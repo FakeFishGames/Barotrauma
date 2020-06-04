@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.CharacterEditor;
@@ -80,8 +80,8 @@ namespace Barotrauma
         public static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
         public static Vector2 ReferenceResolution => new Vector2(1920f, 1080f);
-        public static float Scale => (GameMain.GraphicsWidth / ReferenceResolution.X + GameMain.GraphicsHeight / ReferenceResolution.Y) / 2.0f * GameSettings.HUDScale;
-        public static float xScale => GameMain.GraphicsWidth / ReferenceResolution.X * GameSettings.HUDScale;
+        public static float Scale => (UIWidth / ReferenceResolution.X + GameMain.GraphicsHeight / ReferenceResolution.Y) / 2.0f * GameSettings.HUDScale;
+        public static float xScale => UIWidth / ReferenceResolution.X * GameSettings.HUDScale;
         public static float yScale => GameMain.GraphicsHeight / ReferenceResolution.Y * GameSettings.HUDScale;
         public static int IntScale(float f) => (int)(f * Scale);
         public static int IntScaleFloor(float f) => (int)Math.Floor(f * Scale);
@@ -90,6 +90,23 @@ namespace Barotrauma
         public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
         public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
         public static float RelativeVerticalAspectRatio => VerticalAspectRatio / (ReferenceResolution.Y / ReferenceResolution.X);
+        public static bool IsUltrawide => HorizontalAspectRatio > 2.0f;
+
+        public static int UIWidth
+        {
+            get
+            {
+                // Ultrawide
+                if (IsUltrawide)
+                {
+                    return (int)(GameMain.GraphicsHeight * ReferenceResolution.X / ReferenceResolution.Y);
+                }
+                else
+                {
+                    return GameMain.GraphicsWidth;
+                }
+            }
+        }
 
         public static float SlicedSpriteScale
         {
@@ -520,6 +537,37 @@ namespace Barotrauma
 
                     DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
                     yPos += (int)anchorPivotStringSize.Y + padding / 2;
+                }
+                else
+                {
+                    string guiScaleString = $"GUI.Scale: {Scale}";
+                    string guixScaleString = $"GUI.xScale: {xScale}";
+                    string guiyScaleString = $"GUI.yScale: {yScale}";
+                    string relativeHorizontalAspectRatioString = $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}";
+                    string relativeVerticalAspectRatioString = $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}";
+                    Vector2 guiScaleStringSize = SmallFont.MeasureString(guiScaleString);
+                    Vector2 guixScaleStringSize = SmallFont.MeasureString(guixScaleString);
+                    Vector2 guiyScaleStringSize = SmallFont.MeasureString(guiyScaleString);
+                    Vector2 relativeHorizontalAspectRatioStringSize = SmallFont.MeasureString(relativeHorizontalAspectRatioString);
+                    Vector2 relativeVerticalAspectRatioStringSize = SmallFont.MeasureString(relativeVerticalAspectRatioString);
+
+                    int padding = IntScale(10);
+                    int yPos = padding;
+
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiScaleStringSize.X - padding, yPos), guiScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)guiScaleStringSize.Y + padding / 2;
+
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guixScaleStringSize.X - padding, yPos), guixScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)guixScaleStringSize.Y + padding / 2;
+
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiyScaleStringSize.X - padding, yPos), guiyScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)guiyScaleStringSize.Y + padding / 2;
+
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeHorizontalAspectRatioStringSize.X - padding, yPos), relativeHorizontalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)relativeHorizontalAspectRatioStringSize.Y + padding / 2;
+
+                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
+                    yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
                 }
             }
 
@@ -1917,8 +1965,9 @@ namespace Barotrauma
                 Inventory.draggingItem = null;
                 Inventory.DraggingInventory = null;
 
-                PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas), style: null, color: Color.Black * 0.5f);
-                    
+                PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas, Anchor.Center), style: null);
+                new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, PauseMenu.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
+
                 var pauseMenuInner = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.3f), PauseMenu.RectTransform, Anchor.Center) { MinSize = new Point(250, 300) });
 
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.6f), pauseMenuInner.RectTransform, Anchor.Center))

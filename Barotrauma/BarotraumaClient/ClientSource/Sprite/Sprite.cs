@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -47,7 +47,7 @@ namespace Barotrauma
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn)
         {
-            texture = LoadTexture(this.FilePath, out Sprite reusedSprite);
+            texture = LoadTexture(this.FilePath, out Sprite reusedSprite, Compress);
             if (reusedSprite != null)
             {
                 FilePath = string.Intern(reusedSprite.FilePath);
@@ -70,7 +70,21 @@ namespace Barotrauma
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;
-            LoadTexture(ref sourceVector, ref temp2);
+            int maxLoadRetries = 3;
+            for (int i = 0; i <= maxLoadRetries; i++)
+            {
+                try
+                {
+                    LoadTexture(ref sourceVector, ref temp2);
+                }
+                catch (System.IO.IOException)
+                {
+                    if (i == maxLoadRetries || !File.Exists(FilePath)) { throw; }
+                    DebugConsole.NewMessage("Loading sprite \"" + FilePath + "\" failed, retrying in 250 ms...");
+                    System.Threading.Thread.Sleep(500);
+                }
+            }
+
             if (sourceRect.Width == 0 && sourceRect.Height == 0)
             {
                 sourceRect = new Rectangle((int)sourceVector.X, (int)sourceVector.Y, (int)sourceVector.Z, (int)sourceVector.W);
@@ -90,7 +104,7 @@ namespace Barotrauma
         public void ReloadTexture(IEnumerable<Sprite> spritesToUpdate)
         {
             texture.Dispose();
-            texture = TextureLoader.FromFile(FilePath);
+            texture = TextureLoader.FromFile(FilePath, Compress);
             foreach (Sprite sprite in spritesToUpdate)
             {
                 sprite.texture = texture;
@@ -107,7 +121,7 @@ namespace Barotrauma
             return LoadTexture(file, out _);
         }
 
-        public static Texture2D LoadTexture(string file, out Sprite reusedSprite)
+        public static Texture2D LoadTexture(string file, out Sprite reusedSprite, bool compress = true)
         {
             reusedSprite = null;
             if (string.IsNullOrWhiteSpace(file))
@@ -119,10 +133,10 @@ namespace Barotrauma
                 });
                 return t;
             }
-            file = Path.GetFullPath(file);
+            string fullPath = Path.GetFullPath(file);
             foreach (Sprite s in LoadedSprites)
             {
-                if (s.FullPath == file && s.texture != null && !s.texture.IsDisposed) 
+                if (s.FullPath == fullPath && s.texture != null && !s.texture.IsDisposed) 
                 {
                     reusedSprite = s;
                     return s.texture; 
@@ -131,8 +145,13 @@ namespace Barotrauma
 
             if (File.Exists(file))
             {
-                ToolBox.IsProperFilenameCase(file);
-                return TextureLoader.FromFile(file);
+                if (!ToolBox.IsProperFilenameCase(file))
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Texture file \"" + file + "\" has incorrect case!");
+#endif
+                }
+                return TextureLoader.FromFile(file, compress);
             }
             else
             {

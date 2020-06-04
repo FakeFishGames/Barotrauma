@@ -12,7 +12,8 @@ namespace Barotrauma
         private PathFinder pathFinder;
         private SteeringPath currentPath;
 
-        private bool canOpenDoors, canBreakDoors;
+        private bool canOpenDoors;
+        public bool CanBreakDoors { get; set; }
 
         private Character character;
 
@@ -50,8 +51,8 @@ namespace Barotrauma
         /// </summary>
         public bool InLadders =>
             currentPath != null &&
-            currentPath.CurrentNode != null && (currentPath.CurrentNode.Ladders != null ||
-            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null));
+            currentPath.CurrentNode != null && (currentPath.CurrentNode.Ladders != null && !currentPath.CurrentNode.Ladders.Item.NonInteractable ||
+            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null && !currentPath.NextNode.Ladders.Item.NonInteractable));
 
         /// <summary>
         /// Returns true if any node in the path is in stairs
@@ -69,6 +70,7 @@ namespace Barotrauma
                 if (currentPath.NextNode == null) { return false; }
                 var currentLadder = currentPath.CurrentNode.Ladders;
                 if (currentLadder == null) { return false; }
+                if (currentLadder.Item.NonInteractable) { return false; }
                 var nextLadder = GetNextLadder();
                 return nextLadder != null && nextLadder == currentLadder;
             }
@@ -80,7 +82,7 @@ namespace Barotrauma
             pathFinder.GetNodePenalty = GetNodePenalty;
 
             this.canOpenDoors = canOpenDoors;
-            this.canBreakDoors = canBreakDoors;
+            this.CanBreakDoors = canBreakDoors;
 
             character = (host as AIController).Character;
 
@@ -103,6 +105,12 @@ namespace Barotrauma
             IsPathDirty = false;
         }
 
+        public void ResetPath()
+        {
+            currentPath = null;
+            IsPathDirty = true;
+        }
+
         public void SteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {
             steering += CalculateSteeringSeek(target, weight, startNodeFilter, endNodeFilter, nodeFilter);
@@ -115,7 +123,7 @@ namespace Barotrauma
         {
             if (currentPath == null) { return null; }
             if (currentPath.NextNode == null) { return null; }
-            if (currentPath.NextNode.Ladders != null)
+            if (currentPath.NextNode.Ladders != null && !currentPath.NextNode.Ladders.Item.NonInteractable)
             {
                 return currentPath.NextNode.Ladders;
             }
@@ -126,7 +134,10 @@ namespace Barotrauma
                 {
                     var node = currentPath.Nodes[index];
                     if (node == null) { return null; }
-                    return node.Ladders;
+                    if (node.Ladders != null && !node.Ladders.Item.NonInteractable)
+                    {
+                        return node.Ladders;
+                    }
                 }
                 return null;
             }
@@ -134,7 +145,19 @@ namespace Barotrauma
 
         private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
         {
-            bool needsNewPath = character.Params.PathFinderPriority > 0.5f && (currentPath == null || currentPath.Unreachable || currentPath.Finished || Vector2.DistanceSquared(target, currentTarget) > 1);
+            Vector2 targetDiff = target - currentTarget;
+            if (currentPath != null && currentPath.Nodes.Any())
+            {
+                //current path calculated relative to a different sub than where the character is now
+                //take that into account when calculating if the target has moved
+                Submarine currentPathSub = currentPath?.Nodes.First().Submarine;
+                if (currentPathSub != character.Submarine && character.Submarine != null)
+                {
+                    Vector2 subDiff = character.Submarine.SimPosition - currentPathSub.SimPosition;
+                    targetDiff += subDiff;
+                }
+            }
+            bool needsNewPath = character.Params.PathFinderPriority > 0.5f && (currentPath == null || currentPath.Unreachable || currentPath.Finished || targetDiff.LengthSquared() > 1);
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (needsNewPath || findPathTimer < -1.0f)
             {
@@ -172,12 +195,13 @@ namespace Barotrauma
 
             Vector2 diff = DiffToCurrentNode();
             var collider = character.AnimController.Collider;
+            // Only humanoids can climb ladders
+            bool canClimb = character.AnimController is HumanoidAnimController;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
-            if (!character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
+            if (canClimb && !character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
             {
                 diff.Y = 0.0f;
             }
-            //if (diff.LengthSquared() < 0.001f) { return -host.Steering; }
             if (diff == Vector2.Zero) { return Vector2.Zero; }
             return Vector2.Normalize(diff) * weight;
         }
@@ -186,8 +210,10 @@ namespace Barotrauma
 
         private Vector2 DiffToCurrentNode()
         {
-            if (currentPath == null || currentPath.Unreachable) return Vector2.Zero;
-
+            if (currentPath == null || currentPath.Unreachable)
+            {
+                return Vector2.Zero;
+            }
             if (currentPath.Finished)
             {
                 Vector2 pos2 = host.SimPosition;
@@ -197,15 +223,12 @@ namespace Barotrauma
                     pos2 -= CurrentPath.Nodes.Last().Submarine.SimPosition;
                 }
                 return currentTarget - pos2;
-            }
-            
+            }  
             if (canOpenDoors && !character.LockHands && buttonPressCooldown <= 0.0f)
             {
                 CheckDoorsInPath();
-            }
-            
+            }       
             Vector2 pos = host.SimPosition;
-
             if (character != null && currentPath.CurrentNode != null)
             {
                 if (CurrentPath.CurrentNode.Submarine != null)
@@ -220,19 +243,17 @@ namespace Barotrauma
                     }
                 }
             }
-
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
-
-            //only humanoids can climb ladders
-            if (!isDiving && character.AnimController is HumanoidAnimController && IsNextLadderSameAsCurrent)
+            // Only humanoids can climb ladders
+            bool canClimb = character.AnimController is HumanoidAnimController;
+            if (canClimb && !isDiving && IsNextLadderSameAsCurrent)
             {
-                if (character.SelectedConstruction != currentPath.CurrentNode.Ladders.Item &&
-                    currentPath.CurrentNode.Ladders.Item.IsInsideTrigger(character.WorldPosition))
+                var ladders = currentPath.CurrentNode.Ladders;
+                if (character.SelectedConstruction != ladders.Item && ladders.Item.IsInsideTrigger(character.WorldPosition))
                 {
                     currentPath.CurrentNode.Ladders.Item.TryInteract(character, false, true);
                 }
-            }
-            
+            }         
             var collider = character.AnimController.Collider;
             if (character.IsClimbing && !isDiving)
             {
@@ -252,13 +273,16 @@ namespace Barotrauma
                     {
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
+                    // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
+                    float margin = 0.1f;
+                    bool isAboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
                     // If the next waypoint is horizontally far, we don't want to keep holding the ladders
-                    if (nextLadder == null || Math.Abs(currentPath.CurrentNode.WorldPosition.X - currentPath.NextNode.WorldPosition.X) > 50)
+                    if (isAboveFloor && (nextLadder == null || Math.Abs(currentPath.CurrentNode.WorldPosition.X - currentPath.NextNode.WorldPosition.X) > 50))
                     {
                         character.AnimController.Anim = AnimController.Animation.None;
                         character.SelectedConstruction = null;
                     }
-                    else if (!nextLadderSameAsCurrent)
+                    else if (nextLadder != null && !nextLadderSameAsCurrent)
                     {
                         // Try to change the ladder (hatches between two submarines)
                         if (character.SelectedConstruction != nextLadder.Item && nextLadder.Item.IsInsideTrigger(character.WorldPosition))
@@ -266,9 +290,6 @@ namespace Barotrauma
                             nextLadder.Item.TryInteract(character, false, true);
                         }
                     }
-                    // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
-                    float margin = 0.1f;
-                    bool isAboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
                     if (nextLadder != null || isAboveFloor)
                     {
                         currentPath.SkipToNextNode();
@@ -286,7 +307,7 @@ namespace Barotrauma
                 }
                 return diff;
             }
-            else if (character.AnimController.InWater)
+            else if (!canClimb || character.AnimController.InWater)
             {
                 // If the character is underwater, we don't need the ladders anymore
                 if (character.IsClimbing && isDiving)
@@ -294,49 +315,59 @@ namespace Barotrauma
                     character.AnimController.Anim = AnimController.Animation.None;
                     character.SelectedConstruction = null;
                 }
-                float multiplier = MathHelper.Lerp(1, 10, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
-                float targetDistance = collider.GetSize().X * multiplier;
-                float horizontalDistance = Math.Abs(character.WorldPosition.X - currentPath.CurrentNode.WorldPosition.X);
-                float verticalDistance = Math.Abs(character.WorldPosition.Y - currentPath.CurrentNode.WorldPosition.Y);
-                if (character.CurrentHull != currentPath.CurrentNode.CurrentHull)
+                var door = currentPath.CurrentNode.ConnectedDoor;
+                bool blockedByDoor = door != null && !door.IsOpen && !door.IsBroken;
+                if (!blockedByDoor)
                 {
-                    verticalDistance *= 2;
-                }
-                float distance = horizontalDistance + verticalDistance;
-                if (ConvertUnits.ToSimUnits(distance) < targetDistance)
-                {
-                    currentPath.SkipToNextNode();
+                    float multiplier = MathHelper.Lerp(1, 10, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
+                    float targetDistance = collider.GetSize().X * multiplier;
+                    float horizontalDistance = Math.Abs(character.WorldPosition.X - currentPath.CurrentNode.WorldPosition.X);
+                    float verticalDistance = Math.Abs(character.WorldPosition.Y - currentPath.CurrentNode.WorldPosition.Y);
+                    if (character.CurrentHull != currentPath.CurrentNode.CurrentHull)
+                    {
+                        verticalDistance *= 2;
+                    }
+                    float distance = horizontalDistance + verticalDistance;
+                    if (ConvertUnits.ToSimUnits(distance) < targetDistance)
+                    {
+                        currentPath.SkipToNextNode();
+                    }
                 }
             }
             else if (!IsNextLadderSameAsCurrent)
             {
+                // Walking horizontally
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
                 Vector2 colliderSize = collider.GetSize();
                 Vector2 velocity = collider.LinearVelocity;
-                // If the character is smaller than this, it fails to use the waypoint nodes, because they are always too high.
+                // If the character is smaller than this, it would fail to use the waypoint nodes because they are always too high.
                 float minHeight = 1;
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
                 float characterHeight = Math.Max(colliderSize.Y + character.AnimController.ColliderHeightFromFloor, minHeight);
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
+                var door = currentPath.CurrentNode.ConnectedDoor;
+                bool blockedByDoor = door != null && !door.IsOpen && !door.IsBroken;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
                 float targetDistance = collider.radius * margin;
-                if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh)
+                if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && !blockedByDoor)
                 {
                     currentPath.SkipToNextNode();
                 }
             }
-
-            if (currentPath.CurrentNode == null) return Vector2.Zero;
-
+            if (currentPath.CurrentNode == null)
+            {
+                return Vector2.Zero;
+            }
             return currentPath.CurrentNode.SimPosition - pos;
         }
 
         private bool CanAccessDoor(Door door, Func<Controller, bool> buttonFilter = null)
         {
             if (door.IsOpen) { return true; }
-            if (canBreakDoors) { return true; }
+            if (door.Item.NonInteractable) { return false; }
+            if (CanBreakDoors) { return true; }
             if (door.IsStuck) { return false; }
             if (!canOpenDoors || character.LockHands) { return false; }
             if (door.HasIntegratedButtons)
@@ -345,7 +376,7 @@ namespace Barotrauma
             }
             else
             {
-                return door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character) && (buttonFilter == null || buttonFilter(b)));
+                return door.Item.GetConnectedComponents<Controller>(true).Any(b => !b.Item.NonInteractable && b.HasAccess(character) && (buttonFilter == null || buttonFilter(b)));
             }
         }
 
@@ -381,7 +412,11 @@ namespace Barotrauma
                     {
                         //the node we're heading towards is the last one in the path, and at a door
                         //the door needs to be open for the character to reach the node
-                        shouldBeOpen = true;
+                        if (currentWaypoint.ConnectedDoor.LinkedGap != null && currentWaypoint.ConnectedDoor.LinkedGap.IsRoomToRoom)
+                        {
+                            shouldBeOpen = true;
+                            door = currentWaypoint.ConnectedDoor;
+                        }
                     }
                     else
                     {
@@ -519,9 +554,9 @@ namespace Barotrauma
             //non-humanoids can't climb up ladders
             if (!(character.AnimController is HumanoidAnimController))
             {
-                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null &&
-                    nextNode.Position.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
-                    nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y) //upper node not underwater
+                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && nextNode.Waypoint.Ladders.Item.NonInteractable ||
+                    (nextNode.Position.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
+                    nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y)) //upper node not underwater
                 {
                     return null;
                 }
@@ -539,7 +574,10 @@ namespace Barotrauma
                 }
                 if (character.NeedsAir && hull.WaterVolume / hull.Rect.Width > 100.0f)
                 {
-                    penalty += 500.0f;
+                    if (!HumanAIController.HasDivingSuit(character))
+                    {
+                        penalty += 500.0f;
+                    }
                 }
                 if (character.PressureProtection < 10.0f && hull.WaterVolume > hull.Volume)
                 {

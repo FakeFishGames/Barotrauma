@@ -5,7 +5,7 @@ using System.Xml.Linq;
 using OpenAL;
 using Microsoft.Xna.Framework;
 using System.Linq;
-using System.IO;
+using Barotrauma.IO;
 
 namespace Barotrauma.Sounds
 {
@@ -286,7 +286,7 @@ namespace Barotrauma.Sounds
 
             if (!File.Exists(filename))
             {
-                throw new FileNotFoundException("Sound file \"" + filename + "\" doesn't exist!");
+                throw new System.IO.FileNotFoundException("Sound file \"" + filename + "\" doesn't exist!");
             }
 
             Sound newSound = new OggSound(this, filename, stream, null);
@@ -304,7 +304,7 @@ namespace Barotrauma.Sounds
             string filePath = overrideFilePath ?? element.GetAttributeString("file", "");
             if (!File.Exists(filePath))
             {
-                throw new FileNotFoundException("Sound file \"" + filePath + "\" doesn't exist!");
+                throw new System.IO.FileNotFoundException("Sound file \"" + filePath + "\" doesn't exist!");
             }
 
             var newSound = new OggSound(this, filePath, stream, xElement: element);

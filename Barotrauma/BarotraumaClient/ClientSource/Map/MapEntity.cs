@@ -151,7 +151,8 @@ namespace Barotrauma
                 {
                     selectedList.ForEach(e =>
                     {
-                        e.Remove();
+                        //orphaned wires may already have been removed
+                        if (!e.Removed) { e.Remove(); }
                     });
                     selectedList.Clear();
                 }

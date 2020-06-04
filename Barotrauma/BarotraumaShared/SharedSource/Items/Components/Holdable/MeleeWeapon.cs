@@ -95,6 +95,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Limb l in character.AnimController.Limbs)
                 {
+                    if (l.IsSevered) { continue; }
                     if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) { continue; }
                     if (l.type == LimbType.Head || l.type == LimbType.Torso)
                     {

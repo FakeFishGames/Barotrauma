@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.IO;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -306,7 +307,7 @@ namespace Barotrauma
             }
             try
             {
-                characterDataDoc.Save(characterDataPath);
+                characterDataDoc.SaveSafe(characterDataPath);
             }
             catch (Exception e)
             {

@@ -47,7 +47,7 @@ namespace Barotrauma
         public override bool AllowSubObjectiveSorting => true;
         public virtual bool InverseTargetEvaluation => false;
 
-        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
+        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
 
         public override void Update(float deltaTime)
         {
@@ -204,7 +204,7 @@ namespace Barotrauma
                     {
                         Objectives.Remove(target);
                         ignoreList.Add(target);
-                        targetUpdateTimer = 0;
+                        targetUpdateTimer = Math.Min(0.1f, targetUpdateTimer);
                     };
                 }
             }

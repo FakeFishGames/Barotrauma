@@ -195,7 +195,7 @@ namespace Barotrauma.Tutorials
                 // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_security, "operateweapons", highlightColor, new Vector2(5, 5));
                 HighlightOrderOption("fireatwill");
             }
-            while (!HasOrder(captain_security, "operateweapons", "fireatwill"));
+            while (!HasOrder(captain_security, "operateweapons"));
             RemoveCompletedObjective(segments[2]);
             yield return new WaitForSeconds(4f, false);
             TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Command));

@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
     class ModuloComponent : ItemComponent
     {
         private float modulus;
-        [InGameEditable, Serialize(1.0f, false, description: "The modulus of the operation. Must be non-zero.")]
+        [InGameEditable, Serialize(1.0f, false, description: "The modulus of the operation. Must be non-zero.", alwaysUseInstanceValues: true)]
         public float Modulus
         {
             get { return modulus; }

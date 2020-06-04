@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.")]
+        [Editable, Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.", alwaysUseInstanceValues: true)]
         public float MaxFlow
         {
             get { return maxFlow; }
@@ -45,6 +45,7 @@ namespace Barotrauma.Items.Components
         }
 
         public bool HasPower => IsActive && Voltage >= MinVoltage;
+        public bool IsAutoControlled => pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
 
         public Pump(Item item, XElement element)
             : base(item, element)
@@ -68,7 +69,7 @@ namespace Barotrauma.Items.Components
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
             //pumps consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
 
             if (!HasPower) { return; }
 
@@ -130,7 +131,7 @@ namespace Barotrauma.Items.Components
             if (objective.Option.Equals("stoppumping", StringComparison.OrdinalIgnoreCase))
             {
 #if SERVER
-                if (FlowPercentage > 0.0f)
+                if (objective.Override || FlowPercentage > 0.0f)
                 {
                     item.CreateServerEvent(this);
                 }
@@ -141,7 +142,7 @@ namespace Barotrauma.Items.Components
             else
             {
 #if SERVER
-                if (!IsActive || FlowPercentage > -100.0f)
+                if (objective.Override || !IsActive || FlowPercentage > -100.0f)
                 {
                     item.CreateServerEvent(this);
                 }

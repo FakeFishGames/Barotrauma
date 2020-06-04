@@ -237,6 +237,7 @@ namespace Barotrauma.Items.Components
                 {
                     StopPicking(null);
                     PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
+                    if (isOpen) { stuck = MathHelper.Clamp(stuck - StuckReductionOnOpen, 0.0f, 100.0f); }
                 }
             }       
         }
@@ -245,7 +246,8 @@ namespace Barotrauma.Items.Components
         {
             base.ClientRead(type, msg, sendingTime);
 
-            bool open = msg.ReadBoolean();
+            bool open       = msg.ReadBoolean();
+            bool broken     = msg.ReadBoolean();
             bool forcedOpen = msg.ReadBoolean();
             SetState(open, isNetworkMessage: true, sendNetworkMessage: false, forcedOpen: forcedOpen);
             Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
@@ -258,6 +260,7 @@ namespace Barotrauma.Items.Components
             }
 
             if (isStuck) { OpenState = 0.0f; }
+            IsBroken = broken;
             PredictedState = null;
         }
     }

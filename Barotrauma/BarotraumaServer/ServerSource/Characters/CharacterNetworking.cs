@@ -416,6 +416,7 @@ namespace Barotrauma
             }
         }
 
+        private List<int> severedJointIndices = new List<int>();
         private void WriteStatus(IWriteMessage msg)
         {
             msg.Write(IsDead);
@@ -426,32 +427,31 @@ namespace Barotrauma
                 {
                     msg.Write(CauseOfDeath.Affliction.Identifier);
                 }
-
-                if (AnimController?.LimbJoints == null)
-                {
-                    //0 limbs severed
-                    msg.Write((byte)0);
-                }
-                else
-                {
-                    List<int> severedJointIndices = new List<int>();
-                    for (int i = 0; i < AnimController.LimbJoints.Length; i++)
-                    {
-                        if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
-                        {
-                            severedJointIndices.Add(i);
-                        }
-                    }
-                    msg.Write((byte)severedJointIndices.Count);
-                    foreach (int jointIndex in severedJointIndices)
-                    {
-                        msg.Write((byte)jointIndex);
-                    }
-                }
             }
             else
             {
                 CharacterHealth.ServerWrite(msg);
+            }
+            if (AnimController?.LimbJoints == null)
+            {
+                //0 limbs severed
+                msg.Write((byte)0);
+            }
+            else
+            {
+                severedJointIndices.Clear();
+                for (int i = 0; i < AnimController.LimbJoints.Length; i++)
+                {
+                    if (AnimController.LimbJoints[i] != null && AnimController.LimbJoints[i].IsSevered)
+                    {
+                        severedJointIndices.Add(i);
+                    }
+                }
+                msg.Write((byte)severedJointIndices.Count);
+                foreach (int jointIndex in severedJointIndices)
+                {
+                    msg.Write((byte)jointIndex);
+                }
             }
         }
 

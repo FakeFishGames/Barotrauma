@@ -31,7 +31,7 @@ namespace Barotrauma
 
         public Sprite SlotSprite;
 
-        public Keys QuickUseKey;
+        public int InventoryKeyIndex = -1;
 
         public int SubInventoryDir = -1;
 
@@ -709,12 +709,15 @@ namespace Barotrauma
         /// Is the mouse on any inventory element (slot, equip button, subinventory...)
         /// </summary>
         /// <returns></returns>
-        public static bool IsMouseOnInventory()
+        public static bool IsMouseOnInventory(bool ignoreDraggedItem = false)
         {
             var isSubEditor = Screen.Selected is SubEditorScreen editor && !editor.WiringMode;
-            if (Character.Controlled == null) return false;
+            if (Character.Controlled == null) { return false; }
 
-            if (draggingItem != null || DraggingInventory != null) return true;
+            if (!ignoreDraggedItem)
+            {
+                if (draggingItem != null || DraggingInventory != null) { return true; }
+            }
 
             if (Character.Controlled.Inventory != null && !isSubEditor)
             {
@@ -966,7 +969,8 @@ namespace Barotrauma
             {
                 Character.Controlled.ClearInputs();
 
-                if (CharacterHealth.OpenHealthWindow != null &&
+                if (!IsMouseOnInventory(ignoreDraggedItem: true) &&
+                    CharacterHealth.OpenHealthWindow != null &&
                     CharacterHealth.OpenHealthWindow.OnItemDropped(draggingItem, false))
                 {
                     draggingItem = null;
@@ -1078,7 +1082,7 @@ namespace Barotrauma
         protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
         {
             Rectangle hoverArea;
-            if (!subSlot.Inventory.Movable())
+            if (!subSlot.Inventory.Movable() || Character.Controlled?.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item))
             {
                 hoverArea = subSlot.Slot.Rect;
                 hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
@@ -1251,7 +1255,7 @@ namespace Barotrauma
 
                 if (item != null && drawItem)
                 {
-                    if (!item.IsFullCondition && (itemContainer == null || !itemContainer.ShowConditionInContainedStateIndicator))
+                    if (!item.IsFullCondition && !item.Prefab.HideConditionBar && (itemContainer == null || !itemContainer.ShowConditionInContainedStateIndicator))
                     {
                         GUI.DrawRectangle(spriteBatch, new Rectangle(rect.X, rect.Bottom - 8, rect.Width, 8), Color.Black * 0.8f, true);
                         GUI.DrawRectangle(spriteBatch,
@@ -1378,10 +1382,10 @@ namespace Barotrauma
             if (inventory != null &&
                 !inventory.Locked &&
                 Character.Controlled?.Inventory == inventory &&
-                slot.QuickUseKey != Keys.None)
+                slot.InventoryKeyIndex != -1)
             {
                 spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.15f), slotHotkeySprite.SourceRect, slotColor);
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), slot.QuickUseKey.ToString().Substring(1, 1), Color.Black, font: GUI.HotkeyFont);
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameMain.Config.InventoryKeyBind(slot.InventoryKeyIndex).Name, Color.Black, font: GUI.HotkeyFont);
             }
         }
 

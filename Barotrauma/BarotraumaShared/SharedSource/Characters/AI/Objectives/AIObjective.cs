@@ -118,7 +118,6 @@ namespace Barotrauma
         public void TryComplete(float deltaTime)
         {
             if (isCompleted) { return; }
-            //if (Abandon && !IsLoop && subObjectives.None()) { return; }
             if (CheckState()) { return; }
             // Not ready -> act (can't do foreach because it's possible that the collection is modified in event callbacks.
             for (int i = 0; i < subObjectives.Count; i++)
@@ -201,7 +200,7 @@ namespace Barotrauma
             }
             else
             {
-                Priority = CumulatedDevotion * PriorityModifier;
+                Priority = CumulatedDevotion;
             }
             return Priority;
         }
@@ -211,7 +210,7 @@ namespace Barotrauma
             var currentObjective = objectiveManager.CurrentObjective;
             if (currentObjective != null && (currentObjective == this || currentObjective.subObjectives.Any(so => so == this)))
             {
-                CumulatedDevotion += Devotion * PriorityModifier * deltaTime;
+                CumulatedDevotion += Devotion * deltaTime;
             }
         }
 

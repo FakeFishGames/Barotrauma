@@ -40,6 +40,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool shouldClearConnections = true;
+
         const float MaxAttachDistance = 150.0f;
 
         const float MinNodeDistance = 7.0f;
@@ -180,8 +182,6 @@ namespace Barotrauma.Items.Components
                     newConnection.Item.Position : 
                     newConnection.Item.Position - refSub.HiddenSubPosition;
 
-                nodePos = RoundNode(nodePos);
-
                 if (nodes.Count > 0 && nodes[0] == nodePos) { break; }
                 if (nodes.Count > 1 && nodes[nodes.Count - 1] == nodePos) { break; }
 
@@ -246,7 +246,7 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            ClearConnections(character);
+            if (shouldClearConnections) { ClearConnections(character); }
             IsActive = true;
         }
 
@@ -258,7 +258,7 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
-            ClearConnections(dropper);
+            if (shouldClearConnections) { ClearConnections(dropper); }
             IsActive = false;
         }
 
@@ -340,7 +340,7 @@ namespace Barotrauma.Items.Components
             else
             {
 #if CLIENT
-                bool disableGrid = SubEditorScreen.IsSubEditor() && (PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift));
+                bool disableGrid = SubEditorScreen.IsSubEditor() && PlayerInput.IsShiftDown();
                 newNodePos = disableGrid ? item.Position : RoundNode(item.Position);
 #else
                 newNodePos = RoundNode(item.Position);

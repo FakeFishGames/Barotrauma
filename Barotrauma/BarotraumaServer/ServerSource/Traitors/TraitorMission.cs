@@ -5,7 +5,7 @@ using System;
 using Barotrauma.Networking;
 using Lidgren.Network;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using Barotrauma.Extensions;

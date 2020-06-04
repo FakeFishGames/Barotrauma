@@ -89,7 +89,21 @@ namespace Barotrauma.Particles
     {        
         public readonly string Name;
 
-        public readonly ParticlePrefab ParticlePrefab;
+        private string particlePrefabName;
+
+        private ParticlePrefab particlePrefab;
+        public ParticlePrefab ParticlePrefab
+        {
+            get
+            {
+                if (particlePrefab == null && particlePrefabName != null)
+                {
+                    particlePrefab = GameMain.ParticleManager?.FindPrefab(particlePrefabName);
+                    if (particlePrefab == null) { particlePrefabName = null; }
+                }
+                return particlePrefab;
+            }
+        }
 
         public readonly float AngleMin, AngleMax;
 
@@ -114,8 +128,7 @@ namespace Barotrauma.Particles
         public ParticleEmitterPrefab(XElement element)
         {
             Name = element.Name.ToString();
-
-            ParticlePrefab = GameMain.ParticleManager.FindPrefab(element.GetAttributeString("particle", ""));
+            particlePrefabName = element.GetAttributeString("particle", "");
 
             if (element.Attribute("startrotation") == null)
             {

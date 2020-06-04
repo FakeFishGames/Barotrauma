@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using System.IO;
+using Barotrauma.IO;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 #endif

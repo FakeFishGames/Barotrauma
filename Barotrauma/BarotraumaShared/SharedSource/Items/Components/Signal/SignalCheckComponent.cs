@@ -4,12 +4,12 @@ namespace Barotrauma.Items.Components
 {
     class SignalCheckComponent : ItemComponent
     {
-        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the target signal.")]
+        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the target signal.", alwaysUseInstanceValues: true)]
         public string Output { get; set; }
-        [InGameEditable, Serialize("0", true, description: "The signal this item outputs when the received signal does not match the target signal.")]
+        [InGameEditable, Serialize("0", true, description: "The signal this item outputs when the received signal does not match the target signal.", alwaysUseInstanceValues: true)]
         public string FalseOutput { get; set; }
 
-        [InGameEditable, Serialize("", true, description: "The value to compare the received signals against.")]
+        [InGameEditable, Serialize("", true, description: "The value to compare the received signals against.", alwaysUseInstanceValues: true)]
         public string TargetSignal { get; set; }
 
         public SignalCheckComponent(Item item, XElement element)

@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.IO.Compression;
-using System.IO;
+using Barotrauma.IO;
 using Barotrauma.Steam;
 using System.Xml.Linq;
 using System.Threading;
@@ -1917,6 +1917,15 @@ namespace Barotrauma.Networking
                 var teamID = n == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
 
                 Submarine.MainSubs[n].TeamID = teamID;
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine == null) { continue; }
+                    if (item.Submarine != Submarine.MainSubs[n] && !Submarine.MainSubs[n].DockedTo.Contains(item.Submarine)) { continue; }
+                    foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                    {
+                        wifiComponent.TeamID = Submarine.MainSubs[n].TeamID;
+                    }
+                }
                 foreach (Submarine sub in Submarine.MainSubs[n].DockedTo)
                 {
                     sub.TeamID = teamID;

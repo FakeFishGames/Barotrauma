@@ -18,14 +18,14 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public bool MotionDetected { get; set; }
 
-        [Editable, Serialize(false, true, description: "Should the sensor only detect the movement of humans?")]
+        [Editable, Serialize(false, true, description: "Should the sensor only detect the movement of humans?", alwaysUseInstanceValues: true)]
         public bool OnlyHumans
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, true, description: "Should the sensor ignore the bodies of dead characters?")]
+        [Editable, Serialize(false, true, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
         public bool IgnoreDead
         {
             get;
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [InGameEditable, Serialize(0.0f, true, description: "Horizontal detection range.")]
+        [InGameEditable, Serialize(0.0f, true, description: "Horizontal detection range.", alwaysUseInstanceValues: true)]
         public float RangeX
         {
             get { return rangeX; }
@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-        [InGameEditable, Serialize(0.0f, true, description: "Vertical movement detection range.")]
+        [InGameEditable, Serialize(0.0f, true, description: "Vertical movement detection range.", alwaysUseInstanceValues: true)]
         public float RangeY
         {
             get { return rangeY; }
@@ -67,13 +67,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("1", true, description: "The signal the item outputs when it has detected movement.")]
+        [InGameEditable, Serialize("1", true, description: "The signal the item outputs when it has detected movement.", alwaysUseInstanceValues: true)]
         public string Output { get; set; }
 
-        [InGameEditable, Serialize("", true, description: "The signal the item outputs when it has not detected movement.")]
+        [InGameEditable, Serialize("", true, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
         public string FalseOutput { get; set; }
 
-        [Editable(DecimalCount = 3), Serialize(0.01f, true, description: "How fast the objects within the detector's range have to be moving (in m/s).")]
+        [Editable(DecimalCount = 3), Serialize(0.01f, true, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
         public float MinimumVelocity
         {
             get;
@@ -132,7 +132,8 @@ namespace Barotrauma.Items.Components
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
-                    if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) continue;
+                    if (limb.IsSevered) { continue; }
+                    if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) { continue; }
                     if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                     {
                         MotionDetected = true;

@@ -1,11 +1,11 @@
 ﻿using FarseerPhysics;
-using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -19,8 +19,8 @@ namespace Barotrauma
         private Vector2 attachSurfaceNormal;
         private Submarine attachTargetSubmarine;
 
-        private bool attachToSub;
-        private bool attachToWalls;
+        public bool AttachToSub { get; private set; }
+        public bool AttachToWalls { get; private set; }
 
         private float minDeattachSpeed = 3.0f, maxDeattachSpeed = 10.0f;
         private float damageOnDetach = 0.0f, detachStun = 0.0f;
@@ -58,8 +58,8 @@ namespace Barotrauma
 
         public LatchOntoAI(XElement element, EnemyAIController enemyAI)
         {
-            attachToWalls = element.GetAttributeBool("attachtowalls", false);
-            attachToSub = element.GetAttributeBool("attachtosub", false);
+            AttachToWalls = element.GetAttributeBool("attachtowalls", false);
+            AttachToSub = element.GetAttributeBool("attachtosub", false);
             minDeattachSpeed = element.GetAttributeFloat("mindeattachspeed", 3.0f);
             maxDeattachSpeed = Math.Max(minDeattachSpeed, element.GetAttributeFloat("maxdeattachspeed", 10.0f));
             damageOnDetach = element.GetAttributeFloat("damageondetach", 0.0f);
@@ -67,11 +67,19 @@ namespace Barotrauma
             localAttachPos = ConvertUnits.ToSimUnits(element.GetAttributeVector2("localattachpos", Vector2.Zero));
             attachLimbRotation = MathHelper.ToRadians(element.GetAttributeFloat("attachlimbrotation", 0.0f));
 
-            if (Enum.TryParse(element.GetAttributeString("attachlimb", "Head"), out LimbType attachLimbType))
+            string limbString = element.GetAttributeString("attachlimb", null);
+            attachLimb = enemyAI.Character.AnimController.Limbs.FirstOrDefault(l => string.Equals(l.Name, limbString, StringComparison.OrdinalIgnoreCase));
+            if (attachLimb == null)
             {
-                attachLimb = enemyAI.Character.AnimController.GetLimb(attachLimbType);
+                if (Enum.TryParse(limbString, out LimbType attachLimbType))
+                {
+                    attachLimb = enemyAI.Character.AnimController.GetLimb(attachLimbType);
+                }
             }
-            if (attachLimb == null) attachLimb = enemyAI.Character.AnimController.MainLimb;
+            if (attachLimb == null)
+            {
+                attachLimb = enemyAI.Character.AnimController.MainLimb;
+            }
 
             enemyAI.Character.OnDeath += OnCharacterDeath;
         }
@@ -108,7 +116,9 @@ namespace Barotrauma
                     //something went wrong, limb body is very far from the joint anchor -> deattach
                     if (Vector2.DistanceSquared(attachJoints[i].WorldAnchorB, attachJoints[i].BodyA.Position) > 10.0f * 10.0f)
                     {
+#if DEBUG
                         DebugConsole.ThrowError("Limb body of the character \"" + character.Name + "\" is very far from the attach joint anchor -> deattach");
+#endif
                         DeattachFromBody();
                         return;
                     }
@@ -131,7 +141,7 @@ namespace Barotrauma
             switch (enemyAI.State)
             {
                 case AIState.Idle:
-                    if (attachToWalls && character.Submarine == null && Level.Loaded != null)
+                    if (AttachToWalls && character.Submarine == null && Level.Loaded != null)
                     {
                         if (!IsAttached)
                         {
@@ -180,8 +190,9 @@ namespace Barotrauma
                     }
                     else
                     {
-                        float dist = Vector2.Distance(character.SimPosition, wallAttachPos);
-                        if (dist < Math.Max(Math.Max(character.AnimController.Collider.radius, character.AnimController.Collider.width), character.AnimController.Collider.height) * 1.2f)
+                        float squaredDistance = Vector2.DistanceSquared(character.SimPosition, wallAttachPos);
+                        float targetDistance = Math.Max(Math.Max(character.AnimController.Collider.radius, character.AnimController.Collider.width), character.AnimController.Collider.height) * 1.2f;
+                        if (squaredDistance < targetDistance * targetDistance)
                         {
                             //close enough to a wall -> attach
                             AttachToBody(character.AnimController.Collider, attachLimb, attachTargetBody, wallAttachPos);
@@ -197,12 +208,13 @@ namespace Barotrauma
                     }
                     break;
                 case AIState.Attack:
+                case AIState.Aggressive:
                     if (enemyAI.AttackingLimb != null)
                     {
-                        if (attachToSub && !enemyAI.IsSteeringThroughGap && wallAttachPos != Vector2.Zero && attachTargetBody != null)
+                        if (AttachToSub && !enemyAI.IsSteeringThroughGap && wallAttachPos != Vector2.Zero && attachTargetBody != null)
                         {
                             // is not attached or is attached to something else
-                            if (!IsAttached || IsAttached && attachJoints[0].BodyB == attachTargetBody)
+                            if (!IsAttached || IsAttached && attachJoints[0].BodyB != attachTargetBody)
                             {
                                 if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.DamageRange * enemyAI.AttackingLimb.attack.DamageRange)
                                 {
@@ -247,16 +259,17 @@ namespace Barotrauma
             if (attachJoints.Count > 0)
             {
                 //already attached to the target body, no need to do anything
-                if (attachJoints[0].BodyB == targetBody) return;
+                if (attachJoints[0].BodyB == targetBody) { return; }
                 DeattachFromBody();
             }
 
             jointDir = attachLimb.Dir;
 
             Vector2 transformedLocalAttachPos = localAttachPos * attachLimb.Scale * attachLimb.Params.Ragdoll.LimbScale;
-            if (jointDir < 0.0f) transformedLocalAttachPos.X = -transformedLocalAttachPos.X;
-
-            //transformedLocalAttachPos = Vector2.Transform(transformedLocalAttachPos, Matrix.CreateRotationZ(attachLimb.Rotation));
+            if (jointDir < 0.0f)
+            {
+                transformedLocalAttachPos.X = -transformedLocalAttachPos.X;
+            }
 
             float angle = MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2 + attachLimbRotation * attachLimb.Dir;
             attachLimb.body.SetTransform(attachPos + attachSurfaceNormal * transformedLocalAttachPos.Length(), angle);
@@ -274,7 +287,10 @@ namespace Barotrauma
 
             // Limb scale is already taken into account when creating the collider.
             Vector2 colliderFront = collider.GetLocalFront();
-            if (jointDir < 0.0f) colliderFront.X = -colliderFront.X;
+            if (jointDir < 0.0f)
+            {
+                colliderFront.X = -colliderFront.X;
+            }
             collider.SetTransform(attachPos + attachSurfaceNormal * colliderFront.Length(), MathUtils.VectorToAngle(-attachSurfaceNormal) - MathHelper.PiOver2);
 
             var colliderJoint = new WeldJoint(collider.FarseerBody, targetBody, colliderFront, targetBody.GetLocalPoint(attachPos), false)

@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
@@ -39,6 +39,8 @@ namespace Barotrauma.Items.Components
         public IEnumerable<Item> ActiveProjectiles => activeProjectiles;
 
         private Character user;
+
+        private float resetUserTimer;
 
         public float Rotation
         {
@@ -102,7 +104,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
+        [Serialize(1, false, description: "How many projectiles the weapon launches when fired once.")]
         public int ProjectileCount
         {
             get;
@@ -116,7 +118,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize("0.0,0.0", true, description: "The range at which the barrel can rotate. TODO")]
+        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
+            Serialize("0.0,0.0", true, description: "The range at which the barrel can rotate.", alwaysUseInstanceValues: true)]
         public Vector2 RotationLimits
         {
             get
@@ -196,7 +199,7 @@ namespace Barotrauma.Items.Components
         }
 
         private float baseRotationRad;
-        [Editable(0.0f, 360.0f), Serialize(0.0f, true, description: "The angle of the turret's base in degrees.")]
+        [Editable(0.0f, 360.0f), Serialize(0.0f, true, description: "The angle of the turret's base in degrees.", alwaysUseInstanceValues: true)]
         public float BaseRotation
         {
             get { return MathHelper.ToDegrees(baseRotationRad); }
@@ -284,6 +287,11 @@ namespace Barotrauma.Items.Components
             if (user != null && user.Removed)
             {
                 user = null;
+            }
+            else
+            {
+                resetUserTimer -= deltaTime;
+                if (resetUserTimer <= 0.0f) { user = null; }
             }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -713,6 +721,7 @@ namespace Barotrauma.Items.Components
                 PowerContainer batteryToLoad = null;
                 foreach (PowerContainer battery in batteries)
                 {
+                    if (battery.Item.NonInteractable) { continue; }
                     if (batteryToLoad == null || battery.Charge < lowestCharge)
                     {
                         batteryToLoad = battery;
@@ -733,20 +742,22 @@ namespace Barotrauma.Items.Components
             int maxProjectileCount = 0;
             foreach (MapEntity e in item.linkedTo)
             {
-                if (!(e is Item projectileContainer)) continue;
-
-                var containedItems = projectileContainer.ContainedItems;
-                if (containedItems != null)
+                if (item.NonInteractable) { continue; }
+                if (e is Item projectileContainer)
                 {
-                    var container = projectileContainer.GetComponent<ItemContainer>();
-                    maxProjectileCount += container.Capacity;
+                    var containedItems = projectileContainer.ContainedItems;
+                    if (containedItems != null)
+                    {
+                        var container = projectileContainer.GetComponent<ItemContainer>();
+                        maxProjectileCount += container.Capacity;
 
-                    int projectiles = containedItems.Count(it => it.Condition > 0.0f);
-                    usableProjectileCount += projectiles;
+                        int projectiles = containedItems.Count(it => it.Condition > 0.0f);
+                        usableProjectileCount += projectiles;
+                    }
                 }
             }
 
-            if (usableProjectileCount == 0 || (usableProjectileCount < maxProjectileCount && objective.Option.Equals("fireatwill", StringComparison.OrdinalIgnoreCase)))
+            if (usableProjectileCount == 0)
             {
                 ItemContainer container = null;
                 Item containerItem = null;
@@ -754,11 +765,16 @@ namespace Barotrauma.Items.Components
                 {
                     containerItem = e as Item;
                     if (containerItem == null) { continue; }
+                    if (containerItem.NonInteractable) { continue; }
+                    if (character.AIController is HumanAIController aiController && aiController.IgnoredItems.Contains(containerItem)) { continue; }
                     container = containerItem.GetComponent<ItemContainer>();
                     if (container != null) { break; }
                 }
-                if (container == null || container.ContainableItems.Count == 0) { return true; }
-
+                if (container == null || container.ContainableItems.Count == 0)
+                {
+                    character.Speak(TextManager.GetWithVariable("DialogCannotLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "cannotloadturret", 30.0f);
+                    return true;
+                }
                 if (objective.SubObjectives.None())
                 {
                     if (!AIDecontainEmptyItems(character, objective, equip: true, sourceContainer: container))
@@ -769,10 +785,25 @@ namespace Barotrauma.Items.Components
                 if (objective.SubObjectives.None())
                 {
                     var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1, equip: true, removeEmpty: true);
-                    loadItemsObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
-                    character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
+                    if (loadItemsObjective == null)
+                    {
+                        if (usableProjectileCount == 0)
+                        {
+                            character.Speak(TextManager.GetWithVariable("DialogCannotLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "cannotloadturret", 30.0f);
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        loadItemsObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
+                        character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
+                        return false;
+                    }
                 }
-                return false;
+                if (objective.SubObjectives.Any())
+                {
+                    return false;
+                }
             }
 
             //enough shells and power
@@ -803,7 +834,10 @@ namespace Barotrauma.Items.Components
             character.AIController.SelectTarget(closestEnemy.AiTarget);
 
             character.CursorPosition = closestEnemy.WorldPosition;
-            if (item.Submarine != null) { character.CursorPosition -= item.Submarine.Position; }
+            if (character.Submarine != null) 
+            { 
+                character.CursorPosition -= character.Submarine.Position; 
+            }
             
             float enemyAngle = MathUtils.VectorToAngle(closestEnemy.WorldPosition - item.WorldPosition);
             float turretAngle = -rotation;
@@ -857,11 +891,8 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            if (objective.Option.Equals("fireatwill", StringComparison.OrdinalIgnoreCase))
-            {
-                character?.Speak(TextManager.GetWithVariable("DialogFireTurret", "[itemname]", item.Name, true), null, 0.0f, "fireturret", 5.0f);
-                character.SetInput(InputType.Shoot, true, true);
-            }
+            character?.Speak(TextManager.GetWithVariable("DialogFireTurret", "[itemname]", item.Name, true), null, 0.0f, "fireturret", 5.0f);
+            character.SetInput(InputType.Shoot, true, true);
             return false;
         }
 
@@ -979,10 +1010,12 @@ namespace Barotrauma.Items.Components
                         IsActive = true;
                     }
                     user = sender;
+                    resetUserTimer = 10.0f;
                     break;
                 case "trigger_in":
                     item.Use((float)Timing.Step, sender);
                     user = sender;
+                    resetUserTimer = 10.0f;
                     //triggering the Use method through item.Use will fail if the item is not characterusable and the signal was sent by a character
                     //so lets do it manually
                     if (!characterUsable && sender != null)

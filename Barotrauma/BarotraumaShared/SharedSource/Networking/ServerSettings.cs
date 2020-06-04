@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;

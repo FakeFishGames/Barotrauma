@@ -16,7 +16,7 @@ namespace Barotrauma.Items.Components
             SquareRoot
         }
 
-        [Serialize(FunctionType.Round, false, description: "Which kind of function to run the input through.")]
+        [Serialize(FunctionType.Round, false, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
         public FunctionType Function
         {
             get; set;

@@ -4,7 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 

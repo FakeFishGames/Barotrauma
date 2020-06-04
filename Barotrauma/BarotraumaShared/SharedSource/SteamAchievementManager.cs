@@ -67,16 +67,19 @@ namespace Barotrauma
 
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (c.IsDead) continue;
+                    if (c.IsDead) { continue; }
                     //achievement for descending below crush depth and coming back
-                    if (c.WorldPosition.Y < SubmarineBody.DamageDepth || (c.Submarine != null && c.Submarine.WorldPosition.Y < SubmarineBody.DamageDepth))
+                    if (Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
                     {
-                        roundData.EnteredCrushDepth.Add(c);
-                    }
-                    else if (c.WorldPosition.Y > SubmarineBody.DamageDepth * 0.5f)
-                    {
-                        //all characters that have entered crush depth and are still alive get an achievement
-                        if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");
+                        if (c.WorldPosition.Y < SubmarineBody.DamageDepth || (c.Submarine != null && c.Submarine.WorldPosition.Y < SubmarineBody.DamageDepth))
+                        {
+                            roundData.EnteredCrushDepth.Add(c);
+                        }
+                        else if (c.WorldPosition.Y > SubmarineBody.DamageDepth * 0.5f)
+                        {
+                            //all characters that have entered crush depth and are still alive get an achievement
+                            if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");
+                        }
                     }
                 }
 
@@ -106,7 +109,7 @@ namespace Barotrauma
 
                     //achievement for descending ridiculously deep
                     float realWorldDepth = Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
-                    if (realWorldDepth > 5000.0f)
+                    if (realWorldDepth > 5000.0f && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
                     {
                         //all conscious characters inside the sub get an achievement
                         UnlockAchievement("subdeep", true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
@@ -375,6 +378,12 @@ namespace Barotrauma
                     {
                         UnlockAchievement(charactersInSub[0], "lastmanstanding");
                     }
+#if CLIENT
+                    else if (GameMain.GameSession.CrewManager.GetCharacters().Count() == 1)
+                    {
+                        UnlockAchievement(charactersInSub[0], "lonesailor");
+                    }
+#else
                     //lone sailor achievement if alone in the sub and there are no other characters with the same team ID
                     else if (!Character.CharacterList.Any(c => 
                         c != charactersInSub[0] && 
@@ -383,6 +392,8 @@ namespace Barotrauma
                     {
                         UnlockAchievement(charactersInSub[0], "lonesailor");
                     }
+#endif
+
                 }
                 foreach (Character character in charactersInSub)
                 {

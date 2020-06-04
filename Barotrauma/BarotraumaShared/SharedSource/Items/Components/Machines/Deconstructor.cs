@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
 
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
-                    if (targetItem.Prefab.DeconstructItems.Any())
+                    if (targetItem.Prefab.AllowDeconstruct)
                     {
                         //drop all items that are inside the deconstructed item
                         foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())

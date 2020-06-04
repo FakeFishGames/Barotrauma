@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable, Serialize(400.0f, true, description: "How much oxygen the machine generates when operating at full power.")]
+        [Editable, Serialize(400.0f, true, description: "How much oxygen the machine generates when operating at full power.", alwaysUseInstanceValues: true)]
         public float GeneratedAmount
         {
             get { return generatedAmount; }
@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
             CurrFlow = 0.0f;
             currPowerConsumption = powerConsumption;
             //consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
 
             if (powerConsumption <= 0.0f)
             {

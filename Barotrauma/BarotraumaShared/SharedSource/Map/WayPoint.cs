@@ -124,13 +124,15 @@ namespace Barotrauma
 #if CLIENT
             if (iconSprites == null)
             {
-                iconSprites = new Dictionary<SpawnType, Sprite>()
+                iconSprites = new Dictionary<string, Sprite>()
                 {
-                    { SpawnType.Path, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(0,0,128,128)) },
-                    { SpawnType.Human, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(128,0,128,128)) },
-                    { SpawnType.Enemy, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256,0,128,128)) },
-                    { SpawnType.Cargo, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384,0,128,128)) },
-                    { SpawnType.Corpse, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512,0,128,128)) }
+                    { "Path", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(0,0,128,128)) },
+                    { "Human", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(128,0,128,128)) },
+                    { "Enemy", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256,0,128,128)) },
+                    { "Cargo", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384,0,128,128)) },
+                    { "Corpse", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512,0,128,128)) },
+                    { "Ladder", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(0,128,128,128)) },
+                    { "Door", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(128,128,128,128)) }
                 };
             }
 #endif
@@ -590,6 +592,11 @@ namespace Barotrauma
             }
 
             return assignedWayPoints;
+        }
+
+        public void FindHull()
+        {
+            currentHull = Hull.FindHull(WorldPosition, CurrentHull);
         }
 
         public override void OnMapLoaded()

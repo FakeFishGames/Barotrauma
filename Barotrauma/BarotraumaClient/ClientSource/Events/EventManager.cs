@@ -83,10 +83,6 @@ namespace Barotrauma
             }
             foreach (ScriptedEventSet eventSet in pendingEventSets)
             {
-                float distanceTraveled = MathHelper.Clamp(
-                    (Submarine.MainSub.WorldPosition.X - level.StartPosition.X) / (level.EndPosition.X - level.StartPosition.X),
-                    0.0f, 1.0f);
-
                 GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                 y += 12;
 

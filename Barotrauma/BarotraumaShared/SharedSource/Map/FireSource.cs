@@ -2,12 +2,14 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using Barotrauma.Extensions;
 #if CLIENT
 using Barotrauma.Sounds;
 using Barotrauma.Lights;
 using Barotrauma.Particles;
 #endif
 using FarseerPhysics;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -15,6 +17,7 @@ namespace Barotrauma
     {
         const float OxygenConsumption = 50.0f;
         const float GrowSpeed = 20.0f;
+        const float MaxDamageRange = 250.0f;
 
         protected Hull hull;
 
@@ -65,7 +68,7 @@ namespace Barotrauma
 
         public virtual float DamageRange
         {
-            get { return (float)Math.Sqrt(size.X) * 20.0f; }
+            get { return Math.Min((float)Math.Sqrt(size.X) * 10.0f, MaxDamageRange); }
         }
 
         public Hull Hull
@@ -123,8 +126,8 @@ namespace Barotrauma
                 {
                     i = Math.Min(i, fireSources.Count - 1);
                     j = Math.Min(j, i - 1);
-                    
-                    if (!fireSources[i].CheckOverLap(fireSources[j])) continue;
+
+                    if (!fireSources[i].CheckOverLap(fireSources[j])) { continue; }
 
                     float leftEdge = Math.Min(fireSources[i].position.X, fireSources[j].position.X);
 
@@ -133,12 +136,10 @@ namespace Barotrauma
                         - leftEdge;
 
                     fireSources[j].position.X = leftEdge;
-
 #if CLIENT
                     fireSources[j].burnDecals.AddRange(fireSources[i].burnDecals);
                     fireSources[j].burnDecals.Sort((d1, d2) => { return Math.Sign(d1.WorldPosition.X - d2.WorldPosition.X); });
 #endif
-
                     fireSources[i].Remove();
                 }
             }
@@ -210,21 +211,32 @@ namespace Barotrauma
 
         private void DamageCharacters(float deltaTime)
         {
-            if (size.X <= 0.0f) return;
+            if (size.X <= 0.0f) { return; }
 
             for (int i = 0; i < Character.CharacterList.Count; i++)
             {
                 Character c = Character.CharacterList[i];
-                if (c.AnimController.CurrentHull == null || c.IsDead) continue;
+                if (c.CurrentHull == null || c.IsDead) { continue; }
 
-                if (!IsInDamageRange(c, DamageRange)) continue;
+                if (!IsInDamageRange(c, DamageRange)) { continue; }
 
-                float dmg = (float)Math.Sqrt(size.X) * deltaTime / c.AnimController.Limbs.Length;
+                //GetApproximateDistance returns float.MaxValue if there's no path through open gaps between the hulls (e.g. if there's a door/wall in between)
+                if (hull.GetApproximateDistance(Position, c.Position, c.CurrentHull, 10000.0f) > size.X + DamageRange)
+                {
+                    return;
+                }
+
+                float dmg = (float)Math.Sqrt(Math.Min(500, size.X)) * deltaTime / c.AnimController.Limbs.Count(l => !l.IsSevered);
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     c.LastDamageSource = null;
-                    c.DamageLimb(WorldPosition, limb, new List<Affliction>() { AfflictionPrefab.Burn.Instantiate(dmg) }, 0.0f, false, 0.0f);
+                    c.DamageLimb(WorldPosition, limb, AfflictionPrefab.Burn.Instantiate(dmg).ToEnumerable(), 0.0f, false, 0.0f);
                 }
+#if CLIENT
+                //let clients display the client-side damage immediately, otherwise they may not be able to react to the damage fast enough
+                c.CharacterHealth.DisplayedVitality = c.Vitality;
+#endif
                 c.ApplyStatusEffects(ActionType.OnFire, deltaTime);
             }
         }

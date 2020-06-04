@@ -75,6 +75,11 @@ float4 mainPS(VertexShaderOutput input) : COLOR
 	return xTexture.Sample(TextureSampler, input.TexCoords) * input.Color;
 }
 
+float4 solidVertexColorPS(VertexShaderOutput input) : COLOR
+{
+	return input.Color * xTexture.Sample(TextureSampler, input.TexCoords).a;
+}
+
 float4 solidColorPS(VertexShaderOutput input) : COLOR
 {
 	return solidColor * xTexture.Sample(TextureSampler, input.TexCoords).a;
@@ -95,5 +100,14 @@ technique DeformShaderSolidColor
     {
         VertexShader = compile vs_4_0_level_9_1 mainVS();
         PixelShader = compile ps_4_0_level_9_1 solidColorPS();
+    }
+}
+
+technique DeformShaderSolidVertexColor
+{
+    pass Pass1
+    {
+        VertexShader = compile vs_4_0_level_9_1 mainVS();
+        PixelShader = compile ps_4_0_level_9_1 solidVertexColorPS();
     }
 }

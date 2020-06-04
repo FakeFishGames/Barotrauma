@@ -122,7 +122,7 @@ namespace Barotrauma
             };
             chatSendButton.RectTransform.AbsoluteOffset = new Point((int)(InputBox.Rect.Height * 0.15f), 0);
             InputBox.TextBlock.RectTransform.MaxSize 
-                = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f - InputBox.TextBlock.Padding.Z), int.MaxValue);
+                = new Point((int)(InputBox.Rect.Width - chatSendButton.Rect.Width * 1.25f - InputBox.TextBlock.Padding.X - chatSendButton.RectTransform.AbsoluteOffset.X), int.MaxValue);
 
             showNewMessagesButton = new GUIButton(new RectTransform(new Vector2(1f, 0.075f), GUIFrame.RectTransform, Anchor.BottomCenter) { RelativeOffset = new Vector2(0.0f, 0.125f) }, TextManager.Get("chat.shownewmessages"));
             showNewMessagesButton.OnClicked += (GUIButton btn, object userdata) =>
@@ -382,17 +382,6 @@ namespace Barotrauma
                 SetUILayout();
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 prevUIScale = GUI.Scale;
-            }
-
-            //hide chatbox when accessing the inventory of another character to prevent overlaps
-            if (Character.Controlled?.SelectedCharacter?.Inventory != null &&
-                Character.Controlled.SelectedCharacter.CanInventoryBeAccessed)
-            {
-                SetVisibility(false);
-            }
-            else
-            {
-                SetVisibility(true);
             }
 
             if (showNewMessagesButton.Visible && chatBox.ScrollBar.BarScroll == 1f)

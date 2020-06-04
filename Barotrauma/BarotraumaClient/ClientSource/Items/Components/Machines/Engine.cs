@@ -16,6 +16,10 @@ namespace Barotrauma.Items.Components
         private GUIScrollBar forceSlider;
         private GUITickBox autoControlIndicator;
 
+        private int particlesPerSec = 60;
+        private float particleTimer;
+
+
         public float AnimSpeed
         {
             get;

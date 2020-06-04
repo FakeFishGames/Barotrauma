@@ -430,7 +430,7 @@ namespace Barotrauma
         /// For rectangles, the front is either at the top or at the right, depending on which one of the two is greater: width or height.
         /// The rotation is in radians.
         /// </summary>
-        public Vector2 GetLocalFront(float spritesheetRotation = 0)
+        public Vector2 GetLocalFront(float? spritesheetRotation = null)
         {
             Vector2 pos;
             switch (bodyShape)
@@ -445,12 +445,12 @@ namespace Barotrauma
                     pos = new Vector2(0.0f, radius);
                     break;
                 case Shape.Rectangle:
-                    pos = new Vector2(0.0f, Math.Max(height, width) / 2.0f);
+                    pos = height > width ? new Vector2(0, height / 2) : new Vector2(width / 2, 0);
                     break;
                 default:
                     throw new NotImplementedException();
             }
-            return spritesheetRotation == 0 ? pos : Vector2.Transform(pos, Matrix.CreateRotationZ(-spritesheetRotation));
+            return spritesheetRotation.HasValue ? Vector2.Transform(pos, Matrix.CreateRotationZ(-spritesheetRotation.Value)) : pos;
         }
 
         public float GetMaxExtent()

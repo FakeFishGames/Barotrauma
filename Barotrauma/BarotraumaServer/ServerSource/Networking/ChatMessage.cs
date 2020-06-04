@@ -30,7 +30,8 @@ namespace Barotrauma.Networking
 
                 if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                 {
-                    DebugConsole.ThrowError("Invalid order message from client \"" + c.Name + "\" - order index out of bounds.");
+                    DebugConsole.ThrowError($"Invalid order message from client \"{c.Name}\" - order index out of bounds ({orderIndex}, {orderOptionIndex}).");
+                    if (NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) { c.LastSentChatMsgID = ID; }
                     return;
                 }
 
@@ -44,7 +45,7 @@ namespace Barotrauma.Networking
                 txt = msg.ReadString() ?? "";
             }
 
-            if (!NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) return;
+            if (!NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) { return; }
 
             c.LastSentChatMsgID = ID;
 

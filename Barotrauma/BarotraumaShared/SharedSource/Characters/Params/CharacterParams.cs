@@ -25,10 +25,10 @@ namespace Barotrauma
         [Serialize("", true, description: "If defined, different species of the same group are considered like the characters of the same species by the AI."), Editable]
         public string Group { get; private set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, true), Editable(ReadOnly = true)]
         public bool Humanoid { get; private set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, true), Editable(ReadOnly = true)]
         public bool HasInfo { get; private set; }
 
         [Serialize(false, true), Editable]
@@ -43,13 +43,13 @@ namespace Barotrauma
         [Serialize(false, true, description: "Can the creature live without water or does it die on dry land?"), Editable]
         public bool NeedsWater { get; set; }
 
-        [Serialize(false, true), Editable]
+        [Serialize(false, false), Editable]
         public bool CanSpeak { get; set; }
 
-        [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 1000f)]
+        [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 100000f)]
         public float Noise { get; set; }
 
-        [Serialize(100f, true, description: "How visible the character is?"), Editable(minValue: 0f, maxValue: 1000f)]
+        [Serialize(100f, true, description: "How visible the character is?"), Editable(minValue: 0f, maxValue: 100000f)]
         public float Visibility { get; set; }
 
         [Serialize("blood", true), Editable]
@@ -69,6 +69,9 @@ namespace Barotrauma
 
         [Serialize(false, true), Editable]
         public bool HideInSonar { get; set; }
+
+        [Serialize(0f, true), Editable]
+        public float SonarDisruption { get; set; }
 
         public readonly string File;
 
@@ -474,8 +477,8 @@ namespace Barotrauma
             [Serialize(true, true, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission."), Editable()]
             public bool EnforceAggressiveBehaviorForMissions { get; private set; }
 
-            [Serialize(false, true, description: "Should the character target or ignore walls when it's inside the submarine. Doesn't have any effect if no target priority for walls is defined."), Editable()]
-            public bool TargetInnerWalls { get; private set; }
+            [Serialize(true, true, description: "Should the character target or ignore walls when it's outside the submarine. Doesn't have any effect if no target priority for walls is defined."), Editable()]
+            public bool TargetOuterWalls { get; private set; }
 
             [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable()]
             public bool RandomAttack { get; private set; }

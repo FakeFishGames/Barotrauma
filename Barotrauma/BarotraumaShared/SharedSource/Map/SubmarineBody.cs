@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
@@ -302,7 +303,7 @@ namespace Barotrauma
             //-------------------------
 
             //if outside left or right edge of the level
-            if (Position.X < 0 || Position.X > Level.Loaded.Size.X)
+            if (Level.Loaded != null && (Position.X < 0 || Position.X > Level.Loaded.Size.X))
             {
                 Rectangle worldBorders = Borders;
                 worldBorders.Location += MathUtils.ToPoint(Position);
@@ -386,12 +387,13 @@ namespace Barotrauma
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine) continue;
+                if (c.AnimController.CurrentHull != null && c.AnimController.CanEnterSubmarine) { continue; }
 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     //if the character isn't inside the bounding box, continue
-                    if (!Submarine.RectContains(worldBorders, limb.WorldPosition)) continue;
+                    if (!Submarine.RectContains(worldBorders, limb.WorldPosition)) { continue; }
 
                     //cast a line from the position of the character to the same direction as the translation of the sub
                     //and see where it intersects with the bounding box
@@ -450,16 +452,18 @@ namespace Barotrauma
         private void UpdateDepthDamage(float deltaTime)
         {
             if (Position.Y > DamageDepth) { return; }
-
+#if CLIENT
+            if (GameMain.GameSession.GameMode is SubTestMode) { return; }
+#endif
             float depth = DamageDepth - Position.Y;
 
             depthDamageTimer -= deltaTime;
 
-            if (depthDamageTimer > 0.0f) return;
+            if (depthDamageTimer > 0.0f) { return; }
 
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != submarine) continue;
+                if (wall.Submarine != submarine) { continue; }
 
                 if (wall.Health < depth * 0.01f)
                 {
@@ -499,9 +503,13 @@ namespace Barotrauma
                 }
                 return collision;
             }
-            if (f2.Body.UserData is Character character)
+            else if (f2.Body.UserData is Character character)
             {
                 return CheckCharacterCollision(contact, character);
+            }
+            else if (f2.UserData is Items.Components.DockingPort)
+            {
+                return false;
             }
            
             lock (impactQueue)
@@ -634,7 +642,7 @@ namespace Barotrauma
                 float damageAmount = contactDot * Body.Mass / limb.character.Mass;
                 limb.character.LastDamageSource = submarine;
                 limb.character.DamageLimb(ConvertUnits.ToDisplayUnits(collision.ImpactPos), limb, 
-                    new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(damageAmount) }, 0.0f, true, 0.0f);
+                    AfflictionPrefab.ImpactDamage.Instantiate(damageAmount).ToEnumerable(), 0.0f, true, 0.0f);
 
                 if (limb.character.IsDead)
                 {
@@ -693,8 +701,8 @@ namespace Barotrauma
 
             //find all contacts between this sub and level walls
             List<Contact> levelContacts = new List<Contact>();
-            ContactEdge contactEdge = Body.FarseerBody.ContactList;
-            while (contactEdge.Next != null)
+            ContactEdge contactEdge = Body?.FarseerBody?.ContactList;
+            while (contactEdge?.Next != null)
             {
                 if (contactEdge.Contact.Enabled &&
                     contactEdge.Other.UserData is VoronoiCell &&
@@ -706,7 +714,7 @@ namespace Barotrauma
                 contactEdge = contactEdge.Next;
             }
 
-            if (levelContacts.Count == 0) return;
+            if (levelContacts.Count == 0) { return; }
             
             //if this sub is in contact with the level, apply artifical impacts
             //to both subs to prevent the other sub from bouncing on top of this one 
@@ -795,6 +803,7 @@ namespace Barotrauma
                 
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse, 10.0f);
                 }
                 c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);

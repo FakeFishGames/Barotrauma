@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
@@ -53,7 +53,7 @@ namespace Barotrauma
         
         //these types of files are included in the MD5 hash calculation,
         //meaning that the players must have the exact same files to play together
-        private static HashSet<ContentType> multiplayerIncompatibleContent = new HashSet<ContentType>
+        public static HashSet<ContentType> MultiplayerIncompatibleContent { get; private set; } = new HashSet<ContentType>
         {
             ContentType.Jobs,
             ContentType.Item,
@@ -161,7 +161,7 @@ namespace Barotrauma
 
         public bool HasMultiplayerIncompatibleContent
         {
-            get { return Files.Any(f => multiplayerIncompatibleContent.Contains(f.Type)); }
+            get { return Files.Any(f => MultiplayerIncompatibleContent.Contains(f.Type)); }
         }
 
         private ContentPackage()
@@ -414,7 +414,42 @@ namespace Barotrauma
                 doc.Root.Add(new XElement(file.Type.ToString(), new XAttribute("file", file.Path.CleanUpPathCrossPlatform())));
             }
 
-            doc.Save(filePath);
+            doc.SaveSafe(filePath);
+
+            var packagesToDeselect = List.Where(p => p.Path.CleanUpPath() == Path.CleanUpPath()).ToList();
+            bool reselectPackage = false;
+
+            if (packagesToDeselect.Any())
+            {
+                foreach (var p in packagesToDeselect)
+                {
+                    if (GameMain.Config.SelectedContentPackages.Contains(p))
+                    {
+                        reselectPackage = true;
+                        if (p.CorePackage)
+                        {
+                            GameMain.Config.SelectCorePackage(List.Find(cpp => cpp.CorePackage && !packagesToDeselect.Contains(cpp)));
+                        }
+                        else
+                        {
+                            GameMain.Config.DeselectContentPackage(p);
+                        }
+                    }
+                    List.Remove(p);
+                }
+                List.Add(this);
+                if (reselectPackage)
+                {
+                    if (CorePackage)
+                    {
+                        GameMain.Config.SelectCorePackage(this);
+                    }
+                    else
+                    {
+                        GameMain.Config.SelectContentPackage(this);
+                    }
+                }
+            }
         }
 
         public void CalculateHash(bool logging = false)
@@ -428,7 +463,7 @@ namespace Barotrauma
 
             foreach (ContentFile file in Files)
             {
-                if (!multiplayerIncompatibleContent.Contains(file.Type)) { continue; }
+                if (!MultiplayerIncompatibleContent.Contains(file.Type)) { continue; }
 
                 try
                 {
@@ -539,7 +574,7 @@ namespace Barotrauma
 
             while (true)
             {
-                string temp = System.IO.Path.GetDirectoryName(path);
+                string temp = Barotrauma.IO.Path.GetDirectoryName(path);
                 if (string.IsNullOrEmpty(temp)) { break; }
                 path = temp;
             }
@@ -580,7 +615,7 @@ namespace Barotrauma
                 }
             }
 
-            string[] files = Directory.GetFiles(folder, "*.xml");
+            IEnumerable<string> files = Directory.GetFiles(folder, "*.xml");
 
             List.Clear();
 
@@ -589,12 +624,12 @@ namespace Barotrauma
                 List.Add(new ContentPackage(filePath));
             }
 
-            string[] modDirectories = Directory.GetDirectories("Mods");
+            IEnumerable<string> modDirectories = Directory.GetDirectories("Mods");
             foreach (string modDirectory in modDirectories)
             {
-                if (System.IO.Path.GetFileName(modDirectory.TrimEnd(System.IO.Path.DirectorySeparatorChar)) == "ExampleMod") { continue; }
-                string modFilePath = System.IO.Path.Combine(modDirectory, Steam.SteamManager.MetadataFileName);
-                string copyingFilePath = System.IO.Path.Combine(modDirectory, Steam.SteamManager.CopyIndicatorFileName);
+                if (Barotrauma.IO.Path.GetFileName(modDirectory.TrimEnd(Barotrauma.IO.Path.DirectorySeparatorChar)) == "ExampleMod") { continue; }
+                string modFilePath = Barotrauma.IO.Path.Combine(modDirectory, Steam.SteamManager.MetadataFileName);
+                string copyingFilePath = Barotrauma.IO.Path.Combine(modDirectory, Steam.SteamManager.CopyIndicatorFileName);
                 if (File.Exists(copyingFilePath))
                 {
                     //this mod didn't clean up its copying file; assume it's corrupted and delete it
@@ -615,21 +650,29 @@ namespace Barotrauma
 
         public static void SortContentPackages()
         {
-            List = List
-                .OrderByDescending(p => p.CorePackage)
-                .ThenBy(p => List.IndexOf(p))
-                .ToList();
-
             if (GameMain.Config != null)
             {
+                List = List
+                    .OrderByDescending(p => p.CorePackage)
+                    .ThenBy(p => GameMain.Config.SelectedContentPackages.IndexOf(p))
+                    .ThenBy(p => List.IndexOf(p))
+                    .ToList();
+
                 var sortedSelected = GameMain.Config.SelectedContentPackages
                     .OrderByDescending(p => p.CorePackage)
-                    .ThenBy(p => List.IndexOf(p))
+                    .ThenBy(p => GameMain.Config.SelectedContentPackages.IndexOf(p))
                     .ToList();
                 GameMain.Config.SelectedContentPackages.Clear(); GameMain.Config.SelectedContentPackages.AddRange(sortedSelected);
 
-                var reportList = List.Where(p => GameMain.Config.SelectedContentPackages.Contains(p));
+                var reportList = GameMain.Config.SelectedContentPackages;
                 DebugConsole.NewMessage($"Content package load order: { string.Join("  |  ", reportList.Select(cp => cp.Name)) }");
+            }
+            else
+            {
+                List = List
+                    .OrderByDescending(p => p.CorePackage)
+                    .ThenBy(p => List.IndexOf(p))
+                    .ToList();
             }
         }
 

@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private List<ushort> disconnectedWireIds;
 
-        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.")]
+        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
         public bool Locked
         {
             get;

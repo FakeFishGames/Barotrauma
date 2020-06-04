@@ -80,6 +80,13 @@ namespace Barotrauma.Items.Components
             set { itemRotation = MathHelper.ToRadians(value); }
         }
 
+        [Serialize("", false, description: "Specify an item for the container to spawn with.")]
+        public string SpawnWithId
+        {
+            get;
+            set;
+        }
+
         public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
         {
             isRestrictionsDefined = containableRestrictions.Any();
@@ -143,7 +150,7 @@ namespace Barotrauma.Items.Components
             }
 
             //no need to Update() if this item has no statuseffects and no physics body
-            IsActive = itemsWithStatusEffects.Count > 0 || containedItem.body != null;
+            IsActive = itemsWithStatusEffects.Count > 0 || Inventory.Items.Any(it => it?.body != null);
         }
 
         public void OnItemRemoved(Item containedItem)
@@ -151,7 +158,7 @@ namespace Barotrauma.Items.Components
             itemsWithStatusEffects.RemoveAll(i => i.First == containedItem);
 
             //deactivate if the inventory is empty
-            IsActive = itemsWithStatusEffects.Count > 0 || containedItem.body != null;
+            IsActive = itemsWithStatusEffects.Count > 0 || Inventory.Items.Any(it => it?.body != null);
         }
 
         public bool CanBeContained(Item item)
@@ -196,6 +203,22 @@ namespace Barotrauma.Items.Components
                     var targets = new List<ISerializableEntity>();
                     effect.GetNearbyTargets(item.WorldPosition, targets);
                     effect.Apply(ActionType.OnActive, deltaTime, item, targets);
+                }
+            }
+        }
+
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            if (SpawnWithId.Length > 0)
+            {
+                ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);                
+                if (prefab != null)
+                {                    
+                    if (Inventory != null && Inventory.Items.Any(it => it == null))
+                    {
+                        Entity.Spawner?.AddToSpawnQueue(prefab, Inventory);
+                    }
                 }
             }
         }
@@ -295,7 +318,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Item contained in Inventory.Items)
             {
-                if (contained == null) continue;
+                if (contained == null) { continue; }
                 if (contained.body != null)
                 {
                     try
@@ -311,6 +334,7 @@ namespace Barotrauma.Items.Components
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                             "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
                     }
+                    contained.body.Submarine = item.Submarine;
                 }
 
                 contained.Rect =

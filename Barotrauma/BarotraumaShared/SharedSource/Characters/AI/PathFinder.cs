@@ -46,7 +46,7 @@ namespace Barotrauma
             var nodes = new Dictionary<int, PathNode>();
             foreach (WayPoint wayPoint in wayPoints)
             {
-                if (wayPoint == null) continue;
+                if (wayPoint == null) { continue; }
                 if (nodes.ContainsKey(wayPoint.ID))
                 {
 #if DEBUG
@@ -63,7 +63,7 @@ namespace Barotrauma
                 {
                     PathNode connectedNode = null;
                     nodes.TryGetValue(linked.ID, out connectedNode);
-                    if (connectedNode == null) continue;
+                    if (connectedNode == null) { continue; }
 
                     node.Value.connections.Add(connectedNode);                    
                 }
@@ -107,17 +107,17 @@ namespace Barotrauma
 
         void WaypointLinksChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            if (Submarine.Unloading) return;
+            if (Submarine.Unloading) { return; }
 
             var waypoints = sender as IEnumerable<MapEntity>;
 
             foreach (MapEntity me in waypoints)
             {
                 WayPoint wp = me as WayPoint;
-                if (me == null) continue;
+                if (me == null) { continue; }
 
                 var node = nodes.Find(n => n.Waypoint == wp);
-                if (node == null) return;
+                if (node == null) { return; }
 
                 if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
                 {
@@ -136,10 +136,10 @@ namespace Barotrauma
                     for (int i = 0; i < wp.linkedTo.Count; i++)
                     {
                         WayPoint connected = wp.linkedTo[i] as WayPoint;
-                        if (connected == null) continue;
+                        if (connected == null) { continue; }
 
                         //already connected, continue
-                        if (node.connections.Any(n => n.Waypoint == connected)) continue;
+                        if (node.connections.Any(n => n.Waypoint == connected)) { continue; }
 
                         var matchingNode = nodes.Find(n => n.Waypoint == connected);
                         if (matchingNode == null)
@@ -201,8 +201,8 @@ namespace Barotrauma
                         if (body != null)
                         {
                             //if (body.UserData is Submarine) continue;
-                            if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
-                            if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
+                            if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) { continue; }
+                            if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
                         }
                     }
 
@@ -236,9 +236,9 @@ namespace Barotrauma
                 if (InsideSubmarine)
                 {
                     //much higher cost to waypoints that are outside
-                    if (node.Waypoint.CurrentHull == null) dist *= 10.0f;
+                    if (node.Waypoint.CurrentHull == null) { dist *= 10.0f; }
                     //avoid stopping at a doorway
-                    if (node.Waypoint.ConnectedDoor != null) dist *= 10.0f;
+                    if (node.Waypoint.ConnectedDoor != null) { dist *= 10.0f; }
                 }
                 if (dist < closestDist || endNode == null)
                 {
@@ -251,8 +251,8 @@ namespace Barotrauma
                         if (body != null)
                         {
                             //if (body.UserData is Submarine) continue;
-                            if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) continue;
-                            if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) continue;
+                            if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) { continue; }
+                            if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
                         }
                     }
 

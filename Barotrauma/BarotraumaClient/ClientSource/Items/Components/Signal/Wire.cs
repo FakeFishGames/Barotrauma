@@ -285,6 +285,8 @@ namespace Barotrauma.Items.Components
 
         public static void UpdateEditing(List<Wire> wires)
         {
+            var doubleClicked = PlayerInput.DoubleClicked();
+            
             Wire equippedWire =
                 Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
                 Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
@@ -298,7 +300,7 @@ namespace Barotrauma.Items.Components
             }
 
             //dragging a node of some wire
-            if (draggingWire != null)
+            if (draggingWire != null && !doubleClicked)
             {
                 if (Character.Controlled != null)
                 {
@@ -329,15 +331,18 @@ namespace Barotrauma.Items.Components
 
                     if (selectedNodeIndex.HasValue)
                     {
-                        nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
-                        nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
+                        if (!PlayerInput.IsShiftDown())
+                        {
+                            nodeWorldPos.X = MathUtils.Round(nodeWorldPos.X, Submarine.GridSize.X / 2.0f);
+                            nodeWorldPos.Y = MathUtils.Round(nodeWorldPos.Y, Submarine.GridSize.Y / 2.0f);
+                        }
 
                         draggingWire.nodes[(int)selectedNodeIndex] = nodeWorldPos;
                         draggingWire.UpdateSections();
                     }
                     else
                     {
-                        if (Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X)
+                        if (Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X || PlayerInput.IsShiftDown())
                         {
                             selectedNodeIndex = highlightedNodeIndex;
                         }
@@ -349,6 +354,8 @@ namespace Barotrauma.Items.Components
 
                 return;
             }
+
+            bool updateHighlight = true;
 
             //a wire has been selected -> check if we should start dragging one of the nodes
             float nodeSelectDist = 10, sectionSelectDist = 5;
@@ -405,6 +412,37 @@ namespace Barotrauma.Items.Components
                             {
                                 selectedWire.nodes.RemoveAt(closestIndex);
                                 selectedWire.UpdateSections();
+                            } 
+                            // if only one end of the wire is disconnect pick it back up with double click
+                            else if (doubleClicked && equippedWire == null && Character.Controlled != null && selectedWire.connections.Any(conn => conn != null))
+                            {
+                                if (selectedWire.connections[0] == null && closestIndex == 0 || selectedWire.connections[1] == null && closestIndex == selectedWire.nodes.Count - 1)
+                                {
+                                    selectedWire.IsActive = true;
+                                    selectedWire.nodes.RemoveAt(closestIndex);
+                                    selectedWire.UpdateSections();
+                                    
+                                    // flip the wire
+                                    if (closestIndex == 0)
+                                    {
+                                        selectedWire.nodes.Reverse();
+                                        selectedWire.connections[0] = selectedWire.connections[1];
+                                        selectedWire.connections[1] = null;
+                                    }
+                                
+                                    selectedWire.shouldClearConnections = false;
+                                    Character.Controlled.Inventory.TryPutItem(selectedWire.item, Character.Controlled, new List<InvSlotType> { InvSlotType.LeftHand, InvSlotType.RightHand });
+                                    foreach (var entity in MapEntity.mapEntityList)
+                                    {
+                                        if (entity is Item item)
+                                        {
+                                            item.GetComponent<ConnectionPanel>()?.DisconnectedWires.Remove(selectedWire);
+                                        }
+                                    }
+                                    MapEntity.SelectedList.Clear();
+                                    selectedWire.shouldClearConnections = true;
+                                    updateHighlight = false;
+                                }
                             }
                         }
                     }
@@ -446,7 +484,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (highlighted != null)
+            if (highlighted != null && updateHighlight)
             {
                 highlighted.item.IsHighlighted = true;
                 if (PlayerInput.PrimaryMouseButtonClicked())

@@ -275,14 +275,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Write(IWriteMessage msg)
-        {
-            lock (buffers)
-            {
-                base.Write(msg);
-            }
-        }
-
         public override void Dispose()
         {
             Instance = null;

@@ -80,21 +80,28 @@ namespace Barotrauma
             this.repeat = repeat;
             waitUntilPathUnreachable = 3.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
-            CloseEnough = closeEnough;
             if (Target is Item i)
             {
                 CloseEnough = Math.Max(CloseEnough, i.InteractDistance + Math.Max(i.Rect.Width, i.Rect.Height) / 2);
+            }
+            else if (Target is Character)
+            {
+                CloseEnough = Math.Max(closeEnough, AIObjectiveGetItem.DefaultReach);
+            }
+            else
+            {
+                CloseEnough = closeEnough;
             }
         }
 
         private void SpeakCannotReach()
         {
 #if DEBUG
-            DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target.ToString()}", Color.Yellow);
+            DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
 #endif
             if (objectiveManager.CurrentOrder != null && DialogueIdentifier != null)
             {
-                string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, true);
+                string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
                 if (msg != null)
                 {
                     character.Speak(msg, identifier: DialogueIdentifier, minDurationBetweenSimilar: 20.0f);
@@ -213,10 +220,19 @@ namespace Barotrauma
                         return;
                     }
                 }
-                if (repeat && IsCloseEnough)
+                if (repeat)
                 {
-                    OnCompleted();
-                    return;
+                    if (IsCloseEnough)
+                    {
+                        if (requiredCondition == null || requiredCondition())
+                        {
+                            if (character.CanSeeTarget(Target))
+                            {
+                                OnCompleted();
+                                return;
+                            }
+                        }
+                    }
                 }
                 if (SteeringManager == PathSteering)
                 {
@@ -244,7 +260,7 @@ namespace Barotrauma
             }
         }
 
-        private Hull GetTargetHull()
+        public Hull GetTargetHull()
         {
             if (Target is Hull h)
             {
@@ -284,13 +300,7 @@ namespace Barotrauma
                     //otherwise characters can let go of the ladders too soon once they're close enough to the target
                     if (PathSteering.CurrentPath.NextNode != null) { return false; }
                 }
-
-                bool closeEnough = Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
-                if (closeEnough)
-                {
-                    closeEnough = !(Target is Character) || Target is Character c && c.CurrentHull == character.CurrentHull;
-                }
-                return closeEnough;
+                return Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
             }
         }
 
@@ -326,7 +336,9 @@ namespace Barotrauma
                         }
                         else if (Target is Character targetCharacter)
                         {
-                            if (character.CanInteractWith(targetCharacter, CloseEnough)) { IsCompleted = true; }
+                            character.SelectCharacter(targetCharacter);
+                            if (character.CanInteractWith(targetCharacter, skipDistanceCheck: true)) { IsCompleted = true; }
+                            character.DeselectCharacter();
                         }
                         else
                         {
@@ -336,6 +348,16 @@ namespace Barotrauma
                 }
             }
             return IsCompleted;
+        }
+
+        protected override void OnAbandon()
+        {
+            StopMovement();
+            if (SteeringManager == PathSteering)
+            {
+                PathSteering.ResetPath();
+            }
+            base.OnAbandon();
         }
 
         private void StopMovement()

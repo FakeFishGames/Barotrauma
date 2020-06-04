@@ -17,17 +17,6 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    public enum ActionType
-    {
-        Always, OnPicked, OnUse, OnSecondaryUse,
-        OnWearing, OnContaining, OnContained, OnNotContained,
-        OnActive, OnFailure, OnBroken, 
-        OnFire, InWater, NotInWater,
-        OnImpact,
-        OnEating,
-        OnDeath = OnBroken,
-        OnDamaged
-    }
 
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
@@ -171,7 +160,7 @@ namespace Barotrauma
             set { description = value; }
         }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, true, alwaysUseInstanceValues: true)]
         public bool NonInteractable
         {
             get;
@@ -1087,7 +1076,7 @@ namespace Barotrauma
 
         public Item GetRootContainer()
         {
-            if (Container == null) return null;
+            if (Container == null) { return null; }
 
             Item rootContainer = Container;
             while (rootContainer.Container != null)
@@ -1098,7 +1087,16 @@ namespace Barotrauma
             return rootContainer;
         }
 
-        public bool IsOwnedBy(Character character) => FindParentInventory(i => i.Owner == character) != null;
+        public bool IsOwnedBy(Entity entity) => FindParentInventory(i => i.Owner == entity) != null;
+
+        public Entity GetRootInventoryOwner()
+        {
+            if (ParentInventory == null) { return this; }
+            if (ParentInventory.Owner is Character) { return ParentInventory.Owner; }
+            var rootContainer = GetRootContainer();
+            if (rootContainer?.ParentInventory?.Owner is Character) { return rootContainer.ParentInventory.Owner; }
+            return rootContainer ?? this;
+        }
 
         public Inventory FindParentInventory(Func<Inventory, bool> predicate)
         {
@@ -1457,6 +1455,14 @@ namespace Barotrauma
                 body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
             }
 
+            if (Submarine != prevSub && ContainedItems != null)
+            {
+                foreach (Item containedItem in ContainedItems)
+                {
+                    containedItem.Submarine = Submarine;
+                }
+            }
+
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(body.SimPosition);
             rect.X = (int)(displayPos.X - rect.Width / 2.0f);
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
@@ -1705,7 +1711,22 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        public Controller FindController()
+        {
+            //try finding the controller with the simpler non-recursive method first
+            var controllers = GetConnectedComponents<Controller>();
+            if (controllers.None()) { controllers = GetConnectedComponents<Controller>(recursive: true); }
+            return controllers.Count < 2 ? controllers.FirstOrDefault() :
+                (controllers.FirstOrDefault(c => c.GetFocusTarget() == this) ?? controllers.FirstOrDefault());
+        }
+
+        public bool TryFindController(out Controller controller)
+        {
+            controller = FindController();
+            return controller != null;
+        }
+
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
             if (connections == null) { return; }
@@ -1779,7 +1800,8 @@ namespace Barotrauma
 #if CLIENT
             bool hasRequiredSkills = true;
             Skill requiredSkill = null;
-#endif            
+#endif
+            if (NonInteractable) { return false; }
             foreach (ItemComponent ic in components)
             {
                 bool pickHit = false, selectHit = false;
@@ -2089,13 +2111,19 @@ namespace Barotrauma
 
         public void Equip(Character character)
         {
-            foreach (ItemComponent ic in components) ic.Equip(character);
+            if (Removed)
+            {
+                DebugConsole.ThrowError($"Tried to equip a removed item ({Name}).\n{Environment.StackTrace}");
+                return;
+            }
+
+            foreach (ItemComponent ic in components) { ic.Equip(character); }
         }
 
         public void Unequip(Character character)
         {
             character.DeselectItem(this);
-            foreach (ItemComponent ic in components) ic.Unequip(character);
+            foreach (ItemComponent ic in components) { ic.Unequip(character); }
         }
 
         public List<Pair<object, SerializableProperty>> GetProperties<T>()

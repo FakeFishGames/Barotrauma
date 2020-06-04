@@ -4,9 +4,14 @@ using Barotrauma.Particles;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using System.Xml;
 using System.Text;
 using Barotrauma.Extensions;
+#if DEBUG
+using System.IO;
+using System.Xml;
+#else
+using Barotrauma.IO;
+#endif
 
 namespace Barotrauma
 {
@@ -242,7 +247,7 @@ namespace Barotrauma
                     }
                 }
 
-                XmlWriterSettings settings = new XmlWriterSettings
+                System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
                 {
                     Indent = true,
                     OmitXmlDeclaration = true,
@@ -262,7 +267,7 @@ namespace Barotrauma
 #if WINDOWS
             if (prefab == null) { return; }
 
-            XmlWriterSettings settings = new XmlWriterSettings
+            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 OmitXmlDeclaration = true,
@@ -295,7 +300,7 @@ namespace Barotrauma
             }
 
             StringBuilder sb = new StringBuilder();
-            using (var writer = XmlWriter.Create(sb, settings))
+            using (var writer = System.Xml.XmlWriter.Create(sb, settings))
             {
                 originalElement.WriteTo(writer);
                 writer.Flush();

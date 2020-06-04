@@ -1,8 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.IO;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Barotrauma.RuinGeneration
@@ -174,7 +174,7 @@ namespace Barotrauma.RuinGeneration
 
         public static void SaveAll()
         {
-            XmlWriterSettings settings = new XmlWriterSettings
+            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 NewLineOnAttributes = true

@@ -177,7 +177,8 @@ namespace Barotrauma
         {
             tabButtons.Clear();
 
-            infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker");
+            infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, infoFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
             switch (selectedTab)
             {
@@ -488,6 +489,12 @@ namespace Barotrauma
                 Color = (GameMain.NetworkMember != null && GameMain.Client.Character == character) ? ownCharacterBGColor : Color.Transparent
             };
 
+            frame.OnSecondaryClicked += (component, data) =>
+            {
+                GameMain.GameSession?.CrewManager?.CreateModerationContextMenu(PlayerInput.MousePosition.ToPoint(), client);
+                return true;
+            };
+
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), frame.RectTransform, Anchor.Center), isHorizontal: true)
             {
                 AbsoluteSpacing = 2
@@ -593,6 +600,8 @@ namespace Barotrauma
         {
             GUITextBlock characterNameBlock;
             Sprite permissionIcon = GetPermissionIcon(client);
+            JobPrefab prefab = client.Character?.Info?.Job?.Prefab;
+            Color nameColor = prefab != null ? prefab.UIColor : Color.White;
 
             if (permissionIcon != null)
             {
@@ -600,7 +609,7 @@ namespace Barotrauma
                 float characterNameWidthAdjustment = (iconSize.X + paddedFrame.AbsoluteSpacing) / characterColumnWidth;
 
                 characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(client.Name, GUI.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: client.Character != null ? client.Character.Info.Job.Prefab.UIColor : Color.White);
+                    ToolBox.LimitString(client.Name, GUI.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
 
                 float iconWidth = iconSize.X / (float)characterColumnWidth;
                 int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUI.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
@@ -609,7 +618,7 @@ namespace Barotrauma
             else
             {
                 characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(client.Name, GUI.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: client.Character != null ? client.Character.Info.Job.Prefab.UIColor : Color.White);
+                    ToolBox.LimitString(client.Name, GUI.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: nameColor);
             }
 
             if (client.Character != null && client.Character.IsDead)

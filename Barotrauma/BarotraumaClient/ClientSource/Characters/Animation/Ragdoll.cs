@@ -389,7 +389,7 @@ namespace Barotrauma
         {
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered || limb.ActiveSprite == null) continue;
+                if (limb == null || limb.IsSevered || limb.ActiveSprite == null) { continue; }
 
                 Vector2 spriteOrigin = limb.ActiveSprite.Origin;
                 spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
@@ -404,8 +404,8 @@ namespace Barotrauma
                 float gibParticleAmount = MathHelper.Clamp(limb.Mass / character.AnimController.Mass, 0.1f, 1.0f);
                 foreach (ParticleEmitter emitter in character.GibEmitters)
                 {
-                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) continue;
-                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) continue;
+                    if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
+                    if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
 
                     emitter.Emit(1.0f, limb.WorldPosition, character.CurrentHull, amountMultiplier: gibParticleAmount);
                 }
@@ -418,7 +418,8 @@ namespace Barotrauma
 
             if (playSound)
             {
-                SoundPlayer.PlayDamageSound("Gore", 1.0f, limbJoint.LimbA.body);
+                var damageSound = character.GetSound(s => s.Type == CharacterSound.SoundType.Damage);
+                SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: damageSound != null ? damageSound.Range : 800);
             }
         }
 
@@ -446,9 +447,10 @@ namespace Barotrauma
             float depthOffset = GetDepthOffset();
             for (int i = 0; i < limbs.Length; i++)
             {
-                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth += depthOffset; }
-                inversedLimbDrawOrder[i].Draw(spriteBatch, cam, color);
-                if (depthOffset != 0.0f) { inversedLimbDrawOrder[i].ActiveSprite.Depth -= depthOffset; }
+                var limb = inversedLimbDrawOrder[i];
+                if (depthOffset != 0.0f) { limb.ActiveSprite.Depth += depthOffset; }
+                limb.Draw(spriteBatch, cam, color);
+                if (depthOffset != 0.0f) { limb.ActiveSprite.Depth -= depthOffset; }
             }
             LimbJoints.ForEach(j => j.Draw(spriteBatch));
         }
@@ -489,8 +491,8 @@ namespace Barotrauma
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
-            if (!GameMain.DebugDraw || !character.Enabled) return;
-            if (simplePhysicsEnabled) return;
+            if (!GameMain.DebugDraw || !character.Enabled) { return; }
+            if (simplePhysicsEnabled) { return; }
 
             foreach (Limb limb in Limbs)
             {
@@ -508,7 +510,7 @@ namespace Barotrauma
             Collider.DebugDraw(spriteBatch, frozen ? GUI.Style.Red : (inWater ? Color.SkyBlue : Color.Gray));
             GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.FormatSingleDecimal(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
 
-            foreach (RevoluteJoint joint in LimbJoints)
+            foreach (var joint in LimbJoints)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(joint.WorldAnchorA);
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 5, 5), Color.White, true);
@@ -522,7 +524,10 @@ namespace Barotrauma
                 if (limb.body.TargetPosition != null)
                 {
                     Vector2 pos = ConvertUnits.ToDisplayUnits((Vector2)limb.body.TargetPosition);
-                    if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
+                    if (currentHull?.Submarine != null)
+                    {
+                        pos += currentHull.Submarine.DrawPosition;
+                    }
                     pos.Y = -pos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X - 10, (int)pos.Y - 10, 20, 20), Color.Cyan, false, 0.01f);
@@ -541,13 +546,19 @@ namespace Barotrauma
             if (character.MemState.Count > 1)
             {
                 Vector2 prevPos = ConvertUnits.ToDisplayUnits(character.MemState[0].Position);
-                if (currentHull?.Submarine != null) prevPos += currentHull.Submarine.DrawPosition;
+                if (currentHull?.Submarine != null)
+                {
+                    prevPos += currentHull.Submarine.DrawPosition;
+                }
                 prevPos.Y = -prevPos.Y;
 
                 for (int i = 1; i < character.MemState.Count; i++)
                 {
                     Vector2 currPos = ConvertUnits.ToDisplayUnits(character.MemState[i].Position);
-                    if (currentHull?.Submarine != null) currPos += currentHull.Submarine.DrawPosition;
+                    if (currentHull?.Submarine != null)
+                    {
+                        currPos += currentHull.Submarine.DrawPosition;
+                    }
                     currPos.Y = -currPos.Y;
 
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)currPos.X - 3, (int)currPos.Y - 3, 6, 6), Color.Cyan * 0.6f, true, 0.01f);

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
@@ -15,7 +15,7 @@ namespace Barotrauma
         {
             XDocument doc = new XDocument(CreateFileList());
 
-            doc.Save(filePath);
+            doc.SaveSafe(filePath);
         }
 
         public static XElement CreateFileList()
@@ -23,7 +23,7 @@ namespace Barotrauma
             XElement root = new XElement("filelist");
             string currentDir = Directory.GetCurrentDirectory();
 
-            string[] files = Directory.GetFiles(currentDir, "*", SearchOption.AllDirectories);
+            IEnumerable<string> files = Directory.GetFiles(currentDir, "*", System.IO.SearchOption.AllDirectories);
             
             foreach (string file in files)
             {
@@ -122,7 +122,7 @@ namespace Barotrauma
         /// <param name="updateFileFolder"></param>
         public static void InstallUpdatedFiles(string updateFileFolder)
         {
-            string[] files = Directory.GetFiles(updateFileFolder, "*", SearchOption.AllDirectories);
+            IEnumerable<string> files = Directory.GetFiles(updateFileFolder, "*", System.IO.SearchOption.AllDirectories);
 
             string currentDir = Directory.GetCurrentDirectory();
 
@@ -166,7 +166,7 @@ namespace Barotrauma
         {
             string currentDir = Directory.GetCurrentDirectory();
 
-            string[] files = Directory.GetFiles(currentDir, "*", SearchOption.AllDirectories);
+            IEnumerable<string> files = Directory.GetFiles(currentDir, "*", System.IO.SearchOption.AllDirectories);
 
             foreach (string file in files)
             {
@@ -199,7 +199,7 @@ namespace Barotrauma
         {
             string currentDir = Directory.GetCurrentDirectory();
 
-            string[] files = Directory.GetFiles(currentDir, "*", SearchOption.AllDirectories);
+            IEnumerable<string> files = Directory.GetFiles(currentDir, "*", System.IO.SearchOption.AllDirectories);
 
             foreach (string file in files)
             {

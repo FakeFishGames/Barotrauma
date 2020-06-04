@@ -1,4 +1,153 @@
 ---------------------------------------------------------------------------------------------------------
+v0.9.10.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Added 2 new moloch variants: Black Moloch and Moloch Pupa.
+- Reworked Moloch.
+- Overhauled level layouts and events (longer and more difficult levels).
+- Added two new afflictions: medical items and poisons cause organ damage instead of internal damage and explosions cause deep tissue injuries. Both are functionally identical to internal damage, and treated with the same items. 
+- Added DXT5 texture compression to reduce memory consumption. Slightly increases loading times; if you're not short on memory, you may want to disable the compression from the game settings.
+- Added partial dismemberment for live creatures. Currently enabled only for non-humanoids. (Dismembering dead bodies was already in the game).
+- Destructible shells/armor -> Moloch's shell can now be destroyed.
+- Added a new monster AI state: Protect.
+- Increased the threshold for limping and changed the calculations.
+- Added limping for non-human characters.
+- Modded servers show up as purple in the server list.
+- Added 4 new background music tracks.
+- Added parameter autocompletion to the "spawnsub" command.
+- All content types except UI styles are now hotswappable.
+- Made smoke detector logic more accurate (no size restrictions on the size of the fire, the fire doesn't have to be inside the same hull).
+- Added "Output" and "FalseOutput" properties to smoke detector.
+- Option to define ambient light values for individual hulls in the sub editor.
+- Characters float in place instead of sinking when staying still underwater.
+- Improvements to water flow forces: flowing water can push characters around much more heavily now.
+- Balanced item prices and fabrication/deconstruction recipes.
+- Balanced medical items.
+- UI layout improvements when using an ultrawide resolution.
+- Added "set_channel" input to wifi components.
+- Added "power_value_out" and "load_value_out" outputs to reactor.
+- Added search/filter boxes to content package list in the settings menu and item lists in the Workshop menu.
+- Added submarine filter to the server lobby.
+- Detonators are only triggered by non-zero signals.
+- The state of toggleable controllers (= switches) can be set in the sub editor.
+- Made toolboxes purchaseable.
+- Added a warning to keep the drone door closed in Remora.
+- All Thalamus cells die when the Thalamus dies.
+- Removed "hold fire" option from the "operate weapon" order, display turrets on minimap as icons instead of text.
+- Added some logic to prevent the game from modifying/deleting any vanilla content in any situation.
+- Readded legacy Carrier (doesn't spawn naturally but can be spawned with console commands).
+- Modified Typhon 2's coilgun rotation limits a bit so it isn't possible to hit the walls when firing at enemies near the airlock.
+- Hulls can be multiedited in the sub editor.
+- Placed down wires can now be re-equipped in the sub editor by double clicking a loose end.
+- Added charging docks to Remora.
+- Adjusted how pixel sizes are converted to meters (which are used to display the submarine's dimensions and distances on the navigation terminal). Previously 100 pixels corresponded to 1 meter, now it's 80px -> 1m, making the human characters about 1.75m tall. 
+- Distance calculations on the navigation terminal take the shape of the path into account instead of just using the direct distance to the target.
+- Made improvements to the manual order assignment by adding always visible name labels, displaying indicators for characters' current orders, and repositioning the nodes.
+- Reduced the damage range of fires, characters don't take damage from fires if there's a closed door or a wall in between.
+- Always draw steering indicators at the center of the display instead of the center of the sub. Fixes indicators getting offset (sometimes even outside the display) during docking.
+- Added option to give all command perms with the "givecommandperm" command by using "all" as the parameter.
+- Wrecks with no predefined Thalamus items can no more be infested by Thalamus. Allows to create wrecks that always spawn without Thalamus.
+- The "shut down" reactor order now allows the bot to continue doing other things after powering off the reactor, instead of just standing next to the reactor.
+- Removed the "initiative" skill -> all bots should now react better when there's something to do. Note: this doesn't mean that they always react on everything. It's just the end of individualism. At least for now.
+- Reduced the physical forces applied on characters when they are hit by melee weapons, harpoons, or frag grenades. Adjusted stun for crowbar and harpoon.
+- Disabled retreat/escape behavior for the bots when they take damage from items or explosions. They still escape/fight back when attacked by other characters.
+- Refactor the medic priority calculations/logic: Bots should never treat others autonomously, unless they are medics or ordered to rescue. Bots should always give a high priority for treating themselves, unless there's a medic on board.
+- Adjusted the flipping logic of non-humanoids to make them flip less frequently.
+- Monsters won't anymore target nasonov artifact unless it is inside the player submarine or in the player inventory.
+
+Modding:
+- Made it possible to use repair tools with StatusEffect's UseItem.
+- Made pressure deaths more moddable. Dying because of high pressure isn't hard-coded anymore, the characters are just given the barotrauma affliction which (by default) kills them.
+- Added "HideConditionBar" property to items.
+- Fixed wearables staying on the character when the item is removed by a status effect.
+- Character light sprites can now deform. The cells of Thalamus (Leucocyte and Terminal cell) now use the deformable light sprites.
+- Creature flipping parameters are now exposed. Adjusted the flipping for all creatures.
+- Allow to define character joints as weld joints in addition of normal revolute joints. Weld joints don't rotate.
+- Allow sound definitions to ignore the muffling effect.
+- Exposed the "scatter" value and added new "offset" attribute for monster events.
+- Added support for status effects in limb definitions (ragdoll file).
+- Status effects defined in the character definition can now also target limbs.
+- Added ActionType.OnSevered status effect for limbs.
+- Creatures can now be set to disrupt sonar.
+- Player attacks can now also use the conditionals (i.e. when player is controlling a character). Previously only the AI used the conditionals.
+- Conditional sprites don't anymore require a texture definition.
+- Conditional Sprites can now be non-exclusive -> Draw more than just one sprite at a time.
+- Fixed conditional sprites not being able to target limbs.
+
+Bugfixes:
+- Fixed crashing when opening the tab menu when there are clients present with no job preferences set.
+- Fixed "ColdCavernsMaze" levels sometimes being extremely short.
+- Fixes to level generation when playing with a very large submarine.
+- Fixed bots being unable to shoot at enemies from another room/hull.
+- Fixed bots being unable to get items from dead bodies.
+- Fixed submarines being unable to move vertically in the submarine test mode.
+- Fixed crashing when starting a new round with no audio device (speakers, headset) available.
+- Improvements to shadow/LOS rendering.
+- Fixed double click being ignored if it's been less than 0.4s since the last double click.
+- Fixed all servers sometimes not showing up in the server list (showing only the servers in the same/nearby region).
+- Fixed "lone sailor" achievement not unlocking in single player.
+- Fixed "Gaze in to the Abyss" achievement sometimes unlocking as soon as the round starts.
+- Fixed characters sometimes being unable to exit the submarine when outside the borders of the level.
+- Fixed ruin/wreck monsters not spawning if the submarine is too close to them.
+- Fixed ruin items sometimes getting saved as a part of the main submarine in the campaign.
+- Fixed rare "item with the same key has already been added" errors when starting a round (particularly when playing with a submarine with very large numbers of items/structures).
+- Thalamus entities can't be selected in the sub editor when they're hidden.
+- Fixed "spawnsub" console command not working.
+- Fixed projectiles, welding tools and plasma cutters hitting destroyed Thalamus organs.
+- Fixed reactor not shutting down if the turbine/fission rate are controlled via signals even the power switch is toggled off.
+- Fixed reactor sliders not moving when they're controlled by signals.
+- Fixed level triggers sometimes affecting entities that have left the trigger. The most noticeable effect was characters getting burn damage indefinitely after they've been close to a hydrothermal vent.
+- Made flamers fire proof to prevents the flames from blowing up the fuel tank inside it.
+- Don't allow harpoons to stick to very small limbs (such as mudraptor's "mouth tentacles"), because it lead to physics glitches.
+- Fixed the husk infection crashing when turning the character, if either the non-husk or the husked variation has no inventory defined.
+- Fixed characters getting weapon XP after using a turret, until someone else operates the same turret.
+- Fixed characters being able to crouch when their pose is controlled by a controller (e.g. periscope, modded chair).
+- Fixed bots being unable to aim correctly when operating a turret in another submarine (such as a remotely controlled coilgun in a shuttle).
+- Fixed bots sometimes taking too much time to interrupt their current objective when the room they're in floods, causing them to get crushed by pressure.
+- Fixed bots sometimes letting go of ladders too soon, preventing them from reaching certain areas (such as the upper platform in Berilia's cargo bay).
+- Fixed multiple bots sometimes trying to treat the same person.
+- Bots stop grabbing the character they're treating after they're done.
+- Fixed harpoons going through doors.
+- Fixed depth charges going through level walls.
+- Fixed husks attacking human husks wearing a diving suit.
+- Fixed first shot from a firearm that uses a magazine/clip not doing anything.
+- Fixes to waypoints in Kastrull, Berilia and Remora.
+- Fixed chat-linked wifi components not working in single player.
+- Fixed chat-linked wifi components not working in multiplayer outside of combat missions.
+- Fixed Azimuth using tutorial junction boxes instead of normal ones (the tutorial variants are indestructible and don't have signal connections).
+- Fixed autopilot not being able to navigate past wrecks.
+- More reliable syncing of door's breaking state. Fixes doors sometimes being impassable or impossible to repair client-side, particularly when joining mid-round.
+- Fixed repairing doors getting interrupted at 50% when the door's collider is re-enabled and the character pushed out of the doorway.
+- Fixed items getting used in the health interface when dropped on a subinventory slot in front of the interface.
+- Fixed dedicated servers letting clients join with an invalid name when there's no server owner.
+- Fixed server letting clients join with a name that's already taken.
+- Changed "creating hulls between docking ports failed" from errors to warnings. Allows creating exterior docking ports that aren't next to a hull without having the console pop up every time the port is used.
+- Fixed changing resolution not updating character inventory slot sizes properly, causing invalid spacing in dead characters' inventories.
+- Don't allow detaching signal components when rewiring is disabled or the item's connection panel is locked.
+- Fixed misaligned hull next to Wreck1's airlock.
+- Fixed "attempting to remove an already removed item" errors when mass-deleting items. Happened because removing items a wire is connected to removes the orphaned wires automatically.
+- Fixed multi-part subs (example case: The Aeche III) getting teleported to oblivion when flipped.
+- Fixes to bots getting stuck or killed for no apparent reason when the player is very far from them, due to the bots switching to a "simple physics mode" which prevents them from doing certain kinds of interactions.
+- The explosive cargo mission that places a block of Volatile Compound N in one of the crates no longer requires delivering the volatile block to the destination.
+- Disabled crush depth in the submarine test mode.
+- Fixed monsters staying invisible if they die far away from the camera view.
+- Fixed very small limbs (mudraptor's mouth tentacles, husk appendages) launching off at a very high velocity, leading to glitchy physics behavior, when hit by a non-raycast projectile or an explosion.
+- Allow subs to be saved to subdirectories of the "Submarines" folder (e.g. "Submarines/Downloaded").
+- Fixed a couple of waypoints in Berilia that prevented bots from using the ladders.
+- Fixed Husked Crawler bleeding red blood.
+- Fixed the priority of the operate order being 69 when it should be 70, which sometimes caused bots to get stuck between two objectives (like repairing or fixing leaks).
+- Fixed enemies always using the priority defined for "room" when they should use the priority for "sonar".
+- Fixed monsters not being able to drop down from platforms/hatches etc. In practice they still have difficulties in getting down from the hatches when they don't swim because they are so big.
+- Fixed bots ignoring themselves as a target when they are rescuing others.
+- Fixed numerous issues in the monster behavior when simple physics is enabled. e.g. Ignoring targets or not being able to attack or eat them.
+- Fixed hitting damage modifiers emitting a ridiculous amount of particles.
+- Fixed some cases where bots fail to open the door that they should be able to open (because they skipped a waypoint without checking the doors).
+- Fixed monsters not keeping inside the level.
+- Fixed a crash when the command interface button was pressed while the player is controlling a custom monster that didn't have character info but was able to speak.
+- Fixed monsters sometimes ignoring their target after attacking.
+
+---------------------------------------------------------------------------------------------------------
 v0.9.9.1
 ---------------------------------------------------------------------------------------------------------
 

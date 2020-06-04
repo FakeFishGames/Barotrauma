@@ -135,12 +135,6 @@ namespace Barotrauma
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("ParticleUpdate", sw.ElapsedTicks);
             sw.Restart();  
-            
-            GameMain.LightManager.Update((float)deltaTime);
-
-            sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("LightUpdate", sw.ElapsedTicks);
-            sw.Restart();  
 
             if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime, cam);
 

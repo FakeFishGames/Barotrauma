@@ -3,7 +3,7 @@ using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
         public GUITickBox EndVoteTickBox;
         private GUIComponent buttonContainer;
 
-        private NetStats netStats;
+        public readonly NetStats NetStats;
 
         protected GUITickBox cameraFollowsSub;
 
@@ -169,9 +169,9 @@ namespace Barotrauma.Networking
 
             allowReconnect = true;
 
-            netStats = new NetStats();
+            NetStats = new NetStats();
 
-            inGameHUD = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+            inGameHUD = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
             {
                 CanBeFocused = false
             };
@@ -569,14 +569,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            /*TODO: reimplement
-            if (ShowNetStats && client?.ServerConnection != null)
-            {
-                netStats.AddValue(NetStats.NetStatType.ReceivedBytes, client.ServerConnection.Statistics.ReceivedBytes);
-                netStats.AddValue(NetStats.NetStatType.SentBytes, client.ServerConnection.Statistics.SentBytes);
-                netStats.AddValue(NetStats.NetStatType.ResentMessages, client.ServerConnection.Statistics.ResentMessages);
-                netStats.Update(deltaTime);
-            }*/
+            NetStats.Update(deltaTime);
 
             UpdateHUD(deltaTime);
 
@@ -781,7 +774,7 @@ namespace Barotrauma.Networking
 
                     if (readyToStart && !CoroutineManager.IsCoroutineRunning("WaitForStartRound"))
                     {
-                        CoroutineManager.StartCoroutine(GameMain.NetLobbyScreen.WaitForStartRound(startButton: null, allowCancel: false), "WaitForStartRound");
+                        CoroutineManager.StartCoroutine(GameMain.NetLobbyScreen.WaitForStartRound(startButton: null), "WaitForStartRound");
                     }
                     break;
                 case ServerPacketHeader.STARTGAME:
@@ -1455,6 +1448,15 @@ namespace Barotrauma.Networking
 
                 var teamID = i == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
                 Submarine.MainSubs[i].TeamID = teamID;
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine == null) { continue; }
+                    if (item.Submarine != Submarine.MainSubs[i] && !Submarine.MainSubs[i].DockedTo.Contains(item.Submarine)) { continue; }
+                    foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                    {
+                        wifiComponent.TeamID = Submarine.MainSubs[i].TeamID;
+                    }
+                }
                 foreach (Submarine sub in Submarine.MainSubs[i].DockedTo)
                 {
                     sub.TeamID = teamID;
@@ -1891,8 +1893,8 @@ namespace Barotrauma.Networking
 
                         DebugConsole.ThrowError("Writing object data to \"crashreport_object.bin\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
 
-                        using (FileStream fl = File.Open("crashreport_object.bin", FileMode.Create))
-                        using (BinaryWriter sw = new BinaryWriter(fl))
+                        using (FileStream fl = File.Open("crashreport_object.bin", System.IO.FileMode.Create))
+                        using (System.IO.BinaryWriter sw = new System.IO.BinaryWriter(fl))
                         {
                             sw.Write(inc.Buffer, (int)(prevBytePos - prevByteLength), (int)(prevByteLength));
                         }
@@ -2759,15 +2761,15 @@ namespace Barotrauma.Networking
 
             if (!ShowNetStats) return;
 
-            netStats.Draw(spriteBatch, new Rectangle(300, 10, 300, 150));
+            NetStats.Draw(spriteBatch, new Rectangle(300, 10, 300, 150));
 
+            /* TODO: reimplement
             int width = 200, height = 300;
             int x = GameMain.GraphicsWidth - width, y = (int)(GameMain.GraphicsHeight * 0.3f);
 
             GUI.DrawRectangle(spriteBatch, new Rectangle(x, y, width, height), Color.Black * 0.7f, true);
             GUI.Font.DrawString(spriteBatch, "Network statistics:", new Vector2(x + 10, y + 10), Color.White);
 
-            /* TODO: reimplement
             if (client.ServerConnection != null)
             {
                 GUI.Font.DrawString(spriteBatch, "Ping: " + (int)(client.ServerConnection.AverageRoundtripTime * 1000.0f) + " ms", new Vector2(x + 10, y + 25), Color.White);

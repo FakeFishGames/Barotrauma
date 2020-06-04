@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -231,7 +232,7 @@ namespace Barotrauma
                         if (port.Item.WorldPosition.Y < Submarine.WorldPosition.Y) { continue; }
 
                         float dist = Vector2.DistanceSquared(port.Item.WorldPosition, level.StartOutpost.WorldPosition);
-                        if (myPort == null || dist < closestDistance || (port.MainDockingPort && !myPort.MainDockingPort))
+                        if ((myPort == null || dist < closestDistance || port.MainDockingPort) && !(myPort?.MainDockingPort ?? false))
                         {
                             myPort = port;
                             closestDistance = dist;
@@ -463,7 +464,7 @@ namespace Barotrauma
 
             try
             {
-                doc.Save(filePath);
+                doc.SaveSafe(filePath);
             }
             catch (Exception e)
             {

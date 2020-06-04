@@ -38,7 +38,9 @@ namespace Barotrauma
 
                     if (item.Submarine == null)
                     {
-                        if (!(item.ParentInventory?.Owner is Character)) { continue; }
+                        //items outside the sub don't count as destroyed if they're still in the traitor's inventory
+                        bool carriedByTraitor = Traitors.Any(traitor => item.IsOwnedBy(traitor.Character));
+                        if (!carriedByTraitor) { continue; }
                     }
                     else
                     {

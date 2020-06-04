@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 
@@ -146,7 +146,7 @@ namespace Barotrauma
             {
                 id += 1;
                 IDfound = dictionary.ContainsKey(id);
-            } while (IDfound);
+            } while (IDfound || id == NullEntityID || id == EntitySpawnerID);
             return id;
         }
         

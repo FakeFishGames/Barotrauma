@@ -24,6 +24,10 @@ namespace Barotrauma
         {
             get
             {
+                if (!GameMain.SubEditorScreen.ShowThalamus && prefab.Category.HasFlag(MapEntityCategory.Thalamus))
+                {
+                    return false;
+                }
                 return HasBody ? ShowWalls : ShowStructures;
             }
         }

@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
         private float prevVoltage;
 
         private float controlLockTimer;
-        
+
         [Editable(0.0f, 10000000.0f), 
         Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
@@ -93,8 +93,8 @@ namespace Barotrauma.Items.Components
             controlLockTimer -= deltaTime;
 
             currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
-            //pumps consume more power when in a bad condition
-            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
+            //engines consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
 
             if (powerConsumption == 0.0f) { Voltage = 1.0f; }
 
@@ -119,12 +119,15 @@ namespace Barotrauma.Items.Components
                 float max = 1 + maxChangeSpeed;
                 UpdateAITargets(Math.Clamp(noise, min, max), deltaTime);
 #if CLIENT
-                for (int i = 0; i < 5; i++)
+                particleTimer -= deltaTime;
+                if (particleTimer <= 0.0f)
                 {
+                    Vector2 particleVel = -currForce.ClampLength(5000.0f) / 5.0f;
                     GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos,
-                        -currForce / 5.0f + new Vector2(Rand.Range(-100.0f, 100.0f), Rand.Range(-50f, 50f)),
+                        particleVel * Rand.Range(0.9f, 1.1f),
                         0.0f, item.CurrentHull);
-                }
+                    particleTimer = 1.0f / particlesPerSec;
+                }                
 #endif
             }
         }

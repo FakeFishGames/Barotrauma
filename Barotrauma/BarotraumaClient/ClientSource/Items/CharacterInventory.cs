@@ -354,7 +354,6 @@ namespace Barotrauma
                     break;
                 case Layout.Right:
                     {
-                        int extraOffset = 0;
                         int x = HUDLayoutSettings.InventoryAreaLower.Right;
                         int personalSlotX = HUDLayoutSettings.InventoryAreaLower.Right - SlotSize.X - Spacing;
                         for (int i = 0; i < slots.Length; i++)
@@ -371,17 +370,18 @@ namespace Barotrauma
                         }
 
                         int lowerX = x;
+                        int personalSlotY = GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2 - (int)(!GUI.IsFourByThree() ? UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment : UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment * 2f);
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (HideSlot(i)) continue;
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
-                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - extraOffset - Spacing * 2);
+                                SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
                                 personalSlotX -= slots[i].Rect.Width + Spacing;
                             }
                             else
                             {
-                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
+                                SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                                 x += slots[i].Rect.Width + Spacing;
                             }
                         }
@@ -391,7 +391,7 @@ namespace Barotrauma
                         {
                             if (!HideSlot(i)) continue;
                             x -= slots[i].Rect.Width + Spacing;
-                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset - extraOffset);
+                            SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                         }
                     }
                     break;
@@ -399,12 +399,14 @@ namespace Barotrauma
                     {
                         int x = HUDLayoutSettings.InventoryAreaLower.X;
                         int personalSlotX = x;
+                        int personalSlotY = GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2 - (int)(!GUI.IsFourByThree() ? UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment : UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment * 2f);
+
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
                             if (HideSlot(i)) continue;
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
-                                SlotPositions[i] = new Vector2(personalSlotX, GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2);
+                                SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
                                 personalSlotX += slots[i].Rect.Width + Spacing;
                             }
                             else
@@ -523,8 +525,7 @@ namespace Barotrauma
             for (int i = 0; i < capacity; i++)
             {
                 if (Items[i] != null && Items[i] != draggingItem && Character.Controlled?.Inventory == this &&
-                    GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen &&
-                    slots[i].QuickUseKey != Keys.None && PlayerInput.KeyHit(slots[i].QuickUseKey))
+                    GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen && PlayerInput.InventoryKeyHit(slots[i].InventoryKeyIndex))
                 {
                     QuickUseItem(Items[i], true, false, true);
                 }
@@ -782,21 +783,16 @@ namespace Barotrauma
             }
         }
         
-        private void AssignQuickUseNumKeys()
+        public void AssignQuickUseNumKeys()
         {
-            int num = 1;
+            int keyBindIndex = 0;
             for (int i = 0; i < slots.Length; i++)
             {
-                if (HideSlot(i))
-                {
-                    slots[i].QuickUseKey = Keys.None;
-                    continue;
-                }
-
+                if (HideSlot(i)) continue;
                 if (SlotTypes[i] == InvSlotType.Any)
                 {
-                    slots[i].QuickUseKey = Keys.D0 + num % 10;
-                    num++;
+                    slots[i].InventoryKeyIndex = keyBindIndex;
+                    keyBindIndex++;
                 }
             }
         }
@@ -819,16 +815,21 @@ namespace Barotrauma
                 {
                     if (item.Container == null || character.Inventory.FindIndex(item.Container) == -1) // Not a subinventory in the character's inventory
                     {
-                        return item.ParentInventory is CharacterInventory ?
-                            QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                        if (character.SelectedItems.Any(i => i?.OwnInventory != null && i.OwnInventory.CanBePut(item)))
+                        {
+                            return QuickUseAction.PutToEquippedItem;
+                        }
+                        else
+                        {
+                            return item.ParentInventory is CharacterInventory ? QuickUseAction.TakeFromCharacter : QuickUseAction.TakeFromContainer;
+                        }
                     }
                     else
                     {
                         var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
                         if (selectedContainer != null &&
                             selectedContainer.Inventory != null &&
-                            !selectedContainer.Inventory.Locked &&
-                            allowInventorySwap)
+                            !selectedContainer.Inventory.Locked)
                         {
                             // Move the item from the subinventory to the selected container
                             return QuickUseAction.PutToContainer;
@@ -928,24 +929,24 @@ namespace Barotrauma
                     //attempt to put in a free slot first
                     for (int i = capacity - 1; i >= 0; i--)
                     {
-                        if (Items[i] != null) continue;
-                        if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
+                        if (Items[i] != null) { continue; }
+                        if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
                         success = TryPutItem(item, i, true, false, Character.Controlled, true);
-                        if (success) break;
+                        if (success) { break; }
                     }
 
                     if (!success)
                     {
                         for (int i = capacity - 1; i >= 0; i--)
                         {
-                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) continue;
-                            //something else already equipped in the slot, attempt to unequip it
-                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any))
+                            if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
+                            // something else already equipped in a hand slot, attempt to unequip it so items aren't unnecessarily swapped to it
+                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any) && (SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand))
                             {
                                 TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
                             }
                             success = TryPutItem(item, i, true, false, Character.Controlled, true);
-                            if (success) break;
+                            if (success) { break; }
                         }
                     }
                     break;
@@ -1041,6 +1042,7 @@ namespace Barotrauma
                 prevUIScale != UIScale ||
                 prevHUDScale != GUI.Scale)
             {
+                CreateSlots();
                 SetSlotPositions(layout);
                 prevUIScale = UIScale;
                 prevHUDScale = GUI.Scale;

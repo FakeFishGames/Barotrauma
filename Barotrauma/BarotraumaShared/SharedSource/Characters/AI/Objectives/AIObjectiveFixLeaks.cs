@@ -37,7 +37,7 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>(), onlyBots: true);
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>() && !c.Character.IsIncapacitated, onlyBots: true);
             int totalLeaks = Targets.Count();
             if (totalLeaks == 0) { return 0; }
             int secondaryLeaks = Targets.Count(l => l.IsRoomToRoom);

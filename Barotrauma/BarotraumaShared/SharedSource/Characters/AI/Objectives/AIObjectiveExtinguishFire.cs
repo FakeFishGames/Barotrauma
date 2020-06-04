@@ -106,7 +106,7 @@ namespace Barotrauma
                             if (SteeringManager == PathSteering)
                             {
                                 var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
-                                if (door != null && !door.IsOpen)
+                                if (door != null && !door.IsOpen && !door.IsBroken)
                                 {
                                     isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
                                 }

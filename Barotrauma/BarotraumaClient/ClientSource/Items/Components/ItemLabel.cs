@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string text;
-        [Serialize("", true, translationTextTag: "Label.", description: "The text displayed in the label."), Editable(100)]
+        [Serialize("", true, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(100)]
         public string Text
         {
             get { return text; }
@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Editable, Serialize("0,0,0,255", true, description: "The color of the text displayed on the label (R,G,B,A).")]
+        [Editable, Serialize("0,0,0,255", true, description: "The color of the text displayed on the label (R,G,B,A).", alwaysUseInstanceValues: true)]
         public Color TextColor
         {
             get { return textColor; }
@@ -69,7 +69,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(0.0f, 10.0f), Serialize(1.0f, true, description: "The scale of the text displayed on the label.")]
+        [Editable(0.0f, 10.0f), Serialize(1.0f, true, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public float TextScale
         {
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }

@@ -125,12 +125,15 @@ namespace Barotrauma.Networking
 
             msg.Write((UInt16)LatestBufferID);
             msg.Write(ForceLocal); msg.WritePadBits();
-            for (int i = 0; i < BUFFER_COUNT; i++)
+            lock (buffers)
             {
-                int index = (newestBufferInd + i + 1) % BUFFER_COUNT;
+                for (int i = 0; i < BUFFER_COUNT; i++)
+                {
+                    int index = (newestBufferInd + i + 1) % BUFFER_COUNT;
 
-                msg.Write((byte)bufferLengths[index]);
-                msg.Write(buffers[index], 0, bufferLengths[index]);
+                    msg.Write((byte)bufferLengths[index]);
+                    msg.Write(buffers[index], 0, bufferLengths[index]);
+                }
             }
         }
 
@@ -144,10 +147,13 @@ namespace Barotrauma.Networking
                 ForceLocal = msg.ReadBoolean(); msg.ReadPadBits();
 
                 firstRead = false;
-                for (int i = 0; i < BUFFER_COUNT; i++)
+                lock (buffers)
                 {
-                    bufferLengths[i] = msg.ReadByte();
-                    buffers[i] = msg.ReadBytes(bufferLengths[i]);
+                    for (int i = 0; i < BUFFER_COUNT; i++)
+                    {
+                        bufferLengths[i] = msg.ReadByte();
+                        buffers[i] = msg.ReadBytes(bufferLengths[i]);
+                    }
                 }
                 newestBufferInd = BUFFER_COUNT - 1;
                 LatestBufferID = incLatestBufferID;

@@ -3,10 +3,14 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+#if DEBUG
+using System.IO;
+#else
+using Barotrauma.IO;
+#endif
 
 namespace Barotrauma
 {
@@ -415,7 +419,11 @@ namespace Barotrauma
             {
                 string xmlPath = doc.ParseContentPathFromUri();
                 xmlPathText.Text += "\n" + xmlPath;
+#if DEBUG
                 doc.Save(xmlPath);
+#else
+                doc.SaveSafe(xmlPath);
+#endif
             }
             xmlPathText.TextColor = GUI.Style.Green;
             return true;

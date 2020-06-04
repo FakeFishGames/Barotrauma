@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -740,7 +740,7 @@ namespace Barotrauma
 
         public void FlipX(List<Submarine> parents = null)
         {
-            if (parents == null) parents = new List<Submarine>();
+            if (parents == null) { parents = new List<Submarine>(); }
             parents.Add(this);
 
             flippedX = !flippedX;
@@ -748,20 +748,25 @@ namespace Barotrauma
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
-
             List<MapEntity> subEntities = MapEntity.mapEntityList.FindAll(me => me.Submarine == this);
 
             foreach (MapEntity e in subEntities)
             {
                 if (e is Item) continue;
-                if (e is LinkedSubmarine)
+                if (e is LinkedSubmarine linkedSub)
                 {
-                    Submarine sub = ((LinkedSubmarine)e).Sub;
-                    if (!parents.Contains(sub))
+                    Submarine sub = linkedSub.Sub;
+                    if (sub == null)
+                    {
+                        Vector2 relative1 = linkedSub.Position - SubBody.Position;
+                        relative1.X = -relative1.X;
+                        linkedSub.Rect = new Rectangle((relative1 + SubBody.Position).ToPoint(), linkedSub.Rect.Size);
+                    }
+                    else if (!parents.Contains(sub))
                     {
                         Vector2 relative1 = sub.SubBody.Position - SubBody.Position;
                         relative1.X = -relative1.X;
-                        sub.SetPosition(relative1 + SubBody.Position);
+                        sub.SetPosition(relative1 + SubBody.Position, new List<Submarine>(parents));
                         sub.FlipX(parents);
                     }
                 }
@@ -779,7 +784,7 @@ namespace Barotrauma
             Vector2 pos = new Vector2(subBody.Position.X, subBody.Position.Y);
             subBody.Body.Remove();
             subBody = new SubmarineBody(this);
-            SetPosition(pos);
+            SetPosition(pos, new List<Submarine>(parents.Where(p => p != this)));
 
             if (entityGrid != null)
             {
@@ -812,20 +817,24 @@ namespace Barotrauma
 
             Item.UpdateHulls();
             Gap.UpdateHulls();
+#if CLIENT
+            Lights.ConvexHull.RecalculateAll(this);
+#endif
         }
 
         public void Update(float deltaTime)
         {
             //if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
 
-            if (Level.Loaded == null || subBody == null) { return; }
-
             if (Info.IsWreck)
             {
                 WreckAI?.Update(deltaTime);
             }
 
-            if (WorldPosition.Y < Level.MaxEntityDepth &&
+            if (subBody?.Body == null) { return; }
+
+            if (Level.Loaded != null &&
+                WorldPosition.Y < Level.MaxEntityDepth &&
                 subBody.Body.Enabled &&
                 (GameMain.NetworkMember?.RespawnManager == null || this != GameMain.NetworkMember.RespawnManager.RespawnShuttle))
             {
@@ -852,17 +861,17 @@ namespace Barotrauma
                 return;
             }
 
+
             subBody.Body.LinearVelocity = new Vector2(
                 LockX ? 0.0f : subBody.Body.LinearVelocity.X,
                 LockY ? 0.0f : subBody.Body.LinearVelocity.Y);
-
 
             subBody.Update(deltaTime);
 
             for (int i = 0; i < 2; i++)
             {
-                if (MainSubs[i] == null) continue;
-                if (this != MainSubs[i] && MainSubs[i].DockedTo.Contains(this)) return;
+                if (MainSubs[i] == null) { continue; }
+                if (this != MainSubs[i] && MainSubs[i].DockedTo.Contains(this)) { return; }
             }
 
             //send updates more frequently if moving fast
@@ -884,9 +893,9 @@ namespace Barotrauma
             prevPosition = position;
         }
 
-        public void SetPosition(Vector2 position, List<Submarine> checkd=null)
+        public void SetPosition(Vector2 position, List<Submarine> checkd = null)
         {
-            if (!MathUtils.IsValid(position)) return;
+            if (!MathUtils.IsValid(position)) { return; }
 
             if (checkd == null) { checkd = new List<Submarine>(); }
             if (checkd.Contains(this)) { return; }
@@ -898,7 +907,7 @@ namespace Barotrauma
 
             foreach (Submarine dockedSub in DockedTo)
             {
-                if (dockedSub.Info.IsOutpost)
+                if (dockedSub.PhysicsBody.BodyType == BodyType.Static)
                 {
                     if (ConnectedDockingPorts.TryGetValue(dockedSub, out DockingPort port))
                     {
@@ -1169,7 +1178,7 @@ namespace Barotrauma
 
             foreach (Hull hull in matchingHulls)
             {
-                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.Contains("roomname.", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(hull.RoomName))// || !hull.RoomName.Contains("roomname.", StringComparison.OrdinalIgnoreCase))
                 {
                     hull.RoomName = hull.CreateRoomName();
                 }
@@ -1229,7 +1238,7 @@ namespace Barotrauma
             Info.CheckSubsLeftBehind(element);
         }
 
-        public bool SaveAs(string filePath, MemoryStream previewImage = null)
+        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
             var newInfo = new SubmarineInfo(this)
             {

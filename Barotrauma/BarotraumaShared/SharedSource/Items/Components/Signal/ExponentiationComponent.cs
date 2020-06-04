@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
     class ExponentiationComponent : ItemComponent
     {
         private float exponent;
-        [InGameEditable, Serialize(1.0f, false, description: "The exponent of the operation.")]
+        [InGameEditable, Serialize(1.0f, false, description: "The exponent of the operation.", alwaysUseInstanceValues: true)]
         public float Exponent
         {
             get

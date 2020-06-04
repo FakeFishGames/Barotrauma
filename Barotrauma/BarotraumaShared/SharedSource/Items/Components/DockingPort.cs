@@ -5,7 +5,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -29,6 +29,7 @@ namespace Barotrauma.Items.Components
         private Door door;
 
         private Body[] bodies;
+        private Fixture outsideBlocker;
         private Body doorBody;
 
         private bool docked;
@@ -58,7 +59,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false, description: "If set to true, this docking port is used when spawning the submarine docked to an outpost (if possible).")]
+        [Editable, Serialize(false, true, description: "If set to true, this docking port is used when spawning the submarine docked to an outpost (if possible).")]
         public bool MainDockingPort
         {
             get;
@@ -113,6 +114,12 @@ namespace Barotrauma.Items.Components
         {
             if (DockingTarget != null)
             {
+                if (IsHorizontal) 
+                { 
+                    DockingDir = 0; 
+                    DockingDir = GetDir(DockingTarget);  
+                    DockingTarget.DockingDir = -DockingDir;
+                }
                 if (joint != null)
                 {
                     CreateJoint(joint is WeldJoint);
@@ -198,18 +205,6 @@ namespace Barotrauma.Items.Components
             DockingDir = GetDir(DockingTarget);
             DockingTarget.DockingDir = -DockingDir;
            
-            if (door != null && DockingTarget.door != null)
-            {
-                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
-                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.door.LinkedGap == wp.ConnectedGap);
-
-                if (myWayPoint != null && targetWayPoint != null)
-                {
-                    myWayPoint.linkedTo.Add(targetWayPoint);
-                    targetWayPoint.linkedTo.Add(myWayPoint);
-                }
-            }
-
             CreateJoint(false);
 
 #if SERVER
@@ -259,6 +254,12 @@ namespace Barotrauma.Items.Components
                 {
                     item.CreateServerEvent(this);
                 }
+#else
+                if (GameMain.Client != null && GameMain.Client.MidRoundSyncing && 
+                    (item.Submarine == Submarine.MainSub || DockingTarget.item.Submarine == Submarine.MainSub))
+                {
+                    Screen.Selected.Cam.Position = Submarine.MainSub.WorldPosition;
+                }
 #endif
             }
 
@@ -269,6 +270,20 @@ namespace Barotrauma.Items.Components
             if (!item.linkedTo.Any(e => e is Hull) && !DockingTarget.item.linkedTo.Any(e => e is Hull))
             {
                 CreateHulls();
+            }
+
+            if (door != null && DockingTarget.door != null)
+            {
+                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
+                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.door.LinkedGap == wp.ConnectedGap);
+
+                if (myWayPoint != null && targetWayPoint != null)
+                {
+                    myWayPoint.FindHull();
+                    myWayPoint.linkedTo.Add(targetWayPoint);
+                    targetWayPoint.FindHull();
+                    targetWayPoint.linkedTo.Add(myWayPoint);
+                }
             }
         }
 
@@ -461,6 +476,12 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                if (leftSubRightSide == int.MinValue || rightSubLeftSide == int.MaxValue)
+                {
+                    DebugConsole.NewMessage("Creating hulls between docking ports failed. Could not find a hull next to the docking port.");
+                    return;
+                }
+
                 //expand left hull to the rightmost hull of the sub at the left side
                 //(unless the difference is more than 100 units - if the distance is very large 
                 //there's something wrong with the positioning of the docking ports or submarine hulls)
@@ -469,7 +490,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (leftHullDiff > 100)
                     {
-                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The leftmost docking port seems to be very far from any hulls in the left-side submarine.");
+                        DebugConsole.NewMessage("Creating hulls between docking ports failed. The leftmost docking port seems to be very far from any hulls in the left-side submarine.");
+                        return;
                     }
                     else
                     {
@@ -483,7 +505,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (rightHullDiff > 100)
                     {
-                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The rightmost docking port seems to be very far from any hulls in the right-side submarine.");
+                        DebugConsole.NewMessage("Creating hulls between docking ports failed. The rightmost docking port seems to be very far from any hulls in the right-side submarine.");
+                        return;
                     }
                     else
                     {
@@ -504,6 +527,16 @@ namespace Barotrauma.Items.Components
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X, hullRects[i].Y - hullRects[i].Height * j)),
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].Right, hullRects[i].Y - hullRects[i].Height * j)));
                     }
+                }
+
+                if (rightHullDiff <= 100 && hulls[0].Submarine != null)
+                {
+                    outsideBlocker = hulls[0].Submarine.PhysicsBody.FarseerBody.CreateRectangle(
+                        ConvertUnits.ToSimUnits(hullRects[0].Width + hullRects[1].Width),
+                        ConvertUnits.ToSimUnits(hullRects[0].Height),
+                        density: 0.0f,
+                        offset: ConvertUnits.ToSimUnits(new Vector2(hullRects[0].Right, hullRects[0].Y - hullRects[0].Height / 2) - hulls[0].Submarine.HiddenSubPosition));
+                    outsideBlocker.UserData = this;
                 }
 
                 gap = new Gap(new Rectangle(hullRects[0].Right - 2, hullRects[0].Y, 4, hullRects[0].Height), true, subs[0]);
@@ -540,6 +573,12 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                if (upperSubBottom == int.MaxValue || lowerSubTop == int.MinValue)
+                {
+                    DebugConsole.NewMessage("Creating hulls between docking ports failed. Could not find a hull next to the docking port.");
+                    return;
+                }
+
                 //expand lower hull to the topmost hull of the lower sub 
                 //(unless the difference is more than 100 units - if the distance is very large 
                 //there's something wrong with the positioning of the docking ports or submarine hulls)
@@ -548,7 +587,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (lowerHullDiff > 100)
                     {
-                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The lower docking port seems to be very far from any hulls in the lower submarine.");
+                        DebugConsole.NewMessage("Creating hulls between docking ports failed. The lower docking port seems to be very far from any hulls in the lower submarine.");
+                        return;
                     }
                     else
                     {
@@ -561,7 +601,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (upperHullDiff > 100)
                     {
-                        DebugConsole.ThrowError("Creating hulls between docking ports failed. The upper docking port seems to be very far from any hulls in the upper submarine.");
+                        DebugConsole.NewMessage("Creating hulls between docking ports failed. The upper docking port seems to be very far from any hulls in the upper submarine.");
+                        return;
                     }
                     else
                     {
@@ -575,7 +616,8 @@ namespace Barotrauma.Items.Components
                 int midHullDiff = ((hullRects[1].Y - hullRects[1].Height) - hullRects[0].Y) + 2;
                 if (midHullDiff > 100)
                 {
-                    DebugConsole.ThrowError("Creating hulls between docking ports failed. The upper hull seems to be very far from the lower hull.");
+                    DebugConsole.NewMessage("Creating hulls between docking ports failed. The upper hull seems to be very far from the lower hull.");
+                    return;
                 }
                 else if (midHullDiff > 0)
                 {
@@ -584,15 +626,33 @@ namespace Barotrauma.Items.Components
                     hullRects[1].Height += midHullDiff / 2 + 1;
                 }
 
+
                 for (int i = 0; i < 2; i++)
                 {
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
+
+                    for (int j = 0; j < 2; j++)
+                    {
+                        bodies[i + j * 2] = GameMain.World.CreateEdge(
+                            ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X + hullRects[i].Width * j, hullRects[i].Y)),
+                            ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X + hullRects[i].Width * j, hullRects[i].Y - hullRects[i].Height)));
+                    }
                 }
 
-                gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y+2, hullRects[0].Width, 4), false, subs[0]);
+                if (midHullDiff <= 100 && hulls[0].Submarine != null)
+                {
+                    outsideBlocker = hulls[0].Submarine.PhysicsBody.FarseerBody.CreateRectangle(
+                        ConvertUnits.ToSimUnits(hullRects[0].Width),
+                        ConvertUnits.ToSimUnits(hullRects[0].Height + hullRects[1].Height),
+                        density: 0.0f,
+                        offset: ConvertUnits.ToSimUnits(new Vector2(hullRects[0].Center.X, hullRects[0].Y) - hulls[0].Submarine.HiddenSubPosition));
+                    outsideBlocker.UserData = this;
+                }
+
+                gap = new Gap(new Rectangle(hullRects[0].X, hullRects[0].Y + 2, hullRects[0].Width, 4), false, subs[0]);
             }
 
             LinkHullsToGaps();
@@ -609,7 +669,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Body body in bodies)
             {
-                if (body == null) continue;
+                if (body == null) { continue; }
                 body.BodyType = BodyType.Static;
                 body.Friction = 0.5f;
 
@@ -720,7 +780,9 @@ namespace Barotrauma.Items.Components
 
                 if (myWayPoint != null && targetWayPoint != null)
                 {
+                    myWayPoint.FindHull();
                     myWayPoint.linkedTo.Remove(targetWayPoint);
+                    targetWayPoint.FindHull();
                     targetWayPoint.linkedTo.Remove(myWayPoint);
                 }
             }
@@ -768,6 +830,9 @@ namespace Barotrauma.Items.Components
                 }
                 bodies = null;
             }
+
+            outsideBlocker?.Body.Remove(outsideBlocker);
+            outsideBlocker = null;
 
             Item.Submarine.EnableObstructedWaypoints();
             obstructedWayPointsDisabled = false;

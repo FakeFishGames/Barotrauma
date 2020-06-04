@@ -238,7 +238,8 @@ namespace Barotrauma
         }
 
 
-        [Editable, Serialize("5000, 10000", true, description: "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
+        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
+            Serialize("5000, 10000", true, description: "The distance between the nodes that are used to generate the main path through the level (min, max). Larger values produce a straighter path.")]
         public Point MainPathNodeIntervalRange
         {
             get { return mainPathNodeIntervalRange; }
@@ -256,7 +257,8 @@ namespace Barotrauma
             set { smallTunnelCount = MathHelper.Clamp(value, 0, 100); }
         }
 
-        [Editable, Serialize("5000, 10000", true, description: "The minimum and maximum length of small tunnels placed along the main path.")]
+        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
+            Serialize("5000, 10000", true, description: "The minimum and maximum length of small tunnels placed along the main path.")]
         public Point SmallTunnelLengthRange
         {
             get { return smallTunnelLengthRange; }

@@ -193,44 +193,64 @@ namespace Barotrauma
                         string[] readTags = valStr.Split(',');
                         int matches = 0;
                         foreach (string tag in readTags)
-                            if (target is Item item && item.HasTag(tag)) matches++;
-
+                        {
+                            if (target is Item item && item.HasTag(tag))
+                            {
+                                matches++;
+                            }
+                        }
                         //If operator is == then it needs to match everything, otherwise if its != there must be zero matches.
                         return Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
                     }
                 case ConditionType.HasStatusTag:
                     if (target == null) { return Operator == OperatorType.NotEquals; }
-
-                    List<DurationListElement> durations = StatusEffect.DurationList.FindAll(d => d.Targets.Contains(target));
-                    List<DelayedListElement> delays = DelayedEffect.DelayList.FindAll(d => d.Targets.Contains(target));
-
                     bool success = false;
-                    if (durations.Count > 0 || delays.Count > 0)
+                    if (StatusEffect.DurationList.Any(d => d.Targets.Contains(target)) || DelayedEffect.DelayList.Any(d => d.Targets.Contains(target)))
                     {
                         string[] readTags = valStr.Split(',');
-                        foreach (DurationListElement duration in durations)
+                        foreach (DurationListElement duration in StatusEffect.DurationList)
                         {
+                            if (!duration.Targets.Contains(target)) { continue; }
                             int matches = 0;
                             foreach (string tag in readTags)
-                                if (duration.Parent.HasTag(tag)) matches++;
-
+                            {
+                                if (duration.Parent.HasTag(tag))
+                                {
+                                    matches++;
+                                }
+                            }
                             success = Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
                             if (cancelStatusEffect > 0 && success)
+                            {
                                 StatusEffect.DurationList.Remove(duration);
-                            if (cancelStatusEffect != 2) //cancelStatusEffect 1 = only cancel once, cancelStatusEffect 2 = cancel all of matching tags
+                            }
+                            if (cancelStatusEffect != 2)
+                            {
+                                //cancelStatusEffect 1 = only cancel once, cancelStatusEffect 2 = cancel all of matching tags
                                 return success;
+                            }
                         }
-                        foreach (DelayedListElement delay in delays)
+                        foreach (DelayedListElement delay in DelayedEffect.DelayList)
                         {
+                            if (!delay.Targets.Contains(target)) { continue; }
                             int matches = 0;
                             foreach (string tag in readTags)
-                                if (delay.Parent.HasTag(tag)) matches++;
-
+                            {
+                                if (delay.Parent.HasTag(tag))
+                                {
+                                    matches++;
+                                }
+                            }
                             success = Operator == OperatorType.Equals ? matches >= readTags.Length : matches <= 0;
                             if (cancelStatusEffect > 0 && success)
+                            {
                                 DelayedEffect.DelayList.Remove(delay);
-                            if (cancelStatusEffect != 2) //ditto
+                            }
+                            if (cancelStatusEffect != 2)
+                            {
+                                //ditto
                                 return success;
+                            }
                         }
                     }
                     else if (Operator == OperatorType.NotEquals)
@@ -242,7 +262,7 @@ namespace Barotrauma
                 case ConditionType.SpeciesName:
                     if (target == null) { return Operator == OperatorType.NotEquals; }
                     if (!(target is Character targetCharacter)) { return false; }
-                    return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == valStr);
+                    return (Operator == OperatorType.Equals) == targetCharacter.SpeciesName.Equals(valStr, StringComparison.OrdinalIgnoreCase);
                 case ConditionType.EntityType:
                     switch (valStr)
                     {

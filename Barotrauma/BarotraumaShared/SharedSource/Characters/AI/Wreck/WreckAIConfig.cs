@@ -19,6 +19,9 @@ namespace Barotrauma
         public string DefensiveAgent { get; private set; }
 
         [Serialize("", false)]
+        public string OffensiveAgent { get; private set; }
+
+        [Serialize("", false)]
         public string Brain { get; private set; }
 
         [Serialize("", false)]

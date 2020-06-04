@@ -26,10 +26,13 @@ namespace Barotrauma.Networking
 
         public void CreateLogFrame()
         {
-            LogFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            LogFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) LogFrame = null; return true; }
             };
+
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, LogFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
+
             new GUIButton(new RectTransform(Vector2.One, LogFrame.RectTransform), "", style: null).OnClicked += (btn, userData) =>
             {
                 LogFrame = null;

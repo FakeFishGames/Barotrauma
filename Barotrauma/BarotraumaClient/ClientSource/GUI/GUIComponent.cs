@@ -5,7 +5,7 @@ using System.Linq;
 using Barotrauma.Extensions;
 using System;
 using System.Xml.Linq;
-using System.IO;
+using Barotrauma.IO;
 using RestSharp;
 using System.Net;
 

@@ -30,8 +30,9 @@ namespace Barotrauma
 
         public static float HULL_SAFETY_THRESHOLD = 50;
 
-        public HashSet<Hull> UnreachableHulls { get; private set; } = new HashSet<Hull>();
-        public HashSet<Hull> UnsafeHulls { get; private set; } = new HashSet<Hull>();
+        public readonly HashSet<Hull> UnreachableHulls = new HashSet<Hull>();
+        public readonly HashSet<Hull> UnsafeHulls = new HashSet<Hull>();
+        public readonly List<Item> IgnoredItems = new List<Item>();
 
         private SteeringManager outsideSteering, insideSteering;
 
@@ -55,13 +56,13 @@ namespace Barotrauma
             private set;
         }
 
-        public float CurrentHullSafety { get; private set; }
+        public float CurrentHullSafety { get; private set; } = 100;
 
         public HumanAIController(Character c) : base(c)
         {
             if (!c.IsHuman)
             {
-                throw new System.Exception($"Tried to create a human ai controller for a non-human: {c.SpeciesName}!");
+                throw new Exception($"Tried to create a human ai controller for a non-human: {c.SpeciesName}!");
             }
             insideSteering = new IndoorsSteeringManager(this, true, false);
             outsideSteering = new SteeringManager(this);
@@ -85,7 +86,7 @@ namespace Barotrauma
             {
                 unreachableClearTimer = clearUnreachableInterval;
                 UnreachableHulls.Clear();
-                ignoredContainers.Clear();
+                IgnoredItems.Clear();
             }
 
             // Use the pathfinding also outside of the sub, but not farther than the extents of the sub + 500 units.
@@ -175,9 +176,7 @@ namespace Barotrauma
             }
             steeringManager.Update(Character.AnimController.GetCurrentSpeed(run && Character.CanRun));
 
-            bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f &&
-                (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
-
+            bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f && (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
             if (steeringManager == insideSteering)
             {
                 var currPath = PathSteering.CurrentPath;
@@ -185,51 +184,24 @@ namespace Barotrauma
                 {
                     if (currPath.CurrentNode.SimPosition.Y < Character.AnimController.GetColliderBottom().Y)
                     {
-                        // Don't allow to jump from too high. The formula might require tweaking.
+                        // Don't allow to jump from too high.
                         float allowedJumpHeight = Character.AnimController.ImpactTolerance / 2;
                         float height = Math.Abs(currPath.CurrentNode.SimPosition.Y - Character.SimPosition.Y);
                         ignorePlatforms = height < allowedJumpHeight;
                     }
                 }
-
                 if (Character.IsClimbing && PathSteering.IsNextLadderSameAsCurrent)
                 {
                     Character.AnimController.TargetMovement = new Vector2(0.0f, Math.Sign(Character.AnimController.TargetMovement.Y));
                 }
             }
-
             Character.AnimController.IgnorePlatforms = ignorePlatforms;
 
             Vector2 targetMovement = AnimController.TargetMovement;
-
             if (!Character.AnimController.InWater)
             {
                 targetMovement = new Vector2(Character.AnimController.TargetMovement.X, MathHelper.Clamp(Character.AnimController.TargetMovement.Y, -1.0f, 1.0f));
             }
-
-            if (Character.AnimController.InWater && targetMovement.LengthSquared() < 0.000001f)
-            {
-                bool isAiming = false;
-                var holdable = Character.SelectedConstruction?.GetComponent<Holdable>();
-                if (holdable != null)
-                {
-                    isAiming = holdable.ControlPose;
-                }
-                bool swimInPlace = !isAiming;
-                if (swimInPlace && ObjectiveManager.GetActiveObjective() is AIObjectiveGoTo goToObjective)
-                {
-                    if (goToObjective.Target != Character)
-                    {
-                        swimInPlace = false;
-                    }
-                }
-                if (swimInPlace)
-                {
-                    // Swim in place so that we don't fall motionless and look dead.
-                    targetMovement = new Vector2(targetMovement.X, Rand.Range(-0.001f, 0.001f));
-                }
-            }
-
             Character.AnimController.TargetMovement = Character.ApplyMovementLimits(targetMovement, AnimController.GetCurrentSpeed(run));
 
             flipTimer -= deltaTime;
@@ -280,14 +252,14 @@ namespace Barotrauma
                         else
                         {
                             findItemState = FindItemState.Extinguisher;
-                            if (FindSuitableContainer(Character, extinguisher, out Item targetContainer))
+                            if (FindSuitableContainer(extinguisher, out Item targetContainer))
                             {
                                 findItemState = FindItemState.None;
                                 itemIndex = 0;
                                 if (targetContainer != null)
                                 {
                                     var decontainObjective = new AIObjectiveDecontainItem(Character, extinguisher, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
-                                    decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                    decontainObjective.Abandoned += () => IgnoredItems.Add(targetContainer);
                                     ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                     return;
                                 }
@@ -310,42 +282,47 @@ namespace Barotrauma
                         || ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() 
                         || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
                     bool removeDivingSuit = !Character.AnimController.HeadInWater && oxygenLow;
-                    AIObjectiveGoTo gotoObjective = ObjectiveManager.GetActiveObjective<AIObjectiveGoTo>();
+                    bool takeMaskOff = !Character.AnimController.HeadInWater && oxygenLow;
                     if (!removeDivingSuit)
                     {
-                        bool targetHasNoSuit = gotoObjective != null && gotoObjective.mimic && !HasDivingSuit(gotoObjective.Target as Character);
-                        removeDivingSuit = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoSuit);
-                    }
-                    bool takeMaskOff = !Character.AnimController.HeadInWater && oxygenLow;
-                    if (!takeMaskOff && Character.CurrentHull.WaterPercentage < 40)
-                    {
-                        bool targetHasNoMask = gotoObjective != null && gotoObjective.mimic && !HasDivingMask(gotoObjective.Target as Character);
-                        takeMaskOff = !shouldKeepTheGearOn && (gotoObjective == null || targetHasNoMask);
-                    }
-                    if (gotoObjective != null)
-                    {
-                        if (gotoObjective.Target is Hull h)
+                        if (shouldKeepTheGearOn)
                         {
-                            if (NeedsDivingGear(Character, h, out _))
-                            {
-                                removeDivingSuit = false;
-                                takeMaskOff = false;
-                            }
+                            removeDivingSuit = false;
                         }
-                        else if (gotoObjective.Target is Character c)
+                    }
+                    if (!takeMaskOff)
+                    {
+                        if (shouldKeepTheGearOn)
                         {
-                            if (NeedsDivingGear(Character, c.CurrentHull, out _))
-                            {
-                                removeDivingSuit = false;
-                                takeMaskOff = false;
-                            }
+                            takeMaskOff = false;
                         }
-                        else if (gotoObjective.Target is Item i)
+                    }
+                    if (!shouldKeepTheGearOn && (!takeMaskOff || !removeDivingSuit))
+                    {
+                        foreach (var objective in ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(includingSelf: true))
                         {
-                            if (NeedsDivingGear(Character, i.CurrentHull, out _))
+                            if (objective is AIObjectiveGoTo gotoObjective)
                             {
-                                removeDivingSuit = false;
-                                takeMaskOff = false;
+                                bool insideSteering = SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.IsPathDirty;
+                                Hull targetHull = gotoObjective.GetTargetHull();
+                                bool targetIsOutside = (gotoObjective.Target != null && targetHull == null) || (insideSteering && PathSteering.CurrentPath.HasOutdoorsNodes);
+                                if (targetIsOutside || NeedsDivingGear(Character, targetHull, out _))
+                                {
+                                    removeDivingSuit = false;
+                                    takeMaskOff = false;
+                                    break;
+                                }
+                                else if (gotoObjective.mimic)
+                                {
+                                    if (!removeDivingSuit)
+                                    {
+                                        removeDivingSuit = !HasDivingSuit(gotoObjective.Target as Character);
+                                    }
+                                    if (!takeMaskOff)
+                                    {
+                                        takeMaskOff = !HasDivingMask(gotoObjective.Target as Character);
+                                    }
+                                }
                             }
                         }
                     }
@@ -363,7 +340,7 @@ namespace Barotrauma
                                 else
                                 {
                                     findItemState = FindItemState.DivingSuit;
-                                    if (FindSuitableContainer(Character, divingSuit, out Item targetContainer))
+                                    if (FindSuitableContainer(divingSuit, out Item targetContainer))
                                     {
                                         findItemState = FindItemState.None;
                                         itemIndex = 0;
@@ -375,7 +352,7 @@ namespace Barotrauma
                                             };
                                             decontainObjective.Abandoned += () =>
                                             {
-                                                ignoredContainers.Add(targetContainer);
+                                                IgnoredItems.Add(targetContainer);
                                             };
                                             ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                             return;
@@ -405,14 +382,14 @@ namespace Barotrauma
                                     else
                                     {
                                         findItemState = FindItemState.DivingMask;
-                                        if (FindSuitableContainer(Character, mask, out Item targetContainer))
+                                        if (FindSuitableContainer(mask, out Item targetContainer))
                                         {
                                             findItemState = FindItemState.None;
                                             itemIndex = 0;
                                             if (targetContainer != null)
                                             {
                                                 var decontainObjective = new AIObjectiveDecontainItem(Character, mask, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
-                                                decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                                decontainObjective.Abandoned += () => IgnoredItems.Add(targetContainer);
                                                 ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                                 return;
                                             }
@@ -442,14 +419,14 @@ namespace Barotrauma
                     {
                         if (!item.AllowedSlots.Contains(InvSlotType.Any) || !Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any }))
                         {
-                            if (FindSuitableContainer(Character, item, out Item targetContainer))
+                            if (FindSuitableContainer(item, out Item targetContainer))
                             {
                                 findItemState = FindItemState.None;
                                 itemIndex = 0;
                                 if (targetContainer != null)
                                 {
                                     var decontainObjective = new AIObjectiveDecontainItem(Character, item, ObjectiveManager, targetContainer: targetContainer.GetComponent<ItemContainer>());
-                                    decontainObjective.Abandoned += () => ignoredContainers.Add(targetContainer);
+                                    decontainObjective.Abandoned += () => IgnoredItems.Add(targetContainer);
                                     ObjectiveManager.CurrentObjective.AddSubObjective(decontainObjective, addFirst: true);
                                     return;
                                 }
@@ -478,11 +455,10 @@ namespace Barotrauma
         }
         private FindItemState findItemState;
         private int itemIndex;
-        private List<Item> ignoredContainers = new List<Item>();
-        public bool FindSuitableContainer(Character character, Item containableItem, out Item suitableContainer)
+        public bool FindSuitableContainer(Item containableItem, out Item suitableContainer)
         {
             suitableContainer = null;
-            if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredContainers, customPriorityFunction: i =>
+            if (Character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: IgnoredItems, customPriorityFunction: i =>
             {
                 var container = i.GetComponent<ItemContainer>();
                 if (container == null) { return 0; }
@@ -583,7 +559,7 @@ namespace Barotrauma
                                 if (item.CurrentHull != hull) { continue; }
                                 if (AIObjectiveRepairItems.IsValidTarget(item, Character))
                                 {
-                                    if (item.Repairables.All(r => item.ConditionPercentage > r.AIRepairThreshold)) { continue; }
+                                    if (item.Repairables.All(r => item.ConditionPercentage > r.RepairThreshold)) { continue; }
                                     if (AddTargets<AIObjectiveRepairItems, Item>(Character, item) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRepairItem>())
                                     {
                                         var orderPrefab = Order.GetPrefab("reportbrokendevices");
@@ -633,9 +609,13 @@ namespace Barotrauma
             if (ObjectiveManager.CurrentObjective is AIObjectiveFightIntruders) { return; }
             if (attacker == null || attacker.IsDead || attacker.Removed)
             {
+                // Don't react on the damage if there's no attacker.
+                // We might consider launching the retreat combat objective in some cases, so that the bot does not just stand somewhere getting damaged and dying.
+                // But fires and enemies should already be handled by the FindSafetyObjective.
+                return;
                 // Ignore damage from falling etc that we shouldn't react to.
-                if (Character.LastDamageSource == null) { return; }
-                AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
+                //if (Character.LastDamageSource == null) { return; }
+                //AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, Rand.Range(0.5f, 1f, Rand.RandSync.Unsynced));
             }
             else if (IsFriendly(attacker))
             {
@@ -784,7 +764,6 @@ namespace Barotrauma
             return false;
         }
 
-
         public static bool HasDivingGear(Character character, float conditionPercentage = 0) => HasDivingSuit(character, conditionPercentage) || HasDivingMask(character, conditionPercentage);
 
         /// <summary>
@@ -852,7 +831,7 @@ namespace Barotrauma
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveRepairItems.IsValidTarget(item, character))
                         {
-                            if (item.Repairables.All(r => item.ConditionPercentage >= r.AIRepairThreshold)) { continue; }
+                            if (item.Repairables.All(r => item.ConditionPercentage >= r.RepairThreshold)) { continue; }
                             AddTargets<AIObjectiveRepairItems, Item>(character, item);
                         }
                     }

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -24,7 +25,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch sb, bool editing, bool back = true)
         {
-            if (!GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
+            if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
             {
                 Vector2 center = new Vector2(WorldRect.X + rect.Width / 2.0f, -(WorldRect.Y - rect.Height / 2.0f));
                 GUI.DrawLine(sb, center, center + new Vector2(flowForce.X, -flowForce.Y) / 10.0f, GUI.Style.Red);
@@ -121,24 +122,36 @@ namespace Barotrauma
 
         partial void EmitParticles(float deltaTime)
         {
-            if (flowTargetHull == null) return;
-            
+            if (flowTargetHull == null) { return; }
+
+            if (linkedTo.Count == 2 && linkedTo[0] is Hull hull1 && linkedTo[1] is Hull hull2)
+            {
+                //no flow particles between linked hulls (= rooms consisting of multiple hulls)
+                if (hull1.linkedTo.Contains(hull2)) { return; }
+                if (hull1.linkedTo.Any(h => h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2))) { return; }
+                if (hull2.linkedTo.Any(h => h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2))) { return; }
+            }
+
             Vector2 pos = Position;
             if (IsHorizontal)
             {
                 pos.X += Math.Sign(flowForce.X);
-                pos.Y = MathHelper.Clamp((higherSurface + lowerSurface) / 2.0f, rect.Y - rect.Height, rect.Y) + 10;
+                pos.Y = MathHelper.Clamp(Rand.Range(higherSurface, lowerSurface), rect.Y - rect.Height, rect.Y);
             }
             else
             {
                 pos.Y += Math.Sign(flowForce.Y) * rect.Height / 2.0f;
             }
 
+            //spawn less particles when there's already a large number of them
+            float particleAmountMultiplier = 1.0f - GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles;
+            particleAmountMultiplier *= particleAmountMultiplier;
+
             //light dripping
             if (open < 0.2f && LerpedFlowForce.LengthSquared() > 100.0f)
             {
                 particleTimer += deltaTime;
-                float particlesPerSec = open * 100.0f;
+                float particlesPerSec = open * 100.0f * particleAmountMultiplier;
                 float emitInterval = 1.0f / particlesPerSec;
                 while (particleTimer > emitInterval)
                 {
@@ -174,12 +187,13 @@ namespace Barotrauma
                 particleTimer += deltaTime;
                 if (IsHorizontal)
                 {
-                    float particlesPerSec = open * rect.Height * 0.1f;
+                    float particlesPerSec = open * rect.Height * 0.1f * particleAmountMultiplier;
+                    if (openedTimer > 0.0f) { particlesPerSec *= 1.0f + openedTimer * 10.0f; }
                     float emitInterval = 1.0f / particlesPerSec;
                     while (particleTimer > emitInterval)
                     {
                         Vector2 velocity = new Vector2(
-                        MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
+                            MathHelper.Clamp(flowForce.X, -5000.0f, 5000.0f) * Rand.Range(0.5f, 0.7f),
                         flowForce.Y * Rand.Range(0.5f, 0.7f));
 
                         if (flowTargetHull.WaterVolume < flowTargetHull.Volume * 0.95f)
@@ -191,11 +205,11 @@ namespace Barotrauma
 
                             if (particle != null)
                             {
-                                particle.Size = particle.Size * Math.Min(Math.Abs(flowForce.X / 1000.0f), 5.0f);
+                                particle.Size *= Math.Min(Math.Abs(flowForce.X / 500.0f), 5.0f);
                             }
                         }
 
-                        if (Math.Abs(flowForce.X) > 300.0f)
+                        if (Math.Abs(flowForce.X) > 300.0f && flowTargetHull.WaterVolume > flowTargetHull.Volume * 0.1f)
                         {
                             pos.X += Math.Sign(flowForce.X) * 10.0f;
                             if (rect.Height < 32)
@@ -211,7 +225,7 @@ namespace Barotrauma
                             GameMain.ParticleManager.CreateParticle(
                                 "bubbles",
                                 Submarine == null ? pos : pos + Submarine.Position,
-                                flowForce / 10.0f, 0, flowTargetHull);
+                                velocity, 0, flowTargetHull);
                         }
                         particleTimer -= emitInterval;
                     }
@@ -220,7 +234,7 @@ namespace Barotrauma
                 {
                     if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) return;
 
-                    float particlesPerSec = open * rect.Width * 0.3f;
+                    float particlesPerSec = open * rect.Width * 0.3f * particleAmountMultiplier;
                     float emitInterval = 1.0f / particlesPerSec;
                     while (particleTimer > emitInterval)
                     {
@@ -237,7 +251,7 @@ namespace Barotrauma
                             velocity, 0, FlowTargetHull);
                             if (splash != null) splash.Size = splash.Size * MathHelper.Clamp(rect.Width / 50.0f, 0.8f, 4.0f);
                         }
-                        if (Math.Abs(flowForce.Y) > 190.0f && Rand.Range(0.0f, 1.0f) < 0.3f)
+                        if (Math.Abs(flowForce.Y) > 190.0f && Rand.Range(0.0f, 1.0f) < 0.3f && flowTargetHull.WaterVolume > flowTargetHull.Volume * 0.1f)
                         {
                             GameMain.ParticleManager.CreateParticle(
                             "bubbles",

@@ -268,7 +268,26 @@ namespace Barotrauma
                 {
                     if (Config.KillAgentsWhenEntityDies)
                     {
-                        protectiveCells.ForEach(c => c.Kill(CauseOfDeathType.Unknown, null, isNetworkMessage: true));
+                        protectiveCells.ForEach(c => c.Kill(CauseOfDeathType.Unknown, null));
+                        if (!string.IsNullOrWhiteSpace(Config.OffensiveAgent))
+                        {
+                            foreach (var character in Character.CharacterList)
+                            {
+                                // Kills ALL offensive agents that are near the thalamus. Not the ideal solution, 
+                                // but as long as spawning is handled via status effects, I don't know if there is any better way.
+                                // In practice there shouldn't be terminal cells from different thalamus organisms at the same time.
+                                // And if there was, the distance check should prevent killing the agents of a different organism.
+                                if (character.SpeciesName.Equals(Config.OffensiveAgent, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Sonar distance is used also for wreck positioning. No wreck should be closer to each other than this.
+                                    float maxDistance = Sonar.DefaultSonarRange;
+                                    if (Vector2.DistanceSquared(character.WorldPosition, Wreck.WorldPosition) < maxDistance * maxDistance)
+                                    {
+                                        character.Kill(CauseOfDeathType.Unknown, null);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

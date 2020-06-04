@@ -19,11 +19,14 @@ namespace Barotrauma
                 var target = _selectedAiTarget ?? _lastAiTarget;
                 if (target != null && target.Entity != null)
                 {
-                    var memory = GetTargetMemory(target);
-                    Vector2 targetPos = memory.Location;
-                    targetPos.Y = -targetPos.Y;
-                    GUI.DrawLine(spriteBatch, pos, targetPos, Color.White * 0.5f, 0, 4);
-                    GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{target.Entity.ToString()} ({memory.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                    var memory = GetTargetMemory(target, false);
+                    if (memory != null)
+                    {
+                        Vector2 targetPos = memory.Location;
+                        targetPos.Y = -targetPos.Y;
+                        GUI.DrawLine(spriteBatch, pos, targetPos, Color.White * 0.5f, 0, 4);
+                        GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{target.Entity} ({memory.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                    }
                 }
             }
             else if (SelectedAiTarget?.Entity != null)
@@ -35,7 +38,7 @@ namespace Barotrauma
                 }
                 targetPos.Y = -targetPos.Y;
                 GUI.DrawLine(spriteBatch, pos, targetPos, GUI.Style.Red * 0.5f, 0, 4);
-                if (wallTarget != null)
+                if (wallTarget != null && (State == AIState.Attack || State == AIState.Aggressive || State == AIState.PassiveAggressive))
                 {
                     Vector2 wallTargetPos = wallTarget.Position;
                     if (wallTarget.Structure.Submarine != null) { wallTargetPos += wallTarget.Structure.Submarine.Position; }
@@ -43,7 +46,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, wallTargetPos - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Orange, false);
                     GUI.DrawLine(spriteBatch, pos, wallTargetPos, Color.Orange * 0.5f, 0, 5);
                 }
-                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity.ToString()} ({GetTargetMemory(SelectedAiTarget).Priority.FormatZeroDecimal()})", GUI.Style.Red, Color.Black);
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 60.0f, $"{SelectedAiTarget.Entity} ({GetTargetMemory(SelectedAiTarget, false)?.Priority.FormatZeroDecimal()})", GUI.Style.Red, Color.Black);
                 GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 40.0f, $"({targetValue.FormatZeroDecimal()})", GUI.Style.Red, Color.Black);
             }
 

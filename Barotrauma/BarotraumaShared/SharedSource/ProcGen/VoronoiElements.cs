@@ -168,19 +168,12 @@ namespace Voronoi2
             }
             midPoint /= vertices.Length;
 
-
-            for (int i = 1; i < vertices.Length; i++ )
+            for (int i = 0; i < vertices.Length; i++)
             {
-                GraphEdge ge = new GraphEdge(vertices[i-1], vertices[i]);
-
+                GraphEdge ge = new GraphEdge(vertices[i], vertices[MathUtils.PositiveModulo(i + 1, vertices.Length)]);
                 System.Diagnostics.Debug.Assert(ge.Point1 != ge.Point2);
-
                 Edges.Add(ge);
             }
-
-            GraphEdge lastEdge = new GraphEdge(vertices[0], vertices[vertices.Length-1]);
-
-            Edges.Add(lastEdge);
 
             Site = new Site();
             Site.SetPoint(midPoint);
@@ -198,9 +191,8 @@ namespace Voronoi2
         {
             foreach (GraphEdge edge in Edges)
             {
-                if (MathUtils.LinesIntersect(point, Center, edge.Point1 + Translation, edge.Point2 + Translation)) return false;
+                if (MathUtils.LinesIntersect(point, Center, edge.Point1 + Translation, edge.Point2 + Translation)) { return false; }
             }
-
             return true;
         }
     }

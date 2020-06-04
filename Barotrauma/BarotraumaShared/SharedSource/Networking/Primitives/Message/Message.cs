@@ -1,7 +1,7 @@
 ﻿using Lidgren.Network;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -519,7 +519,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                using (MemoryStream output = new MemoryStream())
+                using (System.IO.MemoryStream output = new System.IO.MemoryStream())
                 {
                     using (DeflateStream dstream = new DeflateStream(output, CompressionLevel.Fastest))
                     {
@@ -613,9 +613,9 @@ namespace Barotrauma.Networking
             if (isCompressed)
             {
                 byte[] decompressedData;
-                using (MemoryStream input = new MemoryStream(inBuf, startPos, inLength))
+                using (System.IO.MemoryStream input = new System.IO.MemoryStream(inBuf, startPos, inLength))
                 {
-                    using (MemoryStream output = new MemoryStream())
+                    using (System.IO.MemoryStream output = new System.IO.MemoryStream())
                     {
                         using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
                         {

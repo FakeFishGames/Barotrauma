@@ -150,7 +150,24 @@ namespace Barotrauma
         /// </summary>
         public override bool TryPutItem(Item item, Character user, List<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
         {
-            if (allowedSlots == null || !allowedSlots.Any()) return false;
+            if (allowedSlots == null || !allowedSlots.Any()) { return false; }
+            if (item == null)
+            {
+#if DEBUG
+                throw new Exception("item null");
+#else
+                return false;
+#endif
+            }
+            if (item.Removed)
+            {
+#if DEBUG
+                throw new Exception("Tried to put a removed item (" + item.Name + ") in an inventory");
+#else
+                DebugConsole.ThrowError("Tried to put a removed item (" + item.Name + ") in an inventory.\n" + Environment.StackTrace);
+                return false;
+#endif
+            }
 
             bool inSuitableSlot = false;
             bool inWrongSlot = false;
@@ -167,7 +184,7 @@ namespace Barotrauma
                 }
             }
             //all good
-            if (inSuitableSlot && !inWrongSlot) return true;
+            if (inSuitableSlot && !inWrongSlot) { return true; }
 
             //try to place the item in a LimbSlot.Any slot if that's allowed
             if (allowedSlots.Contains(InvSlotType.Any) && item.AllowedSlots.Contains(InvSlotType.Any))
@@ -184,6 +201,9 @@ namespace Barotrauma
             int placedInSlot = -1;
             foreach (InvSlotType allowedSlot in allowedSlots)
             {
+                if (allowedSlot.HasFlag(InvSlotType.RightHand) && character.AnimController.GetLimb(LimbType.RightHand) == null) { continue; }
+                if (allowedSlot.HasFlag(InvSlotType.LeftHand) && character.AnimController.GetLimb(LimbType.LeftHand) == null) { continue; }
+
                 //check if all the required slots are free
                 bool free = true;
                 for (int i = 0; i < capacity; i++)

@@ -103,6 +103,10 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
+#if SERVER
+            originalItemID = Entity.NullEntityID;
+            originalInventoryID = Entity.NullEntityID;
+#endif
             if (!IsClient)
             {
                 //ruin/wreck items are allowed to spawn close to the sub
@@ -147,6 +151,9 @@ namespace Barotrauma
                     item.body.FarseerBody.BodyType = BodyType.Kinematic;
                     item.FindHull();
                 }
+#if SERVER
+                originalItemID = item.ID;
+#endif
 
                 for (int i = 0; i < statusEffects.Count; i++)
                 {
@@ -166,6 +173,7 @@ namespace Barotrauma
                     foreach (Item it in Item.ItemList)
                     {
                         if (!it.HasTag(containerTag)) { continue; }
+                        if (it.NonInteractable) { continue; }
                         switch (spawnPositionType)
                         {
                             case Level.PositionType.Cave:
@@ -181,7 +189,13 @@ namespace Barotrauma
                         }
                         var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                         if (itemContainer == null) { continue; }
-                        if (itemContainer.Combine(item, user: null)) { break; } // Placement successful
+                        if (itemContainer.Combine(item, user: null)) 
+                        {
+#if SERVER
+                            originalInventoryID = it.ID;
+#endif
+                            break; 
+                        } // Placement successful
                     }
                 }
             }

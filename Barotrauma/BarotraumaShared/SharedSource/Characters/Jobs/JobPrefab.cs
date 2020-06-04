@@ -64,7 +64,7 @@ namespace Barotrauma
         public readonly Dictionary<int, List<string>> ItemIdentifiers = new Dictionary<int, List<string>>();
         public readonly Dictionary<int, Dictionary<string, bool>> ShowItemPreview = new Dictionary<int, Dictionary<string, bool>>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
-        public readonly List<AutonomousObjective> AutomaticOrders = new List<AutonomousObjective>();
+        public readonly List<AutonomousObjective> AutonomousObjective = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
 
         [Serialize("1,1,1,1", false)]
@@ -163,6 +163,7 @@ namespace Barotrauma
         }
 
         public Sprite Icon;
+        public Sprite IconSmall;
         public string FilePath { get; private set; }
 
         public XElement Element { get; private set; }
@@ -198,7 +199,7 @@ namespace Barotrauma
                         }
                         break;
                     case "autonomousobjectives":
-                        subElement.Elements().ForEach(order => AutomaticOrders.Add(new AutonomousObjective(order)));
+                        subElement.Elements().ForEach(order => AutonomousObjective.Add(new AutonomousObjective(order)));
                         break;
                     case "appropriateobjectives":
                     case "appropriateorders":
@@ -206,6 +207,9 @@ namespace Barotrauma
                         break;
                     case "jobicon":
                         Icon = new Sprite(subElement.FirstElement());
+                        break;
+                    case "jobiconsmall":
+                        IconSmall = new Sprite(subElement.FirstElement());
                         break;
                 }
             }

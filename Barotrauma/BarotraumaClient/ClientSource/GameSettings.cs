@@ -44,6 +44,8 @@ namespace Barotrauma
             }
         }
 
+        private const int inventoryHotkeyCount = 10;
+
         public void SetDefaultBindings(XDocument doc = null, bool legacy = false)
         {
             keyMapping = new KeyOrMouse[Enum.GetNames(typeof(InputType)).Length];
@@ -100,6 +102,13 @@ namespace Barotrauma
                 keyMapping[(int)InputType.Select] = new KeyOrMouse(MouseButton.PrimaryMouse);
                 // shoot and deselect are handled in CheckBindings() so that we don't override the legacy settings.
             }
+
+            inventoryKeyMapping = new KeyOrMouse[inventoryHotkeyCount];
+            for (int i = 0; i < inventoryKeyMapping.Length; i++)
+            {
+                inventoryKeyMapping[i] = new KeyOrMouse(Keys.D0 + (i + 1) % 10);
+            }
+
             if (doc != null)
             {
                 LoadControls(doc);
@@ -179,12 +188,38 @@ namespace Barotrauma
             }
         }
 
+        private void LoadInventoryKeybinds(XElement element)
+        {
+            for (int i = 0; i < inventoryKeyMapping.Length; i++)
+            {
+                XAttribute attribute = element.Attributes().ElementAt(i);
+                if (int.TryParse(attribute.Value.ToString(), out int mouseButtonInt))
+                {
+                    inventoryKeyMapping[i] = new KeyOrMouse((MouseButton)mouseButtonInt);
+                }
+                else if (Enum.TryParse(attribute.Value.ToString(), true, out MouseButton mouseButton))
+                {
+                    inventoryKeyMapping[i] = new KeyOrMouse(mouseButton);
+                }
+                else if (Enum.TryParse(attribute.Value.ToString(), true, out Keys key))
+                {
+                    inventoryKeyMapping[i] = new KeyOrMouse(key);
+                }
+            }
+        }
+
         private void LoadControls(XDocument doc)
         {
             XElement keyMapping = doc.Root.Element("keymapping");
             if (keyMapping != null)
             {
                 LoadKeyBinds(keyMapping);
+            }
+
+            XElement inventoryKeyMapping = doc.Root.Element("inventorykeymapping");
+            if (inventoryKeyMapping != null)
+            {
+                LoadInventoryKeybinds(inventoryKeyMapping);
             }
         }
 
@@ -195,25 +230,14 @@ namespace Barotrauma
 
         public string KeyBindText(InputType inputType)
         {
-            KeyOrMouse bind = keyMapping[(int)inputType];
-
-            if (bind.MouseButton != MouseButton.None)
-            {
-                switch (bind.MouseButton)
-                {
-                    case MouseButton.PrimaryMouse:
-                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse");
-                    case MouseButton.SecondaryMouse:
-                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse");
-                    default:
-                        return TextManager.Get("input." + bind.MouseButton.ToString().ToLowerInvariant());
-
-                }
-            }
-
-            return bind.ToString();
+            return keyMapping[(int)inputType].Name;
         }
-        
+
+        public KeyOrMouse InventoryKeyBind(int index)
+        {
+            return inventoryKeyMapping[index];
+        }
+
         private GUIListBox contentPackageList;
 
         private bool ChangeSliderText(GUIScrollBar scrollBar, float barScroll)
@@ -259,7 +283,8 @@ namespace Barotrauma
             }
             else
             {
-                settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f);
+                settingsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
+                new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, settingsFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
                 var settingsFrameContent = new GUIFrame(new RectTransform(new Vector2(0.8f, 0.8f), settingsFrame.RectTransform, Anchor.Center));
                 settingsHolder = settingsFrameContent.RectTransform;
             }
@@ -290,6 +315,25 @@ namespace Barotrauma
             var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform))
             {
                 ButtonEnabled = ContentPackage.List.Count(cp => cp.CorePackage) > 1
+            };
+
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font, createClearButton: true);
+            filterContainer.RectTransform.MinSize = searchBox.RectTransform.MinSize;
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+            searchBox.OnTextChanged += (textBox, text) => 
+            {
+                foreach (GUIComponent child in contentPackageList.Content.Children)
+                {
+                    if (!(child.UserData is ContentPackage cp)) { continue; }
+                    child.Visible = string.IsNullOrEmpty(text) ? true : cp.Name.ToLower().Contains(text.ToLower());
+                }
+                return true; 
             };
 
             contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.70f), leftPanel.RectTransform))
@@ -551,6 +595,37 @@ namespace Barotrauma
             };
 
 
+            GUITickBox textureCompressionTickBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform), TextManager.Get("EnableTextureCompression"))
+            {
+                ToolTip = TextManager.Get("EnableTextureCompressionToolTip"),
+                OnSelected = (GUITickBox box) =>
+                {
+                    if (box.Selected == TextureCompressionEnabled) { return true; }
+                    bool prevTextureCompressionEnabled = TextureCompressionEnabled;
+                    TextureCompressionEnabled = box.Selected;
+
+                    var msgBox = new GUIMessageBox(
+                        TextManager.Get("RestartRequiredLabel"),
+                        TextManager.Get("RestartRequiredGeneric"),
+                        buttons: new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") });
+                    msgBox.Buttons[0].OnClicked += (btn, userdata) =>
+                    {
+                        ApplySettings();
+                        GameMain.Instance.Exit();
+                        return true;
+                    }; msgBox.Buttons[1].OnClicked += (btn, userdata) =>
+                    {
+                        TextureCompressionEnabled = prevTextureCompressionEnabled;
+                        box.Selected = prevTextureCompressionEnabled;
+                        msgBox.Close();
+                        return true;
+                    };
+
+                    return true;
+                },
+                Selected = TextureCompressionEnabled
+            };
+
             GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform),
                 TextManager.Get("PauseOnFocusLost"))
             {
@@ -612,7 +687,8 @@ namespace Barotrauma
                 {
                     ChangeSliderText(scrollBar, barScroll);
                     LightMapScale = MathHelper.Lerp(0.2f, 1.0f, barScroll);
-                    UnsavedSettings = true; return true;
+                    UnsavedSettings = true;
+                    return true;
                 },
                 Step = 0.25f
             };
@@ -1113,6 +1189,24 @@ namespace Barotrauma
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
 
+            for (int i = 0; i < inventoryHotkeyCount; i++)
+            {
+                var inputContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.06f), ((i + 1) <= inventoryHotkeyCount / 2 ? inputColumnLeft : inputColumnRight).RectTransform))
+                { Stretch = true, IsHorizontal = true, RelativeSpacing = 0.01f, Color = new Color(12, 14, 15, 215) };
+                var inputName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(100, 0) },
+                    TextManager.GetWithVariable("inventoryslotkeybind", "[slotnumber]", (i + 1).ToString()), font: GUI.SmallFont)
+                { ForceUpperCase = true };
+                inputNameBlocks.Add(inputName);
+                var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform),
+                    text: inventoryKeyMapping[i].Name, font: GUI.SmallFont, style: "GUITextBoxNoIcon")
+                {
+                    UserData = i
+                };
+                keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, (int)(keyBox.Rect.Width - keyBox.Padding.X - keyBox.Padding.Z));
+                keyBox.OnSelected += InventoryKeyBoxSelected;
+                keyBox.SelectedColor = Color.Gold * 0.3f;
+            }
+
             GUITextBlock.AutoScaleAndNormalize(inputNameBlocks);
 
             var resetControlsArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.07f), controlsLayoutGroup.RectTransform), style: null);
@@ -1380,7 +1474,13 @@ namespace Barotrauma
         private void KeyBoxSelected(GUITextBox textBox, Keys key)
         {
             textBox.Text = "";
-            CoroutineManager.StartCoroutine(WaitForKeyPress(textBox));
+            CoroutineManager.StartCoroutine(WaitForKeyPress(textBox, keyMapping));
+        }
+
+        private void InventoryKeyBoxSelected(GUITextBox textBox, Keys key)
+        {
+            textBox.Text = "";
+            CoroutineManager.StartCoroutine(WaitForKeyPress(textBox, inventoryKeyMapping));
         }
 
         private void ResetControls(bool legacy)
@@ -1476,7 +1576,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox)
+        private IEnumerable<object> WaitForKeyPress(GUITextBox keyBox, KeyOrMouse[] keyArray)
         {
             yield return CoroutineStatus.Running;
 
@@ -1500,42 +1600,43 @@ namespace Barotrauma
 
             if (PlayerInput.LeftButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.LeftMouse);
+                keyArray[keyIndex] = new KeyOrMouse(MouseButton.LeftMouse);
             }
             else if (PlayerInput.RightButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.RightMouse);
+                keyArray[keyIndex] = new KeyOrMouse(MouseButton.RightMouse);
             }
             else if (PlayerInput.MidButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MiddleMouse);
+                keyArray[keyIndex] = new KeyOrMouse(MouseButton.MiddleMouse);
             }
             else if (PlayerInput.Mouse4ButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseButton4);
+                keyArray[keyIndex] = new KeyOrMouse(MouseButton.MouseButton4);
             }
             else if (PlayerInput.Mouse5ButtonClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseButton5);
+                keyArray[keyIndex] = new KeyOrMouse(MouseButton.MouseButton5);
             }
             else if (PlayerInput.MouseWheelUpClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelUp);
+                keyArray[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelUp);
             }
             else if (PlayerInput.MouseWheelDownClicked())
             {
-                keyMapping[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelDown);
+                keyArray[keyIndex] = new KeyOrMouse(MouseButton.MouseWheelDown);
             }
             else if (PlayerInput.GetKeyboardState.GetPressedKeys().Length > 0)
             {
                 Keys key = PlayerInput.GetKeyboardState.GetPressedKeys()[0];
-                keyMapping[keyIndex] = new KeyOrMouse(key);
+                keyArray[keyIndex] = new KeyOrMouse(key);
             }
             else
             {
                 yield return CoroutineStatus.Success;
             }
-            keyBox.Text = KeyBindText((InputType)keyIndex);
+
+            keyBox.Text = keyArray[keyIndex].Name;
             keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, keyBox.Rect.Width);
 
             keyBox.Deselect();

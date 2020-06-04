@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -233,7 +233,7 @@ namespace Barotrauma
             for (int i = 0; i <= maxLoadRetries; i++)
             {
                 doc = OpenFile(FilePath, out Exception e);
-                if (e != null && !(e is IOException)) { break; }
+                if (e != null && !(e is System.IO.IOException)) { break; }
                 if (doc != null || i == maxLoadRetries || !File.Exists(FilePath)) { break; }
                 DebugConsole.NewMessage("Opening submarine file \"" + FilePath + "\" failed, retrying in 250 ms...");
                 Thread.Sleep(250);
@@ -369,12 +369,15 @@ namespace Barotrauma
 
 
         //saving/loading ----------------------------------------------------
-        public bool SaveAs(string filePath, MemoryStream previewImage=null)
+        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage=null)
         {
             var newElement = new XElement(SubmarineElement.Name,
-                SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase)),
+                SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
+                                                         !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)),
                 SubmarineElement.Elements());
             XDocument doc = new XDocument(newElement);
+
+            doc.Root.Add(new XAttribute("name", Name));
 
             if (previewImage != null)
             {
@@ -459,7 +462,7 @@ namespace Barotrauma
                 subDirectories = Directory.GetDirectories(SavePath).Where(s =>
                 {
                     DirectoryInfo dir = new DirectoryInfo(s);
-                    return (dir.Attributes & FileAttributes.Hidden) == 0;
+                    return (dir.Attributes & System.IO.FileAttributes.Hidden) == 0;
                 }).ToArray();
             }
             catch (Exception e)
@@ -559,12 +562,12 @@ namespace Barotrauma
 
             if (extension == ".sub")
             {
-                Stream stream = null;
+                System.IO.Stream stream = null;
                 try
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);
                 }
-                catch (FileNotFoundException e)
+                catch (System.IO.FileNotFoundException e)
                 {
                     exception = e;
                     DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (File not found) " + Environment.StackTrace, e);

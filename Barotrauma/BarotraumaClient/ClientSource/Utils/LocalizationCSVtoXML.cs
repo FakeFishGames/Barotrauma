@@ -1,7 +1,7 @@
 ﻿#if DEBUG
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
@@ -41,7 +41,7 @@ namespace Barotrauma
 
                 if (Directory.Exists(conversationsPath + $"/{languageNoWhitespace}"))
                 {
-                    string[] conversationFileArray = Directory.GetFiles(conversationsPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories);
+                    IEnumerable<string> conversationFileArray = Directory.GetFiles(conversationsPath + $"/{languageNoWhitespace}", "*.csv", System.IO.SearchOption.AllDirectories);
 
                     if (conversationFileArray != null)
                     {
@@ -58,7 +58,7 @@ namespace Barotrauma
 
                 if (Directory.Exists(infoTextPath + $"/{languageNoWhitespace}"))
                 {
-                    string[] infoTextFileArray = Directory.GetFiles(infoTextPath + $"/{languageNoWhitespace}", "*.csv", SearchOption.AllDirectories);
+                    IEnumerable<string> infoTextFileArray = Directory.GetFiles(infoTextPath + $"/{languageNoWhitespace}", "*.csv", System.IO.SearchOption.AllDirectories);
 
                     if (infoTextFileArray != null)
                     {
@@ -145,7 +145,7 @@ namespace Barotrauma
                     }
                     else if (split[0].Contains(".") && !split[0].Any(char.IsUpper)) // An empty field
                     {
-                        xmlContent.Add($"<{split[0]}><!-- No data --></{split[0]}>");
+                        xmlContent.Add($"<{split[0]}></{split[0]}>");
                     }
                     else // A header
                     {

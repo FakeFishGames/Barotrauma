@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Extensions;
-using System.IO;
+using Barotrauma.IO;
 using System;
 using SpriteParams = Barotrauma.RagdollParams.SpriteParams;
 #if CLIENT
@@ -112,6 +112,8 @@ namespace Barotrauma
 
         public string FullPath { get; private set; }
 
+        public bool Compress { get; private set; }
+
         public override string ToString()
         {
             return FilePath + ": " + sourceRect;
@@ -149,6 +151,7 @@ namespace Barotrauma
             {
                 sourceVector = overrideElement.GetAttributeVector4("sourcerect", Vector4.Zero);
             }
+            Compress = SourceElement.GetAttributeBool("compress", true);
             bool shouldReturn = false;
             if (!lazyLoad)
             {

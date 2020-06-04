@@ -53,6 +53,7 @@
   <Item file="Content/Items/Legacy/legacysearchlight.xml" />
   <Item file="Content/Items/Shipwrecks/wreckeditems.xml" />
   <Item file="Content/Map/Thalamus/thalamusitems.xml" />
+  <Character file="Content/Characters/Carrier/Carrier.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
@@ -75,6 +76,8 @@
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
+  <Character file="Content/Characters/Molochblack/Molochblack.xml" />
+  <Character file="Content/Characters/Molochbaby/Molochbaby.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />

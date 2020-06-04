@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
 
             if (PickingTime > 0.0f)
             {
-                if (picker.PickingItem == null && PickingTime <= float.MaxValue)
+                if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
 #if SERVER
                     item.CreateServerEvent(this);
@@ -114,10 +114,6 @@ namespace Barotrauma.Items.Components
         {
             activePicker = picker;
             picker.PickingItem = item;
-
-            var leftHand = picker.AnimController.GetLimb(LimbType.LeftHand);
-            var rightHand = picker.AnimController.GetLimb(LimbType.RightHand);
-
             pickTimer = 0.0f;
             while (pickTimer < requiredTime && Screen.Selected != GameMain.SubEditorScreen)
             {

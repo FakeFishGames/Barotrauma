@@ -24,8 +24,9 @@ namespace Barotrauma
         public readonly float MinLevelDifficulty = 0.0f;
         public readonly float MaxLevelDifficulty = 100.0f;
 
-        static EventManagerSettings()
+        public static void Init()
         {
+            List.Clear();
             foreach (ContentFile file in GameMain.Instance.GetFilesOfType(ContentType.EventManagerSettings))
             {
                 Load(file);

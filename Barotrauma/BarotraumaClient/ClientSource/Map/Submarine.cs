@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
@@ -31,6 +31,7 @@ namespace Barotrauma
             Stream = sound.Stream;
             Range = element.GetAttributeFloat("range", 1000.0f);
             Volume = element.GetAttributeFloat("volume", 1.0f);
+            sound.IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
         }
     }
 
@@ -87,7 +88,7 @@ namespace Barotrauma
                     existingSound = GameMain.SoundManager.LoadSound(filename, stream);
                     if (existingSound == null) { return null; }
                 }
-                catch (FileNotFoundException e)
+                catch (System.IO.FileNotFoundException e)
                 {
                     string errorMsg = "Failed to load sound file \"" + filename + "\".";
                     DebugConsole.ThrowError(errorMsg, e);

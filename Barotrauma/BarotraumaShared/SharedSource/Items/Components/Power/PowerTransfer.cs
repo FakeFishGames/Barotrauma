@@ -316,6 +316,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (recipient.Item == item || recipient.Item == source) { continue; }
 
+                    source?.LastSentSignalRecipients.Add(recipient.Item);
+
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //other junction boxes don't need to receive the signal in the pass-through signal connections

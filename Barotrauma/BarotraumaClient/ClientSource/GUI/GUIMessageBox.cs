@@ -11,7 +11,7 @@ namespace Barotrauma
         public static List<GUIComponent> MessageBoxes = new List<GUIComponent>();
         private static int DefaultWidth
         {
-            get { return Math.Max(400, 400 * (GameMain.GraphicsWidth / 1920)); }
+            get { return Math.Max(400, (int)(400 * (GameMain.GraphicsWidth / GUI.ReferenceResolution.X))); }
         }
 
         private float inGameCloseTimer = 0.0f;
@@ -63,7 +63,7 @@ namespace Barotrauma
         }
 
         public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null)
-            : base(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: GUI.Style.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
+            : base(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: GUI.Style.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
         {
             int width = (int)(DefaultWidth * (type == Type.Default ? 1.0f : 1.5f)), height = 0;
             if (relativeSize.HasValue)

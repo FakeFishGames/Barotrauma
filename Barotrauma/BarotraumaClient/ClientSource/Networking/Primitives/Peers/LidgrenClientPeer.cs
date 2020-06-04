@@ -97,6 +97,9 @@ namespace Barotrauma.Networking
             incomingLidgrenMessages.Clear();
             netClient.ReadMessages(incomingLidgrenMessages);
 
+            GameMain.Client?.NetStats?.AddValue(NetStats.NetStatType.ReceivedBytes, netClient.Statistics.ReceivedBytes);
+            GameMain.Client?.NetStats?.AddValue(NetStats.NetStatType.SentBytes, netClient.Statistics.SentBytes);
+
             foreach (NetIncomingMessage inc in incomingLidgrenMessages)
             {
                 if (inc.SenderConnection != (ServerConnection as LidgrenConnection).NetConnection) { continue; }

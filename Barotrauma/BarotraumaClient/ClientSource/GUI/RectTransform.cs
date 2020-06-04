@@ -253,11 +253,12 @@ namespace Barotrauma
                 return _rect;
             }
         }
-        public Rectangle ParentRect => Parent != null ? Parent.Rect : ScreenRect;
-
+        public Rectangle ParentRect => Parent != null ? Parent.Rect : UIRect;
         protected Rectangle NonScaledRect => new Rectangle(NonScaledTopLeft, NonScaledSize);
-        protected Rectangle NonScaledParentRect => parent != null ? Parent.NonScaledRect : ScreenRect;
-        protected Rectangle ScreenRect => new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+        protected virtual Rectangle NonScaledUIRect => NonScaledRect;
+        protected Rectangle NonScaledParentRect => parent != null ? Parent.NonScaledRect : UIRect;
+        protected Rectangle NonScaledParentUIRect => parent != null ? Parent.NonScaledUIRect : UIRect;
+        protected Rectangle UIRect => new Rectangle(0, 0, GUI.UIWidth, GameMain.GraphicsHeight);
 
         private Pivot pivot;
         /// <summary>
@@ -444,14 +445,14 @@ namespace Barotrauma
 
         protected void RecalculateRelativeSize()
         {
-            relativeSize = new Vector2(NonScaledSize.X, NonScaledSize.Y) / new Vector2(NonScaledParentRect.Width, NonScaledParentRect.Height);
+            relativeSize = new Vector2(NonScaledSize.X, NonScaledSize.Y) / new Vector2(NonScaledParentUIRect.Width, NonScaledParentUIRect.Height);
             recalculateRect = true;
             SizeChanged?.Invoke();
         }
 
         protected void RecalculateAbsoluteSize()
         {
-            Point size = NonScaledParentRect.Size;
+            Point size = NonScaledParentUIRect.Size;
             switch (ScaleBasis)
             {
                 case ScaleBasis.BothWidth:

@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Xml.Linq;
 using Barotrauma.Media;
-using System.IO;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
@@ -56,7 +56,7 @@ namespace Barotrauma
 
         public VideoPlayer() // GUI elements with size set to Point.Zero are resized based on content
         {
-            int screenWidth = (int)(GameMain.GraphicsWidth * 0.55f);
+            int screenWidth = (int)(GameMain.GraphicsWidth * 0.65f);
             scaledVideoResolution = new Point(screenWidth, (int)(screenWidth / 16f * 9f));
 
             int width = scaledVideoResolution.X;
@@ -178,6 +178,7 @@ namespace Barotrauma
 
             videoFrame.RectTransform.NonScaledSize = scaledVideoResolution + new Point(scaledBorderSize, scaledBorderSize);
             videoView.RectTransform.NonScaledSize = scaledVideoResolution;
+            videoFrame.RectTransform.AbsoluteOffset = new Point(0, videoFrame.RectTransform.NonScaledSize.Y);
 
             title.RectTransform.NonScaledSize = new Point(scaledTextWidth, scaledTitleHeight);
             title.RectTransform.AbsoluteOffset = new Point((int)(5 * GUI.Scale), (int)(10 * GUI.Scale));
@@ -247,7 +248,7 @@ namespace Barotrauma
             }
             else
             {
-                videoFrame.RectTransform.AbsoluteOffset = new Point(0, (int)(100 * GUI.Scale));
+                videoFrame.RectTransform.AbsoluteOffset = new Point(0, 0);
 
                 okButton = new GUIButton(new RectTransform(scaledButtonSize, videoFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(scaledBorderSize, scaledBorderSize) }, TextManager.Get("Back"))
                 {

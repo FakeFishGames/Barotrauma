@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     partial class WayPoint : MapEntity
     {
-        private static Dictionary<SpawnType, Sprite> iconSprites;
+        private static Dictionary<string, Sprite> iconSprites;
         private const int WaypointSize = 12, SpawnPointSize = 32;
 
         public override bool IsVisible(Rectangle worldView)
@@ -56,10 +56,18 @@ namespace Barotrauma
                     Color.White);
             }
 
-            Sprite sprite = iconSprites[SpawnType];
+            Sprite sprite = iconSprites[SpawnType.ToString()];
             if (spawnType == SpawnType.Human && AssignedJob?.Icon != null)
             {
-                sprite = iconSprites[SpawnType.Path];
+                sprite = iconSprites["Path"];
+            }
+            else if (ConnectedDoor != null)
+            {
+                sprite = iconSprites["Door"];
+            }
+            else if (Ladders != null)
+            {
+                sprite = iconSprites["Ladder"];
             }
             sprite.Draw(spriteBatch, drawPos, clr, scale: iconSize / (float)sprite.SourceRect.Width, depth: 0.001f);
             sprite.RelativeOrigin = Vector2.One * 0.5f;

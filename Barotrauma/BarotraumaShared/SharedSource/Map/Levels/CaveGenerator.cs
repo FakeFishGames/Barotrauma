@@ -27,19 +27,19 @@ namespace Barotrauma
 
             foreach (GraphEdge ge in graphEdges)
             {
-                if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.001f) continue;
+                if (Vector2.DistanceSquared(ge.Point1, ge.Point2) < 0.001f) { continue; }
 
                 for (int i = 0; i < 2; i++)
                 {
                     Site site = (i == 0) ? ge.Site1 : ge.Site2;
 
-                    int x = (int)(Math.Floor((site.Coord.X-borders.X) / gridCellSize));
-                    int y = (int)(Math.Floor((site.Coord.Y-borders.Y) / gridCellSize));
+                    int x = (int)(Math.Floor((site.Coord.X - borders.X) / gridCellSize));
+                    int y = (int)(Math.Floor((site.Coord.Y - borders.Y) / gridCellSize));
 
-                    x = MathHelper.Clamp(x, 0, cellGrid.GetLength(0)-1);
-                    y = MathHelper.Clamp(y, 0, cellGrid.GetLength(1)-1);
-                        
-                    VoronoiCell cell = cellGrid[x,y].Find(c => c.Site == site);
+                    x = MathHelper.Clamp(x, 0, cellGrid.GetLength(0) - 1);
+                    y = MathHelper.Clamp(y, 0, cellGrid.GetLength(1) - 1);
+
+                    VoronoiCell cell = cellGrid[x, y].Find(c => c.Site == site);
 
                     if (cell == null)
                     {
@@ -60,14 +60,62 @@ namespace Barotrauma
                 }
             }
 
+            //add edges to the borders of the graph
+            foreach (var cell in cells)
+            {
+                Vector2? point1 = null, point2 = null;
+                foreach (GraphEdge ge in cell.Edges)
+                {
+                    if (MathUtils.NearlyEqual(ge.Point1.X, borders.X) || MathUtils.NearlyEqual(ge.Point1.X, borders.Right) ||
+                        MathUtils.NearlyEqual(ge.Point1.Y, borders.Y) || MathUtils.NearlyEqual(ge.Point1.Y, borders.Bottom))
+                    {
+                        if (point1 == null)
+                        {
+                            point1 = ge.Point1;
+                        }
+                        else if (point2 == null)
+                        {
+                            if (MathUtils.NearlyEqual(point1.Value, ge.Point1)) { continue; }
+                            point2 = ge.Point1;
+                        }
+                    }
+                    if (MathUtils.NearlyEqual(ge.Point2.X, borders.X) || MathUtils.NearlyEqual(ge.Point2.X, borders.Right) ||
+                             MathUtils.NearlyEqual(ge.Point2.Y, borders.Y) || MathUtils.NearlyEqual(ge.Point2.Y, borders.Bottom))
+                    {
+                        if (point1 == null)
+                        {
+                            point1 = ge.Point2;
+                        }
+                        else
+                        {
+                            if (MathUtils.NearlyEqual(point1.Value, ge.Point2)) { continue; }
+                            point2 = ge.Point2;
+                        }
+                    }
+                    if (point1.HasValue && point2.HasValue)
+                    {
+                        Debug.Assert(point1 != point2);
+                        var newEdge = new GraphEdge(point1.Value, point2.Value)
+                        {
+                            Cell1 = cell,
+                            IsSolid = true,
+                            Site1 = cell.Site,
+                            OutsideLevel = true
+                        };
+                        cell.Edges.Add(newEdge);
+                        break;
+                    }
+                }
+            }
+
             return cells;
         }
 
 
         private static Vector2 GetEdgeNormal(GraphEdge edge, VoronoiCell cell = null)
         {
-            if (cell == null) cell = edge.AdjacentCell(null);
-            if (cell == null) return Vector2.UnitX;
+            if (cell == null) { cell = edge.AdjacentCell(null); }
+            if (cell == null) { return Vector2.UnitX; }
 
             CompareCCW compare = new CompareCCW(cell.Center);
             if (compare.Compare(edge.Point1, edge.Point2) == -1)
@@ -77,9 +125,7 @@ namespace Barotrauma
                 edge.Point2 = temp;
             }
 
-            Vector2 normal = Vector2.Zero;
-
-            normal = Vector2.Normalize(edge.Point2 - edge.Point1);
+            Vector2 normal = Vector2.Normalize(edge.Point2 - edge.Point1);
             Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.Point2);
 
             normal = new Vector2(-normal.Y, normal.X);
@@ -136,7 +182,7 @@ namespace Barotrauma
             currentCell.CellType = CellType.Path;
             pathCells.Add(currentCell);
 
-            int currentTargetIndex = 1;
+            int currentTargetIndex = 0;
 
             int iterationsLeft = cells.Count;
 
@@ -148,7 +194,7 @@ namespace Barotrauma
                 foreach (GraphEdge edge in currentCell.Edges)
                 {
                     var adjacentCell = edge.AdjacentCell(currentCell);
-                    if (limits.Contains(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y))
+                    if (adjacentCell != null && limits.Contains(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y))
                     {
                         allowedEdges.Add(edge);
                     }
@@ -161,6 +207,7 @@ namespace Barotrauma
                     for (int i = 0; i < currentCell.Edges.Count; i++)
                     {
                         var adjacentCell = currentCell.Edges[i].AdjacentCell(currentCell);
+                        if (adjacentCell == null) { continue; }
                         double dist = MathUtils.Distance(
                             adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y,
                             targetCells[currentTargetIndex].Site.Coord.X, targetCells[currentTargetIndex].Site.Coord.Y);

@@ -128,7 +128,7 @@ namespace Barotrauma
 
             if (Current == null)
             {
-                DebugConsole.NewMessage("Now skill settings found in the selected content packages. Using default values.");
+                DebugConsole.NewMessage("No skill settings found in the selected content packages. Using default values.");
                 Current = new SkillSettings(null);
             }
         }

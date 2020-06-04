@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +15,7 @@ namespace Barotrauma
     {
         private GUIFrame menu;
         private GUIListBox subscribedItemList, topItemList;
+        private GUITextBox subscribedItemFilter, topItemFilter;
 
         private GUIListBox publishedItemList, myItemList;
 
@@ -26,7 +27,7 @@ namespace Barotrauma
         //listbox that shows the files included in the item being created
         private GUIListBox createItemFileList;
 
-        private FileSystemWatcher createItemWatcher;
+        private System.IO.FileSystemWatcher createItemWatcher;
 
         private readonly List<GUIButton> tabButtons = new List<GUIButton>();
 
@@ -135,6 +136,8 @@ namespace Barotrauma
                 }
             };
 
+            subscribedItemFilter = CreateFilterBox(modsContainer, subscribedItemList);
+
             modsPreviewFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 1.0f), tabs[(int)Tab.Mods].RectTransform, Anchor.TopRight), style: null);
 
             //-------------------------------------------------------------------------------
@@ -162,6 +165,8 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            topItemFilter = CreateFilterBox(listContainer, topItemList);
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.02f), listContainer.RectTransform), TextManager.Get("FindModsButton"), style: "GUIButtonSmall")
             {
@@ -233,6 +238,31 @@ namespace Barotrauma
             SelectTab(Tab.Mods);
 
             subscribedCoroutine = CoroutineManager.StartCoroutine(PollSubscribedItems());
+        }
+
+        private GUITextBox CreateFilterBox(GUIComponent parent, GUIListBox listbox)
+        {
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), parent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            filterContainer.RectTransform.SetAsFirstChild();
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font, createClearButton: true);
+            filterContainer.RectTransform.MinSize = searchBox.RectTransform.MinSize;
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+            searchBox.OnTextChanged += (textBox, text) =>
+            {
+                foreach (GUIComponent child in listbox.Content.Children)
+                {
+                    if (!(child.UserData is Steamworks.Ugc.Item item)) { continue; }
+                    child.Visible = string.IsNullOrEmpty(text) ? true : (item.Title?.ToLower().Contains(text.ToLower()) ?? false);
+                }
+                return true;
+            };
+
+            return searchBox;
         }
 
         public override void Select()
@@ -448,6 +478,18 @@ namespace Barotrauma
                 return;
             }
 
+            string text = string.Empty;
+            if (listBox == subscribedItemList)
+            {
+                text = subscribedItemFilter.Text;
+            }
+            else if (listBox == topItemList)
+            {
+                text = topItemFilter.Text;
+            }
+
+            bool visible = string.IsNullOrEmpty(text) ? true : (item?.Title?.ToLower().Contains(text.ToLower()) ?? false);
+
             int prevIndex = -1;
             var existingFrame = listBox.Content.FindChild((component) => { return (component.UserData is Steamworks.Ugc.Item?) && (component.UserData as Steamworks.Ugc.Item?)?.Id == item?.Id; });
             if (existingFrame != null)
@@ -459,7 +501,8 @@ namespace Barotrauma
             var itemFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), listBox.Content.RectTransform, minSize: new Point(0, 80)),
                     style: "ListBoxElement")
             {
-                UserData = item
+                UserData = item,
+                Visible = visible
             };
             if (prevIndex > -1)
             {
@@ -583,7 +626,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        installed = SteamManager.EnableWorkShopItem(item, true, out string errorMsg, Selected == this);
+                        installed = SteamManager.EnableWorkShopItem(item, out string errorMsg, Selected == this);
                         if (!installed)
                         {
                             DebugConsole.NewMessage(errorMsg, Color.Red);
@@ -643,7 +686,7 @@ namespace Barotrauma
                     {
                         bool reselect = GameMain.Config.SelectedContentPackages.Any(cp => !string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.SteamWorkshopUrl == item?.Url);
                         if (!SteamManager.DisableWorkShopItem(item, false, out string errorMsg) ||
-                            !SteamManager.EnableWorkShopItem(item, true, out errorMsg, reselect, true))
+                            !SteamManager.EnableWorkShopItem(item, out errorMsg, reselect, true))
                         {
                             DebugConsole.ThrowError($"Failed to reinstall \"{item?.Title}\": {errorMsg}", null, true);
                             elem.Flash(GUI.Style.Red);
@@ -837,7 +880,7 @@ namespace Barotrauma
 
             item?.Download(onInstalled: () =>
             {
-                if (SteamManager.EnableWorkShopItem(item, false, out _))
+                if (SteamManager.EnableWorkShopItem(item, out _))
                 {
                     textBlock.Text = TextManager.Get("workshopiteminstalled");
                     frame.Flash(GUI.Style.Green);
@@ -1038,7 +1081,7 @@ namespace Barotrauma
                 string previewImagePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(itemContentPackage.Path), SteamManager.PreviewImageName));
                 try
                 {
-                    using (Stream s = File.Create(previewImagePath))
+                    using (System.IO.Stream s = File.Create(previewImagePath))
                     {
                         sub.PreviewImage.Texture.SaveAsPng(s, (int)sub.PreviewImage.size.X, (int)sub.PreviewImage.size.Y);
                         itemEditor = itemEditor?.WithPreviewFile(previewImagePath);
@@ -1290,10 +1333,10 @@ namespace Barotrauma
             };
             createItemFileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.35f), createItemContent.RectTransform));
             createItemWatcher?.Dispose();
-            createItemWatcher = new FileSystemWatcher(Path.GetDirectoryName(itemContentPackage.Path))
+            createItemWatcher = new System.IO.FileSystemWatcher(Path.GetDirectoryName(itemContentPackage.Path))
             {
                 Filter = "*",
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
+                NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.DirectoryName
             };
             createItemWatcher.Created += OnFileSystemChanges;
             createItemWatcher.Deleted += OnFileSystemChanges;
@@ -1551,7 +1594,7 @@ namespace Barotrauma
 
         volatile bool refreshFileList = false;
 
-        private void OnFileSystemChanges(object sender, FileSystemEventArgs e)
+        private void OnFileSystemChanges(object sender, System.IO.FileSystemEventArgs e)
         {
             refreshFileList = true;
         }
@@ -1564,14 +1607,26 @@ namespace Barotrauma
 
             List<ContentFile> files = itemContentPackage.Files.ToList();
 
-            foreach (ContentFile contentFile in files)
+            for (int i = files.Count - 1; i >= 0; i--)
             {
+                ContentFile contentFile = files[i];
+
                 bool fileExists = File.Exists(contentFile.Path);
 
-                if (!fileExists) { itemContentPackage.Files.Remove(contentFile); continue; }
+                if (contentFile.Type == ContentType.Executable ||
+                    contentFile.Type == ContentType.ServerExecutable)
+                {
+                    fileExists |= File.Exists(contentFile.Path + ".dll");
+                }
+
+                if (!fileExists)
+                {
+                    itemContentPackage.Files.Remove(contentFile);
+                    files.RemoveAt(i);
+                }
             }
 
-            List<ContentFile> allFiles = Directory.GetFiles(Path.GetDirectoryName(itemContentPackage.Path), "*", SearchOption.AllDirectories)
+            List<ContentFile> allFiles = Directory.GetFiles(Path.GetDirectoryName(itemContentPackage.Path), "*", System.IO.SearchOption.AllDirectories)
                 .Select(f => new ContentFile(f, ContentType.None))
                 .Where(file => Path.GetFileName(file.Path) != SteamManager.MetadataFileName &&
                                Path.GetFileName(file.Path) != SteamManager.PreviewImageName)
@@ -1579,21 +1634,30 @@ namespace Barotrauma
             for (int i=0;i<allFiles.Count;i++)
             {
                 ContentFile file = allFiles[i];
-                ContentFile otherFile = itemContentPackage.Files.Find(f => string.Equals(Path.GetFullPath(f.Path).CleanUpPath(),
-                                                                                         Path.GetFullPath(file.Path).CleanUpPath(),
-                                                                                         StringComparison.InvariantCultureIgnoreCase));
+                ContentFile otherFile = files.Find(f => string.Equals(Path.GetFullPath(f.Path).CleanUpPath(),
+                                                                      Path.GetFullPath(file.Path).CleanUpPath(),
+                                                                      StringComparison.InvariantCultureIgnoreCase));
                 if (otherFile != null)
                 {
                     //replace the generated ContentFile object with the one that's present in the
                     //content package to determine which tickboxes should already be checked
                     allFiles[i] = otherFile;
+                    files.Remove(otherFile);
                 }
             }
+
+            allFiles.AddRange(files);
 
             foreach (ContentFile contentFile in allFiles)
             {
                 bool illegalPath = !ContentPackage.IsModFilePathAllowed(contentFile);
                 bool fileExists = File.Exists(contentFile.Path);
+
+                if (contentFile.Type == ContentType.Executable ||
+                    contentFile.Type == ContentType.ServerExecutable)
+                {
+                    fileExists |= File.Exists(contentFile.Path + ".dll");
+                }
 
                 var fileFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.12f), createItemFileList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     style: "ListBoxElement")
@@ -1662,36 +1726,39 @@ namespace Barotrauma
                     return true;
                 };
 
-                new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), content.RectTransform), TextManager.Get("Delete"), style: "GUIButtonSmall")
+                if (!files.Contains(contentFile)) //this prevents deletion of files not contained in the mod's path (i.e. vanilla content)
                 {
-                    OnClicked = (btn, userdata) =>
+                    new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), content.RectTransform), TextManager.Get("Delete"), style: "GUIButtonSmall")
                     {
-                        var msgBox = new GUIMessageBox(TextManager.Get("ConfirmFileDeletionHeader"),
-                                TextManager.GetWithVariable("ConfirmFileDeletion", "[file]", contentFile.Path),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                        OnClicked = (btn, userdata) =>
                         {
-                            UserData = "verificationprompt"
-                        };
-                        msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
-                        {
-                            try
+                            var msgBox = new GUIMessageBox(TextManager.Get("ConfirmFileDeletionHeader"),
+                                    TextManager.GetWithVariable("ConfirmFileDeletion", "[file]", contentFile.Path),
+                                    new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                             {
-                                File.Delete(contentFile.Path);
-                                if (contentFile.Type == ContentType.Submarine) { SubmarineInfo.RefreshSavedSub(contentFile.Path); }
-                            }
-                            catch (Exception e)
+                                UserData = "verificationprompt"
+                            };
+                            msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
                             {
-                                DebugConsole.ThrowError($"Failed to delete \"${contentFile.Path}\".", e);
-                            }
-                            //RefreshCreateItemFileList();
-                            RefreshMyItemList();
+                                try
+                                {
+                                    File.Delete(contentFile.Path);
+                                    if (contentFile.Type == ContentType.Submarine) { SubmarineInfo.RefreshSavedSub(contentFile.Path); }
+                                }
+                                catch (Exception e)
+                                {
+                                    DebugConsole.ThrowError($"Failed to delete \"${contentFile.Path}\".", e);
+                                }
+                                //RefreshCreateItemFileList();
+                                RefreshMyItemList();
+                                return true;
+                            };
+                            msgBox.Buttons[0].OnClicked += msgBox.Close;
+                            msgBox.Buttons[1].OnClicked = msgBox.Close;
                             return true;
-                        };
-                        msgBox.Buttons[0].OnClicked += msgBox.Close;
-                        msgBox.Buttons[1].OnClicked = msgBox.Close;
-                        return true;
-                    }
-                };
+                        }
+                    };
+                }
 
                 content.Recalculate();
                 fileFrame.RectTransform.MinSize = 
@@ -1714,7 +1781,7 @@ namespace Barotrauma
                 var workshopPublishStatus = SteamManager.StartPublishItem(itemContentPackage, itemEditor);
                 if (workshopPublishStatus != null)
                 {
-                    if (!itemEditor.Value.Tags.Contains("unstable")) { itemEditor.Value.Tags.Add("unstable"); }
+                    if (!(itemEditor?.HasTag("unstable") ?? false)) { itemEditor = itemEditor?.WithTag("unstable"); }
                     CoroutineManager.StartCoroutine(WaitForPublish(workshopPublishStatus), "WaitForPublish");
                 }
                 msgBox.Close();

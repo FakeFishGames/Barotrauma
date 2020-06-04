@@ -32,7 +32,9 @@ namespace Barotrauma
                 SoundPlayer.OverrideMusicDuration = 18.0f;
             }
 
-            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            GUIFrame background = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: "GUIBackgroundBlocker");
+
+            GUIFrame frame = new GUIFrame(new RectTransform(Vector2.One, background.RectTransform, Anchor.Center), style: null)
             {
                 UserData = "roundsummary"
             };

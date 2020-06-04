@@ -104,7 +104,7 @@ namespace Barotrauma
             }
         }
 
-        class CharacterSpawnInfo : ISerializableEntity
+        public class CharacterSpawnInfo : ISerializableEntity
         {
             public string Name => $"Character Spawn Info ({SpeciesName})";
             public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
@@ -186,6 +186,11 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        public IEnumerable<CharacterSpawnInfo> SpawnCharacters
+        {
+            get { return spawnCharacters; }
         }
 
         private readonly List<Pair<string, float>> reduceAffliction;
@@ -313,7 +318,7 @@ namespace Barotrauma
                         break;
                     case "conditionalcomparison":
                     case "comparison":
-                        if (!Enum.TryParse(attribute.Value, out conditionalComparison))
+                        if (!Enum.TryParse(attribute.Value, ignoreCase: true, out conditionalComparison))
                         {
                             DebugConsole.ThrowError("Invalid conditional comparison type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
@@ -688,7 +693,7 @@ namespace Barotrauma
             }
 
             Vector2 position = worldPosition ?? (entity.Removed ? Vector2.Zero : entity.WorldPosition);
-            if (targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
+            if (worldPosition == null && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
             {
                 if (entity is Character c)
                 {
@@ -745,13 +750,20 @@ namespace Barotrauma
                 {
                     if (target is Entity targetEntity)
                     {
-                        if (targetEntity.Removed) continue;
+                        if (targetEntity.Removed) { continue; }
+                    }
+
+                    if (target is Limb limb)
+                    {
+                        position = limb.WorldPosition + Offset;
                     }
 
                     for (int i = 0; i < propertyNames.Length; i++)
                     {
-                        if (target == null || target.SerializableProperties == null ||
-                            !target.SerializableProperties.TryGetValue(propertyNames[i], out SerializableProperty property)) continue;
+                        if (target == null || target.SerializableProperties == null || !target.SerializableProperties.TryGetValue(propertyNames[i], out SerializableProperty property))
+                        {
+                            continue;
+                        }
                         ApplyToProperty(target, property, propertyEffects[i], deltaTime);
                     }
                 }
@@ -767,7 +779,10 @@ namespace Barotrauma
                 foreach (Affliction affliction in Afflictions)
                 {
                     Affliction multipliedAffliction = affliction;
-                    if (!disableDeltaTime) multipliedAffliction = affliction.CreateMultiplied(deltaTime);
+                    if (!disableDeltaTime)
+                    {
+                        multipliedAffliction = affliction.CreateMultiplied(deltaTime);
+                    }
 
                     if (target is Character character)
                     {
@@ -775,18 +790,21 @@ namespace Barotrauma
                         character.LastDamageSource = entity;
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
+                            if (limb.Removed) { continue; }
+                            if (limb.IsSevered) { continue; }
                             if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
-                            limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
-                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
+                            AttackResult result = limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, result.Damage, allowBeheading: true);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
                     }
                     else if (target is Limb limb)
                     {
+                        if (limb.IsSevered) { continue; }
                         if (limb.character.Removed || limb.Removed) { continue; }
-                        limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
-                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability);
+                        AttackResult result = limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, result.Damage, allowBeheading: true);
                     }
                 }
 

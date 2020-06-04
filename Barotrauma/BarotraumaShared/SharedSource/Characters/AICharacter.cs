@@ -47,12 +47,16 @@ namespace Barotrauma
             base.Update(deltaTime, cam);
 
             if (!Enabled) { return; }
-            if (IsDead || Vitality <= 0.0f || Stun > 0.0f || IsIncapacitated) { return; }
+            if (IsDead || Vitality <= 0.0f || Stun > 0.0f || IsIncapacitated)
+            {
+                //don't enable simple physics on dead/incapacitated characters
+                //the ragdoll controls the movement of incapacitated characters instead of the collider,
+                //but in simple physics mode the ragdoll would get disabled, causing the character to not move at all
+                AnimController.SimplePhysicsEnabled = false;
+                return;
+            }
 
-            //don't enable simple physics on dead/incapacitated characters
-            //the ragdoll controls the movement of incapacitated characters instead of the collider,
-            //but in simple physics mode the ragdoll would get disabled, causing the character to not move at all
-            if (!IsRemotePlayer)
+            if (!IsRemotePlayer && !(AIController is HumanAIController))
             {
                 float characterDist = float.MaxValue;
 #if CLIENT

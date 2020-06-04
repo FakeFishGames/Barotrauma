@@ -10,10 +10,10 @@ namespace Barotrauma.Items.Components
         private bool isInWater;
         private float stateSwitchDelay;
 
-        [InGameEditable, Serialize("1", true, description: "The signal the item sends out when it's underwater.")]
+        [InGameEditable, Serialize("1", true, description: "The signal the item sends out when it's underwater.", alwaysUseInstanceValues: true)]
         public string Output { get; set; }
 
-        [InGameEditable, Serialize("0", true, description: "The signal the item sends out when it's not underwater.")]
+        [InGameEditable, Serialize("0", true, description: "The signal the item sends out when it's not underwater.", alwaysUseInstanceValues: true)]
         public string FalseOutput { get; set; }
 
         public WaterDetector(Item item, XElement element)

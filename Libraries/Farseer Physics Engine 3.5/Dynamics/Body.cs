@@ -664,7 +664,7 @@ namespace FarseerPhysics.Dynamics
                 }
             }
 
-            if (Enabled)
+            if (Enabled && World != null)
             {
                 IBroadPhase broadPhase = World.ContactManager.BroadPhase;
                 fixture.DestroyProxies(broadPhase);
@@ -677,7 +677,7 @@ namespace FarseerPhysics.Dynamics
                 ((PolygonShape)fixture.Shape).Vertices.AttachedToBody = false;
 #endif
 
-            if (World.FixtureRemoved != null)
+            if (World?.FixtureRemoved != null)
                 World.FixtureRemoved(World, this, fixture);
 
             ResetMassData();

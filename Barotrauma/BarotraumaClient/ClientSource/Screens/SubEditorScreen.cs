@@ -4,11 +4,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework.Input;
+#if DEBUG
+using System.IO;
+#else
+using Barotrauma.IO;
+#endif
 
 // ReSharper disable AccessToModifiedClosure, PossibleLossOfFraction, RedundantLambdaParameterType, UnusedVariable
 
@@ -50,7 +54,7 @@ namespace Barotrauma
 
         private GUITextBlock subNameLabel;
 
-        private bool showThalamus = true;
+        public bool ShowThalamus { get; private set; } = true;
 
         private bool entityMenuOpen = true;
         private float entityMenuOpenState = 1.0f;
@@ -183,7 +187,7 @@ namespace Barotrauma
 
         private void CreateUI()
         {
-            TopPanel = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
+            TopPanel = new GUIFrame(new RectTransform(new Vector2(GUI.Canvas.RelativeSize.X, 0.01f), GUI.Canvas) { MinSize = new Point(0, 35) }, "GUIFrameTop");
 
             GUILayoutGroup paddedTopPanel = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.8f), TopPanel.RectTransform, Anchor.Center),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft)
@@ -480,8 +484,8 @@ namespace Barotrauma
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedShowEntitiesPanel.RectTransform), TextManager.Get("mapentitycategory.thalamus"))
             {
                 UserData = "thalamus",
-                Selected = showThalamus,
-                OnSelected = (GUITickBox obj) => { showThalamus = obj.Selected; return true; },
+                Selected = ShowThalamus,
+                OnSelected = (GUITickBox obj) => { ShowThalamus = obj.Selected; return true; },
             };
 
             showEntitiesTickBoxes.AddRange(paddedShowEntitiesPanel.Children.Select(c => c as GUITickBox));
@@ -747,9 +751,14 @@ namespace Barotrauma
                 frame.RectTransform.MinSize = new Point(0, frame.Rect.Width);
                 frame.RectTransform.MaxSize = new Point(int.MaxValue, frame.Rect.Width);
 
-
-                string name = legacy ? ep.Name + " (legacy)" : ep.Name;
+                string name = legacy ? TextManager.GetWithVariable("legacyitemformat", "[name]", ep.Name) : ep.Name;
                 frame.ToolTip = string.IsNullOrEmpty(ep.Description) ? name : name + '\n' + ep.Description;
+
+                if (ep.HideInMenus) 
+                {
+                    frame.Color = Color.Red;
+                    name = "[HIDDEN] " + name;
+                }
 
                 GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
                 {              
@@ -787,7 +796,11 @@ namespace Barotrauma
                 if (ep is ItemAssemblyPrefab itemAssemblyPrefab)
                 {
                     new GUICustomComponent(new RectTransform(new Vector2(1.0f, 0.75f),
-                        paddedFrame.RectTransform, Anchor.TopCenter), onDraw: itemAssemblyPrefab.DrawIcon)
+                        paddedFrame.RectTransform, Anchor.TopCenter), onDraw: (sb, customComponent) =>
+                        {
+                            if (GUIImage.LoadingTextures) { return; }
+                            itemAssemblyPrefab.DrawIcon(sb, customComponent);
+                        })
                     {
                         HideElementsOutsideFrame = true,
                         ToolTip = frame.RawToolTip
@@ -795,7 +808,7 @@ namespace Barotrauma
                 }
 
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform, Anchor.BottomCenter),
-                    text: ep.Name, textAlignment: Alignment.Center, font: GUI.SmallFont)
+                    text: name, textAlignment: Alignment.Center, font: GUI.SmallFont)
                 {
                     CanBeFocused = false
                 };
@@ -1169,7 +1182,7 @@ namespace Barotrauma
                     if (!Directory.Exists(filePath))
                     {
                         var e = Directory.CreateDirectory(filePath);
-                        e.Attributes = FileAttributes.Directory | FileAttributes.Hidden;
+                        e.Attributes = System.IO.FileAttributes.Directory | System.IO.FileAttributes.Hidden;
                         if (!e.Exists) { return; }
                     }
 
@@ -1221,15 +1234,33 @@ namespace Barotrauma
                 return false;
             }
 
-            Submarine.MainSub.Info.Name = name;
-
             string savePath = name + ".sub";
             string prevSavePath = null;
             if (!string.IsNullOrEmpty(Submarine.MainSub?.Info.FilePath) &&
                 Submarine.MainSub.Info.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
             {
                 prevSavePath = Submarine.MainSub.Info.FilePath.CleanUpPath();
-                savePath = Path.Combine(Path.GetDirectoryName(Submarine.MainSub.Info.FilePath), savePath).CleanUpPath();
+                string prevDir = Path.GetDirectoryName(Submarine.MainSub.Info.FilePath).CleanUpPath();
+                string[] subDirs = prevDir.Split('/');
+                bool forceToSubFolder = Steam.SteamManager.IsInitialized;
+                bool isInSubFolder = subDirs.Length > 0 && subDirs[0].Equals("Submarines", StringComparison.InvariantCultureIgnoreCase);
+                if (forceToSubFolder && subDirs.Length > 1 && subDirs[0].Equals("Mods", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    string modName = subDirs[1];
+                    ContentPackage contentPackage = ContentPackage.List.Find(p => p.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
+                    if (contentPackage != null)
+                    {
+                        Steamworks.Data.PublishedFileId packageId = Steam.SteamManager.GetWorkshopItemIDFromUrl(contentPackage.SteamWorkshopUrl);
+                        Steamworks.Ugc.Item? item = Steamworks.Ugc.Item.GetAsync(packageId).Result;
+                        if (item?.Owner.Id == Steam.SteamManager.GetSteamID())
+                        {
+                            forceToSubFolder = false;
+                            contentPackage.Files.Add(new ContentFile(Path.Combine(prevDir, savePath).CleanUpPath(), ContentType.Submarine));
+                            contentPackage.Save(contentPackage.Path);
+                        }
+                    }
+                }
+                savePath = Path.Combine(forceToSubFolder && !isInSubFolder ? SubmarineInfo.SavePath : prevDir, savePath).CleanUpPath();
             }
             else
             {
@@ -1255,7 +1286,7 @@ namespace Barotrauma
                 if (previewImage?.Sprite?.Texture != null)
                 {
                     bool savePreviewImage = true;
-                    using MemoryStream imgStream = new MemoryStream();
+                    using System.IO.MemoryStream imgStream = new System.IO.MemoryStream();
                     try
                     {
                         previewImage.Sprite.Texture.SaveAsPng(imgStream, previewImage.Sprite.Texture.Width, previewImage.Sprite.Texture.Height);
@@ -1298,10 +1329,12 @@ namespace Barotrauma
                 SetMode(Mode.Default);
             }
 
-            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
+
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, saveFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.5f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(750, 400) });
             var paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.02f };
@@ -1465,10 +1498,10 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    using (MemoryStream imgStream = new MemoryStream())
+                    using (System.IO.MemoryStream imgStream = new System.IO.MemoryStream())
                     {
                         CreateImage(defaultPreviewImageSize.X, defaultPreviewImageSize.Y, imgStream);
-                        previewImage.Sprite = new Sprite(TextureLoader.FromStream(imgStream), null, null);
+                        previewImage.Sprite = new Sprite(TextureLoader.FromStream(imgStream, compress: false), null, null);
                         if (Submarine.MainSub != null)
                         {
                             Submarine.MainSub.Info.PreviewImage = previewImage.Sprite;
@@ -1611,10 +1644,12 @@ namespace Barotrauma
         {
             SetMode(Mode.Default);
 
-            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            saveFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) saveFrame = null; return true; }
             };
+
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, saveFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.3f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 300) });
             GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center))
@@ -1703,10 +1738,24 @@ namespace Barotrauma
                 }
             }
 
-            var hideInMenusTickBox = nameBox.Parent.GetChildByUserData("hideinmenus") as GUITickBox;
-            bool hideInMenus = hideInMenusTickBox == null ? false : hideInMenusTickBox.Selected;
-            
-            string saveFolder = Path.Combine("Content", "Items", "Assemblies");
+            bool hideInMenus = !(nameBox.Parent.GetChildByUserData("hideinmenus") is GUITickBox hideInMenusTickBox) ? false : hideInMenusTickBox.Selected;
+#if DEBUG
+            string saveFolder = ItemAssemblyPrefab.VanillaSaveFolder;
+#else
+            string saveFolder = ItemAssemblyPrefab.SaveFolder;
+            if (!Directory.Exists(saveFolder))
+            {
+                try
+                {
+                    Directory.CreateDirectory(saveFolder);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to create a directory for the item assmebly.", e);
+                    return false;
+                }
+            }
+#endif
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
 
             if (File.Exists(filePath))
@@ -1729,8 +1778,11 @@ namespace Barotrauma
             void Save()
             {
                 XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
+#if DEBUG
                 doc.Save(filePath);
-
+#else
+                doc.SaveSafe(filePath);
+#endif
                 new ItemAssemblyPrefab(filePath);
                 UpdateEntityList();
             }
@@ -1744,10 +1796,12 @@ namespace Barotrauma
             CloseItem();
             SetMode(Mode.Default);
 
-            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas), style: "GUIBackgroundBlocker")
+            loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
             {
                 OnClicked = (btn, userdata) => { if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) loadFrame = null; return true; },
             };
+
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, loadFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.5f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
 
@@ -3025,6 +3079,7 @@ namespace Barotrauma
             }
             
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
+            hullVolumeFrame.RectTransform.AbsoluteOffset = new Point(Math.Max(showEntitiesPanel.Rect.Right, previouslyUsedPanel.Rect.Right), 0);
             saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
 
             var offset = cam.WorldView.Top - cam.ScreenToWorld(new Vector2(0, GameMain.GraphicsHeight - EntityMenu.Rect.Top)).Y;
@@ -3547,7 +3602,7 @@ namespace Barotrauma
             }
             Submarine.DrawBack(spriteBatch, true, e => 
                 e is Structure s && 
-                (showThalamus || !s.prefab.Category.HasFlag(MapEntityCategory.Thalamus)) && 
+                (ShowThalamus || !s.prefab.Category.HasFlag(MapEntityCategory.Thalamus)) && 
                 (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null));
             spriteBatch.End();
 
@@ -3567,15 +3622,15 @@ namespace Barotrauma
             
             Submarine.DrawBack(spriteBatch, true, e => 
                 (!(e is Structure) || e.SpriteDepth < 0.9f) &&
-                (showThalamus || !e.prefab.Category.HasFlag(MapEntityCategory.Thalamus)));
+                (ShowThalamus || !e.prefab.Category.HasFlag(MapEntityCategory.Thalamus)));
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
-            Submarine.DrawDamageable(spriteBatch, null, editing: true, e => showThalamus || !(e.prefab?.Category.HasFlag(MapEntityCategory.Thalamus) ?? false));
+            Submarine.DrawDamageable(spriteBatch, null, editing: true, e => ShowThalamus || !(e.prefab?.Category.HasFlag(MapEntityCategory.Thalamus) ?? false));
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
-            Submarine.DrawFront(spriteBatch, editing: true, e => showThalamus || !(e.prefab?.Category.HasFlag(MapEntityCategory.Thalamus) ?? false));
+            Submarine.DrawFront(spriteBatch, editing: true, e => ShowThalamus || !(e.prefab?.Category.HasFlag(MapEntityCategory.Thalamus) ?? false));
             if (!WiringMode && !IsMouseOnEditorGUI())
             {
                 MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);                
@@ -3636,7 +3691,7 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void CreateImage(int width, int height, Stream stream)
+        private void CreateImage(int width, int height, System.IO.Stream stream)
         {
             MapEntity.SelectedList.Clear();
 
@@ -3688,7 +3743,7 @@ namespace Barotrauma
 
         public void SaveScreenShot(int width, int height, string filePath)
         {
-            Stream stream = File.OpenWrite(filePath);
+            System.IO.Stream stream = File.OpenWrite(filePath);
             CreateImage(width, height, stream);
             stream.Dispose();
         }

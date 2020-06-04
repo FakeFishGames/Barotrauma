@@ -1258,7 +1258,7 @@ namespace Microsoft.Xna.Framework.Graphics
                     }
                 }
             }
-            _batcher.Dispose();
+            //_batcher.Dispose();
             base.Dispose(disposing);
         }
 	}

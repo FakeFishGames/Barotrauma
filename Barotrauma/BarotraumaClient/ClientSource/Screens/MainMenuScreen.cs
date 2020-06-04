@@ -10,7 +10,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -409,10 +409,9 @@ namespace Barotrauma
 
             this.game = game;
 
-            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null, color: Color.Black * 0.5f)
-            {
-                CanBeFocused = false
-            };
+            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, menuTabs[(int)Tab.Credits].RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
+
             var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
 
@@ -1010,11 +1009,12 @@ namespace Barotrauma
             GUI.Draw(Cam, spriteBatch);
 
 #if !UNSTABLE
-            GUI.Font.DrawString(spriteBatch, "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")", new Vector2(10, GameMain.GraphicsHeight - 20), Color.White * 0.7f);
+            string versionString = "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")";
+            GUI.SmallFont.DrawString(spriteBatch, versionString, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUI.SmallFont.MeasureString(versionString).Y - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
 #endif
             if (selectedTab != Tab.Credits)
             {
-                Vector2 textPos = new Vector2(GameMain.GraphicsWidth - 10, GameMain.GraphicsHeight - 10);
+                Vector2 textPos = new Vector2(GameMain.GraphicsWidth - HUDLayoutSettings.Padding, GameMain.GraphicsHeight - HUDLayoutSettings.Padding * 0.75f);
                 for (int i = legalCrap.Length - 1; i >= 0; i--)
                 {
                     Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
@@ -1069,7 +1069,7 @@ namespace Barotrauma
             {
                 File.Copy(selectedSub.FilePath, Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"), true);
             }
-            catch (IOException e)
+            catch (System.IO.IOException e)
             {
                 DebugConsole.ThrowError("Copying the file \"" + selectedSub.FilePath + "\" failed. The file may have been deleted or in use by another process. Try again or select another submarine.", e);
                 GameAnalyticsManager.AddErrorEventOnce(

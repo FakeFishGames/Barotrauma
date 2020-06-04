@@ -344,10 +344,18 @@ namespace Barotrauma.Networking
                     if (!isCompatibleVersion)
                     {
                         RemovePendingClient(pendingClient, DisconnectReason.InvalidVersion,
-                                    $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version.ToString()}~[clientversion]={version}");
+                                    $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version}~[clientversion]={version}");
 
                         GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
                         DebugConsole.NewMessage(name + " (" + inc.SenderConnection.RemoteEndPoint.Address.ToString() + ") couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
+                        return;
+                    }
+
+                    Client nameTaken = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), name.ToLower()));
+                    if (nameTaken != null)
+                    {
+                        RemovePendingClient(pendingClient, DisconnectReason.NameTaken, "");
+                        GameServer.Log(name + " (" + inc.SenderConnection.RemoteEndPoint.Address + ") couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
                         return;
                     }
 

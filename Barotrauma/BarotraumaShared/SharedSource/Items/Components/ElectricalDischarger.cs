@@ -1,13 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ElectricalDischarger : Powered
+    partial class ElectricalDischarger : Powered, IServerSerializable
     {
         private static readonly List<ElectricalDischarger> list = new List<ElectricalDischarger>();
         public static IEnumerable<ElectricalDischarger> List
@@ -48,14 +48,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(500.0f, true, description: "How far the discharge can travel from the item."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
+        [Serialize(500.0f, true, description: "How far the discharge can travel from the item.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float Range
         {
             get;
             set;
         }
 
-        [Serialize(25.0f, true, description: "How much further can the discharge be carried when moving across walls."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(25.0f, true, description: "How much further can the discharge be carried when moving across walls.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float RangeMultiplierInWalls
         {
             get;
@@ -115,10 +115,15 @@ namespace Barotrauma.Items.Components
             //already active, do nothing
             if (IsActive) { return false; }
 
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+
             CurrPowerConsumption = powerConsumption;
             charging = true;
             timer = Duration;
             IsActive = true;
+#if SERVER
+            if (GameMain.Server != null) { item.CreateServerEvent(this); }
+#endif
             return false;
         }
 
@@ -150,14 +155,12 @@ namespace Barotrauma.Items.Components
                             neededPower -= takePower;
                             battery.Charge -= takePower / 3600.0f;
     #if SERVER
-                            if (GameMain.Server != null)
-                            {
-                                battery.Item.CreateServerEvent(battery);
-                            }
+                            if (GameMain.Server != null) { battery.Item.CreateServerEvent(battery); }
     #endif
                         }
                     }
                     Discharge();
+
                 }
                 else if (Voltage > MinVoltage)
                 {
@@ -477,6 +480,11 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
             list.Remove(this);
+        }
+
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        {
+            //no further data needed, the event just triggers the discharge
         }
     }
 }

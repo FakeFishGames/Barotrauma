@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -7,6 +8,9 @@ namespace Barotrauma
     {
         private bool usedExistingItem;
 
+        private UInt16 originalItemID;
+        private UInt16 originalInventoryID;
+
         private readonly List<Pair<int, int>> executedEffectIndices = new List<Pair<int, int>>();
 
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
@@ -14,11 +18,11 @@ namespace Barotrauma
             msg.Write(usedExistingItem);
             if (usedExistingItem)
             {
-                msg.Write(item.ID);
+                msg.Write(originalItemID);
             }
             else
             {
-                item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? 0);
+                item.WriteSpawnData(msg, originalItemID, originalInventoryID);
             }
 
             msg.Write((byte)executedEffectIndices.Count);

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Threading;
 
@@ -93,7 +93,7 @@ namespace Barotrauma.Networking
                     {
                         data = File.ReadAllBytes(filePath);
                     }
-                    catch (IOException e)
+                    catch (System.IO.IOException e)
                     {
                         if (i >= maxRetries) { throw; }
                         DebugConsole.NewMessage("Failed to initiate a file transfer {" + e.Message + "}, retrying in 250 ms...", Color.Red);

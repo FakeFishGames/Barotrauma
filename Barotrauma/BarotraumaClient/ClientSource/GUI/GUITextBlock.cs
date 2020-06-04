@@ -510,6 +510,8 @@ namespace Barotrauma
 
             var currPosition = positions[0];
 
+            float topY = positions.Min(p => p.Item1.Y);
+
             for (int i = 1; i < positions.Count; i++)
             {
                 var p1 = positions[i];
@@ -527,7 +529,7 @@ namespace Barotrauma
                 else
                 {
                     diffY = Math.Abs(p1.Item1.Y - pos.Y);
-                    if (diffY < halfHeight)
+                    if (diffY < halfHeight || (p1.Item1.Y == topY && pos.Y < topY))
                     {
                         //we are on this line, select the nearest character
                         float diffX = Math.Abs(p1.Item1.X - pos.X) - Math.Abs(p2.Item1.X - pos.X);

@@ -10,6 +10,8 @@ namespace Barotrauma.Particles
     {
         private ParticlePrefab prefab;
 
+        private string debugName = "Particle (uninitialized)";
+
         public delegate void OnChangeHullHandler(Vector2 position, Hull currentHull);
         public OnChangeHullHandler OnChangeHull;
 
@@ -92,10 +94,16 @@ namespace Barotrauma.Particles
         {
             get { return prefab; }
         }
-        
+
+        public override string ToString()
+        {
+            return debugName;
+        }
+
         public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false)
         {
             this.prefab = prefab;
+            debugName = $"Particle ({prefab.Name})";
 
             spriteIndex = Rand.Int(prefab.Sprites.Count);
 

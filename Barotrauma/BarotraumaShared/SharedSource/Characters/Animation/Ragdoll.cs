@@ -47,7 +47,9 @@ namespace Barotrauma
         private readonly Queue<Impact> impactQueue = new Queue<Impact>();
 
         protected Hull currentHull;
-        
+
+        private bool accessRemovedCharacterErrorShown;
+
         private Limb[] limbs;
         public Limb[] Limbs
         {
@@ -55,16 +57,17 @@ namespace Barotrauma
             {
                 if (limbs == null)
                 {
-                    string errorMsg = "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this);
-#if DEBUG || UNSTABLE
-                    errorMsg += '\n' + Environment.StackTrace;
-#endif
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce(
-                        "Ragdoll.Limbs:AccessRemoved",
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace);
-
+                    if (!accessRemovedCharacterErrorShown)
+                    {
+                        string errorMsg = "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this);
+                        errorMsg += '\n' + Environment.StackTrace;
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "Ragdoll.Limbs:AccessRemoved",
+                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace);
+                        accessRemovedCharacterErrorShown = true;
+                    }
                     return new Limb[0];
                 }
                 return limbs;
@@ -97,11 +100,16 @@ namespace Barotrauma
 
         private bool simplePhysicsEnabled;
 
+        public Character Character => character;
         protected Character character;
 
         protected float strongestImpact;
 
         private float splashSoundTimer;
+
+        //the ragdoll builds a "tolerance" to the flow force when being pushed by water. 
+        //Allows sudden forces (breach, letting water through a door) to heavily push the character around while ensuring flowing water won't make the characters permanently stuck.
+        private float flowForceTolerance, flowStunTolerance;
 
         //the movement speed of the ragdoll
         public Vector2 movement;
@@ -156,8 +164,8 @@ namespace Barotrauma
             }
             set
             {
-                if (value == colliderIndex || collider == null) return;
-                if (value >= collider.Count || value < 0) return;
+                if (value == colliderIndex || collider == null) { return; }
+                if (value >= collider.Count || value < 0) { return; }
 
                 if (collider[colliderIndex].height < collider[value].height)
                 {
@@ -165,9 +173,8 @@ namespace Barotrauma
                     pos1.Y -= collider[colliderIndex].height * ColliderHeightFromFloor;
                     Vector2 pos2 = pos1;
                     pos2.Y += collider[value].height * 1.1f;
-                    if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall))) return;
+                    if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall))) { return; }
                 }
-
 
                 Vector2 pos = collider[colliderIndex].SimPosition;
                 pos.Y -= collider[colliderIndex].height * 0.5f;
@@ -216,7 +223,7 @@ namespace Barotrauma
                     mainLimb = torso ?? head;
                     if (mainLimb == null)
                     {
-                        mainLimb = Limbs.FirstOrDefault();
+                        mainLimb = Limbs.FirstOrDefault(l => !l.IsSevered && !l.ignoreCollisions);
                     }
                 }
                 return mainLimb;
@@ -238,13 +245,13 @@ namespace Barotrauma
             get { return simplePhysicsEnabled; }
             set
             {
-                if (value == simplePhysicsEnabled) return;
+                if (value == simplePhysicsEnabled) { return; }
 
                 simplePhysicsEnabled = value;
 
                 foreach (Limb limb in Limbs)
                 {
-                    if (limb.IsSevered) continue;
+                    if (limb.IsSevered) { continue; }
                     if (limb.body == null)
                     {
                         DebugConsole.ThrowError("Limb has no body! (" + (character != null ? character.Name : "Unknown character") + ", " + limb.type.ToString());
@@ -296,8 +303,6 @@ namespace Barotrauma
         public float ImpactTolerance => RagdollParams.ImpactTolerance;
         public bool Draggable => RagdollParams.Draggable;
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
-        public bool CanAttackSubmarine => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Structure));
-        public bool CanAttackCharacters => Limbs.Any(l => l.attack != null && l.attack.IsValidTarget(AttackTarget.Character));
 
         public float Dir => dir == Direction.Left ? -1.0f : 1.0f;
 
@@ -324,6 +329,7 @@ namespace Barotrauma
                 Submarine currSubmarine = currentHull?.Submarine;
                 foreach (Limb limb in Limbs)
                 {
+                    if (limb.IsSevered) { continue; }
                     limb.body.Submarine = currSubmarine;
                 }
                 Collider.Submarine = currSubmarine;
@@ -377,7 +383,7 @@ namespace Barotrauma
                 foreach (var kvp in items)
                 {
                     int id = kvp.Key.ID;
-                    // This can be the case if we manipulate the ragdoll in runtime (husk appendage, limb severance)
+                    // This can be the case if we manipulate the ragdoll at runtime (husk appendage, limb removal in the character editor)
                     if (id > limbs.Length - 1) { continue; }
                     var limb = limbs[id];
                     var itemList = kvp.Value;
@@ -438,7 +444,7 @@ namespace Barotrauma
             {
                 foreach (LimbJoint joint in LimbJoints)
                 {
-                    if (GameMain.World.JointList.Contains(joint)) { GameMain.World.Remove(joint); }
+                    if (GameMain.World.JointList.Contains(joint.Joint)) { GameMain.World.Remove(joint.Joint); }
                 }
             }
             DebugConsole.Log($"Creating joints from {RagdollParams.Name}.");
@@ -523,7 +529,7 @@ namespace Barotrauma
         public void AddJoint(JointParams jointParams)
         {
             LimbJoint joint = new LimbJoint(Limbs[jointParams.Limb1], Limbs[jointParams.Limb2], jointParams, this);
-            GameMain.World.Add(joint);
+            GameMain.World.Add(joint.Joint);
             for (int i = 0; i < LimbJoints.Length; i++)
             {
                 if (LimbJoints[i] != null) continue;
@@ -606,7 +612,7 @@ namespace Barotrauma
             limb.Remove();
             foreach (LimbJoint limbJoint in attachedJoints)
             {
-                GameMain.World.Remove(limbJoint);
+                GameMain.World.Remove(limbJoint.Joint);
             }
         }
 
@@ -706,7 +712,7 @@ namespace Barotrauma
                         float impactDamage = Math.Min((impact - ImpactTolerance) * ImpactDamageMultiplayer, character.MaxVitality * MaxImpactDamage);
 
                         character.LastDamageSource = null;
-                        character.AddDamage(impactPos, new List<Affliction>() { AfflictionPrefab.InternalDamage.Instantiate(impactDamage) }, 0.0f, true);
+                        character.AddDamage(impactPos, AfflictionPrefab.ImpactDamage.Instantiate(impactDamage).ToEnumerable(), 0.0f, true);
                         strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
                         character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
                         //briefly disable impact damage
@@ -720,12 +726,14 @@ namespace Barotrauma
 
             ImpactProjSpecific(impact, f1.Body);
         }
-        
-        public void SeverLimbJoint(LimbJoint limbJoint, bool playSound = true)
+
+        private readonly List<Limb> connectedLimbs = new List<Limb>();
+        private readonly List<LimbJoint> checkedJoints = new List<LimbJoint>();
+        public bool SeverLimbJoint(LimbJoint limbJoint)
         {
             if (!limbJoint.CanBeSevered || limbJoint.IsSevered)
             {
-                return;
+                return false;
             }
 
             limbJoint.IsSevered = true;
@@ -738,22 +746,29 @@ namespace Barotrauma
             limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
             limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
 
-            List<Limb> connectedLimbs = new List<Limb>();
-            List<LimbJoint> checkedJoints = new List<LimbJoint>();
-
+            connectedLimbs.Clear();
+            checkedJoints.Clear();
             GetConnectedLimbs(connectedLimbs, checkedJoints, MainLimb);
             foreach (Limb limb in Limbs)
             {
                 if (connectedLimbs.Contains(limb)) { continue; }
                 limb.IsSevered = true;
+                if (limb.type == LimbType.RightHand)
+                {
+                    character.SelectedItems[0]?.Drop(character);
+                }
+                else if (limb.type == LimbType.LeftHand)
+                {
+                    character.SelectedItems[1]?.Drop(character);
+                }
             }
 
             SeverLimbJointProjSpecific(limbJoint, playSound: true);
-
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
             }
+            return true;
         }
 
         partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound);
@@ -764,7 +779,7 @@ namespace Barotrauma
 
             foreach (LimbJoint joint in LimbJoints)
             {
-                if (joint.IsSevered || checkedJoints.Contains(joint)) continue;
+                if (joint.IsSevered || checkedJoints.Contains(joint)) { continue; }
                 if (joint.LimbA == limb)
                 {
                     if (!connectedLimbs.Contains(joint.LimbB))
@@ -861,7 +876,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < Limbs.Length; i++)
             {
-                if (Limbs[i] == null) continue;
+                if (Limbs[i] == null) { continue; }
                 Limbs[i].PullJointEnabled = false;
             }
         }
@@ -982,8 +997,8 @@ namespace Barotrauma
         {
             foreach (Limb limb in Limbs)
             {
-                if (limb.IsSevered) continue;
-                if (limb.body.FarseerBody.ContactList == null) continue;
+                if (limb.IsSevered) { continue; }
+                if (limb.body.FarseerBody.ContactList == null) { continue; }
 
                 ContactEdge ce = limb.body.FarseerBody.ContactList;
                 while (ce != null && ce.Contact != null)
@@ -995,7 +1010,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.IsSevered) continue;
+                if (limb.IsSevered) { continue; }
                 limb.body.LinearVelocity += velocityChange;
             }
 
@@ -1020,15 +1035,15 @@ namespace Barotrauma
             Category collisionCategory = (IgnorePlatforms) ?
                 wall | Physics.CollisionProjectile | Physics.CollisionStairs
                 : wall | Physics.CollisionProjectile | Physics.CollisionPlatform | Physics.CollisionStairs;
-            
-            if (collisionCategory == prevCollisionCategory) return;
+
+            if (collisionCategory == prevCollisionCategory) { return; }
             prevCollisionCategory = collisionCategory;
 
             Collider.CollidesWith = collisionCategory | Physics.CollisionItemBlocking;
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.ignoreCollisions || limb.IsSevered) continue;
+                if (limb.ignoreCollisions || limb.IsSevered) { continue; }
 
                 try
                 {
@@ -1081,8 +1096,6 @@ namespace Barotrauma
             CheckDistFromCollider();
             UpdateCollisionCategories();
 
-            Vector2 flowForce = Vector2.Zero;
-
             FindHull();
             PreventOutsideCollision();
             
@@ -1104,10 +1117,7 @@ namespace Barotrauma
             }
             else
             {
-                flowForce = GetFlowForce();
-
                 headInWater = false;
-
                 inWater = false;
                 if (currentHull.WaterVolume > currentHull.Volume * 0.95f)
                 {
@@ -1129,7 +1139,7 @@ namespace Barotrauma
                             if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
                         }
                     }
-                    float standHeight = 
+                    float standHeight =
                         HeadPosition.HasValue ? HeadPosition.Value :
                         TorsoPosition.HasValue ? TorsoPosition.Value :
                         Collider.GetMaxExtent() * 0.5f;
@@ -1140,10 +1150,7 @@ namespace Barotrauma
                 }
             }
 
-            if (flowForce.LengthSquared() > 0.001f)
-            {
-                Collider.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-            }
+            UpdateHullFlowForces(deltaTime);
 
             if (currentHull == null ||
                 currentHull.WaterVolume > currentHull.Volume * 0.95f ||
@@ -1151,7 +1158,6 @@ namespace Barotrauma
             {
                 Collider.ApplyWaterForces();
             }
-
 
             foreach (Limb limb in Limbs)
             {
@@ -1177,14 +1183,7 @@ namespace Barotrauma
                     if (limb.Position.Y < limbHull.Surface)
                     {
                         limb.inWater = true;
-
-                        if (flowForce.LengthSquared() > 0.001f)
-                        {
-                            limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                        }
-
                         surfaceY = limbHull.Surface;
-
                         if (limb.type == LimbType.Head)
                         {
                             headInWater = true;
@@ -1256,6 +1255,12 @@ namespace Barotrauma
         private int validityResets;
         private bool CheckValidity()
         {
+            if (limbs == null)
+            {
+                DebugConsole.ThrowError("Attempted to check the validity of a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this));
+                Invalid = true;
+                return false;
+            }
             bool isColliderValid = CheckValidity(Collider);
             bool limbsValid = true;
             foreach (Limb limb in limbs)
@@ -1278,8 +1283,8 @@ namespace Barotrauma
                     Collider.SetTransform(Vector2.Zero, 0.0f);
                     foreach (Limb limb in Limbs)
                     {
-                        limb.body.SetTransform(Collider.SimPosition, 0.0f);
-                        limb.body.ResetDynamics();
+                        limb.body?.SetTransform(Collider.SimPosition, 0.0f);
+                        limb.body?.ResetDynamics();
                     }
                     Frozen = true;
                 }
@@ -1352,6 +1357,74 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
         partial void Splash(Limb limb, Hull limbHull);
+
+        private void UpdateHullFlowForces(float deltaTime)
+        {
+            if (currentHull == null) { return; }
+
+            const float StunForceThreshold = 5.0f;
+            const float StunDuration = 0.5f;
+            const float ToleranceIncreaseSpeed = 5.0f;
+            const float ToleranceDecreaseSpeed = 1.0f;
+
+            //how much distance to a gap affects the force it exerts on the character
+            const float DistanceFactor = 0.5f;
+            const float ForceMultiplier = 0.035f;
+
+            Vector2 flowForce = Vector2.Zero;
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.Open <= 0.0f || !gap.linkedTo.Contains(currentHull) || gap.LerpedFlowForce.LengthSquared() < 0.01f) { continue; }
+                float dist = Vector2.Distance(MainLimb.WorldPosition, gap.WorldPosition) * DistanceFactor;
+                flowForce += Vector2.Normalize(gap.LerpedFlowForce) * (Math.Max(gap.LerpedFlowForce.Length() - dist, 0.0f) * ForceMultiplier);
+            }
+
+            //throwing conscious/moving characters around takes more force -> double the flow force
+            if (character.CanMove) { flowForce *= 2.0f; }
+
+            float flowForceMagnitude = flowForce.Length();
+            float limbMultipier = limbs.Count(l => l.inWater) / (float)limbs.Length;
+            //if the force strong enough, stun the character to let it get thrown around by the water
+            if ((flowForceMagnitude * limbMultipier) - flowStunTolerance > StunForceThreshold)
+            {
+                character.Stun = Math.Max(character.Stun, StunDuration);
+                flowStunTolerance = Math.Max(flowStunTolerance, flowForceMagnitude);
+            }
+
+            if (character == Character.Controlled && inWater && Screen.Selected?.Cam != null)
+            {
+                float shakeStrength = Math.Min(flowForceMagnitude / 10.0f, 5.0f) * limbMultipier;
+                Screen.Selected.Cam.Shake = Math.Max(Screen.Selected.Cam.Shake, shakeStrength);
+            }
+
+            if (flowForceMagnitude > 0.0001f)
+            {
+                flowForce = Vector2.Normalize(flowForce) * Math.Max(flowForceMagnitude - flowForceTolerance, 0.0f);
+            }
+
+            if (flowForceTolerance <= flowForceMagnitude * 1.5f && inWater)
+            {
+                //build up "tolerance" to the flow force
+                //ensures the character won't get permanently stuck by forces, while allowing sudden changes in flow to push the character hard
+                flowForceTolerance += deltaTime * ToleranceIncreaseSpeed;
+                flowStunTolerance = Math.Max(flowStunTolerance, flowForceTolerance);
+            }
+            else
+            {
+                flowForceTolerance = Math.Max(flowForceTolerance - deltaTime * ToleranceDecreaseSpeed, 0.0f);
+                flowStunTolerance = Math.Max(flowStunTolerance - deltaTime * ToleranceDecreaseSpeed, 0.0f);
+            }
+
+            if (flowForce.LengthSquared() > 0.001f)
+            {
+                Collider.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                foreach (Limb limb in limbs)
+                {
+                    if (!limb.inWater) { continue; }
+                    limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                }
+            }
+        }
 
         private void RefreshFloorY(Limb refLimb = null, bool ignoreStairs = false)
         {
@@ -1490,7 +1563,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.IsSevered) continue;
+                if (limb.IsSevered) { continue; }
                 //check visibility from the new position of the collider to the new position of this limb
                 Vector2 movePos = limb.SimPosition + limbMoveAmount;
 
@@ -1554,7 +1627,7 @@ namespace Barotrauma
                 Vector2 forceDir = diff / (float)Math.Sqrt(distSqrd);
                 foreach (Limb limb in Limbs)
                 {
-                    if (limb.IsSevered) continue;
+                    if (limb.IsSevered) { continue; }
                     limb.body.CollidesWith = Physics.CollisionNone;
                     limb.body.ApplyForce(forceDir * limb.Mass * 10.0f, maxVelocity: 10.0f);
                 }
@@ -1600,28 +1673,37 @@ namespace Barotrauma
             UpdateNetPlayerPositionProjSpecific(deltaTime, lowestSubPos);
         }
         
-        private Vector2 GetFlowForce()
-        {
-            Vector2 limbPos = Limbs[0].Position;
-
-            Vector2 force = Vector2.Zero;
-            foreach (Gap gap in Gap.GapList)
-            {
-                if (gap.Open <= 0.0f || gap.FlowTargetHull != currentHull || gap.LerpedFlowForce.LengthSquared() < 0.01f) continue;
-
-                Vector2 gapPos = gap.SimPosition;
-                float dist = Vector2.Distance(limbPos, gapPos);
-                force += Vector2.Normalize(gap.LerpedFlowForce) * (Math.Max(gap.LerpedFlowForce.Length() - dist, 0.0f) / 500.0f);
-            }
-            return force;
-        }
-
         /// <summary>
         /// Note that if there are multiple limbs of the same type, only the first of them is found in the dictionary.
         /// </summary>
-        public Limb GetLimb(LimbType limbType)
+        public Limb GetLimb(LimbType limbType, bool excludeSevered = true)
         {
-            limbDictionary.TryGetValue(limbType, out Limb limb);
+            Limb limb = null;
+            if (HasMultipleLimbsOfSameType)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    limbDictionary.TryGetValue(limbType, out limb);
+                    if (limb == null)
+                    {
+                        // No limbs found
+                        break;
+                    }
+                    if (!excludeSevered || !limb.IsSevered)
+                    {
+                        // Found a valid limb
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                limbDictionary.TryGetValue(limbType, out limb);
+            }
+            if (excludeSevered && limb != null && limb.IsSevered)
+            {
+                limb = null;
+            }
             return limb;
         }
 
@@ -1664,10 +1746,15 @@ namespace Barotrauma
             Limb lowestLimb = null;
             foreach (Limb limb in Limbs)
             {
+                if (limb.IsSevered) { continue; }
                 if (lowestLimb == null)
+                {
                     lowestLimb = limb;
+                }
                 else if (limb.SimPosition.Y < lowestLimb.SimPosition.Y)
+                {
                     lowestLimb = limb;
+                }
             }
 
             return lowestLimb;
@@ -1700,11 +1787,12 @@ namespace Barotrauma
 
             if (LimbJoints != null)
             {
-                foreach (RevoluteJoint joint in LimbJoints)
+                foreach (var joint in LimbJoints)
                 {
-                    if (GameMain.World.JointList.Contains(joint))
+                    var j = joint.Joint;
+                    if (GameMain.World.JointList.Contains(j))
                     {
-                        GameMain.World.Remove(joint);
+                        GameMain.World.Remove(j);
                     }
                 }
                 LimbJoints = null;

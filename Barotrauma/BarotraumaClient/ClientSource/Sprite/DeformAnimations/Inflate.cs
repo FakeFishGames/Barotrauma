@@ -54,7 +54,7 @@ namespace Barotrauma.SpriteDeformations
             phase = Rand.Range(0.0f, MathHelper.TwoPi);
         }
 
-        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier)
+        protected override void GetDeformation(out Vector2[,] deformation, out float multiplier, bool inverse)
         {
             deformation = this.deformation;
             multiplier = InflateParams.Frequency <= 0.0f ? InflateParams.Scale : (float)(Math.Sin(phase) + 1.0f) / 2.0f * InflateParams.Scale;

@@ -29,7 +29,7 @@ namespace Barotrauma
             {
                 if (hudFrame == null)
                 {
-                    hudFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), style: null)
+                    hudFrame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
                     {
                         CanBeFocused = false
                     };
@@ -163,7 +163,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Submarine == null || item.Submarine.TeamID != character.TeamID || item.Submarine.Info.IsWreck) { continue; }
-                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.AIRepairThreshold)) { continue; }
+                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.RepairThreshold)) { continue; }
                     if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
                     Vector2 diff = item.WorldPosition - character.WorldPosition;
@@ -202,6 +202,7 @@ namespace Barotrauma
 
             foreach (Item brokenItem in brokenItems)
             {
+                if (brokenItem.NonInteractable) { continue; }
                 float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
                 Vector2 drawPos = brokenItem.DrawPosition;
                 float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
@@ -373,7 +374,7 @@ namespace Barotrauma
             {
                 GUIComponent.DrawToolTip(
                     spriteBatch,
-                    character.Info?.Job == null ? character.DisplayName : character.Name + " (" + character.Info.Job.Name + ")",
+                    character.Info?.Job == null ? character.DisplayName : character.DisplayName + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
         }
@@ -393,10 +394,6 @@ namespace Barotrauma
             startPos = cam.WorldToScreen(startPos);
 
             string focusName = character.FocusedCharacter.DisplayName;
-            if (character.FocusedCharacter.Info != null)
-            {
-                focusName = character.FocusedCharacter.Info.DisplayName;
-            }
             Vector2 textPos = startPos;
             Vector2 textSize = GUI.Font.MeasureString(focusName);
             Vector2 largeTextSize = GUI.SubHeadingFont.MeasureString(focusName);

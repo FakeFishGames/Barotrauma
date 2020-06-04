@@ -390,7 +390,7 @@ namespace Barotrauma.Items.Components
             };
 
             // Sonar area
-            steerArea = new GUICustomComponent(new RectTransform(Vector2.One * GUI.RelativeHorizontalAspectRatio * Sonar.sonarAreaSize, GuiFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest),
+            steerArea = new GUICustomComponent(new RectTransform(Sonar.GUISizeCalculation, GuiFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
             steerRadius = steerArea.Rect.Width / 2;
 
@@ -438,11 +438,8 @@ namespace Barotrauma.Items.Components
             if (Voltage < MinVoltage) { return; }
 
             Rectangle velRect = new Rectangle(x + 20, y + 20, width - 40, height - 40);
-            Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
-            displaySubPos.Y = -displaySubPos.Y;
-            displaySubPos = displaySubPos.ClampLength(velRect.Width / 2);
-            displaySubPos = steerArea.Rect.Center.ToVector2() + displaySubPos;
-            
+            Vector2 steeringOrigin = steerArea.Rect.Center.ToVector2();
+
             if (!AutoPilot)
             {
                 Vector2 unitSteeringInput = steeringInput / 100.0f;
@@ -450,18 +447,18 @@ namespace Barotrauma.Items.Components
                 Vector2 steeringInputPos = new Vector2(
                     steeringInput.X * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.Y * unitSteeringInput.Y),
                     -steeringInput.Y * (float)Math.Sqrt(1.0f - 0.5f * unitSteeringInput.X * unitSteeringInput.X));
-                steeringInputPos += displaySubPos;
+                steeringInputPos += steeringOrigin;
 
                 if (steeringIndicator != null)
                 {
-                    Vector2 dir = steeringInputPos - displaySubPos;
+                    Vector2 dir = steeringInputPos - steeringOrigin;
                     float angle = (float)Math.Atan2(dir.Y, dir.X);
-                    steeringIndicator.Draw(spriteBatch, displaySubPos, Color.White, origin: steeringIndicator.Origin, rotate: angle,
+                    steeringIndicator.Draw(spriteBatch, steeringOrigin, Color.White, origin: steeringIndicator.Origin, rotate: angle,
                         scale: new Vector2(dir.Length() / steeringIndicator.size.X, 1.0f));
                 }
                 else
                 {
-                    GUI.DrawLine(spriteBatch, displaySubPos, steeringInputPos, Color.LightGray);
+                    GUI.DrawLine(spriteBatch, steeringOrigin, steeringInputPos, Color.LightGray);
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringInputPos.X - 5, (int)steeringInputPos.Y - 5, 10, 10), Color.White);
                 }
 
@@ -475,7 +472,7 @@ namespace Barotrauma.Items.Components
                 Sonar sonar = item.GetComponent<Sonar>();
                 if (sonar != null && controlledSub != null)
                 {
-                    Vector2 displayPosToMaintain = ((posToMaintain.Value - sonar.DisplayOffset * sonar.Zoom - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
+                    Vector2 displayPosToMaintain = ((posToMaintain.Value - controlledSub.WorldPosition)) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
                     displayPosToMaintain.Y = -displayPosToMaintain.Y;
                     displayPosToMaintain = displayPosToMaintain.ClampLength(velRect.Width / 2);
                     displayPosToMaintain = steerArea.Rect.Center.ToVector2() + displayPosToMaintain;
@@ -494,11 +491,11 @@ namespace Barotrauma.Items.Components
 
                     if (maintainPosOriginIndicator != null)
                     {
-                        maintainPosOriginIndicator.Draw(spriteBatch, displaySubPos, GUI.Style.Orange, scale: 0.5f * sonar.Zoom);
+                        maintainPosOriginIndicator.Draw(spriteBatch, steeringOrigin, GUI.Style.Orange, scale: 0.5f * sonar.Zoom);
                     }
                     else
                     {
-                        GUI.DrawRectangle(spriteBatch, new Rectangle((int)displaySubPos.X - 5, (int)displaySubPos.Y - 5, 10, 10), GUI.Style.Orange);
+                        GUI.DrawRectangle(spriteBatch, new Rectangle((int)steeringOrigin.X - 5, (int)steeringOrigin.Y - 5, 10, 10), GUI.Style.Orange);
                     }
                 }
             }
@@ -508,20 +505,19 @@ namespace Barotrauma.Items.Components
             Vector2 steeringPos = new Vector2(
                 targetVelocity.X * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.Y * unitTargetVel.Y),
                 -targetVelocity.Y * 0.9f * (float)Math.Sqrt(1.0f - 0.5f * unitTargetVel.X * unitTargetVel.X));
-            steeringPos += displaySubPos;
-
+            steeringPos += steeringOrigin;
 
             if (steeringIndicator != null)
             {
-                Vector2 dir = steeringPos - displaySubPos;
+                Vector2 dir = steeringPos - steeringOrigin;
                 float angle = (float)Math.Atan2(dir.Y, dir.X);
-                steeringIndicator.Draw(spriteBatch, displaySubPos, Color.Gray, origin: steeringIndicator.Origin, rotate: angle,
+                steeringIndicator.Draw(spriteBatch, steeringOrigin, Color.Gray, origin: steeringIndicator.Origin, rotate: angle,
                     scale: new Vector2(dir.Length() / steeringIndicator.size.X, 0.7f));
             }
             else
             {
                 GUI.DrawLine(spriteBatch,
-                    displaySubPos,
+                    steeringOrigin,
                     steeringPos,
                     Color.CadetBlue, 0, 2);
             }           
@@ -669,11 +665,7 @@ namespace Barotrauma.Items.Components
             {
                 if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsTabMenuOpen)
                 {
-                    Vector2 displaySubPos = (-sonar.DisplayOffset * sonar.Zoom) / sonar.Range * sonar.DisplayRadius * sonar.Zoom;
-                    displaySubPos.Y = -displaySubPos.Y;
-                    displaySubPos = steerArea.Rect.Center.ToVector2() + displaySubPos;
-
-                    Vector2 inputPos = PlayerInput.MousePosition - displaySubPos;
+                    Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                     inputPos.Y = -inputPos.Y;
                     if (AutoPilot && !LevelStartSelected && !LevelEndSelected)
                     {
@@ -848,7 +840,6 @@ namespace Barotrauma.Items.Components
             Vector2 newSteeringInput        = steeringInput;
             Vector2 newTargetVelocity       = targetVelocity;
             float newSteeringAdjustSpeed    = steeringAdjustSpeed;
-            bool maintainPos                = false;
             Vector2? newPosToMaintain       = null;
             bool headingToStart             = false;
 
@@ -859,8 +850,7 @@ namespace Barotrauma.Items.Components
 
             if (autoPilot)
             {
-                maintainPos = msg.ReadBoolean();
-                if (maintainPos)
+                if (msg.ReadBoolean())
                 {
                     newPosToMaintain = new Vector2(
                         msg.ReadSingle(),

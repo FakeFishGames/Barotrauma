@@ -241,7 +241,6 @@ namespace Barotrauma.Items.Components
         private void Launch(Vector2 impulse)
         {
             hits.Clear();
-            MaxTargetsToHit = 2;
 
             if (item.AiTarget != null)
             {
@@ -487,6 +486,10 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             }
+            else if (target.Body.UserData is Item item)
+            {
+                if (item.Condition <= 0.0f) { return false; }
+            }
 
             //ignore character colliders (the projectile only hits limbs)
             if (target.CollisionCategories == Physics.CollisionCharacter && target.Body.UserData is Character)
@@ -634,6 +637,7 @@ namespace Barotrauma.Items.Components
                 item.body.LinearVelocity *= 0.1f;
             }
             else if (Vector2.Dot(velocity, collisionNormal) < 0.0f && hits.Count() >= MaxTargetsToHit &&
+                        target.Body.Mass > item.body.Mass * 0.5f &&
                         (DoesStick ||
                         (StickToCharacters && target.Body.UserData is Limb) ||
                         (StickToStructures && target.Body.UserData is Structure) ||

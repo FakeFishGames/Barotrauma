@@ -18,6 +18,10 @@ namespace Barotrauma
         //all entities are disabled after they reach this depth
         public const int MaxEntityDepth = -300000;
         public const float ShaftHeight = 1000.0f;
+        /// <summary>
+        /// The level generator won't try to adjust the width of the main path above this limit.
+        /// </summary>
+        public const int MaxSubmarineWidth = 16000;
 
         public static Level Loaded
         {
@@ -140,8 +144,6 @@ namespace Barotrauma
         {
             get { return positionsOfInterest; }
         }
-
-        public readonly List<InterestingPosition> UsedPositions = new List<InterestingPosition>();
 
         public Submarine StartOutpost { get; private set; }
         public Submarine EndOutpost { get; private set; }
@@ -324,26 +326,25 @@ namespace Barotrauma
             SeaFloorTopPos = generationParams.SeaFloorDepth + generationParams.MountainHeightMax + generationParams.SeaFloorVariance;
 
             int minWidth = 6500;
-            int maxWidth = 50000;
             if (Submarine.MainSub != null)
             {
                 Rectangle dockedSubBorders = Submarine.MainSub.GetDockedBorders();
                 dockedSubBorders.Inflate(dockedSubBorders.Size.ToVector2() * 0.15f);
                 minWidth = Math.Max(minWidth, Math.Max(dockedSubBorders.Width, dockedSubBorders.Height));
-                minWidth = Math.Min(minWidth, maxWidth);
+                minWidth = Math.Min(minWidth, MaxSubmarineWidth);
             }
 
             Rectangle pathBorders = borders;
-            pathBorders.Inflate(-minWidth * 2, -minWidth);
+            pathBorders.Inflate(-Math.Min(minWidth * 2, MaxSubmarineWidth), -minWidth);
 
             Debug.Assert(pathBorders.Width > 0 && pathBorders.Height > 0, "The size of the level's path area was negative.");
 
             startPosition = new Point(
-                Rand.Range(minWidth, minWidth * 2, Rand.RandSync.Server),
+                minWidth,
                 Rand.Range(borders.Height / 2, borders.Height - minWidth * 2, Rand.RandSync.Server));
 
             endPosition = new Point(
-                borders.Width - Rand.Range(minWidth, minWidth * 2, Rand.RandSync.Server),
+                borders.Width - minWidth,
                 Rand.Range(borders.Height / 2, borders.Height - minWidth * 2, Rand.RandSync.Server));
 
             //----------------------------------------------------------------------------------
@@ -356,19 +357,25 @@ namespace Barotrauma
             Point nodeInterval = generationParams.MainPathNodeIntervalRange;
 
             for (int  x = startPosition.X + nodeInterval.X;
-                        x < endPosition.X   - nodeInterval.X;
+                        x < endPosition.X  - nodeInterval.X;
                         x += Rand.Range(nodeInterval.X, nodeInterval.Y, Rand.RandSync.Server))
             {
                 pathNodes.Add(new Point(x, Rand.Range(pathBorders.Y, pathBorders.Bottom, Rand.RandSync.Server)));
             }
 
-            pathNodes.Add(new Point(endPosition.X, borders.Height));
-            
-            if (pathNodes.Count <= 2)
+            if (pathNodes.Count == 1)
             {
-                pathNodes.Insert(1, borders.Center);
+                pathNodes.Add(new Point(pathBorders.Center.X, pathBorders.Y));
+            }
+            //if all nodes ended up high up in the level, move one down to make sure we utilize the full height of the level
+            else if (pathNodes.GetRange(1, pathNodes.Count - 1).All(p => p.Y > pathBorders.Y + pathBorders.Height * 0.25f))
+            {
+                int nodeIndex = Rand.Range(1, pathNodes.Count, Rand.RandSync.Server);
+                pathNodes[nodeIndex] = new Point(pathNodes[nodeIndex].X, pathBorders.Y);
             }
 
+            pathNodes.Add(new Point(endPosition.X, borders.Height));
+            
             GenerateTunnels(pathNodes, minWidth);
 
             //----------------------------------------------------------------------------------
@@ -547,21 +554,21 @@ namespace Barotrauma
                 {
                     foreach (GraphEdge edge in cell.Edges)
                     {
-                        if (mirroredEdges.Contains(edge)) continue;
+                        if (mirroredEdges.Contains(edge)) { continue; }
                         edge.Point1.X = borders.Width - edge.Point1.X;
                         edge.Point2.X = borders.Width - edge.Point2.X;
-                        if (!mirroredSites.Contains(edge.Site1))
+                        if (edge.Site1 != null && !mirroredSites.Contains(edge.Site1))
                         {
                             //make sure that sites right at the edge of a grid cell end up in the same cell as in the non-mirrored level
                             if (edge.Site1.Coord.X % GridCellSize < 1.0f &&
-                                edge.Site1.Coord.X % GridCellSize >= 0.0f) edge.Site1.Coord.X += 1.0f;
+                                edge.Site1.Coord.X % GridCellSize >= 0.0f) { edge.Site1.Coord.X += 1.0f; }
                             edge.Site1.Coord.X = borders.Width - edge.Site1.Coord.X;
                             mirroredSites.Add(edge.Site1);
                         }
-                        if (!mirroredSites.Contains(edge.Site2))
+                        if (edge.Site2 != null && !mirroredSites.Contains(edge.Site2))
                         {
                             if (edge.Site2.Coord.X % GridCellSize < 1.0f &&
-                                edge.Site2.Coord.X % GridCellSize >= 0.0f) edge.Site2.Coord.X += 1.0f;
+                                edge.Site2.Coord.X % GridCellSize >= 0.0f) { edge.Site2.Coord.X += 1.0f; }
                             edge.Site2.Coord.X = borders.Width - edge.Site2.Coord.X;
                             mirroredSites.Add(edge.Site2);
                         }
@@ -1583,8 +1590,8 @@ namespace Barotrauma
                 var subDoc = SubmarineInfo.OpenFile(contentFile.Path);
                 Rectangle borders = Submarine.GetBorders(subDoc.Root);
                 string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
-                // Add some vertical margin so that the wreck doesn't block the path entirely. It's still possible that some larger subs can't pass by.
-                Point paddedDimensions = new Point(borders.Width, borders.Height + 3000);
+                // Add some margin so that the wreck doesn't block the path entirely. It's still possible that some larger subs can't pass by.
+                Point paddedDimensions = new Point(borders.Width + 3000, borders.Height + 3000);
                 tempSW.Restart();
                 // For storing the translations. Used only for debugging.
                 var positions = new List<Vector2>();
@@ -1593,6 +1600,7 @@ namespace Barotrauma
                 int attemptsLeft = maxAttempts;
                 bool success = false;
                 Vector2 spawnPoint = Vector2.Zero;
+                var allCells = Loaded.GetAllCells();
                 while (attemptsLeft > 0)
                 {
                     if (attemptsLeft < maxAttempts)
@@ -1621,7 +1629,7 @@ namespace Barotrauma
                 tempSW.Stop();
                 if (success)
                 {
-                    Debug.WriteLine($"Wreck {wreckName} successfully positioned to {spawnPoint} in {tempSW.ElapsedMilliseconds.ToString()} (ms)");
+                    Debug.WriteLine($"Wreck {wreckName} successfully positioned to {spawnPoint} in {tempSW.ElapsedMilliseconds} (ms)");
                     tempSW.Restart();
                     SubmarineInfo info = new SubmarineInfo(contentFile.Path)
                     {
@@ -1630,7 +1638,7 @@ namespace Barotrauma
                     Submarine wreck = new Submarine(info);
                     wreck.MakeWreck();
                     tempSW.Stop();
-                    Debug.WriteLine($"Wreck {wreck.Info.Name} loaded in { tempSW.ElapsedMilliseconds.ToString()} (ms)");
+                    Debug.WriteLine($"Wreck {wreck.Info.Name} loaded in { tempSW.ElapsedMilliseconds} (ms)");
                     wrecks.Add(wreck);
                     wreck.SetPosition(spawnPoint);
                     wreckPositions.Add(wreck, positions);
@@ -1643,7 +1651,8 @@ namespace Barotrauma
                             hull.WaterVolume = hull.Volume * Rand.Range(Loaded.GenerationParams.WreckFloodingHullMinWaterPercentage, Loaded.GenerationParams.WreckFloodingHullMaxWaterPercentage, Rand.RandSync.Server);
                         }
                     }
-                    if (Rand.Value(Rand.RandSync.Server) <= Loaded.GenerationParams.ThalamusProbability)
+                    // Only spawn thalamus when the wreck has some thalamus items defined.
+                    if (Rand.Value(Rand.RandSync.Server) <= Loaded.GenerationParams.ThalamusProbability && wreck.GetItems(false).Any(i => i.Prefab.Category == MapEntityCategory.Thalamus))
                     {
                         if (!wreck.CreateWreckAI())
                         {
@@ -1839,8 +1848,7 @@ namespace Barotrauma
                     {
                         return true;
                     }
-                    var cells = Loaded.GetAllCells().Where(c => c.Body != null && Vector2.DistanceSquared(pos, c.Center) <= maxDistance);
-                    return cells.Any(c => c.BodyVertices.Any(v => bounds.ContainsWorld(v)));
+                    return cells.Any(c => c.Body != null && Vector2.DistanceSquared(pos, c.Center) <= maxDistance && c.BodyVertices.Any(v => bounds.ContainsWorld(v)));
                 }
             }
             totalSW.Stop();

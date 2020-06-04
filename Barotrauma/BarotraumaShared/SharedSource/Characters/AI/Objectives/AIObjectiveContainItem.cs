@@ -158,7 +158,7 @@ namespace Barotrauma
                         Abandon = true;
                     }, onCompleted: () =>
                     {
-                        if (getItemObjective.TargetItem != null)
+                        if (getItemObjective?.TargetItem != null)
                         {
                             containedItems.Add(getItemObjective.TargetItem);
                         }

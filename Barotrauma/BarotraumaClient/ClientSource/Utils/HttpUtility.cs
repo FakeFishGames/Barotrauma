@@ -34,7 +34,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
-using System.IO;
+using Barotrauma.IO;
 using System.Security.Permissions;
 using System.Text;
 
@@ -76,6 +76,7 @@ namespace RestSharp.Contrib
 
         #region Methods
 
+        /*
         public static void HtmlAttributeEncode(string s, TextWriter output)
         {
             if (output == null)
@@ -92,6 +93,7 @@ namespace RestSharp.Contrib
             output.Write(HttpEncoder.HtmlAttributeEncode(s));
 #endif
         }
+        */
 
         public static string HtmlAttributeEncode(string s)
         {
@@ -113,7 +115,7 @@ namespace RestSharp.Contrib
             return UrlDecode(str, Encoding.UTF8);
         }
 
-        static char[] GetChars(MemoryStream b, Encoding e)
+        static char[] GetChars(System.IO.MemoryStream b, Encoding e)
         {
             return e.GetChars(b.GetBuffer(), 0, (int)b.Length);
         }
@@ -260,7 +262,7 @@ namespace RestSharp.Contrib
                 throw new ArgumentOutOfRangeException("count");
 
             StringBuilder output = new StringBuilder();
-            MemoryStream acc = new MemoryStream();
+            System.IO.MemoryStream acc = new System.IO.MemoryStream();
 
             int end = count + offset;
             int xchar;
@@ -354,7 +356,7 @@ namespace RestSharp.Contrib
             if (count < 0 || offset > len - count)
                 throw new ArgumentOutOfRangeException("count");
 
-            MemoryStream result = new MemoryStream();
+            System.IO.MemoryStream result = new System.IO.MemoryStream();
             int end = offset + count;
             for (int i = offset; i < end; i++)
             {
@@ -492,7 +494,7 @@ namespace RestSharp.Contrib
             if (str.Length == 0)
                 return new byte[0];
 
-            MemoryStream result = new MemoryStream(str.Length);
+            System.IO.MemoryStream result = new System.IO.MemoryStream(str.Length);
             foreach (char c in str)
             {
                 HttpEncoder.UrlEncodeChar(c, result, true);
@@ -525,6 +527,7 @@ namespace RestSharp.Contrib
         /// </summary>
         /// <param name="s">The HTML string to decode</param>
         /// <param name="output">The TextWriter output stream containing the decoded string. </param>
+        /*
         public static void HtmlDecode(string s, TextWriter output)
         {
             if (output == null)
@@ -545,6 +548,7 @@ namespace RestSharp.Contrib
 #endif
             }
         }
+        */
 
         public static string HtmlEncode(string s)
         {
@@ -566,6 +570,7 @@ namespace RestSharp.Contrib
         /// </summary>
         /// <param name="s">The string to encode. </param>
         /// <param name="output">The TextWriter output stream containing the encoded string. </param>
+        /*
         public static void HtmlEncode(string s, TextWriter output)
         {
             if (output == null)
@@ -586,6 +591,8 @@ namespace RestSharp.Contrib
 #endif
             }
         }
+        */
+
 #if NET_4_0
 		public static string HtmlEncode (object value)
 		{

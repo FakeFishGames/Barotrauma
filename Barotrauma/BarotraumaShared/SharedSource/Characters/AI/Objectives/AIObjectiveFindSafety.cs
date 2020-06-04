@@ -43,7 +43,7 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo ? 0 : 100;
+                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo && HumanAIController.HasDivingSuit(character) ? 0 : 100;
             }
             else
             {
@@ -83,8 +83,9 @@ namespace Barotrauma
                 else
                 {
                     float dangerFactor = (100 - currenthullSafety) / 100;
-                    Priority = Math.Min(Priority + dangerFactor * priorityIncrease * deltaTime, 100);
+                    Priority += dangerFactor * priorityIncrease * deltaTime;
                 }
+                Priority = MathHelper.Clamp(Priority, 0, 100);
             }
         }
 
@@ -93,34 +94,39 @@ namespace Barotrauma
         protected override void Act(float deltaTime)
         {
             var currentHull = character.CurrentHull;
-            bool needsDivingGear = HumanAIController.NeedsDivingGear(character, currentHull, out bool needsDivingSuit);
-            bool needsEquipment = false;
-            if (needsDivingSuit)
+            bool dangerousPressure = currentHull == null || currentHull.LethalPressure > 0;
+            if (!dangerousPressure)
             {
-                needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
-            }
-            else if (needsDivingGear)
-            {
-                needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
-            }
-            if (needsEquipment && divingGearObjective == null && !character.LockHands)
-            {
-                RemoveSubObjective(ref goToObjective);
-                TryAddSubObjective(ref divingGearObjective,
-                    constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
-                    onAbandon: () =>
-                    {
-                        searchHullTimer = Math.Min(1, searchHullTimer);
+                // Don't try to seek diving gear if the pressure is dangerous. Just get out.
+                bool needsDivingGear = HumanAIController.NeedsDivingGear(character, currentHull, out bool needsDivingSuit);
+                bool needsEquipment = false;
+                if (needsDivingSuit)
+                {
+                    needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
+                }
+                else if (needsDivingGear)
+                {
+                    needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
+                }
+                if (needsEquipment && divingGearObjective == null && !character.LockHands)
+                {
+                    RemoveSubObjective(ref goToObjective);
+                    TryAddSubObjective(ref divingGearObjective,
+                        constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
+                        onAbandon: () =>
+                        {
+                            searchHullTimer = Math.Min(1, searchHullTimer);
                         // Don't reset the diving gear objective, because it's possible that there is no diving gear -> seek a safe hull and then reset so that we can check again.
                     },
-                    onCompleted: () =>
-                    {
-                        resetPriority = true;
-                        searchHullTimer = Math.Min(1, searchHullTimer);
-                        RemoveSubObjective(ref divingGearObjective);
-                    });
+                        onCompleted: () =>
+                        {
+                            resetPriority = true;
+                            searchHullTimer = Math.Min(1, searchHullTimer);
+                            RemoveSubObjective(ref divingGearObjective);
+                        });
+                }
             }
-            else if (divingGearObjective == null || !divingGearObjective.CanBeCompleted)
+            if (divingGearObjective == null || !divingGearObjective.CanBeCompleted)
             {
                 if (currenthullSafety < HumanAIController.HULL_SAFETY_THRESHOLD)
                 {

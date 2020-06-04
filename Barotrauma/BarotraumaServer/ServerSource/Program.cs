@@ -3,7 +3,7 @@
 using Barotrauma.Steam;
 using GameAnalyticsSDK.Net;
 using System;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -85,8 +85,6 @@ namespace Barotrauma
                 filePath = Path.GetFileNameWithoutExtension(originalFilePath) + " (" + (existingFiles + 1) + ")" + Path.GetExtension(originalFilePath);
             }
 
-            StreamWriter sw = new StreamWriter(filePath);
-
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Barotrauma Dedicated Server crash report (generated on " + DateTime.Now + ")");
             sb.AppendLine("\n");
@@ -142,8 +140,7 @@ namespace Barotrauma
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write(crashReport);
 
-            sw.WriteLine(sb.ToString());
-            sw.Close();
+            File.WriteAllText(filePath,sb.ToString());
 
             if (GameSettings.SendUserStatistics)
             {

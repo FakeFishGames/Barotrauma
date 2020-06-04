@@ -2,7 +2,7 @@
 using System;
 using System.Text;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;

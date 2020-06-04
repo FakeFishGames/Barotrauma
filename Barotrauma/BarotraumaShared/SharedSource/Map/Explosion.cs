@@ -136,7 +136,7 @@ namespace Barotrauma
                     if (powered == null || !powered.VulnerableToEMP) continue;
                     if (item.Repairables.Any())
                     {
-                        item.Condition -= 100 * EmpStrength * distFactor;
+                        item.Condition -= item.MaxCondition * EmpStrength * distFactor;
                     }
 
                     //discharge batteries
@@ -157,42 +157,47 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
             {
-                if (flames)
+                foreach (Item item in Item.ItemList)
                 {
-                    foreach (Item item in Item.ItemList)
+                    if (item.Condition <= 0.0f) { continue; }
+                    if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.5f) { continue; }
+                    if (flames && !item.FireProof)
                     {
-                        if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) { continue; }
-
                         //don't apply OnFire effects if the item is inside a fireproof container
                         //(or if it's inside a container that's inside a fireproof container, etc)
                         Item container = item.Container;
                         bool fireProof = false;
                         while (container != null)
                         {
-                            if (container.FireProof) { fireProof = true; break; }
+                            if (container.FireProof)
+                            { 
+                                fireProof = true; 
+                                break; 
+                            }
                             container = container.Container;
                         }
-
-                        if (fireProof || Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.5f) { continue; }
-
-                        item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
-                        if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                        if (!fireProof)
                         {
-                            GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                            item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
+                            if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                            {
+                                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                            }
                         }
+                    }
 
-                        if (item.Prefab.DamagedByExplosions && !item.Indestructible)
+                    if (item.Prefab.DamagedByExplosions && !item.Indestructible)
+                    {
+                        float limbRadius = item.body == null ? 0.0f : item.body.GetMaxExtent();
+                        float dist = Vector2.Distance(item.WorldPosition, worldPosition);
+                        dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
+                        if (dist > attack.Range)
                         {
-                            float limbRadius = item.body == null ? 0.0f : item.body.GetMaxExtent();
-                            float dist = Vector2.Distance(item.WorldPosition, worldPosition);
-                            dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
-
-                            if (dist > attack.Range) { continue; }
-
-                            float distFactor = 1.0f - dist / attack.Range;
-                            float damageAmount = attack.GetItemDamage(1.0f);
-                            item.Condition -= damageAmount * distFactor;
+                            continue;
                         }
+                        float distFactor = 1.0f - dist / attack.Range;
+                        float damageAmount = attack.GetItemDamage(1.0f) * item.Prefab.ExplosionDamageMultiplier;
+                        item.Condition -= damageAmount * distFactor;
                     }
                 }
             }
@@ -200,10 +205,9 @@ namespace Barotrauma
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
         
-
         public static void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker)
         {
-            if (attack.Range <= 0.0f) return;
+            if (attack.Range <= 0.0f) { return; }
 
             //long range for the broad distance check, because large characters may still be in range even if their collider isn't
             float broadRange = Math.Max(attack.Range * 10.0f, 10000.0f);
@@ -226,13 +230,14 @@ namespace Barotrauma
                 explosionPos = ConvertUnits.ToSimUnits(explosionPos);
 
                 Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
+                Dictionary<Limb, float> damages = new Dictionary<Limb, float>();
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
                     
                     //calculate distance from the "outer surface" of the physics body
                     //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
-                    float limbRadius = Math.Max(Math.Max(limb.body.width * 0.5f, limb.body.height * 0.5f), limb.body.radius);
+                    float limbRadius = limb.body.GetMaxExtent();
                     dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(limbRadius));
 
                     if (dist > attack.Range) { continue; }
@@ -240,14 +245,18 @@ namespace Barotrauma
                     float distFactor = 1.0f - dist / attack.Range;
 
                     //solid obstacles between the explosion and the limb reduce the effect of the explosion by 90%
-                    if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null) distFactor *= 0.1f;
+                    if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null)
+                    {
+                        distFactor *= 0.1f;
+                    }
                     
                     distFactors.Add(limb, distFactor);
                     
                     List<Affliction> modifiedAfflictions = new List<Affliction>();
+                    int limbCount = c.AnimController.Limbs.Count(l => !l.IsSevered && !l.ignoreCollisions);
                     foreach (Affliction affliction in attack.Afflictions.Keys)
                     {
-                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / c.AnimController.Limbs.Length));
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / limbCount));
                     }
                     c.LastDamageSource = damageSource;
                     if (attacker == null)
@@ -255,14 +264,18 @@ namespace Barotrauma
                         if (damageSource is Item item)
                         {
                             attacker = item.GetComponent<Projectile>()?.User;
-                            if (attacker == null) attacker = item.GetComponent<MeleeWeapon>()?.User;
+                            if (attacker == null)
+                            {
+                                attacker = item.GetComponent<MeleeWeapon>()?.User;
+                            }
                         }
                     }
 
                     //use a position slightly from the limb's position towards the explosion
                     //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
                     Vector2 hitPos = limb.WorldPosition + (worldPosition - limb.WorldPosition) / dist * 0.01f;
-                    c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
+                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
+                    damages.Add(limb, attackResult.Damage);
                     
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {
@@ -279,22 +292,27 @@ namespace Barotrauma
                     if (limb.WorldPosition != worldPosition && !MathUtils.NearlyEqual(force, 0.0f))
                     {
                         Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
-                        if (!MathUtils.IsValid(limbDiff)) limbDiff = Rand.Vector(1.0f);
+                        if (!MathUtils.IsValid(limbDiff)) { limbDiff = Rand.Vector(1.0f); }
                         Vector2 impulse = limbDiff * distFactor * force;
                         Vector2 impulsePoint = limb.SimPosition - limbDiff * limbRadius;
-                        limb.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                        limb.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.2f);
                     }
                 }
 
                 //sever joints 
-                if (c.IsDead && attack.SeverLimbsProbability > 0.0f)
+                if (attack.SeverLimbsProbability > 0.0f)
                 {
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
-                        if (!distFactors.ContainsKey(limb)) { continue; }
-                        if (Rand.Range(0.0f, 1.0f) < attack.SeverLimbsProbability * distFactors[limb])
+                        if (limb.character.Removed || limb.Removed) { continue; }
+                        if (limb.IsSevered) { continue; }
+                        if (!c.IsDead && !limb.CanBeSeveredAlive) { continue; }
+                        if (distFactors.TryGetValue(limb, out float distFactor))
                         {
-                            c.TrySeverLimbJoints(limb, 1.0f);
+                            if (damages.TryGetValue(limb, out float damage))
+                            {
+                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true);
+                            }
                         }
                     }
                 }

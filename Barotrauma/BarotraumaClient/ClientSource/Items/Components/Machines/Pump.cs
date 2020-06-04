@@ -163,7 +163,7 @@ namespace Barotrauma.Items.Components
         {
             pumpSpeedLockTimer -= deltaTime;
             isActiveLockTimer -= deltaTime;
-            autoControlIndicator.Selected = pumpSpeedLockTimer > 0.0f || isActiveLockTimer > 0.0f;
+            autoControlIndicator.Selected = IsAutoControlled;
             PowerButton.Enabled = isActiveLockTimer <= 0.0f;
             if (HasPower)
             {

@@ -25,6 +25,18 @@ namespace Barotrauma
     public class KeyOrMouse
     {
         public Keys Key { get; private set; }
+
+        private string name;
+
+        public string Name
+        {
+            get
+            {
+                if (name == null) { name = GetName(); }
+                return name;
+            }
+        }
+
         public MouseButton MouseButton { get; private set; }
 
         public KeyOrMouse(Keys keyBinding)
@@ -133,6 +145,30 @@ namespace Barotrauma
             hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode((int)MouseButton);
             return hashCode;
         }
+
+        public string GetName()
+        {
+            if (PlayerInput.NumberKeys.Contains(Key))
+            {
+                return Key.ToString().Substring(1, 1);
+            }
+            if (MouseButton != MouseButton.None)
+            {
+                switch (MouseButton)
+                {
+                    case MouseButton.PrimaryMouse:
+                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse");
+                    case MouseButton.SecondaryMouse:
+                        return PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse");
+                    default:
+                        return TextManager.Get("input." + MouseButton.ToString().ToLowerInvariant());
+                }
+            }
+            else
+            {
+                return  Key.ToString();
+            }            
+        }
     }
 
     public static class PlayerInput
@@ -154,6 +190,8 @@ namespace Barotrauma
 
         static bool allowInput;
         static bool wasWindowActive;
+
+        public static readonly List<Keys> NumberKeys = new List<Keys> { Keys.D0, Keys.D1, Keys.D2, Keys.D3, Keys.D4, Keys.D5, Keys.D6, Keys.D7, Keys.D8, Keys.D9 };
 
 #if WINDOWS
         [DllImport("user32.dll")]
@@ -408,6 +446,12 @@ namespace Barotrauma
             return (AllowInput && oldKeyboardState.IsKeyDown(button) && keyboardState.IsKeyUp(button));
         }
 
+        public static bool InventoryKeyHit(int index)
+        {
+            if (index == -1) return false;
+            return AllowInput && GameMain.Config.InventoryKeyBind(index).IsHit();
+        }
+
         public static bool KeyDown(Keys button)
         {
             return (AllowInput && keyboardState.IsKeyDown(button));
@@ -425,7 +469,11 @@ namespace Barotrauma
         
         public static bool IsCtrlDown()
         {
+#if !OSX
             return KeyDown(Keys.LeftControl) || KeyDown(Keys.RightControl);
+#else
+            return KeyDown(Keys.LeftWindows) || KeyDown(Keys.RightWindows);
+#endif
         }
 
         public static void Update(double deltaTime)
@@ -462,8 +510,9 @@ namespace Barotrauma
             doubleClicked = false;
             if (PrimaryMouseButtonClicked())
             {
-                if (timeSinceClick < DoubleClickDelay &&
-                    (mouseState.Position - lastClickPosition).ToVector2().Length() < MaxDoubleClickDistance)
+                float dist = (mouseState.Position - lastClickPosition).ToVector2().Length();
+
+                if (timeSinceClick < DoubleClickDelay && dist < MaxDoubleClickDistance)
                 {
                     doubleClicked = true;
                     timeSinceClick = DoubleClickDelay;
@@ -472,16 +521,15 @@ namespace Barotrauma
                 {
                     lastClickPosition = mouseState.Position;
                 }
-
-                timeSinceClick = 0.0;
+                if (!doubleClicked && dist < MaxDoubleClickDistance)
+                {
+                    timeSinceClick = 0.0;
+                }
             }           
 
             if (PrimaryMouseButtonDown())
             {
-                if (timeSinceClick > DoubleClickDelay)
-                {
-                    lastClickPosition = mouseState.Position;
-                }
+                lastClickPosition = mouseState.Position;                
             }
         }
 

@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using GameAnalyticsSDK.Net;
-using System.IO;
+using Barotrauma.IO;
 using System.Threading;
 using Barotrauma.Tutorials;
 using Barotrauma.Media;
@@ -532,6 +532,8 @@ namespace Barotrauma
             ScriptedEventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
+            Order.Init();
+            EventManagerSettings.Init();
             TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 
@@ -860,7 +862,7 @@ namespace Barotrauma
                             //TODO: do we need to check Inventory.SelectedSlot?
                             && Inventory.SelectedSlot == null && CharacterHealth.OpenHealthWindow == null
                             && !CrewManager.IsCommandInterfaceOpen
-                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled.SelectedConstruction != null))
+                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedConstruction != null))
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();

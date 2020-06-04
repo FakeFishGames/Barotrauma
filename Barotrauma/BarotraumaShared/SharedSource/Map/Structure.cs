@@ -174,7 +174,11 @@ namespace Barotrauma
                     int newWidth = ResizeHorizontal ? rect.Width : (int)(defaultRect.Width * relativeScale);
                     int newHeight = ResizeVertical ? rect.Height : (int)(defaultRect.Height * relativeScale);
                     Rect = new Rectangle(rect.X, rect.Y, newWidth, newHeight);
-                    if (Sections != null)
+                    if (StairDirection != Direction.None)
+                    {
+                        CreateStairBodies();
+                    }
+                    else if (Sections != null)
                     {
                         UpdateSections();
                     }
@@ -283,6 +287,13 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(false, true), Editable]
+        public bool NoAITarget
+        {
+            get;
+            private set;
+        }
+
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
             get;
@@ -354,6 +365,7 @@ namespace Barotrauma
             }
 
             StairDirection = Prefab.StairDirection;
+            NoAITarget = Prefab.NoAITarget;
             SerializableProperties = SerializableProperty.GetProperties(this);
 
             InitProjSpecific();
@@ -381,7 +393,7 @@ namespace Barotrauma
             }
 
             // Only add ai targets automatically to submarine/outpost walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !submarine.Info.IsWreck && !Prefab.NoAITarget)
+            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !submarine.Info.IsWreck && !NoAITarget)
             {
                 aiTarget = new AITarget(this)
                 {
@@ -423,6 +435,7 @@ namespace Barotrauma
         private void CreateStairBodies()
         {
             Bodies = new List<Body>();
+            bodyDebugDimensions.Clear();
                         
             float stairAngle = MathHelper.ToRadians(Math.Min(Prefab.StairAngle, 75.0f));
 
@@ -440,7 +453,7 @@ namespace Barotrauma
             newBody.Friction = 0.8f;
             newBody.UserData = this;
 
-            newBody.Position = ConvertUnits.ToSimUnits(stairPos) + BodyOffset;
+            newBody.Position = ConvertUnits.ToSimUnits(stairPos) + BodyOffset * Scale;
 
             bodyDebugDimensions.Add(new Vector2(bodyWidth, bodyHeight));
 
@@ -567,12 +580,12 @@ namespace Barotrauma
         {
             foreach (MapEntity mapEntity in mapEntityList)
             {
-                if (!(mapEntity is Structure structure)) continue;
-                if (!structure.Prefab.AllowAttachItems) continue;
-                if (structure.Bodies != null && structure.Bodies.Count > 0) continue;
+                if (!(mapEntity is Structure structure)) { continue; }
+                if (!structure.Prefab.AllowAttachItems) { continue; }
+                if (structure.Bodies != null && structure.Bodies.Count > 0) { continue; }
                 Rectangle worldRect = mapEntity.WorldRect;
-                if (worldPosition.X < worldRect.X || worldPosition.X > worldRect.Right) continue;
-                if (worldPosition.Y > worldRect.Y || worldPosition.Y < worldRect.Y - worldRect.Height) continue;
+                if (worldPosition.X < worldRect.X || worldPosition.X > worldRect.Right) { continue; }
+                if (worldPosition.Y > worldRect.Y || worldPosition.Y < worldRect.Y - worldRect.Height) { continue; }
                 return structure;
             }
             return null;
@@ -818,7 +831,10 @@ namespace Barotrauma
                 Vector2 sectionPos = new Vector2(
                     Sections[sectionIndex].rect.X + Sections[sectionIndex].rect.Width / 2.0f,
                     Sections[sectionIndex].rect.Y - Sections[sectionIndex].rect.Height / 2.0f);
-                if (world && Submarine != null) sectionPos += Submarine.Position;
+                if (world && Submarine != null)
+                {
+                    sectionPos += Submarine.Position;
+                }
                 return sectionPos;
             }
             else
@@ -839,7 +855,10 @@ namespace Barotrauma
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
                     (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
 
-                if (world && Submarine != null) sectionPos += Submarine.Position;
+                if (world && Submarine != null)
+                {
+                    sectionPos += Submarine.Position;
+                }
                 return sectionPos;
             }
 
@@ -1255,6 +1274,11 @@ namespace Barotrauma
                 s.UseDropShadow = prefab.Body;
             }
 
+            if (element.Attribute("noaitarget") == null)
+            {
+                s.NoAITarget = prefab.NoAITarget;
+            }
+
             return s;
         }
 
@@ -1327,6 +1351,7 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
             Sprite.ReloadXML();
             SpriteDepth = Sprite.Depth;
+            NoAITarget = Prefab.NoAITarget;
         }
 
         public override void Update(float deltaTime, Camera cam)

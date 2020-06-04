@@ -1382,13 +1382,13 @@ namespace Microsoft.Xna.Framework.Graphics
 
         private void PlatformDrawIndexedPrimitives(PrimitiveType primitiveType, int baseVertex, int startIndex, int primitiveCount)
         {
+            var indexCount = GetElementCountArray(primitiveType, primitiveCount);
+
             lock (_d3dContext)
             {
                 ApplyState(true);
 
                 _d3dContext.InputAssembler.PrimitiveTopology = ToPrimitiveTopology(primitiveType);
-
-                var indexCount = GetElementCountArray(primitiveType, primitiveCount);
                 _d3dContext.DrawIndexed(indexCount, startIndex, baseVertex);
             }
         }

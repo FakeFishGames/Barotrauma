@@ -13,7 +13,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string welcomeMessage;
-        [InGameEditable, Serialize("", true, "Message to be displayed on the terminal display when it is first opened.", translationTextTag = "terminalwelcomemsg.")]
+        [InGameEditable, Serialize("", true, "Message to be displayed on the terminal display when it is first opened.", translationTextTag = "terminalwelcomemsg.", AlwaysUseInstanceValues = true)]
         public string WelcomeMessage
         {
             get { return welcomeMessage; }

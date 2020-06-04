@@ -19,14 +19,14 @@ namespace Barotrauma.Items.Components
 
         protected float[] receivedSignal = new float[2];
 
-        [Serialize(FunctionType.Sin, false, description: "Which kind of function to run the input through.")]
+        [Serialize(FunctionType.Sin, false, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
         public FunctionType Function
         {
             get; set;
         }
 
 
-        [InGameEditable, Serialize(false, true, description: "If set to true, the trigonometric function uses radians instead of degrees.")]
+        [InGameEditable, Serialize(false, true, description: "If set to true, the trigonometric function uses radians instead of degrees.", alwaysUseInstanceValues: true)]
         public bool UseRadians
         {
             get; set;

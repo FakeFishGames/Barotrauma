@@ -10,7 +10,17 @@ namespace Barotrauma
     public class GUIImage : GUIComponent
     {
         //paths of the textures that are being loaded asynchronously
-        private static readonly HashSet<string> activeTextureLoads = new HashSet<string>();
+        private static readonly List<string> activeTextureLoads = new List<string>();
+
+        private static bool loadingTextures;
+
+        public static bool LoadingTextures
+        {
+            get
+            {
+                return loadingTextures;
+            }
+        }
 
         public float Rotation;
 
@@ -25,7 +35,7 @@ namespace Barotrauma
         private bool lazyLoaded, loading;
 
         public bool LoadAsynchronously;
-        
+                
         public bool Crop
         {
             get
@@ -122,6 +132,7 @@ namespace Barotrauma
             {
                 if (LoadAsynchronously)
                 {
+                    loadingTextures = true;
                     loading = true;
                     TaskPool.Add(LoadTextureAsync(), (Task) =>
                     {
@@ -223,6 +234,7 @@ namespace Barotrauma
                 lock (activeTextureLoads)
                 {
                     activeTextureLoads.Remove(Sprite.FullPath);
+                    loadingTextures = activeTextureLoads.Count > 0;
                 }
             }
             return true;

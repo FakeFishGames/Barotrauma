@@ -14,12 +14,14 @@ namespace Barotrauma
         public readonly float MaxCondition;
         public readonly Sprite Sprite;
         public readonly bool FadeIn;
+        public readonly Point Offset;
 
-        public BrokenItemSprite(Sprite sprite, float maxCondition, bool fadeIn)
+        public BrokenItemSprite(Sprite sprite, float maxCondition, bool fadeIn, Point offset)
         {
             Sprite = sprite;
             MaxCondition = MathHelper.Clamp(maxCondition, 0.0f, 100.0f);
             FadeIn = fadeIn;
+            Offset = offset;
         }
     }
 

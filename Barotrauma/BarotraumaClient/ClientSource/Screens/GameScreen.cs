@@ -151,7 +151,10 @@ namespace Barotrauma
 
             GameMain.ParticleManager.UpdateTransforms();
 
-            GameMain.LightManager.ObstructVision = Character.Controlled != null && Character.Controlled.ObstructVision;
+            GameMain.LightManager.ObstructVision = 
+                Character.Controlled != null && 
+                Character.Controlled.ObstructVision && 
+                (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null);
 
             if (Character.Controlled != null)
             {
@@ -261,7 +264,7 @@ namespace Barotrauma
             graphics.SetRenderTarget(renderTargetFinal);
                         
             WaterRenderer.Instance.ResetBuffers();
-            Hull.UpdateVertices(graphics, cam, WaterRenderer.Instance);			
+            Hull.UpdateVertices(cam, WaterRenderer.Instance);			
             WaterRenderer.Instance.RenderWater(spriteBatch, renderTargetWater, cam);
             WaterRenderer.Instance.RenderAir(graphics, cam, renderTarget, Cam.ShaderTransform);
             graphics.DepthStencilState = DepthStencilState.None;

@@ -22,6 +22,8 @@ namespace Barotrauma.Items.Components
 
         private Vector2 debugRayStartPos, debugRayEndPos;
 
+        private readonly List<Body> ignoredBodies = new List<Body>();
+
         [Serialize("Both", false, description: "Can the item be used in air, water or both.")]
         public UseEnvironment UsableIn
         {
@@ -67,6 +69,12 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, false, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
+
+        [Serialize(true, false, description: "Can the item hit broken doors.")]
+        public bool HitItems { get; set; }
+
+        [Serialize(false, false, description: "Can the item hit broken doors.")]
+        public bool HitBrokenDoors { get; set; }
 
         [Serialize(0.0f, false, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
@@ -114,8 +122,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             item.IsShootable = true;
-            // TODO: should define this in xml if we have repair tools that don't require aim to use
-            item.RequireAimToUse = true;
+            item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
             InitProjSpecific(element);
         }
 
@@ -124,16 +131,17 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             activeTimer -= deltaTime;
-            if (activeTimer <= 0.0f) IsActive = false;
+            if (activeTimer <= 0.0f) { IsActive = false; }
         }
 
-        private List<Body> ignoredBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character.Removed) return false;
-            if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) return false;
+            if (character != null)
+            {
+                if (item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) { return false; }
+            }
             
-            float degreeOfSuccess = DegreeOfSuccess(character);
+            float degreeOfSuccess = character == null ? 0.5f : DegreeOfSuccess(character);
 
             if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess)
             {
@@ -187,12 +195,15 @@ namespace Barotrauma.Items.Components
                     (float)Math.Sin(angle)) * Range * item.body.Dir);
 
             ignoredBodies.Clear();
-            foreach (Limb limb in character.AnimController.Limbs)
+            if (character != null)
             {
-                if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
-                ignoredBodies.Add(limb.body.FarseerBody);
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (Rand.Range(0.0f, 0.5f) > degreeOfSuccess) continue;
+                    ignoredBodies.Add(limb.body.FarseerBody);
+                }
+                ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
             }
-            ignoredBodies.Add(character.AnimController.Collider.FarseerBody);
 
             IsActive = true;
             activeTimer = 0.1f;
@@ -200,7 +211,8 @@ namespace Barotrauma.Items.Components
             debugRayStartPos = ConvertUnits.ToDisplayUnits(rayStart);
             debugRayEndPos = ConvertUnits.ToDisplayUnits(rayEnd);
 
-            if (character.Submarine == null)
+            Submarine parentSub = character?.Submarine ?? item.Submarine;
+            if (parentSub == null)
             {
                 foreach (Submarine sub in Submarine.Loaded)
                 {
@@ -216,7 +228,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Repair(rayStart - character.Submarine.SimPosition, rayEnd - character.Submarine.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
+                Repair(rayStart - parentSub.SimPosition, rayEnd - parentSub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
             
             UseProjSpecific(deltaTime, rayStart);
@@ -314,6 +326,18 @@ namespace Barotrauma.Items.Components
                     {
                         if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure) { return false; }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
+                        if (f.Body?.UserData is Item targetItem)
+                        {
+                            if (!HitItems) { return false; }
+                            if (HitBrokenDoors)
+                            {
+                                if (targetItem.GetComponent<Door>() == null && targetItem.Condition <= 0) { return false; }
+                            }
+                            else
+                            {
+                                if (targetItem.Condition <= 0) { return false; }
+                            }
+                        }
                         return f.Body?.UserData != null; 
                     },
                     allowInsideFixture: true));
@@ -440,7 +464,8 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Item targetItem)
             {
-                
+                if (!HitItems) { return false; }
+
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
                     levelResource.requiredItems.Any() &&
@@ -458,6 +483,15 @@ namespace Barotrauma.Items.Components
                 }
                 
                 if (!targetItem.Prefab.DamagedByRepairTools) { return false; }
+
+                if (HitBrokenDoors)
+                {
+                    if (targetItem.GetComponent<Door>() == null && targetItem.Condition <= 0) { return false; }
+                }
+                else
+                {
+                    if (targetItem.Condition <= 0) { return false; }
+                }
 
                 targetItem.IsHighlighted = true;
                 
@@ -647,26 +681,26 @@ namespace Barotrauma.Items.Components
                 }
 
 #if CLIENT
+                if (user == null) { return; }
                 // Hard-coded progress bars for welding doors stuck.
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
                 foreach (ISerializableEntity target in targets)
                 {
-                    if (target is Door door)
+                    if (!(target is Door door)) { continue; }
+                    
+                    if (!door.CanBeWelded) { continue; }
+                    for (int i = 0; i < effect.propertyNames.Length; i++)
                     {
-                        if (!door.CanBeWelded) continue;
-                        for (int i = 0; i < effect.propertyNames.Length; i++)
+                        string propertyName = effect.propertyNames[i];
+                        if (propertyName != "stuck") { continue; }
+                        if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
+                        object value = property.GetValue(target);
+                        if (door.Stuck > 0)
                         {
-                            string propertyName = effect.propertyNames[i];
-                            if (propertyName != "stuck") { continue; }
-                            if (door.SerializableProperties == null || !door.SerializableProperties.TryGetValue(propertyName, out SerializableProperty property)) { continue; }
-                            object value = property.GetValue(target);
-                            if (door.Stuck > 0)
-                            {
-                                var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White);
-                                if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
-                            }
+                            var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White);
+                            if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                         }
-                    }
+                    }                    
                 }
 #endif
             }

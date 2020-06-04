@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         private DelayedSignal prevQueuedSignal;
         
         private float delay;
-        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true, description: "How long the item delays the signals (in seconds).")]
+        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true, description: "How long the item delays the signals (in seconds).", alwaysUseInstanceValues: true)]
         public float Delay
         {
             get { return delay; }
@@ -43,14 +43,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when a new one is received.")]
+        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when a new one is received.", alwaysUseInstanceValues: true)]
         public bool ResetWhenSignalReceived
         {
             get;
             set;
         }
 
-        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when the incoming signal changes.")]
+        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when the incoming signal changes.", alwaysUseInstanceValues: true)]
         public bool ResetWhenDifferentSignalReceived
         {
             get;

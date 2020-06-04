@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -10,6 +11,8 @@ namespace Barotrauma
         private readonly XElement itemConfig;
 
         private readonly List<Item> items = new List<Item>();
+        private readonly Dictionary<Item, UInt16> itemIDs = new Dictionary<Item, UInt16>();
+        private readonly Dictionary<Item, UInt16> parentInventoryIDs = new Dictionary<Item, UInt16>();
 
         private int requiredDeliveryAmount;
 
@@ -22,8 +25,6 @@ namespace Barotrauma
 
         private void InitItems()
         {
-            items.Clear();
-
             if (itemConfig == null)
             {
                 DebugConsole.ThrowError("Failed to initialize items for cargo mission (itemConfig == null)");
@@ -91,8 +92,13 @@ namespace Barotrauma
             var item = new Item(itemPrefab, position, cargoRoom.Submarine);
             item.FindHull();
             items.Add(item);
-            
-            if (parent != null) parent.Combine(item, user: null);
+            itemIDs.Add(item, item.ID);
+
+            if (parent != null) 
+            {
+                parentInventoryIDs.Add(item, parent.ID);
+                parent.Combine(item, user: null); 
+            }
             
             foreach (XElement subElement in element.Elements())
             {
@@ -106,6 +112,10 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
+            items.Clear();
+            itemIDs.Clear();
+            parentInventoryIDs.Clear();
+
             if (!IsClient)
             {
                 InitItems();

@@ -502,11 +502,9 @@ namespace Barotrauma
                         causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName];
                     }
                 }
-
-                byte severedLimbCount = msg.ReadByte();
                 if (!IsDead)
                 {
-                    if (causeOfDeathType == CauseOfDeathType.Pressure)
+                    if (causeOfDeathType == CauseOfDeathType.Pressure || causeOfDeathAffliction == AfflictionPrefab.Pressure)
                     {
                         Implode(true);
                     }
@@ -515,25 +513,25 @@ namespace Barotrauma
                         Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f), true);
                     }
                 }
-
-                for (int i = 0; i < severedLimbCount; i++)
-                {
-                    int severedJointIndex = msg.ReadByte();
-                    if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
-                    {
-                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                    }
-                    else
-                    {
-                        AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
-                    }
-                }
             }
             else
             {
                 if (IsDead) { Revive(); }
                 CharacterHealth.ClientRead(msg);
+            }
+            byte severedLimbCount = msg.ReadByte();
+            for (int i = 0; i < severedLimbCount; i++)
+            {
+                int severedJointIndex = msg.ReadByte();
+                if (severedJointIndex < 0 || severedJointIndex >= AnimController.LimbJoints.Length)
+                {
+                    string errorMsg = $"Error in CharacterNetworking.ReadStatus: severed joint index out of bounds (index: {severedJointIndex}, joint count: {AnimController.LimbJoints.Length})";
+                    GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:JointIndexOutOfBounts", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                }
+                else
+                {
+                    AnimController.SeverLimbJoint(AnimController.LimbJoints[severedJointIndex]);
+                }
             }
         }
     }

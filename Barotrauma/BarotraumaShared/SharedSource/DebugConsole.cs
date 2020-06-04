@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 
@@ -292,7 +292,7 @@ namespace Barotrauma
 
             commands.Add(new Command("startwhenclientsready", "startwhenclientsready [true/false]: Enable or disable automatically starting the round when clients are ready to start.", null));
 
-            commands.Add(new Command("giveperm", "giveperm [id]: Grants administrative permissions to the player with the specified client ID.", null,
+            commands.Add(new Command("giveperm", "giveperm [id/steamid/endpoint/name]: Grants administrative permissions to the specified client.", null,
                 () =>
                 {
                     if (GameMain.NetworkMember == null) return null;
@@ -304,7 +304,7 @@ namespace Barotrauma
                     };
                 }));
 
-            commands.Add(new Command("revokeperm", "revokeperm [id]: Revokes administrative permissions to the player with the specified client ID.", null,
+            commands.Add(new Command("revokeperm", "revokeperm [id/steamid/endpoint/name]: Revokes administrative permissions from the specified client.", null,
                 () =>
                 {
                     if (GameMain.NetworkMember == null) return null;
@@ -316,7 +316,7 @@ namespace Barotrauma
                     };
                 }));
             
-            commands.Add(new Command("giverank", "giverank [id]: Assigns a specific rank (= a set of administrative permissions) to the player with the specified client ID.", null,
+            commands.Add(new Command("giverank", "giverank [id/steamid/endpoint/name]: Assigns a specific rank (= a set of administrative permissions) to the specified client.", null,
                 () =>
                 {
                     if (GameMain.NetworkMember == null) return null;
@@ -328,12 +328,41 @@ namespace Barotrauma
                     };
                 }));
 
-            commands.Add(new Command("givecommandperm", "givecommandperm [id]: Gives the player with the specified client ID the permission to use the specified console commands.", null));
+            commands.Add(new Command("givecommandperm", "givecommandperm [id/steamid/endpoint/name]: Gives the specified client the permission to use the specified console commands.", null,
+                () =>
+                {
+                    if (GameMain.NetworkMember == null) return null;
 
-            commands.Add(new Command("revokecommandperm", "revokecommandperm [id]: Revokes permission to use the specified console commands from the player with the specified client ID.", null));
-            
-            commands.Add(new Command("showperm", "showperm [id]: Shows the current administrative permissions of the client with the specified client ID.", null));
-            
+                    return new string[][]
+                    {
+                        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                        commands.Select(c => c.names[0]).ToArray()
+                    };
+                }));
+
+            commands.Add(new Command("revokecommandperm", "revokecommandperm [id/steamid/endpoint/name]: Revokes permission to use the specified console commands from the specified client.", null,
+                () =>
+                {
+                    if (GameMain.NetworkMember == null) return null;
+
+                    return new string[][]
+                    {
+                        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
+                        new string[0]
+                    };
+                }));
+
+            commands.Add(new Command("showperm", "showperm [id/steamid/endpoint/name]: Shows the current administrative permissions of the specified client.", null,
+                () =>
+                {
+                    if (GameMain.NetworkMember == null) return null;
+
+                    return new string[][]
+                    {
+                        GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray()
+                    };
+                }));
+
             commands.Add(new Command("respawnnow", "respawnnow: Trigger a respawn immediately if there are any clients waiting to respawn.", null));
 
             commands.Add(new Command("showkarma", "showkarma: Show the current karma values of the players.", null));
@@ -692,7 +721,7 @@ namespace Barotrauma
                 }
             },null));
             
-            commands.Add(new Command("teleportsub", "teleportsub [start/end]: Teleport the submarine to the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
+            commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null || Level.Loaded == null) return;
 
@@ -974,6 +1003,22 @@ namespace Barotrauma
                     NewMessage(location.Name + " selected.", Color.White);
                 }
             }));
+
+            commands.Add(new Command("money", "", args =>
+            {
+                if (args.Length == 0) { return; }
+                if (GameMain.GameSession.GameMode is CampaignMode campaign)
+                {
+                    if (int.TryParse(args[0], out int money))
+                    {
+                        campaign.Money += money;
+                    }
+                    else
+                    {
+                        ThrowError($"\"{args[0]}\" is not a valid numeric value.");
+                    }
+                }
+            }, isCheat: true));
 
             commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
             

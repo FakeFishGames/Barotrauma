@@ -121,6 +121,12 @@ namespace Barotrauma
 
         protected override bool Check()
         {
+            if (initialMode == CombatMode.Offensive && Mode != CombatMode.Offensive)
+            {
+                Abandon = true;
+                SteeringManager.Reset();
+                return false;
+            }
             bool completed = (Enemy != null && (Enemy.Removed || Enemy.IsDead)) || (initialMode != CombatMode.Offensive && coolDownTimer <= 0);
             if (completed)
             {
@@ -465,7 +471,6 @@ namespace Barotrauma
                 SteeringManager.Reset();
                 return;
             }
-
             retreatTarget = null;
             RemoveSubObjective(ref retreatObjective);
             RemoveSubObjective(ref seekAmmunition);
@@ -482,9 +487,8 @@ namespace Barotrauma
                 },
                 onAbandon: () =>
                 {
-                    Mode = CombatMode.Defensive;
+                    Abandon = true;
                     SteeringManager.Reset();
-                    RemoveSubObjective(ref followTargetObjective);
                 });
             if (followTargetObjective != null)
             {
@@ -593,10 +597,7 @@ namespace Barotrauma
 
         private void Attack(float deltaTime)
         {
-            float squaredDistance = Vector2.DistanceSquared(character.Position, Enemy.Position);
             character.CursorPosition = Enemy.Position;
-            float engageDistance = 500;
-            if (character.CurrentHull != Enemy.CurrentHull && squaredDistance > engageDistance * engageDistance) { return; }
             if (!character.CanSeeCharacter(Enemy)) { return; }
             if (Weapon.RequireAimToUse)
             {
@@ -604,7 +605,7 @@ namespace Barotrauma
                 if (SteeringManager == PathSteering)
                 {
                     var door = PathSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
-                    if (door != null && !door.IsOpen)
+                    if (door != null && !door.IsOpen && !door.IsBroken)
                     {
                         isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
                     }
@@ -626,7 +627,7 @@ namespace Barotrauma
             }
             if (WeaponComponent is MeleeWeapon meleeWeapon)
             {
-                if (squaredDistance <= meleeWeapon.Range * meleeWeapon.Range)
+                if (Vector2.DistanceSquared(character.Position, Enemy.Position) <= meleeWeapon.Range * meleeWeapon.Range)
                 {
                     character.SetInput(InputType.Shoot, false, true);
                     Weapon.Use(deltaTime, character);
@@ -636,7 +637,7 @@ namespace Barotrauma
             {
                 if (WeaponComponent is RepairTool repairTool)
                 {
-                    if (squaredDistance > repairTool.Range * repairTool.Range) { return; }
+                    if (Vector2.DistanceSquared(character.Position, Enemy.Position) > repairTool.Range * repairTool.Range) { return; }
                 }
                 if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - Weapon.Position) < MathHelper.PiOver4)
                 {

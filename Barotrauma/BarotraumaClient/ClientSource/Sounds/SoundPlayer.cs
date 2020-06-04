@@ -3,7 +3,7 @@ using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -260,7 +260,7 @@ namespace Barotrauma
                             break;
                     }
                 }
-                catch (FileNotFoundException e)
+                catch (System.IO.FileNotFoundException e)
                 {
                     DebugConsole.ThrowError("Error while initializing SoundPlayer.", e);
                 }
@@ -377,6 +377,8 @@ namespace Barotrauma
 
         private static void UpdateWaterAmbience(float ambienceVolume, float deltaTime)
         {
+            if (GameMain.SoundManager.Disabled) { return; }
+
             //how fast the sub is moving, scaled to 0.0 -> 1.0
             float movementSoundVolume = 0.0f;
 
@@ -453,17 +455,25 @@ namespace Barotrauma
             Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
             foreach (Gap gap in Gap.GapList)
             {
-                if (gap.Open < 0.01f) continue;
-                float gapFlow = Math.Abs(gap.LerpedFlowForce.X) + Math.Abs(gap.LerpedFlowForce.Y) * 2.5f;
-
-                if (gapFlow < 10.0f) continue;
-
-                int flowSoundIndex = (int)Math.Floor(MathHelper.Clamp(gapFlow / MaxFlowStrength, 0, FlowSounds.Count));
-                flowSoundIndex = Math.Min(flowSoundIndex, FlowSounds.Count - 1);
-
                 Vector2 diff = gap.WorldPosition - listenerPos;
                 if (Math.Abs(diff.X) < FlowSoundRange && Math.Abs(diff.Y) < FlowSoundRange)
                 {
+                    if (gap.Open < 0.01f) { continue; }
+                    float gapFlow = Math.Abs(gap.LerpedFlowForce.X) + Math.Abs(gap.LerpedFlowForce.Y) * 2.5f;
+                    if (!gap.IsRoomToRoom) { gapFlow *= 2.0f; }
+                    if (gapFlow < 10.0f) { continue; }
+
+                    if (gap.linkedTo.Count == 2 && gap.linkedTo[0] is Hull hull1 && gap.linkedTo[1] is Hull hull2)
+                    {
+                        //no flow sounds between linked hulls (= rooms consisting of multiple hulls)
+                        if (hull1.linkedTo.Contains(hull2)) { continue; }
+                        if (hull1.linkedTo.Any(h => h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2))) { continue; }
+                        if (hull2.linkedTo.Any(h => h.linkedTo.Contains(hull1) && h.linkedTo.Contains(hull2))) { continue; }
+                    }
+
+                    int flowSoundIndex = (int)Math.Floor(MathHelper.Clamp(gapFlow / MaxFlowStrength, 0, FlowSounds.Count));
+                    flowSoundIndex = Math.Min(flowSoundIndex, FlowSounds.Count - 1);
+
                     float dist = diff.Length();
                     float distFallOff = dist / FlowSoundRange;
                     if (distFallOff >= 0.99f) continue;
@@ -484,10 +494,10 @@ namespace Barotrauma
             {
                 flowVolumeLeft[i] = (targetFlowLeft[i] < flowVolumeLeft[i]) ?
                     Math.Max(targetFlowLeft[i], flowVolumeLeft[i] - deltaTime) :
-                    Math.Min(targetFlowLeft[i], flowVolumeLeft[i] + deltaTime);
+                    Math.Min(targetFlowLeft[i], flowVolumeLeft[i] + deltaTime * 10.0f);
                 flowVolumeRight[i] = (targetFlowRight[i] < flowVolumeRight[i]) ?
                      Math.Max(targetFlowRight[i], flowVolumeRight[i] - deltaTime) :
-                     Math.Min(targetFlowRight[i], flowVolumeRight[i] + deltaTime);
+                     Math.Min(targetFlowRight[i], flowVolumeRight[i] + deltaTime * 10.0f);
 
                 if (flowVolumeLeft[i] < 0.05f && flowVolumeRight[i] < 0.05f)
                 {
@@ -634,8 +644,12 @@ namespace Barotrauma
 
             float far = range ?? sound.BaseFar;
 
-            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far) return null;
-            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: ShouldMuffleSound(Character.Controlled, position, far, hullGuess));            
+            if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > far * far)
+            {
+                return null;
+            }
+            bool muffle = !sound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
+            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: muffle);            
         }
 
         private static void UpdateMusic(float deltaTime)
@@ -921,20 +935,22 @@ namespace Barotrauma
             PlayDamageSound(damageType, damage, bodyPosition, 800.0f);
         }
 
+        private static readonly List<DamageSound> tempList = new List<DamageSound>();
         public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, IEnumerable<string> tags = null)
         {
             damage = MathHelper.Clamp(damage + Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
-            var sounds = damageSounds.FindAll(s =>
-                (s.damageRange == Vector2.Zero ||
-                (damage >= s.damageRange.X && damage <= s.damageRange.Y)) &&
-                s.damageType == damageType &&
-                (tags == null ? string.IsNullOrEmpty(s.requiredTag) : tags.Contains(s.requiredTag)));
-
-            if (!sounds.Any()) return;
-
-            int selectedSound = Rand.Int(sounds.Count);
-            sounds[selectedSound].sound.Play(1.0f, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, null));
-        }
-        
+            tempList.Clear();
+            foreach (var s in damageSounds)
+            {
+                if ((s.damageRange == Vector2.Zero ||
+                    (damage >= s.damageRange.X && damage <= s.damageRange.Y)) &&
+                    string.Equals(s.damageType, damageType, StringComparison.OrdinalIgnoreCase) &&
+                    (tags == null ? string.IsNullOrEmpty(s.requiredTag) : tags.Contains(s.requiredTag)))
+                {
+                    tempList.Add(s);
+                }
+            }
+            tempList.GetRandom().sound?.Play(1.0f, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, null));
+        }       
     }
 }

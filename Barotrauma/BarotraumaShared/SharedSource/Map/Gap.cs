@@ -33,6 +33,8 @@ namespace Barotrauma
         //the force of the water flow which is exerted on physics bodies
         private Vector2 flowForce;
         private Hull flowTargetHull;
+
+        private float openedTimer = 1.0f;
         
         private float higherSurface;
         private float lowerSurface;
@@ -54,7 +56,11 @@ namespace Barotrauma
         public float Open
         {
             get { return open; }
-            set { open = MathHelper.Clamp(value, 0.0f, 1.0f); }
+            set 
+            {
+                if (value > open) { openedTimer = 1.0f; }
+                open = MathHelper.Clamp(value, 0.0f, 1.0f); 
+            }
         }
 
         public float Size => IsHorizontal ? Rect.Height : Rect.Width;
@@ -124,6 +130,7 @@ namespace Barotrauma
             InsertToList();
 
             outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f);
+            outsideCollisionBlocker.UserData = $"CollisionBlocker (Gap {ID})";
             outsideCollisionBlocker.BodyType = BodyType.Static;
             outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
             outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
@@ -277,57 +284,18 @@ namespace Barotrauma
 
             flowForce.X = MathHelper.Clamp(flowForce.X, -MaxFlowForce, MaxFlowForce);
             flowForce.Y = MathHelper.Clamp(flowForce.Y, -MaxFlowForce, MaxFlowForce);
-            lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime * 5.0f);
+            if (openedTimer > 0.0f && flowForce.Length() > lerpedFlowForce.Length())
+            {
+                //if the gap has just been opened/created, allow it to exert a large force instantly without any smoothing
+                lerpedFlowForce = flowForce;                
+            }
+            else
+            {
+                lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime * 5.0f);
+            }
+            openedTimer -= deltaTime;
 
             EmitParticles(deltaTime);
-
-            if (flowTargetHull != null && lerpedFlowForce.LengthSquared() > 0.0001f)
-            {
-                foreach (Character character in Character.CharacterList)
-                {
-                    if (character.CurrentHull == null) continue;
-                    if (character.CurrentHull != linkedTo[0] as Hull &&
-                        (linkedTo.Count < 2 || character.CurrentHull != linkedTo[1] as Hull))
-                    {
-                        continue;
-                    }
-
-                    foreach (Limb limb in character.AnimController.Limbs)
-                    {
-                        if (!limb.inWater) continue;
-
-                        float dist = Vector2.Distance(limb.WorldPosition, WorldPosition);
-                        if (dist > lerpedFlowForce.Length()) continue;
-
-                        Vector2 force = lerpedFlowForce / (float)Math.Max(Math.Sqrt(dist), 20.0f) * 0.025f;
-
-                        //vertical gaps only apply forces if the character is roughly above/below the gap
-                        if (!IsHorizontal)
-                        {
-                            float xDist = Math.Abs(limb.WorldPosition.X - WorldPosition.X);
-                            if (xDist > rect.Width || rect.Width == 0) break;
-
-                            force *= 1.0f - xDist / rect.Width;
-                        }
-
-                        if (!MathUtils.IsValid(force))
-                        {
-                            string errorMsg = "Attempted to apply invalid flow force to the character \"" + character.Name +
-                                "\", gap pos: " + WorldPosition +
-                                ", limb pos: " + limb.WorldPosition +
-                                ", flowforce: " + flowForce + ", lerpedFlowForce:" + lerpedFlowForce +
-                                ", dist: " + dist;
-
-                            DebugConsole.Log(errorMsg);
-                            GameAnalyticsManager.AddErrorEventOnce("Gap.Update:InvalidFlowForce:" + character.Name,
-                                GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                                errorMsg);
-                            continue;
-                        }
-                        character.AnimController.Collider.ApplyForce(force * limb.body.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                    }
-                }
-            }
         }
 
         partial void EmitParticles(float deltaTime);

@@ -85,32 +85,22 @@ namespace Barotrauma
         //legacy support
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
-        public readonly string[] OptionNames;
+        private readonly Dictionary<string, string> OptionNames;
 
         public readonly Dictionary<string, Sprite> OptionSprites;
+
+        private readonly Dictionary<string, Sprite> minimapIcons;
+        public Dictionary<string, Sprite> MinimapIcons => IsPrefab ? minimapIcons : Prefab.minimapIcons;
 
         public readonly float Weight;
         public readonly bool MustSetTarget;
         public readonly string AppropriateSkill;
 
-        public bool HasOptions
-        {
-            get
-            {
-                if (IsPrefab)
-                {
-                    return MustSetTarget || Options.Length > 1;
-                }
-                else
-                {
-                    return Prefab.MustSetTarget || Prefab.Options.Length > 1;
-                }
-            }
-        }
+        public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
         public readonly bool MustManuallyAssign;
 
-        static Order()
+        public static void Init()
         {
             Prefabs = new Dictionary<string, Order>();
             OrderCategoryIcons = new Dictionary<OrderCategory, Tuple<Sprite, Color>>();
@@ -219,25 +209,18 @@ namespace Barotrauma
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
             AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
 
-            string translatedOptionNames = TextManager.Get("OrderOptions." + Identifier, true);
-            if (translatedOptionNames == null)
+            var optionNames = TextManager.Get("OrderOptions." + Identifier, true)?.Split(',', '，') ??
+                orderElement.GetAttributeStringArray("optionnames", new string[0]);
+            OptionNames = new Dictionary<string, string>();
+            for (int i = 0; i < Options.Length && i < optionNames.Length; i++)
             {
-                OptionNames = orderElement.GetAttributeStringArray("optionnames", new string[0]);
+                OptionNames.Add(Options[i], optionNames[i].Trim());
             }
-            else
-            {
-                string[] splitOptionNames = translatedOptionNames.Split(',', '，');
-                OptionNames = new string[Options.Length];
-                for (int i = 0; i < Options.Length && i < splitOptionNames.Length; i++)
-                {
-                    OptionNames[i] = splitOptionNames[i].Trim();
-                }
-            }
-
-            if (OptionNames.Length != Options.Length)
+            if (OptionNames.Count != Options.Length)
             {
                 DebugConsole.ThrowError("Error in Order " + Name + " - the number of option names doesn't match the number of options.");
-                OptionNames = Options;
+                OptionNames.Clear();
+                Options.ForEach(o => OptionNames.Add(o, o));
             }
 
             var spriteElement = orderElement.GetChildElement("sprite");
@@ -261,6 +244,15 @@ namespace Barotrauma
                 }
             }
 
+            minimapIcons = new Dictionary<string, Sprite>();
+            var minimapIconElements = orderElement.GetChildElements("minimapicon");
+            foreach (XElement minimapIconElement in minimapIconElements)
+            {
+                var id = minimapIconElement.GetAttributeString("id", null);
+                if (string.IsNullOrWhiteSpace(id)) { continue; }
+                minimapIcons.Add(id, new Sprite(minimapIconElement.GetChildElement("sprite"), lazyLoad: true));
+            }
+
             IsPrefab = true;
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
         }
@@ -268,7 +260,7 @@ namespace Barotrauma
         /// <summary>
         /// Constructor for order instances
         /// </summary>
-        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
+        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
         {
             Prefab = prefab;
 
@@ -293,26 +285,22 @@ namespace Barotrauma
             TargetEntity = targetEntity;
             if (targetItem != null)
             {
-                if (UseController) { ConnectedController = FindController(targetItem); }
+                if (UseController)
+                {
+                    ConnectedController = targetItem.Item?.FindController();
+                    if (ConnectedController == null)
+                    {
+#if DEBUG
+                        throw new Exception("Tried to use controller, but couldn't find one");
+#endif
+                        UseController = false;
+                    }
+                }
                 TargetEntity = targetItem.Item;
                 TargetItemComponent = targetItem;
             }
 
             IsPrefab = false;
-        }
-
-        private Controller FindController(ItemComponent targetComponent)
-        {
-            if (targetComponent?.Item == null) { return null; }
-            //try finding the controller with the simpler non-recursive method first
-            return targetComponent.Item.GetConnectedComponents<Controller>().FirstOrDefault() ??
-                targetComponent.Item.GetConnectedComponents<Controller>(recursive: true).FirstOrDefault();
-        }
-
-        private bool TryFindController(ItemComponent targetComponent, out Controller controller)
-        {
-            controller = FindController(targetComponent);
-            return controller != null;
         }
         
         public bool HasAppropriateJob(Character character)
@@ -368,7 +356,7 @@ namespace Barotrauma
                 matchingItems.RemoveAll(it => it.NonInteractable);
                 if (UseController)
                 {
-                    matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType && TryFindController(c, out _)));
+                    matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType) && !i.TryFindController(out _));
                 }
             }
             return matchingItems;
@@ -380,6 +368,17 @@ namespace Barotrauma
                 Submarine.MainSubs[1] :
                 Submarine.MainSub;
             return GetMatchingItems(submarine, mustBelongToPlayerSub);
+        }
+
+        public string GetOptionName(string id)
+        {
+            return Prefab == null ? OptionNames[id] : Prefab.OptionNames[id];
+        }
+
+        public string GetOptionName(int index)
+        {
+            if (index < 0 || index >= Options.Length) { return null; }
+            return GetOptionName(Options[index]);
         }
     }
 }

@@ -67,6 +67,8 @@ namespace Barotrauma
         private Vector2 selectionEndPos;
         private Vector2 selectionRectSize;
 
+        private bool mouseHeldInside;
+
         private readonly Memento<string> memento = new Memento<string>();
         
         // Skip one update cycle, fixes Enter key instantly deselecting the chatbox
@@ -414,6 +416,7 @@ namespace Barotrauma
                 State = ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonDown())
                 {
+                    mouseHeldInside = true;
                     Select();
                 }
                 else
@@ -436,7 +439,11 @@ namespace Barotrauma
             }
             else
             {
-                if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) Deselect();
+                if ((PlayerInput.LeftButtonClicked() || PlayerInput.RightButtonClicked()) && selected) 
+                {
+                    if (!mouseHeldInside) { Deselect(); }
+                    mouseHeldInside = false;
+                }
                 isSelecting = false;
                 State = ComponentState.None;
             }

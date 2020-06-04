@@ -174,6 +174,10 @@ namespace Barotrauma
                 }
 
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine);
+                foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                {
+                    wifiComponent.TeamID = validContainer.Key.Item.Submarine.TeamID;
+                }
                 spawnedItems.Add(item);
 #if SERVER
                 Entity.Spawner.CreateNetworkEvent(item, remove: false);

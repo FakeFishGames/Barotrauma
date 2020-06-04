@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -56,7 +57,7 @@ namespace Barotrauma
                         {
                             Objectives.Remove(item);
                             ignoreList.Add(item);
-                            targetUpdateTimer = 0;
+                            targetUpdateTimer = Math.Min(0.1f, targetUpdateTimer);
                         };
                     }
                     break;
@@ -75,12 +76,8 @@ namespace Barotrauma
                 if (item != character.SelectedConstruction)
                 {
                     float condition = item.ConditionPercentage;
-                    if (item.Repairables.All(r => condition >= r.AIRepairThreshold)) { return false; }
+                    if (item.Repairables.All(r => condition >= r.RepairThreshold)) { return false; }
                 }
-            }
-            if (RequireAdequateSkills)
-            {
-                if (item.Repairables.Any(r => !r.HasRequiredSkills(character))) { return false; }
             }
             if (!string.IsNullOrWhiteSpace(RelevantSkill))
             {
@@ -96,7 +93,7 @@ namespace Barotrauma
                 // Don't stop fixing until done
                 return 100;
             }
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>(), onlyBots: true);
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>() && !c.Character.IsIncapacitated, onlyBots: true);
             int items = Targets.Count;
             bool anyFixers = otherFixers > 0;
             float ratio = anyFixers ? items / (float)otherFixers : 1;
@@ -111,8 +108,22 @@ namespace Barotrauma
                     // Enough fixers
                     return 0;
                 }
-                return Targets.Sum(t => 100 - t.ConditionPercentage) * ratio;
+                if (RequireAdequateSkills)
+                {
+                    return Targets.Sum(t => GetTargetPriority(t, character)) * ratio;
+                }
+                else
+                {
+                    return Targets.Sum(t => 100 - t.ConditionPercentage) * ratio;
+                }
             }
+        }
+
+        public static float GetTargetPriority(Item item, Character character)
+        {
+            float damagePriority = MathHelper.Lerp(1, 0, item.Condition / item.MaxCondition);
+            float successFactor = MathHelper.Lerp(0, 1, item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+            return MathHelper.Lerp(0, 100, MathHelper.Clamp(damagePriority * successFactor, 0, 1));
         }
 
         protected override IEnumerable<Item> GetList() => Item.ItemList;
@@ -126,6 +137,7 @@ namespace Barotrauma
         public static bool IsValidTarget(Item item, Character character)
         {
             if (item == null) { return false; }
+            if (item.NonInteractable) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null) { return false; }

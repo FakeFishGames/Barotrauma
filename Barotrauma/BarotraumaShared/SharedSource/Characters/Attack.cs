@@ -316,11 +316,6 @@ namespace Barotrauma
                                 continue;
                             }
                         }
-
-                        //float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
-                        //var affliction = afflictionPrefab.Instantiate(afflictionStrength);
-                        //Afflictions.Add(affliction, subElement);
-
                         break;
                     case "conditional":
                         foreach (XAttribute attribute in subElement.Attributes())
@@ -347,14 +342,18 @@ namespace Barotrauma
                 afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
                 if (afflictionPrefab != null)
                 {
-                    float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
-                    affliction = afflictionPrefab.Instantiate(afflictionStrength);
+                    affliction = afflictionPrefab.Instantiate(0.0f);
                 }
                 else
                 {
                     affliction = new Affliction(null, 0);
                 }
                 affliction.Deserialize(subElement);
+                //backwards compatibility
+                if (subElement.Attribute("amount") != null && subElement.Attribute("strength") == null)
+                {
+                    affliction.Strength = subElement.GetAttributeFloat("amount", 0.0f);
+                }
                 // add the affliction anyway, so that it can be shown in the editor.
                 Afflictions.Add(affliction, subElement);
             }
@@ -572,18 +571,14 @@ namespace Barotrauma
 
         public bool IsValidTarget(AttackTarget targetType) => TargetType == AttackTarget.Any || TargetType == targetType;
 
-        public bool IsValidTarget(Entity target)
+        public bool IsValidTarget(IDamageable target)
         {
-            switch (TargetType)
+            return TargetType switch
             {
-                case AttackTarget.Character:
-                    return target is Character;
-                case AttackTarget.Structure:
-                    return !(target is Character);
-                case AttackTarget.Any:
-                default:
-                    return true;
-            }
+                AttackTarget.Character => target is Character,
+                AttackTarget.Structure => !(target is Character),
+                _ => true,
+            };
         }
 
         public Vector2 CalculateAttackPhase(TransitionMode easing = TransitionMode.Linear)

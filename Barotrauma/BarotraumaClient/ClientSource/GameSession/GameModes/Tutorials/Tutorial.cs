@@ -515,7 +515,7 @@ namespace Barotrauma.Tutorials
                 height += (int)GUI.Font.MeasureString(title).Y + (int)(150 * GUI.Scale);
             }
 
-            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), style: null, Color.Black * 0.5f);
+            var background = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center), style: "GUIBackgroundBlocker");
 
             var infoBlock = new GUIFrame(new RectTransform(new Point(width, height), background.RectTransform, anchor));
             infoBlock.Flash(GUI.Style.Green);

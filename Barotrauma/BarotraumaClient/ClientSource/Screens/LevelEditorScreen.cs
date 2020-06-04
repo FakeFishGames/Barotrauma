@@ -3,10 +3,14 @@ using Barotrauma.RuinGeneration;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.IO;
 using System.Linq;
-using System.Xml;
 using System.Xml.Linq;
+#if DEBUG
+using System.IO;
+using System.Xml;
+#else
+using Barotrauma.IO;
+#endif
 
 namespace Barotrauma
 {
@@ -459,7 +463,7 @@ namespace Barotrauma
                 Submarine.Draw(spriteBatch, false);
                 Submarine.DrawFront(spriteBatch);
                 Submarine.DrawDamageable(spriteBatch, null);
-                GUI.DrawRectangle(spriteBatch, new Rectangle(new Point(0, -Level.Loaded.Size.Y), Level.Loaded.Size), Color.White, thickness: (int)(1.0f / cam.Zoom));
+                GUI.DrawRectangle(spriteBatch, new Rectangle(new Point(0, -Level.Loaded.Size.Y), Level.Loaded.Size), Color.Gray, thickness: (int)(1.0f / cam.Zoom));
                 spriteBatch.End();
 
                 if (lightingEnabled.Selected)
@@ -497,7 +501,7 @@ namespace Barotrauma
 
         private void SerializeAll()
         {
-            XmlWriterSettings settings = new XmlWriterSettings
+            System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 NewLineOnAttributes = true
@@ -578,7 +582,7 @@ namespace Barotrauma
 
                 if (elementFound)
                 {
-                    XmlWriterSettings settings = new XmlWriterSettings
+                    System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
                     {
                         Indent = true,
                         NewLineOnAttributes = true
@@ -595,7 +599,7 @@ namespace Barotrauma
         }
 
         
-        #region LevelObject Wizard
+#region LevelObject Wizard
         private class Wizard
         {
             private LevelObjectPrefab newPrefab;
@@ -676,8 +680,8 @@ namespace Barotrauma
                     }
 
                     newPrefab.Name = nameBox.Text;
-                    
-                    XmlWriterSettings settings = new XmlWriterSettings { Indent = true };
+
+                    System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings { Indent = true };
                     foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
                     {
                         XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
@@ -710,6 +714,6 @@ namespace Barotrauma
             }
 
         }
-        #endregion
+#endregion
     }
 }

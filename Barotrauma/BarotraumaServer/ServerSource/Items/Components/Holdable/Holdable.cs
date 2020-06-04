@@ -13,6 +13,7 @@ namespace Barotrauma.Items.Components
             msg.Write(Attached);
             msg.Write(body.SimPosition.X);
             msg.Write(body.SimPosition.Y);
+            msg.Write(item.Submarine?.ID ?? Entity.NullEntityID);
         }
 
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
@@ -26,7 +27,7 @@ namespace Barotrauma.Items.Components
             simPosition = c.Character.SimPosition + offset;
 
             Drop(false, null);
-            item.SetTransform(simPosition, 0.0f);
+            item.SetTransform(simPosition, 0.0f, findNewHull: false);
             AttachToWall();
 
             item.CreateServerEvent(this);

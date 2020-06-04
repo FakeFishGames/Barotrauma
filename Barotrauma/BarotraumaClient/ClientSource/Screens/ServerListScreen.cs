@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -683,7 +683,21 @@ namespace Barotrauma
             if (!File.Exists(file)) { return; }
 
             XDocument doc = XMLExtensions.TryLoadXml(file);
-            if (doc == null) { return; }
+            if (doc == null)
+            {
+                DebugConsole.NewMessage("Failed to load file \"" + file + "\". Attempting to recreate the file...");
+                try
+                {
+                    doc = new XDocument(new XElement("servers"));
+                    doc.Save(file);
+                    DebugConsole.NewMessage("Recreated \"" + file + "\".");
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to recreate the file \"" + file + "\".", e);
+                }
+                return;
+            }
 
             foreach (XElement element in doc.Root.Elements())
             {
@@ -705,7 +719,7 @@ namespace Barotrauma
                 rootElement.Add(info.ToXElement());
             }
 
-            doc.Save(file);
+            doc.SaveSafe(file);
         }
 
         public ServerInfo UpdateServerInfoWithServerSettings(object endpoint, ServerSettings serverSettings)
@@ -1670,7 +1684,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false,
                 Selected =
-                    serverInfo.GameVersion == GameMain.Version.ToString() &&
+                    (NetworkMember.IsCompatible(GameMain.Version.ToString(), serverInfo.GameVersion) ?? true) &&
                     serverInfo.ContentPackagesMatch(GameMain.SelectedPackages),
                 UserData = "compatible"
             };
@@ -1695,6 +1709,14 @@ namespace Barotrauma
             {
                 serverName.Text = ToolBox.LimitString(serverName.Text, serverName.Font, serverName.Rect.Width);
             };
+
+            if (serverInfo.ContentPackageNames.Any())
+            {
+                if (serverInfo.ContentPackageNames.Any(cp => !cp.Equals(GameMain.VanillaContent.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    serverName.TextColor = new Color(219, 125, 217);
+                }
+            }
 
             new GUITickBox(new RectTransform(new Vector2(columnRelativeWidth[3], 0.9f), serverContent.RectTransform, Anchor.Center), label: "")
             {

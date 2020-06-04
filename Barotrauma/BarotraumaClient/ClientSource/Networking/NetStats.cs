@@ -14,10 +14,10 @@ namespace Barotrauma.Networking
             ResentMessages = 2
         }
 
-        private Graph[] graphs;
+        private readonly Graph[] graphs;
 
-        private float[] totalValue;
-        private float[] lastValue;
+        private readonly float[] totalValue;
+        private readonly float[] lastValue;
 
         const float UpdateInterval = 0.1f;
         float updateTimer;
@@ -37,9 +37,7 @@ namespace Barotrauma.Networking
         public void AddValue(NetStatType statType, float value)
         {
             float valueChange = value - lastValue[(int)statType];
-
             totalValue[(int)statType] += valueChange;
-
             lastValue[(int)statType] = value;
         }
 
@@ -51,7 +49,6 @@ namespace Barotrauma.Networking
 
             for (int i = 0; i < 3; i++)
             {
-
                 graphs[i].Update(totalValue[i] / UpdateInterval);
                 totalValue[i] = 0.0f;
             }
@@ -64,23 +61,22 @@ namespace Barotrauma.Networking
             GUI.DrawRectangle(spriteBatch, rect, Color.Black * 0.4f, true);
 
             graphs[(int)NetStatType.ReceivedBytes].Draw(spriteBatch, rect, null, 0.0f, Color.Cyan);
-
             graphs[(int)NetStatType.SentBytes].Draw(spriteBatch, rect, null, 0.0f, GUI.Style.Orange);
-
-            graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, null, 0.0f, GUI.Style.Red);
+            if (graphs[(int)NetStatType.ResentMessages].Average() > 0)
+            {
+                graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, null, 0.0f, GUI.Style.Red);
+                GUI.SmallFont.DrawString(spriteBatch, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
+                    new Vector2(rect.Right + 10, rect.Y + 50), GUI.Style.Red);
+            }
 
             GUI.SmallFont.DrawString(spriteBatch,
                 "Peak received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].LargestValue()) + "/s      " +
                 "Avg received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].Average()) + "/s",
                 new Vector2(rect.Right + 10, rect.Y + 10), Color.Cyan);
 
-
             GUI.SmallFont.DrawString(spriteBatch, "Peak sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].LargestValue()) + "/s      " +
                 "Avg sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].Average()) + "/s",
                 new Vector2(rect.Right + 10, rect.Y + 30), GUI.Style.Orange);
-
-            GUI.SmallFont.DrawString(spriteBatch, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
-                new Vector2(rect.Right + 10, rect.Y + 50), GUI.Style.Red);
 #if DEBUG
             /*int y = 10;
 

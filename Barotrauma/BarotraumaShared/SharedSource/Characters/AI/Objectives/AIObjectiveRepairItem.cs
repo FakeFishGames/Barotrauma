@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 using Barotrauma.Extensions;
-using FarseerPhysics;
 
 namespace Barotrauma
 {
@@ -52,12 +51,11 @@ namespace Barotrauma
                     float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
                     distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
                 }
-                float damagePriority = isPriority ? 1 : MathHelper.Lerp(1, 0, Item.Condition / Item.MaxCondition);
-                float successFactor = isPriority ? 1 : MathHelper.Lerp(0, 1, Item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+                float severity = isPriority ? 1 : AIObjectiveRepairItems.GetTargetPriority(Item, character);
                 float isSelected = IsRepairing ? 50 : 0;
                 float devotion = (CumulatedDevotion + isSelected) / 100;
                 float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
-                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (damagePriority * distanceFactor * successFactor * PriorityModifier), 0, 1));
+                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
             }
             return Priority;
         }
@@ -150,7 +148,8 @@ namespace Barotrauma
                     {
                         if (character.SelectedConstruction != Item)
                         {
-                            if (!Item.TryInteract(character, true, true))
+                            if (!Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) &&
+                                !Item.TryInteract(character, ignoreRequiredItems: true, forceActionKey: true))
                             {
                                 Abandon = true;
                             }

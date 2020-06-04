@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Items.Components;
@@ -223,6 +223,12 @@ namespace Barotrauma
             private set;
         }
 
+        public bool AllowDeconstruct
+        {
+            get;
+            private set;
+        }
+
         //how close the Character has to be to the item to pick it up
         [Serialize(120.0f, false)]
         public float InteractDistance
@@ -245,6 +251,9 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        [Serialize(false, false, description: "Hides the condition bar displayed at the bottom of the inventory slot the item is in.")]
+        public bool HideConditionBar { get; set; }
 
         //if true and the item has trigger areas defined, characters need to be within the trigger to interact with the item
         //if false, trigger areas define areas that can be used to highlight the item
@@ -295,6 +304,13 @@ namespace Barotrauma
 
         [Serialize(false, false)]
         public bool DamagedByExplosions
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1f, false)]
+        public float ExplosionDamageMultiplier
         {
             get;
             private set;
@@ -691,7 +707,8 @@ namespace Barotrauma
                         var brokenSprite = new BrokenItemSprite(
                             new Sprite(subElement, brokenSpriteFolder, lazyLoad: true), 
                             subElement.GetAttributeFloat("maxcondition", 0.0f),
-                            subElement.GetAttributeBool("fadein", false));
+                            subElement.GetAttributeBool("fadein", false),
+                            subElement.GetAttributePoint("offset", Point.Zero));
 
                         int spriteIndex = 0;
                         for (int i = 0; i < BrokenSprites.Count && BrokenSprites[i].MaxCondition < brokenSprite.MaxCondition; i++)
@@ -741,7 +758,7 @@ namespace Barotrauma
 #endif
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 1.0f);
-
+                        AllowDeconstruct = true;
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
                             if (deconstructItem.Attribute("name") != null)

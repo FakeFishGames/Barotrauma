@@ -379,7 +379,7 @@ namespace Barotrauma.Items.Components
                     ConnectionPanel.HighlightedWire = wire;
 
                     bool allowRewiring = GameMain.NetworkMember?.ServerSettings == null || GameMain.NetworkMember.ServerSettings.AllowRewiring;
-                    if (allowRewiring && !wire.Locked && (!panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
+                    if (allowRewiring && (!wire.Locked && !panel.Locked || Screen.Selected == GameMain.SubEditorScreen))
                     {
                         //start dragging the wire
                         if (PlayerInput.PrimaryMouseButtonHeld()) { DraggingConnected = wire; }
