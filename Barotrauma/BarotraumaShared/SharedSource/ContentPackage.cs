@@ -525,7 +525,13 @@ namespace Barotrauma
                 {
                     using (MD5 tempMd5 = MD5.Create())
                     {
-                        filePaths = filePaths.OrderBy(f => ToolBox.StringToUInt32Hash(f.CleanUpPathCrossPlatform(true), tempMd5)).ToList();
+                        // TODO: ToLower() fixes discrepencies between windows folder name capitalization for server/client interactions.
+                        // The proper fix would probably be to save both a case-sensitive and non-casesensitive hash on the server,
+                        //     and only compare case-sensitive clients with the case-sensitive hash, and case-insensitive clients with the
+                        //     case insensitive hash.
+                        // Though ultimately, the only case where this will cause issues is if someone made a mod with identical folder names in the same path.
+                        // Windows... 😩
+                        filePaths = filePaths.OrderBy(f => ToolBox.StringToUInt32Hash(f.CleanUpPathCrossPlatform(true).ToLower(), tempMd5)).ToList();
                     }
                 }
 
