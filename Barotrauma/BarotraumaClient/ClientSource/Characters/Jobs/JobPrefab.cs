@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class JobPrefab : IPrefab, IDisposable
     {
-        public GUIButton CreateInfoFrame(int variant)
+        public GUIButton CreateInfoFrame(out GUIComponent buttonContainer)
         {
             int width = 500, height = 400;
 
@@ -34,6 +34,8 @@ namespace Barotrauma
                     font: GUI.SmallFont);
             }
 
+            buttonContainer = paddedFrame;
+
             /*if (!ItemIdentifiers.TryGetValue(variant, out var itemIdentifiers)) { return backFrame; }
             var itemContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 0.5f), paddedFrame.RectTransform, Anchor.TopRight)
             { RelativeOffset = new Vector2(0.0f, 0.2f + descriptionBlock.RectTransform.RelativeSize.Y) })
@@ -53,7 +55,6 @@ namespace Barotrauma
 
             return frameHolder;
         }
-
 
         public class OutfitPreview
         {

@@ -761,6 +761,44 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
 
+#if (!OSX)
+            AudioDeviceNames = Alc.GetStringList((IntPtr)null, Alc.AllDevicesSpecifier);
+            if (string.IsNullOrEmpty(AudioOutputDevice))
+            {
+                AudioOutputDevice = Alc.GetString((IntPtr)null, Alc.DefaultDeviceSpecifier);
+                if (AudioDeviceNames.Any() && !AudioDeviceNames.Any(n => n.Equals(AudioOutputDevice, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AudioOutputDevice = AudioDeviceNames[0];
+                }
+            }
+
+            var outputDeviceList = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.15f), audioContent.RectTransform), TrimAudioDeviceName(AudioOutputDevice), AudioDeviceNames.Count);
+            if (AudioDeviceNames?.Count > 0)
+            {
+                foreach (string name in AudioDeviceNames)
+                {
+                    outputDeviceList.AddItem(TrimAudioDeviceName(name), name);
+                }
+                outputDeviceList.OnSelected = (GUIComponent selected, object obj) =>
+                {
+                    string name = obj as string;
+                    if (!GameMain.SoundManager.Disconnected && AudioOutputDevice == name) { return true; }
+
+                    AudioOutputDevice = name;
+                    GameMain.SoundManager.InitializeAlcDevice(AudioOutputDevice);
+
+                    return true;
+                };
+            }
+            else
+            {
+                outputDeviceList.AddItem(TextManager.Get("AudioNoDevices") ?? "N/A", null);
+                outputDeviceList.ButtonTextColor = GUI.Style.Red;
+                outputDeviceList.ButtonEnabled = false;
+                outputDeviceList.Select(0);
+            }
+#endif
+
             GUITextBlock soundVolumeText = new GUITextBlock(new RectTransform(textBlockScale, audioContent.RectTransform), TextManager.Get("SoundVolume"), font: GUI.SubHeadingFont);
             GUIScrollBar soundScrollBar = new GUIScrollBar(new RectTransform(textBlockScale, audioContent.RectTransform), 
                 style: "GUISlider", barSize: 0.05f)
@@ -893,7 +931,7 @@ namespace Barotrauma
                 deviceList.OnSelected = (GUIComponent selected, object obj) =>
                 {
                     string name = obj as string;
-                    if (VoiceCaptureDevice == name) { return true; }
+                    if (!(VoipCapture.Instance?.Disconnected ?? true) && VoiceCaptureDevice == name) { return true; }
 
                     VoipCapture.ChangeCaptureDevice(name);
                     return true;
@@ -1179,12 +1217,16 @@ namespace Barotrauma
                 var inputName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), inputContainer.RectTransform, Anchor.TopLeft) { MinSize = new Point(100, 0) },
                     TextManager.Get("InputType." + ((InputType)i)), font: GUI.SmallFont) { ForceUpperCase = true };
                 inputNameBlocks.Add(inputName);
+                string keyText = KeyBindText((InputType)i);
                 var keyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), inputContainer.RectTransform),
-                    text: KeyBindText((InputType)i), font: GUI.SmallFont, style: "GUITextBoxNoIcon")
+                    text: keyText, font: GUI.SmallFont, style: "GUITextBoxNoIcon")
                 {
                     UserData = i
                 };
-                keyBox.Text = ToolBox.LimitString(keyBox.Text, keyBox.Font, (int)(keyBox.Rect.Width - keyBox.Padding.X - keyBox.Padding.Z));
+                keyBox.RectTransform.SizeChanged += () =>
+                {
+                    keyBox.Text = ToolBox.LimitString(keyText, keyBox.Font, (int)(keyBox.Rect.Width - keyBox.Padding.X - keyBox.Padding.Z));
+                };
                 keyBox.OnSelected += KeyBoxSelected;
                 keyBox.SelectedColor = Color.Gold * 0.3f;
             }
@@ -1333,6 +1375,16 @@ namespace Barotrauma
             automaticQuickStartTickBox.OnSelected = (tickBox) =>
             {
                 AutomaticQuickStartEnabled = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
+            };
+
+            var automaticCampaignLoadTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Automatic campaign load enabled", style: "GUITickBox");
+            automaticCampaignLoadTickBox.Selected = AutomaticCampaignLoadEnabled;
+            automaticCampaignLoadTickBox.ToolTip = "Will the game automatically load the latest campaign save when the game is launched";
+            automaticCampaignLoadTickBox.OnSelected = (tickBox) =>
+            {
+                AutomaticCampaignLoadEnabled = tickBox.Selected;
                 UnsavedSettings = true;
                 return true;
             };
@@ -1520,8 +1572,7 @@ namespace Barotrauma
         {
             return GameMain.Client == null &&
                    (ContentPackage.IngameModSwap ||
-                   (Screen.Selected != GameMain.GameScreen &&
-                    Screen.Selected != GameMain.LobbyScreen) &&
+                   Screen.Selected != GameMain.GameScreen &&
                     Screen.Selected != GameMain.SubEditorScreen) &&
                    (!core ||
                    (Screen.Selected != GameMain.CharacterEditorScreen &&

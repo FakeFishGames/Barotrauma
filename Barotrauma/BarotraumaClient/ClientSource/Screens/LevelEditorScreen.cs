@@ -1,8 +1,10 @@
-﻿using Barotrauma.Lights;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Lights;
 using Barotrauma.RuinGeneration;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 #if DEBUG
@@ -27,7 +29,7 @@ namespace Barotrauma
         private LevelGenerationParams selectedParams;
         private LevelObjectPrefab selectedLevelObject;
 
-        private GUIListBox paramsList, ruinParamsList, levelObjectList;
+        private GUIListBox paramsList, ruinParamsList, outpostParamsList, levelObjectList;
         private GUIListBox editorContainer;
 
         private GUIButton spriteEditDoneButton;
@@ -65,7 +67,9 @@ namespace Barotrauma
                 return true;
             };
 
-            ruinParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform));
+            var ruinTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("leveleditor.ruinparams"), font: GUI.SubHeadingFont);
+
+            ruinParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedLeftPanel.RectTransform));
             ruinParamsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 var ruinGenerationParams = obj as RuinGenerationParams;
@@ -74,7 +78,111 @@ namespace Barotrauma
                 return true;
             };
 
-            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
+            var outpostTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("leveleditor.outpostparams"), font: GUI.SubHeadingFont);
+            GUITextBlock.AutoScaleAndNormalize(ruinTitle, outpostTitle);
+
+            outpostParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform));
+            outpostParamsList.OnSelected += (GUIComponent component, object obj) =>
+            {
+                var outpostGenerationParams = obj as OutpostGenerationParams;
+                editorContainer.ClearChildren();
+                var outpostParamsEditor = new SerializableEntityEditor(editorContainer.Content.RectTransform, outpostGenerationParams, false, true, elementHeight: 20);
+
+                // location type -------------------------
+
+                var locationTypeGroup = new GUILayoutGroup(new RectTransform(new Point(editorContainer.Content.Rect.Width, 20)), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true
+                };
+
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), locationTypeGroup.RectTransform), TextManager.Get("outpostmoduleallowedlocationtypes"), textAlignment: Alignment.CenterLeft);
+                HashSet<string> availableLocationTypes = new HashSet<string> { "any" };
+                foreach (LocationType locationType in LocationType.List) { availableLocationTypes.Add(locationType.Identifier); }
+
+                var locationTypeDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), locationTypeGroup.RectTransform),
+                    text: string.Join(", ", outpostGenerationParams.AllowedLocationTypes.Select(lt => TextManager.Capitalize(lt)) ?? "any".ToEnumerable()), selectMultiple: true);
+                foreach (string locationType in availableLocationTypes)
+                {
+                    locationTypeDropDown.AddItem(TextManager.Capitalize(locationType), locationType);
+                    if (outpostGenerationParams.AllowedLocationTypes.Contains(locationType))
+                    {
+                        locationTypeDropDown.SelectItem(locationType);
+                    }
+                }
+                if (!outpostGenerationParams.AllowedLocationTypes.Any())
+                {
+                    locationTypeDropDown.SelectItem("any");
+                }
+
+                locationTypeDropDown.OnSelected += (_, __) =>
+                {
+                    outpostGenerationParams.SetAllowedLocationTypes(locationTypeDropDown.SelectedDataMultiple.Cast<string>());
+                    locationTypeDropDown.Text = ToolBox.LimitString(locationTypeDropDown.Text, locationTypeDropDown.Font, locationTypeDropDown.Rect.Width);
+                    return true;
+                };
+                locationTypeGroup.RectTransform.MinSize = new Point(locationTypeGroup.Rect.Width, locationTypeGroup.RectTransform.Children.Max(c => c.MinSize.Y));
+
+                outpostParamsEditor.AddCustomContent(locationTypeGroup, 100);
+                
+                // module count -------------------------
+
+                var moduleLabel = new GUITextBlock(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(70 * GUI.Scale))), TextManager.Get("submarinetype.outpostmodules"), font: GUI.SubHeadingFont);
+                outpostParamsEditor.AddCustomContent(moduleLabel, 100);
+
+                foreach (KeyValuePair<string, int> moduleCount in outpostGenerationParams.ModuleCounts)
+                {
+                    var moduleCountGroup = new GUILayoutGroup(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(25 * GUI.Scale))), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                    new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), TextManager.Capitalize(moduleCount.Key), textAlignment: Alignment.CenterLeft);
+                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), GUINumberInput.NumberType.Int)
+                    {
+                        MinValueInt = 0,
+                        MaxValueInt = 100,
+                        IntValue = moduleCount.Value,
+                        OnValueChanged = (numInput) =>
+                        {
+                            outpostGenerationParams.SetModuleCount(moduleCount.Key, numInput.IntValue);
+                            if (numInput.IntValue == 0)
+                            {
+                                outpostParamsList.Select(outpostParamsList.SelectedData);
+                            }
+                        }
+                    };
+                    moduleCountGroup.RectTransform.MinSize = new Point(moduleCountGroup.Rect.Width, moduleCountGroup.RectTransform.Children.Max(c => c.MinSize.Y));
+                    outpostParamsEditor.AddCustomContent(moduleCountGroup, 100);
+                }
+
+                // add module count -------------------------
+
+                var addModuleCountGroup = new GUILayoutGroup(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(40 * GUI.Scale))), isHorizontal: true, childAnchor: Anchor.Center);
+
+                HashSet<string> availableFlags = new HashSet<string>();
+                foreach (string flag in OutpostGenerationParams.Params.SelectMany(p => p.ModuleCounts.Select(m => m.Key))) { availableFlags.Add(flag); }
+                foreach (var sub in SubmarineInfo.SavedSubmarines)
+                {
+                    if (sub.OutpostModuleInfo == null) { continue; }
+                    foreach (string flag in sub.OutpostModuleInfo.ModuleFlags) { availableFlags.Add(flag); }
+                }
+
+                var moduleTypeDropDown = new GUIDropDown(new RectTransform(new Vector2(0.8f, 0.8f), addModuleCountGroup.RectTransform),
+                    text: TextManager.Get("leveleditor.addmoduletype"));
+                foreach (string flag in availableFlags)
+                {
+                    if (outpostGenerationParams.ModuleCounts.Any(mc => mc.Key.Equals(flag, StringComparison.OrdinalIgnoreCase))) { continue; }
+                    moduleTypeDropDown.AddItem(TextManager.Capitalize(flag), flag);
+                }
+                moduleTypeDropDown.OnSelected += (_, userdata) =>
+                {
+                    outpostGenerationParams.SetModuleCount(userdata as string, 1);
+                    outpostParamsList.Select(outpostParamsList.SelectedData);
+                    return true;
+                };
+                addModuleCountGroup.RectTransform.MinSize = new Point(addModuleCountGroup.Rect.Width, addModuleCountGroup.RectTransform.Children.Max(c => c.MinSize.Y));
+                outpostParamsEditor.AddCustomContent(addModuleCountGroup, 100);
+
+                return true;
+            };
+
+            var createLevelObjButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedLeftPanel.RectTransform),
                 TextManager.Get("leveleditor.createlevelobj"))
             {
                 OnClicked = (btn, obj) =>
@@ -83,6 +191,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            GUITextBlock.AutoScaleAndNormalize(createLevelObjButton.TextBlock);            
 
             lightingEnabled = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedLeftPanel.RectTransform),
                 TextManager.Get("leveleditor.lightingenabled"));
@@ -130,7 +239,9 @@ namespace Barotrauma
                 {
                     Submarine.Unload();
                     GameMain.LightManager.ClearLights();
-                    Level.CreateRandom(seedBox.Text, generationParams: selectedParams).Generate(mirror: false);
+                    LevelData levelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
+                    levelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
+                    Level.Generate(levelData, mirror: false);
                     GameMain.LightManager.AddLight(pointerLightSource);
                     cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
                     foreach (GUITextBlock param in paramsList.Content.Children)
@@ -138,6 +249,56 @@ namespace Barotrauma
                         param.TextColor = param.UserData == selectedParams ? GUI.Style.Green : param.Style.TextColor;
                     }
                     seedBox.Deselect();
+                    return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), paddedRightPanel.RectTransform),
+                TextManager.Get("leveleditor.test"))
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    if (Level.Loaded?.LevelData == null) { return false; }
+
+                    GameMain.GameScreen.Select();
+
+                    var currEntities = Entity.GetEntities().ToList();
+                    if (Submarine.MainSub != null)
+                    {
+                        var toRemove = Entity.GetEntities().Where(e => e.Submarine == Submarine.MainSub).ToList();
+                        foreach (Entity ent in toRemove)
+                        {
+                            ent.Remove();
+                        }
+                        Submarine.MainSub.Remove();
+                    }
+
+                    //TODO: hacky workaround to check for wrecks and outposts, refactor SubmarineInfo and ContentType at some point
+                    var nonPlayerFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Wreck).ToList();
+                    nonPlayerFiles.AddRange(ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost));
+                    nonPlayerFiles.AddRange(ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.OutpostModule));
+                    SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.Equals(GameMain.Config.QuickStartSubmarineName, StringComparison.InvariantCultureIgnoreCase));
+                    subInfo ??= SubmarineInfo.SavedSubmarines.GetRandom(s =>
+                        s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&
+                        !nonPlayerFiles.Any(f => f.Path.CleanUpPath().Equals(s.FilePath.CleanUpPath(), StringComparison.InvariantCultureIgnoreCase)));
+                    GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, null);
+                    gameSession.StartRound(Level.Loaded.LevelData);
+                    (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
+                    {
+                        GameMain.LevelEditorScreen.Select();
+                        Submarine.MainSub.Remove();
+
+                        var toRemove = Entity.GetEntities().Where(e => !currEntities.Contains(e)).ToList();
+                        foreach (Entity ent in toRemove)
+                        {
+                            ent.Remove();
+                        }
+
+                        Submarine.MainSub = null;
+                    };
+
+                    GameMain.GameSession = gameSession;
+
                     return true;
                 }
             };
@@ -182,6 +343,7 @@ namespace Barotrauma
             editingSprite = null;
             UpdateParamsList();
             UpdateRuinParamsList();
+            UpdateOutpostParamsList();
             UpdateLevelObjectsList();
         }
 
@@ -200,7 +362,7 @@ namespace Barotrauma
             foreach (LevelGenerationParams genParams in LevelGenerationParams.LevelParams)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paramsList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    genParams.Name)
+                    genParams.Identifier)
                 {
                     Padding = Vector4.Zero,
                     UserData = genParams
@@ -216,6 +378,22 @@ namespace Barotrauma
             foreach (RuinGenerationParams genParams in RuinGenerationParams.List)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), ruinParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    genParams.Name)
+                {
+                    Padding = Vector4.Zero,
+                    UserData = genParams
+                };
+            }
+        }
+
+        private void UpdateOutpostParamsList()
+        {
+            editorContainer.ClearChildren();
+            outpostParamsList.Content.ClearChildren();
+
+            foreach (OutpostGenerationParams genParams in OutpostGenerationParams.Params)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), outpostParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Name)
                 {
                     Padding = Vector4.Zero,
@@ -273,15 +451,15 @@ namespace Barotrauma
                     Stretch = true
                 };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
-                    TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", selectedParams.Name), textAlignment: Alignment.Center);
+                    TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", selectedParams.Identifier), textAlignment: Alignment.Center);
                 new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
                 {
                     MinValueFloat = 0,
                     MaxValueFloat = 100,
-                    FloatValue = levelObjectPrefab.GetCommonness(selectedParams.Name),
+                    FloatValue = levelObjectPrefab.GetCommonness(selectedParams.Identifier),
                     OnValueChanged = (numberInput) =>
                     {
-                        levelObjectPrefab.OverrideCommonness[selectedParams.Name] = numberInput.FloatValue;
+                        levelObjectPrefab.OverrideCommonness[selectedParams.Identifier] = numberInput.FloatValue;
                     }
                 };
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
@@ -411,7 +589,7 @@ namespace Barotrauma
             foreach (GUIComponent levelObjFrame in levelObjectList.Content.Children)
             {
                 var levelObj = levelObjFrame.UserData as LevelObjectPrefab;
-                float commonness = levelObj.GetCommonness(selectedParams.Name);
+                float commonness = levelObj.GetCommonness(selectedParams.Identifier);
                 levelObjFrame.Color = commonness > 0.0f ? GUI.Style.Green * 0.4f : Color.Transparent;
                 levelObjFrame.SelectedColor = commonness > 0.0f ? GUI.Style.Green * 0.6f : Color.White * 0.5f;
                 levelObjFrame.HoverColor = commonness > 0.0f ? GUI.Style.Green * 0.7f : Color.White * 0.6f;
@@ -428,7 +606,7 @@ namespace Barotrauma
             {
                 var levelObj1 = c1.GUIComponent.UserData as LevelObjectPrefab;
                 var levelObj2 = c2.GUIComponent.UserData as LevelObjectPrefab;
-                return Math.Sign(levelObj2.GetCommonness(selectedParams.Name) - levelObj1.GetCommonness(selectedParams.Name));
+                return Math.Sign(levelObj2.GetCommonness(selectedParams.Identifier) - levelObj1.GetCommonness(selectedParams.Identifier));
             });
         }
 
@@ -520,14 +698,15 @@ namespace Barotrauma
                         {
                             foreach (XElement subElement in element.Elements())
                             {
-                                if (subElement.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) 
-                                { 
-                                    SerializableProperty.SerializeProperties(genParams, subElement, true);
-                                }
+                                string id = element.GetAttributeString("identifier", null) ?? element.Name.ToString();
+                                if (!id.Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
+                                SerializableProperty.SerializeProperties(genParams, element, true);
                             }
                         }
-                        else if (element.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) 
-                        { 
+                        else
+                        {
+                            string id = element.GetAttributeString("identifier", null) ?? element.Name.ToString();
+                            if (!id.Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                             SerializableProperty.SerializeProperties(genParams, element, true);
                         }
                         break;
@@ -575,7 +754,8 @@ namespace Barotrauma
                 bool elementFound = false;
                 foreach (XElement element in doc.Root.Elements())
                 {
-                    if (!element.Name.ToString().Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
+                    string id = element.GetAttributeString("identifier", null) ?? element.Name.ToString();
+                    if (!id.Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
                     SerializableProperty.SerializeProperties(genParams, element, true);
                     elementFound = true;
                 }                

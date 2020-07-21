@@ -22,8 +22,8 @@ namespace Barotrauma
 
         protected float soundTimer;
         protected float soundInterval;
-        protected float hudInfoTimer;
-        protected bool hudInfoVisible;
+        protected float hudInfoTimer = 1.0f;
+        protected bool hudInfoVisible = false;
 
         private float pressureParticleTimer;
 
@@ -31,7 +31,7 @@ namespace Barotrauma
 
         protected float lastRecvPositionUpdateTime;
 
-        private float hudInfoHeight;
+        private float hudInfoHeight = 100.0f;
 
         private List<CharacterSound> sounds;
         
@@ -264,7 +264,7 @@ namespace Barotrauma
                 }
                 else if (Lights.LightManager.ViewTarget is Item item && item.Prefab.FocusOnSelected)
                 {
-                    cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected;
+                    cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
                 }
                 else if (SelectedConstruction != null && ViewTarget == null && 
                     SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
@@ -549,11 +549,12 @@ namespace Barotrauma
         public bool ShouldLockHud()
         {
             if (this != controlled) { return false; }
-
+            if (GameMain.GameSession?.Campaign != null && GameMain.GameSession.Campaign.ShowCampaignUI) { return true; }
+            var controller = SelectedConstruction?.GetComponent<Controller>();
             //lock if using a controller, except if we're also using a connection panel in the same item
             return
                 SelectedConstruction != null &&
-                SelectedConstruction?.GetComponent<Controller>()?.User == this &&
+                controller?.User == this && controller.HideHUD &&
                 SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != this;
         }
 
@@ -661,7 +662,7 @@ namespace Barotrauma
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
         {
             CharacterHUD.Draw(spriteBatch, this, cam);
-            if (drawHealth) CharacterHealth.DrawHUD(spriteBatch);
+            if (drawHealth && !CharacterHUD.IsCampaignInterfaceOpen) { CharacterHealth.DrawHUD(spriteBatch); }
         }
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
@@ -672,8 +673,8 @@ namespace Barotrauma
             {
                 AnimController.DebugDraw(spriteBatch);
             }
-            
-            if (GUI.DisableHUD) return;
+
+            if (GUI.DisableHUD) { return; }
 
             if (Controlled != null &&
                 Controlled != this &&
@@ -756,19 +757,23 @@ namespace Barotrauma
             float hoverRange = 300.0f;
             float fadeOutRange = 200.0f;
             float cursorDist = Vector2.Distance(WorldPosition, cam.ScreenToWorld(PlayerInput.MousePosition));
-            float hudInfoAlpha = MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f);
+            float hudInfoAlpha = 
+                CampaignInteractionType == CampaignMode.InteractionType.None ?
+                MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f) :
+                1.0f;
             
             if (!GUI.DisableCharacterNames && hudInfoVisible && info != null &&
-                (controlled == null || this != controlled.FocusedCharacter))
+                (controlled == null || this != controlled.FocusedCharacter) && cam.Zoom > 0.4f)
             {
                 string name = Info.DisplayName;
-                if (controlled == null && name != Info.Name) name += " " + TextManager.Get("Disguised");
+                if (controlled == null && name != Info.Name) { name += " " + TextManager.Get("Disguised"); }
 
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - GUI.Font.MeasureString(name) * 0.5f / cam.Zoom;
+                Vector2 nameSize = GUI.Font.MeasureString(name);
+                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
 
                 Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
-            	namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
+                namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
             	namePos *= screenSize / viewportSize;
             	namePos.X = (float)Math.Floor(namePos.X); namePos.Y = (float)Math.Floor(namePos.Y);
             	namePos *= viewportSize / screenSize;
@@ -779,16 +784,30 @@ namespace Barotrauma
                 {
                     nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
                 }
+                if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
+                {
+                    var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + CampaignInteractionType);
+                    if (iconStyle != null)
+                    {
+                        Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
+                        Vector2 iconPos = headPos;
+                        iconPos.Y = -iconPos.Y;
+                        nameColor = iconStyle.Color;
+                        var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
+                        float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;                 
+                        icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
+                    }
+                }
+
                 GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
                 GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
-
                 if (GameMain.DebugDraw)
                 {
                     GUI.Font.DrawString(spriteBatch, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                 }
             }
 
-            if (IsDead) return;
+            if (IsDead) { return; }
             
             if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {

@@ -21,9 +21,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (item.CurrentHull == null) return;
+            if (item.CurrentHull == null || item.InWater) { return; }
 
-            if (item.InWater) return;
+            if (oxygenFlow > 0.0f)
+            {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime);
+            }
 
             item.CurrentHull.Oxygen += oxygenFlow * deltaTime;
             OxygenFlow -= deltaTime * 1000.0f;

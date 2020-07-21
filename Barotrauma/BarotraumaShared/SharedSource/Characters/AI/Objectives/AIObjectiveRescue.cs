@@ -12,6 +12,8 @@ namespace Barotrauma
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
 
+        public override bool AllowOutsideSubmarine => true;
+
         const float TreatmentDelay = 0.5f;
 
         const float CloseEnoughToTreat = 100.0f;
@@ -216,50 +218,53 @@ namespace Barotrauma
                     }
                 }
             }
-
-            float cprSuitability = targetCharacter.Oxygen < 0.0f ? -targetCharacter.Oxygen * 100.0f : 0.0f;
-            //didn't have any suitable treatments available, try to find some medical items
-            if (currentTreatmentSuitabilities.Any(s => s.Value > cprSuitability))
+            // Find treatments outside of own inventory only if inside the own sub.
+            if (character.Submarine != null && character.Submarine.TeamID == character.TeamID)
             {
-                itemNameList.Clear();
-                suitableItemIdentifiers.Clear();
-                foreach (KeyValuePair<string, float> treatmentSuitability in currentTreatmentSuitabilities)
+                float cprSuitability = targetCharacter.Oxygen < 0.0f ? -targetCharacter.Oxygen * 100.0f : 0.0f;
+                //didn't have any suitable treatments available, try to find some medical items
+                if (currentTreatmentSuitabilities.Any(s => s.Value > cprSuitability))
                 {
-                    if (treatmentSuitability.Value <= cprSuitability) { continue; }
-                    if (MapEntityPrefab.Find(null, treatmentSuitability.Key, showErrorMessages: false) is ItemPrefab itemPrefab)
+                    itemNameList.Clear();
+                    suitableItemIdentifiers.Clear();
+                    foreach (KeyValuePair<string, float> treatmentSuitability in currentTreatmentSuitabilities)
                     {
-                        if (!Item.ItemList.Any(it => it.prefab.Identifier == treatmentSuitability.Key)) { continue; }
-                        suitableItemIdentifiers.Add(treatmentSuitability.Key);
-                        //only list the first 4 items
-                        if (itemNameList.Count < 4)
+                        if (treatmentSuitability.Value <= cprSuitability) { continue; }
+                        if (MapEntityPrefab.Find(null, treatmentSuitability.Key, showErrorMessages: false) is ItemPrefab itemPrefab)
                         {
-                            itemNameList.Add(itemPrefab.Name);
+                            if (!Item.ItemList.Any(it => it.prefab.Identifier == treatmentSuitability.Key)) { continue; }
+                            suitableItemIdentifiers.Add(treatmentSuitability.Key);
+                            //only list the first 4 items
+                            if (itemNameList.Count < 4)
+                            {
+                                itemNameList.Add(itemPrefab.Name);
+                            }
                         }
                     }
-                }
-                if (itemNameList.Count > 0)
-                {
-                    string itemListStr = "";
-                    if (itemNameList.Count == 1)
+                    if (itemNameList.Count > 0)
                     {
-                        itemListStr = itemNameList[0];
+                        string itemListStr = "";
+                        if (itemNameList.Count == 1)
+                        {
+                            itemListStr = itemNameList[0];
+                        }
+                        else
+                        {
+                            itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
+                        }
+                        if (targetCharacter != character)
+                        {
+                            character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments", new string[2] { "[targetname]", "[treatmentlist]" },
+                                new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
+                                null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
+                        }
+                        character.DeselectCharacter();
+                        RemoveSubObjective(ref getItemObjective);
+                        TryAddSubObjective(ref getItemObjective,
+                            constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC),
+                            onCompleted: () => RemoveSubObjective(ref getItemObjective),
+                            onAbandon: () => RemoveSubObjective(ref getItemObjective));
                     }
-                    else
-                    {
-                        itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
-                    }
-                    if (targetCharacter != character)
-                    {
-                        character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments", new string[2] { "[targetname]", "[treatmentlist]" },
-                            new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
-                            null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
-                    }
-                    character.DeselectCharacter();
-                    RemoveSubObjective(ref getItemObjective);
-                    TryAddSubObjective(ref getItemObjective, 
-                        constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true),
-                        onCompleted: () => RemoveSubObjective(ref getItemObjective),
-                        onAbandon: () => RemoveSubObjective(ref getItemObjective));
                 }
             }
             if (character != targetCharacter)

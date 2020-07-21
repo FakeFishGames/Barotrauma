@@ -105,7 +105,7 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 placeSize = size;
+                Vector2 placeSize = size * Scale;
 
                 if (placePosition == Vector2.Zero)
                 {
@@ -161,7 +161,14 @@ namespace Barotrauma
             }
             else
             {
-                sprite?.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), size, color: SpriteColor);
+                Vector2 placeSize = size * Scale;
+                if (placePosition != Vector2.Zero)
+                {
+                    if (ResizeHorizontal) { placeSize.X = Math.Max(position.X - placePosition.X, placeSize.X); }
+                    if (ResizeVertical) { placeSize.Y = Math.Max(placePosition.Y - position.Y, placeSize.Y); }
+                    position = placePosition;
+                }
+                sprite?.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, color: SpriteColor);
             }
         }
 
@@ -173,7 +180,15 @@ namespace Barotrauma
             }
             else
             {
-                if (sprite != null) sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), null, SpriteColor * 0.8f);
+                Vector2 position = Submarine.MouseToWorldGrid(Screen.Selected.Cam, Submarine.MainSub);
+                Vector2 placeSize = size * Scale;
+                if (placePosition != Vector2.Zero)
+                {
+                    if (ResizeHorizontal) { placeSize.X = Math.Max(position.X - placePosition.X, placeSize.X); }
+                    if (ResizeVertical) { placeSize.Y = Math.Max(placePosition.Y - position.Y, placeSize.Y); }
+                    position = placePosition;
+                }
+                sprite?.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, color: SpriteColor);
             }
         }
     }

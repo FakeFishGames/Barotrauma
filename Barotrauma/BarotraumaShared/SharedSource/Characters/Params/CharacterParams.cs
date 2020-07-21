@@ -19,6 +19,9 @@ namespace Barotrauma
         [Serialize("", true), Editable]
         public string SpeciesName { get; private set; }
 
+        [Serialize("", true, description: "If the creature is a variant that needs to use a pre-existing translation."), Editable]
+        public string SpeciesTranslationOverride { get; private set; }
+
         [Serialize("", true, description: "If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
         public string DisplayName { get; private set; }
 

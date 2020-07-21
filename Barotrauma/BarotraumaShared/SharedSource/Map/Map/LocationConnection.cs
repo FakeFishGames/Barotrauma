@@ -9,11 +9,11 @@ namespace Barotrauma
 
         public float Difficulty;
 
-        public List<Vector2[]> CrackSegments;
+        public readonly List<Vector2[]> CrackSegments = new List<Vector2[]>();
 
         public bool Passed;
 
-        public Level Level { get; set; }
+        public LevelData LevelData { get; set; }
 
         public Vector2 CenterPos
         {
@@ -33,8 +33,7 @@ namespace Barotrauma
 
         public LocationConnection(Location location1, Location location2)
         {
-            Locations = new Location[] { location1, location2 };
-            
+            Locations = new Location[] { location1, location2 };            
             Length = Vector2.Distance(location1.MapPosition, location2.MapPosition);
         }
 

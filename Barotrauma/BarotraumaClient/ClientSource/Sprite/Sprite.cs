@@ -133,10 +133,10 @@ namespace Barotrauma
                 });
                 return t;
             }
-            file = Path.GetFullPath(file);
+            string fullPath = Path.GetFullPath(file);
             foreach (Sprite s in LoadedSprites)
             {
-                if (s.FullPath == file && s.texture != null && !s.texture.IsDisposed) 
+                if (s.FullPath == fullPath && s.texture != null && !s.texture.IsDisposed) 
                 {
                     reusedSprite = s;
                     return s.texture; 
@@ -145,7 +145,12 @@ namespace Barotrauma
 
             if (File.Exists(file))
             {
-                ToolBox.IsProperFilenameCase(file);
+                if (!ToolBox.IsProperFilenameCase(file))
+                {
+#if DEBUG
+                    DebugConsole.ThrowError("Texture file \"" + file + "\" has incorrect case!");
+#endif
+                }
                 return TextureLoader.FromFile(file, compress);
             }
             else
@@ -194,11 +199,11 @@ namespace Barotrauma
         }
 
         public void DrawTiled(SpriteBatch spriteBatch, Vector2 position, Vector2 targetSize,
-            Rectangle? rect = null, Color? color = null, Point? startOffset = null, Vector2? textureScale = null, float? depth = null)
+            Color? color = null, Vector2? startOffset = null, Vector2? textureScale = null, float? depth = null)
         {
             if (Texture == null) { return; }
             //Init optional values
-            Vector2 drawOffset = startOffset.HasValue ? new Vector2(startOffset.Value.X, startOffset.Value.Y) : Vector2.Zero;
+            Vector2 drawOffset = startOffset.HasValue ? startOffset.Value : Vector2.Zero;
             Vector2 scale = textureScale ?? Vector2.One;
             Color drawColor = color ?? Color.White;
 

@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
 
         private float reloadTimer;
 
-        private readonly Attack attack;
+        public Attack Attack { get; private set; }
 
         private readonly HashSet<Entity> hitTargets = new HashSet<Entity>();
 
@@ -56,7 +56,7 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
-                attack = new Attack(subElement, item.Name + ", MeleeWeapon");
+                Attack = new Attack(subElement, item.Name + ", MeleeWeapon");
             }
             item.IsShootable = true;
             // TODO: should define this in xml if we have melee weapons that don't require aim to use
@@ -158,7 +158,7 @@ namespace Barotrauma.Items.Components
             //TODO: refactor the hitting logic (get rid of the magic numbers, make it possible to use different kinds of animations for different items)
             if (!hitting)
             {
-                bool aim = picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
+                bool aim = picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
                 if (aim)
                 {
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));
@@ -332,31 +332,31 @@ namespace Barotrauma.Items.Components
             Structure targetStructure = target.UserData as Structure;
             Item targetItem = target.UserData as Item;
             
-            if (attack != null)
+            if (Attack != null)
             {
-                attack.SetUser(User);
+                Attack.SetUser(User);
 
                 if (targetLimb != null)
                 {
                     if (targetLimb.character.Removed) { return; }
                     targetLimb.character.LastDamageSource = item;
-                    attack.DoDamageToLimb(User, targetLimb, item.WorldPosition, 1.0f);
+                    Attack.DoDamageToLimb(User, targetLimb, item.WorldPosition, 1.0f);
                 }
                 else if (targetCharacter != null)
                 {
                     if (targetCharacter.Removed) { return; }
                     targetCharacter.LastDamageSource = item;
-                    attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
+                    Attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
                 }
                 else if (targetStructure != null)
                 {
                     if (targetStructure.Removed) { return; }
-                    attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
+                    Attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
                 }
                 else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                 {
                     if (targetItem.Removed) { return; }
-                    attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                    Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
                 }
                 else
                 {

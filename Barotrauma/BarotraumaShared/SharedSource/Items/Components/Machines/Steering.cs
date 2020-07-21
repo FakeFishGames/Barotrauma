@@ -146,6 +146,8 @@ namespace Barotrauma.Items.Components
             set { posToMaintain = value; }
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         struct ObstacleDebugInfo
         {
             public Vector2 Point1;
@@ -330,6 +332,8 @@ namespace Barotrauma.Items.Components
         private void IncreaseSkillLevel(Character user, float deltaTime)
         {
             if (user?.Info == null) { return; }
+            // Do not increase the helm skill when "steering" the sub in an outpost level
+            if (GameMain.GameSession?.Campaign != null && Level.IsLoadedOutpost) { return; }
 
             float userSkill = user.GetSkillLevel("helm") / 100.0f;
             user.Info.IncreaseSkillLevel(

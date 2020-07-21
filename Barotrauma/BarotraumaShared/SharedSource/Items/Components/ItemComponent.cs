@@ -220,6 +220,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        public virtual bool RecreateGUIOnResolutionChange => false;
+
         /// <summary>
         /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
         /// </summary>
@@ -511,7 +513,11 @@ namespace Barotrauma.Items.Components
                 channel.Dispose();
             }*/
 
-            if (GuiFrame != null) { GUI.RemoveFromUpdateList(GuiFrame, true); }
+            if (GuiFrame != null)
+            {
+                GUI.RemoveFromUpdateList(GuiFrame, true);
+                GuiFrame.RectTransform.Parent = null;
+            }
 #endif
 
             if (delayedCorrectionCoroutine != null)
@@ -545,8 +551,10 @@ namespace Barotrauma.Items.Components
             RemoveComponentSpecific();
         }
 
+
         protected virtual void RemoveComponentSpecific()
-        { }
+        {
+        }
 
         public bool HasRequiredSkills(Character character)
         {
@@ -558,7 +566,7 @@ namespace Barotrauma.Items.Components
             foreach (Skill skill in requiredSkills)
             {
                 float characterLevel = character.GetSkillLevel(skill.Identifier);
-                if (characterLevel < skill.Level)
+                if (characterLevel < skill.Level * GetSkillMultiplier())
                 {
                     insufficientSkill = skill;
                     return false;
@@ -567,6 +575,8 @@ namespace Barotrauma.Items.Components
             insufficientSkill = null;
             return true;
         }
+
+        public virtual float GetSkillMultiplier() { return 1; }
 
         /// <summary>
         /// Returns 0.0f-1.0f based on how well the Character can use the itemcomponent
@@ -722,16 +732,27 @@ namespace Barotrauma.Items.Components
 
         public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null)
         {
-            if (statusEffectLists == null) return;
+            if (statusEffectLists == null) { return; }
 
-            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) return;
+            if (!statusEffectLists.TryGetValue(type, out List<StatusEffect> statusEffects)) { return; }
 
             bool broken = item.Condition <= 0.0f;
+            bool reducesCondition = false;
             foreach (StatusEffect effect in statusEffects)
             {
                 if (broken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
                 item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, false, false, worldPosition);
+                reducesCondition |= effect.ReducesItemCondition();
+            }
+            //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
+            if (reducesCondition && user != null && type != ActionType.OnBroken)
+            {
+                foreach (ItemComponent ic in item.Components)
+                {
+                    if (ic.statusEffectLists == null || !ic.statusEffectLists.TryGetValue(ActionType.OnBroken, out List<StatusEffect> brokenEffects)) { continue; }
+                    brokenEffects.ForEach(e => e.SetUser(user));
+                }
             }
         }
 
@@ -935,12 +956,12 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount, bool equip, bool removeEmpty) where T : ItemComponent
+        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount, bool equip, bool removeEmpty, bool spawnItemIfNotFound = false) where T : ItemComponent
         {
             AIObjectiveContainItem containObjective = null;
             if (character.AIController is HumanAIController aiController)
             {
-                containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager)
+                containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
                     targetItemCount = itemCount,
                     Equip = equip,

@@ -23,6 +23,8 @@ namespace Barotrauma
 
         private readonly Character character;
 
+        public HumanAIController HumanAIController => character.AIController as HumanAIController;
+
 
         private float _waitTimer;
         /// <summary>
@@ -123,7 +125,7 @@ namespace Barotrauma
             {
                 var orderPrefab = Order.GetPrefab(autonomousObjective.identifier);
                 if (orderPrefab == null) { throw new Exception($"Could not find a matching prefab by the identifier: '{autonomousObjective.identifier}'"); }
-                var item = orderPrefab.MustSetTarget ? orderPrefab.GetMatchingItems(character.Submarine, false)?.GetRandom() : null;
+                var item = orderPrefab.MustSetTarget ? orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID)?.GetRandom() : null;
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity,
                     item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType), orderGiver: character);
                 if (order == null) { continue; }
@@ -298,7 +300,7 @@ namespace Barotrauma
                     if (orderGiver == null) { return null; }
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        CloseEnough = 100,
+                        CloseEnough = Rand.Range(90, 100) + Rand.Range(50, 70) * Math.Min(HumanAIController.CountCrew(c => c.ObjectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.Target == orderGiver, onlyBots: true), 4),
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
                         followControlledCharacter = orderGiver == character,

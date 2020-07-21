@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework.Graphics;
+using System.ComponentModel;
 
 namespace Barotrauma.Items.Components
 {
@@ -73,6 +74,21 @@ namespace Barotrauma.Items.Components
                 GameMain.Client.ChatBox.ToggleOpen = value;
             }
         }
+
+#if DEBUG
+        public override void CreateEditingHUD(SerializableEntityEditor editor)
+        {
+            base.CreateEditingHUD(editor);
+
+            foreach (LimbPos limbPos in limbPositions)
+            {
+                PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(limbPos);
+
+                PropertyDescriptor limbPosProperty = properties.Find("Position", false);
+                editor.CreateVector2Field(limbPos, new SerializableProperty(limbPosProperty), limbPos.Position, limbPos.LimbType.ToString(), "");
+            }
+        }
+#endif
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {

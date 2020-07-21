@@ -7,7 +7,7 @@ using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
-    class MonsterEvent : ScriptedEvent
+    class MonsterEvent : Event
     {
         private readonly string speciesName;
         private readonly int minAmount, maxAmount;
@@ -25,6 +25,12 @@ namespace Barotrauma
         private readonly Level.PositionType spawnPosType;
 
         private bool spawnPending;
+
+        public List<Character> Monsters => monsters;
+        public Vector2? SpawnPos => spawnPos;
+        public bool SpawnPending => spawnPending;
+        public int MinAmount => minAmount;
+        public int MaxAmount => maxAmount;
 
         public override Vector2 DebugDrawPos
         {
@@ -47,7 +53,7 @@ namespace Barotrauma
             }
         }
 
-        public MonsterEvent(ScriptedEventPrefab prefab)
+        public MonsterEvent(EventPrefab prefab)
             : base (prefab)
         {
             speciesName = prefab.ConfigElement.GetAttributeString("characterfile", "");
@@ -93,6 +99,11 @@ namespace Barotrauma
             }
         }
 
+        private Submarine GetReferenceSub()
+        {
+            return EventManager.GetRefEntity() as Submarine ?? Submarine.MainSub;
+        }
+
         public override IEnumerable<ContentFile> GetFilesToPreload()
         {
             string path = CharacterPrefab.FindBySpeciesName(speciesName)?.FilePath;
@@ -110,7 +121,7 @@ namespace Barotrauma
         public override bool CanAffectSubImmediately(Level level)
         {
             float maxRange = Sonar.DefaultSonarRange * 0.8f;
-            return GetAvailableSpawnPositions().Any(p => Vector2.DistanceSquared(p.Position.ToVector2(), Submarine.MainSub.WorldPosition) < maxRange * maxRange);
+            return GetAvailableSpawnPositions().Any(p => Vector2.DistanceSquared(p.Position.ToVector2(), GetReferenceSub().WorldPosition) < maxRange * maxRange);
         }
 
         public override void Init(bool affectSubImmediately)
@@ -191,10 +202,10 @@ namespace Barotrauma
                 foreach (var position in availablePositions)
                 {
                     Vector2 pos = position.Position.ToVector2();
-                    float dist = Vector2.DistanceSquared(pos, Submarine.MainSub.WorldPosition);
+                    float dist = Vector2.DistanceSquared(pos, GetReferenceSub().WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
-                        if (sub.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        if (sub.Info.Type != SubmarineType.Player) { continue; }
                         float minDistToSub = GetMinDistanceToSub(sub);
                         if (dist > minDistToSub * minDistToSub && dist < closestDist)
                         {
@@ -209,7 +220,7 @@ namespace Barotrauma
                 {
                     foreach (var position in availablePositions)
                     {
-                        float dist = Vector2.DistanceSquared(position.Position.ToVector2(), Submarine.MainSub.WorldPosition);
+                        float dist = Vector2.DistanceSquared(position.Position.ToVector2(), GetReferenceSub().WorldPosition);
                         if (dist < closestDist)
                         {
                             closestDist = dist;
@@ -223,7 +234,7 @@ namespace Barotrauma
                 if (!isSubOrWreck)
                 {
                     float minDistance = 20000;
-                    availablePositions.RemoveAll(p => Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
+                    availablePositions.RemoveAll(p => Vector2.DistanceSquared(GetReferenceSub().WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
                 }
                 if (availablePositions.None())
                 {
@@ -256,6 +267,11 @@ namespace Barotrauma
                         int currentIndex = waypoints.IndexOf(nearestWaypoint);
                         var nextWaypoint = waypoints[Math.Min(currentIndex + 20, waypoints.Count - 1)];
                         dir = Vector2.Normalize(nextWaypoint.WorldPosition - nearestWaypoint.WorldPosition);
+                        // Ensure that the spawn position is not offset to the left.
+                        if (dir.X < 0)
+                        {
+                            dir.X = 0;
+                        }
                     }
                     else
                     {
@@ -301,7 +317,7 @@ namespace Barotrauma
                 {
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
-                        if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        if (submarine.Info.Type != SubmarineType.Player) { continue; }
                         float minDist = GetMinDistanceToSub(submarine);
                         if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist) { return; }
                     }
@@ -315,7 +331,7 @@ namespace Barotrauma
                     float minDist = Sonar.DefaultSonarRange * 0.8f;
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
-                        if (submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        if (submarine.Info.Type != SubmarineType.Player) { continue; }
                         if (Vector2.DistanceSquared(submarine.WorldPosition, spawnPos.Value) < minDist * minDist)
                         {
                             someoneNearby = true;

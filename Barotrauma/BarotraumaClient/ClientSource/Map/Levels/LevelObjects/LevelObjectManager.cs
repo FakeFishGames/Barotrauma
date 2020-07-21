@@ -9,8 +9,12 @@ namespace Barotrauma
 {
     partial class LevelObjectManager
     {
-        private List<LevelObject> visibleObjectsBack = new List<LevelObject>();
-        private List<LevelObject> visibleObjectsFront = new List<LevelObject>();
+        private readonly List<LevelObject> visibleObjectsBack = new List<LevelObject>();
+        private readonly List<LevelObject> visibleObjectsFront = new List<LevelObject>();
+
+        //Maximum number of visible objects drawn at once. Should be large enough to not have an effect during normal gameplay, 
+        //but small enough to prevent wrecking performance when zooming out very far
+        const int MaxVisibleObjects = 500;
 
         private Rectangle currentGridIndices;
         
@@ -43,7 +47,7 @@ namespace Barotrauma
             {
                 for (int y = currentIndices.Y; y <= currentIndices.Height; y++)
                 {
-                    if (objectGrid[x, y] == null) continue;
+                    if (objectGrid[x, y] == null) { continue; }
                     foreach (LevelObject obj in objectGrid[x, y])
                     {
                         var objectList = obj.Position.Z >= 0 ? visibleObjectsBack : visibleObjectsFront;
@@ -69,6 +73,7 @@ namespace Barotrauma
                         if (drawOrderIndex >= 0)
                         {
                             objectList.Insert(drawOrderIndex, obj);
+                            if (objectList.Count >= MaxVisibleObjects) { break; }
                         }
                     }
                 }

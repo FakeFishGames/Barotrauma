@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -61,6 +62,11 @@ namespace Barotrauma
         public int Reward
         {
             get { return Prefab.Reward; }
+        }
+
+        public Dictionary<string, float> ReputationRewards
+        {
+            get { return Prefab.ReputationRewards; }
         }
 
         public bool Completed
@@ -197,8 +203,22 @@ namespace Barotrauma
 
         public void GiveReward()
         {
-            if (!(GameMain.GameSession.GameMode is CampaignMode mode)) { return; }
-            mode.Money += Reward;
+            if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
+            campaign.Money += Reward;
+
+            foreach (KeyValuePair<string, float> reputationReward in ReputationRewards)
+            {
+                if (reputationReward.Key.Equals("location", StringComparison.OrdinalIgnoreCase))
+                {
+                    Locations[0].Reputation.Value += reputationReward.Value;
+                    Locations[1].Reputation.Value += reputationReward.Value;
+                }
+                else
+                {
+                    Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(reputationReward.Key, StringComparison.OrdinalIgnoreCase));
+                    if (faction != null) { faction.Reputation.Value += reputationReward.Value; }
+                }
+            }
         }
     }
 }

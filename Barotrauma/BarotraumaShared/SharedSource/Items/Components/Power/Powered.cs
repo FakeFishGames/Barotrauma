@@ -17,6 +17,10 @@ namespace Barotrauma.Items.Components
         /// List of all powered ItemComponents
         /// </summary>
         private static readonly List<Powered> poweredList = new List<Powered>();
+        public static IEnumerable<Powered> PoweredList
+        {
+            get { return poweredList; }
+        }
 
         /// <summary>
         /// Items that have already received the "probe signal" that's used to distribute power and load across the grid
@@ -306,6 +310,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             poweredList.Remove(this);
         }
     }

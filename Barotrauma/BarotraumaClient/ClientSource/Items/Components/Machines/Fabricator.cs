@@ -42,17 +42,15 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific()
         {
             CreateGUI();
-            GameMain.Instance.OnResolutionChanged += RecreateGUI;
         }
 
-        private void RecreateGUI()
+        protected override void OnResolutionChanged()
         {
-            GuiFrame.ClearChildren();
-            CreateGUI();
+            base.OnResolutionChanged();
             OnItemLoadedProjSpecific();
         }
 
-        private void CreateGUI()
+        protected override void CreateGUI()
         {
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), GuiFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
 
@@ -242,8 +240,8 @@ namespace Barotrauma.Items.Components
                 var item1 = c1.GUIComponent.UserData as FabricationRecipe;
                 var item2 = c2.GUIComponent.UserData as FabricationRecipe;
 
-                bool hasSkills1 = DegreeOfSuccess(character, item1.RequiredSkills) >= 0.5f;
-                bool hasSkills2 = DegreeOfSuccess(character, item2.RequiredSkills) >= 0.5f;
+                bool hasSkills1 = FabricationDegreeOfSuccess(character, item1.RequiredSkills) >= 0.5f;
+                bool hasSkills2 = FabricationDegreeOfSuccess(character, item2.RequiredSkills) >= 0.5f;
 
                 if (hasSkills1 != hasSkills2)
                 {
@@ -267,7 +265,7 @@ namespace Barotrauma.Items.Components
                 AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
-            var firstinSufficient = itemList.Content.Children.FirstOrDefault(c => c.UserData is FabricationRecipe fabricableItem && DegreeOfSuccess(character, fabricableItem.RequiredSkills) < 0.5f);
+            var firstinSufficient = itemList.Content.Children.FirstOrDefault(c => c.UserData is FabricationRecipe fabricableItem && FabricationDegreeOfSuccess(character, fabricableItem.RequiredSkills) < 0.5f);
             if (firstinSufficient != null)
             {
                 insufficientSkillsText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstinSufficient.RectTransform));
@@ -476,7 +474,7 @@ namespace Barotrauma.Items.Components
             List<Skill> inadequateSkills = new List<Skill>();
             if (user != null)
             {
-                inadequateSkills = selectedItem.RequiredSkills.FindAll(skill => user.GetSkillLevel(skill.Identifier) < skill.Level);
+                inadequateSkills = selectedItem.RequiredSkills.FindAll(skill => user.GetSkillLevel(skill.Identifier) < Math.Round(skill.Level * SkillRequirementMultiplier));
             }
             
             if (selectedItem.RequiredSkills.Any())
@@ -489,13 +487,13 @@ namespace Barotrauma.Items.Components
                 };
                 foreach (Skill skill in selectedItem.RequiredSkills)
                 {
-                    text += TextManager.Get("SkillName." + skill.Identifier) + " " + TextManager.Get("Lvl").ToLower() + " " + skill.Level;
+                    text += TextManager.Get("SkillName." + skill.Identifier) + " " + TextManager.Get("Lvl").ToLower() + " " + Math.Round(skill.Level * SkillRequirementMultiplier);
                     if (skill != selectedItem.RequiredSkills.Last()) { text += "\n"; }
                 }
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), text, font: GUI.SmallFont);
             }
 
-            float degreeOfSuccess = user == null ? 0.0f : DegreeOfSuccess(user, selectedItem.RequiredSkills);
+            float degreeOfSuccess = user == null ? 0.0f : FabricationDegreeOfSuccess(user, selectedItem.RequiredSkills);
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
             float requiredTime = user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user);
@@ -620,11 +618,6 @@ namespace Barotrauma.Items.Components
                 SelectItem(user, fabricationRecipes[itemIndex]);
                 StartFabricating(fabricationRecipes[itemIndex], user);
             }
-        }
-
-        protected override void RemoveComponentSpecific()
-        {
-            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
         }
     }
 }

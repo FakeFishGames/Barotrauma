@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -10,7 +12,16 @@ namespace Barotrauma
         const float ConversationIntervalMax = 180.0f;
         const float ConversationIntervalMultiplierMultiplayer = 5.0f;
         private float conversationTimer, conversationLineTimer;
-        private List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
+        private readonly List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
+
+        private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
+        private readonly List<Character> characters = new List<Character>();
+
+        private Character welcomeMessageNPC;
+
+        public List<CharacterInfo> CharacterInfos => characterInfos;
+
+        public bool HasBots { get; set; }
 
         public List<Pair<Order, float>> ActiveOrders { get; } = new List<Pair<Order, float>>();
         public bool IsSinglePlayer { get; private set; }
@@ -51,6 +62,145 @@ namespace Barotrauma
             ActiveOrders.RemoveAll(o => o.First == order);
         }
 
+        public void AddCharacterElements(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                if (!subElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                CharacterInfo characterInfo = new CharacterInfo(subElement);
+#if CLIENT
+                if (subElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
+#endif
+                characterInfos.Add(characterInfo);
+                foreach (XElement invElement in subElement.Elements())
+                {
+                    if (!invElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    characterInfo.InventoryData = invElement;
+                    break;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Remove info of a selected character. The character will not be visible in any menus or the round summary.
+        /// </summary>
+        /// <param name="characterInfo"></param>
+        public void RemoveCharacterInfo(CharacterInfo characterInfo)
+        {
+            characterInfos.Remove(characterInfo);
+        }
+        
+        public void AddCharacter(Character character)
+        {
+            if (character.Removed)
+            {
+                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+            if (character.IsDead)
+            {
+                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
+                return;
+            }
+
+            if (!characters.Contains(character))
+            {
+                characters.Add(character);
+            }
+            if (!characterInfos.Contains(character.Info))
+            {
+                characterInfos.Add(character.Info);
+            }
+#if CLIENT
+            AddCharacterToCrewList(character);
+            DisplayCharacterOrder(character, character.CurrentOrder, character.CurrentOrderOption);
+#endif
+        }
+
+        public void AddCharacterInfo(CharacterInfo characterInfo)
+        {
+            if (characterInfos.Contains(characterInfo))
+            {
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
+                return;
+            }
+
+            characterInfos.Add(characterInfo);
+        }
+
+        public void InitRound()
+        {
+            characters.Clear();
+
+            List<WayPoint> spawnWaypoints = null;
+            List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
+
+            if (Level.IsLoadedOutpost)
+            {
+                spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
+                    wp.SpawnType == SpawnType.Human &&
+                    wp.Submarine == Level.Loaded.StartOutpost && 
+                    wp.CurrentHull?.OutpostModuleTags != null && 
+                    wp.CurrentHull.OutpostModuleTags.Contains("airlock"));
+                while (spawnWaypoints.Count > characterInfos.Count)
+                {
+                    spawnWaypoints.RemoveAt(Rand.Int(spawnWaypoints.Count));
+                }
+                while (spawnWaypoints.Any() && spawnWaypoints.Count < characterInfos.Count)
+                {
+                    spawnWaypoints.Add(spawnWaypoints[Rand.Int(spawnWaypoints.Count)]);
+                }
+            }
+
+            if (spawnWaypoints == null || !spawnWaypoints.Any())
+            {
+                spawnWaypoints = mainSubWaypoints;
+            }
+
+            System.Diagnostics.Debug.Assert(spawnWaypoints.Count == mainSubWaypoints.Count);
+
+            for (int i = 0; i < spawnWaypoints.Count; i++)
+            {
+                var info = characterInfos[i];
+                info.TeamID = Character.TeamType.Team1;
+                Character character = Character.Create(info, spawnWaypoints[i].WorldPosition, info.Name);
+                if (character.Info != null)
+                {
+                    if (!character.Info.StartItemsGiven && character.Info.InventoryData != null)
+                    {
+                        DebugConsole.AddWarning($"Error when initializing a round: character \"{character.Name}\" has not been given their initial items but has saved inventory data. Using the saved inventory data instead of giving the character new items.");
+                    }
+                    if (character.Info.InventoryData != null)
+                    {
+                        character.Info.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
+                    }
+                    else if (!character.Info.StartItemsGiven)
+                    {
+                        character.GiveJobItems(mainSubWaypoints[i]);
+                    }
+                    if (character.Info.HealthData != null)
+                    {
+                        character.Info.ApplyHealthData(character, character.Info.HealthData);
+                    }
+                    character.GiveIdCardTags(spawnWaypoints[i]);
+                    character.Info.StartItemsGiven = true;
+                }
+                
+                AddCharacter(character);
+#if CLIENT
+                if (IsSinglePlayer && (Character.Controlled == null || character.Info.LastControlled)) { Character.Controlled = character; }
+#endif
+            }
+
+            conversationTimer = Rand.Range(5.0f, 10.0f);
+        }
+
+        public void FireCharacter(CharacterInfo characterInfo)
+        {
+            RemoveCharacterInfo(characterInfo);
+        }
+
         public void Update(float deltaTime)
         {
             foreach (Pair<Order, float> order in ActiveOrders)
@@ -86,6 +236,49 @@ namespace Barotrauma
                 {
                     conversationTimer *= ConversationIntervalMultiplierMultiplayer;
                 }
+            }
+
+            if (welcomeMessageNPC == null)
+            {
+                foreach (Character npc in Character.CharacterList)
+                {
+                    if (npc.TeamID != Character.TeamType.FriendlyNPC || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
+                    if (npc.AIController?.ObjectiveManager != null && (npc.AIController.ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() || npc.AIController.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()))
+                    {
+                        continue;
+                    }
+                    foreach (Character player in Character.CharacterList)
+                    {
+                        if (player.TeamID != npc.TeamID && !player.IsIncapacitated && player.CurrentHull == npc.CurrentHull)
+                        {
+                            List<Character> availableSpeakers = new List<Character>() { npc, player };
+                            List<string> dialogFlags = new List<string>() { "OutpostNPC", "EnterOutpost" };
+                            if (GameMain.GameSession?.GameMode is CampaignMode campaignMode && campaignMode.Map?.CurrentLocation?.Reputation != null)
+                            {
+                                float normalizedReputation = MathUtils.InverseLerp(
+                                    campaignMode.Map.CurrentLocation.Reputation.MinReputation,
+                                    campaignMode.Map.CurrentLocation.Reputation.MaxReputation,
+                                    campaignMode.Map.CurrentLocation.Reputation.Value);
+                                if (normalizedReputation < 0.2f)
+                                {
+                                    dialogFlags.Add("LowReputation");
+                                }
+                                else if (normalizedReputation > 0.8f)
+                                {
+                                    dialogFlags.Add("HighReputation");
+                                }
+                            }
+                            pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers, dialogFlags));
+                            welcomeMessageNPC = npc;
+                            break;
+                        }
+                    }
+                    if (welcomeMessageNPC != null) { break; }
+                }
+            }
+            else if (welcomeMessageNPC.Removed)
+            {
+                welcomeMessageNPC = null;
             }
 
             if (pendingConversationLines.Count > 0)

@@ -10,6 +10,7 @@ using RestSharp.Contrib;
 using System.Xml.Linq;
 using Color = Microsoft.Xna.Framework.Color;
 using System.Runtime.InteropServices;
+using NLog.Fluent;
 
 namespace Barotrauma.Steam
 {
@@ -29,7 +30,7 @@ namespace Barotrauma.Steam
                 if (isInitialized)
                 {
                     DebugConsole.NewMessage("Logged in as " + GetUsername() + " (SteamID " + SteamIDUInt64ToString(GetSteamID()) + ")");
-                    
+
                     popularTags.Clear();
                     int i = 0;
                     foreach (KeyValuePair<string, int> commonness in tagCommonness)
@@ -37,19 +38,16 @@ namespace Barotrauma.Steam
                         popularTags.Insert(i, commonness.Key);
                         i++;
                     }
-
-                    LogSteamworksNetworkingDelegate = LogSteamworksNetworking;
-
-                    IntPtr logSteamworksNetworkingPtr = Marshal.GetFunctionPointerForDelegate(LogSteamworksNetworkingDelegate);
-                    Steamworks.SteamNetworkingUtils.SetDebugOutputFunction(Steamworks.Data.DebugOutputType.Everything, logSteamworksNetworkingPtr);
                 }
+
+                Steamworks.SteamNetworkingUtils.OnDebugOutput += LogSteamworksNetworking;
             }
             catch (DllNotFoundException)
             {
                 isInitialized = false;
                 initializationErrors.Add("SteamDllNotFound");
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 isInitialized = false;
                 initializationErrors.Add("SteamClientInitFailed");
@@ -70,12 +68,23 @@ namespace Barotrauma.Steam
 
         public static bool NetworkingDebugLog = false;
 
-        private static Steamworks.Data.FSteamNetworkingSocketsDebugOutput LogSteamworksNetworkingDelegate;
-
-        private static void LogSteamworksNetworking(Steamworks.Data.DebugOutputType nType, string pszMsg)
+        private static void LogSteamworksNetworking(Steamworks.NetDebugOutput nType, string pszMsg)
         {
-            if (NetworkingDebugLog) { DebugConsole.NewMessage($"({nType}) {pszMsg}", Color.Orange); }
+            DebugConsole.NewMessage($"({nType}) {pszMsg}", Color.Orange);
         }
+
+        public static void SetSteamworksNetworkingDebugLog(bool enabled)
+        {
+            if (enabled)
+            {
+                Steamworks.SteamNetworkingUtils.DebugLevel = Steamworks.NetDebugOutput.Everything;
+            }
+            else
+            {
+                Steamworks.SteamNetworkingUtils.DebugLevel = Steamworks.NetDebugOutput.None;
+            }
+        }
+
 
         private static void UpdateProjectSpecific(float deltaTime)
         {
@@ -98,6 +107,34 @@ namespace Barotrauma.Steam
             }
         }
 
+        public static async Task InitRelayNetworkAccess()
+        {
+            if (!IsInitialized) { return; }
+
+            await Task.Yield();
+            Steamworks.SteamNetworkingUtils.InitRelayNetworkAccess();
+
+            SetSteamworksNetworkingDebugLog(true);
+            var status = Steamworks.SteamNetworkingUtils.Status;
+            while (status.Avail != Steamworks.SteamNetworkingAvailability.Current)
+            {
+                if (status.Avail == Steamworks.SteamNetworkingAvailability.CannotTry ||
+                    status.Avail == Steamworks.SteamNetworkingAvailability.Previously ||
+                    status.Avail == Steamworks.SteamNetworkingAvailability.Failed)
+                {
+                    DebugConsole.ThrowError($"Failed to initialize Steamworks network relay: " +
+                        $"{Steamworks.SteamNetworkingUtils.Status.Avail}, " +
+                        $"{Steamworks.SteamNetworkingUtils.Status.AvailNetConfig}, " +
+                        $"{Steamworks.SteamNetworkingUtils.Status.Avail}, " +
+                        $"{Steamworks.SteamNetworkingUtils.Status.Msg}");
+                    break;
+                }
+                await Task.Delay(25);
+                status = Steamworks.SteamNetworkingUtils.Status;
+            }
+            SetSteamworksNetworkingDebugLog(false);
+        }
+
         private enum LobbyState
         {
             NotConnected,
@@ -118,10 +155,16 @@ namespace Barotrauma.Steam
         {
             if (lobbyState != LobbyState.NotConnected) { return; }
             lobbyState = LobbyState.Creating;
-            TaskPool.Add(Steamworks.SteamMatchmaking.CreateLobbyAsync(serverSettings.MaxPlayers + 10),
+            TaskPool.Add("CreateLobbyAsync", Steamworks.SteamMatchmaking.CreateLobbyAsync(serverSettings.MaxPlayers + 10),
                 (lobby) =>
                 {
-                    currentLobby = lobby.Result;
+                    if (lobbyState != LobbyState.Creating)
+                    {
+                        LeaveLobby();
+                        return;
+                    }
+
+                    currentLobby = ((Task<Steamworks.Data.Lobby?>)lobby).Result;
 
                     if (currentLobby == null)
                     {
@@ -218,10 +261,10 @@ namespace Barotrauma.Steam
             lobbyState = LobbyState.Joining;
             lobbyID = id;
 
-            TaskPool.Add(Steamworks.SteamMatchmaking.JoinLobbyAsync(lobbyID),
+            TaskPool.Add("JoinLobbyAsync", Steamworks.SteamMatchmaking.JoinLobbyAsync(lobbyID),
                 (lobby) =>
                 {
-                    currentLobby = lobby.Result;
+                    currentLobby = ((Task<Steamworks.Data.Lobby?>)lobby).Result;
                     lobbyState = LobbyState.Joined;
                     lobbyID = (currentLobby?.Id).Value;
                     if (joinServer)
@@ -252,9 +295,10 @@ namespace Barotrauma.Steam
             //TODO: find a better strategy to fetch all lobbies, this is gonna take forever if we actually have 10000 lobbies
             Steamworks.Data.LobbyQuery lobbyQuery = Steamworks.SteamMatchmaking.CreateLobbyQuery().FilterDistanceWorldwide().WithMaxResults(10000);
 
-            TaskPool.Add(Task.Run(async () =>
+            TaskPool.Add("LobbyQueryRequest", lobbyQuery.RequestAsync(),
+            (t) =>
             {
-                Steamworks.Data.Lobby[] lobbies = await lobbyQuery.RequestAsync();
+                var lobbies = ((Task<Steamworks.Data.Lobby[]>)t).Result;
                 foreach (var lobby in lobbies)
                 {
                     if (string.IsNullOrEmpty(lobby.GetData("name"))) { continue; }
@@ -270,14 +314,8 @@ namespace Barotrauma.Steam
 
                     AssignLobbyDataToServerInfo(lobby, serverInfo);
 
-                    CrossThread.RequestExecutionOnMainThread(() =>
-                    {
-                        addToServerList(serverInfo);
-                    });
+                    addToServerList(serverInfo);
                 }
-            }),
-            (t) =>
-            {
                 taskDone();
                 if (t.Status == TaskStatus.Faulted)
                 {
@@ -301,7 +339,7 @@ namespace Barotrauma.Steam
 
                 if (responsive)
                 {
-                    TaskPool.Add(info.QueryRulesAsync(),
+                    TaskPool.Add($"QueryServerRules (GetServers, {info.Name}, {info.Address})", info.QueryRulesAsync(),
                         (t) =>
                         {
                             if (t.Status == TaskStatus.Faulted)
@@ -310,7 +348,7 @@ namespace Barotrauma.Steam
                                 return;
                             }
 
-                            var rules = t.Result;
+                            var rules = ((Task<Dictionary<string,string>>)t).Result;
                             AssignServerRulesToServerInfo(rules, serverInfo);
 
                             CrossThread.RequestExecutionOnMainThread(() =>
@@ -331,7 +369,7 @@ namespace Barotrauma.Steam
             serverQuery.OnResponsiveServer += (info) => onServer(info, true);
             serverQuery.OnUnresponsiveServer += (info) => onServer(info, false);
 
-            TaskPool.Add(serverQuery.RunQueryAsync(),
+            TaskPool.Add("RunServerQuery", serverQuery.RunQueryAsync(),
             (t) =>
             {
                 serverQuery.Dispose();
@@ -384,7 +422,7 @@ namespace Barotrauma.Steam
             string pingLocation = lobby.GetData("pinglocation");
             if (!string.IsNullOrEmpty(pingLocation))
             {
-                serverInfo.PingLocation = Steamworks.Data.PingLocation.TryParseFromString(pingLocation);
+                serverInfo.PingLocation = Steamworks.Data.NetPingLocation.TryParseFromString(pingLocation);
             }
 
             bool? getLobbyBool(string key)
@@ -570,7 +608,7 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) { query = query.WithTags(requireTags); }
 
-            TaskPool.Add(GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(task.Result); });
+            TaskPool.Add("GetSubscribedWorkshopItems", GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(((Task<List<Steamworks.Ugc.Item>>)task).Result); });
         }
 
         public static void GetPopularWorkshopItems(Action<IList<Steamworks.Ugc.Item>> onItemsFound, int amount, List<string> requireTags = null)
@@ -582,8 +620,8 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) query.WithTags(requireTags);
 
-            TaskPool.Add(GetWorkshopItemsAsync(query, amount, (item) => !item.IsSubscribed), (task) => {
-                var entries = task.Result;
+            TaskPool.Add("GetPopularWorkshopItems", GetWorkshopItemsAsync(query, amount, (item) => !item.IsSubscribed), (task) => {
+                var entries = ((Task<List<Steamworks.Ugc.Item>>)task).Result;
 
                 //count the number of each unique tag
                 foreach (var item in entries)
@@ -614,7 +652,7 @@ namespace Barotrauma.Steam
                     }
                     popularTags.Insert(i, tagCommonnessKVP.Key);
                 }
-                onItemsFound?.Invoke(task.Result);
+                onItemsFound?.Invoke(entries);
             });
         }
 
@@ -628,7 +666,7 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) query.WithTags(requireTags);
 
-            TaskPool.Add(GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(task.Result); });
+            TaskPool.Add("GetPublishedWorkshopItems", GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(((Task<List<Steamworks.Ugc.Item>>)task).Result); });
         }
 
         private static Dictionary<ulong, Task> ugcSubscriptionTasks;
@@ -678,7 +716,7 @@ namespace Barotrauma.Steam
         {
             string folderPath = Path.GetDirectoryName(contentPackage.Path);
             if (!Directory.Exists(folderPath)) { Directory.CreateDirectory(folderPath); }
-            itemEditor = Steamworks.Ugc.Editor.CreateCommunityFile()
+            itemEditor = Steamworks.Ugc.Editor.NewCommunityFile
                 .WithPublicVisibility()
                 .ForAppId(AppID)
                 .WithContent(folderPath);
@@ -700,7 +738,7 @@ namespace Barotrauma.Steam
             Directory.CreateDirectory("Mods");
             Directory.CreateDirectory(dirPath);
 
-            itemEditor = Steamworks.Ugc.Editor.CreateCommunityFile()
+            itemEditor = Steamworks.Ugc.Editor.NewCommunityFile
 #if DEBUG
                 .WithPrivateVisibility()
 #else
@@ -827,6 +865,11 @@ namespace Barotrauma.Steam
                 DebugConsole.ThrowError("Cannot publish workshop item \"" + item?.Title + "\" - folder not set.");
                 return null;
             }
+            if (!contentPackage.Files.Any())
+            {
+                DebugConsole.ThrowError("Cannot publish workshop item \"" + item?.Title + "\" - no files defined.");
+                return null;
+            }
 
 #if DEBUG
             item = item?.WithPrivateVisibility();
@@ -944,13 +987,6 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
-            {
-                errorMsg = TextManager.GetWithVariables("ContentPackageMissingCoreFiles", new string[2] { "[packagename]", "[missingfiletypes]" },
-                    new string[2] { contentPackage.Name, string.Join(", ", missingContentTypes) }, new bool[2] { false, true });
-                return false;
-            }
-
             Task<string> newTask = null;
 
             lock (modCopiesInProgress)
@@ -963,7 +999,8 @@ namespace Barotrauma.Steam
                 modCopiesInProgress.Add(item.Value.Id, newTask);
             }
             
-            TaskPool.Add(newTask,
+            TaskPool.Add("CopyWorkShopItemAsync",
+                newTask,
                 contentPackage,
                 (task, cp) =>
                 {
@@ -975,9 +1012,10 @@ namespace Barotrauma.Steam
                             GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Red);
                             return;
                         }
-                        if (!string.IsNullOrWhiteSpace(task.Result))
+                        string errorMsg = ((Task<string>)task).Result;
+                        if (!string.IsNullOrWhiteSpace(errorMsg))
                         {
-                            DebugConsole.ThrowError($"Failed to copy \"{item?.Title}\": {task.Result}");
+                            DebugConsole.ThrowError($"Failed to copy \"{item?.Title}\": {errorMsg}");
                             GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Red);
                             return;
                         }
@@ -1199,7 +1237,7 @@ namespace Barotrauma.Steam
             {
                 if (cp.CorePackage)
                 {
-                    GameMain.Config.SelectCorePackage(ContentPackage.List.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
+                    GameMain.Config.AutoSelectCorePackage(toRemove);
                 }
                 else
                 {
@@ -1295,6 +1333,14 @@ namespace Barotrauma.Steam
         public static bool CheckWorkshopItemEnabled(Steamworks.Ugc.Item? item)
         {
             if (!(item?.IsInstalled ?? false)) { return false; }
+
+            lock (modCopiesInProgress)
+            {
+                if (modCopiesInProgress.ContainsKey(item.Value.Id))
+                {
+                    return true;
+                }
+            }
 
             if (!Directory.Exists(item?.Directory))
             {
@@ -1572,7 +1618,7 @@ namespace Barotrauma.Steam
                 if (type == ContentType.Executable ||
                     type == ContentType.ServerExecutable)
                 {
-                    exists |= File.Exists(contentFilePath + ".dll");
+                    exists |= File.Exists(Path.GetFileNameWithoutExtension(contentFilePath) + ".dll");
                 }
                 if (exists)
                 {

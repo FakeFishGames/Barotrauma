@@ -11,32 +11,19 @@ namespace Steamworks
 	/// <summary>
 	/// Exposes a wide range of information and actions for applications and Downloadable Content (DLC).
 	/// </summary>
-	public static class SteamApps
+	public class SteamApps : SteamSharedClass<SteamApps>
 	{
-		static ISteamApps _internal;
-		internal static ISteamApps Internal
-		{
-			get
-			{
-				if ( _internal == null )
-				{
-					_internal = new ISteamApps();
-					_internal.Init();
-				}
+		internal static ISteamApps Internal => Interface as ISteamApps;
 
-				return _internal;
-			}
-		}
-
-		internal static void Shutdown()
+		internal override void InitializeInterface( bool server )
 		{
-			_internal = null;
+			SetInterface( server, new ISteamApps( server ) );
 		}
 
 		internal static void InstallEvents()
 		{
-			DlcInstalled_t.Install( x => OnDlcInstalled?.Invoke( x.AppID ) );
-			NewUrlLaunchParameters_t.Install( x => OnNewLaunchParameters?.Invoke() );
+			Dispatch.Install<DlcInstalled_t>( x => OnDlcInstalled?.Invoke( x.AppID ) );
+			Dispatch.Install<NewUrlLaunchParameters_t>( x => OnNewLaunchParameters?.Invoke() );
 		}
 
 		/// <summary>
@@ -87,7 +74,7 @@ namespace Steamworks
 		/// <summary>
 		/// Gets a list of the languages the current app supports.
 		/// </summary>
-		public static string[] AvailablLanguages => Internal.GetAvailableGameLanguages().Split( new[] { ',' }, StringSplitOptions.RemoveEmptyEntries );
+		public static string[] AvailableLanguages => Internal.GetAvailableGameLanguages().Split( new[] { ',' }, StringSplitOptions.RemoveEmptyEntries );
 
 		/// <summary>
 		/// Checks if the active user is subscribed to a specified AppId.
@@ -181,9 +168,7 @@ namespace Steamworks
 				appid = SteamClient.AppId;
 
 			var depots = new DepotId_t[32];
-			uint count = 0;
-
-			count = Internal.GetInstalledDepots( appid.Value, depots, (uint) depots.Length );
+			uint count = Internal.GetInstalledDepots( appid.Value, depots, (uint) depots.Length );
 
 			for ( int i = 0; i < count; i++ )
 			{
@@ -233,7 +218,7 @@ namespace Steamworks
 			ulong punBytesTotal = 0;
 
 			if ( !Internal.GetDlcDownloadProgress( appid.Value, ref punBytesDownloaded, ref punBytesTotal ) )
-				return default( DownloadProgress );
+				return default;
 
 			return new DownloadProgress { BytesDownloaded = punBytesDownloaded, BytesTotal = punBytesTotal, Active = true };
 		}
@@ -276,7 +261,7 @@ namespace Steamworks
 		{
 			get
 			{
-				var len = Internal.GetLaunchCommandLine( out var strVal );
+				Internal.GetLaunchCommandLine( out var strVal );
 				return strVal;
 			}
 		}

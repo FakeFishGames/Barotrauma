@@ -212,6 +212,39 @@ namespace Barotrauma
 
             return inputType;
         }
+        
+        /// <summary>
+        /// Returns either a green [x] or a red [o]
+        /// </summary>
+        /// <param name="isFinished"></param>
+        /// <returns></returns>
+        public static string GetDebugSymbol(bool isFinished)
+        {
+            return $"[‖color:{(isFinished ? "0,255,0‖x" : "255,0,0‖o")}‖color:end‖]";
+        }
+
+        /// <summary>
+        /// Turn the object into a string and give it rich color based on the object type
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static string ColorizeObject(this object obj)
+        {
+            string color = obj switch
+            {
+                bool   b => b ? "80,250,123" : "255,85,85",
+                string _ => "241,250,140",
+                int    _ => "189,147,249",
+                float  _ => "189,147,249",
+                double _ => "189,147,249",
+                null     => "255,85,85",
+                _ => "139,233,253"
+            };
+
+            return obj is string 
+                ? $"‖color:{color}‖\"{obj}\"‖color:end‖" 
+                : $"‖color:{color}‖{obj ?? "null"}‖color:end‖";
+        }
 
         // Convert an RGB value into an HLS value.
         public static Vector3 RgbToHLS(Vector3 color)

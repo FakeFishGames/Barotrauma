@@ -30,6 +30,7 @@ namespace Barotrauma
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
         public string Tag { get; private set; }
+        public bool Closed { get; private set; }
 
         public GUIImage Icon
         {
@@ -47,9 +48,16 @@ namespace Barotrauma
             }
         }
 
-        private bool alwaysVisible;
+        public GUIImage BackgroundIcon { get; private set; }
+        private GUIImage newBackgroundIcon;
+
+        public bool AutoClose;
+
+        private readonly bool alwaysVisible;
 
         private float openState;
+        private float iconState;
+        private bool iconSwitching;
         private bool closing;
 
         private Type type;
@@ -62,7 +70,7 @@ namespace Barotrauma
             this.Buttons[0].OnClicked = Close;
         }
 
-        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null)
+        public GUIMessageBox(string headerText, string text, string[] buttons, Vector2? relativeSize = null, Point? minSize = null, Alignment textAlignment = Alignment.TopLeft, Type type = Type.Default, string tag = "", Sprite icon = null, string iconStyle = "", Sprite backgroundIcon = null)
             : base(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas, Anchor.Center), style: GUI.Style.GetComponentStyle("GUIMessageBox." + type) != null ? "GUIMessageBox." + type : "GUIMessageBox")
         {
             int width = (int)(DefaultWidth * (type == Type.Default ? 1.0f : 1.5f)), height = 0;
@@ -78,6 +86,15 @@ namespace Barotrauma
                 {
                     height = Math.Max(height, minSize.Value.Y);
                 }
+            }
+
+            if (backgroundIcon != null)
+            {
+                BackgroundIcon = new GUIImage(new RectTransform(backgroundIcon.size.ToPoint(), RectTransform), backgroundIcon)
+                {
+                    IgnoreLayoutGroups = true,
+                    Color = Color.Transparent
+                };
             }
 
             InnerFrame = new GUIFrame(new RectTransform(new Point(width, height), RectTransform, type == Type.InGame ? Anchor.TopCenter : Anchor.Center) { IsFixedSize = false }, style: null);
@@ -145,6 +162,7 @@ namespace Barotrauma
                 InnerFrame.RectTransform.AbsoluteOffset = new Point(0, GameMain.GraphicsHeight);
                 alwaysVisible = true;
                 CanBeFocused = false;
+                AutoClose = true;
                 GUI.Style.Apply(InnerFrame, "", this);
 
                 var horizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), InnerFrame.RectTransform, Anchor.Center), 
@@ -156,6 +174,10 @@ namespace Barotrauma
                 if (icon != null)
                 {
                     Icon = new GUIImage(new RectTransform(new Vector2(0.2f, 0.95f), horizontalLayoutGroup.RectTransform), icon, scaleToFit: true);
+                }
+                else if (iconStyle != string.Empty)
+                {
+                    Icon = new GUIImage(new RectTransform(new Vector2(0.2f, 0.95f), horizontalLayoutGroup.RectTransform), iconStyle, scaleToFit: true);
                 }
 
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(icon != null ? 0.65f : 0.85f, 1.0f), horizontalLayoutGroup.RectTransform));
@@ -182,6 +204,10 @@ namespace Barotrauma
                     Text.RectTransform.NonScaledSize = Text.RectTransform.MinSize = Text.RectTransform.MaxSize =
                         new Point(Text.Rect.Width, Text.Rect.Height);
                     Text.RectTransform.IsFixedSize = true;
+                    if (string.IsNullOrWhiteSpace(headerText))
+                    {
+                        Content.ChildAnchor = Anchor.Center;
+                    }
                 }
 
                 if (height == 0)
@@ -226,6 +252,23 @@ namespace Barotrauma
             }
         }
 
+        public void SetBackgroundIcon(Sprite icon)
+        {
+            if (icon == null) { return; }
+            GUIImage newIcon = new GUIImage(new RectTransform(icon.size.ToPoint(), RectTransform), icon)
+            {
+                IgnoreLayoutGroups = true,
+                Color = Color.Transparent
+            };
+
+            if (newBackgroundIcon != null)
+            {
+                RemoveChild(newBackgroundIcon);
+                newBackgroundIcon = null;
+            }
+            newBackgroundIcon = newIcon;
+        }
+
         protected override void Update(float deltaTime)
         {
             if (type == Type.InGame)
@@ -246,10 +289,19 @@ namespace Barotrauma
 
                 if (!closing)
                 {
-                    InnerFrame.RectTransform.AbsoluteOffset = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
+                    Point step = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
+                    InnerFrame.RectTransform.AbsoluteOffset = step;
+                    if (BackgroundIcon != null)
+                    {
+                        BackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (BackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - BackgroundIcon.Rect.Size.Y / 2);
+                        if (!MathUtils.NearlyEqual(openState, 1.0f))
+                        {
+                            BackgroundIcon.Color = ToolBox.GradientLerp(openState, Color.Transparent, Color.White);
+                        }
+                    }
                     openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
 
-                    if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn))
+                    if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn) && AutoClose)
                     {
                         inGameCloseTimer += deltaTime;
                     }
@@ -262,11 +314,53 @@ namespace Barotrauma
                 else
                 {
                     openState += deltaTime * 2.0f;
-                    InnerFrame.RectTransform.AbsoluteOffset = Vector2.SmoothStep(defaultPos, endPos, openState - 1.0f).ToPoint();
+                    Point step = Vector2.SmoothStep(defaultPos, endPos, openState - 1.0f).ToPoint();
+                    InnerFrame.RectTransform.AbsoluteOffset = step;
+                    if (BackgroundIcon != null)
+                    {
+                        BackgroundIcon.Color *= 0.9f;
+                    }
                     if (openState >= 2.0f)
                     {
                         if (Parent != null) { Parent.RemoveChild(this); }
                         if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
+                    }
+                }
+
+                if (newBackgroundIcon != null)
+                {
+                    if (!iconSwitching)
+                    {
+                        if (BackgroundIcon != null)
+                        {
+                            BackgroundIcon.Color *= 0.9f;
+                            if (BackgroundIcon.Color.A == 0)
+                            {
+                                BackgroundIcon = null;
+                                iconSwitching = true;
+                                RemoveChild(BackgroundIcon);
+                            }
+                        }
+                        else
+                        {
+                            iconSwitching = true;
+                        }
+                        iconState = 0;
+                    }
+                    else
+                    {
+                        newBackgroundIcon.SetAsFirstChild();
+                        newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
+                        newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
+                        if (newBackgroundIcon.Color.A == 255)
+                        {
+                            BackgroundIcon = newBackgroundIcon;
+                            BackgroundIcon.SetAsFirstChild();
+                            newBackgroundIcon = null;
+                            iconSwitching = false;
+                        }
+
+                        iconState = Math.Min(iconState + deltaTime * 2.0f, 1.0f);
                     }
                 }
             }
@@ -284,6 +378,8 @@ namespace Barotrauma
                 if (Parent != null) { Parent.RemoveChild(this); }
                 if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
             }
+
+            Closed = true;
         }
 
         public bool Close(GUIButton button, object obj)

@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -83,6 +84,30 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float skillRequirementMultiplier;
+        
+        [Serialize(1.0f, true)]
+        public float SkillRequirementMultiplier 
+        { 
+            get { return skillRequirementMultiplier; }
+            set
+            {
+                var oldValue = skillRequirementMultiplier;
+                skillRequirementMultiplier = value;
+#if CLIENT
+                if (!MathUtils.NearlyEqual(oldValue, skillRequirementMultiplier))
+                {
+                    RecreateGUI();
+                }
+#endif
+            } 
+        }
+
+        public float RepairIconThreshold
+        {
+            get { return RepairThreshold / 2; }
+        }
+
         public Character CurrentFixer { get; private set; }
 
         public enum FixActions : int
@@ -146,12 +171,27 @@ namespace Barotrauma.Items.Components
             if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)) &&
                 item.GetComponent<Powered>() is Powered powered && powered.Voltage < 0.1f) { return true; }
 
-            if (Rand.Range(0.0f, 0.5f) < DegreeOfSuccess(character)) { return true; }
+            if (Rand.Range(0.0f, 0.5f) < RepairDegreeOfSuccess(character, requiredSkills)) { return true; }
 
             ApplyStatusEffects(ActionType.OnFailure, 1.0f, character);
             return false;
         }
 
+        public override float GetSkillMultiplier()
+        {
+            return SkillRequirementMultiplier;
+        }
+
+        public float RepairDegreeOfSuccess(Character character, List<Skill> skills)
+        {
+            if (skills.Count == 0) return 1.0f;
+
+            float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
+            float average = skillSum / skills.Count;
+
+            return ((average + 100.0f) / 2.0f) / 100.0f;
+        }
+        
         public bool StartRepairing(Character character, FixActions action)
         {
             if (character == null || character.IsDead || action == FixActions.None)
@@ -213,7 +253,7 @@ namespace Barotrauma.Items.Components
         public void ResetDeterioration()
         {
             deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
-            item.Condition = item.Prefab.Health;
+            item.Condition = item.MaxCondition;
 #if SERVER
             //let the clients know the deterioration delay
             item.CreateServerEvent(this);
@@ -271,7 +311,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            float successFactor = requiredSkills.Count == 0 ? 1.0f : DegreeOfSuccess(CurrentFixer, requiredSkills);
+            float successFactor = requiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
             if (item.ConditionPercentage < RepairThreshold)
@@ -368,6 +408,8 @@ namespace Barotrauma.Items.Components
 
         private bool ShouldDeteriorate()
         {
+            if (Level.IsLoadedOutpost) { return false; }
+
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)
             {

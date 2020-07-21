@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -142,6 +143,15 @@ namespace Barotrauma
             }
 
             GetSize(element);
+        }
+
+        public Sprite GetDefaultSprite()
+        {
+            return GetSprite(GUIComponent.ComponentState.None);
+        }
+        public Sprite GetSprite(GUIComponent.ComponentState state)
+        {
+            return Sprites.ContainsKey(state) ? Sprites[state]?.First()?.Sprite : null;
         }
 
         public void GetSize(XElement element)

@@ -51,7 +51,7 @@ namespace Barotrauma
                     float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
                     distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 5000, dist));
                 }
-                float severity = isPriority ? 1 : AIObjectiveRepairItems.GetTargetPriority(Item, character);
+                float severity = isPriority ? 1 : AIObjectiveRepairItems.GetTargetPriority(Item, character, requiredSuccessFactor: objectiveManager.CurrentOrder != this ? AIObjectiveRepairItems.RequiredSuccessFactor : 0);
                 float isSelected = IsRepairing ? 50 : 0;
                 float devotion = (CumulatedDevotion + isSelected) / 100;
                 float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
@@ -148,7 +148,8 @@ namespace Barotrauma
                     {
                         if (character.SelectedConstruction != Item)
                         {
-                            if (!Item.TryInteract(character, true, true))
+                            if (!Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) &&
+                                !Item.TryInteract(character, ignoreRequiredItems: true, forceActionKey: true))
                             {
                                 Abandon = true;
                             }

@@ -78,7 +78,7 @@ namespace Barotrauma.Items.Components
 
         private float RepairThreshold
         {
-            get { return item.GetComponent<Repairable>() == null ? 0.0f : item.Prefab.Health; }
+            get { return item.GetComponent<Repairable>() == null ? 0.0f : item.MaxCondition; }
         }
 
         public bool CanBeWelded = true;
@@ -185,7 +185,10 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-        
+
+        [Serialize(true, true, description: ""), Editable]
+        public bool UseBetweenOutpostModules { get; private set; }
+
         public Door(Item item, XElement element)
             : base(item, element)
         {
@@ -419,8 +422,8 @@ namespace Barotrauma.Items.Components
             linkedGap.Open = 1.0f;
             IsOpen = false;
 #if CLIENT
-            if (convexHull != null) convexHull.Enabled = false;
-            if (convexHull2 != null) convexHull2.Enabled = false;
+            if (convexHull != null) { convexHull.Enabled = false; }
+            if (convexHull2 != null) { convexHull2.Enabled = false; }
 #endif
         }
 
@@ -469,6 +472,14 @@ namespace Barotrauma.Items.Components
                 Body.Remove();
                 Body = null;
             }
+
+            foreach (Gap gap in Gap.GapList)
+            {
+                if (gap.ConnectedDoor == this)
+                {
+                    gap.ConnectedDoor = null;
+                }
+            }
             
             //no need to remove the gap if we're unloading the whole submarine
             //otherwise the gap will be removed twice and cause console warnings
@@ -485,13 +496,19 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
+        bool itemPosErrorShown;
+        private readonly HashSet<Character> characterPosErrorShown = new HashSet<Character>();
         private void PushCharactersAway()
         {
             if (!MathUtils.IsValid(item.SimPosition))
             {
-                DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ")");
-                GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:DoorPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                      "Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ").");
+                if (!itemPosErrorShown)
+                {
+                    DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ")");
+                    GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:DoorPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                          "Failed to push a character out of a doorway - position of the door is not valid (" + item.SimPosition + ").");
+                    itemPosErrorShown = true;
+                }
                 return;
             }
             
@@ -505,14 +522,18 @@ namespace Barotrauma.Items.Components
 
             foreach (Character c in Character.CharacterList)
             {
-                if (!c.Enabled) continue;
+                if (!c.Enabled) { continue; }
                 if (!MathUtils.IsValid(c.SimPosition))
                 {
-                    if (GameSettings.VerboseLogging) { DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")"); }
-                    GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")." +
-                        " Removed: " + c.Removed +
-                        " Remoteplayer: " + c.IsRemotePlayer);
+                    if (!characterPosErrorShown.Contains(c))
+                    {
+                        if (GameSettings.VerboseLogging) { DebugConsole.ThrowError("Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")"); }
+                        GameAnalyticsManager.AddErrorEventOnce("PushCharactersAway:CharacterPosInvalid", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            "Failed to push a character out of a doorway - position of the character \"" + c.Name + "\" is not valid (" + c.SimPosition + ")." +
+                            " Removed: " + c.Removed +
+                            " Remoteplayer: " + c.IsRemotePlayer);
+                        characterPosErrorShown.Add(c);
+                    }
                     continue;
                 }
                 int dir = IsHorizontal ? Math.Sign(c.SimPosition.Y - item.SimPosition.Y) : Math.Sign(c.SimPosition.X - item.SimPosition.X);

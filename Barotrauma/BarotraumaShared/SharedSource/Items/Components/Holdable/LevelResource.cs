@@ -114,6 +114,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             if (trigger != null)
             {
                 trigger.Remove();

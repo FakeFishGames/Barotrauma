@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
         public string Port;
         public string QueryPort;
 
-        public Steamworks.Data.PingLocation? PingLocation;
+        public Steamworks.Data.NetPingLocation? PingLocation;
         public UInt64 LobbyID;
         public UInt64 OwnerID;
         public bool OwnerVerified;
@@ -60,7 +60,7 @@ namespace Barotrauma.Networking
         public bool? RespondedToSteamQuery = null;
 
         public Steamworks.Friend? SteamFriend;
-        public Steamworks.ISteamMatchmakingPingResponse MatchmakingPingResponse;
+        public Steamworks.SteamMatchmakingPingResponse MatchmakingPingResponse;
 
         public string GameVersion;
         public List<string> ContentPackageNames
@@ -401,7 +401,7 @@ namespace Barotrauma.Networking
             return info;
         }
 
-        public void QueryLiveInfo(Action<Networking.ServerInfo> onServerRulesReceived)
+        public void QueryLiveInfo(Action<Networking.ServerInfo> onServerRulesReceived, Action<Networking.ServerInfo> onQueryDone)
         {
             if (!SteamManager.IsInitialized) { return; }
 
@@ -412,7 +412,7 @@ namespace Barotrauma.Networking
                     MatchmakingPingResponse.Cancel();
                 }
 
-                MatchmakingPingResponse = new Steamworks.ISteamMatchmakingPingResponse(
+                MatchmakingPingResponse = new Steamworks.SteamMatchmakingPingResponse(
                     (server) =>
                     {
                         ServerName = server.Name;
@@ -423,22 +423,20 @@ namespace Barotrauma.Networking
                         PingChecked = true;
                         Ping = server.Ping;
                         LobbyID = 0;
-                        TaskPool.Add(server.QueryRulesAsync(),
+                        TaskPool.Add("QueryServerRules (QueryLiveInfo)", server.QueryRulesAsync(),
                         (t) =>
                         {
+                            onQueryDone(this);
                             if (t.Status == TaskStatus.Faulted)
                             {
                                 TaskPool.PrintTaskExceptions(t, "Failed to retrieve rules for " + ServerName);
                                 return;
                             }
 
-                            var rules = t.Result;
+                            var rules = ((Task<Dictionary<string, string>>)t).Result;
                             SteamManager.AssignServerRulesToServerInfo(rules, this);
 
-                            CrossThread.RequestExecutionOnMainThread(() =>
-                            {
-                                onServerRulesReceived(this);
-                            });
+                            onServerRulesReceived(this);
                         });
                     },
                     () =>
@@ -456,9 +454,10 @@ namespace Barotrauma.Networking
                 }
                 if (LobbyID == 0)
                 {
-                    TaskPool.Add(SteamFriend?.RequestInfoAsync(),
+                    TaskPool.Add("RequestSteamP2POwnerInfo", SteamFriend?.RequestInfoAsync(),
                         (t) =>
                         {
+                            onQueryDone(this);
                             if ((SteamFriend?.IsPlayingThisGame ?? false) && ((SteamFriend?.GameInfo?.Lobby?.Id ?? 0) != 0))
                             {
                                 LobbyID = SteamFriend?.GameInfo?.Lobby?.Id.Value ?? 0;
@@ -470,6 +469,10 @@ namespace Barotrauma.Networking
                                 RespondedToSteamQuery = false;
                             }
                         });
+                }
+                else
+                {
+                    onQueryDone(this);
                 }
             }
         }

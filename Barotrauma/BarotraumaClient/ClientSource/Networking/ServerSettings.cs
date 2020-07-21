@@ -766,6 +766,14 @@ namespace Barotrauma.Networking
                 TextManager.Get("ServerSettingsAllowFriendlyFire"));
             GetPropertyData("AllowFriendlyFire").AssignGUIComponent(allowFriendlyFire);
 
+            var killableNPCs = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
+                TextManager.Get("ServerSettingsKillableNPCs"));
+            GetPropertyData("KillableNPCs").AssignGUIComponent(killableNPCs);
+
+            var destructibleOutposts = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
+                TextManager.Get("ServerSettingsDestructibleOutposts"));
+            GetPropertyData("DestructibleOutposts").AssignGUIComponent(destructibleOutposts);
+
             var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowRewiring"));
             GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);

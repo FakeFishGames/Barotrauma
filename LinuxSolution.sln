@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Barotrauma", "Barotrauma", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{DE36F45F-F09E-4719-B953-00D148F7722A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Facepunch.Steamworks.Win64", "Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Win64.csproj", "{E1BBC67C-DC2A-40E8-89F3-B57299D7B16C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Facepunch.Steamworks.Posix", "Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj", "{E1BBC67C-DC2A-40E8-89F3-B57299D7B16C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GA_SDK_NETSTANDARD", "Libraries\GameAnalytics\GA_SDK_NETSTANDARD\GA_SDK_NETSTANDARD.csproj", "{95C4D59D-9BE4-4278-B4F8-46C0BA1A3916}"
 EndProject

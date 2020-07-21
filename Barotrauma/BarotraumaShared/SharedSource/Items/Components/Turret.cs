@@ -315,7 +315,8 @@ namespace Barotrauma.Items.Components
             float springDamping = MathHelper.Lerp(SpringDampingLowSkill, SpringDampingHighSkill, degreeOfSuccess);
             float rotationSpeed = MathHelper.Lerp(RotationSpeedLowSkill, RotationSpeedHighSkill, degreeOfSuccess);
 
-            if (user?.Info != null)
+            // Do not increase the weapons skill when operating a turret in an outpost level
+            if (user?.Info != null && (GameMain.GameSession?.Campaign == null || !Level.IsLoadedOutpost))
             {
                 user.Info.IncreaseSkillLevel("weapons",
                     SkillSettings.Current.SkillIncreasePerSecondWhenOperatingTurret * deltaTime / Math.Max(user.GetSkillLevel("weapons"), 1.0f),
@@ -447,6 +448,11 @@ namespace Barotrauma.Items.Components
                 if (launchedProjectile != null || LaunchWithoutProjectile)
                 {
                     Launch(launchedProjectile?.Item, character);
+                    if (item.AiTarget != null)
+                    {
+                        item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
+                        // Turrets also have a light component, which handles the sight range.
+                    }
                 }
             }
 
@@ -586,7 +592,7 @@ namespace Barotrauma.Items.Components
                     closestDist = maxDistance * maxDistance;
                     foreach (Submarine sub in Submarine.Loaded)
                     {
-                        if (sub.Info.Type != SubmarineInfo.SubmarineType.Player) { continue; }
+                        if (sub.Info.Type != SubmarineType.Player) { continue; }
                         float dist = Vector2.DistanceSquared(sub.WorldPosition, item.WorldPosition);
                         if (dist > closestDist) { continue; }
                         closestSub = sub;

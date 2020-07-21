@@ -64,6 +64,12 @@ namespace Barotrauma
             GUI.ScreenOverlayColor = to;
 
             yield return CoroutineStatus.Success;
-        }        
+        }
+
+        public virtual void Release()
+        {
+            frame.RectTransform.Parent = null;
+            frame = null;
+        }
     }
 }

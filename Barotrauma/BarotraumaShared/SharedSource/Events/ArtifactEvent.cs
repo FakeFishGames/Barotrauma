@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    class ArtifactEvent : ScriptedEvent
+    class ArtifactEvent : Event
     {
         private ItemPrefab itemPrefab;
 
@@ -14,6 +14,11 @@ namespace Barotrauma
 
         private bool spawnPending;
 
+        public bool SpawnPending => spawnPending;
+        public int State => state;
+        public Item Item => item;
+        public Vector2 SpawnPos => spawnPos;
+
         public override Vector2 DebugDrawPos
         {
             get { return spawnPos; }
@@ -24,7 +29,7 @@ namespace Barotrauma
             return "ArtifactEvent (" + (itemPrefab == null ? "null" : itemPrefab.Name) + ")";
         }
 
-        public ArtifactEvent(ScriptedEventPrefab prefab)
+        public ArtifactEvent(EventPrefab prefab)
             : base(prefab)
         {
             if (prefab.ConfigElement.Attribute("itemname") != null)

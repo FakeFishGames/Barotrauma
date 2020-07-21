@@ -28,6 +28,8 @@ namespace Barotrauma
         public List<StatusEffect> statusEffects;
         
         public string Msg;
+        public string MsgTag;
+
 
         public RelationType Type
         {
@@ -162,7 +164,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
             }
 
-            if (!string.IsNullOrWhiteSpace(Msg)) element.Add(new XAttribute("msg", Msg));
+            if (!string.IsNullOrWhiteSpace(Msg)) { element.Add(new XAttribute("msg", string.IsNullOrEmpty(MsgTag) ? Msg : MsgTag)); }
         }
 
         public static RelatedItem Load(XElement element, bool returnEmpty, string parentDebugName)
@@ -226,15 +228,15 @@ namespace Barotrauma
             }
             if (!Enum.TryParse(typeStr, true, out ri.type))
             {
-                DebugConsole.ThrowError("Error in RelatedItem config ("+parentDebugName+") - \""+ typeStr +"\" is not a valid relation type.");
+                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - \"" + typeStr + "\" is not a valid relation type.");
                 return null;
             }
 
-            string msgTag = element.GetAttributeString("msg", "");
-            string msg = TextManager.Get(msgTag, true);
+            ri.MsgTag = element.GetAttributeString("msg", "");
+            string msg = TextManager.Get(ri.MsgTag, true);
             if (msg == null)
             {
-                ri.Msg = msgTag;
+                ri.Msg = ri.MsgTag;
             }
             else
             {

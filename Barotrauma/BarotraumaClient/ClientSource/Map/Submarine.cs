@@ -5,6 +5,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
@@ -306,9 +307,9 @@ namespace Barotrauma
 
         public static void DrawGrid(SpriteBatch spriteBatch, int gridCells, Vector2 gridCenter, Vector2 roundedGridCenter, float alpha = 1.0f)
         {
-            var horizontalLine = GUI.Style.GetComponentStyle("HorizontalLine").Sprites[GUIComponent.ComponentState.None].First();
-            var verticalLine = GUI.Style.GetComponentStyle("VerticalLine").Sprites[GUIComponent.ComponentState.None].First();
-            
+            var horizontalLine = GUI.Style.GetComponentStyle("HorizontalLine").GetDefaultSprite();
+            var verticalLine = GUI.Style.GetComponentStyle("VerticalLine").GetDefaultSprite();
+
             Vector2 topLeft = roundedGridCenter - Vector2.One * GridSize * gridCells / 2;
             Vector2 bottomRight = roundedGridCenter + Vector2.One * GridSize * gridCells / 2;
 
@@ -324,19 +325,19 @@ namespace Barotrauma
                 float expandY = MathHelper.Lerp(30.0f, 0.0f, normalizedDistY);
 
                 GUI.DrawLine(spriteBatch,
-                    horizontalLine.Sprite,
+                    horizontalLine,
                     new Vector2(topLeft.X - expandX, -bottomRight.Y + i * GridSize.Y),
                     new Vector2(bottomRight.X + expandX, -bottomRight.Y + i * GridSize.Y),
                     Color.White * (1.0f - normalizedDistY) * alpha, depth: 0.6f, width: 3);
                 GUI.DrawLine(spriteBatch,
-                    verticalLine.Sprite,
+                    verticalLine,
                     new Vector2(topLeft.X + i * GridSize.X, -topLeft.Y + expandY),
                     new Vector2(topLeft.X + i * GridSize.X, -bottomRight.Y - expandY),
                     Color.White * (1.0f - normalizedDistX) * alpha, depth: 0.6f, width: 3);
             }
         }
 
-        public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null)
+        public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null, bool ignoreOutpost = false)
         {
             Rectangle worldBorders = GetDockedBorders();
             worldBorders.Location += WorldPosition.ToPoint();
@@ -354,7 +355,8 @@ namespace Barotrauma
 
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull.Submarine != this && !DockedTo.Contains(hull.Submarine)) continue;
+                if (hull.Submarine != this && !(DockedTo.Contains(hull.Submarine))) continue;
+                if (ignoreOutpost && !IsEntityFoundOnThisSub(hull, true)) { continue; }
 
                 Vector2 relativeHullPos = new Vector2(
                     (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width, 
@@ -393,35 +395,61 @@ namespace Barotrauma
                 errorMsgs.Add(TextManager.Get("NoHullsWarning"));
             }
 
-            foreach (Item item in Item.ItemList)
+            if (Info.Type != SubmarineType.OutpostModule || 
+                (Info.OutpostModuleInfo?.ModuleFlags.Any(f => !f.Equals("hallwayvertical", StringComparison.OrdinalIgnoreCase) && !f.Equals("hallwayhorizontal", StringComparison.OrdinalIgnoreCase)) ?? true))
             {
-                if (item.GetComponent<Items.Components.Vent>() == null) continue;
-
-                if (!item.linkedTo.Any())
+                if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
                 {
-                    errorMsgs.Add(TextManager.Get("DisconnectedVentsWarning"));
-                    break;
+                    errorMsgs.Add(TextManager.Get("NoWaypointsWarning"));
                 }
             }
 
-            if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Human))
+            if (Info.Type == SubmarineType.Player)
             {
-                errorMsgs.Add(TextManager.Get("NoHumanSpawnpointWarning"));
-            }
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.GetComponent<Items.Components.Vent>() == null) { continue; }
+                    if (!item.linkedTo.Any())
+                    {
+                        errorMsgs.Add(TextManager.Get("DisconnectedVentsWarning"));
+                        break;
+                    }
+                }
 
-            if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Path))
-            {
-                errorMsgs.Add(TextManager.Get("NoWaypointsWarning"));
+                if (!WayPoint.WayPointList.Any(wp => wp.ShouldBeSaved && wp.SpawnType == SpawnType.Human))
+                {
+                    errorMsgs.Add(TextManager.Get("NoHumanSpawnpointWarning"));
+                }
+                if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
+                {
+                    errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning"));
+                }
+                if (!Item.ItemList.Any(it => it.GetComponent<Items.Components.Pump>() != null && it.HasTag("ballast")))
+                {
+                    errorMsgs.Add(TextManager.Get("NoBallastTagsWarning"));
+                }
             }
-
-            if (WayPoint.WayPointList.Find(wp => wp.SpawnType == SpawnType.Cargo) == null)
+            else if (Info.Type == SubmarineType.OutpostModule)
             {
-                errorMsgs.Add(TextManager.Get("NoCargoSpawnpointWarning"));
-            }
-
-            if (!Item.ItemList.Any(it => it.GetComponent<Items.Components.Pump>() != null && it.HasTag("ballast")))
-            {
-                errorMsgs.Add(TextManager.Get("NoBallastTagsWarning"));
+                foreach (Item item in Item.ItemList)
+                {
+                    var junctionBox = item.GetComponent<PowerTransfer>();
+                    if (junctionBox == null) { continue; }
+                    int doorLinks =
+                        item.linkedTo.Count(lt => lt is Gap || (lt is Item it2 && it2.GetComponent<Door>() != null)) +
+                        Item.ItemList.Count(it2 => it2.linkedTo.Contains(item) && !item.linkedTo.Contains(it2));
+                    for (int i = 0; i < item.Connections.Count; i++)
+                    {
+                        int wireCount = item.Connections[i].Wires.Count(w => w != null);
+                        if (doorLinks + wireCount > Connection.MaxLinked)
+                        {
+                            errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning", 
+                                new string[] { "[doorcount]", "[freeconnectioncount]" },
+                                new string[] { doorLinks.ToString(), (Connection.MaxLinked - wireCount).ToString() }));
+                            break;
+                        }
+                    }
+                }
             }
 
             if (Gap.GapList.Any(g => g.linkedTo.Count == 0))

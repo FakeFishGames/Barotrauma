@@ -7,11 +7,8 @@ namespace Barotrauma
 {
     partial class MonsterMission : Mission
     {
-        private readonly string monsterFile;
-        private readonly int monsterCount;
-
         //string = filename, point = min,max
-        private readonly HashSet<Tuple<string, Point>> monsterFiles = new HashSet<Tuple<string, Point>>();
+        private readonly HashSet<Tuple<CharacterPrefab, Point>> monsterPrefabs = new HashSet<Tuple<CharacterPrefab, Point>>();
         private readonly List<Character> monsters = new List<Character>();
         private readonly List<Vector2> sonarPositions = new List<Vector2>();
 
@@ -38,28 +35,26 @@ namespace Barotrauma
         public MonsterMission(MissionPrefab prefab, Location[] locations)
             : base(prefab, locations)
         {
-            monsterFile = prefab.ConfigElement.GetAttributeString("monsterfile", null);
-
-            if (!string.IsNullOrEmpty(monsterFile))
+            string speciesName = prefab.ConfigElement.GetAttributeString("monsterfile", null);
+            if (!string.IsNullOrEmpty(speciesName))
             {
-                var characterPrefab = CharacterPrefab.FindByFilePath(monsterFile);
+                var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                 if (characterPrefab != null)
                 {
-                    monsterFile = characterPrefab.Identifier;
+                    int monsterCount = Math.Min(prefab.ConfigElement.GetAttributeInt("monstercount", 1), 255);
+                    monsterPrefabs.Add(new Tuple<CharacterPrefab, Point>(characterPrefab, new Point(monsterCount)));
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
                 }
             }
 
             maxSonarMarkerDistance = prefab.ConfigElement.GetAttributeFloat("maxsonarmarkerdistance", 10000.0f);
 
-            monsterCount = Math.Min(prefab.ConfigElement.GetAttributeInt("monstercount", 1), 255);
-            string monsterFileName = monsterFile;
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
-                string monster = monsterElement.GetAttributeString("character", string.Empty);
-                if (monsterFileName == null)
-                {
-                    monsterFileName = monster;
-                }
+                speciesName = monsterElement.GetAttributeString("character", string.Empty);
                 int defaultCount = monsterElement.GetAttributeInt("count", -1);
                 if (defaultCount < 0)
                 {
@@ -67,10 +62,24 @@ namespace Barotrauma
                 }
                 int min = Math.Min(monsterElement.GetAttributeInt("min", defaultCount), 255);
                 int max = Math.Min(Math.Max(min, monsterElement.GetAttributeInt("max", defaultCount)), 255);
-                monsterFiles.Add(new Tuple<string, Point>(monster, new Point(min, max)));
+                var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+                if (characterPrefab != null)
+                {
+                    monsterPrefabs.Add(new Tuple<CharacterPrefab, Point>(characterPrefab, new Point(min, max)));
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error in monster mission \"{prefab.Identifier}\". Could not find a character prefab with the name \"{speciesName}\".");
+                }
             }
-            description = description.Replace("[monster]",
-                TextManager.Get("character." + Barotrauma.IO.Path.GetFileNameWithoutExtension(monsterFileName)));
+
+            if (monsterPrefabs.Any())
+            {
+                var characterParams = new CharacterParams(monsterPrefabs.First().Item1.FilePath);
+                description = description.Replace("[monster]",
+                    TextManager.Get("character." + characterParams.SpeciesTranslationOverride, returnNull: true) ??
+                    TextManager.Get("character." + characterParams.SpeciesName));
+            }
         }
         
         public override void Start(Level level)
@@ -88,19 +97,12 @@ namespace Barotrauma
             if (!IsClient)
             {
                 Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
-                if (!string.IsNullOrEmpty(monsterFile))
-                {
-                    for (int i = 0; i < monsterCount; i++)
-                    {
-                        monsters.Add(Character.Create(monsterFile, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
-                    }
-                }
-                foreach (var monster in monsterFiles)
+                foreach (var monster in monsterPrefabs)
                 {
                     int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);
                     for (int i = 0; i < amount; i++)
                     {
-                        monsters.Add(Character.Create(monster.Item1, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
+                        monsters.Add(Character.Create(monster.Item1.Identifier, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
                     }
                 }
 

@@ -25,6 +25,8 @@ namespace Barotrauma
 
         public override bool AllowMultipleInstances => true;
 
+        public readonly static float RequiredSuccessFactor = 0.4f;
+
         public override bool IsDuplicate<T>(T otherObjective) => 
             (otherObjective as AIObjective) is AIObjectiveRepairItems repairObjective && repairObjective.RequireAdequateSkills == RequireAdequateSkills;
 
@@ -110,7 +112,7 @@ namespace Barotrauma
                 }
                 if (RequireAdequateSkills)
                 {
-                    return Targets.Sum(t => GetTargetPriority(t, character)) * ratio;
+                    return Targets.Sum(t => GetTargetPriority(t, character, RequiredSuccessFactor)) * ratio;
                 }
                 else
                 {
@@ -119,10 +121,14 @@ namespace Barotrauma
             }
         }
 
-        public static float GetTargetPriority(Item item, Character character)
+        public static float GetTargetPriority(Item item, Character character, float requiredSuccessFactor = 0)
         {
             float damagePriority = MathHelper.Lerp(1, 0, item.Condition / item.MaxCondition);
             float successFactor = MathHelper.Lerp(0, 1, item.Repairables.Average(r => r.DegreeOfSuccess(character)));
+            if (successFactor < requiredSuccessFactor)
+            {
+                return 0;
+            }
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(damagePriority * successFactor, 0, 1));
         }
 

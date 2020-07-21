@@ -166,11 +166,33 @@ namespace Barotrauma
         private static List<string> GetCurrentFlags(Character speaker)
         {
             var currentFlags = new List<string>();
-            if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth) currentFlags.Add("SubmarineDeep");
-            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) currentFlags.Add("Initial");
+            if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth) { currentFlags.Add("SubmarineDeep"); }
+
+            if (GameMain.GameSession != null && Level.Loaded != null)
+            {
+                if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
+                {
+                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) { currentFlags.Add("Initial"); }
+                }
+                else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+                {
+                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0f && 
+                        speaker?.CurrentHull != null && 
+                        speaker.TeamID == Character.TeamType.FriendlyNPC && 
+                        Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
+                    {
+                        currentFlags.Add("EnterOutpost"); 
+                    }
+                }
+                if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
+                {
+                    currentFlags.Add("Casual");
+                }
+            }
+
             if (speaker != null)
             {
-                if (speaker.AnimController.InWater) currentFlags.Add("Underwater");
+                if (speaker.AnimController.InWater) { currentFlags.Add("Underwater"); }
                 currentFlags.Add(speaker.CurrentHull == null ? "Outside" : "Inside");
 
                 if (Character.Controlled != null)
@@ -190,6 +212,15 @@ namespace Barotrauma
                         currentFlags.Add(currentEffect.DialogFlag);
                     }
                 }
+
+                if (speaker.TeamID == Character.TeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
+                {
+                    currentFlags.Add("OutpostNPC");
+                }
+                if (speaker.CampaignInteractionType != CampaignMode.InteractionType.None)
+                {
+                    currentFlags.Add("CampaignNPC." + speaker.CampaignInteractionType);
+                }
             }
 
             return currentFlags;
@@ -207,7 +238,7 @@ namespace Barotrauma
             return lines;
         }
 
-        public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers, List<string> requiredFlags)
+        public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers, IEnumerable<string> requiredFlags)
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
             List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
@@ -215,7 +246,7 @@ namespace Barotrauma
                     kpv => kpv.Value.Where(conversation => kpv.Key == TextManager.Language && requiredFlags.All(f => conversation.Flags.Contains(f))))).ToList();
             if (availableConversations.Count > 0)
             {
-                CreateConversation(availableSpeakers, assignedSpeakers, null, lines, availableConversations: availableConversations, ignoreFlags: true);
+                CreateConversation(availableSpeakers, assignedSpeakers, null, lines, availableConversations: availableConversations, ignoreFlags: false);
             }
             return lines;
         }
@@ -229,11 +260,11 @@ namespace Barotrauma
             bool ignoreFlags = false)
         {
             List<NPCConversation> conversations = baseConversation == null ? availableConversations : baseConversation.Responses;
-            if (conversations.Count == 0) return;
+            if (conversations.Count == 0) { return; }
 
             int conversationIndex = Rand.Int(conversations.Count);
             NPCConversation selectedConversation = conversations[conversationIndex];
-            if (string.IsNullOrEmpty(selectedConversation.Line)) return;
+            if (string.IsNullOrEmpty(selectedConversation.Line)) { return; }
             
             Character speaker = null;
             //speaker already assigned for this line
@@ -265,8 +296,8 @@ namespace Barotrauma
                     //select a random line and attempt to find a speaker for it
                     // and if no valid speaker is found, choose another random line
                     selectedConversation = GetRandomConversation(potentialLines, baseConversation == null);
-                    if (selectedConversation == null || string.IsNullOrEmpty(selectedConversation.Line)) return;
-                    
+                    if (selectedConversation == null || string.IsNullOrEmpty(selectedConversation.Line)) { return; }
+
                     //speaker already assigned for this line
                     if (assignedSpeakers.ContainsKey(selectedConversation.speakerIndex))
                     {
@@ -280,21 +311,24 @@ namespace Barotrauma
                         if ((potentialSpeaker.Info?.Job != null && potentialSpeaker.Info.Job.Prefab.OnlyJobSpecificDialog) ||
                             selectedConversation.AllowedJobs.Count > 0)
                         {
-                            if (!selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) continue;
+                            if (!selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) { continue; }
                         }
 
                         //check if the character has all required flags to say the line
                         if (!ignoreFlags)
                         {
                             var characterFlags = GetCurrentFlags(potentialSpeaker);
-                            if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) continue;
+                            if (!selectedConversation.Flags.All(flag => characterFlags.Contains(flag))) { continue; }
                         }
+
+                        //check if the character is close enough to hear the rest of the speakers
+                        if (assignedSpeakers.Values.Any(s => !potentialSpeaker.CanHearCharacter(s))) { continue; }
 
                         //check if the character has an appropriate personality
                         if (selectedConversation.allowedSpeakerTags.Count > 0)
                         {
-                            if (potentialSpeaker.Info?.PersonalityTrait == null) continue;
-                            if (!selectedConversation.allowedSpeakerTags.Any(t => potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Any(t2 => t2 == t))) continue;
+                            if (potentialSpeaker.Info?.PersonalityTrait == null) { continue; }
+                            if (!selectedConversation.allowedSpeakerTags.Any(t => potentialSpeaker.Info.PersonalityTrait.AllowedDialogTags.Any(t2 => t2 == t))) { continue; }
                         }
                         else
                         {
@@ -318,7 +352,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (allowedSpeakers.Count == 0) return;
+                if (allowedSpeakers.Count == 0) { return; }
                 speaker = allowedSpeakers[Rand.Int(allowedSpeakers.Count)];
                 availableSpeakers.Remove(speaker);
                 assignedSpeakers.Add(selectedConversation.speakerIndex, speaker);

@@ -298,5 +298,11 @@ namespace Barotrauma.Particles
             //endPos = x + vt + 1/2 * at^2
             return startPosition + velocity * LifeTime + 0.5f * VelocityChangeDisplay * LifeTime * LifeTime;
         }
+
+        public Vector2 CalculateEndSize()
+        {
+            //endPos = x + vt + 1/2 * at^2
+            return StartSizeMax + 0.5f * SizeChangeMax * LifeTime * LifeTime;
+        }
     }
 }

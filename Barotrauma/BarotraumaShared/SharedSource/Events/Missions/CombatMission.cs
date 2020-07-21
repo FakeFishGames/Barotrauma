@@ -105,6 +105,7 @@ namespace Barotrauma
             
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
             subs[0].TeamID = Character.TeamType.Team1; subs[1].TeamID = Character.TeamType.Team2;
+            subs[0].NeutralizeBallast(); subs[1].NeutralizeBallast();
             subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
 

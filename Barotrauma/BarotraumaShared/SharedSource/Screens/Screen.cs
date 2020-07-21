@@ -20,7 +20,6 @@
 
         public virtual void Select()
         {
-
             if (selected != null && selected != this)
             {
                 selected.Deselect();

@@ -35,6 +35,26 @@ namespace Barotrauma
         }
 
         private static Dictionary<InvSlotType, Sprite> limbSlotIcons;
+        public static Dictionary<InvSlotType, Sprite> LimbSlotIcons
+        {
+            get
+            {
+                if (limbSlotIcons == null)
+                {
+                    limbSlotIcons = new Dictionary<InvSlotType, Sprite>();
+                    int margin = 2;
+                    limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+
+                    limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
+                    limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));
+                    limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                }
+                return limbSlotIcons;
+            }
+        }
 
         public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
 
@@ -88,7 +108,7 @@ namespace Barotrauma
 
             indicatorGroup = new GUILayoutGroup(new RectTransform(Point.Zero, hideButton.RectTransform)) { IsHorizontal = false };
             indicatorGroup.ChildAnchor = Anchor.TopCenter;
-            indicatorSpriteSize = GUI.Style.GetComponentStyle("EquipmentIndicatorDivingSuit").Sprites[GUIComponent.ComponentState.None][0].Sprite.size;
+            indicatorSpriteSize = GUI.Style.GetComponentStyle("EquipmentIndicatorDivingSuit").GetDefaultSprite().size;
 
             indicators[0] = new GUIImage(new RectTransform(Point.Zero, indicatorGroup.RectTransform), "EquipmentIndicatorDivingSuit");
             indicators[1] = new GUIImage(new RectTransform(Point.Zero, indicatorGroup.RectTransform), "EquipmentIndicatorID");
@@ -115,20 +135,6 @@ namespace Barotrauma
 
             hidePersonalSlots = false;
 
-            if (limbSlotIcons == null)
-            {
-                limbSlotIcons = new Dictionary<InvSlotType, Sprite>();
-
-                int margin = 2;
-                limbSlotIcons.Add(InvSlotType.Headset, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.InnerClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                limbSlotIcons.Add(InvSlotType.Card, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(640 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-
-                limbSlotIcons.Add(InvSlotType.Head, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(896 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));                
-                limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
-                limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));                
-                limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-            }
             SlotPositions = new Vector2[SlotTypes.Length];
             CurrentLayout = Layout.Default;
             SetSlotPositions(layout);
@@ -522,14 +528,7 @@ namespace Barotrauma
             if (hoverOnInventory) { HideTimer = 0.5f; }
             if (HideTimer > 0.0f) { HideTimer -= deltaTime; }
 
-            for (int i = 0; i < capacity; i++)
-            {
-                if (Items[i] != null && Items[i] != draggingItem && Character.Controlled?.Inventory == this &&
-                    GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen && PlayerInput.InventoryKeyHit(slots[i].InventoryKeyIndex))
-                {
-                    QuickUseItem(Items[i], true, false, true);
-                }
-            }
+            UpdateSlotInput();
 
             //force personal slots open if an item is running out of battery/fuel/oxygen/etc
             if (hidePersonalSlots)
@@ -683,6 +682,18 @@ namespace Barotrauma
             }
 
             doubleClickedItem = null;
+        }
+
+        public void UpdateSlotInput()
+        {
+            for (int i = 0; i < capacity; i++)
+            {
+                if (Items[i] != null && Items[i] != draggingItem && Character.Controlled?.Inventory == this &&
+                    GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen && PlayerInput.InventoryKeyHit(slots[i].InventoryKeyIndex))
+                {
+                    QuickUseItem(Items[i], true, false, true);
+                }
+            }
         }
 
         private void HandleButtonEquipStates(Item item, InventorySlot slot, float deltaTime)
@@ -1084,9 +1095,9 @@ namespace Barotrauma
                     !Items[i].AllowedSlots.Any(a => a != InvSlotType.Any))
                 {
                     //draw limb icons on empty slots
-                    if (limbSlotIcons.ContainsKey(SlotTypes[i]))
+                    if (LimbSlotIcons.ContainsKey(SlotTypes[i]))
                     {
-                        var icon = limbSlotIcons[SlotTypes[i]];
+                        var icon = LimbSlotIcons[SlotTypes[i]];
                         icon.Draw(spriteBatch, slots[i].Rect.Center.ToVector2() + slots[i].DrawOffset, GUI.Style.EquipmentSlotIconColor, origin: icon.size / 2, scale: slots[i].Rect.Width / icon.size.X);
                     }
                     continue;
@@ -1096,12 +1107,12 @@ namespace Barotrauma
                 //draw hand icons if the item is equipped in a hand slot
                 if (IsInLimbSlot(Items[i], InvSlotType.LeftHand))
                 {
-                    var icon = limbSlotIcons[InvSlotType.LeftHand];
+                    var icon = LimbSlotIcons[InvSlotType.LeftHand];
                     icon.Draw(spriteBatch, new Vector2(slots[i].Rect.X, slots[i].Rect.Bottom) + slots[i].DrawOffset, Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.35f, icon.size.Y * 0.75f), scale: slots[i].Rect.Width / icon.size.X * 0.7f);
                 }
                 if (IsInLimbSlot(Items[i], InvSlotType.RightHand))
                 {
-                    var icon = limbSlotIcons[InvSlotType.RightHand];
+                    var icon = LimbSlotIcons[InvSlotType.RightHand];
                     icon.Draw(spriteBatch, new Vector2(slots[i].Rect.Right, slots[i].Rect.Bottom) + slots[i].DrawOffset, Color.White * 0.6f, origin: new Vector2(icon.size.X * 0.65f, icon.size.Y * 0.75f), scale: slots[i].Rect.Width / icon.size.X * 0.7f);
                 }
 

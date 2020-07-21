@@ -226,9 +226,19 @@ namespace Barotrauma
             }
         }
 
+        public int CalculateBasePrice()
+        {
+            int minPrice = 1000;
+            float volume = Hull.hullList.Where(h => h.Submarine == this).Sum(h => h.Volume);
+            float itemValue = Item.ItemList.Where(it => it.Submarine == this).Sum(it => it.Prefab.GetMinPrice() ?? 0);
+            float price = volume / 500.0f + itemValue / 100.0f;
+            System.Diagnostics.Debug.Assert(price >= 0);
+            return Math.Max(minPrice, (int)price);
+        }
+
         public void MakeWreck()
         {
-            Info.Type = SubmarineInfo.SubmarineType.Wreck;
+            Info.Type = SubmarineType.Wreck;
             ShowSonarMarker = false;
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = Character.TeamType.None;
@@ -359,7 +369,7 @@ namespace Barotrauma
         /// <summary>
         /// Attempt to find a spawn position close to the specified position where the sub doesn't collide with walls/ruins
         /// </summary>
-        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null, float subDockingPortOffset = 0.0f)
+        public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null, float subDockingPortOffset = 0.0f, int verticalMoveDir = 0)
         {
             Rectangle dockedBorders = GetDockedBorders();
             Vector2 diffFromDockedBorders = 
@@ -369,58 +379,99 @@ namespace Barotrauma
             int minWidth = Math.Max(submarineSize.HasValue ? submarineSize.Value.X : dockedBorders.Width, 500);
             int minHeight = Math.Max(submarineSize.HasValue ? submarineSize.Value.Y : dockedBorders.Height, 1000);
             //a bit of extra padding to prevent the sub from spawning in a super tight gap between walls
-            minHeight += 500;
+            int padding = 100;
+            minWidth += padding;
+            minHeight += padding;
 
-            float minX = float.MinValue, maxX = float.MaxValue;
-            foreach (VoronoiCell cell in Level.Loaded.GetAllCells())
+            Vector2 limits = GetHorizontalLimits(spawnPos, minWidth, minHeight, 0);
+            if (verticalMoveDir != 0)
             {
-                if (cell.Edges.All(e => e.Point1.Y < Level.Loaded.Size.Y - minHeight && e.Point2.Y < Level.Loaded.Size.Y - minHeight)) { continue; }
-
-                //find the closest wall at the left and right side of the spawnpos
-                if (cell.Site.Coord.X < spawnPos.X)
+                verticalMoveDir = Math.Sign(verticalMoveDir);
+                //do a raycast towards the top/bottom of the level depending on direction
+                Vector2 potentialPos = new Vector2(spawnPos.X, verticalMoveDir > 0 ? Level.Loaded.Size.Y : 0);
+                if (PickBody(ConvertUnits.ToSimUnits(spawnPos), ConvertUnits.ToSimUnits(potentialPos), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
                 {
-                    minX = Math.Max(minX, cell.Edges.Max(e => Math.Max(e.Point1.X, e.Point2.X)));
+                    //if the raycast hit a wall, attempt to place the spawnpos there
+                    potentialPos.Y = ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) - 10;
                 }
-                else
+
+                //step away from the top/bottom of the level, or from whatever wall the raycast hit,
+                //until we found a spot where there's enough room to place the sub
+                float dist = Math.Abs(potentialPos.Y - spawnPos.Y);
+                for (float d = dist; d > 0; d -= 100.0f)
                 {
-                    maxX = Math.Min(maxX, cell.Edges.Min(e => Math.Min(e.Point1.X, e.Point2.X)));
+                    float y = spawnPos.Y + verticalMoveDir * d;
+                    limits = GetHorizontalLimits(new Vector2(spawnPos.X, y), minWidth, minHeight, verticalMoveDir);
+                    if (limits.Y - limits.X > minWidth)
+                    {
+                        spawnPos = new Vector2(spawnPos.X, y - (dockedBorders.Height * 0.5f * verticalMoveDir));
+                        break;
+                    }
                 }
             }
 
-            foreach (var ruin in Level.Loaded.Ruins)
+            static Vector2 GetHorizontalLimits(Vector2 spawnPos, float minWidth, float minHeight, int verticalMoveDir)
             {
-                if (ruin.Area.Y + ruin.Area.Height < Level.Loaded.Size.Y - minHeight) { continue; }
-                if (ruin.Area.X < spawnPos.X)
+                Vector2 refPos = spawnPos - Vector2.UnitY * minHeight * 0.5f * Math.Sign(verticalMoveDir);
+
+                float minX = float.MinValue, maxX = float.MaxValue;
+                foreach (VoronoiCell cell in Level.Loaded.GetAllCells())
                 {
-                    minX = Math.Max(minX, ruin.Area.Right + 100.0f);
+                    foreach (GraphEdge e in cell.Edges)
+                    {
+                        if ((e.Point1.Y < refPos.Y - minHeight * 0.5f && e.Point2.Y < refPos.Y - minHeight * 0.5f) ||
+                            (e.Point1.Y > refPos.Y + minHeight * 0.5f && e.Point2.Y > refPos.Y + minHeight * 0.5f))
+                        {
+                            continue;
+                        }                        
+
+                        if (cell.Site.Coord.X < refPos.X)
+                        {
+                            minX = Math.Max(minX, Math.Max(e.Point1.X, e.Point2.X));
+                        }
+                        else
+                        {
+                            maxX = Math.Min(maxX, Math.Min(e.Point1.X, e.Point2.X));
+                        }
+                    }
                 }
-                else
+
+                foreach (var ruin in Level.Loaded.Ruins)
                 {
-                    maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                    if (Math.Abs(ruin.Area.Center.Y - refPos.Y) > (minHeight + ruin.Area.Height) * 0.5f) { continue; }
+                    if (ruin.Area.Center.X < refPos.X)
+                    {
+                        minX = Math.Max(minX, ruin.Area.Right + 100.0f);
+                    }
+                    else
+                    {
+                        maxX = Math.Min(maxX, ruin.Area.X - 100.0f);
+                    }
                 }
+                return new Vector2(Math.Max(minX, spawnPos.X - minWidth), Math.Min(maxX, spawnPos.X + minWidth));
             }
-            
-            if (minX < 0.0f && maxX > Level.Loaded.Size.X)
+
+            if (limits.X < 0.0f && limits.Y > Level.Loaded.Size.X)
             {
                 //no walls found at either side, just use the initial spawnpos and hope for the best
             }
-            else if (minX < 0)
+            else if (limits.X < 0)
             {
                 //no wall found at the left side, spawn to the left from the right-side wall
-                spawnPos.X = maxX - minWidth - 100.0f + subDockingPortOffset;
+                spawnPos.X = limits.Y - minWidth * 0.5f - 100.0f + subDockingPortOffset;
             }
-            else if (maxX > Level.Loaded.Size.X)
+            else if (limits.Y > Level.Loaded.Size.X)
             {
                 //no wall found at right side, spawn to the right from the left-side wall
-                spawnPos.X = minX + minWidth + 100.0f + subDockingPortOffset;
+                spawnPos.X = limits.X + minWidth * 0.5f + 100.0f + subDockingPortOffset;
             }
             else
             {
                 //walls found at both sides, use their midpoint
-                spawnPos.X = (minX + maxX) / 2 + subDockingPortOffset;
+                spawnPos.X = (limits.X + limits.Y) / 2 + subDockingPortOffset;
             }
             
-            spawnPos.Y = Math.Min(spawnPos.Y, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+            spawnPos.Y = MathHelper.Clamp(spawnPos.Y, dockedBorders.Height / 2 + 10, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
             return spawnPos - diffFromDockedBorders;
         }
 
@@ -429,6 +480,7 @@ namespace Barotrauma
             DrawPosition = interpolate ?
                 Timing.Interpolate(prevPosition, Position) :
                 Position;
+            if (!interpolate) { prevPosition = Position; }
         }
 
         //math/physics stuff ----------------------------------------------------
@@ -888,6 +940,76 @@ namespace Barotrauma
             if (subBody != null) subBody.ApplyForce(force);
         }
 
+        public void EnableMaintainPosition()
+        {
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != this) { continue; }
+                var steering = item.GetComponent<Steering>();
+                if (steering == null) { continue; }
+                steering.MaintainPos = true;
+                steering.AutoPilot = true;
+            }
+        }
+
+        public void NeutralizeBallast()
+        {
+            float neutralBallastLevel = 0.5f;
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != this) { continue; }
+                var steering = item.GetComponent<Steering>();
+                if (steering == null) { continue; }
+                neutralBallastLevel = Math.Min(neutralBallastLevel, steering.NeutralBallastLevel);
+            }
+
+            HashSet<Hull> ballastHulls = new HashSet<Hull>();
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != this) { continue; }
+                var pump = item.GetComponent<Pump>();
+                if (pump == null || !item.HasTag("ballast") || item.CurrentHull == null) { continue; }
+                pump.FlowPercentage = 0.0f;
+                ballastHulls.Add(item.CurrentHull);
+            }
+
+            float waterVolume = 0.0f;
+            float volume = 0.0f;
+            float excessWater = 0.0f;
+            foreach (Hull hull in Hull.hullList)
+            {
+                if (hull.Submarine != this) { continue; }
+                waterVolume += hull.WaterVolume;
+                volume += hull.Volume;
+                if (!ballastHulls.Contains(hull)) { excessWater += hull.WaterVolume; }
+            }
+
+            neutralBallastLevel -= excessWater / volume;
+            //reduce a bit to be on the safe side (better to float up than sink)
+            neutralBallastLevel *= 0.9f;
+
+            foreach (Hull hull in ballastHulls)
+            {
+                hull.WaterVolume = hull.Volume * neutralBallastLevel;
+            }
+        }
+
+        /// <summary>
+        /// Run the power logic so the sub is already powered up at the start of the round (as long as the reactor was on)
+        /// </summary>
+        public void WarmStartPower()
+        {
+            for (int i = 0; i < 600; i++)
+            {
+                Powered.UpdatePower((float)Timing.Step);
+                foreach (Entity e in Item.ItemList)
+                {
+                    if (!(e is Item item) || item.GetComponent<Powered>() == null || e.Submarine != this) { continue; }
+                    item.Update((float)Timing.Step, GameMain.GameScreen.Cam);
+                }
+            }
+        }
+
         public void SetPrevTransform(Vector2 position)
         {
             prevPosition = position;
@@ -978,14 +1100,14 @@ namespace Barotrauma
             return list.Where(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
         }
 
-        public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs)
+        public bool IsEntityFoundOnThisSub(MapEntity entity, bool includingConnectedSubs, bool allowDifferentTeam = false, bool allowDifferentType = false)
         {
             if (entity == null) { return false; }
             if (entity.Submarine == this) { return true; }
             if (entity.Submarine == null) { return false; }
             if (includingConnectedSubs)
             {
-                return GetConnectedSubs().Any(s => s == entity.Submarine && entity.Submarine.TeamID == TeamID && entity.Submarine.Info.Type == Info.Type);
+                return GetConnectedSubs().Any(s => s == entity.Submarine && (allowDifferentTeam || entity.Submarine.TeamID == TeamID) && (allowDifferentType || entity.Submarine.Info.Type == Info.Type));
             }
             return false;
         }
@@ -1030,7 +1152,7 @@ namespace Barotrauma
             return new Rectangle((int)bounds.X, (int)bounds.Y, (int)(bounds.Z - bounds.X), (int)(bounds.Y - bounds.W));
         }
 
-        public Submarine(SubmarineInfo info, bool showWarningMessages = true) : base(null)
+        public Submarine(SubmarineInfo info, bool showWarningMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null) : base(null)
         {
             Loading = true;
 
@@ -1040,12 +1162,12 @@ namespace Barotrauma
 
             //place the sub above the top of the level
             HiddenSubPosition = HiddenSubStartPosition;
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
+            if (GameMain.GameSession != null && GameMain.GameSession.LevelData != null)
             {
-                HiddenSubPosition += Vector2.UnitY * GameMain.GameSession.Level.Size.Y;
+                HiddenSubPosition += Vector2.UnitY * GameMain.GameSession.LevelData.Size.Y;
             }
 
-            foreach (Submarine sub in Submarine.loaded)
+            foreach (Submarine sub in loaded)
             {
                 HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);
             }
@@ -1057,9 +1179,17 @@ namespace Barotrauma
             }
 
             List<MapEntity> newEntities = new List<MapEntity>();
-            if (Info.SubmarineElement != null)
+            if (loadEntities == null)
             {
-                newEntities = MapEntity.LoadAll(this, Info.SubmarineElement, Info.FilePath);
+                if (Info.SubmarineElement != null)
+                {
+                    newEntities = MapEntity.LoadAll(this, Info.SubmarineElement, Info.FilePath);
+                }
+            }
+            else
+            {
+                newEntities = loadEntities(this);
+                newEntities.ForEach(me => me.Submarine = this);
             }
 
             Vector2 center = Vector2.Zero;
@@ -1082,26 +1212,7 @@ namespace Barotrauma
                 center.X -= center.X % GridSize.X;
                 center.Y -= center.Y % GridSize.Y;
 
-                if (center != Vector2.Zero)
-                {
-                    foreach (Item item in Item.ItemList)
-                    {
-                        if (item.Submarine != this) continue;
-
-                        var wire = item.GetComponent<Items.Components.Wire>();
-                        if (wire != null)
-                        {
-                            wire.MoveNodes(-center);
-                        }
-                    }
-
-                    for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
-                    {
-                        if (MapEntity.mapEntityList[i].Submarine != this) continue;
-
-                        MapEntity.mapEntityList[i].Move(-center);
-                    }
-                }
+                RepositionEntities(-center, MapEntity.mapEntityList.Where(me => me.Submarine == this));
 
                 subBody = new SubmarineBody(this, showWarningMessages);
                 subBody.SetPosition(HiddenSubPosition);
@@ -1117,7 +1228,9 @@ namespace Barotrauma
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            if (item.GetComponent<Repairable>() != null)
+                            item.SpawnedInOutpost = true;
+                            if (item.GetComponent<Repairable>() != null && 
+                                (GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.DestructibleOutposts))
                             {
                                 item.Indestructible = true;
                             }
@@ -1128,23 +1241,20 @@ namespace Barotrauma
                                     //prevent rewiring
                                     connectionPanel.Locked = true;
                                 }
-                                else if (ic is Holdable holdable && holdable.Attached)
+                                else if (ic is Holdable holdable && holdable.Attached && item.GetComponent<LevelResource>() == null)
                                 {
                                     //prevent deattaching items from walls
 #if CLIENT
-                                if (GameMain.GameSession?.GameMode is TutorialMode)
-                                {
-                                    continue;
-                                }
+                                    if (GameMain.GameSession?.GameMode is TutorialMode) { continue; }
 #endif
                                     holdable.CanBePicked = false;
                                     holdable.CanBeSelected = false;
                                 }
                             }
                         }
-                        else if (me is Structure structure)
+                        else if (me is Structure structure && structure.Prefab.IndestructibleInOutposts)
                         {
-                            structure.Indestructible = true;
+                            structure.Indestructible = GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.DestructibleOutposts;
                         }
                     }
                 }
@@ -1178,7 +1288,7 @@ namespace Barotrauma
 
             foreach (Hull hull in matchingHulls)
             {
-                if (string.IsNullOrEmpty(hull.RoomName) || !hull.RoomName.Contains("roomname.", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(hull.RoomName))// || !hull.RoomName.Contains("roomname.", StringComparison.OrdinalIgnoreCase))
                 {
                     hull.RoomName = hull.CreateRoomName();
                 }
@@ -1189,7 +1299,10 @@ namespace Barotrauma
 #endif
             //if the sub was made using an older version, 
             //halve the brightness of the lights to make them look (almost) right on the new lighting formula
-            if (showWarningMessages && Screen.Selected != GameMain.SubEditorScreen && (Info.GameVersion == null || Info.GameVersion < new Version("0.8.9.0")))
+            if (showWarningMessages &&
+                !string.IsNullOrEmpty(Info.FilePath) &&
+                Screen.Selected != GameMain.SubEditorScreen && 
+                (Info.GameVersion == null || Info.GameVersion < new Version("0.8.9.0")))
             {
                 DebugConsole.ThrowError("The submarine \"" + Info.Name + "\" was made using an older version of the Barotrauma that used a different formula to calculate the lighting. "
                     + "The game automatically adjusts the lights make them look better with the new formula, but it's recommended to open the submarine in the submarine editor and make sure everything looks right after the automatic conversion.");
@@ -1207,17 +1320,38 @@ namespace Barotrauma
 
         public static Submarine Load(SubmarineInfo info, bool unloadPrevious)
         {
-            if (unloadPrevious) Unload();
+            if (unloadPrevious) { Unload(); }
 
             Submarine sub = new Submarine(info, false);
 
             return sub;
         }
 
+        public static void RepositionEntities(Vector2 moveAmount, IEnumerable<MapEntity> entities)
+        {
+            if (moveAmount.LengthSquared() < 0.00001f) { return; }
+            foreach (MapEntity entity in entities)
+            {
+                if (entity is Item item)
+                {
+                    item.GetComponent<Wire>()?.MoveNodes(moveAmount);
+                }
+                entity.Move(moveAmount);
+            }
+        }
+
         public void SaveToXElement(XElement element)
         {
             element.Add(new XAttribute("name", Info.Name));
             element.Add(new XAttribute("description", Info.Description ?? ""));
+            element.Add(new XAttribute("checkval", Rand.Int(int.MaxValue)));
+            element.Add(new XAttribute("price", Info.Price));
+            element.Add(new XAttribute("initialsuppliesspawned", Info.InitialSuppliesSpawned));
+            element.Add(new XAttribute("type", Info.Type.ToString()));
+            if (Info.IsPlayer && !Info.HasTag(SubmarineTag.Shuttle))
+            {
+                element.Add(new XAttribute("class", Info.SubmarineClass.ToString()));
+            }
             element.Add(new XAttribute("tags", Info.Tags.ToString()));
             element.Add(new XAttribute("gameversion", GameMain.Version.ToString()));
 
@@ -1228,6 +1362,11 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));
             element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", Info.RequiredContentPackages)));
             
+            if (Info.Type == SubmarineType.OutpostModule)
+            {
+                Info.OutpostModuleInfo?.Save(element);
+            }
+
             foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
             {
                 if (e.Submarine != this || !e.ShouldBeSaved) continue;
@@ -1242,12 +1381,12 @@ namespace Barotrauma
         {
             var newInfo = new SubmarineInfo(this)
             {
-                GameVersion = GameMain.Version,
+                Type = Info.Type,
                 FilePath = filePath,
+                OutpostModuleInfo = Info.OutpostModuleInfo != null ? new OutpostModuleInfo(Info.OutpostModuleInfo) : null,
                 Name = Path.GetFileNameWithoutExtension(filePath)
             };
             Info.Dispose(); Info = newInfo;
-
             return newInfo.SaveAs(filePath, previewImage);
         }
 
@@ -1312,6 +1451,7 @@ namespace Barotrauma
         {
             base.Remove();
 
+            subBody?.Remove();
             subBody = null;
 
             if (entityGrid != null)

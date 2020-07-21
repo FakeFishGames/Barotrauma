@@ -92,11 +92,25 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(0.0f, false)]
+        public float MinHealth
+        {
+            get;
+            set;
+        }
+
         [Serialize(100.0f, false)]
         public float Health
         {
             get { return health; }
-            set { health = Math.Max(value, 0.0f); }
+            set { health = Math.Max(value, MinHealth); }
+        }
+
+        [Serialize(true, false)]
+        public bool IndestructibleInOutposts
+        {
+            get;
+            set;
         }
 
         [Serialize(false, false)]
@@ -236,7 +250,8 @@ namespace Barotrauma
             var parentType = element.Parent?.GetAttributeString("prefabtype", "") ?? string.Empty;
             
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
-            
+            string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
+
             if (string.IsNullOrEmpty(sp.originalName))
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
@@ -374,7 +389,11 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(sp.Description))
             {
-                if (string.IsNullOrEmpty(nameIdentifier))
+                if (!string.IsNullOrEmpty(descriptionIdentifier))
+                {
+                    sp.Description = TextManager.Get("EntityDescription." + descriptionIdentifier, returnNull: true) ?? string.Empty;
+                }
+                else  if (string.IsNullOrEmpty(nameIdentifier))
                 {
                     sp.Description = TextManager.Get("EntityDescription." + sp.identifier, returnNull: true) ?? string.Empty;
                 }

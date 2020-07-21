@@ -289,7 +289,7 @@ namespace Barotrauma.Items.Components
                     flashColor * (float)Math.Sin(FlashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), scale: connectorSpriteScale);
             }
 
-            if (Wires.Any(w => w != null && w != DraggingConnected))
+            if (Wires.Any(w => w != null && w != DraggingConnected && !w.Hidden))
             {
                 int screwIndex = (int)Math.Floor(position.Y / 30.0f) % screwSprites.Count;
                 screwSprites[screwIndex].Draw(spriteBatch, position, scale: connectorSpriteScale);

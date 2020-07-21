@@ -34,7 +34,7 @@ namespace Barotrauma
         public GUIScrollBar ScrollBar { get; private set; }
 
         private Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
-
+  
         private int totalSize;
         private bool childrenNeedsRecalculation;
         private bool scrollBarNeedsRecalculation;
@@ -58,6 +58,37 @@ namespace Barotrauma
         public bool HideChildrenOutsideFrame = true;
 
         private bool useGridLayout;
+
+        private float targetScroll;
+
+        private GUIComponent pendingScroll;
+
+        public bool AllowMouseWheelScroll { get; set; } = true;
+
+        /// <summary>
+        /// Scrolls the list smoothly
+        /// </summary>
+        public bool SmoothScroll { get; set; }
+
+        /// <summary>
+        /// Whether to only allow scrolling from one element to the next when smooth scrolling is enabled
+        /// </summary>
+        public bool ClampScrollToElements { get; set; }
+
+        /// <summary>
+        /// When set to true elements at the bottom of the list are gradually faded
+        /// </summary>
+        public bool FadeElements { get; set; }
+        
+        /// <summary>
+        /// Adds enough extra padding to the bottom so the end of the scroll will only contain the last element
+        /// </summary>
+        public bool PadBottom { get; set; }
+
+        /// <summary>
+        /// When set to true always selects the topmost item on the list
+        /// </summary>
+        public bool SelectTop { get; set; }
 
         public bool UseGridLayout
         {
@@ -189,10 +220,13 @@ namespace Barotrauma
         private Point draggedReferenceOffset;
 
         public GUIComponent DraggedElement => draggedElement;
+        
+        private bool scheduledScroll = false;
 
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
         {
+            HoverCursor = CursorState.Hand;
             CanBeFocused = true;
             selected = new List<GUIComponent>();
             this.useMouseDownToSelect = useMouseDownToSelect;
@@ -363,6 +397,49 @@ namespace Barotrauma
                 }
             }
         }
+
+        /// <summary>
+        /// Scrolls the list to the specific element, currently only works when smooth scrolling and PadBottom are enabled.
+        /// </summary>
+        /// <param name="component"></param>
+        public void ScrollToElement(GUIComponent component)
+        {
+            GUI.PlayUISound(GUISoundType.Click);
+            List<GUIComponent> children = Content.Children.ToList();
+            int index = children.IndexOf(component);
+            if (index < 0) { return; }
+
+            targetScroll = MathHelper.Clamp(MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, (children.Count - 0.9f), index)), ScrollBar.MinValue, ScrollBar.MaxValue);
+        }
+
+        public void ScrollToEnd(float duration)
+        {
+            CoroutineManager.StartCoroutine(ScrollCoroutine());
+
+            IEnumerable<object> ScrollCoroutine()
+            {
+                if (BarSize >= 1.0f)
+                {
+                    yield return CoroutineStatus.Success;
+                }
+                float t = 0.0f;
+                float startScroll = BarScroll * BarSize;
+                float distanceToTravel = ScrollBar.MaxValue - startScroll;
+                float progress = startScroll;
+                float speed = distanceToTravel / duration;
+
+                while (t < duration && !MathUtils.NearlyEqual(ScrollBar.MaxValue, progress))
+                {
+                    t += CoroutineManager.DeltaTime;
+                    progress += speed * CoroutineManager.DeltaTime;
+                    BarScroll = progress;
+                    yield return CoroutineStatus.Running;
+                }
+
+                yield return CoroutineStatus.Success;
+            }
+        }
+
         
         private void UpdateChildrenRect()
         {
@@ -404,6 +481,32 @@ namespace Barotrauma
                 }
             }
 
+            if (SelectTop)
+            {
+                foreach (GUIComponent child in Content.Children)
+                {
+                    child.CanBeFocused = !selected.Contains(child);
+                    if (!child.CanBeFocused)
+                    {
+                        child.State = ComponentState.None;
+                    }
+                }
+            }
+            
+            if (SelectTop && Content.Children.Any() && pendingScroll == null)
+            {
+                GUIComponent component = Content.Children.FirstOrDefault(c => (c.Rect.Y - Content.Rect.Y) / (float)c.Rect.Height > -0.1f);
+
+                if (component != null && !selected.Contains(component))
+                {
+                    int index = Content.Children.ToList().IndexOf(component);
+                    if (index >= 0)
+                    {
+                        Select(index, false, false, takeKeyBoardFocus: true);
+                    }
+                }
+            }
+
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 var child = Content.RectTransform.GetChild(i)?.GUIComponent;
@@ -418,7 +521,16 @@ namespace Barotrauma
                     
                     if (mouseDown)
                     {
-                        Select(i, autoScroll: false);
+                        if (SelectTop)
+                        {
+                            pendingScroll = child;
+                            ScrollToElement(child);
+                            Select(i, autoScroll: false, takeKeyBoardFocus: true);
+                        }
+                        else
+                        {
+                            Select(i, autoScroll: false, takeKeyBoardFocus: true);
+                        }
                     }
 
                     if (CanDragElements && PlayerInput.LeftButtonDown() && GUI.MouseOn == child)
@@ -538,10 +650,93 @@ namespace Barotrauma
             {
                 UpdateScrollBarSize();
             }
-            if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && PlayerInput.ScrollWheelSpeed != 0)
+
+
+            if (FadeElements)
             {
-                ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
+                foreach (var (component, _) in childVisible)
+                {
+                    float lerp = 0;
+                    float y = component.Rect.Y;
+                    float contentY = Content.Rect.Y;
+                    float height = component.Rect.Height;
+                    if (y < Content.Rect.Y)
+                    {
+                        float distance = (contentY - y) / height;
+                        lerp = distance;
+                    }
+
+                    float centerY = Content.Rect.Y + Content.Rect.Height / 2.0f;
+                    if (y > centerY)
+                    {
+                        float distance = (y - centerY) / (centerY - height);
+                        lerp = distance;
+                    }
+
+                    component.Color = component.HoverColor = ToolBox.GradientLerp(lerp, component.DefaultColor, Color.Transparent);
+                    component.DisabledColor = ToolBox.GradientLerp(lerp, component.Style.DisabledColor, Color.Transparent);
+                    component.HoverColor = ToolBox.GradientLerp(lerp, component.Style.HoverColor, Color.Transparent);
+                    
+                    foreach (var child in component.GetAllChildren())
+                    {
+                        Color gradient = ToolBox.GradientLerp(lerp, child.DefaultColor, Color.Transparent);
+                        child.Color = child.HoverColor = gradient;
+                        if (child is GUITextBlock block)
+                        {
+                            block.TextColor = block.HoverTextColor = gradient;
+                        }
+                    }
+                }
             }
+            
+            if (SmoothScroll)
+            {
+                if (targetScroll > -1)
+                {
+                    float distance = Math.Abs(targetScroll - BarScroll);
+                    float speed = Math.Max(distance * BarSize, 0.1f);
+                    BarScroll = (1.0f - speed) * BarScroll + speed * targetScroll;
+                    if (MathUtils.NearlyEqual(BarScroll, targetScroll) || GUIScrollBar.DraggingBar != null)
+                    {
+                        targetScroll = -1;
+                        pendingScroll = null;
+                    }
+                }
+            }
+
+            if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && AllowMouseWheelScroll && PlayerInput.ScrollWheelSpeed != 0)
+            {
+                float speed = PlayerInput.ScrollWheelSpeed / 500.0f * BarSize;
+                if (SmoothScroll)
+                {
+                    if (ClampScrollToElements)
+                    {
+                        bool scrollDown = Math.Clamp(PlayerInput.ScrollWheelSpeed, 0, 1) > 0;
+
+                        if (scrollDown)
+                        {
+                            SelectPrevious(takeKeyBoardFocus: true);
+                        }
+                        else
+                        {
+                            SelectNext(takeKeyBoardFocus: true);
+                        }
+                    }
+                    else
+                    {
+                        pendingScroll = null;
+                        if (targetScroll < 0) { targetScroll = BarScroll; }
+                        targetScroll -= speed;
+                        targetScroll = Math.Clamp(targetScroll, ScrollBar.MinValue, ScrollBar.MaxValue);
+                    }
+                }
+                else
+                {
+                    ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
+                }
+            }
+            
+
             ScrollBar.Enabled = ScrollBarEnabled && BarSize < 1.0f;
             if (AutoHideScrollBar)
             {
@@ -553,35 +748,47 @@ namespace Barotrauma
             }
         }
 
-        public void SelectNext(bool force = false, bool autoScroll = true)
+        public void SelectNext(bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
         {
             int index = SelectedIndex + 1;
             while (index < Content.CountChildren)
             {
-                if (Content.GetChild(index).Visible)
+                GUIComponent child = Content.GetChild(index);
+                if (child.Visible)
                 {
-                    Select(index, force, autoScroll);
+                    Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
+                    if (SmoothScroll)
+                    {
+                        pendingScroll = child;
+                        ScrollToElement(child);
+                    }
                     break;
                 }
                 index++;
             }
         }
 
-        public void SelectPrevious(bool force = false, bool autoScroll = true)
+        public void SelectPrevious(bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
         {
             int index = SelectedIndex - 1;
             while (index >= 0)
             {
-                if (Content.GetChild(index).Visible)
+                GUIComponent child = Content.GetChild(index);
+                if (child.Visible)
                 {
-                    Select(index, force, autoScroll);
+                    Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
+                    if (SmoothScroll)
+                    {
+                        pendingScroll = child;
+                        ScrollToElement(child);
+                    }
                     break;
                 }
                 index--;
             }
         }
 
-        public void Select(int childIndex, bool force = false, bool autoScroll = true)
+        public void Select(int childIndex, bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
         {
             if (childIndex >= Content.CountChildren || childIndex < 0) { return; }
 
@@ -646,7 +853,7 @@ namespace Barotrauma
             }
 
             // If one of the children is the subscriber, we don't want to register, because it will unregister the child.
-            if (RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
+            if (takeKeyBoardFocus && RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
             {
                 Selected = true;
                 GUI.KeyboardDispatcher.Subscriber = this;
@@ -712,6 +919,14 @@ namespace Barotrauma
                     totalSize += (ScrollBar.IsHorizontal) ? child.Rect.Width : child.Rect.Height;
                 }
                 totalSize += Content.CountChildren * Spacing;
+                if (PadBottom)
+                {
+                    GUIComponent last = Content.Children.LastOrDefault();
+                    if (last != null)
+                    {
+                        totalSize += Rect.Height - last.Rect.Height;
+                    }
+                }
             }
 
             float minScrollBarSize = 20.0f;

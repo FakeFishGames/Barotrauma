@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Voronoi2;
 
 namespace Barotrauma.Items.Components
 {
@@ -51,7 +52,7 @@ namespace Barotrauma.Items.Components
         private const float PersistentStickJointDuration = 1.0f;
         private PrismaticJoint stickJoint;
 
-        private readonly Attack attack;
+        public Attack Attack { get; private set; }
 
         private Vector2 launchPos;
 
@@ -66,7 +67,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 user = value;
-                attack?.SetUser(user);                
+                Attack?.SetUser(user);                
             }
         }
 
@@ -186,27 +187,27 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
-                attack = new Attack(subElement, item.Name + ", Projectile");
+                Attack = new Attack(subElement, item.Name + ", Projectile");
             }
         }
 
         public override void OnItemLoaded()
         {
-            if (attack != null && attack.DamageRange <= 0.0f && item.body != null)
+            if (Attack != null && Attack.DamageRange <= 0.0f && item.body != null)
             {
                 switch (item.body.BodyShape)
                 {
                     case PhysicsBody.Shape.Circle:
-                        attack.DamageRange = item.body.radius;
+                        Attack.DamageRange = item.body.radius;
                         break;
                     case PhysicsBody.Shape.Capsule:
-                        attack.DamageRange = item.body.height / 2 + item.body.radius;
+                        Attack.DamageRange = item.body.height / 2 + item.body.radius;
                         break;
                     case PhysicsBody.Shape.Rectangle:
-                        attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
+                        Attack.DamageRange = new Vector2(item.body.width / 2.0f, item.body.height / 2.0f).Length();
                         break;
                 }
-                attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
+                Attack.DamageRange = ConvertUnits.ToDisplayUnits(Attack.DamageRange);
             }
         }
 
@@ -253,7 +254,7 @@ namespace Barotrauma.Items.Components
             launchPos = item.SimPosition;
 
             item.body.Enabled = true;            
-            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+            item.body.ApplyLinearImpulse(impulse, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.9f);
             
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
             item.body.FarseerBody.IsBullet = true;
@@ -367,6 +368,8 @@ namespace Barotrauma.Items.Components
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return true; }
 
+                if (fixture.Body.UserData is VoronoiCell && this.item.Submarine != null) { return true; }
+
                 fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
                 if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
 
@@ -386,6 +389,15 @@ namespace Barotrauma.Items.Components
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+
+                //ignore level cells if the item the point of impact are inside a sub
+                if (fixture.Body.UserData is VoronoiCell && this.item.Submarine != null) 
+                { 
+                    if (Hull.FindHull(ConvertUnits.ToDisplayUnits(point), this.item.CurrentHull) != null)
+                    {
+                        return -1;
+                    }
+                }
 
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
@@ -532,25 +544,24 @@ namespace Barotrauma.Items.Components
             else if (target.Body.UserData is Limb limb)
             {
                 //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
-                if (limb.IsSevered)
-                {
-                    return true;
-                }
+                if (limb.IsSevered) { return true; }
+                if (limb.character == null || limb.character.Removed) { return false; }
 
                 limb.character.LastDamageSource = item;
-                if (attack != null) { attackResult = attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f); }
+                if (Attack != null) { attackResult = Attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f); }
                 if (limb.character != null) { character = limb.character; }
             }
             else if (target.Body.UserData is Item targetItem)
             {
-                if (attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 
+                if (targetItem.Removed) { return false; }
+                if (Attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 
                 {
-                    attackResult = attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f); 
+                    attackResult = Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f); 
                 }
             }
             else if (target.Body.UserData is IDamageable damageable)
             {
-                if (attack != null) { attackResult = attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }
+                if (Attack != null) { attackResult = Attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }
             }
 
             if (character != null) { character.LastDamageSource = item; }
@@ -738,6 +749,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             if (stickJoint != null)
             {
                 try

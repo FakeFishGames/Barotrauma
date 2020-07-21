@@ -26,7 +26,10 @@ namespace Barotrauma
 
         public Character.TeamType? WinningTeam;
 
+        public bool IsRunning { get; private set; }
+
         public Level Level { get; private set; }
+        public LevelData LevelData { get; private set; }
 
         public Map Map
         {
@@ -36,17 +39,21 @@ namespace Barotrauma
             }
         }
 
+        public CampaignMode Campaign
+        {
+            get
+            {
+                return GameMode as CampaignMode;
+            }
+        }
+        
+
         public Location StartLocation
         {
             get
             {
-                if (Map != null) return Map.CurrentLocation;
-
-                if (dummyLocations == null)
-                {
-                    CreateDummyLocations();
-                }
-
+                if (Map != null) { return Map.CurrentLocation; }
+                if (dummyLocations == null) { CreateDummyLocations(); }
                 return dummyLocations[0];
             }
         }
@@ -55,18 +62,15 @@ namespace Barotrauma
         {
             get
             {
-                if (Map != null) return Map.SelectedLocation;
-
-                if (dummyLocations == null)
-                {
-                    CreateDummyLocations();
-                }
-
+                if (Map != null) { return Map.SelectedLocation; }
+                if (dummyLocations == null) { CreateDummyLocations(); }
                 return dummyLocations[1];
             }
         }
 
         public SubmarineInfo SubmarineInfo { get; set; }
+        
+        public List<SubmarineInfo> OwnedSubmarines = new List<SubmarineInfo>();
 
         public Submarine Submarine { get; set; }
 
@@ -74,41 +78,55 @@ namespace Barotrauma
 
         partial void InitProjSpecific();
 
-        public GameSession(SubmarineInfo submarineInfo, string savePath, GameModePreset gameModePreset, MissionType missionType = MissionType.None)
-            : this(submarineInfo, savePath)
-        {
-            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-            GameMode = gameModePreset.Instantiate(missionType);
-        }
-
-        public GameSession(SubmarineInfo submarineInfo, string savePath, GameModePreset gameModePreset, MissionPrefab missionPrefab)
-            : this(submarineInfo, savePath)
-        {
-            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-            GameMode = gameModePreset.Instantiate(missionPrefab);
-
-#if CLIENT
-            if (GameMode is SubTestMode) { EventManager = null; }
-#endif
-        }
-
-        private GameSession(SubmarineInfo submarineInfo, string savePath)
+        private GameSession(SubmarineInfo submarineInfo, List<SubmarineInfo> ownedSubmarines = null)
         {
             InitProjSpecific();
             SubmarineInfo = submarineInfo;
-            /*Submarine = new Submarine(submarineInfo);
-            Submarine.MainSub = Submarine;*/
+
+#if CLIENT
+            if (ownedSubmarines == null && GameMode is MultiPlayerCampaign && GameMain.NetLobbyScreen.ServerOwnedSubmarines != null)
+            {
+                ownedSubmarines = GameMain.NetLobbyScreen.ServerOwnedSubmarines;
+            }
+#endif
+
+            OwnedSubmarines = ownedSubmarines ?? new List<SubmarineInfo>();
+            if (!OwnedSubmarines.Any(s => s.Name == submarineInfo.Name))
+            {
+                OwnedSubmarines.Add(submarineInfo);
+            }
             GameMain.GameSession = this;
             EventManager = new EventManager();
-            this.SavePath = savePath;
         }
 
-
-        public GameSession(SubmarineInfo selectedSubInfo, string saveFile, XDocument doc)
-            : this(selectedSubInfo, saveFile)
+        /// <summary>
+        /// Start a new GameSession. Will be saved to the specified save path (if playing a game mode that can be saved).
+        /// </summary>
+        public GameSession(SubmarineInfo submarineInfo, string savePath, GameModePreset gameModePreset, string seed = null, MissionType missionType = MissionType.None)
+            : this(submarineInfo)
         {
-            Submarine.MainSub = Submarine;
+            this.SavePath = savePath;
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
+            GameMode = InstantiateGameMode(gameModePreset, seed, missionType: missionType);
+        }
 
+        /// <summary>
+        /// Start a new GameSession with a specific pre-selected mission.
+        /// </summary>
+        public GameSession(SubmarineInfo submarineInfo, GameModePreset gameModePreset, string seed = null, MissionPrefab missionPrefab = null)
+            : this(submarineInfo)
+        {
+            CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
+            GameMode = InstantiateGameMode(gameModePreset, seed, missionPrefab: missionPrefab);
+        }
+
+        /// <summary>
+        /// Load a game session from the specified XML document. The session will be saved to the specified path.
+        /// </summary>
+        public GameSession(SubmarineInfo submarineInfo, List<SubmarineInfo> ownedSubmarines, XDocument doc, string saveFile)
+            : this(submarineInfo, ownedSubmarines)
+        {
+            this.SavePath = saveFile;
             GameMain.GameSession = this;
             //selectedSub.Name = doc.Root.GetAttributeString("submarine", selectedSub.Name);
 
@@ -120,14 +138,59 @@ namespace Barotrauma
                     case "gamemode": //legacy support
                     case "singleplayercampaign":
                         CrewManager = new CrewManager(true);
-                        GameMode = SinglePlayerCampaign.Load(subElement);
+                        var campaign = SinglePlayerCampaign.Load(subElement);
+                        campaign.LoadNewLevel();
+                        GameMode = campaign;
                         break;
 #endif
                     case "multiplayercampaign":
                         CrewManager = new CrewManager(false);
-                        GameMode = MultiPlayerCampaign.LoadNew(subElement);
+                        var mpCampaign = MultiPlayerCampaign.LoadNew(subElement);
+                        GameMode = mpCampaign;
+                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) 
+                        { 
+                            //save to ensure the campaign ID in the save file matches the one that got assigned to this campaign instance
+                            SaveUtil.SaveGame(saveFile);
+                            mpCampaign.LoadNewLevel(); 
+                        }
                         break;
                 }
+            }
+        }
+
+        private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, MissionPrefab missionPrefab = null, MissionType missionType = MissionType.None)
+        {
+            if (gameModePreset.GameModeType == typeof(MissionMode))
+            {
+                return missionPrefab != null ?
+                    new MissionMode(gameModePreset, missionPrefab) :
+                    new MissionMode(gameModePreset, missionType, seed ?? ToolBox.RandomSeed(8));
+            }
+            else if (gameModePreset.GameModeType == typeof(MultiPlayerCampaign))
+            {
+                return MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8));
+            }
+#if CLIENT
+            else if (gameModePreset.GameModeType == typeof(SinglePlayerCampaign))
+            {
+                return SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8));
+            }
+            else if (gameModePreset.GameModeType == typeof(TutorialMode))
+            {
+                return new TutorialMode(gameModePreset);
+            }
+            else if (gameModePreset.GameModeType == typeof(TestGameMode))
+            {
+                return new TestGameMode(gameModePreset);
+            }
+#endif
+            else if (gameModePreset.GameModeType == typeof(GameMode))
+            {
+                return new GameMode(gameModePreset);
+            }
+            else
+            {
+                throw new Exception($"Could not find a game mode of the type \"{gameModePreset.GameModeType}\"");
             }
         }
 
@@ -148,24 +211,146 @@ namespace Barotrauma
             MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
             for (int i = 0; i < 2; i++)
             {
-                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null, rand);
+                dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null, rand, requireOutpost: true);
             }
         }
 
-        public void LoadPrevious()
+        public void LoadPreviousSave()
         {
             Submarine.Unload();
             SaveUtil.LoadGame(SavePath);
         }
 
-        public void StartRound(string levelSeed, float? difficulty = null)
+        /// <summary>
+        /// Switch to another submarine. The sub is loaded when the next round starts.
+        /// </summary>
+        public void SwitchSubmarine(SubmarineInfo newSubmarine, int cost)
         {
-            Level randomLevel = Level.CreateRandom(levelSeed, difficulty);
+            if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
+            {
+                OwnedSubmarines.Add(newSubmarine);
+            }
+            else
+            {
+                // Fetch owned submarine data as the newSubmarine is just the base submarine
+                for (int i = 0; i < OwnedSubmarines.Count; i++)
+                {
+                    if (OwnedSubmarines[i].Name == newSubmarine.Name)
+                    {
+                        newSubmarine = OwnedSubmarines[i];
+                        break;
+                    }
+                }
+            }
 
-            StartRound(randomLevel);
+            Campaign.Money -= cost;
+
+            ((CampaignMode)GameMode).PendingSubmarineSwitch = newSubmarine;
         }
 
-        public void StartRound(Level level, bool mirrorLevel = false)
+        public void PurchaseSubmarine(SubmarineInfo newSubmarine)
+        {
+            if (Campaign == null) return;
+            if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
+            {
+                Campaign.Money -= newSubmarine.Price;
+                OwnedSubmarines.Add(newSubmarine);
+            }
+        }
+
+        public bool IsSubmarineOwned(SubmarineInfo query)
+        {
+            return 
+                Submarine.MainSub.Info.Name == query.Name || 
+                (OwnedSubmarines != null && OwnedSubmarines.Any(os => os.Name == query.Name));
+        }
+
+        public void StartRound(string levelSeed, float? difficulty = null)
+        {
+            StartRound(LevelData.CreateRandom(levelSeed, difficulty));
+        }
+
+        public void StartRound(LevelData levelData, bool mirrorLevel = false, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
+        {
+            if (SubmarineInfo == null)
+            {
+                DebugConsole.ThrowError("Couldn't start game session, submarine not selected.");
+                return;
+            }
+            if (SubmarineInfo.IsFileCorrupted)
+            {
+                DebugConsole.ThrowError("Couldn't start game session, submarine file corrupted.");
+                return;
+            }
+
+            LevelData = levelData;
+
+            if (GameMode is CampaignMode campaignMode && GameMode.Mission != null && 
+                LevelData != null && LevelData.Type == LevelData.LevelType.Outpost)
+            {
+                campaignMode.Map.CurrentLocation.SelectedMission = null;
+            }
+
+            Submarine.Unload();
+            Submarine = Submarine.MainSub = new Submarine(SubmarineInfo);
+            foreach (Submarine sub in Submarine.GetConnectedSubs())
+            {
+                sub.TeamID = Character.TeamType.Team1;
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine != sub) { continue; }
+                    foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                    {
+                        wifiComponent.TeamID = sub.TeamID;
+                    }
+                }
+            }
+            if (GameMode.Mission != null && GameMode.Mission.TeamCount > 1 && Submarine.MainSubs[1] == null)
+            {
+                Submarine.MainSubs[1] = new Submarine(SubmarineInfo, true);
+            }
+
+            Level level = null;
+            if (levelData != null)
+            {
+                level = Level.Generate(levelData, mirrorLevel, startOutpost, endOutpost);
+            }
+
+            InitializeLevel(level);
+
+            GameAnalyticsManager.AddDesignEvent("Submarine:" + Submarine.Info.Name);
+            GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(levelData?.Seed ?? "[NO_LEVEL]"));
+            GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
+                    GameMode.Preset.Identifier, (Mission == null ? "None" : Mission.GetType().ToString()));
+
+#if CLIENT
+            if (GameMode is CampaignMode) { SteamAchievementManager.OnBiomeDiscovered(levelData.Biome); }
+
+            var existingRoundSummary = GUIMessageBox.MessageBoxes.Find(mb => mb.UserData is RoundSummary)?.UserData as RoundSummary;
+            if (existingRoundSummary?.ContinueButton != null)
+            {
+                existingRoundSummary.ContinueButton.Visible = true;
+            }
+
+            RoundSummary = new RoundSummary(Submarine.Info, GameMode, Mission, StartLocation, EndLocation);
+
+            if (!(GameMode is TutorialMode) && !(GameMode is TestGameMode))
+            {
+                GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);
+                if (EndLocation != null)
+                {
+                    GUI.AddMessage(levelData.Biome.DisplayName, Color.Lerp(Color.CadetBlue, Color.DarkRed, levelData.Difficulty / 100.0f), 5.0f, playSound: false);
+                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.Name), Color.CadetBlue, playSound: false);
+                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Mission"), (Mission == null ? TextManager.Get("None") : Mission.Name)), Color.CadetBlue, playSound: false);
+                }
+                else
+                {
+                    GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Location"), StartLocation.Name), Color.CadetBlue, playSound: false);
+                }
+            }
+#endif
+        }
+        private void InitializeLevel(Level level)
         {
             //make sure no status effects have been carried on from the next round
             //(they should be stopped in EndRound, this is a safeguard against cases where the round is ended ungracefully)
@@ -175,83 +360,10 @@ namespace Barotrauma
             GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
             if (GameMain.Client == null) GameMain.LightManager.LosMode = GameMain.Config.LosMode;
 #endif
-            this.Level = level;
+            LevelData = level?.LevelData;
+            Level = level;
 
-            if (SubmarineInfo == null)
-            {
-                DebugConsole.ThrowError("Couldn't start game session, submarine not selected.");
-                return;
-            }
-
-            if (SubmarineInfo.IsFileCorrupted)
-            {
-                DebugConsole.ThrowError("Couldn't start game session, submarine file corrupted.");
-                return;
-            }
-
-            Submarine.Unload();
-            Submarine = Submarine.MainSub = new Submarine(SubmarineInfo);
-            Submarine.MainSub = Submarine;
-            if (GameMode.Mission != null && GameMode.Mission.TeamCount > 1 && Submarine.MainSubs[1] == null)
-            {
-                Submarine.MainSubs[1] = new Submarine(SubmarineInfo, true);
-            }
-
-            if (level != null)
-            {
-                level.Generate(mirrorLevel);
-                if (level.StartOutpost != null)
-                {
-                    //start by placing the sub below the outpost
-                    Rectangle outpostBorders = Level.Loaded.StartOutpost.GetDockedBorders();
-                    Rectangle subBorders = Submarine.GetDockedBorders();
-
-                    Vector2 startOutpostSize = Vector2.Zero;
-                    if (Level.Loaded.StartOutpost != null)
-                    {
-                        startOutpostSize = Level.Loaded.StartOutpost.Borders.Size.ToVector2();
-                    }
-                    Submarine.SetPosition(
-                        Level.Loaded.StartOutpost.WorldPosition -
-                        new Vector2(0.0f, outpostBorders.Height / 2 + subBorders.Height / 2));
-
-                    //find the port that's the nearest to the outpost and dock if one is found
-                    float closestDistance = 0.0f;
-                    DockingPort myPort = null, outPostPort = null;
-                    foreach (DockingPort port in DockingPort.List)
-                    {
-                        if (port.IsHorizontal || port.Docked) { continue; }
-                        if (port.Item.Submarine == level.StartOutpost)
-                        {
-                            outPostPort = port;
-                            continue;
-                        }
-                        if (port.Item.Submarine != Submarine) { continue; }
-
-                        //the submarine port has to be at the top of the sub
-                        if (port.Item.WorldPosition.Y < Submarine.WorldPosition.Y) { continue; }
-
-                        float dist = Vector2.DistanceSquared(port.Item.WorldPosition, level.StartOutpost.WorldPosition);
-                        if ((myPort == null || dist < closestDistance || port.MainDockingPort) && !(myPort?.MainDockingPort ?? false))
-                        {
-                            myPort = port;
-                            closestDistance = dist;
-                        }
-                    }
-
-                    if (myPort != null && outPostPort != null)
-                    {
-                        Vector2 portDiff = myPort.Item.WorldPosition - Submarine.WorldPosition;
-                        Submarine.SetPosition((outPostPort.Item.WorldPosition - portDiff) - Vector2.UnitY * outPostPort.DockedDistance);
-                        myPort.Dock(outPostPort);
-                        myPort.Lock(true);
-                    }
-                }
-                else
-                {
-                    Submarine.SetPosition(Submarine.FindSpawnPos(level.StartPosition));
-                }
-            }
+            PlaceSubAtStart(Level);
 
             foreach (var sub in Submarine.Loaded)
             {
@@ -267,9 +379,9 @@ namespace Barotrauma
             if (GameMode != null) { GameMode.Start(); }
             if (GameMode.Mission != null)
             {
-                int prevEntityCount = Entity.GetEntityList().Count;
+                int prevEntityCount = Entity.GetEntities().Count();
                 Mission.Start(Level.Loaded);
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Entity.GetEntityList().Count != prevEntityCount)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Entity.GetEntities().Count() != prevEntityCount)
                 {
                     DebugConsole.ThrowError(
                         "Entity count has changed after starting a mission as a client. " +
@@ -278,7 +390,7 @@ namespace Barotrauma
                 }
             }
 
-            EventManager?.StartRound(level);
+            EventManager?.StartRound(Level.Loaded);
             SteamAchievementManager.OnStartRound();
 
             if (GameMode != null)
@@ -289,37 +401,109 @@ namespace Barotrauma
                 {
                     //only place items and corpses here in single player
                     //the server does this after loading the respawn shuttle
+                    Level?.SpawnNPCs();
                     Level?.SpawnCorpses();
-                    AutoItemPlacer.PlaceIfNeeded(GameMode);
+                    AutoItemPlacer.PlaceIfNeeded();
                 }
-                if (GameMode is MultiPlayerCampaign mpCampaign && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                if (GameMode is MultiPlayerCampaign mpCampaign)
                 {
-                    mpCampaign.CargoManager.CreateItems();
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                    {
+                        mpCampaign.CargoManager.CreatePurchasedItems();
+#if SERVER
+                        mpCampaign.SendCrewState(false, null);
+#endif
+                    }
+                    mpCampaign.UpgradeManager.ApplyUpgrades();
+                    mpCampaign.UpgradeManager.SanityCheckUpgrades(Submarine);
+                }
+                if (GameMode is CampaignMode)
+                {
+                    Submarine.WarmStartPower();
                 }
             }
 
-            GameAnalyticsManager.AddDesignEvent("Submarine:" + Submarine.Info.Name);
-            GameAnalyticsManager.AddDesignEvent("Level", ToolBox.StringToInt(level?.Seed ?? "[NO_LEVEL]"));
-            GameAnalyticsManager.AddProgressionEvent(GameAnalyticsSDK.Net.EGAProgressionStatus.Start,
-                    GameMode.Preset.Identifier, (Mission == null ? "None" : Mission.GetType().ToString()));
-
-#if CLIENT
-            if (GameMode is SinglePlayerCampaign) { SteamAchievementManager.OnBiomeDiscovered(level.Biome); }
-            if (!(GameMode is SubTestMode)) { RoundSummary = new RoundSummary(this); }
-
-            GameMain.GameScreen.ColorFade(Color.Black, Color.TransparentBlack, 5.0f);
-
-            if (!(GameMode is TutorialMode) && !(GameMode is SubTestMode))
-            {
-                GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);
-                GUI.AddMessage(level.Biome.DisplayName, Color.Lerp(Color.CadetBlue, Color.DarkRed, level.Difficulty / 100.0f), 5.0f, playSound: false);
-                GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Destination"), EndLocation.Name), Color.CadetBlue, playSound: false);
-                GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Mission"), (Mission == null ? TextManager.Get("None") : Mission.Name)), Color.CadetBlue, playSound: false);
-            }
-#endif
-
+            GameMain.GameScreen.Cam.Position = Character.Controlled?.WorldPosition ?? Submarine.MainSub.WorldPosition;
             RoundStartTime = Timing.TotalTime;
             GameMain.ResetFrameTime();
+            IsRunning = true;
+        }
+
+        public void PlaceSubAtStart(Level level)
+        {
+            if (level == null)
+            {
+                Submarine.MainSub.SetPosition(Vector2.Zero);
+                return;
+            }
+            if (level.StartOutpost != null)
+            {
+                //start by placing the sub below the outpost
+                Rectangle outpostBorders = Level.Loaded.StartOutpost.GetDockedBorders();
+                Rectangle subBorders = Submarine.GetDockedBorders();
+
+                Submarine.SetPosition(
+                    Level.Loaded.StartOutpost.WorldPosition -
+                    new Vector2(0.0f, outpostBorders.Height / 2 + subBorders.Height / 2));
+
+                //find the port that's the nearest to the outpost and dock if one is found
+                float closestDistance = 0.0f;
+                DockingPort myPort = null, outPostPort = null;
+                foreach (DockingPort port in DockingPort.List)
+                {
+                    if (port.IsHorizontal || port.Docked) { continue; }
+                    if (port.Item.Submarine == level.StartOutpost)
+                    {
+                        outPostPort = port;
+                        continue;
+                    }
+                    if (port.Item.Submarine != Submarine) { continue; }
+
+                    //the submarine port has to be at the top of the sub
+                    if (port.Item.WorldPosition.Y < Submarine.WorldPosition.Y) { continue; }
+
+                    float dist = Vector2.DistanceSquared(port.Item.WorldPosition, level.StartOutpost.WorldPosition);
+                    if ((myPort == null || dist < closestDistance || port.MainDockingPort) && !(myPort?.MainDockingPort ?? false))
+                    {
+                        myPort = port;
+                        closestDistance = dist;
+                    }
+                }
+
+                if (myPort != null && outPostPort != null)
+                {
+                    Vector2 portDiff = myPort.Item.WorldPosition - Submarine.WorldPosition;
+                    Vector2 spawnPos = (outPostPort.Item.WorldPosition - portDiff) - Vector2.UnitY * outPostPort.DockedDistance;
+
+                    bool startDocked = level.Type == LevelData.LevelType.Outpost;
+#if CLIENT
+                    startDocked |= GameMode is TutorialMode;
+#endif
+                    if (startDocked)
+                    {
+                        Submarine.SetPosition(spawnPos);
+                        myPort.Dock(outPostPort);
+                        myPort.Lock(true);
+                    }
+                    else
+                    {
+                        Submarine.SetPosition(spawnPos - Vector2.UnitY * 100.0f);
+                        Submarine.NeutralizeBallast(); 
+                        Submarine.EnableMaintainPosition();
+                    }
+                }
+                else
+                {
+                    Submarine.NeutralizeBallast();
+                    Submarine.EnableMaintainPosition();
+                }
+            }
+            else
+            {
+                Submarine.SetPosition(Submarine.FindSpawnPos(level.StartPosition, verticalMoveDir: 1));
+                Submarine.NeutralizeBallast();
+                Submarine.EnableMaintainPosition();
+            }
         }
 
         public void Update(float deltaTime)
@@ -333,35 +517,35 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
-        public void EndRound(string endMessage)
+        public void EndRound(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
-            if (Mission != null) Mission.End();
+            if (Mission != null) { Mission.End(); }
             GameAnalyticsManager.AddProgressionEvent(
-                (Mission == null || Mission.Completed)  ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
+                (Mission == null || Mission.Completed) ? GameAnalyticsSDK.Net.EGAProgressionStatus.Complete : GameAnalyticsSDK.Net.EGAProgressionStatus.Fail,
                 GameMode.Preset.Identifier,
-                (Mission == null ? "None" : Mission.GetType().ToString()));
+                Mission == null ? "None" : Mission.GetType().ToString());
 
 #if CLIENT
-            if (RoundSummary != null)
+            if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
             {
-                GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(endMessage);
+                GUI.ClearMessages();
+                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
+                GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
                 GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                var okButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), summaryFrame.Children.First().Children.First().FindChild("buttonarea").RectTransform),
-                    TextManager.Get("OK"))
-                {
-                    OnClicked = (GUIButton button, object obj) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; }
-                };
+                RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
             }
 
+            if (GameMain.NetLobbyScreen != null) GameMain.NetLobbyScreen.OnRoundEnded();
             TabMenu.OnRoundEnded();
+            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction");
 #endif
-
-            EventManager?.EndRound();
             SteamAchievementManager.OnRoundEnded(this);
 
-            Mission = null;
-
+            GameMode?.End(transitionType);
+            EventManager?.EndRound();
             StatusEffect.StopAll();
+            Mission = null;
+            IsRunning = false;
         }
 
         public void KillCharacter(Character character)
@@ -455,7 +639,18 @@ namespace Barotrauma
             XDocument doc = new XDocument(new XElement("Gamesession"));
 
             doc.Root.Add(new XAttribute("savetime", ToolBox.Epoch.NowLocal));
+            doc.Root.Add(new XAttribute("version", GameMain.Version));
             doc.Root.Add(new XAttribute("submarine", SubmarineInfo == null ? "" : SubmarineInfo.Name));
+            if (OwnedSubmarines != null)
+            {
+                List<string> ownedSubmarineNames = new List<string>();
+                var ownedSubsElement = new XElement("ownedsubmarines");
+                doc.Root.Add(ownedSubsElement);
+                foreach (var ownedSub in OwnedSubmarines)
+                {
+                    ownedSubsElement.Add(new XElement("sub", new XAttribute("name", ownedSub.Name)));
+                }
+            }
             doc.Root.Add(new XAttribute("mapseed", Map.Seed));
             doc.Root.Add(new XAttribute("selectedcontentpackages",
                 string.Join("|", GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).Select(cp => cp.Path))));
@@ -472,7 +667,7 @@ namespace Barotrauma
             }
         }
 
-        public void Load(XElement saveElement)
+        /*public void Load(XElement saveElement)
         {
             foreach (XElement subElement in saveElement.Elements())
             {
@@ -495,7 +690,7 @@ namespace Barotrauma
                         break;
                 }
             }
-        }
+        }*/
 
     }
 }

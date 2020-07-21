@@ -12,28 +12,31 @@ namespace Barotrauma
 
         public static bool OutputDebugInfo = false;
 
-        public static void PlaceIfNeeded(GameMode gameMode)
+        public static void PlaceIfNeeded()
         {
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
             
-            CampaignMode campaign = gameMode as CampaignMode;
-            if (campaign == null || !campaign.InitialSuppliesSpawned)
+            for (int i = 0; i < Submarine.MainSubs.Length; i++)
             {
-                for (int i = 0; i < Submarine.MainSubs.Length; i++)
-                {
-                    if (Submarine.MainSubs[i] == null) { continue; }
-                    List<Submarine> subs = new List<Submarine>() { Submarine.MainSubs[i] };
-                    subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.Info.IsOutpost));
-                    Place(subs);
-                }
-                if (campaign != null) { campaign.InitialSuppliesSpawned = true; }
+                if (Submarine.MainSubs[i] == null || Submarine.MainSubs[i].Info.InitialSuppliesSpawned) { continue; }
+                List<Submarine> subs = new List<Submarine>() { Submarine.MainSubs[i] };
+                subs.AddRange(Submarine.MainSubs[i].DockedTo.Where(d => !d.Info.IsOutpost));
+                Place(subs);
+                subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
             }
+            
             foreach (var wreck in Submarine.Loaded)
             {
                 if (wreck.Info.IsWreck)
                 {
                     Place(wreck.ToEnumerable());
                 }
+            }
+
+            if (Level.Loaded?.StartOutpost != null && Level.Loaded.Type == LevelData.LevelType.Outpost)
+            {
+                Rand.SetSyncedSeed(ToolBox.StringToInt(Level.Loaded.StartOutpost.Info.Name));
+                Place(Level.Loaded.StartOutpost.ToEnumerable());
             }
         }
 
@@ -54,9 +57,10 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (!subs.Contains(item.Submarine)) { continue; }
+                if (item.GetRootInventoryOwner() is Character) { continue; }
                 containers.AddRange(item.GetComponents<ItemContainer>());
             }
-            containers.Shuffle();
+            containers.Shuffle(Rand.RandSync.Server);
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
@@ -74,7 +78,7 @@ namespace Barotrauma
 
             spawnedItems.Clear();
             var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
-            prefabsWithContainer.Shuffle();
+            prefabsWithContainer.Shuffle(Rand.RandSync.Server);
             // Spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
             for (int i = 0; i < prefabsWithContainer.Count; i++)
             {
@@ -90,7 +94,7 @@ namespace Barotrauma
             // Another pass for items with containers because also they can spawn inside other items (like smg magazine)
             prefabsWithContainer.ForEach(i => SpawnItems(i));
             // Spawn items that don't have containers last
-            prefabsWithoutContainer.Shuffle();
+            prefabsWithoutContainer.Shuffle(Rand.RandSync.Server);
             prefabsWithoutContainer.ForEach(i => SpawnItems(i));
 
             if (OutputDebugInfo)
@@ -103,6 +107,30 @@ namespace Barotrauma
                 }
             }
 
+            if (GameMain.GameSession?.Level != null &&
+                GameMain.GameSession.Level.Type == LevelData.LevelType.Outpost &&
+                GameMain.GameSession.StartLocation?.TakenItems != null)
+            {
+                foreach (Location.TakenItem takenItem in GameMain.GameSession.StartLocation.TakenItems)
+                {
+                    var matchingItem = spawnedItems.Find(it => takenItem.Matches(it));
+                    if (matchingItem == null) { continue; }
+                    var containedItems = spawnedItems.FindAll(it => it.ParentInventory?.Owner == matchingItem);
+                    matchingItem.Remove();
+                    spawnedItems.Remove(matchingItem);
+                    foreach (Item containedItem in containedItems)
+                    {
+                        containedItem.Remove();
+                        spawnedItems.Remove(containedItem);
+                    }
+                }
+            }
+#if SERVER
+            foreach (Item spawnedItem in spawnedItems)
+            {
+                Entity.Spawner.CreateNetworkEvent(spawnedItem, remove: false);
+            }
+#endif
             bool SpawnItems(ItemPrefab itemPrefab)
             {
                 if (itemPrefab == null)
@@ -158,13 +186,13 @@ namespace Barotrauma
         private static bool SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
         {
             bool success = false;
-            if (Rand.Value() > validContainer.Value.SpawnProbability) { return false; }
+            if (Rand.Value(Rand.RandSync.Server) > validContainer.Value.SpawnProbability) { return false; }
             // Don't add dangerously reactive materials in thalamus wrecks 
             if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.Contains("explodesinwater"))
             {
                 return false;
             }
-            int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1);
+            int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1, Rand.RandSync.Server);
             for (int i = 0; i < amount; i++)
             {
                 if (validContainer.Key.Inventory.IsFull())
@@ -172,17 +200,18 @@ namespace Barotrauma
                     containers.Remove(validContainer.Key);
                     break;
                 }
-
-                var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine);
+                var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine)
+                {
+                    SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,
+                    OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,
+                    OriginalContainerID = validContainer.Key.Item.OriginalID
+                };
                 foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
                 {
                     wifiComponent.TeamID = validContainer.Key.Item.Submarine.TeamID;
                 }
                 spawnedItems.Add(item);
-#if SERVER
-                Entity.Spawner.CreateNetworkEvent(item, remove: false);
-#endif
-                validContainer.Key.Inventory.TryPutItem(item, null);
+                validContainer.Key.Inventory.TryPutItem(item, null, createNetworkEvent: false);
                 containers.AddRange(item.GetComponents<ItemContainer>());
                 success = true;
             }

@@ -70,6 +70,8 @@ namespace Barotrauma.Networking
             Steamworks.SteamNetworking.OnP2PSessionRequest = OnIncomingConnection;
             Steamworks.SteamUser.OnValidateAuthTicketResponse += OnAuthChange;
 
+            Steamworks.SteamNetworking.AllowP2PPacketRelay(true);
+
             isActive = true;
         }
 

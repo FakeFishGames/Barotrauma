@@ -7,7 +7,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {   
-
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
         private readonly List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
@@ -21,6 +20,12 @@ namespace Barotrauma.Items.Components
         private Character user;
 
         private ItemContainer inputContainer, outputContainer;
+        
+        [Serialize(1.0f, true)]
+        public float FabricationSpeed { get; set; }
+        
+        [Serialize(1.0f, true)]
+        public float SkillRequirementMultiplier { get; set; }
 
         private enum FabricatorState
         {
@@ -55,6 +60,8 @@ namespace Barotrauma.Items.Components
         {
             get { return outputContainer; }
         }
+
+        public override bool RecreateGUIOnResolutionChange => true;
 
         private float progressState;
 
@@ -287,13 +294,27 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                Character tempUser = user;
                 if (outputContainer.Inventory.Items.All(i => i != null))
                 {
-                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition,
+                        onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
                 }
                 else
                 {
-                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition);
+                    Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * fabricatedItem.OutCondition, 
+                        onSpawned: (Item spawnedItem) => { onItemSpawned(spawnedItem, tempUser); });
+                }
+
+                static void onItemSpawned(Item spawnedItem, Character user)
+                {
+                    if (user != null && user.TeamID != Character.TeamType.None)
+                    {
+                        foreach (WifiComponent wifiComponent in spawnedItem.GetComponents<WifiComponent>())
+                        {
+                            wifiComponent.TeamID = user.TeamID;
+                        }
+                    }
                 }
             
                 if (user != null && !user.Removed)
@@ -334,13 +355,28 @@ namespace Barotrauma.Items.Components
 
         private float GetRequiredTime(FabricationRecipe fabricableItem, Character user)
         {
-            float degreeOfSuccess = DegreeOfSuccess(user, fabricableItem.RequiredSkills);
+            float degreeOfSuccess = FabricationDegreeOfSuccess(user, fabricableItem.RequiredSkills);
 
             float t = degreeOfSuccess < 0.5f ? degreeOfSuccess * degreeOfSuccess : degreeOfSuccess * 2;
 
             //fabricating takes 100 times longer if degree of success is close to 0
             //characters with a higher skill than required can fabricate up to 100% faster
-            return fabricableItem.RequiredTime / MathHelper.Clamp(t, 0.01f, 2.0f);
+            return fabricableItem.RequiredTime / FabricationSpeed / MathHelper.Clamp(t, 0.01f, 2.0f);
+        }
+        
+        public float FabricationDegreeOfSuccess(Character character, List<Skill> skills)
+        {
+            if (skills.Count == 0) return 1.0f;
+
+            float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
+            float average = skillSum / skills.Count;
+
+            return ((average + 100.0f) / 2.0f) / 100.0f;
+        }
+
+        public override float GetSkillMultiplier()
+        {
+            return SkillRequirementMultiplier;
         }
 
         /// <summary>

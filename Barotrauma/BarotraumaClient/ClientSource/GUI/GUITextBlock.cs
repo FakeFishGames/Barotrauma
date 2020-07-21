@@ -271,6 +271,8 @@ namespace Barotrauma
             public OnClickDelegate OnClick;
         }
         public List<ClickableArea> ClickableAreas { get; private set; } = new List<ClickableArea>();
+
+        public bool Shadow { get; set; }
         
         /// <summary>
         /// This is the new constructor.
@@ -320,10 +322,10 @@ namespace Barotrauma
             hasColorHighlight = richTextData != null;
         }
 
-        public void CalculateHeightFromText(int padding = 0)
+        public void CalculateHeightFromText(int padding = 0, bool removeExtraSpacing = false)
         {
             if (wrappedText == null) { return; }
-            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText).Y + padding));
+            RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(wrappedText, removeExtraSpacing).Y + padding));
         }
         
         public override void ApplyStyle(GUIComponentStyle componentStyle)
@@ -443,8 +445,8 @@ namespace Barotrauma
 
         protected override void SetAlpha(float a)
         {
-            base.SetAlpha(a);
-            textColor = new Color(textColor.R, textColor.G, textColor.B, a);
+            // base.SetAlpha(a);
+            textColor = new Color(TextColor.R / 255.0f, TextColor.G / 255.0f, TextColor.B / 255.0f, a);
         }
 
         /// <summary>
@@ -626,12 +628,17 @@ namespace Barotrauma
 
                 if (!hasColorHighlight)
                 {
-                    Font.DrawString(spriteBatch,
-                        Censor ? censoredText : (Wrap ? wrappedText : text),
-                        pos,
-                        currentTextColor * (currentTextColor.A / 255.0f),
-                        0.0f, origin, TextScale,
-                        SpriteEffects.None, textDepth);
+                    string textToShow = Censor ? censoredText : (Wrap ? wrappedText : text);
+                    Color colorToShow = currentTextColor * (currentTextColor.A / 255.0f);
+
+                    if (Shadow)
+                    {
+                        Vector2 shadowOffset = new Vector2(GUI.IntScale(2));
+                        Font.DrawString(spriteBatch, textToShow, pos + shadowOffset, Color.Black, 0.0f, origin, TextScale, SpriteEffects.None, textDepth);
+                    }
+
+                    Font.DrawString(spriteBatch, textToShow, pos, colorToShow, 0.0f, origin, TextScale, SpriteEffects.None, textDepth);
+
                 }
                 else
                 {

@@ -19,14 +19,16 @@ namespace Barotrauma
         public string Text;
         public Color Color;
 		public bool IsCommand;
+        public bool IsError;
 
         public readonly string Time;
 
-        public ColoredText(string text, Color color, bool isCommand)
+        public ColoredText(string text, Color color, bool isCommand, bool isError)
         {
             this.Text = text;
             this.Color = color;
 			this.IsCommand = isCommand;
+            this.IsError = isError;
 
             Time = DateTime.Now.ToString();
         }
@@ -204,8 +206,8 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-                characterFiles.ToArray(),
-                new string[] { "near", "inside", "outside", "cursor" }
+                    characterFiles.ToArray(),
+                    new string[] { "near", "inside", "outside", "cursor" }
                 };
             }, isCheat: true));
 
@@ -694,6 +696,87 @@ namespace Barotrauma
                     NewMessage(GameMain.GameSession.EventManager.Enabled ? "Event manager on" : "Event manager off", Color.White);
                 }
             }, isCheat: true));
+            
+            commands.Add(new Command("triggerevent", "triggerevent [identifier]: Created a new event.", (string[] args) =>
+            {
+                List<EventPrefab> eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => !string.IsNullOrWhiteSpace(prefab.Identifier)).ToList();
+                if (GameMain.GameSession?.EventManager != null && args.Length > 0)
+                {
+                    EventPrefab newEvent = eventPrefabs.Find(prefab => string.Equals(prefab.Identifier, args[0], StringComparison.InvariantCultureIgnoreCase));
+
+                    if (newEvent != null)
+                    {
+                        var @event = newEvent.CreateInstance();
+                        GameMain.GameSession.EventManager.ActiveEvents.Add(@event);
+                        @event.Init(true);
+                        NewMessage($"Initialized event {newEvent.Identifier}", Color.Aqua);
+                        return;
+                    }
+
+                    NewMessage($"Failed to trigger event because {args[0]} is not a valid event identifier.", Color.Red);
+                    return;
+                }
+                NewMessage("Failed to trigger event", Color.Red);
+            }, isCheat: true, getValidArgs: () =>
+            {
+                List<EventPrefab> eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => !string.IsNullOrWhiteSpace(prefab.Identifier)).ToList();
+                
+                return new[]
+                {
+                   eventPrefabs.Select(prefab => prefab.Identifier).Distinct().ToArray()
+                };
+            }));
+            
+            commands.Add(new Command("setskill", "setskill [all/identifier] [max/level] [character]: Set your skill level.", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    NewMessage($"Missing arguments. Expected at least 2 but got {args.Length} (skill, level, name)", Color.Red);
+                    return;
+                }
+
+                string skillIdentifier = args[0];
+                string levelString = args[1];
+                Character character = args.Length >= 3 ? FindMatchingCharacter(args.Skip(2).ToArray(), false) : Character.Controlled;
+
+                if (character?.Info?.Job == null)
+                {
+                    NewMessage("Character is not valid.", Color.Red);
+                    return;
+                }
+
+                bool isMax = levelString.Equals("max", StringComparison.OrdinalIgnoreCase);
+
+                if (float.TryParse(levelString, NumberStyles.Number, CultureInfo.InvariantCulture, out float level) || isMax)
+                {
+                    if (isMax) { level = 100; }
+                    if (skillIdentifier.Equals("all", StringComparison.OrdinalIgnoreCase))
+                    {
+                        foreach (Skill skill in character.Info.Job.Skills)
+                        {
+                            character.Info.SetSkillLevel(skill.Identifier, level, character.WorldPosition);
+                        }
+                        NewMessage($"Set all {character.Name}'s skills to {level}", Color.Green);
+                    }
+                    else
+                    {
+                        character.Info.SetSkillLevel(skillIdentifier, level, character.WorldPosition);
+                        NewMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", Color.Green);
+                    }
+                }
+                else
+                {
+                    NewMessage($"{levelString} is not a valid level. Expected number or \"max\".", Color.Red);
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                    Character.Controlled?.Info?.Job?.Skills?.Select(skill => skill.Identifier).ToArray() ?? new string[0],
+                    new[]{ "max" },
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                };
+            }));
 
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
@@ -724,6 +807,11 @@ namespace Barotrauma
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null || Level.Loaded == null) return;
+                if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+                {
+                    NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
+                    return;
+                }
 
                 if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                 {
@@ -735,11 +823,21 @@ namespace Barotrauma
                 }
                 else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
                 {
-                    Submarine.MainSub.SetPosition(Level.Loaded.StartPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                    Vector2 pos = Level.Loaded.StartPosition;
+                    if (Level.Loaded.StartOutpost != null)
+                    {
+                        pos -= Vector2.UnitY * (Submarine.MainSub.Borders.Height + Level.Loaded.StartOutpost.Borders.Height) / 2;
+                    }
+                    Submarine.MainSub.SetPosition(pos);
                 }
                 else
                 {
-                    Submarine.MainSub.SetPosition(Level.Loaded.EndPosition - Vector2.UnitY * Submarine.MainSub.Borders.Height);
+                    Vector2 pos = Level.Loaded.EndPosition;
+                    if (Level.Loaded.EndOutpost != null)
+                    {
+                        pos -= Vector2.UnitY * (Submarine.MainSub.Borders.Height + Level.Loaded.EndOutpost.Borders.Height) / 2;
+                    }
+                    Submarine.MainSub.SetPosition(pos);
                 }
             },
             () =>
@@ -802,10 +900,8 @@ namespace Barotrauma
                 while (true)
                 {
                     var gamesession = new GameSession(
-                        SubmarineInfo.SavedSubmarines.GetRandom(s => !s.HasTag(SubmarineTag.HideInMenus)),
-                        "Data/Saves/test.xml",
-                        GameModePreset.List.Find(gm => gm.Identifier == "devsandbox"),
-                        missionPrefab: null);
+                        SubmarineInfo.SavedSubmarines.GetRandom(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)),
+                        GameModePreset.DevSandbox);
                     string seed = ToolBox.RandomSeed(16);
                     gamesession.StartRound(seed);
 
@@ -856,11 +952,31 @@ namespace Barotrauma
             }
 #endif
 
-                    commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
+            commands.Add(new Command("setlocationreputation", "setlocationreputation [value]: Set the reputation in the current location to the specified value.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    if (args.Length == 0) { return; }
+                    if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
+                    {
+                        campaign.Map.CurrentLocation.Reputation.Value = reputation;
+                    }
+                    else
+                    {
+                        ThrowError("Could not set location reputation ({args[0]} is not a valid reputation value).");
+                    }
+                }
+                else
+                {
+                    ThrowError("Could not set location reputation (no active campaign).");
+                }
+            }, null, true));
+
+            commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
             {
                 foreach (Item it in Item.ItemList)
                 {
-                    it.Condition = it.Prefab.Health;
+                    it.Condition = it.MaxCondition;
                 }
             }, null, true));
 
@@ -883,21 +999,109 @@ namespace Barotrauma
                     }
                 }
             }, null, true));
+            
+            commands.Add(new Command("upgradeitem", "upgradeitem [upgrade] [level] [items]: Adds an upgrade to the current targeted item.", args =>
+            {
+                if (args.Length > 0)
+                {
+                    int level;
+                    if (args.Length > 1)
+                    {
+                        if (int.TryParse(args[1], out int result))
+                        {
+                            level = result;
+                        }
+                        else
+                        {
+                            ThrowError($"\"{args[1]}\" is not a valid level.");
+                            return;
+                        }
+                        
+                    }
+                    else
+                    {
+                        ThrowError("Parameter \"level\" is required.");
+                        return;
+                    }
 
-            commands.Add(new Command("power", "power [temperature]: Immediately sets the temperature of the nuclear reactor to the specified value.", (string[] args) =>
+                    var upgradePrefab = UpgradePrefab.Find(args[0]);
+
+                    if (upgradePrefab == null)
+                    {
+                        ThrowError($"Unknown upgrade: {args[0]}.");
+                        return;
+                    }
+
+                    List<MapEntity> targetItems = new List<MapEntity>();
+
+                    if (upgradePrefab.IsWallUpgrade)
+                    {
+                        targetItems.AddRange(Submarine.MainSub.GetWalls(true).Cast<MapEntity>());
+                    }
+                    else
+                    {
+                        if (args.Length > 2)
+                        {
+                            targetItems.AddRange(Item.ItemList.Where(item => item.Submarine == Submarine.MainSub).Where(item => item.HasTag(args[2])).Cast<MapEntity>());
+                        }
+                        else
+                        {
+                            ThrowError("Argument \"tag\" is required.");
+                            return;
+                        }
+                    }
+
+                    if (!targetItems.Any())
+                    {
+                        ThrowError("No valid items found.");
+                        return;
+                    }
+
+                    foreach (MapEntity targetItem in targetItems)
+                    {
+                        Upgrade existingUpgrade = targetItem.GetUpgrade(args[0]);
+
+                        if (!(targetItem is ISerializableEntity sEntity)) { continue; }
+
+                        var upgrade = new Upgrade(sEntity, upgradePrefab, level);
+                        if (targetItem.AddUpgrade(upgrade, true))
+                        {
+                            if (existingUpgrade == null)
+                            {
+                                NewMessage($"Added {upgradePrefab.Identifier}:{level} to {sEntity.Name}.", Color.Green);
+                                upgrade.ApplyUpgrade(); 
+                            }
+                            else
+                            {
+                                NewMessage($"Set {sEntity.Name}'s {upgradePrefab.Identifier} upgrade to level {existingUpgrade.Level}.", Color.Cyan);
+                                existingUpgrade.ApplyUpgrade(); 
+                            }
+                        }
+                        else
+                        {
+                            ThrowError($"{upgrade.Prefab.Identifier} cannot be applied to {sEntity.Name}");
+                        }
+                    }
+                }
+                else
+                {
+                    ThrowError("Parameter \"upgrade\" is required.");
+                }
+            }, () =>
+            {
+                return new[]
+                {
+                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().ToArray()
+                };
+            }, true));
+
+            commands.Add(new Command("power", "power: Immediately powers up the submarine's nuclear reactor.", (string[] args) =>
             {
                 Item reactorItem = Item.ItemList.Find(i => i.GetComponent<Reactor>() != null);
-                if (reactorItem == null) return;
-
-                float power = 1000.0f;
-                if (args.Length > 0) float.TryParse(args[0], out power);
+                if (reactorItem == null) { return; }
 
                 var reactor = reactorItem.GetComponent<Reactor>();
-                reactor.TurbineOutput = power / reactor.MaxPowerOutput * 100.0f;
-                reactor.FissionRate = power / reactor.MaxPowerOutput * 100.0f;
-                reactor.PowerOn = true;
-                reactor.AutoTemp = true;
-
+                reactor.PowerUpImmediately();
 #if SERVER
                 if (GameMain.Server != null)
                 {
@@ -925,7 +1129,7 @@ namespace Barotrauma
                 {
                     Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
                 };
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("killmonsters", "killmonsters: Immediately kills all AI-controlled enemies in the level.", (string[] args) =>
             {
@@ -934,7 +1138,7 @@ namespace Barotrauma
                     if (!(c.AIController is EnemyAIController)) continue;
                     c.SetAllDamage(200.0f, 0.0f, 0.0f);
                 }
-            }, null, true));
+            }, null, isCheat: true));
 
             commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] [character name]: Gives the client control of the specified character.", null,
             () =>
@@ -1007,7 +1211,7 @@ namespace Barotrauma
             commands.Add(new Command("money", "", args =>
             {
                 if (args.Length == 0) { return; }
-                if (GameMain.GameSession.GameMode is CampaignMode campaign)
+                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
                     if (int.TryParse(args[0], out int money))
                     {
@@ -1033,6 +1237,8 @@ namespace Barotrauma
                 GameSettings.VerboseLogging = !GameSettings.VerboseLogging;
                 NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, isCheat: false));
+
+            commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", TaskPool.ListTasks));
 
             commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
             {
@@ -1060,21 +1266,6 @@ namespace Barotrauma
                 {
                     GameMain.Config.SelectedContentPackages.Select(cp => cp.Name).ToArray()
                 };
-            }));
-
-            commands.Add(new Command("debugai", "", onExecute: (string[] args) =>
-            {
-                var commands = new List<KeyValuePair<string, string[]>>()
-                {
-                    new KeyValuePair<string, string[]>("debugdraw", new string[]{ "true" }),
-                    new KeyValuePair<string, string[]>("los", new string[]{ "false" }),
-                    new KeyValuePair<string, string[]>("lights", new string[]{ "false" }),
-                    new KeyValuePair<string, string[]>("freecam", new string[0]),
-                };
-                foreach (var command in commands)
-                {
-                    Commands.Find(c => c.names.Any(n => n.Equals(command.Key, StringComparison.OrdinalIgnoreCase)))?.Execute(command.Value);
-                }
             }));
 
             commands.Add(new Command("simulatedlatency", "simulatedlatency [minimumlatencyseconds] [randomlatencyseconds]: applies a simulated latency to network messages. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
@@ -1165,7 +1356,8 @@ namespace Barotrauma
             commands.Add(new Command("togglecharacternames", "Toggle the names hovering above characters on/off (client-only).", null));
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
-            
+            commands.Add(new Command("debugai", "Toggle the ai debug mode on/off (works properly only in single player).", null, isCheat: true));
+
             InitProjectSpecific();
 
             commands.Sort((c1, c2) => c1.names[0].CompareTo(c2.names[0]));
@@ -1382,7 +1574,7 @@ namespace Barotrauma
         private static void SpawnCharacter(string[] args, Vector2 cursorWorldPos, out string errorMsg)
         {
             errorMsg = "";
-            if (args.Length == 0) return;
+            if (args.Length == 0) { return; }
 
             Character spawnedCharacter = null;
 
@@ -1443,9 +1635,9 @@ namespace Barotrauma
                 spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
             }
 
-            if (string.IsNullOrWhiteSpace(args[0])) return;
+            if (string.IsNullOrWhiteSpace(args[0])) { return; }
 
-            if (spawnPoint != null) spawnPosition = spawnPoint.WorldPosition;
+            if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
 
             if (human)
             {
@@ -1454,11 +1646,8 @@ namespace Barotrauma
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (GameMain.GameSession != null)
                 {
-                    if (GameMain.GameSession.GameMode != null && !GameMain.GameSession.GameMode.IsSinglePlayer)
-                    {
-                        //TODO: a way to select which team to spawn to?
-                        spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : Character.TeamType.Team1;
-                    }
+                    //TODO: a way to select which team to spawn to?
+                    spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : Character.TeamType.Team1;                    
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif
@@ -1549,10 +1738,22 @@ namespace Barotrauma
                 {
                     var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
                     spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
+                    onItemSpawned(spawnedItem);
                 }
                 else
                 {
-                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory);
+                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
+                }
+
+                static void onItemSpawned(Item item)
+                {
+                    if (item.ParentInventory?.Owner is Character character)
+                    {
+                        foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                        {
+                            wifiComponent.TeamID = character.TeamID;
+                        }
+                    }
                 }
             }
         }
@@ -1565,13 +1766,13 @@ namespace Barotrauma
             NewMessage(msg, Color.White, isCommand);
         }
 
-        public static void NewMessage(string msg, Color color, bool isCommand = false)
+        public static void NewMessage(string msg, Color color, bool isCommand = false, bool isError = false)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
             
             lock (queuedMessages)
             {
-                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand));
+                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand, isError));
             }
         }
 
@@ -1669,25 +1870,8 @@ namespace Barotrauma
                 }
             }
             System.Diagnostics.Debug.WriteLine(error);
+
 #if CLIENT
-            if (listBox == null) { NewMessage(error, Color.Red); return; }
-
-            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
-            {
-                CanBeFocused = false
-            };
-            var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
-                error, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
-            {
-                CanBeFocused = false,
-                TextColor = Color.Red
-            };
-            textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
-            textBlock.SetTextPos();
-
-            listBox.UpdateScrollBarSize();
-            listBox.BarScroll = 1.0f;            
-
             if (createMessageBox)
             {
                 CoroutineManager.StartCoroutine(CreateMessageBox(error));
@@ -1696,8 +1880,34 @@ namespace Barotrauma
             {
                 isOpen = true;
             }
+#endif
+
+            NewMessage(error, Color.Red, isError: true);
+        }
+        
+        public static void AddWarning(string warning)
+        {
+            System.Diagnostics.Debug.WriteLine(warning);
+#if CLIENT
+            if (listBox == null) { NewMessage($"WARNING: {warning}", Color.Yellow); return; }
+
+            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
+            {
+                CanBeFocused = false
+            };
+            var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
+                warning, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
+            {
+                CanBeFocused = false,
+                TextColor = Color.Yellow
+            };
+            textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
+            textBlock.SetTextPos();
+
+            listBox.UpdateScrollBarSize();
+            listBox.BarScroll = 1.0f;
 #else
-            NewMessage(error, Color.Red);
+            NewMessage($"WARNING: {warning}", Color.Yellow);
 #endif
         }
 

@@ -16,67 +16,7 @@ namespace Barotrauma.Sounds
         private static List<float> playbackAmplitude;
         private const int AMPLITUDE_SAMPLE_COUNT = 4410; //100ms in a 44100hz file
 
-        public OggSound(SoundManager owner, string filename, bool stream, XElement xElement) : base(owner, filename, stream, true, xElement)
-        {
-            filename = filename.CleanUpPath();
-            if (!ToolBox.IsProperFilenameCase(filename))
-            {
-                DebugConsole.ThrowError("Sound file \"" + filename + "\" has incorrect case!");
-            }
-
-            reader = new VorbisReader(filename);
-
-            ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
-            SampleRate = reader.SampleRate;
-
-            if (!stream)
-            {
-                int bufferSize = (int)reader.TotalSamples * reader.Channels;
-
-                float[] floatBuffer = new float[bufferSize];
-                short[] shortBuffer = new short[bufferSize];
-
-                int readSamples = reader.ReadSamples(floatBuffer, 0, bufferSize);
-
-                playbackAmplitude = new List<float>();
-                for (int i=0;i<bufferSize;i+=reader.Channels*AMPLITUDE_SAMPLE_COUNT)
-                {
-                    float maxAmplitude = 0.0f;
-                    for (int j=i;j<i+reader.Channels*AMPLITUDE_SAMPLE_COUNT;j++)
-                    {
-                        if (j >= bufferSize) { break; }
-                        maxAmplitude = Math.Max(maxAmplitude, Math.Abs(floatBuffer[j]));
-                    }
-                    playbackAmplitude.Add(maxAmplitude);
-                }
-                
-                CastBuffer(floatBuffer, shortBuffer, readSamples);
-                
-                Al.BufferData(ALBuffer, ALFormat, shortBuffer,
-                                readSamples * sizeof(short), SampleRate);
-
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! "+Al.GetErrorString(alError));
-                }
-
-                MuffleBuffer(floatBuffer, SampleRate, reader.Channels);
-
-                CastBuffer(floatBuffer, shortBuffer, readSamples);
-
-                Al.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
-                                readSamples * sizeof(short), SampleRate);
-
-                alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
-                }
-
-                reader.Dispose();
-            }
-        }
+        public OggSound(SoundManager owner, string filename, bool stream, XElement xElement) : base(owner, filename, stream, true, xElement) { }
 
         public override float GetAmplitudeAtPlaybackPos(int playbackPos)
         {
@@ -112,6 +52,64 @@ namespace Barotrauma.Sounds
                 muffleFilters.Add(sampleRate, filter);
             }
             filter.Process(buffer);
+        }
+
+        public override void InitializeALBuffers()
+        {
+            base.InitializeALBuffers();
+
+            reader ??= new VorbisReader(Filename);
+
+            ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
+            SampleRate = reader.SampleRate;
+
+            if (!Stream)
+            {
+                int bufferSize = (int)reader.TotalSamples * reader.Channels;
+
+                float[] floatBuffer = new float[bufferSize];
+                short[] shortBuffer = new short[bufferSize];
+
+                int readSamples = reader.ReadSamples(floatBuffer, 0, bufferSize);
+
+                playbackAmplitude = new List<float>();
+                for (int i = 0; i < bufferSize; i += reader.Channels * AMPLITUDE_SAMPLE_COUNT)
+                {
+                    float maxAmplitude = 0.0f;
+                    for (int j = i; j < i + reader.Channels * AMPLITUDE_SAMPLE_COUNT; j++)
+                    {
+                        if (j >= bufferSize) { break; }
+                        maxAmplitude = Math.Max(maxAmplitude, Math.Abs(floatBuffer[j]));
+                    }
+                    playbackAmplitude.Add(maxAmplitude);
+                }
+
+                CastBuffer(floatBuffer, shortBuffer, readSamples);
+
+                Al.BufferData(ALBuffer, ALFormat, shortBuffer,
+                                readSamples * sizeof(short), SampleRate);
+
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                }
+
+                MuffleBuffer(floatBuffer, SampleRate, reader.Channels);
+
+                CastBuffer(floatBuffer, shortBuffer, readSamples);
+
+                Al.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
+                                readSamples * sizeof(short), SampleRate);
+
+                alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                }
+
+                reader.Dispose(); reader = null;
+            }
         }
 
         public override void Dispose()

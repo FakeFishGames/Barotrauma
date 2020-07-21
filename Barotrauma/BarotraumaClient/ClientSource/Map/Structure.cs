@@ -94,7 +94,23 @@ namespace Barotrauma
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont);
-            
+
+            if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)
+            {
+                GUITickBox tickBox = new GUITickBox(new RectTransform(new Point(listBox.Content.Rect.Width, 10)), TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.name"))
+                {
+                    Font = GUI.SmallFont,
+                    Selected = RemoveIfLinkedOutpostDoorInUse,
+                    ToolTip = TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.description"),
+                    OnSelected = (tickBox) =>
+                    {
+                        RemoveIfLinkedOutpostDoorInUse = tickBox.Selected;
+                        return true;
+                    }
+                };
+                editor.AddCustomContent(tickBox, 1);
+            }
+
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
             {
                 Stretch = true,
@@ -261,7 +277,7 @@ namespace Barotrauma
                     SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
                     Prefab.BackgroundSprite.effects ^= SpriteEffects;
 
-                    Point backGroundOffset = new Point(
+                    Vector2 backGroundOffset = new Vector2(
                         MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.BackgroundSprite.SourceRect.Width),
                         MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.BackgroundSprite.SourceRect.Height));
 
@@ -299,7 +315,7 @@ namespace Barotrauma
                 {
                     if (damageEffect != null)
                     {
-                        float newCutoff = MathHelper.Lerp(0.0f, 0.65f, Sections[i].damage / Prefab.Health);
+                        float newCutoff = MathHelper.Lerp(0.0f, 0.65f, Sections[i].damage / MaxHealth);
 
                         if (Math.Abs(newCutoff - Submarine.DamageEffectCutoff) > 0.01f || color != Submarine.DamageEffectColor)
                         {
@@ -314,7 +330,7 @@ namespace Barotrauma
                         }
                     }
                     
-                    Point sectionOffset = new Point(
+                    Vector2 sectionOffset = new Vector2(
                         Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
                         Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
 
@@ -371,7 +387,7 @@ namespace Barotrauma
                         {
                             var textPos = SectionPosition(i, true);
                             textPos.Y = -textPos.Y;
-                            GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / Health) * 100f) + "%", Color.Yellow);
+                            GUI.DrawString(spriteBatch, textPos, "Damage: " + (int)((GetSection(i).damage / MaxHealth) * 100f) + "%", Color.Yellow);
                         }
                     }
                 }
@@ -448,7 +464,7 @@ namespace Barotrauma
 
             for (int i = 0; i < sectionCount; i++)
             {
-                float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * Health;
+                float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * MaxHealth;
                 if (i < Sections.Length)
                 {
                     SetDamage(i, damage);

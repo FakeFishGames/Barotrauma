@@ -313,7 +313,7 @@ namespace Barotrauma
                     if (wall.Submarine != sub) { continue; }
                     for (int i = 0; i < wall.SectionCount; i++)
                     {
-                        wall.AddDamage(i, -wall.Prefab.Health);
+                        wall.AddDamage(i, -wall.MaxHealth);
                     }                    
                 }
                 foreach (Hull hull in Hull.hullList)

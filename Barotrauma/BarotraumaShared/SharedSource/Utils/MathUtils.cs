@@ -656,10 +656,11 @@ namespace Barotrauma
 
         public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int iterations, float offsetAmount)
         {
-            List<Vector2[]> segments = new List<Vector2[]>();
+            List<Vector2[]> segments = new List<Vector2[]>
+            {
+                new Vector2[] { start, end }
+            };
 
-            segments.Add(new Vector2[] { start, end });
-            
             for (int n = 0; n < iterations; n++)
             {
                 for (int i = 0; i < segments.Count; i++)
@@ -828,6 +829,31 @@ namespace Barotrauma
         public static float Pow(float f, float p)
         {
             return (float)Math.Pow(f, p);
+        }
+
+        /// <summary>
+        /// Converts the alignment to a vector where -1,-1 is the top-left corner, 0,0 the center and 1,1 bottom-right
+        /// </summary>
+        public static Vector2 ToVector2(this Alignment alignment)
+        {
+            Vector2 vector = new Vector2(0.0f,0.0f);
+            if (alignment.HasFlag(Alignment.Left))
+            {
+                vector.X = -1.0f;
+            }
+            else if (alignment.HasFlag(Alignment.Right))
+            {
+                vector.X = 1.0f;
+            }
+            if (alignment.HasFlag(Alignment.Top))
+            {
+                vector.Y = -1.0f;
+            }
+            else if (alignment.HasFlag(Alignment.Bottom))
+            {
+                vector.Y = 1.0f;
+            }
+            return vector;
         }
 
         /// <summary>

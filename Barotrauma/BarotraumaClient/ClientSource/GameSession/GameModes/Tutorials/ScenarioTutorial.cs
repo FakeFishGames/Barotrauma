@@ -58,30 +58,31 @@ namespace Barotrauma.Tutorials
         {
             SubmarineInfo subInfo = new SubmarineInfo(submarinePath);
 
-            LevelGenerationParams generationParams = LevelGenerationParams.LevelParams.Find(p => p.Name == levelParams);
+            LevelGenerationParams generationParams = LevelGenerationParams.LevelParams.Find(p => p.Identifier.Equals(levelParams, StringComparison.OrdinalIgnoreCase));
 
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession = new GameSession(subInfo, "",
-                GameModePreset.List.Find(g => g.Identifier == "tutorial"));
+            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefab: null);
             (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
 
             if (generationParams != null)
             {
-                Biome biome = LevelGenerationParams.GetBiomes().Find(b => generationParams.AllowedBiomes.Contains(b));
+                Biome biome = 
+                    LevelGenerationParams.GetBiomes().FirstOrDefault(b => generationParams.AllowedBiomes.Contains(b)) ??
+                    LevelGenerationParams.GetBiomes().First();
 
-                if (startOutpostPath != string.Empty)
+                if (!string.IsNullOrEmpty(startOutpostPath))
                 {
                     startOutpost = new SubmarineInfo(startOutpostPath);
                 }
 
-                if (endOutpostPath != string.Empty)
+                if (!string.IsNullOrEmpty(endOutpostPath))
                 {
                     endOutpost = new SubmarineInfo(endOutpostPath);
                 }
 
-                Level tutorialLevel = new Level(levelSeed, 0, 0, generationParams, biome, startOutpost, endOutpost);
-                GameMain.GameSession.StartRound(tutorialLevel);
+                LevelData tutorialLevel = new LevelData(levelSeed, 0, 0, generationParams, biome);
+                GameMain.GameSession.StartRound(tutorialLevel, startOutpost: startOutpost, endOutpost: endOutpost);
             }
             else
             {
@@ -100,6 +101,13 @@ namespace Barotrauma.Tutorials
             base.Start();
 
             Submarine.MainSub.GodMode = true;
+            foreach (Structure wall in Structure.WallList)
+            {
+                if (wall.Submarine != null && wall.Submarine.Info.IsOutpost)
+                {
+                    wall.Indestructible = true;
+                }
+            }
 
             CharacterInfo charInfo = configElement.Element("Character") == null ?
                 new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("engineer")) :
@@ -114,6 +122,7 @@ namespace Barotrauma.Tutorials
             }
 
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", false, false);
+            character.TeamID = Character.TeamType.Team1;
             Character.Controlled = character;
             character.GiveJobItems(null);
 
@@ -126,19 +135,14 @@ namespace Barotrauma.Tutorials
             idCard.AddTag("com");
             idCard.AddTag("eng");
 
-            List<Entity> entities = Entity.GetEntityList();
-
-            for (int i = 0; i < entities.Count; i++)
+            foreach (Item item in Item.ItemList)
             {
-                if (entities[i] is Item)
+                Door door = item.GetComponent<Door>();
+                if (door != null)
                 {
-                    Door door = (entities[i] as Item).GetComponent<Door>();
-                    if (door != null)
-                    {
-                        door.CanBeWelded = false;
-                    }
+                    door.CanBeWelded = false;
                 }
-            }
+            }            
 
             tutorialCoroutine = CoroutineManager.StartCoroutine(UpdateState());
         }
@@ -284,7 +288,7 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(waitBeforeFade);
 
-            var endCinematic = new RoundEndCinematic(Submarine.MainSub, GameMain.GameScreen.Cam, fadeOutTime);
+            var endCinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null, Alignment.Center, duration: fadeOutTime);
             currentTutorialCompleted = Completed = true;
             while (endCinematic.Running) yield return null;
             Stop();

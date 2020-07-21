@@ -39,7 +39,7 @@ namespace Barotrauma
 
             if (DraggableIndicator == null)
             {
-                DraggableIndicator = GUI.Style.GetComponentStyle("GUIDragIndicator").Sprites[GUIComponent.ComponentState.None][0].Sprite;
+                DraggableIndicator = GUI.Style.GetComponentStyle("GUIDragIndicator").GetDefaultSprite();
 
                 slotHotkeySprite = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(258, 7, 120, 120), null, 0);
 
@@ -235,6 +235,23 @@ namespace Barotrauma
                 GameMain.Server?.KarmaManager.OnItemTakenFromPlayer(characterInventory, client, item);
             }
 #endif
+            if (this is CharacterInventory)
+            {
+                if (prevInventory != this)
+                {
+                    HumanAIController.ItemTaken(item, user);
+                }
+            }
+            else
+            {
+                if (item.FindParentInventory(inv => inv is CharacterInventory) is CharacterInventory currentInventory)
+                {
+                    if (currentInventory != prevInventory)
+                    {
+                        HumanAIController.ItemTaken(item, user);
+                    }
+                }
+            }
         }
 
         public bool IsEmpty()

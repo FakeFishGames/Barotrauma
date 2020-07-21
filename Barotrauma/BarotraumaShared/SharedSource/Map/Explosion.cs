@@ -311,7 +311,7 @@ namespace Barotrauma
                         {
                             if (damages.TryGetValue(limb, out float damage))
                             {
-                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage);
+                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true);
                             }
                         }
                     }

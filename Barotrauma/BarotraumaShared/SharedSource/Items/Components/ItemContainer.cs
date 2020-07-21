@@ -107,6 +107,8 @@ namespace Barotrauma.Items.Components
 
         public IEnumerable<string> GetContainableItemIdentifiers => ContainableItems.SelectMany(ri => ri.Identifiers);
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         public ItemContainer(Item item, XElement element)
             : base (item, element)
         {
@@ -352,18 +354,12 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            if (itemIds == null) return;
+            if (itemIds == null) { return; }
 
             for (ushort i = 0; i < itemIds.Length; i++)
             {
-                Item item = Entity.FindEntityByID(itemIds[i]) as Item;
-                if (item == null) continue;
-
-                if (i >= Inventory.Capacity)
-                {
-                    continue;
-                }
-
+                if (!(Entity.FindEntityByID(itemIds[i]) is Item item)) { continue; }
+                if (i >= Inventory.Capacity) { continue; }
                 Inventory.TryPutItem(item, i, false, false, null, false);
             }
 
@@ -376,6 +372,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
 #if CLIENT
             inventoryTopSprite?.Remove();
             inventoryBackSprite?.Remove();

@@ -80,6 +80,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         private List<CustomInterfaceElement> customInterfaceElementList = new List<CustomInterfaceElement>();
         
         public CustomInterface(Item item, XElement element)

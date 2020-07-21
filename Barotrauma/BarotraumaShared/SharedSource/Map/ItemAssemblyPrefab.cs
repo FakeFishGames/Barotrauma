@@ -53,11 +53,24 @@ namespace Barotrauma
             name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? originalName;
             Description = TextManager.Get("EntityDescription." + identifier, returnNull: true) ?? Description;
 
+            List<ushort> containedItemIDs = new List<ushort>();
+            foreach (XElement entityElement in doc.Root.Elements())
+            {
+                var containerElement = entityElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("itemcontainer", StringComparison.OrdinalIgnoreCase));
+                if (containerElement == null) { continue; }
+
+                var itemIds = containerElement.GetAttributeIntArray("contained", new int[0]);
+                containedItemIDs.AddRange(itemIds.Select(id => (ushort)id));
+            }
+
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
             DisplayEntities = new List<Pair<MapEntityPrefab, Rectangle>>();
             foreach (XElement entityElement in doc.Root.Elements())
             {
+                ushort id = (ushort)entityElement.GetAttributeInt("ID", 0);
+                if (id > 0 && containedItemIDs.Contains(id)) { continue; }
+
                 string identifier = entityElement.GetAttributeString("identifier", entityElement.Name.ToString().ToLowerInvariant());
                 MapEntityPrefab mapEntity = List.FirstOrDefault(p => p.Identifier == identifier);
                 if (mapEntity == null)

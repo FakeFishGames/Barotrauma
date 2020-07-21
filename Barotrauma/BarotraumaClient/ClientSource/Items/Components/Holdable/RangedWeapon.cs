@@ -114,6 +114,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             crosshairSprite?.Remove();
             crosshairSprite = null;
             crosshairPointerSprite?.Remove();

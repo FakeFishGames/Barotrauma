@@ -187,7 +187,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (IsActive && item.ParentInventory?.Owner is Character user && user == Character.Controlled)// && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > nodeDistance)
                 {
-                    if (user.CanInteract)
+                    if (user.CanInteract && currLength < MaxLength)
                     {
                         Vector2 gridPos = Character.Controlled.Position;
                         Vector2 roundedGridPos = new Vector2(

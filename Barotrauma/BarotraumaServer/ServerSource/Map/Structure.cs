@@ -14,7 +14,7 @@ namespace Barotrauma
             msg.Write((byte)Sections.Length);
             for (int i = 0; i < Sections.Length; i++)
             {
-                msg.WriteRangedSingle(Sections[i].damage / Health, 0.0f, 1.0f, 8);
+                msg.WriteRangedSingle(Sections[i].damage / MaxHealth, 0.0f, 1.0f, 8);
             }
         }
     }

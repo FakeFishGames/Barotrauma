@@ -2,7 +2,7 @@
 {
     partial class MissionMode : GameMode
     {
-        private Mission mission;
+        private readonly Mission mission;
 
         public override Mission Mission
         {
@@ -12,26 +12,18 @@
             }
         }
 
-        public MissionMode(GameModePreset preset, object param)
-            : base(preset, param)
+        public MissionMode(GameModePreset preset, MissionPrefab missionPrefab)
+            : base(preset)
         {
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
-            if (param is MissionType missionType)
-            {
-                mission = Mission.LoadRandom(locations, GameMain.NetLobbyScreen.LevelSeed, false, missionType);
-            }
-            else if (param is MissionPrefab missionPrefab)
-            {
-                mission = missionPrefab.Instantiate(locations);
-            }
-            else if (param is Mission)
-            {
-                mission = (Mission)param;
-            }
-            else
-            {
-                throw new System.ArgumentException("Unrecognized MissionMode parameter \"" + param + "\"");
-            }
+            mission = missionPrefab.Instantiate(locations);
+        }
+
+        public MissionMode(GameModePreset preset, MissionType missionType, string seed)
+            : base(preset)
+        {
+            Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
+            mission = Mission.LoadRandom(locations, seed, false, missionType);
         }
     }
 }

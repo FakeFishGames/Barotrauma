@@ -11,6 +11,10 @@ namespace Barotrauma
 
         public bool AllowEndVoting = true;
 
+        public bool VoteRunning = false;
+
+        public enum VoteState { None = 0, Started = 1, Running = 2, Passed = 3, Failed = 4 };
+
         private List<Pair<object, int>> GetVoteList(VoteType voteType, List<Client> voters)
         {
             List<Pair<object, int>> voteList = new List<Pair<object, int>>();

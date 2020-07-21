@@ -26,6 +26,7 @@ namespace Barotrauma.Tutorials
         protected enum TutorialContentTypes { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
         protected string playableContentPath;
         protected Point screenResolution;
+        protected WindowMode windowMode;
         protected float prevUIScale;
 
         private GUIFrame holderFrame, objectiveFrame;
@@ -207,7 +208,7 @@ namespace Barotrauma.Tutorials
 
         public virtual void AddToGUIUpdateList()
         {
-            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale)
+            if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale || GameMain.Config.WindowMode != windowMode)
             {
                 CreateObjectiveFrame();
             }
@@ -340,6 +341,7 @@ namespace Barotrauma.Tutorials
             }
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            windowMode = GameMain.Config.WindowMode;
             prevUIScale = GUI.Scale;
         }
 

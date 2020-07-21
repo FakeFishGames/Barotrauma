@@ -8,14 +8,10 @@ namespace Barotrauma
         public static List<GameModePreset> PresetList = new List<GameModePreset>();
 
         protected DateTime startTime;
-        
-        protected bool isRunning;
-        
+                
         protected GameModePreset preset;
-
-        private string endMessage;
-        
-        protected CrewManager CrewManager
+                
+        public CrewManager CrewManager
         {
             get { return GameMain.GameSession?.CrewManager; }
         }
@@ -23,11 +19,6 @@ namespace Barotrauma
         public virtual Mission Mission
         {
             get { return null; }
-        }
-
-        public bool IsRunning
-        {
-            get { return isRunning; }
         }
 
         public bool IsSinglePlayer
@@ -40,9 +31,9 @@ namespace Barotrauma
             get { return preset.Name; }
         }
 
-        public string EndMessage
+        public virtual bool Paused
         {
-            get { return endMessage; }
+            get { return false; }
         }
 
         public GameModePreset Preset
@@ -50,7 +41,7 @@ namespace Barotrauma
             get { return preset; }
         }
 
-        public GameMode(GameModePreset preset, object param)
+        public GameMode(GameModePreset preset)
         {
             this.preset = preset;
         }
@@ -58,10 +49,6 @@ namespace Barotrauma
         public virtual void Start()
         {
             startTime = DateTime.Now;
-
-            endMessage = "The round has ended!";
-
-            isRunning = true;
         }
 
         public virtual void ShowStartMessage() { }
@@ -69,8 +56,6 @@ namespace Barotrauma
         public virtual void AddToGUIUpdateList()
         {
 #if CLIENT
-            if (!isRunning) return;
-            
             GameMain.GameSession?.CrewManager.AddToGUIUpdateList();
 #endif
         }
@@ -80,15 +65,10 @@ namespace Barotrauma
             CrewManager?.Update(deltaTime);
         }
 
-        public virtual void End(string endMessage = "")
+        public virtual void End(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
-            isRunning = false;
-
-            if (endMessage != "" || this.endMessage == null) this.endMessage = endMessage;
-
-            GameMain.GameSession.EndRound(endMessage);
         }
-        
+
         public virtual void Remove() { }
     }
 }

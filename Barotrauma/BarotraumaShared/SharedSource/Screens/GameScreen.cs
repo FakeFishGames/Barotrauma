@@ -100,6 +100,11 @@ namespace Barotrauma
             if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
                 !DebugConsole.IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
             {
+                if (PlayerInput.KeyHit(Keys.Insert))
+                {
+                    DebugConsole.ExecuteCommand("teleportcharacter");
+                }
+
                 var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
                 if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
 
@@ -188,18 +193,16 @@ namespace Barotrauma
             {
                 Vector2 targetPos = Lights.LightManager.ViewTarget.DrawPosition;
                 if (Lights.LightManager.ViewTarget == Character.Controlled &&
-                    (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen))
+                    (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen || ConversationAction.IsDialogOpen))
                 {
-                    Vector2 screenTargetPos = new Vector2(0.0f, GameMain.GraphicsHeight * 0.5f);
-                    if (CrewManager.IsCommandInterfaceOpen)
+                    Vector2 screenTargetPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) * 0.5f;
+                    if (CharacterHealth.OpenHealthWindow != null)
                     {
-                        screenTargetPos.X = GameMain.GraphicsWidth * 0.5f;
+                        screenTargetPos.X = GameMain.GraphicsWidth * (CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ? 0.75f : 0.25f);
                     }
-                    else
+                    else if (ConversationAction.IsDialogOpen != null)
                     {
-                        screenTargetPos = CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ?
-                            new Vector2(GameMain.GraphicsWidth * 0.75f, GameMain.GraphicsHeight * 0.5f) :
-                            new Vector2(GameMain.GraphicsWidth * 0.25f, GameMain.GraphicsHeight * 0.5f);
+                        screenTargetPos.Y = GameMain.GraphicsHeight * 0.4f;
                     }
                     Vector2 screenOffset = screenTargetPos - new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight / 2);
                     screenOffset.Y = -screenOffset.Y;
@@ -275,20 +278,14 @@ namespace Barotrauma
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Physics", sw.ElapsedTicks);
 #endif
-
-#if CLIENT
-            if (!PlayerInput.PrimaryMouseButtonHeld())
-            {
-                Inventory.draggingSlot = null;
-                Inventory.draggingItem = null;
-            }
-#endif
-
+            UpdateProjSpecific(deltaTime);
 
 #if RUN_PHYSICS_IN_SEPARATE_THREAD
             }
 #endif
         }
+
+        partial void UpdateProjSpecific(double deltaTime);
 
         private void ExecutePhysics()
         {

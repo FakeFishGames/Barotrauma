@@ -25,10 +25,13 @@ namespace Barotrauma
         public Func<bool> abortCondition;
         public Func<PathNode, bool> endNodeFilter;
 
+        public Func<float> priorityGetter;
+
         public bool followControlledCharacter;
         public bool mimic;
 
         private float _closeEnough = 50;
+        private readonly float minDistance = 25;
         /// <summary>
         /// Display units
         /// </summary>
@@ -37,7 +40,7 @@ namespace Barotrauma
             get { return _closeEnough; }
             set
             {
-                _closeEnough = Math.Max(_closeEnough, value);
+                _closeEnough = Math.Max(minDistance, value);
             }
         }
         public bool IgnoreIfTargetDead { get; set; }
@@ -51,6 +54,8 @@ namespace Barotrauma
         public string TargetName { get; set; }
 
         public ISpatialEntity Target { get; private set; }
+
+        public float? OverridePriority = null;
 
         public override float GetPriority()
         {
@@ -68,7 +73,18 @@ namespace Barotrauma
             }
             else
             {
-                Priority = objectiveManager.CurrentOrder == this ? AIObjectiveManager.OrderPriority : 10;
+                if (priorityGetter != null)
+                {
+                    Priority = priorityGetter();
+                }
+                else if (OverridePriority.HasValue)
+                {
+                    Priority = OverridePriority.Value;
+                }
+                else
+                {
+                    Priority = objectiveManager.CurrentOrder == this ? AIObjectiveManager.OrderPriority : 10;
+                }
             }
             return Priority;
         }
@@ -86,7 +102,8 @@ namespace Barotrauma
             }
             else if (Target is Character)
             {
-                CloseEnough = Math.Max(closeEnough, AIObjectiveGetItem.DefaultReach);
+                //if closeEnough value is given, allow setting CloseEnough as low as 50, otherwise above AIObjectiveGetItem.DefaultReach
+                CloseEnough = Math.Max(closeEnough, MathUtils.NearlyEqual(closeEnough, 0.0f) ? AIObjectiveGetItem.DefaultReach : 50);
             }
             else
             {
@@ -289,7 +306,7 @@ namespace Barotrauma
             return null;
         }
 
-        private bool IsCloseEnough
+        public bool IsCloseEnough
         {
             get
             {

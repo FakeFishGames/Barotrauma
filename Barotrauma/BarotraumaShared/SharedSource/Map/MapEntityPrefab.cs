@@ -111,6 +111,9 @@ namespace Barotrauma
             get;
             protected set;
         }
+        
+        [Serialize("", false)]
+        public string AllowedUpgrades { get; set; }
 
         [Serialize(false, false)]
         public bool HideInMenus { get; set; }
@@ -207,6 +210,11 @@ namespace Barotrauma
             Category = MapEntityCategory.Structure;
         }
 
+        public string[] GetAllowedUpgrades()
+        {
+            return string.IsNullOrWhiteSpace(AllowedUpgrades) ? new string[0] : AllowedUpgrades.Split(",");
+        }
+
         protected virtual void CreateInstance(Rectangle rect)
         {
             if (constructor == null) return;
@@ -300,6 +308,8 @@ namespace Barotrauma
         public bool IsLinkAllowed(MapEntityPrefab target)
         {
             if (target == null) { return false; }
+            if (target is StructurePrefab && AllowedLinks.Contains("structure")) { return true; }
+            if (target is ItemPrefab && AllowedLinks.Contains("item")) { return true; }
             return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(identifier)
                 || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
         }

@@ -9,15 +9,24 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
-    struct LimbPos
+    class LimbPos : ISerializableEntity
     {
-        public LimbType limbType;
-        public Vector2 position;
+        [Editable]
+        public LimbType LimbType { get; set; }
+        [Editable]
+        public Vector2 Position { get; set; }
 
-        public LimbPos(LimbType limbType, Vector2 position)
+        public bool AllowUsingLimb;
+
+        public string Name => LimbType.ToString();
+
+        public Dictionary<string, SerializableProperty> SerializableProperties => null;
+
+        public LimbPos(LimbType limbType, Vector2 position, bool allowUsingLimb)
         {
-            this.limbType = limbType;
-            this.position = position;
+            LimbType = limbType;
+            Position = position;
+            AllowUsingLimb = allowUsingLimb;
         }
     }
 
@@ -66,10 +75,31 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, false, description: "Should the HUD (inventory, health bar, etc) be hidden when this item is selected.")]
+        public bool HideHUD
+        {
+            get;
+            set;
+        }
+
+        public enum UseEnvironment
+        {
+            Air, Water, Both
+        };
+
+        [Serialize(UseEnvironment.Both, false, description: "Can the item be selected in air, underwater or both.")]
+        public UseEnvironment UsableIn { get; set; }
+
         public bool ControlCharacterPose
         {
             get { return limbPositions.Count > 0; }
         }
+
+        public bool AllowAiming
+        {
+            get;
+            private set;
+        } = true;
 
         public Controller(Item item, XElement element)
             : base(item, element)
@@ -79,25 +109,31 @@ namespace Barotrauma.Items.Components
             userPos = element.GetAttributeVector2("UserPos", Vector2.Zero);
 
             Enum.TryParse(element.GetAttributeString("direction", "None"), out dir);
-                
-            foreach (XElement el in element.Elements())
+
+            foreach (XElement subElement in element.Elements())
             {
-                if (el.Name != "limbposition") continue;
-
-                LimbPos lp = new LimbPos();
-
-                try
+                if (subElement.Name != "limbposition") { continue; }
+                string limbStr = subElement.GetAttributeString("limb", "");
+                if (!Enum.TryParse(subElement.Attribute("limb").Value, out LimbType limbType))
                 {
-                    lp.limbType = (LimbType)Enum.Parse(typeof(LimbType), el.Attribute("limb").Value, true);
+                    DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.");
                 }
-                catch (Exception e)
+                else
                 {
-                    DebugConsole.ThrowError("Error in " + element + ": " + e.Message, e);
+                    LimbPos limbPos = new LimbPos(limbType,
+                        subElement.GetAttributeVector2("position", Vector2.Zero),
+                        subElement.GetAttributeBool("allowusinglimb", false));
+                    limbPositions.Add(limbPos);
+                    if (!limbPos.AllowUsingLimb)
+                    {
+                        if (limbType == LimbType.RightHand || limbType == LimbType.RightForearm || limbType == LimbType.RightArm ||
+                            limbType == LimbType.LeftHand || limbType == LimbType.LeftForearm || limbType == LimbType.LeftArm)
+                        {
+                            AllowAiming = false;
+                        }
+                    }
                 }
 
-                lp.position = el.GetAttributeVector2("position", Vector2.Zero);
-
-                limbPositions.Add(lp);
             }
 
             IsActive = true;
@@ -115,7 +151,9 @@ namespace Barotrauma.Items.Components
             if (user == null 
                 || user.Removed
                 || user.SelectedConstruction != item
-                || !user.CanInteractWith(item))
+                || !user.CanInteractWith(item) 
+                || (UsableIn == UseEnvironment.Water && !user.AnimController.InWater)
+                || (UsableIn == UseEnvironment.Air && user.AnimController.InWater))
             {
                 if (user != null)
                 {
@@ -187,12 +225,29 @@ namespace Barotrauma.Items.Components
 
             foreach (LimbPos lb in limbPositions)
             {
-                Limb limb = user.AnimController.GetLimb(lb.limbType);
-                if (limb == null || !limb.body.Enabled) continue;
+                Limb limb = user.AnimController.GetLimb(lb.LimbType);
+                if (limb == null || !limb.body.Enabled) { continue; }
+
+                if (lb.AllowUsingLimb)
+                {
+                    switch (lb.LimbType)
+                    {
+                        case LimbType.RightHand:
+                        case LimbType.RightForearm:
+                        case LimbType.RightArm:
+                            if (user.SelectedItems[0] != null) { continue; }
+                            break;
+                        case LimbType.LeftHand:
+                        case LimbType.LeftForearm:
+                        case LimbType.LeftArm:
+                            if ( user.SelectedItems[1] != null) { continue; }
+                            break;
+                    }
+                }
 
                 limb.Disabled = true;
-                
-                Vector2 worldPosition = new Vector2(item.WorldRect.X, item.WorldRect.Y) + lb.position * item.Scale;
+
+                Vector2 worldPosition = new Vector2(item.WorldRect.X, item.WorldRect.Y) + lb.Position * item.Scale;
                 Vector2 diff = worldPosition - limb.WorldPosition;
 
                 limb.PullJointEnabled = true;
@@ -255,7 +310,7 @@ namespace Barotrauma.Items.Components
                 Lights.LightManager.ViewTarget = focusTarget;
                 cam.TargetPos = focusTarget.WorldPosition;
 
-                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected, deltaTime * 10.0f);
+                cam.OffsetAmount = MathHelper.Lerp(cam.OffsetAmount, (focusTarget as Item).Prefab.OffsetOnSelected * focusTarget.OffsetOnSelectedMultiplier, deltaTime * 10.0f);
                 HideHUDs(true);
             }
 #endif
@@ -326,8 +381,8 @@ namespace Barotrauma.Items.Components
 
             foreach (LimbPos lb in limbPositions)
             {
-                Limb limb = character.AnimController.GetLimb(lb.limbType);
-                if (limb == null) continue;
+                Limb limb = character.AnimController.GetLimb(lb.LimbType);
+                if (limb == null) { continue; }
 
                 limb.Disabled = false;
                 limb.PullJointEnabled = false;
@@ -348,6 +403,12 @@ namespace Barotrauma.Items.Components
         public override bool Select(Character activator)
         {
             if (activator == null || activator.Removed) { return false; }
+
+            if (UsableIn == UseEnvironment.Water && !activator.AnimController.InWater ||
+                UsableIn == UseEnvironment.Air && activator.AnimController.InWater)
+            {
+                return false;
+            }
 
             //someone already using the item
             if (user != null && !user.Removed)
@@ -383,14 +444,13 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < limbPositions.Count; i++)
             {
-                float diff = (item.Rect.X + limbPositions[i].position.X * item.Scale) - item.Rect.Center.X;
+                float diff = (item.Rect.X + limbPositions[i].Position.X * item.Scale) - item.Rect.Center.X;
 
                 Vector2 flippedPos =
                     new Vector2(
                         (item.Rect.Center.X - diff - item.Rect.X) / item.Scale,
-                        limbPositions[i].position.Y);
-
-                limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
+                        limbPositions[i].Position.Y);
+                limbPositions[i] = new LimbPos(limbPositions[i].LimbType, flippedPos, limbPositions[i].AllowUsingLimb);
             }
         }
 
@@ -400,14 +460,13 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < limbPositions.Count; i++)
             {
-                float diff = (item.Rect.Y + limbPositions[i].position.Y) - item.Rect.Center.Y;
+                float diff = (item.Rect.Y + limbPositions[i].Position.Y) - item.Rect.Center.Y;
 
                 Vector2 flippedPos =
                     new Vector2(
-                        limbPositions[i].position.X,
+                        limbPositions[i].Position.X,
                         item.Rect.Center.Y - diff - item.Rect.Y);
-
-                limbPositions[i] = new LimbPos(limbPositions[i].limbType, flippedPos);
+                limbPositions[i] = new LimbPos(limbPositions[i].LimbType, flippedPos, limbPositions[i].AllowUsingLimb);
             }
         }
 

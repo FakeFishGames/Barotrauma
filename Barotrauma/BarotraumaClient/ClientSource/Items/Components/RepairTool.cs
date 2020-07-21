@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
             var progressBar = user.UpdateHUDProgressBar(
                 targetStructure.ID * 1000 + sectionIndex, //unique "identifier" for each wall section
                 progressBarPos,
-                1.0f - targetStructure.SectionDamage(sectionIndex) / targetStructure.Health,
+                MathUtils.InverseLerp(targetStructure.Prefab.MinHealth, targetStructure.Health, targetStructure.Health - targetStructure.SectionDamage(sectionIndex)),
                 GUI.Style.Red, GUI.Style.Green);
 
             if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);

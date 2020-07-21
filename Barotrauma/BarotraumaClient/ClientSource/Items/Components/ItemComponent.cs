@@ -186,7 +186,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-
         private bool shouldMuffleLooping;
         private float lastMuffleCheckTime;
         private ItemSound loopingSound;
@@ -295,8 +294,6 @@ namespace Barotrauma.Items.Components
                 PlaySound(matchingSounds[index], item.WorldPosition);
             }
         }
-
-
         private void PlaySound(ItemSound itemSound, Vector2 position)
         {
             if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > itemSound.Range * itemSound.Range)
@@ -387,7 +384,6 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-
         public ItemComponent GetLinkUIToComponent()
         {
             if (string.IsNullOrEmpty(LinkUIToComponent))
@@ -431,13 +427,8 @@ namespace Barotrauma.Items.Components
                         DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - GUIFrame defined as rect, use RectTransform instead.");
                         break;
                     }
-
-                    Color? color = null;
-                    if (subElement.Attribute("color") != null) color = subElement.GetAttributeColor("color", Color.White);
-                    string style = subElement.Attribute("style") == null ?
-                        null : subElement.GetAttributeString("style", "");
-                    GuiFrame = new GUIFrame(RectTransform.Load(subElement, GUI.Canvas.ItemComponentHolder, Anchor.Center), style, color);
-                    DefaultLayout = GUILayoutSettings.Load(subElement);
+                    GuiFrameSource = subElement;
+                    ReloadGuiFrame();
                     break;
                 case "alternativelayout":
                     AlternativeLayout = GUILayoutSettings.Load(subElement);
@@ -501,6 +492,42 @@ namespace Barotrauma.Items.Components
             return true; //element processed
         }
 
+        private XElement GuiFrameSource;
+
+        protected void ReleaseGuiFrame()
+        {
+            if (GuiFrame != null)
+            {
+                GuiFrame.RectTransform.Parent = null;
+            }
+        }
+
+        protected void ReloadGuiFrame()
+        {
+            if (GuiFrame != null)
+            {
+                ReleaseGuiFrame();
+            }
+            Color? color = null;
+            if (GuiFrameSource.Attribute("color") != null)
+            {
+                color = GuiFrameSource.GetAttributeColor("color", Color.White);
+            }
+            string style = GuiFrameSource.Attribute("style") == null ? null : GuiFrameSource.GetAttributeString("style", "");
+            GuiFrame = new GUIFrame(RectTransform.Load(GuiFrameSource, GUI.Canvas.ItemComponentHolder, Anchor.Center), style, color);
+            DefaultLayout = GUILayoutSettings.Load(GuiFrameSource);
+            if (GuiFrame != null)
+            {
+                GuiFrame.RectTransform.ParentChanged += OnGUIParentChanged;
+            }
+            GameMain.Instance.ResolutionChanged += OnResolutionChanged;
+        }
+
+        /// <summary>
+        /// Overload this method and implement. The method is automatically called when the resolution changes.
+        /// </summary>
+        protected virtual void CreateGUI() { }
+
         //Starts a coroutine that will read the correct state of the component from the NetBuffer when correctionTimer reaches zero.
         protected void StartDelayedCorrection(ServerNetObject type, IReadMessage buffer, float sendingTime, bool waitForMidRoundSync = false)
         {
@@ -529,6 +556,30 @@ namespace Barotrauma.Items.Components
             delayedCorrectionCoroutine = null;
 
             yield return CoroutineStatus.Success;
+        }
+
+        /// <summary>
+        /// Launches when the parent of the GuiFrame is changed.
+        /// </summary>
+        protected void OnGUIParentChanged(RectTransform newParent)
+        {
+            if (newParent == null)
+            {
+                // Make sure to unregister. It doesn't matter if we haven't ever registered to the event.
+                GameMain.Instance.ResolutionChanged -= OnResolutionChangedPrivate;
+            }
+        }
+
+        protected virtual void OnResolutionChanged() { }
+
+        private void OnResolutionChangedPrivate()
+        {
+            if (RecreateGUIOnResolutionChange)
+            {
+                ReloadGuiFrame();
+                CreateGUI();
+            }
+            OnResolutionChanged();
         }
     }
 }

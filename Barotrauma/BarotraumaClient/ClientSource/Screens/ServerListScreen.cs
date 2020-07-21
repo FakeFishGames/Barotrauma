@@ -67,7 +67,7 @@ namespace Barotrauma
         private List<ServerInfo> favoriteServers;
         private List<ServerInfo> recentServers;
 
-        private readonly HashSet<string> activePings = new HashSet<string>();
+        private readonly Dictionary<string, int> activePings = new Dictionary<string, int>();
 
         private enum ServerListTab
         {
@@ -161,7 +161,7 @@ namespace Barotrauma
         private const float sidebarWidth = 0.2f;
         public ServerListScreen()
         {
-            GameMain.Instance.OnResolutionChanged += CreateUI;
+            GameMain.Instance.ResolutionChanged += CreateUI;
             CreateUI();
         }
 
@@ -953,6 +953,7 @@ namespace Barotrauma
             base.Update(deltaTime);
 
             UpdateFriendsList();
+            UpdateInfoQueries();
 
             if (PlayerInput.PrimaryMouseButtonClicked())
             {
@@ -984,7 +985,7 @@ namespace Barotrauma
                 //never show newer versions
                 //(ignore revision number, it doesn't affect compatibility)
                 if (remoteVersion != null &&
-                    (remoteVersion.Major > GameMain.Version.Major || remoteVersion.Minor > GameMain.Version.Minor || remoteVersion.Build > GameMain.Version.Build))
+                    ToolBox.VersionNewerIgnoreRevision(GameMain.Version, remoteVersion))
                 {
                     child.Visible = false;
                 }
@@ -1045,6 +1046,28 @@ namespace Barotrauma
             }
 
             serverList.UpdateScrollBarSize();
+        }
+
+        private Queue<ServerInfo> pendingQueries = new Queue<ServerInfo>();
+        int activeQueries = 0;
+        private void QueueInfoQuery(ServerInfo info)
+        {
+            pendingQueries.Enqueue(info);
+        }
+
+        private void OnQueryDone(ServerInfo info)
+        {
+            activeQueries--;
+        }
+
+        public void UpdateInfoQueries()
+        {
+            while (activeQueries < 25 && pendingQueries.Count > 0)
+            {
+                activeQueries++;
+                var info = pendingQueries.Dequeue();
+                info.QueryLiveInfo(UpdateServerInfo, OnQueryDone);
+            }
         }
 
         private void ShowDirectJoinPrompt()
@@ -1134,7 +1157,7 @@ namespace Barotrauma
                 SelectedTab = ServerListTab.Favorites;
                 FilterServers();
 
-                serverInfo.QueryLiveInfo(UpdateServerInfo);
+                QueueInfoQuery(serverInfo);
 
                 msgBox.Close();
                 return false;
@@ -1276,11 +1299,12 @@ namespace Barotrauma
                             avatarFunc = Steamworks.SteamFriends.GetLargeAvatarAsync;
                             break;
                     }
-                    TaskPool.Add(avatarFunc(friend.Id), (Task<Steamworks.Data.Image?> task) =>
+                    TaskPool.Add($"Get{avatarSize}AvatarAsync", avatarFunc(friend.Id), (task) =>
                     {
-                        if (!task.Result.HasValue) { return; }
+                        Steamworks.Data.Image? img = ((Task<Steamworks.Data.Image?>)task).Result;
+                        if (!img.HasValue) { return; }
 
-                        var avatarImage = task.Result.Value;
+                        var avatarImage = img.Value;
 
                         const int desaturatedWeight = 180;
 
@@ -1477,10 +1501,13 @@ namespace Barotrauma
 
             CoroutineManager.StopCoroutines("EstimateLobbyPing");
 
-            TaskPool.Add(Steamworks.SteamNetworkingUtils.WaitForPingDataAsync(), (task) =>
+            if (SteamManager.IsInitialized)
             {
-                steamPingInfoReady = true;
-            });
+                TaskPool.Add("WaitForPingDataAsync (serverlist)", Steamworks.SteamNetworkingUtils.WaitForPingDataAsync(), (task) =>
+                {
+                    steamPingInfoReady = true;
+                });
+            }
 
             friendsListUpdateTime = Timing.TotalTime - 1.0;
             UpdateFriendsList();
@@ -1526,7 +1553,7 @@ namespace Barotrauma
                     foreach (ServerInfo info in knownServers)
                     {
                         AddToServerList(info);
-                        info.QueryLiveInfo(UpdateServerInfo);
+                        QueueInfoQuery(info);
                     }
                 }
             }
@@ -1823,7 +1850,7 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
-            Steamworks.Data.PingLocation pingLocation = serverInfo.PingLocation.Value;
+            Steamworks.Data.NetPingLocation pingLocation = serverInfo.PingLocation.Value;
             serverInfo.Ping = Steamworks.SteamNetworkingUtils.LocalPingLocation?.EstimatePingTo(pingLocation) ?? -1;
             serverInfo.PingChecked = true;
             serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
@@ -1977,25 +2004,25 @@ namespace Barotrauma
 
             lock (activePings)
             {
-                if (activePings.Contains(serverInfo.IP)) { return; }
-                activePings.Add(serverInfo.IP);
+                if (activePings.ContainsKey(serverInfo.IP)) { return; }
+                activePings.Add(serverInfo.IP, activePings.Any() ? activePings.Values.Max()+1 : 0);
             }
 
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
-            TaskPool.Add(PingServerAsync(serverInfo?.IP, 1000),
+            TaskPool.Add($"PingServerAsync ({serverInfo?.IP ?? "NULL"})", PingServerAsync(serverInfo.IP, 1000),
                 new Tuple<ServerInfo, GUITextBlock>(serverInfo, serverPingText),
                 (rtt, obj) =>
                 {
                     var info = obj.Item1;
                     var text = obj.Item2;
-                    info.Ping = rtt.Result; info.PingChecked = true;
+                    info.Ping = ((Task<int>)rtt).Result; info.PingChecked = true;
                     text.TextColor = GetPingTextColor(info.Ping);
                     text.Text = info.Ping > -1 ? info.Ping.ToString() : "?";
                     lock (activePings)
                     {
-                        activePings.Remove(serverInfo.IP);
+                        activePings.Remove(info.IP);
                     }
                 });
         }
@@ -2009,12 +2036,12 @@ namespace Barotrauma
         public async Task<int> PingServerAsync(string ip, int timeOut)
         {
             await Task.Yield();
-            int activePingCount = 100;
-            while (activePingCount > 25)
+            bool shouldGo = false;
+            while (!shouldGo)
             {
                 lock (activePings)
                 {
-                    activePingCount = activePings.Count;
+                    shouldGo = activePings.Count(kvp => kvp.Value < activePings[ip]) < 25;
                 }
                 await Task.Delay(25);
             }

@@ -98,37 +98,8 @@ namespace Barotrauma.Sounds
             BaseGain = 1.0f;
             BaseNear = 100.0f;
             BaseFar = 200.0f;
-            
-            if (!stream)
-            {
-                Al.GenBuffer(out alBuffer);
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
-                }
 
-                if (!Al.IsBuffer(alBuffer))
-                {
-                    throw new Exception("Generated OpenAL buffer is invalid!");
-                }
-
-                Al.GenBuffer(out alMuffledBuffer);
-                alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
-                }
-                
-                if (!Al.IsBuffer(alMuffledBuffer))
-                {
-                    throw new Exception("Generated OpenAL buffer is invalid!");
-                }
-            }
-            else
-            {
-                alBuffer = 0;
-            }
+            InitializeALBuffers();
         }
 
         public override string ToString()
@@ -191,10 +162,42 @@ namespace Barotrauma.Sounds
 
         public abstract float GetAmplitudeAtPlaybackPos(int playbackPos);
 
-        public virtual void Dispose()
+        public virtual void InitializeALBuffers()
         {
-            if (disposed) { return; }
+            if (!Stream)
+            {
+                Al.GenBuffer(out alBuffer);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
+                }
 
+                if (!Al.IsBuffer(alBuffer))
+                {
+                    throw new Exception("Generated OpenAL buffer is invalid!");
+                }
+
+                Al.GenBuffer(out alMuffledBuffer);
+                alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
+                }
+
+                if (!Al.IsBuffer(alMuffledBuffer))
+                {
+                    throw new Exception("Generated OpenAL buffer is invalid!");
+                }
+            }
+            else
+            {
+                alBuffer = 0;
+            }
+        }
+
+        public virtual void DeleteALBuffers()
+        {
             Owner.KillChannels(this);
             if (alBuffer != 0)
             {
@@ -202,7 +205,7 @@ namespace Barotrauma.Sounds
                 {
                     throw new Exception("Buffer to delete is invalid!");
                 }
-            
+
                 Al.DeleteBuffer(alBuffer); alBuffer = 0;
 
                 int alError = Al.GetError();
@@ -226,6 +229,13 @@ namespace Barotrauma.Sounds
                     throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
                 }
             }
+        }
+
+        public virtual void Dispose()
+        {
+            if (disposed) { return; }
+
+            DeleteALBuffers();
 
             Owner.RemoveSound(this);
             disposed = true;

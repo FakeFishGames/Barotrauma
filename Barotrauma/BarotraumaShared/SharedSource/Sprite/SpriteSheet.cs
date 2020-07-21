@@ -20,13 +20,13 @@ namespace Barotrauma
             private set;
         }
         
-        public SpriteSheet(XElement element, string path = "", string file = "", int emptyFrameCount = 0)
+        public SpriteSheet(XElement element, string path = "", string file = "")
             : base(element, path, file)
         {
             int columnCount = Math.Max(element.GetAttributeInt("columns", 1), 1);
             int rowCount = Math.Max(element.GetAttributeInt("rows", 1), 1);
             origin = element.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
-            emptyFrames = emptyFrameCount;
+            emptyFrames = element.GetAttributeInt("emptyframes", 0);
             Init(columnCount, rowCount);
         }
 

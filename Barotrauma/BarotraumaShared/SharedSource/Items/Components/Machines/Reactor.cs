@@ -172,6 +172,8 @@ namespace Barotrauma.Items.Components
         }
         
         private float prevAvailableFuel;
+
+        [Serialize(0.0f, true)]
         public float AvailableFuel { get; set; }
 
         public Reactor(Item item, XElement element)
@@ -316,9 +318,12 @@ namespace Barotrauma.Items.Components
                 if (item.CurrentHull != null)
                 {
                     var aiTarget = item.CurrentHull.AiTarget;
-                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
-                    float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
-                    aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
+                    if (aiTarget != null)
+                    {
+                        float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                        float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
+                        aiTarget.SoundRange = Math.Max(aiTarget.SoundRange, noise);
+                    }
                 }
 
                 if (item.AiTarget != null)
@@ -447,7 +452,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void UpdateAutoTemp(float speed, float deltaTime)
+        public void UpdateAutoTemp(float speed, float deltaTime)
         {
             float desiredTurbineOutput = (optimalTurbineOutput.X + optimalTurbineOutput.Y) / 2.0f;
             targetTurbineOutput += MathHelper.Clamp(desiredTurbineOutput - targetTurbineOutput, -speed, speed) * deltaTime;
@@ -470,6 +475,19 @@ namespace Barotrauma.Items.Components
             //otherwise we may "overshoot", cranking the target fission rate all the way up because it takes a while
             //for the actual fission rate and temperature to follow
             targetFissionRate = MathHelper.Clamp(targetFissionRate, FissionRate - 5, FissionRate + 5);
+        }
+
+        public void PowerUpImmediately()
+        {
+            PowerOn = true;
+            AutoTemp = true;
+            prevAvailableFuel = AvailableFuel;
+            for (int i = 0; i < 100; i++)
+            {
+                Update((float)(Timing.Step * 10.0f), cam: null);
+                UpdateAutoTemp(100.0f, (float)(Timing.Step * 10.0f));
+                AvailableFuel = prevAvailableFuel;
+            }
         }
         
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -557,7 +575,7 @@ namespace Barotrauma.Items.Components
                     if (objective.SubObjectives.None())
                     {
                         int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
-                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true);
+                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC);
                         character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
                     }
                     return false;
@@ -639,6 +657,11 @@ namespace Barotrauma.Items.Components
             aiUpdateTimer = AIUpdateInterval;
 
             return false;
+        }
+
+        public override void OnMapLoaded()
+        {
+            prevAvailableFuel = AvailableFuel;
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)

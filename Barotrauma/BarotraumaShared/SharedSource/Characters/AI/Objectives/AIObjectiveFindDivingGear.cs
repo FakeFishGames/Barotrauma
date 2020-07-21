@@ -18,7 +18,7 @@ namespace Barotrauma
 
         public static float lowOxygenThreshold = 10;
 
-        protected override bool Check() => HumanAIController.HasItem(character, gearTag, "oxygensource") || HumanAIController.HasItem(character, fallbackTag, "oxygensource");
+        protected override bool Check() => HumanAIController.HasItem(character, gearTag, out _, "oxygensource", requireEquipped: true) || HumanAIController.HasItem(character, fallbackTag, out _, "oxygensource", requireEquipped: true);
 
         public AIObjectiveFindDivingGear(Character character, bool needDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {

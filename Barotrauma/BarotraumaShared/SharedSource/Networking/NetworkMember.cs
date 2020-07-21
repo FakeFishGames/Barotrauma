@@ -24,9 +24,13 @@ namespace Barotrauma.Networking
         RESPONSE_STARTGAME, //tell the server whether you're ready to start
         SERVER_COMMAND,     //tell the server to end a round or kick/ban someone (special permissions required)
 
+        EVENTMANAGER_RESPONSE,
+
         REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
 
-        ERROR           //tell the server that an error occurred
+        ERROR,           //tell the server that an error occurred
+        CREW
+        
     }
     enum ClientNetObject
     {
@@ -71,7 +75,10 @@ namespace Barotrauma.Networking
         ENDGAME,
 
         TRAITOR_MESSAGE,
-        MISSION
+        MISSION,
+        EVENTACTION,
+        RESET_UPGRADES,     //inform the clients that the upgrades on the submarine have been reset
+        CREW                //anything related to managing bots in multiplayer
     }
     enum ServerNetObject
     {
@@ -82,7 +89,7 @@ namespace Barotrauma.Networking
         CLIENT_LIST,
         ENTITY_POSITION,
         ENTITY_EVENT,
-        ENTITY_EVENT_INITIAL,
+        ENTITY_EVENT_INITIAL
     }
 
     enum TraitorMessageType
@@ -100,7 +107,10 @@ namespace Barotrauma.Networking
         Mode,
         EndRound,
         Kick,
-        StartRound
+        StartRound,
+        PurchaseAndSwitchSub,
+        PurchaseSub,
+        SwitchSub
     }
 
     enum DisconnectReason
@@ -157,7 +167,7 @@ namespace Barotrauma.Networking
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
 
-        public int EndVoteCount, EndVoteMax;
+        public int EndVoteCount, EndVoteMax, SubmarineVoteYesCount, SubmarineVoteNoCount, SubmarineVoteMax;
 
         protected bool gameStarted;
 

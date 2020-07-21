@@ -35,7 +35,7 @@ namespace Barotrauma
                 {
                     message.Write((byte)SpawnableType.Item);
                     DebugConsole.Log("Writing item spawn data " + entities.Entity.ToString() + " (original ID: " + entities.OriginalID + ", current ID: " + entities.Entity.ID + ")");
-                    ((Item)entities.Entity).WriteSpawnData(message, entities.OriginalID, entities.OriginalInventoryID);
+                    ((Item)entities.Entity).WriteSpawnData(message, entities.OriginalID, entities.OriginalInventoryID, entities.OriginalItemContainerIndex);
                 }
                 else if (entities.Entity is Character)
                 {

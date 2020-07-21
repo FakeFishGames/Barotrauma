@@ -162,7 +162,7 @@ namespace Barotrauma
     partial class ItemPrefab : MapEntityPrefab
     {
         private string name;
-        public override string Name { get { return name; } }
+        public override string Name => name;
 
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
 
@@ -179,10 +179,8 @@ namespace Barotrauma
         protected Vector2 size;                
 
         private float impactTolerance;
-
-        private bool canSpriteFlipX, canSpriteFlipY;
-        
-        private Dictionary<string, PriceInfo> prices;
+        private readonly PriceInfo defaultPrice;
+        private readonly Dictionary<string, PriceInfo> locationPrices;
 
         /// <summary>
         /// Defines areas where the item can be interacted with. If RequireBodyInsideTrigger is set to true, the character
@@ -407,6 +405,10 @@ namespace Barotrauma
             private set;
         }
 
+
+        [Serialize(true, false, description: "Can the item be rotated in the sprite editor.")]
+        public bool AllowRotatingInEditor { get; set; }
+
         [Serialize(false, false)]
         public bool ShowContentsInTooltip { get; private set; }
 
@@ -428,30 +430,22 @@ namespace Barotrauma
             private set;
         } = new Dictionary<string, float>();
 
-        public bool CanSpriteFlipX
-        {
-            get { return canSpriteFlipX; }
-        }
 
-        public bool CanSpriteFlipY
-        {
-            get { return canSpriteFlipY; }
-        }
+        [Serialize(true, false)]
+        public bool CanFlipX { get; private set; }
+        
+        [Serialize(true, false)]
+        public bool CanFlipY { get; private set; }
 
-        public Vector2 Size
-        {
-            get { return size; }
-        }
+        public bool CanSpriteFlipX { get; private set; }
 
-        public bool CanBeBought
-        {
-            get { return prices != null && prices.Count > 0; }
-        }
+        public bool CanSpriteFlipY { get; private set; }
 
-        public static void RemoveByFile(string filePath)
-        {
-            Prefabs.RemoveByFile(filePath);
-        }
+        public Vector2 Size => size;
+
+        public bool CanBeBought => (defaultPrice != null && defaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
+
+        public static void RemoveByFile(string filePath) => Prefabs.RemoveByFile(filePath);
 
         public static void LoadFromFile(ContentFile file)
         {
@@ -577,6 +571,9 @@ namespace Barotrauma
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
+            //works the same as nameIdentifier, but just replaces the description
+            string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
+
             if (string.IsNullOrEmpty(originalName))
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
@@ -646,7 +643,11 @@ namespace Barotrauma
 
             if (string.IsNullOrEmpty(Description))
             {
-                if (string.IsNullOrEmpty(nameIdentifier))
+                if (!string.IsNullOrEmpty(descriptionIdentifier))
+                {
+                    Description = TextManager.Get("EntityDescription." + descriptionIdentifier, true) ?? string.Empty;
+                }
+                else if (string.IsNullOrEmpty(nameIdentifier))
                 {
                     Description = TextManager.Get("EntityDescription." + identifier, true) ?? string.Empty;
                 }
@@ -667,8 +668,8 @@ namespace Barotrauma
                             spriteFolder = Path.GetDirectoryName(filePath);
                         }
 
-                        canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
-                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
+                        CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder, lazyLoad: true);
                         if (subElement.Attribute("sourcerect") == null)
@@ -684,10 +685,36 @@ namespace Barotrauma
                         sprite.EntityID = identifier;
                         break;
                     case "price":
-                        string locationType = subElement.GetAttributeString("locationtype", "");
-                        if (prices == null) prices = new Dictionary<string, PriceInfo>();
-                        prices[locationType.ToLowerInvariant()] = new PriceInfo(subElement);
+                        if (locationPrices == null) { locationPrices = new Dictionary<string, PriceInfo>(); }
+                        if (subElement.Attribute("baseprice") != null)
+                        {
+                            foreach (Tuple<string, PriceInfo> priceInfo in PriceInfo.CreatePriceInfos(subElement, out defaultPrice))
+                            {
+                                if (priceInfo == null) { continue; }
+                                locationPrices.Add(priceInfo.Item1, priceInfo.Item2);
+                            }
+                        }
+                        else if (subElement.Attribute("buyprice") != null)
+                        {
+                            string locationType = subElement.GetAttributeString("locationtype", "").ToLowerInvariant();
+                            locationPrices.Add(locationType, new PriceInfo(subElement));
+                        }
                         break;
+                    case "upgradeoverride":
+                    {
+#if CLIENT
+                        var sprites = new List<DecorativeSprite>();
+                        foreach (XElement decorSprite in subElement.Elements())
+                        {
+                            if (decorSprite.Name.ToString().Equals("decorativesprite", StringComparison.OrdinalIgnoreCase))
+                            {
+                                sprites.Add(new DecorativeSprite(decorSprite));
+                            }
+                        }
+                        UpgradeOverrideSprites.Add(subElement.GetAttributeString("identifier", ""), sprites);
+#endif
+                        break;
+                    }
 #if CLIENT
                     case "inventoryicon":
                         string iconFolder = "";
@@ -824,6 +851,13 @@ namespace Barotrauma
                 }
             }
 
+            // Set the default price in case the prices are defined in the old way
+            // with separate Price elements and there is no default price explicitly set
+            if (locationPrices != null && locationPrices.Any())
+            {
+                defaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
+            }
+
             if (sprite == null)
             {
                 DebugConsole.ThrowError("Item \"" + Name + "\" has no sprite!");
@@ -856,10 +890,26 @@ namespace Barotrauma
             return treatmentSuitability.TryGetValue(treatmentIdentifier, out float suitability) ? suitability : 0.0f;
         }
 
-        public PriceInfo GetPrice(Location location)
+        public PriceInfo GetPriceInfo(Location location)
         {
-            if (prices == null || !prices.ContainsKey(location.Type.Identifier.ToLowerInvariant())) { return null; }
-            return prices[location.Type.Identifier.ToLowerInvariant()];
+            if (location?.Type == null) { return null; }
+            var locationTypeId = location.Type.Identifier?.ToLowerInvariant();
+            if (locationPrices != null && locationPrices.ContainsKey(locationTypeId))
+            {
+                return locationPrices[locationTypeId];
+            }
+            else
+            {
+                return defaultPrice;
+            }
+        }
+
+        public bool CanBeBoughtAtLocation(Location location, out PriceInfo priceInfo)
+        {
+            priceInfo = null;
+            if (location?.Type == null) { return false; }
+            priceInfo = GetPriceInfo(location);
+            return priceInfo != null && priceInfo.CanBeBought;
         }
 
         public static ItemPrefab Find(string name, string identifier)
@@ -890,9 +940,24 @@ namespace Barotrauma
             return prefab;
         }
 
-        public IEnumerable<PriceInfo> GetPrices()
+        public int? GetMinPrice()
         {
-            return prices?.Values;
+            int? minPrice = locationPrices?.Values.Min(p => p.Price);
+            if (minPrice.HasValue)
+            {
+                if (defaultPrice != null)
+                {
+                    return minPrice < defaultPrice.Price ? minPrice : defaultPrice.Price;
+                }
+                else
+                {
+                    return minPrice.Value;
+                }
+            }
+            else
+            {
+                return defaultPrice?.Price;
+            }
         }
 
         public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined, out bool isSecondary)

@@ -19,8 +19,8 @@ namespace Barotrauma.Sounds
             private set;
         }
         
-        private readonly IntPtr alcDevice;
-        private readonly IntPtr alcContext;
+        private IntPtr alcDevice;
+        private IntPtr alcContext;
         
         public enum SourcePoolIndex
         {
@@ -32,6 +32,10 @@ namespace Barotrauma.Sounds
         private readonly List<Sound> loadedSounds;
         private readonly SoundChannel[][] playingChannels = new SoundChannel[2][];
         private readonly object threadDeathMutex = new object();
+
+        public bool CanDetectDisconnect { get; private set; }
+
+        public bool Disconnected { get; private set; }
 
         private Thread streamingThread;
 
@@ -197,18 +201,55 @@ namespace Barotrauma.Sounds
             streamingThread = null;
             categoryModifiers = null;
 
-            int alcError = Alc.NoError;
+            sourcePools = new SoundSourcePool[2];
+            playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
+            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
 
-            string deviceName = Alc.GetString(IntPtr.Zero, Alc.DefaultDeviceSpecifier);
+            string deviceName = GameMain.Config.AudioOutputDevice;
+
+            if (string.IsNullOrEmpty(deviceName))
+            {
+                deviceName = Alc.GetString((IntPtr)null, Alc.DefaultDeviceSpecifier);
+            }
+
+#if (!OSX)
+            var audioDeviceNames = Alc.GetStringList((IntPtr)null, Alc.AllDevicesSpecifier);
+            if (audioDeviceNames.Any() && !audioDeviceNames.Any(n => n.Equals(deviceName, StringComparison.OrdinalIgnoreCase)))
+            {
+                deviceName = audioDeviceNames[0];
+            }
+#endif
+            GameMain.Config.AudioOutputDevice = deviceName;
+
+            InitializeAlcDevice(deviceName);
+
+            ListenerPosition = Vector3.Zero;
+            ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
+            ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
+
+            CompressionDynamicRangeGain = 1.0f;
+        }
+
+        public bool InitializeAlcDevice(string deviceName)
+        {
+            ReleaseResources(true);
+
             DebugConsole.NewMessage($"Attempting to open ALC device \"{deviceName}\"");
 
             alcDevice = IntPtr.Zero;
+            int alcError = Al.NoError;
             for (int i = 0; i < 3; i++)
             {
                 alcDevice = Alc.OpenDevice(deviceName);
                 if (alcDevice == IntPtr.Zero)
                 {
-                    DebugConsole.NewMessage($"ALC device initialization attempt #{i + 1} failed: device is null");
+                    alcError = Alc.GetError(IntPtr.Zero);
+                    DebugConsole.NewMessage($"ALC device initialization attempt #{i + 1} failed: device is null (error code {Alc.GetErrorString(alcError)})");
+                    if (!string.IsNullOrEmpty(deviceName))
+                    {
+                        deviceName = null;
+                        DebugConsole.NewMessage($"Switching to default device...");
+                    }
                 }
                 else
                 {
@@ -223,14 +264,29 @@ namespace Barotrauma.Sounds
                         }
                         alcDevice = IntPtr.Zero;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
             if (alcDevice == IntPtr.Zero)
             {
                 DebugConsole.ThrowError("ALC device creation failed too many times!");
                 Disabled = true;
-                return;
+                return false;
             }
+
+            CanDetectDisconnect = Alc.IsExtensionPresent(alcDevice, "ALC_EXT_disconnect");
+            alcError = Alc.GetError(alcDevice);
+            if (alcError != Alc.NoError)
+            {
+                DebugConsole.ThrowError("Error determining if disconnect can be detected: " + alcError.ToString() + ". Disabling audio playback...");
+                Disabled = true;
+                return false;
+            }
+
+            Disconnected = false;
 
             int[] alcContextAttrs = new int[] { };
             alcContext = Alc.CreateContext(alcDevice, alcContextAttrs);
@@ -238,14 +294,14 @@ namespace Barotrauma.Sounds
             {
                 DebugConsole.ThrowError("Failed to create an ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + "). Disabling audio playback...");
                 Disabled = true;
-                return;
+                return false;
             }
 
             if (!Alc.MakeContextCurrent(alcContext))
             {
                 DebugConsole.ThrowError("Failed to assign the current ALC context! (error code: " + Alc.GetError(alcDevice).ToString() + "). Disabling audio playback...");
                 Disabled = true;
-                return;
+                return false;
             }
 
             alcError = Alc.GetError(alcDevice);
@@ -253,31 +309,27 @@ namespace Barotrauma.Sounds
             {
                 DebugConsole.ThrowError("Error after assigning ALC context: " + Alc.GetErrorString(alcError) + ". Disabling audio playback...");
                 Disabled = true;
-                return;
+                return false;
             }
 
-            sourcePools = new SoundSourcePool[2];
-            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
-            playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
-
-            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
-            playingChannels[(int)SourcePoolIndex.Voice] = new SoundChannel[16];
-
             Al.DistanceModel(Al.LinearDistanceClamped);
-            
+
             int alError = Al.GetError();
             if (alError != Al.NoError)
             {
                 DebugConsole.ThrowError("Error setting distance model: " + Al.GetErrorString(alError) + ". Disabling audio playback...");
                 Disabled = true;
-                return;
+                return false;
             }
 
-            ListenerPosition = Vector3.Zero;
-            ListenerTargetVector = new Vector3(0.0f, 0.0f, 1.0f);
-            ListenerUpVector = new Vector3(0.0f, -1.0f, 0.0f);
+            sourcePools[(int)SourcePoolIndex.Default] = new SoundSourcePool(SOURCE_COUNT);
+            sourcePools[(int)SourcePoolIndex.Voice] = new SoundSourcePool(16);
 
-            CompressionDynamicRangeGain = 1.0f;
+            ReloadSounds();
+
+            Disabled = false;
+
+            return true;
         }
 
         public Sound LoadSound(string filename, bool stream = false)
@@ -551,7 +603,25 @@ namespace Barotrauma.Sounds
 
         public void Update()
         {
-            if (Disabled) { return; }
+            if (Disconnected || Disabled) { return; }
+
+            if (CanDetectDisconnect)
+            {
+                Alc.GetInteger(alcDevice, Alc.EnumConnected, out int isConnected);
+                int alcError = Alc.GetError(alcDevice);
+                if (alcError != Alc.NoError)
+                {
+                    throw new Exception("Failed to determine if device is connected: " + alcError.ToString());
+                }
+
+                if (isConnected == 0)
+                {
+                    DebugConsole.ThrowError("Playback device has been disconnected. You can select another available device in the settings.");
+                    GameMain.Config.AudioOutputDevice = "<disconnected>";
+                    Disconnected = true;
+                    return;
+                }
+            }
 
             if (GameMain.Client != null && GameMain.Config.VoipAttenuationEnabled)
             {
@@ -681,10 +751,16 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public void Dispose()
+        private void ReloadSounds()
         {
-            if (Disabled) { return; }
+            for (int i = loadedSounds.Count - 1; i >= 0; i--)
+            {
+                loadedSounds[i].InitializeALBuffers();
+            }
+        }
 
+        private void ReleaseResources(bool keepSounds)
+        {
             for (int i = 0; i < playingChannels.Length; i++)
             {
                 lock (playingChannels[i])
@@ -699,10 +775,24 @@ namespace Barotrauma.Sounds
             streamingThread?.Join();
             for (int i = loadedSounds.Count - 1; i >= 0; i--)
             {
-                loadedSounds[i].Dispose();
+                if (keepSounds)
+                {
+                    loadedSounds[i].DeleteALBuffers();
+                }
+                else
+                {
+                    loadedSounds[i].Dispose();
+                }
             }
             sourcePools[(int)SourcePoolIndex.Default]?.Dispose();
             sourcePools[(int)SourcePoolIndex.Voice]?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            if (Disabled) { return; }
+
+            ReleaseResources(false);
 
             if (!Alc.MakeContextCurrent(IntPtr.Zero))
             {

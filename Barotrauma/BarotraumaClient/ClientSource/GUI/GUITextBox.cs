@@ -134,6 +134,10 @@ namespace Barotrauma
             {
                 textBlock.OverflowClip = value != null;                
                 maxTextLength = value;
+                if (Text.Length > MaxTextLength)
+                {
+                    SetText(textBlock.Text.Substring(0, (int)maxTextLength));
+                }
             }
         }
 
@@ -360,6 +364,7 @@ namespace Barotrauma
             }
             else
             {
+                CaretIndex = Math.Min(CaretIndex, textDrawn.Length);
                 textDrawn = Censor ? textBlock.CensoredText : textBlock.Text;
                 Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, CaretIndex));
                 caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin;

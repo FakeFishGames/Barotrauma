@@ -170,10 +170,12 @@ namespace Barotrauma.Lights
             isHorizontal = BoundingBox.Width > BoundingBox.Height;
             if (ParentEntity is Structure structure)
             {
+                System.Diagnostics.Debug.Assert(!structure.Removed);
                 isHorizontal = structure.IsHorizontal;
             }
             else if (ParentEntity is Item item)
             {
+                System.Diagnostics.Debug.Assert(!item.Removed);
                 var door = item.GetComponent<Door>();
                 if (door != null) { isHorizontal = door.IsHorizontal; }
             }
@@ -444,7 +446,7 @@ namespace Barotrauma.Lights
 
             CalculateDimensions();
 
-            if (ParentEntity == null) return;
+            if (ParentEntity == null) { return; }
 
             var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
             if (chList != null)

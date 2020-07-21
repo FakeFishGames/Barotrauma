@@ -221,7 +221,7 @@ namespace Barotrauma
             //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
             
-            if (!character.IsRemotePlayer && (character.AIController == null || character.AIController.CanFlip))
+            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip))
             {
                 if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                 {

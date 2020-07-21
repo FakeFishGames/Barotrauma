@@ -292,7 +292,7 @@ namespace Barotrauma
         public void AddCustomContent(GUIComponent component, int childIndex)
         {
             component.RectTransform.Parent = layoutGroup.RectTransform;
-            component.RectTransform.RepositionChildInHierarchy(childIndex);
+            component.RectTransform.RepositionChildInHierarchy(Math.Min(childIndex, layoutGroup.CountChildren - 1));
             layoutGroup.Recalculate();
             Recalculate();
         }
@@ -309,7 +309,21 @@ namespace Barotrauma
 
             string propertyTag = (entity.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
             string fallbackTag = property.PropertyInfo.Name.ToLowerInvariant();
-            string displayName = TextManager.Get($"sp.{propertyTag}.name", true, $"sp.{fallbackTag}.name");
+            string displayName = 
+                TextManager.Get($"{propertyTag}", true, useEnglishAsFallBack: false) ??
+                TextManager.Get($"sp.{propertyTag}.name", true, useEnglishAsFallBack: false);
+            if (string.IsNullOrEmpty(displayName))
+            {
+                Editable editable = property.GetAttribute<Editable>();
+                if (editable != null && !string.IsNullOrEmpty(editable.FallBackTextTag))
+                {
+                    displayName = TextManager.Get(editable.FallBackTextTag, true);
+                }
+                else
+                {
+                    displayName = TextManager.Get(fallbackTag, true);
+                }
+            }
             
             if (displayName == null)
             {   

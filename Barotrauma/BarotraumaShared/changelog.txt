@@ -1,5 +1,163 @@
 ---------------------------------------------------------------------------------------------------------
-v0.9.10.0 (Unstable)
+v0.10.4.0
+---------------------------------------------------------------------------------------------------------
+
+- Localization fixes.
+- Fixed piercing coilgun ammo boxes never running out.
+- Fixed end round button having no text when leaving an outpost.
+
+---------------------------------------------------------------------------------------------------------
+v0.10.3.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed SalvageMission not spawning the item if the mission has been attempted previously, causing an "attempted to pick up a removed item" error when trying to pick up the artifact/logbook.
+- Fixed bots going to operate the reactor/navterminal in the main sub when they are inside the outpost. Now they should only be allowed to do this when ordered to. 
+- Fixed mechanic tutorial getting softlocked if the oxygen tanks are put in the deconstructor without putting them in the player inventory first (e.g. by putting them inside a diving mask and moving them from there to the deconstructor).
+- Fixed "failed to spawn item, component index out of range" error when an item that originally spawned in a container has been moved inside another container whose ItemContainer component doesn't have the same index as the previous one (e.g. when moving items from cabinets in a wreck into a toolbox).
+- Fixed dialog prompts in the "clownrelations1" and "engineers_are_special" events being displayed to all players in the server.
+- Fixes to localization issues (text overflows, some texts being displayed in English regardless of the selected language).
+- Prevent selling items contained inside an item equipped in Head, OuterClothes, or Headset slot (should prevent accidentally selling your headset batteries or oxygen tanks in your diving mask).
+- Fixed changes during the last campaign round not being saved.
+- Fixed campaign character being recreated on every round start after modifying it via the tab-menu during a campaign.
+- Fixed crashing when clicking the "close" button in the end credits in multiplayer campaign.
+- Reset stores and unlocked missions when finishing the campaign.
+- Fixed open subinventory slots staying visible during the campaign end cinematic.
+- Fixed talk icon not disappearing from NPCs when another client finishes the conversation.
+- Made end round button more noticeable.
+- Added a missing platform to Wreck1.
+- Added burn and lacerations resistance for assistant clothes, removed gunshotwound resistance.
+- Raised explosive and piercing coilgun ammunition prices, reduced quantity by 25%.
+- Limited availability of piercing and explosive rounds at cities to 1 box.
+- Fixed bots getting stuck on ladders when there are two ladders next to each other and no non-ladder waypoint between them.
+- Outpost medics won't anymore try to heal NPCs that are turned hostile by an event.
+- Fixed OnActive StatusEffects not working on Vent components.
+- Fixed clients crashing if they can't find a preview image for a campaign sub.
+- Fixed characters not getting slowed down when walking/running in a partially flooded hull.
+- Fixed end biome being used in sandbox/mission modes.
+- Fixed event prompts not having a scrollbar if the first message is too long.
+- Made chemical and explosive crates water proof to make it possible to use them for transporting water-sensitive materials.
+
+---------------------------------------------------------------------------------------------------------
+v0.10.2.0
+---------------------------------------------------------------------------------------------------------
+
+- Balanced monster spawns (less mudraptors in the low-difficulty levels).
+- Made levels in the Cold Caverns and Europan Ridge biomes a little smaller.
+- Gray out upgrades on the UI if the user lacks campaign management permissions.
+- Disable elements in crew hiring menu when lacking permissions.
+- Idling bots don't try to steer away from each other if there are characters standing on both sides. Fixes groups of bots "spazzing out" in small spaces.
+- Fixed all clients seeing the mission-related conversation lines.
+- Fixed last conversation the huskcultrelations event showing up for all players.
+- Fixed mission notifications being appended to whatever conversation prompt a client has active.
+- Fixed Dugong not receiving power through the docking hatch.
+- Fixed unwired junction box in ResearchModule_01.
+- Fixed occasional "connection index for mission out of range" errors when unlocking missions in multiplayer campaign.
+- Refresh upgrade store when granted manage campaign and manage round permissions.
+- Fixed client's character data not getting saved in the multiplayer campaign if they disconnect but their character doesn't get killed by the disconnect timer.
+- Fixed tiny buttons in wrecks.
+- Fixed crawler mask not showing up on characters.
+- Fixed returning to lobby not triggering a proper reload of the campaign save when continuing.
+- Fixed SmokeDetector's Output and FalseOutput properties doing nothing.
+- Fixed some locations sometimes not being connected to the rest of the campaign map (example seed: JKPNeh4f).
+- Fixed characters being able to play instruments while stunned.
+- Attempt to fix the game process sometimes staying active after the game is closed.
+- Fixed mining outposts sometimes failing to generate.
+
+---------------------------------------------------------------------------------------------------------
+v0.10.1.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed inability select other locations on the campaign map when a mission has been selected in one of the locations.
+- Fixed purchased items not spawning if the crew dies and the previous save is loaded in the multiplayer campaign.
+- Fixed clients not seeing subs they don't have in the campaign setup's purchasable sub selection.
+- Clients who die due to a disconnection in the multiplayer campaign get to keep their character when they rejoin.
+- Fixed submarines with spaces or commas in the name breaking campaign saves.
+- Fixed favorite and recent server queries causing errors if there's a very high number of them.
+- Fixed audio not working on some systems.
+- Fixes to incorrectly sized item colliders.
+- Fixed monsters not spawning in the first few levels of the campaign.
+- Fixed store interface switching to the Buy tab after receiving a campaign state update in multiplayer campaign.
+- Gray out items on store lists when the player doesn't have the relevant permissions.
+- Putting outpost items into crates and toolboxes now gets the guards riled up.
+- Fixed "kill" not being marked as a cheat command.
+- Alarm buzzers and sirens turn off if they're deattached and picked up.
+- Fixed wire that's connected between two docking ports becoming visible and interactable when leaving an outpost.
+- Fixed subinventories being drawn on top of campaing interfaces.
+- Fixed selecting purchasable submarines not working on non-host clients with campaign management permissions.
+- Fixed ResearchModule_01 not being fully powered.
+- Fixed initial campaign cinematic being shown to clients who join mid-campaign.
+
+---------------------------------------------------------------------------------------------------------
+v0.10.0.0
+---------------------------------------------------------------------------------------------------------
+
+Improved campaign mode:
+- Explorable, procedurally generated outposts.
+- Interactable NPCs: things such as hiring, unlocking missions and purchasing supplies are now done by interacting with NPCs instead of just a menu.
+- Multi-step, branching scripted events in outposts.
+- A reputation system that affects how outposts and factions relate to you and your crew. High reputation can make NPCs give you discounts for supplies or unlock special events and event outcomes, while low reputation may turn outposts hostile towards you.
+- Items can now be sold in outposts.
+- Persistent bots in multiplayer campaign.
+- Bots can be hired in multiplayer campaign.
+- New campaign map.
+- The end location is now reachable (do note that the ending is still not completely final).
+- Submarines can be upgraded: for example, you can increase the durability of the walls and make devices more powerful, less prone to malfunctions or less power-hungry.
+- Submarines can be purchased and switched during the campaign.
+- Improved end-of-round summary.
+
+Miscellaneous changes and additions:
+- Overhauled most structure and item sprites to make the artstyle more consistent.
+- Balanced economy (item prices, hiring costs).
+- The currency is now called the Europan Mark instead of credits.
+- 4 new background music tracks.
+- Tons of new decorative items and structures.
+- Sittable chairs.
+- Allow characters to hear messages sent through the radio when within speaking range of the speaker, even if the characters don't have functional headsets.
+- Made organ damage non-limb-specific.
+- Hostile bots now take stunning into account when evaluating the weapons. I.e. switch from stun baton to diving knife if the target is stunned and back to stun baton if it's not.
+- Sodium and lithium explode in water.
+- Item sprites can be rotated in the sub editor.
+- Purchased adrenaline glands spawn in crates.
+- Allow changing audio output device in the game settings.
+- Added "Is On" property to pumps to make them easier to turn on in the sub editor.
+- Tuned difficulty of level events, now with a less severe difficulty curve and more account taken of intensity.
+- Numerous quality of life and visual improvements for stock subs.
+- Mission specific creature variants.
+- Node based event editor.
+- Crawlers tuned to be considerably more dangerous.
+- General creature balance improvements.
+- Creatures avoid targeting the same targets as other characters of the same swarm/type. Should considerably reduce the "stacking", where multiple creatures attack exactly the same target.
+- Bots can rescue/heal targets when they are inside wrecks/outposts.They are not allowed to switch submarines during the objective.
+- Molochs' skirts are now fully severable and collide with the sub instead of floating through the walls.
+- Grenades and syringe guns can be put inside toolboxes.
+- Headsets no longer consume battery power
+
+Bugfixes:
+- Steam networking fixes and additional logging to address issues with some clients being unable to join servers.
+- Ignore ballast tanks when calculating flooding in EventManager. Fixes intensity going up when a submarine with large ballast tanks dives.
+- Fixed gaps generating incorrectly on sloped walls that have been mirrored vertically (horizontal gaps when they should be vertical and vice versa), preventing water from getting through the wall when it's damaged.
+- Fixed sub MD5 hash not getting recalculated when saving a sub, causing a mismatch when trying to host a server without restarting.
+- Fixed item highlights being visible in the generated sub preview images.
+- Fixed cargo spawning partially inside walls in Azimuth.
+- Fixed ragdoll going crazy when trying to run a wire past the maximum length.
+- Fixed LOS effect "twitching" when the cursor is close to the character's position.
+- Fixed handheld sonar pinging and quickly draining the battery when holding E.
+- Fixed PowerContainer's charge indicator going outside bounds if the charge is set higher than the capacity in the sub editor.
+- Fixed sub editor's entity list resetting when pressing esc.
+- Fixed reactors degrading all the way to 0% condition and exploding when submerged.
+- Fixed dumptofile command not including error messages.
+- Fixed salvage missions not considering the item to be salvaged if it's inside a container in a character's inventory.
+- Fixed ragdolls going crazy when moving directly from the sub to a ruin (e.g. when parking the sub so that the airlock is right against the entrance to the ruins).
+- Fixed audio staying disabled when disconnecting and reconnecting the audio device.
+- Fixed inability to detach an item the same round it's attached if it's been loaded from a save as a part of a character inventory at the beginning of the round.
+- Fixed trying to give an order to a character who can't hear you when using the quick-assignment on the command interface.
+- Avoid giving different campaign locations the same name.
+- Fixed bots sometimes getting stuck in the "get item" objective, if the item was specified with a reference instead of identifier.
+- Fixed bots getting stuck in broken hatches when they climb in ladders.
+- Fixed a bug where a waypoint lost all the references when it was selected and the user pressed over an UI element, like the save button.
+
+---------------------------------------------------------------------------------------------------------
+v0.9.10.0
 ---------------------------------------------------------------------------------------------------------
 
 Additions and changes:

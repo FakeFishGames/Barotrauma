@@ -224,7 +224,10 @@ namespace Barotrauma.Items.Components
                 if (variant == value) { return; }
 #if SERVER                
                 variant = value;
-                item.CreateServerEvent(this);
+                if (!item.Submarine?.Loading ?? true)
+                {
+                    item.CreateServerEvent(this);
+                }
 #elif CLIENT
 
                 Character character = picker;

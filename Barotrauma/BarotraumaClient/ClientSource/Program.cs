@@ -57,6 +57,8 @@ namespace Barotrauma
             Game = new GameMain(args);
             Game.Run();
             Game.Dispose();
+
+            CrossThread.ProcessTasks();
         }
 
         private static GameMain Game;
@@ -69,8 +71,9 @@ namespace Barotrauma
                 CrashDump(Game, "crashreport.log", (Exception)args.ExceptionObject);
                 Game?.Dispose();
             }
-            catch
+            catch (Exception e)
             {
+                Debug.WriteLine(e.Message);
                 //exception handler is broken, we have a serious problem here!!
                 return;
             }
@@ -96,12 +99,17 @@ namespace Barotrauma
 
             DebugConsole.DequeueMessages();
 
-            string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
-            var md5 = System.Security.Cryptography.MD5.Create();
             Md5Hash exeHash = null;
-            using (var stream = File.OpenRead(exePath))
+            try
             {
-                exeHash = new Md5Hash(stream);
+                string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
+                var md5 = System.Security.Cryptography.MD5.Create();
+                byte[] exeBytes = File.ReadAllBytes(exePath);
+                exeHash = new Md5Hash(exeBytes);
+            }
+            catch
+            {
+                //do nothing, generate the rest of the crash report
             }
 
             StringBuilder sb = new StringBuilder();

@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -18,6 +19,33 @@ namespace Barotrauma
         public readonly MapEntityPrefab prefab;
 
         protected List<ushort> linkedToID;
+        
+        /// <summary>
+        /// List of upgrades this item has
+        /// </summary>
+        protected readonly List<Upgrade> Upgrades = new List<Upgrade>();
+        
+        public HashSet<string> disallowedUpgrades = new HashSet<string>();
+        
+        [Editable, Serialize("", true)]
+        public string DisallowedUpgrades
+        {
+            get { return string.Join(",", disallowedUpgrades); }
+            set
+            {
+                disallowedUpgrades.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string[] splitTags = value.Split(',');
+                    foreach (string tag in splitTags)
+                    {
+                        string[] splitTag = tag.Trim().Split(':');
+                        splitTag[0] = splitTag[0].ToLowerInvariant();
+                        disallowedUpgrades.Add(string.Join(":", splitTag));
+                    }
+                }
+            }
+        }
 
         //observable collection because some entities may need to be notified when the collection is modified
         public readonly ObservableCollection<MapEntity> linkedTo = new ObservableCollection<MapEntity>();
@@ -202,6 +230,20 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(true, true)]
+        public bool RemoveIfLinkedOutpostDoorInUse
+        {
+            get;
+            protected set;
+        } = true;
+
+        /// <summary>
+        /// The index of the outpost module this entity originally spawned in (-1 if not an outpost item)
+        /// </summary>
+        public int OriginalModuleIndex = -1;
+
+        public UInt16 OriginalContainerID;
+
         public virtual string Name
         {
             get { return ""; }
@@ -222,6 +264,76 @@ namespace Barotrauma
         public virtual bool IsMouseOn(Vector2 position)
         {
             return (Submarine.RectContains(WorldRect, position));
+        }
+
+        public bool HasUpgrade(string identifier)
+        {
+            return GetUpgrade(identifier) != null;
+        }
+        
+        public Upgrade GetUpgrade(string identifier)
+        {
+            return Upgrades.Find(upgrade => upgrade.Identifier == identifier);
+        }
+
+        public List<Upgrade> GetUpgrades()
+        {
+            return Upgrades;
+        }
+
+        public void SetUpgrade(Upgrade upgrade, bool createNetworkEvent = false)
+        {
+            Upgrade existingUpgrade = GetUpgrade(upgrade.Identifier);
+            if (existingUpgrade != null)
+            {
+                existingUpgrade.Level = upgrade.Level;
+                existingUpgrade.ApplyUpgrade();
+                upgrade.Dispose();
+            }
+            else
+            {
+                AddUpgrade(upgrade, createNetworkEvent);
+            }
+            DebugConsole.Log($"Set (ID: {ID} {prefab.Name})'s \"{upgrade.Prefab.Name}\" upgrade to level {upgrade.Level}");
+        }
+        
+        /// <summary>
+        /// Adds a new upgrade to the item
+        /// </summary>
+        public virtual bool AddUpgrade(Upgrade upgrade, bool createNetworkEvent = false)
+        {
+            if (this is Item item && !upgrade.Prefab.UpgradeCategories.Any(category => category.CanBeApplied(item, upgrade.Prefab)))
+            {
+                return false;
+            }
+
+            if (disallowedUpgrades.Contains(upgrade.Identifier)) { return false; }
+
+            Upgrade existingUpgrade = GetUpgrade(upgrade.Identifier);
+
+            if (existingUpgrade != null)
+            {
+                existingUpgrade.Level += upgrade.Level;
+                existingUpgrade.ApplyUpgrade();
+                upgrade.Dispose();
+            }
+            else
+            {
+                upgrade.ApplyUpgrade();
+                Upgrades.Add(upgrade);
+            }
+
+            // not used anymore
+#if SERVER
+            // if (createNetworkEvent)
+            // {
+            //     if (this is IServerSerializable serializable)
+            //     {
+            //         GameMain.Server.CreateEntityEvent(serializable, new object[] { NetEntityEvent.Type.Upgrade, upgrade });
+            //     }
+            // }
+#endif
+            return true;
         }
 
         public abstract MapEntity Clone();
@@ -503,24 +615,12 @@ namespace Barotrauma
         private bool mapLoadedCalled;
         public static void MapLoaded(List<MapEntity> entities, bool updateHulls)
         {
-            foreach (MapEntity e in entities)
-            {
-                if (e.mapLoadedCalled) continue;
-                if (e.linkedToID == null) continue;
-                if (e.linkedToID.Count == 0) continue;
-
-                e.linkedTo.Clear();
-
-                foreach (ushort i in e.linkedToID)
-                {
-                    if (FindEntityByID(i) is MapEntity linked) e.linkedTo.Add(linked);
-                }
-            }
+            InitializeLoadedLinks(entities);
 
             List<LinkedSubmarine> linkedSubs = new List<LinkedSubmarine>();
             for (int i = 0; i < entities.Count; i++)
             {
-                if (entities[i].mapLoadedCalled) continue;
+                if (entities[i].mapLoadedCalled || entities[i].Removed) { continue; }
                 if (entities[i] is LinkedSubmarine)
                 {
                     linkedSubs.Add((LinkedSubmarine)entities[i]);
@@ -541,6 +641,35 @@ namespace Barotrauma
             foreach (LinkedSubmarine linkedSub in linkedSubs)
             {
                 linkedSub.OnMapLoaded();
+            }
+        }
+
+        public static void InitializeLoadedLinks(IEnumerable<MapEntity> entities)
+        {
+            foreach (MapEntity e in entities)
+            {
+                if (e.mapLoadedCalled) { continue; }
+                if (e.linkedToID == null) { continue; }
+                if (e.linkedToID.Count == 0) { continue; }
+
+                e.linkedTo.Clear();
+
+                foreach (ushort i in e.linkedToID)
+                {
+                    if (FindEntityByID(i) is MapEntity linked) 
+                    {
+                        e.linkedTo.Add(linked); 
+                    } 
+                    else 
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError($"Linking the entity \"{e.Name}\" to another entity failed. Could not find an entity with the ID \"{i}\".");
+#endif
+                    }
+                }
+                e.linkedToID.Clear();
+
+                (e as WayPoint)?.InitializeLinks();
             }
         }
 

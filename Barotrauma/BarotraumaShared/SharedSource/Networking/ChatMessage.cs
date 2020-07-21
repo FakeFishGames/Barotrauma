@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
 {
     public enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog, ServerMessageBox
+        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog, ServerMessageBox, ServerMessageBoxInGame
     }
 
     public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
@@ -61,6 +61,7 @@ namespace Barotrauma.Networking
 
         public ChatMessageType Type;
         public PlayerConnectionChangeType ChangeType;
+        public string IconStyle;
 
         public readonly Character Sender;
         public readonly Client SenderClient;
@@ -107,7 +108,7 @@ namespace Barotrauma.Networking
 
         public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
         {
-            return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character == sender), changeType);
+            return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character != null && c.Character == sender), changeType);
         }
 
         public static string GetChatMessageCommand(string message, out string messageWithoutCommand)
@@ -151,7 +152,11 @@ namespace Barotrauma.Networking
             Hull sourceHull = sender == null ? null : Hull.FindHull(sender.WorldPosition);
             if (sourceHull != listenerHull)
             {
-                if (Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) dist = (dist + 100f) * obstructionmult;
+                if ((sourceHull == null || !sourceHull.GetConnectedHulls(includingThis: false, searchDepth: 2, ignoreClosedGaps: true).Contains(listenerHull)) &&
+                    Submarine.CheckVisibility(listener.SimPosition, sender.SimPosition) != null) 
+                { 
+                    dist = (dist + 100f) * obstructionmult; 
+                }
             }
             if (dist > range) { return 1.0f; }
 
@@ -188,14 +193,16 @@ namespace Barotrauma.Networking
 
         public static string ApplyDistanceEffect(string message, ChatMessageType type, Character sender, Character receiver)
         {
-            if (sender == null) return "";
+            if (sender == null) { return ""; }
+
+            string spokenMsg = ApplyDistanceEffect(receiver, sender, message, SpeakRange * (1.0f - sender.SpeechImpediment / 100.0f), 3.0f);
 
             switch (type)
             {
                 case ChatMessageType.Default:
                     if (receiver != null && !receiver.IsDead)
                     {
-                        return ApplyDistanceEffect(receiver, sender, message, SpeakRange * (1.0f - sender.SpeechImpediment / 100.0f), 3.0f);
+                        return spokenMsg;
                     }
                     break;
                 case ChatMessageType.Radio:
@@ -204,15 +211,15 @@ namespace Barotrauma.Networking
                     {
                         var receiverItem = receiver.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
                         //character doesn't have a radio -> don't send
-                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) return "";
+                        if (receiverItem == null || !receiver.HasEquippedItem(receiverItem)) { return spokenMsg; }
 
                         var senderItem = sender.Inventory?.Items.FirstOrDefault(i => i?.GetComponent<WifiComponent>() != null);
-                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) return "";
+                        if (senderItem == null || !sender.HasEquippedItem(senderItem)) { return spokenMsg; }
 
                         var receiverRadio = receiverItem.GetComponent<WifiComponent>();
                         var senderRadio = senderItem.GetComponent<WifiComponent>();
 
-                        if (!receiverRadio.CanReceive(senderRadio)) return "";
+                        if (!receiverRadio.CanReceive(senderRadio)) { return spokenMsg; }
 
                         string msg = ApplyDistanceEffect(receiverItem, senderItem, message, senderRadio.Range);
                         if (sender.SpeechImpediment > 0.0f)
@@ -222,7 +229,6 @@ namespace Barotrauma.Networking
                         }
                         return msg;
                     }
-
                     break;
             }
 

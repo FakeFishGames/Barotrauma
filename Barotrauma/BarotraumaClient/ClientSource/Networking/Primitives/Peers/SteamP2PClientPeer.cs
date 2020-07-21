@@ -4,6 +4,7 @@ using System.Text;
 using System.Linq;
 using Barotrauma.Steam;
 using System.Threading;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma.Networking
 {
@@ -17,6 +18,7 @@ namespace Barotrauma.Networking
         private Steamworks.AuthTicket steamAuthTicket;
         private double timeout;
         private double heartbeatTimer;
+        private double connectionStatusTimer;
 
         private long sentBytes, receivedBytes;
 
@@ -53,6 +55,9 @@ namespace Barotrauma.Networking
 
             Steamworks.SteamNetworking.ResetActions();
             Steamworks.SteamNetworking.OnP2PSessionRequest = OnIncomingConnection;
+            Steamworks.SteamNetworking.OnP2PConnectionFailed = OnConnectionFailed;
+
+            Steamworks.SteamNetworking.AllowP2PPacketRelay(true);
 
             ServerConnection = new SteamP2PConnection("Server", hostSteamId);
 
@@ -71,6 +76,7 @@ namespace Barotrauma.Networking
 
             timeout = NetworkConnection.TimeoutThreshold;
             heartbeatTimer = 1.0;
+            connectionStatusTimer = 0.0;
 
             isActive = true;
         }
@@ -78,7 +84,25 @@ namespace Barotrauma.Networking
         private void OnIncomingConnection(Steamworks.SteamId steamId)
         {
             if (!isActive) { return; }
-            if (steamId == hostSteamId) { Steamworks.SteamNetworking.AcceptP2PSessionWithUser(steamId); }
+            if (steamId == hostSteamId)
+            {
+                Steamworks.SteamNetworking.AcceptP2PSessionWithUser(steamId);
+            }
+            else if (initializationStep != ConnectionInitialization.Password &&
+                     initializationStep != ConnectionInitialization.Success)
+            {
+                DebugConsole.ThrowError($"Connection from incorrect SteamID was rejected: "+
+                    $"expected {SteamManager.SteamIDUInt64ToString(hostSteamId)}," +
+                    $"got {SteamManager.SteamIDUInt64ToString(steamId)}");
+            }
+        }
+
+        private void OnConnectionFailed(Steamworks.SteamId steamId, Steamworks.P2PSessionError error)
+        {
+            if (!isActive) { return; }
+            if (steamId != hostSteamId) { return; }
+            Close($"SteamP2P connection failed: {error}");
+            OnDisconnectMessageReceived?.Invoke($"SteamP2P connection failed: {error}");
         }
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
@@ -139,6 +163,30 @@ namespace Barotrauma.Networking
 
             timeout -= deltaTime;
             heartbeatTimer -= deltaTime;
+
+            if (initializationStep != ConnectionInitialization.Password &&
+                initializationStep != ConnectionInitialization.Success)
+            {
+                connectionStatusTimer -= deltaTime;
+                if (connectionStatusTimer <= 0.0)
+                {
+                    var state = Steamworks.SteamNetworking.GetP2PSessionState(hostSteamId);
+                    if (state == null)
+                    {
+                        Close("SteamP2P connection could not be established");
+                        OnDisconnectMessageReceived?.Invoke("SteamP2P connection could not be established");
+                    }
+                    else
+                    {
+                        if (state?.P2PSessionError != Steamworks.P2PSessionError.None)
+                        {
+                            Close($"SteamP2P error code: {state?.P2PSessionError}");
+                            OnDisconnectMessageReceived?.Invoke($"SteamP2P error code: {state?.P2PSessionError}");
+                        }
+                    }
+                    connectionStatusTimer = 1.0f;
+                }
+            }
 
             for (int i = 0; i < 100; i++)
             {

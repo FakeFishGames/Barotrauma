@@ -138,6 +138,32 @@ namespace Barotrauma
                         errorMsg = "Failed to write a ChangeProperty network event for the item \"" + Name + "\" (" + e.Message + ")";
                     }
                     break;
+                case NetEntityEvent.Type.Upgrade:
+                {
+                    if (extraData.Length > 0 && extraData[1] is Upgrade upgrade)
+                    {
+                        var upgradeTargets = upgrade.TargetComponents;
+                        msg.Write(upgrade.Identifier);
+                        msg.Write((byte)upgrade.Level);
+                        msg.Write((byte)upgradeTargets.Count);
+                        foreach (var (_, value) in upgrade.TargetComponents)
+                        {
+                            msg.Write((byte)value.Length);
+                            foreach (var propertyReference in value)
+                            {
+                                object originalValue = propertyReference.OriginalValue;
+                                msg.Write((float)(originalValue ?? -1));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        errorMsg = extraData.Length > 0 
+                            ? $"Failed to write a network event for the item \"{Name}\" - \"{extraData[1].GetType()}\" is not a valid upgrade." 
+                            : $"Failed to write a network event for the item \"{Name}\". No upgrade specified.";
+                    }
+                    break;
+                }
                 default:
                     errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
                     break;
@@ -152,7 +178,6 @@ namespace Barotrauma
                 DebugConsole.Log(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.ServerWrite:" + errorMsg, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
-
         }
 
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
@@ -213,7 +238,7 @@ namespace Barotrauma
             }
         }
 
-        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID, UInt16 originalInventoryID)
+        public void WriteSpawnData(IWriteMessage msg, UInt16 entityID, UInt16 originalInventoryID, byte originalItemContainerIndex)
         {
             if (GameMain.Server == null) return;
 
@@ -238,29 +263,14 @@ namespace Barotrauma
             else
             {
                 msg.Write(originalInventoryID);
-
-                //find the index of the ItemContainer this item is inside to get the item to
-                //spawn in the correct inventory in multi-inventory items like fabricators
-                byte containerIndex = 0;
-                if (Container != null)
-                {
-                    for (int i = 0; i < Container.components.Count; i++)
-                    {
-                        if (Container.components[i] is ItemContainer container &&
-                            container.Inventory == ParentInventory)
-                        {
-                            containerIndex = (byte)i;
-                            break;
-                        }
-                    }
-                }
-                msg.Write(containerIndex);
+                msg.Write(originalItemContainerIndex);
 
                 int slotIndex = ParentInventory.FindIndex(this);
                 msg.Write(slotIndex < 0 ? (byte)255 : (byte)slotIndex);
             }
 
             msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
+            msg.Write(SpawnedInOutpost);
 
             byte teamID = 0;
             foreach (WifiComponent wifiComponent in GetComponents<WifiComponent>())

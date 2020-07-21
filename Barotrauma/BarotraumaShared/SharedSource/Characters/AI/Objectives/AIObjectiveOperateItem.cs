@@ -81,11 +81,11 @@ namespace Barotrauma
                             break;
                     }
                 }
-                if (targetItem.CurrentHull == null || targetItem.CurrentHull.FireSources.Any() || HumanAIController.IsItemOperatedByAnother(target, out _))
-                {
-                    Priority = 0;
-                }
-                else if (Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
+                if (targetItem.CurrentHull == null ||
+                    targetItem.Submarine != character.Submarine && objectiveManager.CurrentOrder != this ||
+                    targetItem.CurrentHull.FireSources.Any() ||
+                    HumanAIController.IsItemOperatedByAnother(target, out _) ||
+                    Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
                 {
                     Priority = 0;
                 }
@@ -111,10 +111,10 @@ namespace Barotrauma
             var target = GetTarget();
             if (target == null)
             {
+                Abandon = true;
 #if DEBUG
                 throw new Exception("target null");
 #endif
-                Abandon = true;
             }
             else if (target.Item.NonInteractable)
             {

@@ -43,11 +43,42 @@ namespace OpenAL
 #elif LINUX
         public const string OpenAlDll = "libopenal.so.1";
 #elif WINDOWS
-#if X86
-        public const string OpenAlDll = "soft_oal_x86.dll";
-#elif X64
         public const string OpenAlDll = "soft_oal_x64.dll";
 #endif
+
+        public delegate void ErrorReasonCallback(string str);
+
+#if WINDOWS
+        [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcSetErrorReasonCallback")]
+        private static extern void SetErrorReasonCallback(IntPtr callback);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        private delegate void ErrorReasonCallbackInternal(IntPtr cstr);
+
+        private static ErrorReasonCallbackInternal CurrentErrorReasonCallback;
+        private static IntPtr CurrentErrorReasonCallbackPtr;
+
+        public static void SetErrorReasonCallback(ErrorReasonCallback callback)
+        {
+            CurrentErrorReasonCallback = (IntPtr cstr) =>
+            {
+                int strLen = 0;
+                while (Marshal.ReadByte(cstr, strLen) != '\0') { strLen++; }
+                byte[] bytes = new byte[strLen];
+                Marshal.Copy(cstr, bytes, 0, strLen);
+                string csStr = Encoding.UTF8.GetString(bytes);
+
+                callback?.Invoke(csStr);
+            };
+
+            CurrentErrorReasonCallbackPtr = Marshal.GetFunctionPointerForDelegate(CurrentErrorReasonCallback);
+            SetErrorReasonCallback(CurrentErrorReasonCallbackPtr);
+        }
+#else
+        public static void SetErrorReasonCallback(ErrorReasonCallback callback)
+        {
+            //FIXME: not implemented on macOS and Linux
+        }
 #endif
 
         #region Enum
@@ -77,10 +108,11 @@ namespace OpenAL
         public const int CaptureDeviceSpecifier = 0x310;
         public const int CaptureDefaultDeviceSpecifier = 0x311;
         public const int EnumCaptureSamples = 0x312;
+        public const int EnumConnected = 0x313;
 
-        #endregion
+#endregion
 
-        #region Context Management Functions
+#region Context Management Functions
 
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcCreateContext")]
         private static extern IntPtr _CreateContext(IntPtr device, IntPtr attrlist);
@@ -112,7 +144,22 @@ namespace OpenAL
         public static extern IntPtr GetContextsDevice(IntPtr context);
 
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcOpenDevice")]
-        public static extern IntPtr OpenDevice(string deviceName);
+        private static extern IntPtr OpenDevice(IntPtr deviceName);
+
+        public static IntPtr OpenDevice(string deviceName)
+        {
+            if (deviceName == null)
+            {
+                return OpenDevice(IntPtr.Zero);
+            }
+
+            byte[] devicenameBytes = Encoding.UTF8.GetBytes(deviceName + "\0");
+            GCHandle devicenameHandle = GCHandle.Alloc(devicenameBytes, GCHandleType.Pinned);
+            IntPtr retVal = OpenDevice(devicenameHandle.AddrOfPinnedObject());
+            devicenameHandle.Free();
+
+            return retVal;
+        }
 
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcCloseDevice")]
         public static extern bool CloseDevice(IntPtr device);
@@ -150,9 +197,9 @@ namespace OpenAL
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcGetEnumValue")]
         public static extern int GetEnumValue(IntPtr device, string enumname);
 
-        #endregion
+#endregion
 
-        #region Query Functions
+#region Query Functions
 
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcGetString")]
         private static extern IntPtr _GetString(IntPtr device, int param);
@@ -171,6 +218,7 @@ namespace OpenAL
         {
             List<string> retVal = new List<string>();
             IntPtr strPtr = _GetString(device, param);
+            if (strPtr == IntPtr.Zero) { return retVal; }
             int strStart = 0;
             int strEnd = 0;
             byte currChar = Marshal.ReadByte(strPtr, strEnd);
@@ -208,9 +256,9 @@ namespace OpenAL
             data = dataArr[0];
         }
 
-        #endregion
+#endregion
 
-        #region Capture Functions
+#region Capture Functions
 
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcCaptureOpenDevice")]
         private static extern IntPtr CaptureOpenDevice(IntPtr devicename, uint frequency, int format, int buffersize);
@@ -236,6 +284,6 @@ namespace OpenAL
         [DllImport(OpenAlDll, CallingConvention = CallingConvention.Cdecl, EntryPoint = "alcCaptureSamples")]
         public static extern void CaptureSamples(IntPtr device, IntPtr buffer, int samples);
 
-        #endregion
+#endregion
     }
 }

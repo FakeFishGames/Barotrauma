@@ -13,6 +13,8 @@ namespace Barotrauma
         public readonly string DisplayName;
         public readonly string Description;
 
+        public readonly bool IsEndBiome;
+
         public readonly List<int> AllowedZones = new List<int>();
 
         public Biome(string name, string description)
@@ -40,36 +42,24 @@ namespace Barotrauma
                 element.GetAttributeString("description", "") ??
                 TextManager.Get("biomedescription." + Identifier);
 
-            string allowedZonesStr = element.GetAttributeString("AllowedZones", "1,2,3,4,5,6,7,8,9");
-            string[] zoneIndices = allowedZonesStr.Split(',');
-            for (int i = 0; i < zoneIndices.Length; i++)
-            {
-                int zoneIndex = -1;
-                if (!int.TryParse(zoneIndices[i].Trim(), out zoneIndex))
-                {
-                    DebugConsole.ThrowError("Error in biome config \"" + Identifier + "\" - \"" + zoneIndices[i] + "\" is not a valid zone index.");
-                    continue;
-                }
-                AllowedZones.Add(zoneIndex);
-            }
+            IsEndBiome = element.GetAttributeBool("endbiome", false);
+
+            AllowedZones.AddRange(element.GetAttributeIntArray("AllowedZones", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }));
         }
     }
 
     class LevelGenerationParams : ISerializableEntity
     {
-        public static List<LevelGenerationParams> LevelParams
-        {
-            get { return levelParams; }
-        }
+        public static List<LevelGenerationParams> LevelParams { get; private set; }
 
-        private static List<LevelGenerationParams> levelParams;
         private static List<Biome> biomes;
 
         public string Name
         {
-            get;
-            private set;
+            get { return Identifier; }
         }
+
+        public readonly string Identifier;
 
         private int minWidth, maxWidth, height;
 
@@ -107,7 +97,7 @@ namespace Barotrauma
         private float waterParticleScale;
 
         //which biomes can this type of level appear in
-        private List<Biome> allowedBiomes = new List<Biome>();
+        private readonly List<Biome> allowedBiomes = new List<Biome>();
 
         public IEnumerable<Biome> AllowedBiomes
         {
@@ -115,6 +105,13 @@ namespace Barotrauma
         }
 
         public Dictionary<string, SerializableProperty> SerializableProperties
+        {
+            get;
+            set;
+        }
+
+        [Serialize(LevelData.LevelType.LocationConnection, true), Editable]
+        public LevelData.LevelType Type
         {
             get;
             set;
@@ -148,6 +145,39 @@ namespace Barotrauma
             set;
         }
 
+        private Vector2 startPosition;
+        [Serialize("0,0", true, "Start position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable]
+        public Vector2 StartPosition
+        {
+            get { return startPosition; }
+            set 
+            { 
+                startPosition = new Vector2(
+                    MathHelper.Clamp(value.X, 0.0f, 1.0f),
+                    MathHelper.Clamp(value.Y, 0.0f, 1.0f));
+            }
+        }
+
+        private Vector2 endPosition;
+        [Serialize("1,0", true, "End position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable]
+        public Vector2 EndPosition
+        {
+            get { return endPosition; }
+            set
+            {
+                endPosition = new Vector2(
+                    MathHelper.Clamp(value.X, 0.0f, 1.0f),
+                    MathHelper.Clamp(value.Y, 0.0f, 1.0f));
+            }
+        }
+
+        [Serialize(true, true, "Should there be a hole in the wall next to the end outpost (can be used to prevent players from having to backtrack if they approach the outpost from the wrong side of the main path's walls)."), Editable]
+        public bool CreateHoleNextToEnd
+        {
+            get;
+            set;
+        }
+
         [Serialize(1000, true, description: "The total number of level objects (vegetation, vents, etc) in the level."), Editable(MinValueInt = 0, MaxValueInt = 100000)]
         public int LevelObjectAmount
         {
@@ -174,6 +204,13 @@ namespace Barotrauma
         {
             get { return height; }
             set { height = Math.Max(value, 2000); }
+        }
+
+        [Serialize(6500, true), Editable(MinValueInt = 5000, MaxValueInt = 1000000)]
+        public int MinTunnelRadius
+        {
+            get;
+            set;
         }
 
         [Editable, Serialize("3000, 3000", true, description: "How far from each other voronoi sites are placed. " +
@@ -386,31 +423,43 @@ namespace Barotrauma
         public Sprite WallEdgeSpriteSpecular { get; private set; }
         public Sprite WaterParticles { get; private set; }
 
-        public static List<Biome> GetBiomes()
+        public static IEnumerable<Biome> GetBiomes()
         {
             return biomes;
         }
 
-        public static LevelGenerationParams GetRandom(string seed, Biome biome = null)
+        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, Biome biome = null)
         {
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            if (levelParams == null || !levelParams.Any())
+            if (LevelParams == null || !LevelParams.Any())
             {
                 DebugConsole.ThrowError("Level generation presets not found - using default presets");
                 return new LevelGenerationParams(null);
             }
 
+            var matchingLevelParams = LevelParams.FindAll(lp => lp.Type == type && lp.allowedBiomes.Any());
             if (biome == null)
             {
-                return levelParams.GetRandom(lp => lp.allowedBiomes.Count > 0, Rand.RandSync.Server);
+                matchingLevelParams = matchingLevelParams.FindAll(lp => !lp.allowedBiomes.Any(b => b.IsEndBiome));
             }
-
-            var matchingLevelParams = levelParams.FindAll(lp => lp.allowedBiomes.Contains(biome));
+            else
+            {
+                matchingLevelParams = matchingLevelParams.FindAll(lp => lp.allowedBiomes.Contains(biome));
+            }
             if (matchingLevelParams.Count == 0)
             {
-                DebugConsole.ThrowError("Level generation presets not found for the biome \"" + biome.Identifier + "\"!");
-                return new LevelGenerationParams(null);
+                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{(biome?.Identifier ?? "null")}\", type: \"{type}\"!");
+                if (biome != null)
+                {
+                    //try to find params that at least have a suitable type
+                    matchingLevelParams = LevelParams.FindAll(lp => lp.Type == type);
+                    if (matchingLevelParams.Count == 0)
+                    {
+                        //still not found, give up and choose some params randomly
+                        matchingLevelParams = LevelParams;
+                    }
+                }
             }
 
             return matchingLevelParams[Rand.Range(0, matchingLevelParams.Count, Rand.RandSync.Server)];
@@ -418,11 +467,14 @@ namespace Barotrauma
 
         private LevelGenerationParams(XElement element)
         {
-            Name = element == null ? "default" : element.Name.ToString();
+            Identifier = element == null ? "default" :
+                element.GetAttributeString("identifier", null) ?? element.Name.ToString();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
+            if (element == null) { return; }
+
             string biomeStr = element.GetAttributeString("biomes", "");
-            if (string.IsNullOrWhiteSpace(biomeStr))
+            if (string.IsNullOrWhiteSpace(biomeStr) || biomeStr.Equals("any", StringComparison.OrdinalIgnoreCase))
             {
                 allowedBiomes = new List<Biome>(biomes);
             }
@@ -445,7 +497,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            DebugConsole.NewMessage("Please use biome identifiers instead of names in level generation parameter \"" + Name + "\".", Color.Orange);
+                            DebugConsole.NewMessage("Please use biome identifiers instead of names in level generation parameter \"" + Identifier + "\".", Color.Orange);
                         }
                     }
 
@@ -484,7 +536,7 @@ namespace Barotrauma
 
         public static void LoadPresets()
         {
-            levelParams = new List<LevelGenerationParams>();
+            LevelParams = new List<LevelGenerationParams>();
             biomes = new List<Biome>();
 
             var files = GameMain.Instance.GetFilesOfType(ContentType.LevelGenerationParameters);
@@ -549,7 +601,7 @@ namespace Barotrauma
 
             foreach (XElement levelParamElement in levelParamElements)
             {
-                levelParams.Add(new LevelGenerationParams(levelParamElement));
+                LevelParams.Add(new LevelGenerationParams(levelParamElement));
             }
         }
     }

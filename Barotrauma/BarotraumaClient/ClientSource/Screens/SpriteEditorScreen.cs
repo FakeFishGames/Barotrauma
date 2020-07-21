@@ -64,7 +64,7 @@ namespace Barotrauma
         public SpriteEditorScreen()
         {
             cam = new Camera();
-            GameMain.Instance.OnResolutionChanged += CreateUI;
+            GameMain.Instance.ResolutionChanged += CreateUI;
             CreateUI();
         }
 

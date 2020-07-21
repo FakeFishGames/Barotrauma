@@ -8,7 +8,15 @@ namespace Barotrauma
     {
         public static List<GameModePreset> List = new List<GameModePreset>();
 
-        public readonly ConstructorInfo Constructor;
+        public static GameModePreset SinglePlayerCampaign;
+        public static GameModePreset MultiPlayerCampaign;
+        public static GameModePreset Tutorial;
+        public static GameModePreset Mission;
+        public static GameModePreset TestMode;
+        public static GameModePreset Sandbox;
+        public static GameModePreset DevSandbox;
+
+        public readonly Type GameModeType;
 
         public readonly string Name;
         public readonly string Description;
@@ -26,7 +34,7 @@ namespace Barotrauma
             Description = TextManager.Get("GameModeDescription." + identifier, returnNull: true) ?? "";
             Identifier = identifier;
 
-            Constructor = type.GetConstructor(new Type[] { typeof(GameModePreset), typeof(object) });
+            GameModeType = type;
 
             IsSinglePlayer = isSinglePlayer;
             Votable = votable;
@@ -34,23 +42,17 @@ namespace Barotrauma
             List.Add(this);
         }
 
-        public GameMode Instantiate(object param)
-        {
-            object[] lobject = new object[] { this, param };
-            return (GameMode)Constructor.Invoke(lobject);
-        }
-
         public static void Init()
         {
 #if CLIENT
-            new GameModePreset("singleplayercampaign", typeof(SinglePlayerCampaign), true);
-            new GameModePreset("subtest", typeof(SubTestMode), true);
-            new GameModePreset("tutorial", typeof(TutorialMode), true);
-            new GameModePreset("devsandbox", typeof(GameMode), true);
+            Tutorial = new GameModePreset("tutorial", typeof(TutorialMode), true);
+            DevSandbox = new GameModePreset("devsandbox", typeof(GameMode), true);
+            SinglePlayerCampaign = new GameModePreset("singleplayercampaign", typeof(SinglePlayerCampaign), true);
+            TestMode = new GameModePreset("testmode", typeof(TestGameMode), true);
 #endif
-            new GameModePreset("sandbox", typeof(GameMode), false);
-            new GameModePreset("mission", typeof(MissionMode), false);
-            new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
+            Sandbox = new GameModePreset("sandbox", typeof(GameMode), false);
+            Mission = new GameModePreset("mission", typeof(MissionMode), false);
+            MultiPlayerCampaign = new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
         }
     }
 }

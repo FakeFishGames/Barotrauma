@@ -52,6 +52,10 @@ namespace Barotrauma.Networking
             }
         }
 
+        public readonly bool CanDetectDisconnect;
+
+        public bool Disconnected { get; private set; }
+
         public static void Create(string deviceName, UInt16? storedBufferID=null)
         {
             if (Instance != null)
@@ -71,6 +75,8 @@ namespace Barotrauma.Networking
 
         private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0, true, false)
         {
+            Disconnected = false;
+
             VoipConfig.SetupEncoding();
 
             //set up capture device
@@ -121,6 +127,13 @@ namespace Barotrauma.Networking
                 throw new Exception("Failed to open capture device: " + alError.ToString() + " (AL)");
             }
 
+            CanDetectDisconnect = Alc.IsExtensionPresent(captureDevice, "ALC_EXT_disconnect");
+            alcError = Alc.GetError(captureDevice);
+            if (alcError != Alc.NoError)
+            {
+                throw new Exception("Error determining if disconnect can be detected: " + alcError.ToString());
+            }
+
             Alc.CaptureStart(captureDevice);
             alcError = Alc.GetError(captureDevice);
             if (alcError != Alc.NoError)
@@ -158,9 +171,27 @@ namespace Barotrauma.Networking
         {
             Array.Copy(uncompressedBuffer, 0, prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
             Array.Clear(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
-            while (capturing)
+            while (capturing && !Disconnected)
             {
                 int alcError;
+
+                if (CanDetectDisconnect)
+                {
+                    Alc.GetInteger(captureDevice, Alc.EnumConnected, out int isConnected);
+                    alcError = Alc.GetError(captureDevice);
+                    if (alcError != Alc.NoError)
+                    {
+                        throw new Exception("Failed to determine if capture device is connected: " + alcError.ToString());
+                    }
+
+                    if (isConnected == 0)
+                    {
+                        DebugConsole.ThrowError("Capture device has been disconnected. You can select another available device in the settings.");
+                        Disconnected = true;
+                        break;
+                    }
+                }
+
                 Alc.GetInteger(captureDevice, Alc.EnumCaptureSamples, out int sampleCount);
 
                 alcError = Alc.GetError(captureDevice);

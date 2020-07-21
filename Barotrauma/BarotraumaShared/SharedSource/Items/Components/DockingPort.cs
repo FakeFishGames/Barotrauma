@@ -25,9 +25,6 @@ namespace Barotrauma.Items.Components
 
         private readonly Hull[] hulls = new Hull[2];
         private Gap gap;
-
-        private Door door;
-
         private Body[] bodies;
         private Fixture outsideBlocker;
         private Body doorBody;
@@ -67,6 +64,8 @@ namespace Barotrauma.Items.Components
         }
 
         public DockingPort DockingTarget { get; private set; }
+
+        public Door Door { get; private set; }
 
         public bool Docked
         {
@@ -208,7 +207,7 @@ namespace Barotrauma.Items.Components
             CreateJoint(false);
 
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
             {
                 item.CreateServerEvent(this);
             }
@@ -250,7 +249,7 @@ namespace Barotrauma.Items.Components
                 CreateJoint(true);
 
 #if SERVER
-                if (GameMain.Server != null)
+                if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
                 {
                     item.CreateServerEvent(this);
                 }
@@ -272,10 +271,10 @@ namespace Barotrauma.Items.Components
                 CreateHulls();
             }
 
-            if (door != null && DockingTarget.door != null)
+            if (Door != null && DockingTarget.Door != null)
             {
-                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
-                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.door.LinkedGap == wp.ConnectedGap);
+                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => Door.LinkedGap == wp.ConnectedGap);
+                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.Door.LinkedGap == wp.ConnectedGap);
 
                 if (myWayPoint != null && targetWayPoint != null)
                 {
@@ -333,19 +332,19 @@ namespace Barotrauma.Items.Components
         {
             if (DockingDir != 0) { return DockingDir; }
 
-            if (door != null)
+            if (Door != null)
             {
-                if (door.LinkedGap.linkedTo.Count == 1)
+                if (Door.LinkedGap.linkedTo.Count == 1)
                 {
                     return IsHorizontal ?
-                        Math.Sign(door.Item.WorldPosition.X - door.LinkedGap.linkedTo[0].WorldPosition.X) :
-                        Math.Sign(door.Item.WorldPosition.Y - door.LinkedGap.linkedTo[0].WorldPosition.Y);
+                        Math.Sign(Door.Item.WorldPosition.X - Door.LinkedGap.linkedTo[0].WorldPosition.X) :
+                        Math.Sign(Door.Item.WorldPosition.Y - Door.LinkedGap.linkedTo[0].WorldPosition.Y);
                 }
-                else if (dockingTarget?.door?.LinkedGap != null && dockingTarget.door.LinkedGap.linkedTo.Count == 1)
+                else if (dockingTarget?.Door?.LinkedGap != null && dockingTarget.Door.LinkedGap.linkedTo.Count == 1)
                 {
                     return IsHorizontal ?
-                        Math.Sign(dockingTarget.door.LinkedGap.linkedTo[0].WorldPosition.X - dockingTarget.door.Item.WorldPosition.X) :
-                        Math.Sign(dockingTarget.door.LinkedGap.linkedTo[0].WorldPosition.Y - dockingTarget.door.Item.WorldPosition.Y);
+                        Math.Sign(dockingTarget.Door.LinkedGap.linkedTo[0].WorldPosition.X - dockingTarget.Door.Item.WorldPosition.X) :
+                        Math.Sign(dockingTarget.Door.LinkedGap.linkedTo[0].WorldPosition.Y - dockingTarget.Door.Item.WorldPosition.Y);
                 }
             }
             if (dockingTarget != null)
@@ -367,23 +366,22 @@ namespace Barotrauma.Items.Components
         private void ConnectWireBetweenPorts()
         {
             Wire wire = item.GetComponent<Wire>();
-            if (wire == null) return;
+            if (wire == null) { return; }
 
-            wire.Hidden = true;
             wire.Locked = true;
+            wire.Hidden = true;
 
-            if (Item.Connections == null) return;
+            if (Item.Connections == null) { return; }
 
             var powerConnection = Item.Connections.Find(c => c.IsPower);
-            if (powerConnection == null) return;
+            if (powerConnection == null) { return; }
 
-            if (DockingTarget == null || DockingTarget.item.Connections == null) return;
+            if (DockingTarget == null || DockingTarget.item.Connections == null) { return; }
             var recipient = DockingTarget.item.Connections.Find(c => c.IsPower);
-            if (recipient == null) return;
+            if (recipient == null) { return; }
 
             wire.RemoveConnection(item);
             wire.RemoveConnection(DockingTarget.item);
-
 
             powerConnection.TryAddLink(wire);
             wire.Connect(powerConnection, false, false);
@@ -399,13 +397,13 @@ namespace Barotrauma.Items.Components
                 doorBody = null;
             }
 
-            Vector2 position = ConvertUnits.ToSimUnits(item.Position + (DockingTarget.door.Item.WorldPosition - item.WorldPosition));
+            Vector2 position = ConvertUnits.ToSimUnits(item.Position + (DockingTarget.Door.Item.WorldPosition - item.WorldPosition));
             if (!MathUtils.IsValid(position))
             {
                 string errorMsg =
                     "Attempted to create a door body at an invalid position (item pos: " + item.Position
                     + ", item world pos: " + item.WorldPosition
-                    + ", docking target world pos: " + DockingTarget.door.Item.WorldPosition + ")\n" + Environment.StackTrace;
+                    + ", docking target world pos: " + DockingTarget.Door.Item.WorldPosition + ")\n" + Environment.StackTrace;
 
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
@@ -418,11 +416,11 @@ namespace Barotrauma.Items.Components
             System.Diagnostics.Debug.Assert(doorBody == null);
 
             doorBody = GameMain.World.CreateRectangle(
-                DockingTarget.door.Body.width,
-                DockingTarget.door.Body.height,
+                DockingTarget.Door.Body.width,
+                DockingTarget.Door.Body.height,
                 1.0f,
                 position);
-            doorBody.UserData = DockingTarget.door;
+            doorBody.UserData = DockingTarget.Door;
             doorBody.CollisionCategories = Physics.CollisionWall;
             doorBody.BodyType = BodyType.Static;
         }
@@ -434,12 +432,12 @@ namespace Barotrauma.Items.Components
 
             bodies = new Body[4];
 
-            if (DockingTarget.door != null)
+            if (DockingTarget.Door != null)
             {
                 CreateDoorBody();
             }
 
-            if (door != null)
+            if (Door != null)
             {
                 DockingTarget.CreateDoorBody();
             }
@@ -718,7 +716,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < 2; i++)
             {
-                Gap doorGap = i == 0 ? door?.LinkedGap : DockingTarget?.door?.LinkedGap;
+                Gap doorGap = i == 0 ? Door?.LinkedGap : DockingTarget?.Door?.LinkedGap;
                 if (doorGap == null) continue;
                 doorGap.DisableHullRechecks = true;
                 if (doorGap.linkedTo.Count >= 2) continue;
@@ -773,10 +771,10 @@ namespace Barotrauma.Items.Components
             DockingTarget.item.Submarine.ConnectedDockingPorts.Remove(item.Submarine);
             item.Submarine.ConnectedDockingPorts.Remove(DockingTarget.item.Submarine);
 
-            if (door != null && DockingTarget.door != null)
+            if (Door != null && DockingTarget.Door != null)
             {
-                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => door.LinkedGap == wp.ConnectedGap);
-                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.door.LinkedGap == wp.ConnectedGap);
+                WayPoint myWayPoint = WayPoint.WayPointList.Find(wp => Door.LinkedGap == wp.ConnectedGap);
+                WayPoint targetWayPoint = WayPoint.WayPointList.Find(wp => DockingTarget.Door.LinkedGap == wp.ConnectedGap);
 
                 if (myWayPoint != null && targetWayPoint != null)
                 {
@@ -838,7 +836,7 @@ namespace Barotrauma.Items.Components
             obstructedWayPointsDisabled = false;
 
 #if SERVER
-            if (GameMain.Server != null)
+            if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
             {
                 item.CreateServerEvent(this);
             }
@@ -908,9 +906,9 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (DockingTarget.door != null && doorBody != null)
+                    if (DockingTarget.Door != null && doorBody != null)
                     {
-                        doorBody.Enabled = DockingTarget.door.Body.Enabled;
+                        doorBody.Enabled = DockingTarget.Door.Body.Enabled;
                     }
 
                     item.SendSignal(0, "1", "state_out", null);
@@ -927,6 +925,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             list.Remove(this);
             hulls[0]?.Remove(); hulls[0] = null;
             hulls[1]?.Remove(); hulls[1] = null;
@@ -953,7 +952,7 @@ namespace Barotrauma.Items.Components
                 float distSqr = Vector2.DistanceSquared(item.Position, it.Position);
                 if (distSqr < closestDist)
                 {
-                    door = doorComponent;
+                    Door = doorComponent;
                     closestDist = distSqr;
                 }
             }
@@ -982,7 +981,18 @@ namespace Barotrauma.Items.Components
         {
             InitializeLinks();
 
-            if (!item.linkedTo.Any()) return;
+            Wire wire = item.GetComponent<Wire>();
+            if (wire != null)
+            {
+                wire.Locked = true;
+                wire.Hidden = true;
+                if (wire.Connections.Contains(null))
+                {
+                    wire.Drop(null);
+                }                
+            }
+
+            if (!item.linkedTo.Any()) { return; }
 
             List<MapEntity> linked = new List<MapEntity>(item.linkedTo);
             foreach (MapEntity entity in linked)
@@ -995,6 +1005,7 @@ namespace Barotrauma.Items.Components
                     Dock(dockingPort);
                 }
             }
+
         }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)

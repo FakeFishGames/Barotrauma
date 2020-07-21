@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class LevelObject
+    partial class LevelObject : ISpatialEntity
     {
         public readonly LevelObjectPrefab Prefab;
         public Vector3 Position;
@@ -49,6 +49,14 @@ namespace Barotrauma
         {
             get { return spriteIndex < 0 || Prefab.SpecularSprites.Count == 0 ? null : Prefab.SpecularSprites[spriteIndex % Prefab.SpecularSprites.Count]; }
         }
+
+        Vector2 ISpatialEntity.Position => new Vector2(Position.X, Position.Y);
+
+        public Vector2 WorldPosition => new Vector2(Position.X, Position.Y);
+
+        public Vector2 SimPosition => ConvertUnits.ToSimUnits(WorldPosition);
+
+        public Submarine Submarine => null;
 
         public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
         {

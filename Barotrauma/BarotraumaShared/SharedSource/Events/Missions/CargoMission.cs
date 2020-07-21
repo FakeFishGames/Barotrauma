@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,8 @@ namespace Barotrauma
         private readonly XElement itemConfig;
 
         private readonly List<Item> items = new List<Item>();
-        private readonly Dictionary<Item, UInt16> itemIDs = new Dictionary<Item, UInt16>();
         private readonly Dictionary<Item, UInt16> parentInventoryIDs = new Dictionary<Item, UInt16>();
+        private readonly Dictionary<Item, byte> parentItemContainerIndices = new Dictionary<Item, byte>();
 
         private int requiredDeliveryAmount;
 
@@ -26,8 +27,8 @@ namespace Barotrauma
         private void InitItems()
         {
             items.Clear();
-            itemIDs.Clear();
             parentInventoryIDs.Clear();
+            parentItemContainerIndices.Clear();
 
             if (itemConfig == null)
             {
@@ -96,12 +97,12 @@ namespace Barotrauma
             var item = new Item(itemPrefab, position, cargoRoom.Submarine);
             item.FindHull();
             items.Add(item);
-            itemIDs.Add(item, item.ID);
 
-            if (parent != null) 
+            if (parent != null && parent.GetComponent<ItemContainer>() != null) 
             {
                 parentInventoryIDs.Add(item, parent.ID);
-                parent.Combine(item, user: null); 
+                parentItemContainerIndices.Add(item, (byte)parent.GetComponentIndex(parent.GetComponent<ItemContainer>()));
+                parent.Combine(item, user: null);
             }
             
             foreach (XElement subElement in element.Elements())
@@ -116,6 +117,9 @@ namespace Barotrauma
 
         public override void Start(Level level)
         {
+            items.Clear();
+            parentInventoryIDs.Clear();
+
             if (!IsClient)
             {
                 InitItems();

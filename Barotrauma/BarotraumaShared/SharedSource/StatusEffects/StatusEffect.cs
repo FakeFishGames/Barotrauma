@@ -141,6 +141,7 @@ namespace Barotrauma
 
         private readonly PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.Or;
         private readonly List<PropertyConditional> propertyConditionals;
+        public bool HasConditions => propertyConditionals != null && propertyConditionals.Any();
 
         private readonly bool setValue;
 
@@ -456,6 +457,19 @@ namespace Barotrauma
         public bool HasTargetType(TargetType targetType)
         {
             return (targetTypes & targetType) != 0;
+        }
+
+        public bool ReducesItemCondition()
+        {
+            for (int i = 0; i < propertyNames.Length; i++)
+            {
+                if (propertyNames[i] != "condition") { continue; }
+                if (propertyEffects[i].GetType() == typeof(float))
+                {
+                    return (float)propertyEffects[i] < 0.0f || (setValue && (float)propertyEffects[i] <= 0.0f);
+                }
+            }
+            return false;
         }
 
         public virtual bool HasRequiredItems(Entity entity)
@@ -794,7 +808,7 @@ namespace Barotrauma
                             if (limb.IsSevered) { continue; }
                             if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
                             AttackResult result = limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
-                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, result.Damage);
+                            limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
@@ -804,7 +818,7 @@ namespace Barotrauma
                         if (limb.IsSevered) { continue; }
                         if (limb.character.Removed || limb.Removed) { continue; }
                         AttackResult result = limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
-                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, result.Damage);
+                        limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true);
                     }
                 }
 

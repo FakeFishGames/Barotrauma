@@ -13,10 +13,10 @@ namespace Barotrauma
     {
         public static readonly List<LocationType> List = new List<LocationType>();
         
-        private List<string> nameFormats;
-        private List<string> names;
+        private readonly List<string> nameFormats;
+        private readonly List<string> names;
 
-        private Sprite symbolSprite;
+        private readonly Sprite symbolSprite;
 
         private readonly List<Sprite> portraits = new List<Sprite>();
 
@@ -47,6 +47,12 @@ namespace Barotrauma
             get { return hireableJobs.Any(); }
         }
 
+        public bool HasOutpost
+        {
+            get;
+            private set;
+        }
+
         public Sprite Sprite
         {
             get { return symbolSprite; }
@@ -66,9 +72,10 @@ namespace Barotrauma
         private LocationType(XElement element)
         {
             Identifier = element.GetAttributeString("identifier", element.Name.ToString());
-            Name = TextManager.Get("LocationName." + Identifier);
+            Name = TextManager.Get("LocationName." + Identifier, fallBackTag: "unknown");
             nameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
             UseInMainMenu = element.GetAttributeBool("useinmainmenu", false);
+            HasOutpost = element.GetAttributeBool("hasoutpost", true);
 
             string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
             try
@@ -158,16 +165,25 @@ namespace Barotrauma
             return portraits[Math.Abs(portraitId) % portraits.Count];
         }
 
-        public string GetRandomName(Random rand)
+        public string GetRandomName(Random rand, IEnumerable<Location> existingLocations)
         {
+            if (existingLocations != null)
+            {
+                var unusedNames = names.Where(name => !existingLocations.Any(l => l.BaseName == name)).ToList();
+                if (unusedNames.Count > 0)
+                {
+                    return unusedNames[rand.Next() % unusedNames.Count];
+                }
+            }
             return names[rand.Next() % names.Count];
         }
 
-        public static LocationType Random(Random rand, int? zone = null)
+        public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false)
         {
             Debug.Assert(List.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
-            List<LocationType> allowedLocationTypes = zone.HasValue ? List.FindAll(lt => lt.CommonnessPerZone.ContainsKey(zone.Value)) : List;
+            List<LocationType> allowedLocationTypes = 
+                List.FindAll(lt => (!zone.HasValue || lt.CommonnessPerZone.ContainsKey(zone.Value)) && (!requireOutpost || lt.HasOutpost));
 
             if (allowedLocationTypes.Count == 0)
             {
@@ -238,6 +254,11 @@ namespace Barotrauma
                     LocationType locationType = new LocationType(element);
                     List.Add(locationType);
                 }
+            }
+
+            foreach (EventSet eventSet in EventSet.List)
+            {
+                eventSet.CheckLocationTypeErrors();
             }
         }
     }

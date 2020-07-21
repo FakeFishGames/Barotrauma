@@ -37,6 +37,8 @@ namespace Barotrauma
         public UISprite UIGlow { get; private set; }
         public UISprite UIGlowCircular { get; private set; }
 
+        public UISprite ButtonPulse { get; private set; }
+
         public SpriteSheet FocusIndicator { get; private set; }
 
         /// <summary>
@@ -206,6 +208,9 @@ namespace Barotrauma
                     case "uiglowcircular":
                         UIGlowCircular = new UISprite(subElement);
                         break;
+                    case "endroundbuttonpulse":
+                        ButtonPulse = new UISprite(subElement);
+                        break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
                         break;
@@ -255,7 +260,8 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Global font not defined in the current UI style file. The global font is used to render western symbols when using Chinese/Japanese/Korean localization. Using default font instead...", Color.Orange);
             }
 
-            GameMain.Instance.OnResolutionChanged += () => { RescaleElements(); };
+            // TODO: Needs to unregister if we ever remove GUIStyles.
+            GameMain.Instance.ResolutionChanged += RescaleElements;
         }
 
         /// <summary>

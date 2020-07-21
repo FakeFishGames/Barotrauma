@@ -31,6 +31,8 @@ namespace Barotrauma
             public readonly Alignment Alignment;
             public readonly float Length;
 
+            private readonly float noiseVal;
+
             public SpawnPosition(GraphEdge graphEdge, Vector2 normal, LevelObjectPrefab.SpawnPosType spawnPosType, Alignment alignment)
             {
                 GraphEdge = graphEdge;
@@ -39,16 +41,16 @@ namespace Barotrauma
                 Alignment = alignment;
                 
                 Length = Vector2.Distance(graphEdge.Point1, graphEdge.Point2);
+
+                noiseVal =  
+                    (float)(PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 10000.0f, GraphEdge.Point1.Y / 10000.0f, 0.5f) +
+                            PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 20000.0f, GraphEdge.Point1.Y / 20000.0f, 0.5f));
             }
 
             public float GetSpawnProbability(LevelObjectPrefab prefab)
             {
-                if (prefab.ClusteringAmount <= 0.0f) return Length;
-
-                float noise = (float)(
-                    PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 10000.0f, GraphEdge.Point1.Y / 10000.0f, prefab.ClusteringGroup) +
-                    PerlinNoise.CalculatePerlin(GraphEdge.Point1.X / 20000.0f, GraphEdge.Point1.Y / 20000.0f, prefab.ClusteringGroup));
-
+                if (prefab.ClusteringAmount <= 0.0f) { return Length; }
+                float noise = (noiseVal + PerlinNoise.GetPerlin(prefab.ClusteringGroup, prefab.ClusteringGroup * 0.3f)) % 1.0f;
                 return Length * (float)Math.Pow(noise, prefab.ClusteringAmount);
             }
         }
@@ -90,15 +92,33 @@ namespace Barotrauma
                     Alignment.Top));
             }
 
+            availableSpawnPositions.Add(new SpawnPosition(
+                new GraphEdge(level.StartPosition - Vector2.UnitX, level.StartPosition + Vector2.UnitX),
+                -Vector2.UnitY, LevelObjectPrefab.SpawnPosType.LevelStart, Alignment.Top));
+            availableSpawnPositions.Add(new SpawnPosition(
+                new GraphEdge(level.EndPosition - Vector2.UnitX, level.EndPosition + Vector2.UnitX),
+                -Vector2.UnitY, LevelObjectPrefab.SpawnPosType.LevelEnd, Alignment.Top));
+
+            var availablePrefabs = new List<LevelObjectPrefab>(LevelObjectPrefab.List);
             objects = new List<LevelObject>();
+
+            Dictionary<LevelObjectPrefab, List<SpawnPosition>> suitableSpawnPositions = new Dictionary<LevelObjectPrefab, List<SpawnPosition>>();
+            Dictionary<LevelObjectPrefab, List<float>> spawnPositionWeights = new Dictionary<LevelObjectPrefab, List<float>>();
             for (int i = 0; i < amount; i++)
             {
                 //get a random prefab and find a place to spawn it
-                LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams.Name);
-                
-                SpawnPosition spawnPosition = FindObjectPosition(availableSpawnPositions, level, prefab);
+                LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams.Identifier, availablePrefabs);
+                if (prefab == null) { continue; }
+                if (!suitableSpawnPositions.ContainsKey(prefab))
+                {
+                    suitableSpawnPositions.Add(prefab, availableSpawnPositions.Where(sp =>
+                        prefab.SpawnPos.HasFlag(sp.SpawnPosType) && (sp.Length >= prefab.MinSurfaceWidth && prefab.Alignment.HasFlag(sp.Alignment) || sp.SpawnPosType == LevelObjectPrefab.SpawnPosType.LevelEnd || sp.SpawnPosType == LevelObjectPrefab.SpawnPosType.LevelStart)).ToList());
+                    spawnPositionWeights.Add(prefab,
+                        suitableSpawnPositions[prefab].Select(sp => sp.GetSpawnProbability(prefab)).ToList());
+                }
 
-                if (spawnPosition == null && prefab.SpawnPos != LevelObjectPrefab.SpawnPosType.None) continue;
+                SpawnPosition spawnPosition = ToolBox.SelectWeightedRandom(suitableSpawnPositions[prefab], spawnPositionWeights[prefab], Rand.RandSync.Server);
+                if (spawnPosition == null && prefab.SpawnPos != LevelObjectPrefab.SpawnPosType.None) { continue; }
 
                 float rotation = 0.0f;
                 if (prefab.AlignWithSurface && spawnPosition != null)
@@ -124,6 +144,13 @@ namespace Barotrauma
                 var newObject = new LevelObject(prefab,
                     new Vector3(position, Rand.Range(prefab.DepthRange.X, prefab.DepthRange.Y, Rand.RandSync.Server)), Rand.Range(prefab.MinSize, prefab.MaxSize, Rand.RandSync.Server), rotation);
                 AddObject(newObject, level);
+                if (prefab.MaxCount < amount)
+                {
+                    if (objects.Count(o => o.Prefab == prefab) >= prefab.MaxCount)
+                    {
+                        availablePrefabs.Remove(prefab);
+                    }
+                }
 
                 foreach (LevelObjectPrefab.ChildObject child in prefab.ChildObjects)
                 {
@@ -145,9 +172,7 @@ namespace Barotrauma
                         AddObject(childObject, level);
                     }
                 }
-
-            }
-                
+            }                
         }
 
         private void AddObject(LevelObject newObject, Level level)
@@ -321,16 +346,6 @@ namespace Barotrauma
             return availableSpawnPositions;
         }
 
-        private SpawnPosition FindObjectPosition(List<SpawnPosition> availableSpawnPositions, Level level, LevelObjectPrefab prefab)
-        {
-            if (prefab.SpawnPos == LevelObjectPrefab.SpawnPosType.None) return null;
-
-            var suitableSpawnPositions = availableSpawnPositions.Where(sp => 
-                prefab.SpawnPos.HasFlag(sp.SpawnPosType) && sp.Length >= prefab.MinSurfaceWidth && prefab.Alignment.HasFlag(sp.Alignment)).ToList();
-
-            return ToolBox.SelectWeightedRandom(suitableSpawnPositions, suitableSpawnPositions.Select(sp => sp.GetSpawnProbability(prefab)).ToList(), Rand.RandSync.Server);
-        }
-        
         public void Update(float deltaTime)
         {
             foreach (LevelObject obj in objects)
@@ -384,9 +399,14 @@ namespace Barotrauma
 
         private LevelObjectPrefab GetRandomPrefab(string levelType)
         {
+            return GetRandomPrefab(levelType, LevelObjectPrefab.List);
+        }
+
+        private LevelObjectPrefab GetRandomPrefab(string levelType, IList<LevelObjectPrefab> availablePrefabs)
+        {
             return ToolBox.SelectWeightedRandom(
-                LevelObjectPrefab.List, 
-                LevelObjectPrefab.List.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
+                availablePrefabs,
+                availablePrefabs.Select(p => p.GetCommonness(levelType)).ToList(), Rand.RandSync.Server);
         }
 
         public override void Remove()

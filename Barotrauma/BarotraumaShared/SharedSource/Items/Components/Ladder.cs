@@ -26,6 +26,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             RemoveProjSpecific();
             List.Remove(this);
         }

@@ -91,19 +91,19 @@ namespace Barotrauma
                         FocusedCharacter = null;
                     }
                     var closestEntity = FindEntityByID(memInput[memInput.Count - 1].interact);
-                    if (closestEntity is Item)
+                    if (closestEntity is Item item)
                     {
-                        if (CanInteractWith((Item)closestEntity))
+                        if (CanInteractWith(item))
                         {
-                            focusedItem = (Item)closestEntity;
+                            focusedItem = item;
                             FocusedCharacter = null;
                         }
                     }
-                    else if (closestEntity is Character)
+                    else if (closestEntity is Character character)
                     {
-                        if (CanInteractWith((Character)closestEntity))
+                        if (CanInteractWith(character, maxDist: 250.0f))
                         {
-                            FocusedCharacter = (Character)closestEntity;
+                            FocusedCharacter = character;
                             focusedItem = null;
                         }
                     }
@@ -207,6 +207,13 @@ namespace Barotrauma
                     {
                         LastNetworkUpdateID = networkUpdateID;
                     }
+                    else if (NetIdUtils.Difference(networkUpdateID, LastNetworkUpdateID) > 500)
+                    {
+#if DEBUG || UNSTABLE
+                        DebugConsole.AddWarning($"Large disrepancy between a client character's network update ID server-side and client-side (client: {networkUpdateID}, server: {LastNetworkUpdateID}). Resetting the ID.");
+#endif
+                        LastNetworkUpdateID = networkUpdateID;
+                    }
                     if (memInput.Count > 60)
                     {
                         //deleting inputs from the queue here means the server is way behind and data needs to be dropped
@@ -264,21 +271,21 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 0, 4);
+                        msg.WriteRangedInteger(0, 0, 5);
                         msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                         Inventory.ServerWrite(msg, c);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(1, 0, 4);
+                        msg.WriteRangedInteger(1, 0, 5);
                         Client owner = (Client)extraData[1];
                         msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(2, 0, 4);
+                        msg.WriteRangedInteger(2, 0, 5);
                         WriteStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
-                        msg.WriteRangedInteger(3, 0, 4);
+                        msg.WriteRangedInteger(3, 0, 5);
                         if (Info?.Job == null)
                         {
                             msg.Write((byte)0);
@@ -297,10 +304,14 @@ namespace Barotrauma
                         Limb attackLimb = extraData[1] as Limb;
                         UInt16 targetEntityID = (UInt16)extraData[2];
                         int targetLimbIndex = extraData.Length > 3 ? (int)extraData[3] : 0;
-                        msg.WriteRangedInteger(4, 0, 4);
+                        msg.WriteRangedInteger(4, 0, 5);
                         msg.Write((byte)(Removed ? 255 : Array.IndexOf(AnimController.Limbs, attackLimb)));
                         msg.Write(targetEntityID);
                         msg.Write((byte)targetLimbIndex);
+                        break;
+                    case NetEntityEvent.Type.AssignCampaignInteraction:
+                        msg.WriteRangedInteger(5, 0, 5);
+                        msg.Write((byte)CampaignInteractionType);
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
@@ -506,6 +517,8 @@ namespace Barotrauma
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
             info.ServerWrite(msg);
+
+            msg.Write((byte)CampaignInteractionType);
 
             // Current order
             if (info.CurrentOrder != null)

@@ -83,7 +83,7 @@ namespace Barotrauma
                 {
                     Vector2 dir = IsHorizontal ?
                         new Vector2(Math.Sign(linkedTo[i].Rect.Center.X - rect.Center.X), 0.0f)
-                        : new Vector2(0.0f, Math.Sign((linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f) - (rect.Y - rect.Height / 2.0f)));
+                        : new Vector2(0.0f, Math.Sign((rect.Y - rect.Height / 2.0f) - (linkedTo[i].Rect.Y - linkedTo[i].Rect.Height / 2.0f)));
 
                     Vector2 arrowPos = new Vector2(WorldRect.Center.X, -(WorldRect.Y - WorldRect.Height / 2));
                     arrowPos += new Vector2(dir.X * (WorldRect.Width / 2), dir.Y * (WorldRect.Height / 2));

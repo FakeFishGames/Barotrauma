@@ -315,13 +315,14 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster("hammerhead", officer_hammerheadSpawnPos);
+            ((EnemyAIController)officer_hammerhead.AIController).StayInsideLevel = false;
             officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
             SetHighlight(officer_coilgunPeriscope, true);
             float originalDistance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerheadSpawnPos);
             do
             {
                 float distance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerhead.WorldPosition);
-                if (distance > originalDistance * 1.5f)
+                if (distance > originalDistance * 1.5f || officer_hammerhead.WorldPosition.Y > officer_coilgunPeriscope.WorldPosition.Y)
                 {
                     // Don't let the Hammerhead go too far.
                     officer_hammerhead.TeleportTo(officer_hammerheadSpawnPos + new Vector2(0, -1000));
@@ -329,7 +330,13 @@ namespace Barotrauma.Tutorials
                 if (distance > originalDistance)
                 {
                     // Ensure that the Hammerhead targets the player
+                    officer.AiTarget.SoundRange = float.MaxValue;
+                    officer.AiTarget.SightRange = float.MaxValue;
                     officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
+                    if ((officer_hammerhead.AIController as EnemyAIController)?.SelectedTargetingParams != null)
+                    {
+                        ((EnemyAIController)officer_hammerhead.AIController).SelectedTargetingParams.ReactDistance = 5000.0f;
+                    }
                     /*var ai = officer_hammerhead.AIController as EnemyAIController;
                     ai.sight = 2.0f;*/
                 }

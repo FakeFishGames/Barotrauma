@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -14,6 +15,7 @@ namespace Barotrauma
 
         private GUIListBox subList;
         private GUIListBox saveList;
+        private List<GUITickBox> subTickBoxes;
 
         private GUITextBox saveNameBox, seedBox;
 
@@ -90,8 +92,10 @@ namespace Barotrauma
             }
             else // Spacing to fix the multiplayer campaign setup layout
             {
+                CreateMultiplayerCampaignSubList(leftColumn.RectTransform);
+
                 //spacing
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform), style: null);
+                //new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform), style: null);
             }
 
             // New game right side
@@ -100,13 +104,11 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.13f), 
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.12f),
                 (isMultiplayer ? leftColumn : rightColumn).RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.TopRight);
             if (!isMultiplayer) { buttonContainer.IgnoreLayoutGroups = true; }
 
-            StartButton = new GUIButton(new RectTransform(isMultiplayer ? new Vector2(0.5f, 1.0f) : Vector2.One,
-                buttonContainer.RectTransform, Anchor.BottomRight) { MaxSize = new Point(350, 60) }, 
-                TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
+            StartButton = new GUIButton(new RectTransform(new Vector2(0.45f, 1f), buttonContainer.RectTransform, Anchor.BottomRight) { MaxSize = new Point(350, 60) }, TextManager.Get("StartCampaignButton"))
             {
                 OnClicked = (GUIButton btn, object userData) =>
                 {
@@ -127,6 +129,12 @@ namespace Barotrauma
                     {
                         if (GameMain.NetLobbyScreen.SelectedSub == null) { return false; }
                         selectedSub = GameMain.NetLobbyScreen.SelectedSub;
+                    }
+                    
+                    if (selectedSub.SubmarineClass == SubmarineClass.Undefined)
+                    {
+                        new GUIMessageBox(TextManager.Get("error"), TextManager.Get("undefinedsubmarineselected"));
+                        return false;
                     }
 
                     if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
@@ -218,6 +226,106 @@ namespace Barotrauma
             UpdateLoadMenu(saveFiles);
         }
 
+        private void CreateMultiplayerCampaignSubList(RectTransform parent)
+        {
+            GUILayoutGroup subHolder = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.725f), parent))
+            {
+                RelativeSpacing = 0.005f,
+                Stretch = true
+            };
+
+            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Language == "English" ? "Purchasable submarines" : TextManager.Get("workshoplabelsubmarines"), font: GUI.SubHeadingFont);
+
+            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), subHolder.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
+            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font, createClearButton: true);
+            filterContainer.RectTransform.MinSize = searchBox.RectTransform.MinSize;
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
+            searchBox.OnTextChanged += (textBox, text) =>
+            {
+                foreach (GUIComponent child in subList.Content.Children)
+                {
+                    if (!(child.UserData is SubmarineInfo sub)) { continue; }
+                    child.Visible = string.IsNullOrEmpty(text) ? true : sub.DisplayName.ToLower().Contains(text.ToLower());
+                }
+                return true;
+            };
+
+            subList = new GUIListBox(new RectTransform(Vector2.One, subHolder.RectTransform));
+            subTickBoxes = new List<GUITickBox>();
+
+            for (int i = 0; i < GameMain.Client.ServerSubmarines.Count; i++)
+            {
+                SubmarineInfo sub = GameMain.Client.ServerSubmarines[i];
+
+                if (!sub.IsCampaignCompatible) continue;
+
+                var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), subList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    style: "ListBoxElement")
+                {
+                    ToolTip = sub.Description,
+                    UserData = sub
+                };
+
+                int buttonSize = (int)(frame.Rect.Height * 0.8f);
+
+                GUITickBox tickBox = new GUITickBox(new RectTransform(new Vector2(0.8f, 1.0f), frame.RectTransform, Anchor.CenterLeft), ToolBox.LimitString(sub.DisplayName, GUI.Font, subList.Content.Rect.Width - 65))
+                {
+                    UserData = sub,
+                    OnSelected = (GUITickBox box) =>
+                    {
+                        GameMain.Client.RequestCampaignSub(box.UserData as SubmarineInfo, box.Selected);
+                        return true;
+                    }
+                };
+                subTickBoxes.Add(tickBox);
+                tickBox.Selected = GameMain.NetLobbyScreen.CampaignSubmarines.Contains(sub);
+
+                frame.RectTransform.MinSize = new Point(0, tickBox.RectTransform.MinSize.Y);
+
+                var subTextBlock = tickBox.TextBlock;
+
+                var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash?.Hash == sub.MD5Hash?.Hash);
+                if (matchingSub == null) matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
+
+                if (matchingSub == null)
+                {
+                    subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
+                    frame.ToolTip = TextManager.Get("SubNotFound");
+                }
+                else if (matchingSub?.MD5Hash == null || matchingSub.MD5Hash?.Hash != sub.MD5Hash?.Hash)
+                {
+                    subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
+                    frame.ToolTip = TextManager.Get("SubDoesntMatch");
+                }
+
+                if (!sub.RequiredContentPackagesInstalled)
+                {
+                    subTextBlock.TextColor = Color.Lerp(subTextBlock.TextColor, Color.DarkRed, 0.5f);
+                    frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.RawToolTip;
+                }
+
+                var classText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight),
+                TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
+                {
+                    TextColor = subTextBlock.TextColor * 0.8f,
+                    ToolTip = subTextBlock.RawToolTip
+                };
+            }
+        }
+
+        public void RefreshMultiplayerCampaignSubUI(List<SubmarineInfo> campaignSubs)
+        {
+            for (int i = 0; i < subTickBoxes.Count; i++)
+            {
+                subTickBoxes[i].Selected = campaignSubs.Contains(subTickBoxes[i].UserData as SubmarineInfo);
+            }
+        }
+
         public void RandomizeSeed()
         {
             seedBox.Text = ToolBox.RandomSeed(8);
@@ -239,9 +347,15 @@ namespace Barotrauma
             (subPreviewContainer.Parent as GUILayoutGroup)?.Recalculate();
             subPreviewContainer.ClearChildren();
 
-            SubmarineInfo sub = obj as SubmarineInfo;
-            if (sub == null) { return true; }
-
+            if (!(obj is SubmarineInfo sub)) { return true; }
+#if !DEBUG
+            if (!isMultiplayer && sub.Price > CampaignMode.MaxInitialSubmarinePrice && !GameMain.DebugDraw) 
+            {
+                StartButton.Enabled = false;
+                return false; 
+            }
+#endif
+            StartButton.Enabled = true;
             sub.CreatePreviewWindow(subPreviewContainer);
             return true;
         }
@@ -262,10 +376,10 @@ namespace Barotrauma
             };
             msgBox.Buttons[0].OnClicked += msgBox.Close;
 
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-            while (GameMain.NetLobbyScreen.CampaignUI == null && DateTime.Now < timeOut)
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 20);
+            while (Screen.Selected != GameMain.GameScreen && DateTime.Now < timeOut)
             {
-                msgBox.Header.Text = headerText + new string('.', ((int)Timing.TotalTime % 3 + 1));
+                msgBox.Header.Text = headerText + new string('.', (int)Timing.TotalTime % 3 + 1);
                 yield return CoroutineStatus.Running;
             }
             msgBox.Close();
@@ -281,11 +395,13 @@ namespace Barotrauma
 
         public void UpdateSubList(IEnumerable<SubmarineInfo> submarines)
         {
-#if !DEBUG
-            var subsToShow = submarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus));
-#else
-            var subsToShow = submarines;
-#endif
+            var subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass).ToList();
+            subsToShow.Sort((s1, s2) => 
+            {
+                int p1 = s1.Price > CampaignMode.MaxInitialSubmarinePrice ? 10 : 0;
+                int p2 = s2.Price > CampaignMode.MaxInitialSubmarinePrice ? 10 : 0;
+                return p1.CompareTo(p2) * 100 + s1.Name.CompareTo(s2.Name); 
+            });
 
             subList.ClearChildren();
 
@@ -299,30 +415,28 @@ namespace Barotrauma
                         UserData = sub
                     };
                                
-                if(!sub.RequiredContentPackagesInstalled)
+                if (!sub.RequiredContentPackagesInstalled)
                 {
                     textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);
                     textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.RawToolTip;
                 }
 
-                if (sub.HasTag(SubmarineTag.Shuttle))
+                var priceText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
+                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
-                    textBlock.TextColor = textBlock.TextColor * 0.85f;
-
-                    var shuttleText = new GUITextBlock(new RectTransform(new Point(100, textBlock.Rect.Height), textBlock.RectTransform, Anchor.CenterRight)
-                    {
-                        IsFixedSize = false
-                    },
-                        TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.Right, font: GUI.SmallFont)
-                    {
-                        TextColor = textBlock.TextColor * 0.8f,
-                        ToolTip = textBlock.RawToolTip
-                    };
+                    TextColor = sub.Price > CampaignMode.MaxInitialSubmarinePrice ? GUI.Style.Red : textBlock.TextColor * 0.8f,
+                    ToolTip = textBlock.ToolTip
+                };
+#if !DEBUG
+                if (sub.Price > CampaignMode.MaxInitialSubmarinePrice && !GameMain.DebugDraw)
+                {
+                    textBlock.CanBeFocused = false;
                 }
+#endif
             }
             if (SubmarineInfo.SavedSubmarines.Any())
             {
-                var nonShuttles = subsToShow.Where(s => !s.HasTag(SubmarineTag.Shuttle)).ToList();
+                var nonShuttles = subsToShow.Where(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.Shuttle) && s.Price <= CampaignMode.MaxInitialSubmarinePrice).ToList();
                 if (nonShuttles.Count > 0)
                 {
                     subList.Select(nonShuttles[Rand.Int(nonShuttles.Count)]);
@@ -389,6 +503,7 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
 
+                bool isCompatible = true;
                 if (!isMultiplayer)
                 {
                     nameText.Text = Path.GetFileNameWithoutExtension(saveFile);
@@ -406,10 +521,10 @@ namespace Barotrauma
                         saveList.Content.RemoveChild(saveFrame);
                         continue;
                     }
-                    subName =  doc.Root.GetAttributeString("submarine", "");
-                    saveTime = doc.Root.GetAttributeString("savetime", "");
-                    contentPackageStr = doc.Root.GetAttributeString("selectedcontentpackages", "");
-
+                    subName             = doc.Root.GetAttributeString("submarine", "");
+                    saveTime            = doc.Root.GetAttributeString("savetime", "");
+                    isCompatible        = SaveUtil.IsSaveFileCompatible(doc);
+                    contentPackageStr   = doc.Root.GetAttributeString("selectedcontentpackages", "");
                     prevSaveFiles?.Add(saveFile);
                 }
                 else
@@ -435,6 +550,11 @@ namespace Barotrauma
                         nameText.TextColor = GUI.Style.Red;
                         saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
                     }
+                }
+                if (!isCompatible)
+                {
+                    nameText.TextColor = GUI.Style.Red;
+                    saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
                 }
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
@@ -516,13 +636,13 @@ namespace Barotrauma
             }
 
             XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
-            if (doc == null)
+            if (doc?.Root == null)
             {
                 DebugConsole.ThrowError("Error loading save file \"" + fileName + "\". The file may be corrupted.");
                 return false;
             }
 
-            loadGameButton.Enabled = true;
+            loadGameButton.Enabled = SaveUtil.IsSaveFileCompatible(doc);
 
             RemoveSaveFrame();
 

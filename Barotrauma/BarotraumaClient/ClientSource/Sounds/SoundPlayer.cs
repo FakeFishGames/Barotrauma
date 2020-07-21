@@ -809,7 +809,8 @@ namespace Barotrauma
                 Screen.Selected == GameMain.ParticleEditorScreen ||
                 Screen.Selected == GameMain.SpriteEditorScreen ||
                 Screen.Selected == GameMain.SubEditorScreen ||
-                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is SubTestMode))
+                Screen.Selected == GameMain.EventEditorScreen ||
+                (Screen.Selected == GameMain.GameScreen && GameMain.GameSession?.GameMode is TestGameMode))
             {
                 return "editor";
             }
@@ -882,7 +883,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null)
             {
-                if (Submarine.Loaded != null && Level.Loaded != null && Submarine.MainSub.AtEndPosition)
+                if (Submarine.Loaded != null && Level.Loaded != null && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition)
                 {
                     return "levelend";
                 }

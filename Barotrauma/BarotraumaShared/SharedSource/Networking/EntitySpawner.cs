@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -58,10 +59,13 @@ namespace Barotrauma
                     return null;
                 }
                 Item spawnedItem;
-                if (Inventory != null)
+                if (Inventory?.Owner != null)
                 {
                     spawnedItem = new Item(Prefab, Vector2.Zero, null);
-                    Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
+                    if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots))
+                    {
+                        spawnedItem.SetTransform(FarseerPhysics.ConvertUnits.ToSimUnits(Inventory.Owner?.WorldPosition ?? Vector2.Zero), spawnedItem.body?.Rotation ?? 0.0f, findNewHull: false);
+                    }
                 }
                 else
                 {
@@ -127,6 +131,8 @@ namespace Barotrauma
 
             public readonly UInt16 OriginalID, OriginalInventoryID;
 
+            public readonly byte OriginalItemContainerIndex;
+
             public readonly bool Remove = false;
 
             public SpawnOrRemove(Entity entity, bool remove)
@@ -136,6 +142,20 @@ namespace Barotrauma
                 if (entity is Item item && item.ParentInventory?.Owner != null)
                 {
                     OriginalInventoryID = item.ParentInventory.Owner.ID;
+                    //find the index of the ItemContainer this item is inside to get the item to
+                    //spawn in the correct inventory in multi-inventory items like fabricators
+                    if (item.Container != null)
+                    {
+                        foreach (ItemComponent component in item.Container.Components)
+                        {
+                            if (component is ItemContainer container &&
+                                container.Inventory == item.ParentInventory)
+                            {
+                                OriginalItemContainerIndex = (byte)item.Container.GetComponentIndex(component);
+                                break;
+                            }
+                        }
+                    }
                 }
                 Remove = remove;
             }

@@ -51,7 +51,10 @@ namespace Barotrauma
         public bool VoipAttenuationEnabled { get; set; }
         public bool UseDirectionalVoiceChat { get; set; }
 
+        public IList<string> AudioDeviceNames;
         public IList<string> CaptureDeviceNames;
+
+        public string AudioOutputDevice { get; set; }
 
         public enum VoiceMode
         {
@@ -266,6 +269,7 @@ namespace Barotrauma
 
 #if DEBUG
         public bool AutomaticQuickStartEnabled { get; set; }
+        public bool AutomaticCampaignLoadEnabled { get; set; }
         public bool TextManagerDebugModeEnabled { get; set; }
 #endif
 
@@ -288,6 +292,8 @@ namespace Barotrauma
 
         public void SelectCorePackage(ContentPackage contentPackage, bool forceReloadAll = false)
         {
+            if (!contentPackage.ContainsRequiredCorePackageFiles(out _)) { return; }
+
             ContentPackage otherCorePackage = SelectedContentPackages.Where(cp => cp.CorePackage).First();
 
             SelectedContentPackages.Remove(otherCorePackage);
@@ -304,12 +310,19 @@ namespace Barotrauma
                     Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
 
             DisableContentPackageItems(filesToRemove.OrderBy(ContentFileLoadOrder));
-
             EnableContentPackageItems(filesToAdd.OrderBy(ContentFileLoadOrder));
 
             RefreshContentPackageItems(filesToAdd.Concat(filesToRemove));
-
         }
+
+        public void AutoSelectCorePackage(IEnumerable<ContentPackage> toRemove)
+        {
+            SelectCorePackage(ContentPackage.List.Find(cpp =>
+                cpp.CorePackage &&
+                !toRemove.Contains(cpp) &&
+                cpp.ContainsRequiredCorePackageFiles(out _)));
+        }
+
         public void SelectContentPackage(ContentPackage contentPackage)
         {
             if (!SelectedContentPackages.Contains(contentPackage))
@@ -318,7 +331,6 @@ namespace Barotrauma
                 ContentPackage.SortContentPackages();
 
                 EnableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder));
-
                 RefreshContentPackageItems(contentPackage.Files);
             }
         }
@@ -329,13 +341,10 @@ namespace Barotrauma
             {
                 SelectedContentPackages.Remove(contentPackage);
                 ContentPackage.SortContentPackages();
-
                 DisableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder));
-
                 RefreshContentPackageItems(contentPackage.Files);
             }
         }
-
 
         private void EnableContentPackageItems(IOrderedEnumerable<ContentFile> files)
         {
@@ -427,14 +436,20 @@ namespace Barotrauma
 
         private void RefreshContentPackageItems(IEnumerable<ContentFile> files)
         {
+            if (files.Any(f => f.Type == ContentType.LocationTypes)) { LocationType.Init(); }
             if (files.Any(f => f.Type == ContentType.Afflictions)) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
-            if (files.Any(f => f.Type == ContentType.Submarine)) { SubmarineInfo.RefreshSavedSubs(); }
+            if (files.Any(f => f.Type == ContentType.Submarine ||
+                               f.Type == ContentType.Outpost ||
+                               f.Type == ContentType.OutpostModule ||
+                               f.Type == ContentType.Wreck)) { SubmarineInfo.RefreshSavedSubs(); }
+            if (files.Any(f => f.Type == ContentType.NPCSets)) { NPCSet.LoadSets(); }
+            if (files.Any(f => f.Type == ContentType.OutpostConfig)) { OutpostGenerationParams.LoadPresets(); }
+            if (files.Any(f => f.Type == ContentType.Factions)) { FactionPrefab.LoadFactions(); }
             if (files.Any(f => f.Type == ContentType.Item)) { ItemPrefab.InitFabricationRecipes(); }
             if (files.Any(f => f.Type == ContentType.RuinConfig)) { RuinGeneration.RuinGenerationParams.ClearAll(); }
-            if (files.Any(f => f.Type == ContentType.RandomEvents)) { ScriptedEventSet.LoadPrefabs(); }
+            if (files.Any(f => f.Type == ContentType.RandomEvents)) { EventSet.LoadPrefabs(); }
             if (files.Any(f => f.Type == ContentType.Missions)) { MissionPrefab.Init(); }
             if (files.Any(f => f.Type == ContentType.LevelObjectPrefabs)) { LevelObjectPrefab.LoadAll(); }
-            if (files.Any(f => f.Type == ContentType.LocationTypes)) { LocationType.Init(); }
             if (files.Any(f => f.Type == ContentType.MapGenerationParameters)) { MapGenerationParams.Init(); }
             if (files.Any(f => f.Type == ContentType.LevelGenerationParameters)) { LevelGenerationParams.LoadPresets(); }
             if (files.Any(f => f.Type == ContentType.TraitorMissions)) { TraitorMissionPrefab.Init(); }
@@ -474,6 +489,10 @@ namespace Barotrauma
             ContentType.Particles,
             ContentType.Decals,
             ContentType.Outpost,
+            ContentType.OutpostModule,
+            ContentType.OutpostConfig,
+            ContentType.NPCSets,
+            ContentType.Factions,
             ContentType.Wreck,
             ContentType.WreckAIConfig,
             ContentType.BackgroundCreaturePrefabs,
@@ -516,12 +535,13 @@ namespace Barotrauma
             SubmarineInfo.RefreshSavedSubs();
             ItemPrefab.InitFabricationRecipes();
             RuinGeneration.RuinGenerationParams.ClearAll();
-            ScriptedEventSet.LoadPrefabs();
+            EventSet.LoadPrefabs();
             MissionPrefab.Init();
             LevelObjectPrefab.LoadAll();
             LocationType.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
+            OutpostGenerationParams.LoadPresets();
             TraitorMissionPrefab.Init();
             Order.Init();
             EventManagerSettings.Init();
@@ -658,7 +678,7 @@ namespace Barotrauma
                         {
                             if (cp.CorePackage)
                             {
-                                GameMain.Config.SelectCorePackage(ContentPackage.List.Find(cpp => cpp.CorePackage && !toRemove.Contains(cpp)));
+                                GameMain.Config.AutoSelectCorePackage(toRemove);
                             }
                             else
                             {
@@ -1105,6 +1125,7 @@ namespace Barotrauma
                 new XAttribute("usedualmodesockets", UseDualModeSockets)
 #if DEBUG
                 , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
+                , new XAttribute("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled)
                 , new XAttribute("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled)
 #endif
                 );
@@ -1162,6 +1183,7 @@ namespace Barotrauma
                 new XAttribute("voipattenuationenabled", VoipAttenuationEnabled),
                 new XAttribute("usedirectionalvoicechat", UseDirectionalVoiceChat),
                 new XAttribute("voicesetting", VoiceSetting),
+                new XAttribute("audiooutputdevice", System.Xml.XmlConvert.EncodeName(AudioOutputDevice ?? "")),
                 new XAttribute("voicecapturedevice", System.Xml.XmlConvert.EncodeName(VoiceCaptureDevice ?? "")),
                 new XAttribute("noisegatethreshold", NoiseGateThreshold));
 
@@ -1313,6 +1335,7 @@ namespace Barotrauma
             UseDualModeSockets = doc.Root.GetAttributeBool("usedualmodesockets", true);
 #if DEBUG
             AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
+            AutomaticCampaignLoadEnabled = doc.Root.GetAttributeBool("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled);
             TextManagerDebugModeEnabled = doc.Root.GetAttributeBool("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled);
 #endif
             XElement gameplayElement = doc.Root.Element("gameplay");
@@ -1405,6 +1428,7 @@ namespace Barotrauma
 
                 UseDirectionalVoiceChat = audioSettings.GetAttributeBool("usedirectionalvoicechat", UseDirectionalVoiceChat);
                 VoiceCaptureDevice = System.Xml.XmlConvert.DecodeName(audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice));
+                AudioOutputDevice = System.Xml.XmlConvert.DecodeName(audioSettings.GetAttributeString("audiooutputdevice", AudioOutputDevice));
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
                 MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");

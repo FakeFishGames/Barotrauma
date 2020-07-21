@@ -7,34 +7,37 @@ namespace Barotrauma
 {
     class PathNode
     {
-        private WayPoint wayPoint;
-
-        private int wayPointID;
+        private readonly int wayPointID;
 
         public int state;
 
         public PathNode Parent;
-        
+
         private Vector2 position;
 
-        public float F,G,H;
+        public float F, G, H;
 
         public List<PathNode> connections;
         public List<float> distances;
-        
-        public WayPoint Waypoint
-        {
-            get { return wayPoint; }
-        }
+
+        public Vector2 TempPosition;
+        public float TempDistance;
+
+        public WayPoint Waypoint { get; private set; }
 
         public Vector2 Position
         {
             get { return position; }
         }
 
+        public override string ToString()
+        {
+            return $"PathNode {wayPointID}";
+        }
+
         public PathNode(WayPoint wayPoint)
         {
-            this.wayPoint = wayPoint;
+            this.Waypoint = wayPoint;
             this.position = wayPoint.SimPosition;
             wayPointID = wayPoint.ID;
 
@@ -57,15 +60,14 @@ namespace Barotrauma
                 nodes.Add(wayPoint.ID, new PathNode(wayPoint));
             }
 
-            foreach (KeyValuePair<int,PathNode> node in nodes)
+            foreach (KeyValuePair<int, PathNode> node in nodes)
             {
-                foreach (MapEntity linked in node.Value.wayPoint.linkedTo)
+                foreach (MapEntity linked in node.Value.Waypoint.linkedTo)
                 {
-                    PathNode connectedNode = null;
-                    nodes.TryGetValue(linked.ID, out connectedNode);
+                    nodes.TryGetValue(linked.ID, out PathNode connectedNode);
                     if (connectedNode == null) { continue; }
-
-                    node.Value.connections.Add(connectedNode);                    
+                    if (!node.Value.connections.Contains(connectedNode)) { node.Value.connections.Add(connectedNode); }
+                    if (!connectedNode.connections.Contains(node.Value)) { connectedNode.connections.Add(node.Value); }
                 }
             }
 
@@ -74,10 +76,10 @@ namespace Barotrauma
             foreach (PathNode node in nodeList)
             {
                 node.distances = new List<float>();
-                for (int i = 0; i< node.connections.Count; i++)
+                for (int i = 0; i < node.connections.Count; i++)
                 {
                     node.distances.Add(Vector2.Distance(node.position, node.connections[i].position));
-                }                
+                }
             }
 
             return nodeList;            
@@ -89,7 +91,7 @@ namespace Barotrauma
         public delegate float? GetNodePenaltyHandler(PathNode node, PathNode prevNode);
         public GetNodePenaltyHandler GetNodePenalty;
 
-        private List<PathNode> nodes;
+        private readonly List<PathNode> nodes;
 
         public bool InsideSubmarine { get; set; }
 
@@ -135,8 +137,7 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < wp.linkedTo.Count; i++)
                     {
-                        WayPoint connected = wp.linkedTo[i] as WayPoint;
-                        if (connected == null) { continue; }
+                        if (!(wp.linkedTo[i] is WayPoint connected)) { continue; }
 
                         //already connected, continue
                         if (node.connections.Any(n => n.Waypoint == connected)) { continue; }
@@ -157,47 +158,53 @@ namespace Barotrauma
             }
         }
 
+        private static readonly List<PathNode> sortedNodes = new List<PathNode>();
+
         public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
-        {            
-            float closestDist = 0.0f;
-            PathNode startNode = null;
+        {
+            //sort nodes roughly according to distance
+            sortedNodes.Clear();
             foreach (PathNode node in nodes)
             {
-                if (nodeFilter != null && !nodeFilter(node)) { continue; }
-                if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
-                Vector2 nodePos = node.Position;
+                node.TempPosition = node.Position;
                 if (hostSub != null)
                 {
                     Vector2 diff = hostSub.SimPosition - node.Waypoint.Submarine.SimPosition;
-                    nodePos -= diff;
+                    node.TempPosition -= diff;
                 }
+                float xDiff = Math.Abs(start.X - node.TempPosition.X);
+                float yDiff = Math.Abs(start.Y - node.TempPosition.Y);
+                if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null) { yDiff += 10.0f; }
+                node.TempDistance = xDiff + (InsideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
 
-                float xDiff = Math.Abs(start.X - nodePos.X);
-                float yDiff = Math.Abs(start.Y - nodePos.Y);
-
-                if (yDiff > 1.0f && node.Waypoint.Ladders == null && node.Waypoint.Stairs == null)
-                {
-                    yDiff += 10.0f;
-                }
-
-                float dist = xDiff + (InsideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
+                //much higher cost to waypoints that are outside
+                if (node.Waypoint.CurrentHull == null && InsideSubmarine) { node.TempDistance *= 10.0f; }
 
                 //prefer nodes that are closer to the end position
-                dist += (Math.Abs(end.X - nodePos.X) + Math.Abs(end.Y - nodePos.Y)) / 2.0f;
-                //much higher cost to waypoints that are outside
-                if (node.Waypoint.CurrentHull == null && InsideSubmarine)
+                node.TempDistance += (Math.Abs(end.X - node.TempPosition.X) + Math.Abs(end.Y - node.TempPosition.Y)) / 100.0f;
+
+                int i = 0;
+                while (i < sortedNodes.Count && sortedNodes[i].TempDistance < node.TempDistance)
                 {
-                    dist *= 10.0f;
+                    i++;
                 }
-                if (dist < closestDist || startNode == null)
+                sortedNodes.Insert(i, node);
+            }
+
+            //find the most suitable start node, starting from the ones that are the closest
+            PathNode startNode = null;
+            foreach (PathNode node in sortedNodes)
+            {
+                if (startNode == null || node.TempDistance < startNode.TempDistance)
                 {
+                    if (nodeFilter != null && !nodeFilter(node)) { continue; }
+                    if (startNodeFilter != null && !startNodeFilter(node)) { continue; }
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (InsideSubmarine)
                     {
                         var body = Submarine.PickBody(
-                            start, nodePos, null, 
+                            start, node.TempPosition, null, 
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
-
                         if (body != null)
                         {
                             //if (body.UserData is Submarine) continue;
@@ -205,8 +212,6 @@ namespace Barotrauma
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
                         }
                     }
-
-                    closestDist = dist;
                     startNode = node;
                 }
             }
@@ -216,36 +221,45 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.NewMessage("Pathfinding error, couldn't find a start node. "+ errorMsgStr, Color.DarkRed);
 #endif
-
                 return new SteeringPath(true);
             }
-            
-            closestDist = 0.0f;
-            PathNode endNode = null;
+
+            //sort nodes again, now based on distance from the end position
+            sortedNodes.Clear();
             foreach (PathNode node in nodes)
             {
-                if (nodeFilter != null && !nodeFilter(node)) { continue; }
-                if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
-                Vector2 nodePos = node.Position;
-                if (hostSub != null)
-                {
-                    Vector2 diff = hostSub.SimPosition - node.Waypoint.Submarine.SimPosition;
-                    nodePos -= diff;
-                }
-                float dist = Vector2.DistanceSquared(end, nodePos);
+                node.TempDistance = Vector2.DistanceSquared(end, node.TempPosition);
                 if (InsideSubmarine)
                 {
                     //much higher cost to waypoints that are outside
-                    if (node.Waypoint.CurrentHull == null) { dist *= 10.0f; }
+                    if (node.Waypoint.CurrentHull == null) { node.TempDistance *= 10.0f; }
                     //avoid stopping at a doorway
-                    if (node.Waypoint.ConnectedDoor != null) { dist *= 10.0f; }
+                    if (node.Waypoint.ConnectedDoor != null) { node.TempDistance *= 10.0f; }
+                    //avoid stopping at a ladder
+                    if (node.Waypoint.Ladders != null) { node.TempDistance *= 10.0f; }
                 }
-                if (dist < closestDist || endNode == null)
+
+                int i = 0;
+                while (i < sortedNodes.Count && sortedNodes[i].TempDistance < node.TempDistance)
                 {
+                    i++;
+                }
+                sortedNodes.Insert(i, node);
+            }
+
+            //find the most suitable end node, starting from the ones closest to the end position
+            PathNode endNode = null;
+            foreach (PathNode node in sortedNodes)
+            {
+                if (endNode == null || node.TempDistance < endNode.TempDistance)
+                {
+                    if (nodeFilter != null && !nodeFilter(node)) { continue; }
+                    if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
+
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (InsideSubmarine)
                     {
-                        var body = Submarine.PickBody(end, nodePos, null,
+                        var body = Submarine.PickBody(end, node.TempPosition, null,
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
 
                         if (body != null)
@@ -255,8 +269,6 @@ namespace Barotrauma
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
                         }
                     }
-
-                    closestDist = dist;
                     endNode = node;
                 }
             }
@@ -269,25 +281,25 @@ namespace Barotrauma
                 return new SteeringPath(true);
             }
 
-            var path = FindPath(startNode, endNode, nodeFilter);
+            var path = FindPath(startNode, endNode, nodeFilter, errorMsgStr);
 
             return path;
         }
 
         public SteeringPath FindPath(WayPoint start, WayPoint end)
         {
-            PathNode startNode=null, endNode=null;
+            PathNode startNode = null, endNode = null;
             foreach (PathNode node in nodes)
             {
                 if (node.Waypoint == start)
                 {
                     startNode = node;
-                    if (endNode != null) break;
+                    if (endNode != null) { break; }
                 }
                 if (node.Waypoint == end)
                 {
                     endNode = node;
-                    if (startNode != null) break;
+                    if (startNode != null) { break; }
                 }
             }
 
@@ -302,13 +314,12 @@ namespace Barotrauma
             return FindPath(startNode, endNode);
         }
 
-        private SteeringPath FindPath(PathNode start, PathNode end, Func<PathNode, bool> filter = null)
+        private SteeringPath FindPath(PathNode start, PathNode end, Func<PathNode, bool> filter = null, string errorMsgStr = "")
         {
             if (start == end)
             {
                 var path1 = new SteeringPath();
                 path1.AddNode(start.Waypoint);
-
                 return path1;
             }
 
@@ -328,8 +339,8 @@ namespace Barotrauma
                 float dist = float.MaxValue;
                 foreach (PathNode node in nodes)
                 {
-                    if (filter != null && !filter(node)) { continue; }
                     if (node.state != 1) { continue; }
+                    if (filter != null && !filter(node)) { continue; }
                     if (node.F < dist)
                     {
                         dist = node.F;
@@ -395,7 +406,7 @@ namespace Barotrauma
             if (end.state == 0 || end.Parent == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage("Path not found", Color.Yellow);
+                DebugConsole.NewMessage("Path not found. " + errorMsgStr, Color.Yellow);
 #endif
                 return new SteeringPath(true);
             }
@@ -425,15 +436,12 @@ namespace Barotrauma
             }
 
             finalPath.Add(start.Waypoint);
-
-            finalPath.Reverse();
-
-            foreach (WayPoint wayPoint in finalPath)
+            for (int i = finalPath.Count - 1; i >= 0; i--)
             {
-                path.AddNode(wayPoint);
+                path.AddNode(finalPath[i]);
             }
-            
-                
+            System.Diagnostics.Debug.Assert(finalPath.Count == path.Nodes.Count);
+
             return path;
         }
     }

@@ -33,6 +33,8 @@ namespace Barotrauma
 
         public int Variant;
 
+        public Skill PrimarySkill { get; }
+
         public Job(JobPrefab jobPrefab, int variant = 0)
         {
             prefab = jobPrefab;
@@ -41,14 +43,16 @@ namespace Barotrauma
             skills = new Dictionary<string, Skill>();
             foreach (SkillPrefab skillPrefab in prefab.Skills)
             {
-                skills.Add(skillPrefab.Identifier, new Skill(skillPrefab));
+                var skill = new Skill(skillPrefab);
+                skills.Add(skillPrefab.Identifier, skill);
+                if (skillPrefab.IsPrimarySkill) { PrimarySkill = skill; }
             }
         }
 
         public Job(XElement element)
         {
             string identifier = element.GetAttributeString("identifier", "").ToLowerInvariant();
-            JobPrefab p = null;
+            JobPrefab p;
             if (!JobPrefab.Prefabs.ContainsKey(identifier))
             {
                 DebugConsole.ThrowError($"Could not find the job {identifier}. Giving the character a random job.");
@@ -65,9 +69,9 @@ namespace Barotrauma
                 if (!subElement.Name.ToString().Equals("skill", System.StringComparison.OrdinalIgnoreCase)) { continue; }
                 string skillIdentifier = subElement.GetAttributeString("identifier", "");
                 if (string.IsNullOrEmpty(skillIdentifier)) { continue; }
-                skills.Add(
-                    skillIdentifier,
-                    new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0)));
+                var skill = new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0));
+                skills.Add(skillIdentifier, skill);
+                if (skillIdentifier == prefab.PrimarySkill?.Identifier) { PrimarySkill = skill; }
             }
         }
 

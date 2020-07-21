@@ -453,7 +453,7 @@ namespace Barotrauma
         {
             if (Position.Y > DamageDepth) { return; }
 #if CLIENT
-            if (GameMain.GameSession.GameMode is SubTestMode) { return; }
+            if (GameMain.GameSession.GameMode is TestGameMode) { return; }
 #endif
             float depth = DamageDepth - Position.Y;
 
@@ -657,6 +657,13 @@ namespace Barotrauma
 
         private void HandleLevelCollision(Impact impact)
         {
+            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 10)
+            {
+                //ignore level collisions for the first 10 seconds of the round in case the sub spawns in a way that causes it to hit a wall 
+                //(e.g. level without outposts to dock to and an incorrectly configured ballast that makes the sub go up)
+                return;
+            }
+
             float wallImpact = Vector2.Dot(impact.Velocity, -impact.Normal);
 
             ApplyImpact(wallImpact, -impact.Normal, impact.ImpactPos);
@@ -787,7 +794,7 @@ namespace Barotrauma
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
                 GameMain.GameScreen.Cam.Shake = impact * 2.0f;
-                if (submarine.Info.Type == SubmarineInfo.SubmarineType.Player && !submarine.DockedTo.Any(s => s.Info.Type != SubmarineInfo.SubmarineType.Player))
+                if (submarine.Info.Type == SubmarineType.Player && !submarine.DockedTo.Any(s => s.Info.Type != SubmarineType.Player))
                 {
                     float angularVelocity = 
                         (impactPos.X - Body.SimPosition.X) / ConvertUnits.ToSimUnits(submarine.Borders.Width / 2) * impulse.Y 
@@ -860,5 +867,9 @@ namespace Barotrauma
 #endif
         }
 
+        public void Remove()
+        {
+            Body.Remove();
+        }
     }
 }

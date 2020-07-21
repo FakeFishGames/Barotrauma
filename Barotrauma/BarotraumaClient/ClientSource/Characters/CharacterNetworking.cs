@@ -75,8 +75,15 @@ namespace Barotrauma
                         states = newInput,
                         intAim = intAngle
                     };
-                    if (focusedItem != null && !CharacterInventory.DraggingItemToWorld &&
-                        (!newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health)))
+
+                    if (FocusedCharacter != null && 
+                        FocusedCharacter.CampaignInteractionType != CampaignMode.InteractionType.None && 
+                        newMem.states.HasFlag(InputNetFlags.Use))
+                    {
+                        newMem.interact = FocusedCharacter.ID;
+                    }
+                    else if (focusedItem != null && !CharacterInventory.DraggingItemToWorld &&
+                        !newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health))
                     {
                         newMem.interact = focusedItem.ID;
                     }
@@ -278,10 +285,10 @@ namespace Barotrauma
                     break;
                 case ServerNetObject.ENTITY_EVENT:
 
-                    int eventType = msg.ReadRangedInteger(0, 4);
+                    int eventType = msg.ReadRangedInteger(0, 5);
                     switch (eventType)
                     {
-                        case 0:
+                        case 0: //NetEntityEvent.Type.InventoryState
                             if (Inventory == null)
                             {
                                 string errorMsg = "Received an inventory update message for an entity with no inventory (" + Name + ", removed: " + Removed + ")";
@@ -301,7 +308,7 @@ namespace Barotrauma
                                 Inventory.ClientRead(type, msg, sendingTime);
                             }
                             break;
-                        case 1:
+                        case 1: //NetEntityEvent.Type.Control
                             byte ownerID = msg.ReadByte();
                             ResetNetState();
                             if (ownerID == GameMain.Client.ID)
@@ -326,10 +333,10 @@ namespace Barotrauma
                                 }
                             }
                             break;
-                        case 2:
+                        case 2: //NetEntityEvent.Type.Status
                             ReadStatus(msg);
                             break;
-                        case 3:
+                        case 3: //NetEntityEvent.Type.UpdateSkills
                             int skillCount = msg.ReadByte();
                             for (int i = 0; i < skillCount; i++)
                             {
@@ -338,17 +345,17 @@ namespace Barotrauma
                                 info?.SetSkillLevel(skillIdentifier, skillLevel, WorldPosition + Vector2.UnitY * 150.0f);
                             }
                             break;
-                        case 4:
+                        case 4: //NetEntityEvent.Type.ExecuteAttack
                             int attackLimbIndex = msg.ReadByte();
                             UInt16 targetEntityID = msg.ReadUInt16();
                             int targetLimbIndex = msg.ReadByte();
 
                             //255 = entity already removed, no need to do anything
-                            if (attackLimbIndex == 255) { break; }
+                            if (attackLimbIndex == 255 || Removed) { break; }
 
                             if (attackLimbIndex >= AnimController.Limbs.Length)
                             {
-                                DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Limb index out of bounds ({attackLimbIndex})");
+                                DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
                                 break;
                             }
                             Limb attackLimb = AnimController.Limbs[attackLimbIndex];
@@ -362,7 +369,7 @@ namespace Barotrauma
                             {
                                 if (targetLimbIndex >= targetCharacter.AnimController.Limbs.Length)
                                 {
-                                    DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Target limb index out of bounds ({targetLimbIndex})");
+                                    DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
                                     break;
                                 }
                                 targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
@@ -371,6 +378,10 @@ namespace Barotrauma
                             {
                                 attackLimb.ExecuteAttack(targetEntity, targetLimb, out _);
                             }
+                            break;
+                        case 5: //NetEntityEvent.Type.AssignCampaignInteraction
+                            byte campaignInteractionType = msg.ReadByte();
+                            (GameMain.GameSession?.GameMode as CampaignMode)?.AssignNPCMenuInteraction(this, (CampaignMode.InteractionType)campaignInteractionType);
                             break;
                     }
                     msg.ReadPadBits();
@@ -398,7 +409,7 @@ namespace Barotrauma
             Character character = null;
             if (noInfo)
             {
-                character = Create(speciesName, position, seed, null, true);
+                character = Create(speciesName, position, seed, null, false);
                 character.ID = id;
                 bool containsStatusData = inc.ReadBoolean();
                 if (containsStatusData)
@@ -416,9 +427,14 @@ namespace Barotrauma
 
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
-                character = Create(speciesName, position, seed, info, GameMain.Client.ID != ownerId, hasAi);
+                character = Create(speciesName, position, seed, info, ownerId > 0 && GameMain.Client.ID != ownerId, hasAi);
                 character.ID = id;
                 character.TeamID = (TeamType)teamID;
+                character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
+                if (character.CampaignInteractionType != CampaignMode.InteractionType.None)
+                {
+                    (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(character, character.CampaignInteractionType);
+                }
 
                 // Check if the character has a current order
                 if (inc.ReadBoolean())

@@ -13,10 +13,12 @@ namespace Barotrauma
         public const ushort EntitySpawnerID = ushort.MaxValue;
 
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
-        public static List<Entity> GetEntityList()
+        public static IEnumerable<Entity> GetEntities()
         {
-            return dictionary.Values.ToList();
+            return dictionary.Values;
         }
+
+        public static int EntityCount => dictionary.Count;
 
         public static EntitySpawner Spawner;
 
@@ -80,6 +82,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// The ID the entity had after instantiation/loading. May have been taken up by another entity, causing a new ID to be assigned to this entity.
+        /// </summary>
+        public ushort OriginalID;
+
         public virtual Vector2 SimPosition
         {
             get { return Vector2.Zero; }
@@ -124,7 +131,7 @@ namespace Barotrauma
             spawnTime = Timing.TotalTime;
 
             //give a unique ID
-            id = this is EntitySpawner ?
+            id = OriginalID = this is EntitySpawner ?
                 EntitySpawnerID :
                 FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
             

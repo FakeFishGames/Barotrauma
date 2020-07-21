@@ -50,7 +50,12 @@ namespace Barotrauma
         }
 
         private static bool isOpen;
-        public static bool IsOpen => isOpen;
+        public static bool IsOpen
+        {
+            get => isOpen;
+            set => isOpen = value;
+        }
+
         public static bool Paused = false;
         
         private static GUITextBlock activeQuestionText;
@@ -66,6 +71,8 @@ namespace Barotrauma
 
         public static void Init()
         {
+            OpenAL.Alc.SetErrorReasonCallback((string msg) => NewMessage(msg, Color.Orange));
+
             frame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.45f), GUI.Canvas) { MinSize = new Point(400, 300), AbsoluteOffset = new Point(10, 10) },
                 color: new Color(0.4f, 0.4f, 0.4f, 0.8f));
 
@@ -263,12 +270,31 @@ namespace Barotrauma
 
             try
             {
-                var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
-                    msg.Text, font: GUI.SmallFont, wrap: true)
+                if (msg.IsError)
                 {
-                    CanBeFocused = false,
-                    TextColor = msg.Color
-                };
+                    var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
+                    {
+                        CanBeFocused = false
+                    };
+                    var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
+                        msg.Text, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
+                    {
+                        CanBeFocused = false,
+                        TextColor = msg.Color
+                    };
+                    textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
+                    textBlock.SetTextPos();
+                }
+                else
+                {
+                    var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
+                    msg.Text, font: GUI.SmallFont, wrap: true)
+                    {
+                        CanBeFocused = false,
+                        TextColor = msg.Color
+                    };
+                }
+                
                 listBox.UpdateScrollBarSize();
                 listBox.BarScroll = 1.0f;
             }
@@ -446,6 +472,11 @@ namespace Barotrauma
             {
                 GameMain.SpriteEditorScreen.Select();
             }));
+            
+            commands.Add(new Command("editevents|eventeditor", "editevents/eventeditor: Switch to the Event Editor to edit scripted events.", (string[] args) =>
+            {
+                GameMain.EventEditorScreen.Select();
+            }));
 
             commands.Add(new Command("editcharacters|charactereditor", "editcharacters/charactereditor: Switch to the Character Editor to edit/create the ragdolls and animations of characters.", (string[] args) =>
             {
@@ -456,9 +487,11 @@ namespace Barotrauma
                 GameMain.CharacterEditorScreen.Select();
             }));
 
-            commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks debug logging.", (string[] args) =>
+            commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks networking debug logging.", (string[] args) =>
             {
                 SteamManager.NetworkingDebugLog = !SteamManager.NetworkingDebugLog;
+                SteamManager.SetSteamworksNetworkingDebugLog(SteamManager.NetworkingDebugLog);
+
             }));
 
             AssignRelayToServer("kick", false);
@@ -493,6 +526,7 @@ namespace Barotrauma
             commands.Add(new Command("traitorlist", "", (string[] args) => { }));
             AssignRelayToServer("traitorlist", true);
             AssignRelayToServer("money", true);
+            AssignRelayToServer("setskill", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -568,16 +602,46 @@ namespace Barotrauma
 
             AssignOnExecute("ambientlight", (string[] args) =>
             {
-                Color color = XMLExtensions.ParseColor(string.Join(",", args));
+                bool add = string.Equals(args.LastOrDefault(), "add");
+                string colorString = string.Join(",", add ? args.SkipLast(1) : args);
+                if (colorString.Equals("restore", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (Hull hull in Hull.hullList)
+                    {
+                        if (hull.OriginalAmbientLight != null)
+                        {
+                            hull.AmbientLight = hull.OriginalAmbientLight.Value;
+                            hull.OriginalAmbientLight = null;
+                        }
+                    }
+                    NewMessage("Restored all hull ambient lights", Color.White);
+                    return;
+                }
+
+                Color color = XMLExtensions.ParseColor(colorString);
                 if (Level.Loaded != null)
                 {
                     Level.Loaded.GenerationParams.AmbientLightColor = color;
                 }
                 else
                 {
-                    GameMain.LightManager.AmbientLight = color;
+                    GameMain.LightManager.AmbientLight = add ? GameMain.LightManager.AmbientLight.Add(color) : color;
                 }
-                NewMessage("Set ambient light color to " + color + ".", Color.White);
+
+                foreach (Hull hull in Hull.hullList)
+                {
+                    hull.OriginalAmbientLight ??= hull.AmbientLight;
+                    hull.AmbientLight = add ? hull.AmbientLight.Add(color) : color;
+                }
+
+                if (add)
+                {
+                    NewMessage($"Set ambient light color to {color}.", Color.White);
+                }
+                else
+                {
+                    NewMessage($"Increased ambient light by {color}.", Color.White);
+                }
             });
             AssignRelayToServer("ambientlight", false);
 
@@ -849,17 +913,6 @@ namespace Barotrauma
                 TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
             }));
 
-            commands.Add(new Command("lobby|lobbyscreen", "", (string[] args) =>
-            {
-                if (GameMain.Client != null)
-                {
-                    ThrowError("This command cannot be used in multiplayer.");
-                    return;
-                }
-
-                GameMain.LobbyScreen.Select();
-            }));
-
             commands.Add(new Command("save|savesub", "save [submarine name]: Save the currently loaded submarine using the specified name.", (string[] args) =>
             {
                 if (args.Length < 1) { return; }
@@ -1011,8 +1064,38 @@ namespace Barotrauma
             });
             AssignRelayToServer("toggleaitargets|aitargets", false);
 
+            AssignOnExecute("debugai", (string[] args) =>
+            {
+                HumanAIController.debugai = !HumanAIController.debugai;
+                if (HumanAIController.debugai)
+                {
+                    GameMain.DebugDraw = true;
+                    GameMain.LightManager.LightingEnabled = false;
+                    GameMain.LightManager.LosEnabled = false;
+                }
+                else
+                {
+                    GameMain.DebugDraw = false;
+                    GameMain.LightManager.LightingEnabled = true;
+                    GameMain.LightManager.LosEnabled = true;
+                }
+                NewMessage(HumanAIController.debugai ? "AI debug info visible" : "AI debug info hidden", Color.White);
+            });
+            AssignRelayToServer("debugai", false);
+
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
+
+            commands.Add(new Command("togglecampaignteleport", "togglecampaignteleport: Toggle on/off teleportation between campaign locations by double clicking on the campaign map.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.Campaign == null) 
+                { 
+                    ThrowError("No campaign active.");
+                    return;
+                }
+                GameMain.GameSession.Map.AllowDebugTeleport = !GameMain.GameSession.Map.AllowDebugTeleport;
+                NewMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", Color.White);
+            }, isCheat: true));
 
             commands.Add(new Command("mute", "mute [name]: Prevent the client from speaking to anyone through the voice chat. Using this command requires a permission from the server host.",
             null,
@@ -1044,7 +1127,7 @@ namespace Barotrauma
                 }
                 foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    int? minCost = itemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                    int? minCost = itemPrefab.GetMinPrice();
                     int? fabricationCost = null;
                     int? deconstructProductCost = null;
 
@@ -1053,7 +1136,7 @@ namespace Barotrauma
                     {
                         foreach (var ingredient in fabricationRecipe.RequiredItems)
                         {
-                            int? ingredientPrice = ingredient.ItemPrefab.GetPrices()?.Min(p => p.BuyPrice);
+                            int? ingredientPrice = ingredient.ItemPrefab.GetMinPrice();
                             if (ingredientPrice.HasValue)
                             {
                                 if (!fabricationCost.HasValue) { fabricationCost = 0; }
@@ -1071,7 +1154,7 @@ namespace Barotrauma
                             continue;
                         }
 
-                        int? deconstructProductPrice = targetItem.GetPrices()?.Min(p => p.BuyPrice);
+                        int? deconstructProductPrice = targetItem.GetMinPrice();
                         if (deconstructProductPrice.HasValue)
                         {
                             if (!deconstructProductCost.HasValue) { deconstructProductCost = 0; }
@@ -1300,7 +1383,7 @@ namespace Barotrauma
 
             commands.Add(new Command("eventstats", "", (string[] args) =>
             {
-                var debugLines = ScriptedEventSet.GetDebugStatistics();
+                var debugLines = EventSet.GetDebugStatistics();
                 string filePath = "eventstats.txt";
                 File.WriteAllLines(filePath, debugLines);
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
@@ -1537,6 +1620,76 @@ namespace Barotrauma
                 File.WriteAllLines(filePath, lines);
             }));
 
+            commands.Add(new Command("dumpeventtexts", "dumpeventtexts [filepath]: gets the texts from event files and and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EventTexts.txt", (string[] args) =>
+            {
+                string filePath = args.Length > 0 ? args[0] : "Content/Texts/EventTexts.txt";
+                List<string> lines = new List<string>();
+                HashSet<XDocument> docs = new HashSet<XDocument>();
+                HashSet<string> textIds = new HashSet<string>();
+
+                foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs())
+                {
+                    if (string.IsNullOrEmpty(eventPrefab.Identifier)) 
+                    {
+                        continue;
+                    }
+                    docs.Add(eventPrefab.ConfigElement.Document);
+                    getTextsFromElement(eventPrefab.ConfigElement, lines, eventPrefab.Identifier);
+                }
+                File.WriteAllLines(filePath, lines);
+
+                ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+
+                System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
+                {
+                    Indent = true,
+                    NewLineOnAttributes = false
+                };
+
+                foreach (XDocument doc in docs)
+                {
+                    using (var writer = XmlWriter.Create(new System.Uri(doc.BaseUri).LocalPath, settings))
+                    {
+                        doc.WriteTo(writer);
+                        writer.Flush();
+                    }
+                }
+
+                void getTextsFromElement(XElement element, List<string> list, string parentName)
+                {
+                    string text = element.GetAttributeString("text", null);
+                    string textId = $"EventText.{parentName}";
+                    if (!string.IsNullOrEmpty(text) && !text.Contains("EventText.", StringComparison.OrdinalIgnoreCase)) 
+                    { 
+                        list.Add($"<{textId}>{text}</{textId}>");
+                        element.SetAttributeValue("text", textId);
+                    }
+
+                    int i = 1;
+                    foreach (XElement subElement in element.Elements())
+                    {
+                        switch (subElement.Name.ToString().ToLowerInvariant())
+                        {
+                            case "conversationaction":     
+                                while (textIds.Contains(parentName+".c"+i))
+                                {
+                                    i++;
+                                }
+                                parentName += ".c" + i;           
+                                break;
+                            case "option":
+                                while (textIds.Contains(parentName.Substring(0, parentName.Length - 3) + ".o" + i))
+                                {
+                                    i++;
+                                }
+                                parentName = parentName.Substring(0, parentName.Length - 3) + ".o" + i;
+                                break;
+                        }
+                        textIds.Add(parentName);
+                        getTextsFromElement(subElement, list, parentName);
+                    }
+                }
+            }));
 
             commands.Add(new Command("itemcomponentdocumentation", "", (string[] args) =>
             {
