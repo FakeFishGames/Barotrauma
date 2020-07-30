@@ -8,7 +8,7 @@ namespace Barotrauma.Networking
 {
     partial class Client : IDisposable
     {
-        public const int MaxNameLength = 20;
+        public const int MaxNameLength = 32;
 
         public string Name; public UInt16 NameID;
         public byte ID;

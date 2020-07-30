@@ -121,7 +121,7 @@ namespace Barotrauma.Networking
 
                 if (GameSettings.VerboseLogging)
                 {
-                    DebugConsole.Log("Received " + all.Length + " bytes of the file " + FileName + " (" + Received + "/" + FileSize + " received)");
+                    DebugConsole.Log($"Received {all.Length} bytes of the file {FileName} ({Received / 1000}/{FileSize / 1000} kB received)");
                 }
 
                 BytesPerSecond = Received / psec;
@@ -332,17 +332,14 @@ namespace Barotrauma.Networking
                         }
 
                         int offset = inc.ReadInt32();
+                        int bytesToRead = inc.ReadUInt16();
                         if (offset != activeTransfer.Received)
                         {
-                            if (offset < activeTransfer.Received)
-                            {
-                                GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received);
-                            }
+                            DebugConsole.Log($"Received {bytesToRead} bytes of the file {activeTransfer.FileName} (ignoring: offset {offset}, waiting for {activeTransfer.Received})");
+                            GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received);
                             return;
                         }
 
-                        int bytesToRead = inc.ReadUInt16();
-                        
                         if (activeTransfer.Received + bytesToRead > activeTransfer.FileSize)
                         {
                             GameMain.Client.CancelFileTransfer(transferId);
@@ -358,7 +355,7 @@ namespace Barotrauma.Networking
 
                         try
                         {
-                            activeTransfer.ReadBytes(inc, bytesToRead);
+                            activeTransfer.ReadBytes(inc, bytesToRead); 
                         }
                         catch (Exception e)
                         {
@@ -369,9 +366,9 @@ namespace Barotrauma.Networking
                             return;
                         }
 
+                        GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received, reliable: activeTransfer.Status == FileTransferStatus.Finished);
                         if (activeTransfer.Status == FileTransferStatus.Finished)
                         {
-                            GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received, true);
                             activeTransfer.Dispose();
 
                             if (ValidateReceivedData(activeTransfer, out string errorMessage))

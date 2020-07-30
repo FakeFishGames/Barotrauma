@@ -305,13 +305,17 @@ namespace Barotrauma
             attachJoints.Add(colliderJoint);            
         }
 
-        public void DeattachFromBody()
+        public void DeattachFromBody(float cooldown = 0)
         {
             foreach (Joint joint in attachJoints)
             {
                 GameMain.World.Remove(joint);
             }
-            attachJoints.Clear();            
+            attachJoints.Clear();
+            if (cooldown > 0)
+            {
+                attachCooldown = cooldown;
+            }
         }
 
         private void OnCharacterDeath(Character character, CauseOfDeath causeOfDeath)

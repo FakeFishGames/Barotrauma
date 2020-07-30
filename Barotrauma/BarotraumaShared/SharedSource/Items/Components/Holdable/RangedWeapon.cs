@@ -178,7 +178,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private Projectile FindProjectile(bool triggerOnUseOnContainers = false)
+        public Projectile FindProjectile(bool triggerOnUseOnContainers = false)
         {
             var containedItems = item.ContainedItems;
             if (containedItems == null) { return null; }

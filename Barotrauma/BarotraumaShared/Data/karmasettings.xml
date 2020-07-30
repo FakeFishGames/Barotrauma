@@ -19,7 +19,7 @@
     steersubkarmaincrease="0.15"
     spamfilterkarmadecrease="15"
     herpesthreshold="40"
-    kickbanthreshold="1"
+    kickbanthreshold="0"
     kicksbeforeban="3"
     karmanotificationinterval="15" 
     resetkarmabetweenrounds="true"

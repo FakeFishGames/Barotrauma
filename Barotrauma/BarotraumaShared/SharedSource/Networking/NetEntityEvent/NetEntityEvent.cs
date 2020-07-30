@@ -16,7 +16,9 @@ namespace Barotrauma.Networking
             Control,
             UpdateSkills,
             Combine,
-            ExecuteAttack
+            ExecuteAttack,
+            Upgrade,
+            AssignCampaignInteraction
         }
 
         public readonly Entity Entity;

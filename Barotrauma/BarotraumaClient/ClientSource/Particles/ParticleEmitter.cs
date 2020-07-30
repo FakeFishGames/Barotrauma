@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Particles
@@ -72,11 +73,25 @@ namespace Barotrauma.Particles
                 Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Prefab.VelocityMax;
                 Vector2 endPosition = Prefab.ParticlePrefab.CalculateEndPosition(startPosition, velocity);
 
+                Vector2 endSize = Prefab.ParticlePrefab.CalculateEndSize();
+                float spriteExtent = 0.0f;
+                foreach (Sprite sprite in Prefab.ParticlePrefab.Sprites)
+                {
+                    if (sprite is SpriteSheet spriteSheet)
+                    {
+                        spriteExtent = Math.Max(spriteExtent, Math.Max(spriteSheet.FrameSize.X * endSize.X, spriteSheet.FrameSize.Y * endSize.Y));
+                    }
+                    else
+                    {
+                        spriteExtent = Math.Max(spriteExtent, Math.Max(sprite.size.X * endSize.X, sprite.size.Y * endSize.Y)); 
+                    }
+                }
+
                 bounds = new Rectangle(
-                    (int)Math.Min(bounds.X, endPosition.X - Prefab.DistanceMax),
-                    (int)Math.Min(bounds.Y, endPosition.Y - Prefab.DistanceMax),
-                    (int)Math.Max(bounds.X, endPosition.X + Prefab.DistanceMax),
-                    (int)Math.Max(bounds.Y, endPosition.Y + Prefab.DistanceMax));
+                    (int)Math.Min(bounds.X, endPosition.X - Prefab.DistanceMax - spriteExtent / 2),
+                    (int)Math.Min(bounds.Y, endPosition.Y - Prefab.DistanceMax - spriteExtent / 2),
+                    (int)Math.Max(bounds.X, endPosition.X + Prefab.DistanceMax + spriteExtent / 2),
+                    (int)Math.Max(bounds.Y, endPosition.Y + Prefab.DistanceMax + spriteExtent / 2));
             }
 
             bounds = new Rectangle(bounds.X, bounds.Y, bounds.Width - bounds.X, bounds.Height - bounds.Y);

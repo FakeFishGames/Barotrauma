@@ -9,6 +9,52 @@ namespace Barotrauma
 {
     public static partial class ToolBox
     {
+        /// <summary>
+        /// Checks if point is inside of a polygon
+        /// </summary>
+        /// <param name="point"></param>
+        /// <param name="verts"></param>
+        /// <param name="checkBoundingBox">Additional check to see if the point is within the bounding box before doing more complex math</param>
+        /// <remarks>
+        /// Note that the bounding box check can be more expensive than the vertex calculations in some cases.
+        /// <see href="https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html">Reference</see>
+        /// </remarks>
+        /// <returns></returns>
+        public static bool PointIntersectsWithPolygon(Vector2 point, Vector2[] verts, bool checkBoundingBox = true)
+        {
+            var (x, y) = point;
+
+            if (checkBoundingBox)
+            {
+                float minX = verts[0].X;
+                float maxX = verts[0].X;
+                float minY = verts[0].Y;
+                float maxY = verts[0].Y;
+
+                foreach (var (vertX, vertY) in verts)
+                {
+                    minX = Math.Min(vertX, minX);
+                    maxX = Math.Max(vertX, maxX);
+                    minY = Math.Min(vertY, minY);
+                    maxY = Math.Max(vertY, maxY);
+                }
+
+                if (x < minX || x > maxX || y < minY || y > maxY ) { return false; }
+            }
+
+            bool isInside = false;
+
+            for (int i = 0, j = verts.Length - 1; i < verts.Length; j = i++ )
+            {
+                if (verts[i].Y > y != verts[j].Y > y && x < (verts[j].X - verts[i].X) * (y - verts[i].Y) / (verts[j].Y - verts[i].Y) + verts[i].X )
+                {
+                    isInside = !isInside;
+                }
+            }
+
+            return isInside;
+        }
+        
         // Convert an RGB value into an HLS value.
         public static Vector3 RgbToHLS(this Color color)
         {
@@ -250,6 +296,17 @@ namespace Barotrauma
             {
                 UInt64.TryParse(args[1], out lobbyId);
             }
+        }
+
+        public static bool VersionNewerIgnoreRevision(Version a, Version b)
+        {
+            if (b.Major > a.Major) { return true; }
+            if (b.Major < a.Major) { return false; }
+            if (b.Minor > a.Minor) { return true; }
+            if (b.Minor < a.Minor) { return false; }
+            if (b.Build > a.Build) { return true; }
+            if (b.Build < a.Build) { return false; }
+            return false;
         }
     }
 }

@@ -61,7 +61,7 @@ namespace Barotrauma
             var weldingTool = character.Inventory.FindItemByTag("weldingequipment", true);
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, true), 
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref getWeldingTool));
                 return;
@@ -88,7 +88,7 @@ namespace Barotrauma
                 }
                 if (containedItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager), 
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref refuelObjective));
                     return;
@@ -130,7 +130,8 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
-                    AllowGoingOutside = !Leak.IsRoomToRoom && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() && HumanAIController.HasDivingSuit(character, conditionPercentage: 50),
+                    // Disabled for now
+                    //AllowGoingOutside = !Leak.IsRoomToRoom && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() && HumanAIController.HasDivingSuit(character, conditionPercentage: 50),
                     CloseEnough = reach,
                     DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
                     TargetName = Leak.FlowTargetHull?.DisplayName

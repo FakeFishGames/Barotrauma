@@ -525,6 +525,7 @@ namespace Barotrauma
             },
                 TextManager.Get("GiveInButton"), style: "GUIButtonLarge")
             {
+                Visible = false,
                 ToolTip = TextManager.Get(GameMain.NetworkMember == null ? "GiveInHelpSingleplayer" : "GiveInHelpMultiplayer"),
                 OnClicked = (button, userData) =>
                 {
@@ -944,6 +945,22 @@ namespace Barotrauma
 
             suicideButton.Visible = Character == Character.Controlled && !Character.IsDead && Character.IsIncapacitated;
 
+            if (GameMain.GameSession?.Campaign is { } campaign)
+            {
+                RectTransform endRoundButton = campaign?.EndRoundButton.RectTransform;
+                if (endRoundButton != null)
+                {
+                    if (suicideButton.Visible)
+                    {
+                        endRoundButton.ScreenSpaceOffset = new Point(0, suicideButton.Rect.Height);
+                    } 
+                    else if (endRoundButton.ScreenSpaceOffset != Point.Zero)
+                    {
+                        endRoundButton.ScreenSpaceOffset = Point.Zero;
+                    }
+                }
+            }
+
             cprButton.Visible =
                 Character == Character.Controlled?.SelectedCharacter
                 && (Character.IsUnconscious || Character.Stun > 0.0f)
@@ -965,23 +982,29 @@ namespace Barotrauma
 
         public void AddToGUIUpdateList()
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD) { return; }
             if (OpenHealthWindow == this)
             {
                 healthInterfaceFrame.AddToGUIUpdateList();
                 afflictionTooltip?.AddToGUIUpdateList();
             }
-            else if (Character.Controlled == Character)
+            else if (Character.Controlled == Character && !CharacterHUD.IsCampaignInterfaceOpen)
             {
                 healthBarHolder.AddToGUIUpdateList();          
             }
-            if (suicideButton.Visible && Character == Character.Controlled) suicideButton.AddToGUIUpdateList();
-            if (cprButton != null && cprButton.Visible) cprButton.AddToGUIUpdateList();
+            if (suicideButton.Visible && Character == Character.Controlled)
+            {
+                suicideButton.AddToGUIUpdateList();
+            }
+            if (cprButton != null && cprButton.Visible)
+            {
+                cprButton.AddToGUIUpdateList();
+            }
         }
 
         public void DrawHUD(SpriteBatch spriteBatch)
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD) { return; }
             if (GameMain.GraphicsWidth != screenResolution.X ||
                 GameMain.GraphicsHeight != screenResolution.Y ||
                 Math.Abs(inventoryScale - Inventory.UIScale) > 0.01f ||

@@ -8,8 +8,8 @@ namespace Barotrauma
     {
         private bool usedExistingItem;
 
-        private UInt16 originalItemID;
         private UInt16 originalInventoryID;
+        private byte originalItemContainerIndex;
 
         private readonly List<Pair<int, int>> executedEffectIndices = new List<Pair<int, int>>();
 
@@ -18,11 +18,11 @@ namespace Barotrauma
             msg.Write(usedExistingItem);
             if (usedExistingItem)
             {
-                msg.Write(originalItemID);
+                msg.Write(item.OriginalID);
             }
             else
             {
-                item.WriteSpawnData(msg, originalItemID, originalInventoryID);
+                item.WriteSpawnData(msg, item.OriginalID, originalInventoryID, originalItemContainerIndex);
             }
 
             msg.Write((byte)executedEffectIndices.Count);

@@ -33,24 +33,40 @@ namespace Barotrauma
             syncedRandom[(int)RandSync.Server] = new MTRandom(seed);
             syncedRandom[(int)RandSync.ClientOnly] = new MTRandom(seed);
         }
-        
+
+        public static int ThreadId = 0;
+        private static void CheckRandThreadSafety(RandSync sync)
+        {
+            if (ThreadId != 0 && sync == RandSync.Server)
+            {
+                if (System.Threading.Thread.CurrentThread.ManagedThreadId != ThreadId)
+                {
+                    throw new Exception("Unauthorized multithreaded access to RandSync.Server");
+                }
+            }
+        }
+
         public static float Range(float minimum, float maximum, RandSync sync=RandSync.Unsynced)
         {
+            CheckRandThreadSafety(sync);
             return (float)(sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
         public static double Range(double minimum, double maximum, RandSync sync = RandSync.Unsynced)
         {
+            CheckRandThreadSafety(sync);
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
         public static int Range(int minimum, int maximum, RandSync sync = RandSync.Unsynced)
         {
+            CheckRandThreadSafety(sync);
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).Next(maximum - minimum) + minimum;
         }
 
         public static int Int(int max, RandSync sync = RandSync.Unsynced)
         {
+            CheckRandThreadSafety(sync);
             return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).Next(max);
         }
 

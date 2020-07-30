@@ -70,6 +70,16 @@ namespace Barotrauma
             private set;
         }
 
+        private readonly HashSet<string> moduleTags = new HashSet<string>();
+
+        /// <summary>
+        /// Inherited flags from outpost generation.
+        /// </summary>
+        public IEnumerable<string> OutpostModuleTags 
+        { 
+            get { return moduleTags; } 
+        }
+
         private string roomName;
         [Editable, Serialize("", true, translationTextTag: "RoomName.")]
         public string RoomName
@@ -82,6 +92,8 @@ namespace Barotrauma
                 DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
             }
         }
+
+        public Color? OriginalAmbientLight = null;
 
         private Color ambientLight;
 
@@ -107,6 +119,16 @@ namespace Barotrauma
             set
             {
                 float prevOxygenPercentage = OxygenPercentage;
+
+                if (value.Width != rect.Width)
+                {
+                    int arraySize = (int)Math.Ceiling((float)value.Width / WaveWidth + 1);
+                    waveY = new float[arraySize];
+                    waveVel = new float[arraySize];
+                    leftDelta = new float[arraySize];
+                    rightDelta = new float[arraySize];
+                }
+
                 base.Rect = value;
 
                 if (Submarine == null || !Submarine.Loading)
@@ -238,7 +260,6 @@ namespace Barotrauma
             int arraySize = (int)Math.Ceiling((float)rectangle.Width / WaveWidth + 1);
             waveY = new float[arraySize];
             waveVel = new float[arraySize];
-
             leftDelta = new float[arraySize];
             rightDelta = new float[arraySize];
 
@@ -319,6 +340,15 @@ namespace Barotrauma
                 if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
             }
             return newGrid;
+        }
+
+        public void SetModuleTags(IEnumerable<string> tags)
+        {
+            moduleTags.Clear();
+            foreach (string tag in tags)
+            {
+                moduleTags.Add(tag);
+            }
         }
 
         public override void OnMapLoaded()
@@ -530,7 +560,8 @@ namespace Barotrauma
                 if (!gap.IsRoomToRoom || !gap.IsHorizontal || gap.Open <= 0.0f) { continue; }
                 if (surface > gap.Rect.Y || surface < gap.Rect.Y - gap.Rect.Height) { continue; }
 
-                Hull hull2 = this == gap.linkedTo[0] as Hull ? (Hull)gap.linkedTo[1] : (Hull)gap.linkedTo[0];
+                // ReSharper refuses to compile this if it's using "as Hull" since "as" means it can be null and you can't compare null to true or false
+                Hull hull2 = this == gap.linkedTo[0] ? (Hull)gap.linkedTo[1] : (Hull)gap.linkedTo[0];
                 float otherSurfaceY = hull2.surface;
                 if (otherSurfaceY > gap.Rect.Y || otherSurfaceY < gap.Rect.Y - gap.Rect.Height) { continue; }
 
@@ -836,9 +867,23 @@ namespace Barotrauma
             else if (roomItems.Contains("ballast"))
                 return "RoomName.Ballast";
 
-            if (ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
+            var moduleFlags = Submarine?.Info?.OutpostModuleInfo?.ModuleFlags ?? this.moduleTags;
+
+            if (moduleFlags != null && moduleFlags.Any() && 
+                (Submarine.Info.Type == SubmarineType.OutpostModule || Submarine.Info.Type == SubmarineType.Outpost))
             {
-                return "RoomName.Airlock";
+                if (moduleFlags.Contains("airlock") &&
+                    ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
+                {
+                    return "RoomName.Airlock";
+                }
+            }
+            else
+            {
+                if (ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
+                {
+                    return "RoomName.Airlock";
+                }
             }
 
             Rectangle subRect = Submarine.CalculateDimensions();
@@ -883,8 +928,9 @@ namespace Barotrauma
                 WaterVolume = element.GetAttributeFloat("pressure", 0.0f),
                 ID = (ushort)int.Parse(element.Attribute("ID").Value)
             };
-
+            hull.OriginalID = hull.ID;
             hull.linkedToID = new List<ushort>();
+
             string linkedToString = element.GetAttributeString("linked", "");
             if (linkedToString != "")
             {
@@ -893,6 +939,12 @@ namespace Barotrauma
                 {
                     hull.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
                 }
+            }
+
+            string originalAmbientLight = element.GetAttributeString("originalambientlight", null);
+            if (!string.IsNullOrWhiteSpace(originalAmbientLight))
+            {
+                hull.OriginalAmbientLight = XMLExtensions.ParseColor(originalAmbientLight, false);
             }
 
             SerializableProperty.DeserializeProperties(hull, element);
@@ -924,9 +976,15 @@ namespace Barotrauma
 
             if (linkedTo != null && linkedTo.Count > 0)
             {
-                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved && !l.Removed).ToList();
                 element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
             }
+
+            if (OriginalAmbientLight != null)
+            {
+                element.Add(new XAttribute("originalambientlight", XMLExtensions.ColorToString(OriginalAmbientLight.Value)));
+            }
+
             SerializableProperty.SerializeProperties(this, element);
             parentElement.Add(element);
             return element;

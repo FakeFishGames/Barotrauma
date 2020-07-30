@@ -11,12 +11,16 @@ using System.Net;
 
 namespace Barotrauma
 {
+    public enum SlideDirection { Up, Down, Left, Right }
+
     public abstract class GUIComponent
     {
         #region Hierarchy
         public GUIComponent Parent => RectTransform.Parent?.GUIComponent;
 
         public CursorState HoverCursor = CursorState.Default;
+
+        public bool AlwaysOverrideCursor = false;
         
         public delegate bool SecondaryButtonDownHandler(GUIComponent component, object userData);
         public SecondaryButtonDownHandler OnSecondaryClicked;
@@ -75,7 +79,7 @@ namespace Barotrauma
 
         public virtual void RemoveChild(GUIComponent child)
         {
-            if (child == null) return;
+            if (child == null) { return; }
             child.RectTransform.Parent = null;
         }
 
@@ -139,6 +143,11 @@ namespace Barotrauma
         public bool AutoUpdate { get; set; } = true;
         public bool AutoDraw { get; set; } = true;
         public int UpdateOrder { get; set; }
+        
+        public bool Bounce { get; set; }
+        private float bounceTimer;
+        private float bounceJump;
+        private bool bounceDown;
 
         public Action<GUIComponent> OnAddedToGUIUpdateList;
 
@@ -157,6 +166,8 @@ namespace Barotrauma
         protected Color selectedColor;
         protected Color disabledColor;
         protected Color pressedColor;
+
+        public bool GlowOnSelect { get; set; }
 
         private CoroutineHandle pulsateCoroutine;
 
@@ -326,6 +337,11 @@ namespace Barotrauma
         {
             get { return RectTransform.CountChildren; }
         }
+        
+        /// <summary>
+        /// Currently only used for the fade effect in GUIListBox, should be set to the same value as Color but only assigned once
+        /// </summary>
+        public Color DefaultColor { get; set; }
 
         public virtual Color Color
         {
@@ -462,6 +478,36 @@ namespace Barotrauma
                     OnSecondaryClicked?.Invoke(this, userData);
                 }
             }
+
+            if (Bounce)
+            {
+                if (bounceTimer > 3.0f || bounceDown)
+                {
+                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 10f));
+                    if (!bounceDown)
+                    {
+                        bounceJump += deltaTime * 4;
+                        if (bounceJump > 0.5f)
+                        {
+                            bounceDown = true;
+                        }
+                    }
+                    else
+                    {
+                        bounceJump -= deltaTime * 4;
+                        if (bounceJump <= 0.0f)
+                        {
+                            bounceJump = 0.0f;
+                            bounceTimer = 0.0f;
+                            bounceDown = false;
+                        }
+                    }
+                }
+                else
+                {
+                    bounceTimer += deltaTime;
+                }
+            }
             
             if (flashTimer > 0.0f)
             {
@@ -526,12 +572,14 @@ namespace Barotrauma
         protected virtual Color GetColor(ComponentState state)
         {
             if (!Enabled) { return DisabledColor; }
+            if (ExternalHighlight) { return HoverColor; }
+
             return state switch
             {
                 ComponentState.Hover => HoverColor,
                 ComponentState.HoverSelected => HoverColor,
                 ComponentState.Pressed => PressedColor,
-                ComponentState.Selected => SelectedColor,
+                ComponentState.Selected when !GlowOnSelect => SelectedColor,
                 _ => Color,
             };
         }
@@ -619,6 +667,11 @@ namespace Barotrauma
                 }
             }
 
+            if (GlowOnSelect && State == ComponentState.Selected)
+            {
+                GUI.UIGlow.Draw(spriteBatch, Rect, SelectedColor);
+            }
+
             if (flashTimer > 0.0f)
             {
                 //the number of flashes depends on the duration, 1 flash per 1 full second
@@ -690,6 +743,7 @@ namespace Barotrauma
         protected virtual void SetAlpha(float a)
         {
             color = new Color(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, a);
+            hoverColor = new Color(hoverColor.R / 255.0f, hoverColor.G / 255.0f, hoverColor.B / 255.0f, a);;
         }
 
         public virtual void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectInflate = null)
@@ -707,10 +761,77 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter));
         }
 
-        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter)
+        public void FadeIn(float wait, float duration)
+        {
+            SetAlpha(0.0f);
+            CoroutineManager.StartCoroutine(LerpAlpha(1.0f, duration, false, wait));
+        }
+
+        public void SlideIn(float wait, float duration, int amount, SlideDirection direction)
+        {
+            RectTransform.ScreenSpaceOffset = direction switch
+            {
+                SlideDirection.Up    => new Point(0, amount),
+                SlideDirection.Down  => new Point(0, -amount),
+                SlideDirection.Left  => new Point(amount, 0),
+                SlideDirection.Right => new Point(-amount, 0),
+                _ => RectTransform.ScreenSpaceOffset
+            };
+            CoroutineManager.StartCoroutine(SlideToPosition(duration, wait, Vector2.Zero));
+        }
+
+        public void SlideOut(float duration, int amount, SlideDirection direction)
+        {
+            RectTransform.ScreenSpaceOffset = Point.Zero;
+
+            Vector2 targetPos = direction switch
+            {
+                SlideDirection.Up    => new Vector2(0, amount),
+                SlideDirection.Down  => new Vector2(0, -amount),
+                SlideDirection.Left  => new Vector2(amount, 0),
+                SlideDirection.Right => new Vector2(-amount, 0),
+                _ => Vector2.Zero
+            };
+
+            CoroutineManager.StartCoroutine(SlideToPosition(duration, 0.0f, targetPos));
+        }
+
+        private IEnumerable<object> SlideToPosition(float duration, float wait, Vector2 target)
         {
             float t = 0.0f;
-            float startA = color.A;
+            var (startX, startY) = RectTransform.ScreenSpaceOffset.ToVector2();
+            var (endX, endY) = target;
+            while (t < wait)
+            {
+                t += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+            t = 0.0f;
+
+            while (t < duration)
+            {
+                t += CoroutineManager.DeltaTime;
+                RectTransform.ScreenSpaceOffset = new Point((int)MathHelper.Lerp(startX, endX, t / duration), (int)MathHelper.Lerp(startY, endY, t / duration));
+                yield return CoroutineStatus.Running;
+            }
+
+            RectTransform.ScreenSpaceOffset = new Point(0, 0);
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private IEnumerable<object> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
+        {
+            State = ComponentState.None;
+            float t = 0.0f;
+            float startA = color.A / 255.0f;
+
+            while (t < wait)
+            {
+                t += CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+            t = 0.0f;
 
             while (t < duration)
             {

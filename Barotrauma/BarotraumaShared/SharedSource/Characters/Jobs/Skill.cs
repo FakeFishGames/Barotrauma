@@ -1,24 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 
 namespace Barotrauma
 {
     class Skill
     {
-        private SkillPrefab prefab;
-        
         private float level;
 
-        static string[] levelNames = new string[] { 
-            "Untrained", "Incompetent", "Novice", 
-            "Adequate", "Competent", "Proficient", 
-            "Professional", "Master", "Legendary" };
-
-        string identifier;
-        public string Identifier
-        {
-            get { return identifier; }
-        }
+        public string Identifier { get; }
         
         public float Level
         {
@@ -26,29 +14,58 @@ namespace Barotrauma
             set { level = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
+        private Sprite icon;
+        public Sprite Icon
+        {
+            get
+            {
+                if (icon == null)
+                {
+                    icon = GetIcon();
+                }
+                return icon;
+            }
+        }
+
+        internal SkillPrefab Prefab { get; private set; }
+
         public Skill(SkillPrefab prefab)
         {
-            this.prefab = prefab;
-            this.identifier = prefab.Identifier;
-
-            this.level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y, Rand.RandSync.Server);
+            this.Prefab = prefab;
+            Identifier = prefab.Identifier;
+            level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y, Rand.RandSync.Server);
+            icon = GetIcon();
         }
 
         public Skill(string identifier, float level)
         {
-            this.identifier = identifier;
+            Identifier = identifier;
             this.level = level;
+            icon = GetIcon();
         }
 
-        /// <summary>
-        /// returns the "name" of some skill level (0-10 -> untrained, etc)
-        /// </summary>
-        public static string GetLevelName(float level)
+        private Sprite GetIcon()
         {
-            level = MathHelper.Clamp(level, 0.0f, 100.0f);
-            int scaledLevel = (int)Math.Floor((level / 100.0f) * levelNames.Length);
-
-            return levelNames[Math.Min(scaledLevel, levelNames.Length - 1)];
+            string jobId = null;
+            switch (Identifier.ToLowerInvariant())
+            {
+                case "electrical":
+                    jobId = "engineer";
+                    break;
+                case "helm":
+                    jobId = "captain";
+                    break;
+                case "mechanical":
+                    jobId = "mechanic";
+                    break;
+                case "medical":
+                    jobId = "medicaldoctor";
+                    break;
+                case "weapons":
+                    jobId = "securityofficer";
+                    break;
+            }
+            return jobId != null && JobPrefab.Prefabs.ContainsKey(jobId) ? JobPrefab.Prefabs[jobId].IconSmall : null;
         }
     }
 }

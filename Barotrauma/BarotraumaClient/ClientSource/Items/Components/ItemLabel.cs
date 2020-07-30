@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
 
         private float[] charWidths;
 
-        [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom). ")]
+        [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
         public Vector4 Padding
         {
             get { return TextBlock.Padding; }
@@ -34,7 +34,7 @@ namespace Barotrauma.Items.Components
             get { return text; }
             set
             {
-                if (value == text || item.Rect.Width < 5) return;
+                if (value == text || item.Rect.Width < 5) { return; }
 
                 if (TextBlock.Rect.Width != item.Rect.Width || textBlock.Rect.Height != item.Rect.Height)
                 {
@@ -64,7 +64,7 @@ namespace Barotrauma.Items.Components
             get { return textColor; }
             set
             {
-                if (textBlock != null) textBlock.TextColor = value;
+                if (textBlock != null) { textBlock.TextColor = value; }
                 textColor = value;
             }
         }
@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }
             set
             {
-                if (textBlock != null) textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f);
+                if (textBlock != null) { textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f); }
             }
         }
 
@@ -107,7 +107,7 @@ namespace Barotrauma.Items.Components
                 if (textBlock == null)
                 {
                     textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
-                        textColor: textColor, font: GUI.UnscaledSmallFont, textAlignment: Alignment.Center, wrap: true, style: null)
+                        textColor: textColor, font: GUI.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: true, style: null)
                     {
                         TextDepth = item.SpriteDepth - 0.00001f,
                         RoundToNearestPixel = false,

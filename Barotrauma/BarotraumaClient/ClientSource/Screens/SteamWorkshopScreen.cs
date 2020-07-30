@@ -67,7 +67,7 @@ namespace Barotrauma
 
         public SteamWorkshopScreen()
         {
-            GameMain.Instance.OnResolutionChanged += CreateUI;
+            GameMain.Instance.ResolutionChanged += CreateUI;
             CreateUI();
 
             Steamworks.SteamUGC.GlobalOnItemInstalled += OnItemInstalled;
@@ -631,7 +631,7 @@ namespace Barotrauma
                         {
                             DebugConsole.NewMessage(errorMsg, Color.Red);
                             titleText.TextColor = Color.Red;
-                            titleText.ToolTip = itemFrame.ToolTip = TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { TextManager.EnsureUTF8(item?.Title), errorMsg });
+                            titleText.ToolTip = itemFrame.ToolTip = TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item?.Title, errorMsg });
                         }
                     }
                 }
@@ -646,7 +646,7 @@ namespace Barotrauma
                         {
                             DebugConsole.NewMessage(errorMsg, Color.Red);
                             titleText.TextColor = Color.Red;
-                            titleText.ToolTip = itemFrame.ToolTip = TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { TextManager.EnsureUTF8(item?.Title), errorMsg });
+                            titleText.ToolTip = itemFrame.ToolTip = TextManager.GetWithVariables("WorkshopItemUpdateFailed", new string[2] { "[itemname]", "[errormessage]" }, new string[2] { item?.Title, errorMsg });
                         }
                     }
                 }
@@ -781,7 +781,7 @@ namespace Barotrauma
         {
             if (response.ResponseStatus == ResponseStatus.Completed)
             {
-                TaskPool.Add(WritePreviewImageAsync(response, previewImagePath), (task) => { action?.Invoke(); });
+                TaskPool.Add("WritePreviewImageAsync", WritePreviewImageAsync(response, previewImagePath), (task) => { action?.Invoke(); });
             }
         }
 
@@ -815,7 +815,7 @@ namespace Barotrauma
 
             if (File.Exists(previewImagePath))
             {
-                TaskPool.Add(LoadPreviewImageAsync(item?.PreviewImageUrl, previewImagePath),
+                TaskPool.Add("LoadPreviewImageAsync", LoadPreviewImageAsync(item?.PreviewImageUrl, previewImagePath),
                 new Tuple<Steamworks.Ugc.Item?, GUIListBox>(item, listBox),
                 (task, tuple) =>
                 {
@@ -823,7 +823,7 @@ namespace Barotrauma
                     var previewImage = lb.Content.FindChild(item)?.GetChildByUserData("previewimage") as GUIImage;
                     if (previewImage != null)
                     {
-                        previewImage.Sprite = task.Result;
+                        previewImage.Sprite = ((Task<Sprite>)task).Result;
                     }
                     else
                     {
@@ -1465,7 +1465,7 @@ namespace Barotrauma
                         {
                             if (itemEditor == null) { return false; }
                             RemoveItemFromLists(itemEditor.Value.FileId);
-                            TaskPool.Add(Steamworks.SteamUGC.DeleteFileAsync(itemEditor.Value.FileId),
+                            TaskPool.Add("DeleteFileAsync", Steamworks.SteamUGC.DeleteFileAsync(itemEditor.Value.FileId),
                                 (t) =>
                                 {
                                     if (t.Status == TaskStatus.Faulted)
@@ -1616,7 +1616,7 @@ namespace Barotrauma
                 if (contentFile.Type == ContentType.Executable ||
                     contentFile.Type == ContentType.ServerExecutable)
                 {
-                    fileExists |= File.Exists(contentFile.Path + ".dll");
+                    fileExists |= File.Exists(Path.GetFileNameWithoutExtension(contentFile.Path) + ".dll");
                 }
 
                 if (!fileExists)
@@ -1656,7 +1656,7 @@ namespace Barotrauma
                 if (contentFile.Type == ContentType.Executable ||
                     contentFile.Type == ContentType.ServerExecutable)
                 {
-                    fileExists |= File.Exists(contentFile.Path + ".dll");
+                    fileExists |= File.Exists(Path.GetFileNameWithoutExtension(contentFile.Path) + ".dll");
                 }
 
                 var fileFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.12f), createItemFileList.Content.RectTransform) { MinSize = new Point(0, 20) },

@@ -34,6 +34,13 @@ namespace Barotrauma.Items.Components
             set { maxFlow = value; } 
         }
 
+        [Editable, Serialize(false, false, alwaysUseInstanceValues: true)]
+        public bool IsOn
+        {
+            get { return IsActive; }
+            set { IsActive = value; }
+        }
+
         private float currFlow;
         public float CurrFlow
         {

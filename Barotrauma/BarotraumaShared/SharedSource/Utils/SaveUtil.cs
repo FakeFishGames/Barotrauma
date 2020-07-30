@@ -69,10 +69,38 @@ namespace Barotrauma
 
             try
             {
+                GameMain.GameSession.Save(Path.Combine(TempPath, "gamesession.xml"));
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Error saving gamesession", e);
+            }
+
+            try
+            {
+                string mainSubPath = null;
                 if (GameMain.GameSession.SubmarineInfo != null)
                 {
-                    string subPath = Path.Combine(TempPath, GameMain.GameSession.SubmarineInfo.Name + ".sub");
-                    GameMain.GameSession.SubmarineInfo.SaveAs(subPath);
+                    mainSubPath = Path.Combine(TempPath, GameMain.GameSession.SubmarineInfo.Name + ".sub");
+                    GameMain.GameSession.SubmarineInfo.SaveAs(mainSubPath);
+                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
+                    {
+                        if (GameMain.GameSession.OwnedSubmarines[i].Name == GameMain.GameSession.SubmarineInfo.Name)
+                        {
+                            GameMain.GameSession.OwnedSubmarines[i] = GameMain.GameSession.SubmarineInfo;
+                        }
+                    }
+                }
+
+                if (GameMain.GameSession.OwnedSubmarines != null)
+                {
+                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
+                    {
+                        SubmarineInfo storedInfo = GameMain.GameSession.OwnedSubmarines[i];
+                        string subPath = Path.Combine(TempPath, storedInfo.Name + ".sub");
+                        if (mainSubPath == subPath) { continue; }
+                        storedInfo.SaveAs(subPath);
+                    }
                 }
             }
             catch (Exception e)
@@ -82,19 +110,8 @@ namespace Barotrauma
 
             try
             {
-                GameMain.GameSession.Save(Path.Combine(TempPath, "gamesession.xml"));
-            }
-
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error saving gamesession", e);
-            }
-
-            try
-            {
                 CompressDirectory(TempPath, filePath, null);
             }
-
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error compressing save file", e);
@@ -109,19 +126,43 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
             if (doc == null) { return; }
 
-            string subPath = Path.Combine(TempPath, doc.Root.GetAttributeString("submarine", "")) + ".sub";
-            SubmarineInfo selectedSub = new SubmarineInfo(subPath, "");
-            GameMain.GameSession = new GameSession(selectedSub, filePath, doc);
+            if (!IsSaveFileCompatible(doc))
+            {
+                throw new Exception($"The save file \"{filePath}\" is not compatible with this version of Barotrauma.");
+            }
+
+            var ownedSubmarines = LoadOwnedSubmarines(doc, out SubmarineInfo selectedSub);
+            GameMain.GameSession = new GameSession(selectedSub, ownedSubmarines, doc, filePath);
         }
 
-        public static void LoadGame(string filePath, GameSession gameSession)
+        public static List<SubmarineInfo> LoadOwnedSubmarines(XDocument saveDoc, out SubmarineInfo selectedSub)
+        {
+            string subPath = Path.Combine(TempPath, saveDoc.Root.GetAttributeString("submarine", "")) + ".sub";
+            selectedSub = new SubmarineInfo(subPath);
+
+            List<SubmarineInfo> ownedSubmarines = null;
+            var ownedSubsElement = saveDoc.Root.Element("ownedsubmarines");
+            if (ownedSubsElement != null)
+            {
+                ownedSubmarines = new List<SubmarineInfo>();
+                foreach (XElement subElement in ownedSubsElement.Elements())
+                {
+                    string subName = subElement.GetAttributeString("name", "");
+                    string ownedSubPath = Path.Combine(TempPath, subName + ".sub");
+                    ownedSubmarines.Add(new SubmarineInfo(ownedSubPath));
+                }
+            }
+            return ownedSubmarines;
+        }
+
+        /*public static void LoadMultiplayerCampaignState(string filePath, MultiPlayerCampaign multiplayerCampaign)
         {
             DebugConsole.Log("Loading save file for an existing game session (" + filePath + ")");
             DecompressToDirectory(filePath, TempPath, null);
             XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
             if (doc == null) { return; }
             gameSession.Load(doc.Root);
-        }
+        }*/
 
         public static XDocument LoadGameSessionDoc(string filePath)
         {
@@ -137,6 +178,12 @@ namespace Barotrauma
             }
 
             return XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
+        }
+
+        public static bool IsSaveFileCompatible(XDocument saveDoc)
+        {
+            if (saveDoc?.Root?.Attribute("version") == null) { return false; }
+            return true;
         }
 
         public static void DeleteSave(string filePath)
@@ -175,7 +222,7 @@ namespace Barotrauma
             return Path.Combine(folder, saveName);
         }
 
-        public static IEnumerable<string> GetSaveFiles(SaveType saveType)
+        public static IEnumerable<string> GetSaveFiles(SaveType saveType, bool includeInCompatible = true)
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             if (!Directory.Exists(folder))
@@ -191,13 +238,24 @@ namespace Barotrauma
                 }
             }
 
-            List<string> files = Directory.GetFiles(folder, "*.save").ToList();
+            List<string> files = Directory.GetFiles(folder, "*.save", System.IO.SearchOption.TopDirectoryOnly).ToList();
             string legacyFolder = saveType == SaveType.Singleplayer ? LegacySaveFolder : LegacyMultiplayerSaveFolder;
             if (Directory.Exists(legacyFolder))
             {
-                files.AddRange(Directory.GetFiles(legacyFolder, "*.save"));
+                files.AddRange(Directory.GetFiles(legacyFolder, "*.save", System.IO.SearchOption.TopDirectoryOnly));
             }
 
+            if (!includeInCompatible)
+            {
+                for (int i = files.Count - 1; i >= 0; i--)
+                {
+                    XDocument doc = LoadGameSessionDoc(files[i]);
+                    if (!IsSaveFileCompatible(doc))
+                    {
+                        files.RemoveAt(i);
+                    }
+                }
+            }
             return files;
         }
 

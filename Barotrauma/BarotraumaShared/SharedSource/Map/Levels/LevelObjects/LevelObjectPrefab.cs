@@ -41,7 +41,9 @@ namespace Barotrauma
             Wall = 1,
             RuinWall = 2,
             SeaFloor = 4,
-            MainPath = 8
+            MainPath = 8,
+            LevelStart = 16,
+            LevelEnd = 32,
         }
 
         public List<Sprite> Sprites
@@ -112,6 +114,14 @@ namespace Barotrauma
             private set;
         }
         public int PhysicsBodyTriggerIndex
+        {
+            get;
+            private set;
+        }
+
+
+        [Serialize(10000, false, description: "Maximum number of this specific object per level."), Editable(MinValueFloat = 0.01f, MaxValueFloat = 10.0f)]
+        public int MaxCount
         {
             get;
             private set;

@@ -22,6 +22,12 @@ namespace Barotrauma.Networking
                 (id2 > id1) && (id2 - id1 > ushort.MaxValue / 2);
         }
 
+        public static ushort Difference(ushort id1, ushort id2)
+        {
+            int diff = id2 > id1 ? id2 - id1 : id1 - id2;
+            return (ushort)(diff > ushort.MaxValue / 2 ? ushort.MaxValue - diff : diff);           
+        }
+
         public static ushort Clamp(ushort id, ushort min, ushort max)
         {
             if (IdMoreRecent(min, max))
@@ -72,8 +78,13 @@ namespace Barotrauma.Networking
             Debug.Assert(IsValidId((ushort)1, (ushort)(ushort.MaxValue - 5), (ushort)10));
             Debug.Assert(!IsValidId((ushort)(ushort.MaxValue - 6), (ushort)(ushort.MaxValue - 5), (ushort)10));
 
-            Debug.Assert(IsValidId((ushort)0, (ushort)ushort.MaxValue - 100, (ushort)ushort.MaxValue));
-            Debug.Assert(!IsValidId((ushort)(ushort.MaxValue - 101), (ushort)ushort.MaxValue - 100, (ushort)ushort.MaxValue));
+            Debug.Assert(IsValidId((ushort)0, (ushort)(ushort.MaxValue - 100), (ushort)5));
+            Debug.Assert(!IsValidId((ushort)(ushort.MaxValue - 101), (ushort)(ushort.MaxValue - 100), (ushort)ushort.MaxValue));
+
+            Debug.Assert(Difference((ushort)0, (ushort)56) == 56);
+            Debug.Assert(Difference((ushort)56, (ushort)0) == 56);
+            Debug.Assert(Difference((ushort)5, (ushort)(ushort.MaxValue - 101)) == 106);
+            Debug.Assert(Difference((ushort)(ushort.MaxValue - 101), (ushort)5) == 106);
         }
 #endif
     }

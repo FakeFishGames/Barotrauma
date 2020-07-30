@@ -1,10 +1,8 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
-using System.Xml.Linq;
 using System.Collections.Generic;
-using Barotrauma.IO;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -16,7 +14,7 @@ namespace Barotrauma
             get
             {
 #if SERVER
-                if (GameMain.Server != null && lastUpdateID < 1) lastUpdateID++;
+                if (GameMain.Server != null && lastUpdateID < 1) { lastUpdateID++; }
 #endif
                 return lastUpdateID;
             }
@@ -29,141 +27,59 @@ namespace Barotrauma
             get
             {
 #if SERVER
-                if (GameMain.Server != null && lastSaveID < 1) lastSaveID++;
+                if (GameMain.Server != null && lastSaveID < 1) { lastSaveID++; }
 #endif
                 return lastSaveID;
             }
-            set { lastSaveID = value; }
+            set 
+            {
+#if SERVER
+                //trigger a campaign update to notify the clients of the changed save ID
+                lastUpdateID++; 
+#endif
+                lastSaveID = value; 
+            }
         }
         
-        public UInt16 PendingSaveID
-        {
-            get;
-            set;
-        }
-
         private static byte currentCampaignID;
 
         public byte CampaignID
         {
-            get; private set;
+            get; set;
         }
 
-        public MultiPlayerCampaign(GameModePreset preset, object param) : 
-            base(preset, param)
+        private MultiPlayerCampaign() : base(GameModePreset.MultiPlayerCampaign)
         {
             currentCampaignID++;
             CampaignID = currentCampaignID;
-        }
-        
-        public override void Start()
-        {
-            base.Start();            
-            if (GameMain.NetworkMember.IsServer) lastUpdateID++;
-        }
-        
-        public override void End(string endMessage = "")
-        {
-            isRunning = false;
-
-#if CLIENT
-            if (GameMain.Client != null)
-            {
-                bool success =
-                    GameMain.Client.ConnectedClients.Any(c => c.Character != null && !c.Character.IsDead);
-                
-                GameMain.GameSession.EndRound("");
-                GameMain.GameSession.CrewManager.EndRound();
-
-                if (success)
-                {
-                    GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                }
-
-                return;
-            }
-#endif
-
-#if SERVER
-            lastUpdateID++;
-
-            bool success =
-                GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
-            
-            success = success || (GameMain.Server.Character != null && !GameMain.Server.Character.IsDead);
-
-            /*if (success)
-            {
-                if (subsToLeaveBehind == null || leavingSub == null)
-                {
-                    DebugConsole.ThrowError("Leaving submarine not selected -> selecting the closest one");
-
-                    leavingSub = GetLeavingSub();
-
-                    subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-                }
-            }*/
-
-            GameMain.GameSession.EndRound("");
-            
-            //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has an alive character)
-            characterData.RemoveAll(cd => cd.HasSpawned);
-            
-            foreach (Client c in GameMain.Server.ConnectedClients)
-            {
-                if (c.Character?.Info != null && !c.Character.IsDead)
-                {
-                    c.Character.ResetCurrentOrder();
-                    c.CharacterInfo = c.Character.Info;
-                    characterData.Add(new CharacterCampaignData(c));
-                }
-            }
-
-            if (success)
-            {
-                bool atEndPosition = Submarine.MainSub.AtEndPosition;
-
-                /*if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
-                {
-                    Submarine.MainSub = leavingSub;
-
-                    GameMain.GameSession.Submarine = leavingSub;
-
-                    foreach (Submarine sub in subsToLeaveBehind)
-                    {
-                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(leavingSub, sub);
-                    }
-                }*/
-
-                if (atEndPosition)
-                {
-                    map.MoveToNextLocation();
-
-                    //select a random location to make sure we've got some destination
-                    //to head towards even if the host/clients don't select anything
-                    map.SelectRandomLocation(true);
-                }
-                map.ProgressWorld();
-
-                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-            
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-            }
-#endif
+            CampaignMetadata = new CampaignMetadata(this);
+            UpgradeManager = new UpgradeManager(this);
+            InitCampaignData();
         }
 
-        partial void SetDelegates();
-
-        public static MultiPlayerCampaign LoadNew(XElement element)
+        public static MultiPlayerCampaign StartNew(string mapSeed)
         {
-            MultiPlayerCampaign campaign = new MultiPlayerCampaign(GameModePreset.List.Find(gm => gm.Identifier == "multiplayercampaign"), null);
-            campaign.Load(element);
-            campaign.SetDelegates();
-            
+            MultiPlayerCampaign campaign = new MultiPlayerCampaign();
+            //only the server generates the map, the clients load it from a save file
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            {
+                campaign.map = new Map(campaign, mapSeed);
+            }
+            campaign.InitProjSpecific();
             return campaign;
         }
 
+        public static MultiPlayerCampaign LoadNew(XElement element)
+        {
+            MultiPlayerCampaign campaign = new MultiPlayerCampaign();
+            campaign.Load(element);
+            campaign.InitProjSpecific();
+            campaign.IsFirstRound = false;
+            return campaign;
+        }
+
+        partial void InitProjSpecific();
+        
         public static string GetCharacterDataSavePath(string savePath)
         {
             return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
@@ -174,10 +90,12 @@ namespace Barotrauma
             return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }
 
-        public void Load(XElement element)
+        /// <summary>
+        /// Loads the campaign from an XML element. Creates the map if it hasn't been created yet, otherwise updates the state of the map.
+        /// </summary>
+        private void Load(XElement element)
         {
             Money = element.GetAttributeInt("money", 0);
-            InitialSuppliesSpawned = element.GetAttributeBool("initialsuppliesspawned", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {
@@ -195,6 +113,12 @@ namespace Barotrauma
 #endif
             }
 
+#if SERVER
+            List<SubmarineInfo> availableSubs = new List<SubmarineInfo>();
+            List<SubmarineInfo> sourceList = new List<SubmarineInfo>();
+            sourceList.AddRange(SubmarineInfo.SavedSubmarines);
+#endif
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -203,19 +127,55 @@ namespace Barotrauma
                         if (map == null)
                         {
                             //map not created yet, loading this campaign for the first time
-                            map = Map.LoadNew(subElement);
+                            map = Map.Load(this, subElement);
                         }
                         else
                         {
                             //map already created, update it
                             //if we're not downloading the initial save file (LastSaveID > 0), 
                             //show notifications about location type changes
-                            map.Load(subElement, LastSaveID > 0);
+                            map.LoadState(subElement, LastSaveID > 0);
                         }
                         break;
+                    case "metadata":
+                        CampaignMetadata = new CampaignMetadata(this, subElement);
+                        break;
+                    case "pendingupgrades":
+                        UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: false);
+                        break;
+                    case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
+                        CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
+                        CrewManager.AddCharacterElements(subElement);
+                        break;
+                    case "cargo":
+                        CargoManager?.LoadPurchasedItems(subElement);
+                        break;
+#if SERVER
+                    case "availablesubs":
+                        foreach (XElement availableSub in subElement.Elements())
+                        {
+                            string subName = availableSub.GetAttributeString("name", "");
+                            SubmarineInfo matchingSub = sourceList.Find(s => s.Name == subName);
+                            if (matchingSub != null) { availableSubs.Add(matchingSub); }
+                        }
+                        break;
+#endif
                 }
             }
+
+            CampaignMetadata ??= new CampaignMetadata(this);
+            UpgradeManager ??= new UpgradeManager(this);
+
+            InitCampaignData();
 #if SERVER
+            // Fallback if using a save with no available subs assigned, use vanilla submarines
+            if (availableSubs.Count == 0)
+            {
+                GameMain.NetLobbyScreen.CampaignSubmarines.AddRange(sourceList.FindAll(s => s.IsCampaignCompatible && s.IsVanillaSubmarine()));
+            }
+
+            GameMain.NetLobbyScreen.CampaignSubmarines = availableSubs;
+
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();
             var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);

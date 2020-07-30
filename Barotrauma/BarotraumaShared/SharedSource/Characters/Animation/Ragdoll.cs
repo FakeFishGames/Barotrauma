@@ -173,7 +173,7 @@ namespace Barotrauma
                     pos1.Y -= collider[colliderIndex].height * ColliderHeightFromFloor;
                     Vector2 pos2 = pos1;
                     pos2.Y += collider[value].height * 1.1f;
-                    if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall))) { return; }
+                    if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall) && !(f.Body.UserData is Submarine))) { return; }
                 }
 
                 Vector2 pos = collider[colliderIndex].SimPosition;
@@ -619,6 +619,7 @@ namespace Barotrauma
         public bool OnLimbCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (f2.Body.UserData is Submarine && character.Submarine == (Submarine)f2.Body.UserData) { return false; }
+            if (f2.UserData is Hull && character.Submarine != null) { return false; }
 
             //using the velocity of the limb would make the impact damage more realistic,
             //but would also make it harder to edit the animations because the forces/torques
@@ -693,14 +694,14 @@ namespace Barotrauma
 
         private void ApplyImpact(Fixture f1, Fixture f2, Vector2 localNormal, Vector2 impactPos, Vector2 velocity)
         {
-            if (character.DisableImpactDamageTimer > 0.0f) return;
+            if (character.DisableImpactDamageTimer > 0.0f) { return; }
 
             Vector2 normal = localNormal;
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody || !Collider.Enabled)
             {
                 bool isNotRemote = true;
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) isNotRemote = !character.IsRemotePlayer;
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { isNotRemote = !character.IsRemotelyControlled; }
 
                 if (isNotRemote)
                 {
@@ -933,7 +934,7 @@ namespace Barotrauma
             if (setSubmarine)
             {
                 //in -> out
-                if (newHull == null && currentHull.Submarine != null)
+                if (newHull?.Submarine == null && currentHull?.Submarine != null)
                 {
                     //don't teleport out yet if the character is going through a gap
                     if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) { return; }
@@ -1262,6 +1263,7 @@ namespace Barotrauma
                 return false;
             }
             bool isColliderValid = CheckValidity(Collider);
+            if (!isColliderValid) { Collider.ResetDynamics(); }
             bool limbsValid = true;
             foreach (Limb limb in limbs)
             {
@@ -1269,6 +1271,7 @@ namespace Barotrauma
                 if (!CheckValidity(limb.body))
                 {
                     limbsValid = false;
+                    limb.body.ResetDynamics();
                     break;
                 }
             }
@@ -1276,11 +1279,12 @@ namespace Barotrauma
             if (!isValid)
             {
                 validityResets++;
-                if (validityResets > 1)
+                if (validityResets > 3)
                 {
                     Invalid = true;
-                    DebugConsole.ThrowError("Invalid ragdoll physics. Ragdoll freezed to prevent crashes.");
+                    DebugConsole.ThrowError("Invalid ragdoll physics. Ragdoll frozen to prevent crashes.");
                     Collider.SetTransform(Vector2.Zero, 0.0f);
+                    Collider.ResetDynamics();
                     foreach (Limb limb in Limbs)
                     {
                         limb.body?.SetTransform(Collider.SimPosition, 0.0f);
@@ -1313,7 +1317,7 @@ namespace Barotrauma
             }
             if (errorMsg != null)
             {
-                if (character.IsRemotePlayer)
+                if (character.IsRemotelyControlled)
                 {
                     errorMsg += " Ragdoll controlled remotely.";
                 }
@@ -1492,6 +1496,7 @@ namespace Barotrauma
                     case Physics.CollisionWall:
                     case Physics.CollisionLevel:
                         if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) { return -1; }
+                        if (fixture.Body.UserData is Submarine && character.Submarine != null) { return -1; }
                         if (fraction < standOnFloorFraction)
                         {
                             standOnFloorFraction = fraction;

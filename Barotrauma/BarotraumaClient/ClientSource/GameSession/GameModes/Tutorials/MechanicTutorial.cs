@@ -385,7 +385,8 @@ namespace Barotrauma.Tutorials
                     }
                 }
 
-                if (!gotOxygenTank && mechanic.Inventory.FindItemByIdentifier("oxygentank") != null)
+                if (!gotOxygenTank && (mechanic.Inventory.FindItemByIdentifier("oxygentank") != null ||
+                                       mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null))
                 {
                     gotOxygenTank = true;
                 }
@@ -551,7 +552,7 @@ namespace Barotrauma.Tutorials
             do
             {
                 yield return null;
-                if (!mechanic_brokenPump.Item.IsFullCondition)
+                if (mechanic_brokenPump.Item.Condition < repairablePumpComponent.RepairThreshold)
                 {
                     if (!mechanic.HasEquippedItem("wrench"))
                     {
@@ -575,7 +576,7 @@ namespace Barotrauma.Tutorials
                         }
                     }
                 }
-            } while (!mechanic_brokenPump.Item.IsFullCondition || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive);
+            } while (mechanic_brokenPump.Item.Condition < repairablePumpComponent.RepairThreshold || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive);
             RemoveCompletedObjective(segments[9]);
             SetHighlight(mechanic_brokenPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_2.WaterPercentage > waterVolumeBeforeOpening);
@@ -592,9 +593,14 @@ namespace Barotrauma.Tutorials
             SetHighlight(mechanic_ballastPump_1.Item, true);
             SetHighlight(mechanic_ballastPump_2.Item, true);
             SetHighlight(mechanic_submarineEngine.Item, true);
+
+            Repairable repairablePumpComponent1 = mechanic_ballastPump_1.Item.GetComponent<Repairable>();
+            Repairable repairablePumpComponent2 = mechanic_ballastPump_2.Item.GetComponent<Repairable>();
+            Repairable repairableEngineComponent = mechanic_submarineEngine.Item.GetComponent<Repairable>();
+
             // Remove highlights when each individual machine is repaired
-            do { CheckHighlights(); yield return null; } while (!mechanic_ballastPump_1.Item.IsFullCondition || !mechanic_ballastPump_2.Item.IsFullCondition || !mechanic_submarineEngine.Item.IsFullCondition);
-            CheckHighlights();
+            do { CheckHighlights(repairablePumpComponent1, repairablePumpComponent2, repairableEngineComponent); yield return null; } while (mechanic_ballastPump_1.Item.Condition < repairablePumpComponent1.RepairThreshold || mechanic_ballastPump_2.Item.Condition < repairablePumpComponent2.RepairThreshold || mechanic_submarineEngine.Item.Condition < repairableEngineComponent.RepairThreshold);
+            CheckHighlights(repairablePumpComponent1, repairablePumpComponent2, repairableEngineComponent);
             RemoveCompletedObjective(segments[10]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Complete"), ChatMessageType.Radio, null);
 
@@ -617,19 +623,19 @@ namespace Barotrauma.Tutorials
             return false;
         }     
 
-        private void CheckHighlights()
+        private void CheckHighlights(Repairable comp1, Repairable comp2, Repairable comp3)
         {
-            if (mechanic_ballastPump_1.Item.IsFullCondition && mechanic_ballastPump_1.Item.ExternalHighlight)
+            if (mechanic_ballastPump_1.Item.Condition > comp1.RepairThreshold && mechanic_ballastPump_1.Item.ExternalHighlight)
             {
                 SetHighlight(mechanic_ballastPump_1.Item, false);
                 mechanic.RemoveActiveObjectiveEntity(mechanic_ballastPump_1.Item);
             }
-            if (mechanic_ballastPump_2.Item.IsFullCondition && mechanic_ballastPump_2.Item.ExternalHighlight)
+            if (mechanic_ballastPump_2.Item.Condition > comp2.RepairThreshold && mechanic_ballastPump_2.Item.ExternalHighlight)
             {
                 SetHighlight(mechanic_ballastPump_2.Item, false);
                 mechanic.RemoveActiveObjectiveEntity(mechanic_ballastPump_2.Item);
             }
-            if (mechanic_submarineEngine.Item.IsFullCondition && mechanic_submarineEngine.Item.ExternalHighlight)
+            if (mechanic_submarineEngine.Item.Condition > comp3.RepairThreshold && mechanic_submarineEngine.Item.ExternalHighlight)
             {
                 SetHighlight(mechanic_submarineEngine.Item, false);
                 mechanic.RemoveActiveObjectiveEntity(mechanic_submarineEngine.Item);

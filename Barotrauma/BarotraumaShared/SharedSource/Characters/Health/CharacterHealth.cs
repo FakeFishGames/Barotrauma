@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Networking;
 using Barotrauma.Extensions;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -146,6 +147,11 @@ namespace Barotrauma
                 }
                 return maxVitality;
             }
+            set
+            {
+                maxVitality = Math.Max(0, value);
+            }
+
         }
 
         public float MinVitality
@@ -937,7 +943,83 @@ namespace Barotrauma
 
         partial void RemoveProjSpecific();
 
+        /// <summary>
+        /// Automatically filters out buffs.
+        /// </summary>
         public static IEnumerable<Affliction> SortAfflictionsBySeverity(IEnumerable<Affliction> afflictions, bool excludeBuffs = true) =>
             afflictions.Where(a => !excludeBuffs || !a.Prefab.IsBuff).OrderByDescending(a => a.DamagePerSecond).ThenByDescending(a => a.Strength);
+
+        public void Save(XElement healthElement)
+        {
+            foreach (Affliction affliction in afflictions)
+            {
+                if (affliction.Strength <= 0.0f) { continue; }
+                healthElement.Add(new XElement("Affliction",
+                    new XAttribute("identifier", affliction.Identifier),
+                    new XAttribute("strength", affliction.Strength.ToString("G", CultureInfo.InvariantCulture))));
+            }
+            for (int i = 0; i < limbHealths.Count; i++)
+            {
+                var limbHealthElement = new XElement("LimbHealth", new XAttribute("i", i));
+                healthElement.Add(limbHealthElement);
+                foreach (Affliction affliction in limbHealths[i].Afflictions)
+                {
+                    if (affliction.Strength <= 0.0f) { continue; }
+                    limbHealthElement.Add(new XElement("Affliction",
+                        new XAttribute("identifier", affliction.Identifier),
+                        new XAttribute("strength", affliction.Strength.ToString("G", CultureInfo.InvariantCulture))));
+                }
+            }
+        }
+
+        public void Load(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "affliction":
+                        LoadAffliction(subElement);
+                        break;
+                    case "limbhealth":
+                        int limbHealthIndex = subElement.GetAttributeInt("i", -1);
+                        if (limbHealthIndex < 0 || limbHealthIndex >= limbHealths.Count)
+                        {
+                            DebugConsole.ThrowError($"Error while loading character health: limb index \"{limbHealthIndex}\" out of range.");
+                            continue;
+                        }
+                        foreach (XElement afflictionElement in subElement.Elements())
+                        {
+                            LoadAffliction(afflictionElement, limbHealths[limbHealthIndex]);
+                        }
+                        break;
+                }
+            }
+
+            void LoadAffliction(XElement afflictionElement, LimbHealth limbHealth = null)
+            {
+                string id = afflictionElement.GetAttributeString("identifier", "");
+                var afflictionPrefab = AfflictionPrefab.Prefabs.Find(a => a.Identifier == id);
+                if (afflictionPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Error while loading character health: affliction \"{id}\" not found.");
+                    return;
+                }
+                float strength = afflictionElement.GetAttributeFloat("strength", 0.0f);
+                var irremovableAffliction = irremovableAfflictions.FirstOrDefault(a => a.Prefab == afflictionPrefab);
+                if (irremovableAffliction != null)
+                {
+                    irremovableAffliction.Strength = strength;
+                }
+                else if (limbHealth != null)
+                {
+                    limbHealth.Afflictions.Add(afflictionPrefab.Instantiate(strength));
+                }
+                else
+                {
+                    afflictions.Add(afflictionPrefab.Instantiate(strength));
+                }
+            }
+        }
     }
 }

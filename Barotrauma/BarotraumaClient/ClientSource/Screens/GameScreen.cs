@@ -20,6 +20,8 @@ namespace Barotrauma
         private Texture2D damageStencil;
         private Texture2D distortTexture;
 
+        private float fadeToBlackState;
+
         public Effect PostProcessEffect { get; private set; }
         public Effect GradientEffect { get; private set; }
 
@@ -29,7 +31,7 @@ namespace Barotrauma
             cam.Translate(new Vector2(-10.0f, 50.0f));
 
             CreateRenderTargets(graphics);
-            GameMain.Instance.OnResolutionChanged += () =>
+            GameMain.Instance.ResolutionChanged += () =>
             {
                 CreateRenderTargets(graphics);
             };
@@ -111,10 +113,10 @@ namespace Barotrauma
             sw.Restart();
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
-            
-            if (Character.Controlled != null && cam != null) Character.Controlled.DrawHUD(spriteBatch, cam);
 
-            if (GameMain.GameSession != null) GameMain.GameSession.Draw(spriteBatch);
+            if (Character.Controlled != null && cam != null) { Character.Controlled.DrawHUD(spriteBatch, cam); }
+
+            if (GameMain.GameSession != null) { GameMain.GameSession.Draw(spriteBatch); }
 
             if (Character.Controlled == null && !GUI.DisableHUD)
             {
@@ -402,6 +404,31 @@ namespace Barotrauma
                 PostProcessEffect.CurrentTechnique.Passes[0].Apply();
             }
             Quad.Render();
+
+            if (fadeToBlackState > 0.0f)
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred);
+                GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Lerp(Color.TransparentBlack, Color.Black, fadeToBlackState), isFilled: true);
+                spriteBatch.End();
+            }
+        }
+
+        partial void UpdateProjSpecific(double deltaTime)
+        {
+            if (ConversationAction.FadeScreenToBlack)
+            {
+                fadeToBlackState = Math.Min(fadeToBlackState + (float)deltaTime, 1.0f);
+            }
+            else
+            {
+                fadeToBlackState = Math.Max(fadeToBlackState - (float)deltaTime, 0.0f);
+            }
+
+            if (!PlayerInput.PrimaryMouseButtonHeld())
+            {
+                Inventory.draggingSlot = null;
+                Inventory.draggingItem = null;
+            }
         }
     }
 }

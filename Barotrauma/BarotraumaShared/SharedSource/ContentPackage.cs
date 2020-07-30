@@ -18,6 +18,10 @@ namespace Barotrauma
         Character,
         Structure,
         Outpost,
+        OutpostModule,
+        OutpostConfig,
+        NPCSets,
+        Factions,
         Text,
         Executable,
         ServerExecutable,
@@ -42,7 +46,8 @@ namespace Barotrauma
         SkillSettings,
         Wreck,
         Corpses,
-        WreckAIConfig
+        WreckAIConfig,
+        UpgradeModules
     }
 
     public class ContentPackage
@@ -60,17 +65,22 @@ namespace Barotrauma
             ContentType.Character,
             ContentType.Structure,
             ContentType.LocationTypes,
+            ContentType.NPCSets,
+            ContentType.Factions,
             ContentType.MapGenerationParameters,
             ContentType.LevelGenerationParameters,
             ContentType.Missions,
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
             ContentType.Outpost,
+            ContentType.OutpostModule,
+            ContentType.OutpostConfig,
             ContentType.Wreck,
             ContentType.WreckAIConfig,
             ContentType.Afflictions,
             ContentType.Orders,
-            ContentType.Corpses
+            ContentType.Corpses,
+            ContentType.UpgradeModules
         };
 
         //at least one file of each these types is required in core content packages
@@ -80,7 +90,10 @@ namespace Barotrauma
             ContentType.Item,
             ContentType.Character,
             ContentType.Structure,
-            ContentType.Outpost,
+            //TODO: there needs to be either outpost files or outpost generation parameters, both aren't required
+            //ContentType.Outpost,
+            //ContentType.OutpostGenerationParams,
+            ContentType.Factions,
             ContentType.Wreck,
             ContentType.WreckAIConfig,
             ContentType.Text,
@@ -96,7 +109,8 @@ namespace Barotrauma
             ContentType.UIStyle,
             ContentType.EventManagerSettings,
             ContentType.Orders,
-            ContentType.Corpses
+            ContentType.Corpses,
+            ContentType.UpgradeModules
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
@@ -205,6 +219,22 @@ namespace Barotrauma
                 Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type, this));
             }
 
+            if (Files.Count == 0)
+            {
+                //no files defined, find a submarine in here
+                //because somehow people have managed to upload
+                //mods without contentfile definitions
+                string folder = System.IO.Path.GetDirectoryName(filePath);
+                if (File.Exists(System.IO.Path.Combine(folder, Name+".sub")))
+                {
+                    Files.Add(new ContentFile(System.IO.Path.Combine(folder, Name + ".sub"), ContentType.Submarine, this));
+                }
+                else
+                {
+                    errorMsgs.Add("Error in content package \"" + Name + "\" - no content files defined.");
+                }
+            }
+
             bool compatible = IsCompatible();
             //If we know that the package is not compatible, don't display error messages.
             if (compatible)
@@ -292,6 +322,7 @@ namespace Barotrauma
                     case ContentType.ServerExecutable:
                     case ContentType.None:
                     case ContentType.Outpost:
+                    case ContentType.OutpostModule:
                     case ContentType.Submarine:
                     case ContentType.Wreck:
                         break;
@@ -396,7 +427,6 @@ namespace Barotrauma
                 new XAttribute("path", Path.CleanUpPathCrossPlatform(correctFilenameCase: false)),
                 new XAttribute("corepackage", CorePackage)));
 
-
             doc.Root.Add(new XAttribute("gameversion", GameVersion.ToString()));
 
             if (!string.IsNullOrEmpty(SteamWorkshopUrl))
@@ -428,7 +458,7 @@ namespace Barotrauma
                         reselectPackage = true;
                         if (p.CorePackage)
                         {
-                            GameMain.Config.SelectCorePackage(List.Find(cpp => cpp.CorePackage && !packagesToDeselect.Contains(cpp)));
+                            GameMain.Config.AutoSelectCorePackage(packagesToDeselect);
                         }
                         else
                         {
@@ -525,7 +555,7 @@ namespace Barotrauma
                 {
                     using (MD5 tempMd5 = MD5.Create())
                     {
-                        filePaths = filePaths.OrderBy(f => ToolBox.StringToUInt32Hash(f.CleanUpPathCrossPlatform(true), tempMd5)).ToList();
+                        filePaths = filePaths.OrderBy(f => ToolBox.StringToUInt32Hash(f.CleanUpPathCrossPlatform(true).ToLowerInvariant(), tempMd5)).ToList();
                     }
                 }
 
@@ -592,6 +622,10 @@ namespace Barotrauma
         public static IEnumerable<ContentFile> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, ContentType type)
         {
             return contentPackages.SelectMany(f => f.Files).Where(f => f.Type == type);
+        }
+        public static IEnumerable<ContentFile> GetFilesOfType(IEnumerable<ContentPackage> contentPackages, params ContentType[] types)
+        {
+            return contentPackages.SelectMany(f => f.Files).Where(f => types.Contains(f.Type));
         }
 
         public IEnumerable<string> GetFilesOfType(ContentType type)

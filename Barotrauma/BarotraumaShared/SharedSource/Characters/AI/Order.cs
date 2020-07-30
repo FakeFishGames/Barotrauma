@@ -17,6 +17,27 @@ namespace Barotrauma
         Operate
     }
 
+    struct OrderInfo
+    {
+        public string ComponentIdentifier { get; set; }
+        public Order Order { get; private set; }
+        public string OrderOption { get; private set; }
+
+        public OrderInfo(Order order, string orderOption)
+        {
+            ComponentIdentifier = "currentorder";
+            Order = order;
+            OrderOption = orderOption;
+        }
+
+        public OrderInfo(OrderInfo orderInfo)
+        {
+            ComponentIdentifier = "previousorder";
+            Order = orderInfo.Order;
+            OrderOption = orderInfo.OrderOption;
+        }
+    }
+
     class Order
     {
         public static Dictionary<string, Order> Prefabs { get; private set; }
@@ -335,7 +356,7 @@ namespace Barotrauma
             return msg;
         }
 
-        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub)
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, Character.TeamType? requiredTeam = null)
         {
             List<Item> matchingItems = new List<Item>();
             if (submarine == null) { return matchingItems; }
@@ -346,12 +367,12 @@ namespace Barotrauma
                     Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == ItemComponentType));
                 if (mustBelongToPlayerSub)
                 {
-                    matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player);
-                    matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
+                    matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineType.Player);
                 }
-                else
+                matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
+                if (requiredTeam.HasValue)
                 {
-                    matchingItems.RemoveAll(it => it.Submarine != submarine);
+                    matchingItems.RemoveAll(it => it.Submarine == null || it.Submarine.TeamID != requiredTeam.Value);
                 }
                 matchingItems.RemoveAll(it => it.NonInteractable);
                 if (UseController)

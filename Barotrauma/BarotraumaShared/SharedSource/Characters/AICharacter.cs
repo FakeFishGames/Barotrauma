@@ -82,7 +82,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
             if (Controlled == this) { return; }
             
-            if (!IsRemotePlayer)
+            if (!IsRemotelyControlled)
             {
                 aiController.Update(deltaTime);
             }

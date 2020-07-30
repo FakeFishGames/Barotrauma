@@ -260,7 +260,11 @@ namespace Barotrauma
                         item.Name :
                         item.Name + '\n' + description;
                 }
-
+                if (item.SpawnedInOutpost)
+                {
+                    string colorStr = XMLExtensions.ColorToString(GUI.Style.Red);
+                    toolTip = $"‖color:{colorStr}‖{toolTip}‖color:end‖";
+                }
                 return toolTip;
             }
         }
@@ -1127,6 +1131,8 @@ namespace Barotrauma
         public static void DrawFront(SpriteBatch spriteBatch)
         {
             if (GUI.PauseMenuOpen || GUI.SettingsMenuOpen) { return; }
+            if (GameMain.GameSession?.Campaign != null &&
+                (GameMain.GameSession.Campaign.ShowCampaignUI || GameMain.GameSession.Campaign.ForceMapUI)) { return; }
 
             subInventorySlotsToDraw.Clear();
             subInventorySlotsToDraw.AddRange(highlightedSubInventorySlots);
@@ -1377,6 +1383,17 @@ namespace Barotrauma
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black * 0.6f, rotate: rotation, scale: scale);
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
+
+                if (item.SpawnedInOutpost && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                {
+                    var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
+                    Vector2 iconSize = new Vector2(25 * GUI.Scale);
+                    stealIcon.Draw(
+                        spriteBatch, 
+                        new Vector2(rect.X + iconSize.X * 0.2f, rect.Bottom - iconSize.Y * 1.2f),
+                        color: GUI.Style.Red,
+                        scale: iconSize.X / stealIcon.size.X);
+                }
             }
 
             if (inventory != null &&

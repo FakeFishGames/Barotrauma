@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
@@ -36,8 +37,13 @@ namespace Barotrauma
         public readonly bool MultiplayerOnly, SingleplayerOnly;
 
         public readonly string Identifier;
-
         public readonly string TextIdentifier;
+
+        private readonly string[] tags;
+        public IEnumerable<string> Tags
+        {
+            get { return tags; }
+        }
 
         public readonly string Name;
         public readonly string Description;
@@ -47,6 +53,8 @@ namespace Barotrauma
         public readonly string SonarIconIdentifier;
 
         public readonly string AchievementIdentifier;
+
+        public readonly Dictionary<string, float> ReputationRewards = new Dictionary<string, float>(); 
 
         public readonly int Commonness;
 
@@ -107,6 +115,8 @@ namespace Barotrauma
             Identifier = element.GetAttributeString("identifier", "");
             TextIdentifier = element.GetAttributeString("textidentifier", null) ?? Identifier;
 
+            tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
+
             Name        = TextManager.Get("MissionName." + TextIdentifier, true) ?? element.GetAttributeString("name", "");
             Description = TextManager.Get("MissionDescription." + TextIdentifier, true) ?? element.GetAttributeString("description", "");
             Reward      = element.GetAttributeInt("reward", 1);
@@ -149,6 +159,24 @@ namespace Barotrauma
                         AllowedLocationTypes.Add(new Pair<string, string>(
                             subElement.GetAttributeString("from", ""),
                             subElement.GetAttributeString("to", "")));
+                        break;
+                    case "reputation":
+                    case "reputationreward":
+                        string factionIdentifier = subElement.GetAttributeString("identifier", "");
+                        float amount = subElement.GetAttributeFloat("amount", 0.0f);
+                        if (ReputationRewards.ContainsKey(factionIdentifier))
+                        {
+                            DebugConsole.ThrowError($"Error in mission prefab \"{Identifier}\". Multiple reputation changes defined for the identifier \"{factionIdentifier}\".");
+                            continue;
+                        }
+                        ReputationRewards.Add(factionIdentifier, amount);
+                        if (!factionIdentifier.Equals("location", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (FactionPrefab.Prefabs != null && !FactionPrefab.Prefabs.Any(p => p.Identifier.Equals(factionIdentifier, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                DebugConsole.ThrowError($"Error in mission prefab \"{Identifier}\". Could not find a faction with the identifier \"{factionIdentifier}\".");
+                            }
+                        }
                         break;
                 }
             }

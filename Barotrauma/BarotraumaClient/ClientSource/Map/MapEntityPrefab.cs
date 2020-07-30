@@ -1,11 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     abstract partial class MapEntityPrefab : IPrefab, IDisposable
     {
+        public readonly Dictionary<string, List<DecorativeSprite>> UpgradeOverrideSprites = new Dictionary<string, List<DecorativeSprite>>();
+        
         public virtual void UpdatePlacing(Camera cam)
         {
             if (PlayerInput.SecondaryMouseButtonClicked())

@@ -53,6 +53,8 @@ namespace Barotrauma.Items.Components
 
         private bool? swapDestinationOrder;
 
+        private GUIMessageBox enterOutpostPrompt;
+
         private bool levelStartSelected;
         public bool LevelStartSelected
         {
@@ -105,10 +107,9 @@ namespace Barotrauma.Items.Components
                 }
             }
             CreateGUI();
-            GameMain.Instance.OnResolutionChanged += RecreateGUI;
         }
 
-        private void CreateGUI()
+        protected override void CreateGUI()
         {
             controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterLeft), "ItemUI");
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
@@ -220,11 +221,12 @@ namespace Barotrauma.Items.Components
             };
 
             levelEndTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.BottomCenter),
-                GameMain.GameSession?.EndLocation == null ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, textLimit),
+                (GameMain.GameSession?.EndLocation == null || Level.IsLoadedOutpost) ? "" : ToolBox.LimitString(GameMain.GameSession.EndLocation.Name, textLimit),
                 font: GUI.SmallFont, style: "GUIRadioButton")
             {
                 Enabled = autoPilot,
                 Selected = levelEndSelected,
+                Visible = GameMain.GameSession?.EndLocation != null,
                 OnSelected = tickBox =>
                 {
                     if (levelEndSelected != tickBox.Selected)
@@ -321,7 +323,7 @@ namespace Barotrauma.Items.Components
                         };
                         break;
                 }
-                new GUITextBlock(new RectTransform(Vector2.One, left.RectTransform), leftText, font: GUI.SubHeadingFont, wrap: true, textAlignment: Alignment.CenterRight);
+                new GUITextBlock(new RectTransform(Vector2.One, left.RectTransform), leftText, font: GUI.SubHeadingFont, wrap: leftText.Contains(' '), textAlignment: Alignment.CenterRight);
                 new GUITextBlock(new RectTransform(Vector2.One, center.RectTransform), centerText, font: GUI.Font, textAlignment: Alignment.Center) { Padding = Vector4.Zero };
                 var digitalFrame = new GUIFrame(new RectTransform(Vector2.One, right.RectTransform), style: "DigitalFrameDark");
                 new GUITextBlock(new RectTransform(Vector2.One * 0.85f, digitalFrame.RectTransform, Anchor.Center), "12345", GUI.Style.TextColorDark, GUI.DigitalFont, Alignment.CenterRight)
@@ -347,18 +349,47 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (GameMain.Client == null)
+
+                    if (GameMain.GameSession?.Campaign != null)
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        if (Level.IsLoadedOutpost &&
+                            DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
+                        {
+                            GameMain.GameSession.Campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
+                            GameMain.GameSession.Campaign.ShowCampaignUI = true;
+                            return false;
+                        }
+                        else if (!Level.IsLoadedOutpost && DockingModeEnabled && ActiveDockingSource != null &&
+                                !ActiveDockingSource.Docked && (DockingTarget?.Item?.Submarine?.Info.IsOutpost ?? false))
+                        {
+                            enterOutpostPrompt = new GUIMessageBox("", TextManager.GetWithVariable("campaignenteroutpostprompt", "[locationname]", DockingTarget.Item.Submarine.Info.Name), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                            enterOutpostPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                            {
+                                SendDockingSignal();
+                                enterOutpostPrompt.Close();
+                                return true;
+                            };
+                            enterOutpostPrompt.Buttons[1].OnClicked += enterOutpostPrompt.Close;
+                            return false;
+                        }
                     }
-                    else
-                    {
-                        dockingNetworkMessagePending = true;
-                        item.CreateClientEvent(this);
-                    }
+                    SendDockingSignal();
+
                     return true;
                 }
             };
+            void SendDockingSignal()
+            {
+                if (GameMain.Client == null)
+                {
+                    item.SendSignal(0, "1", "toggle_docking", sender: null);
+                }
+                else
+                {
+                    dockingNetworkMessagePending = true;
+                    item.CreateClientEvent(this);
+                }
+            }
             dockingButton.Font = GUI.SubHeadingFont;
             dockingButton.TextBlock.RectTransform.MaxSize = new Point((int)(dockingButton.Rect.Width * 0.7f), int.MaxValue);
             dockingButton.TextBlock.AutoScaleHorizontal = true;
@@ -413,10 +444,9 @@ namespace Barotrauma.Items.Components
                 GameMain.GameSession?.EndLocation == null ? "End" : GameMain.GameSession.EndLocation.Name);
         }
 
-        private void RecreateGUI()
+        protected override void OnResolutionChanged()
         {
-            GuiFrame.ClearChildren();
-            CreateGUI();
+            base.OnResolutionChanged();
             UpdateGUIElements();
         }
 
@@ -600,6 +630,10 @@ namespace Barotrauma.Items.Components
 
             dockingContainer.Visible = DockingModeEnabled;
             statusContainer.Visible = !DockingModeEnabled;
+            if (!DockingModeEnabled)
+            {
+                enterOutpostPrompt?.Close();
+            }
 
             if (DockingModeEnabled && ActiveDockingSource != null)
             {
@@ -612,6 +646,10 @@ namespace Barotrauma.Items.Components
                         dockingButton.Flash(GUI.Style.Blue, 0.5f, useCircularFlash: true);
                         dockingButton.Pulsate(Vector2.One, Vector2.One * 1.2f, dockingButton.FlashTimer);
                     }
+                }
+                else
+                {
+                    enterOutpostPrompt?.Close();
                 }
             }
             else if (DockingSources.Any(d => d.Docked))
@@ -663,7 +701,8 @@ namespace Barotrauma.Items.Components
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
-                if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsTabMenuOpen)
+                if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsTabMenuOpen && 
+                    (!GameMain.GameSession?.Campaign?.ShowCampaignUI ?? true) && !GUIMessageBox.MessageBoxes.Any())
                 {
                     Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                     inputPos.Y = -inputPos.Y;
@@ -800,8 +839,7 @@ namespace Barotrauma.Items.Components
             maintainPosIndicator?.Remove();
             maintainPosOriginIndicator?.Remove();
             steeringIndicator?.Remove();
-
-            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
+            enterOutpostPrompt?.Close();
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

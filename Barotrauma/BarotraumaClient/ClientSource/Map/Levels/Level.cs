@@ -22,7 +22,7 @@ namespace Barotrauma
 
             HashSet<Texture2D> uniqueTextures = new HashSet<Texture2D>();
             HashSet<Sprite> uniqueSprites = new HashSet<Sprite>();
-            var allLevelObjects = levelObjectManager.GetAllObjects();
+            var allLevelObjects = LevelObjectManager.GetAllObjects();
             foreach (var levelObj in allLevelObjects)
             {
                 foreach (Sprite sprite in levelObj.Prefab.Sprites)
@@ -56,7 +56,7 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.1f)
             {
-                foreach (InterestingPosition pos in positionsOfInterest)
+                foreach (InterestingPosition pos in PositionsOfInterest)
                 {
                     Color color = Color.Yellow;
                     if (pos.PositionType == PositionType.Cave)
@@ -71,7 +71,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Vector2(pos.Position.X - 15.0f, -pos.Position.Y - 15.0f), new Vector2(30.0f, 30.0f), color, true);
                 }
 
-                foreach (RuinGeneration.Ruin ruin in ruins)
+                foreach (RuinGeneration.Ruin ruin in Ruins)
                 {
                     Rectangle ruinArea = ruin.Area;
                     ruinArea.Y = -ruinArea.Y - ruinArea.Height;
@@ -113,7 +113,7 @@ namespace Barotrauma
         public void DrawBack(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam)
         {
             float brightness = MathHelper.Clamp(1.1f + (cam.Position.Y - Size.Y) / 100000.0f, 0.1f, 1.0f);
-            var lightColorHLS = generationParams.AmbientLightColor.RgbToHLS();
+            var lightColorHLS = GenerationParams.AmbientLightColor.RgbToHLS();
             lightColorHLS.Y *= brightness;
 
             GameMain.LightManager.AmbientLight = ToolBox.HLSToRGB(lightColorHLS);
@@ -121,12 +121,12 @@ namespace Barotrauma
             graphics.Clear(BackgroundColor);
 
             if (renderer == null) return;
-            renderer.DrawBackground(spriteBatch, cam, levelObjectManager, backgroundCreatureManager);
+            renderer.DrawBackground(spriteBatch, cam, LevelObjectManager, backgroundCreatureManager);
         }
         
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
-            foreach (LevelWall levelWall in extraWalls)
+            foreach (LevelWall levelWall in ExtraWalls)
             {
                 if (levelWall.Body.BodyType == BodyType.Static) continue;
 

@@ -38,7 +38,8 @@ namespace Barotrauma
             LessThan,
             LessThanEquals,
             GreaterThan,
-            GreaterThanEquals
+            GreaterThanEquals,
+            None
         }
 
         public readonly ConditionType Type;
@@ -90,48 +91,19 @@ namespace Barotrauma
                     valueString = splitString[i] + (i > 1 && i < splitString.Length ? " " : "");
                 }
             }
-            //thanks xml for not letting me use < or > in attributes :(
             string op = splitString[0];
-            switch (op)
+            OperatorType operatorType = GetOperatorType(op);
+
+            if (operatorType != OperatorType.None)
             {
-                case "e":
-                case "eq":
-                case "equals":
-                    Operator = OperatorType.Equals;
-                    break;
-                case "ne":
-                case "neq":
-                case "notequals":
-                case "!":
-                case "!e":
-                case "!eq":
-                case "!equals":
-                    Operator = OperatorType.NotEquals;
-                    break;
-                case "gt":
-                case "greaterthan":
-                    Operator = OperatorType.GreaterThan;
-                    break;
-                case "lt":
-                case "lessthan":
-                    Operator = OperatorType.LessThan;
-                    break;
-                case "gte":
-                case "gteq":
-                case "greaterthanequals":
-                    Operator = OperatorType.GreaterThanEquals;
-                    break;
-                case "lte":
-                case "lteq":
-                case "lessthanequals":
-                    Operator = OperatorType.LessThanEquals;
-                    break;
-                default:
-                    if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
-                    {
-                        valueString = attributeValueString; //We probably don't even have an operator
-                    }
-                    break;
+                Operator = operatorType;
+            }
+            else
+            {
+                if (op != "==" && op != "!=" && op != ">" && op != "<" && op != ">=" && op != "<=") //Didn't use escape strings or anything
+                {
+                    valueString = attributeValueString; //We probably don't even have an operator
+                }
             }
 
             TargetItemComponentName = attribute.Parent.GetAttributeString("targetitemcomponent", "");
@@ -168,6 +140,42 @@ namespace Barotrauma
             if (float.TryParse(AttributeValue, NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
             {
                 FloatValue = value;
+            }
+        }
+
+        public static OperatorType GetOperatorType(string op)
+        {
+            //thanks xml for not letting me use < or > in attributes :(
+            switch (op)
+            {
+                case "e":
+                case "eq":
+                case "equals":
+                    return OperatorType.Equals;
+                case "ne":
+                case "neq":
+                case "notequals":
+                case "!":
+                case "!e":
+                case "!eq":
+                case "!equals":
+                    return OperatorType.NotEquals;
+                case "gt":
+                case "greaterthan":
+                    return OperatorType.GreaterThan;
+                case "lt":
+                case "lessthan":
+                    return OperatorType.LessThan;
+                case "gte":
+                case "gteq":
+                case "greaterthanequals":
+                    return OperatorType.GreaterThanEquals;
+                case "lte":
+                case "lteq":
+                case "lessthanequals":
+                    return OperatorType.LessThanEquals;
+                default:
+                    return OperatorType.None;
             }
         }
 

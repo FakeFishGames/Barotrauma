@@ -30,6 +30,61 @@ namespace Barotrauma
             set { selectedShuttle = value; lastUpdateID++; }
         }
 
+        public List<SubmarineInfo> CampaignSubmarines
+        {
+            get
+            {
+                return campaignSubmarines;
+            }
+            set
+            {
+                campaignSubmarines = value;
+                lastUpdateID++;
+                if (GameMain.NetworkMember?.ServerSettings != null)
+                {
+                    GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
+                }
+            }
+        }
+
+        private List<SubmarineInfo> campaignSubmarines;       
+
+        public void AddCampaignSubmarine(SubmarineInfo sub)
+        {
+            if (!campaignSubmarines.Contains(sub))
+            {
+                campaignSubmarines.Add(sub);
+            }
+            else
+            {
+                return;
+            }
+
+            lastUpdateID++;
+            if (GameMain.NetworkMember?.ServerSettings != null)
+            {
+                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
+            }
+        }
+
+        public void RemoveCampaignSubmarine(SubmarineInfo sub)
+        {
+            if (campaignSubmarines.Contains(sub))
+            {
+                campaignSubmarines.Remove(sub);
+            }
+            else
+            {
+                return;
+            }
+
+            lastUpdateID++;
+            if (GameMain.NetworkMember?.ServerSettings != null)
+            {
+                GameMain.NetworkMember.ServerSettings.ServerDetailsChanged = true;
+            }
+        }
+
         public GameModePreset[] GameModes { get; }
 
         private int selectedModeIndex;
@@ -40,6 +95,10 @@ namespace Barotrauma
             {
                 lastUpdateID++;
                 selectedModeIndex = MathHelper.Clamp(value, 0, GameModes.Length - 1);
+                if (SelectedMode != GameModePreset.MultiPlayerCampaign && GameMain.GameSession?.GameMode is CampaignMode && Selected == this)
+                {
+                    GameMain.GameSession = null;
+                }
                 if (GameMain.NetworkMember?.ServerSettings != null)
                 {
                     GameMain.NetworkMember.ServerSettings.GameModeIdentifier = SelectedModeIdentifier;
@@ -121,7 +180,7 @@ namespace Barotrauma
         {
             LevelSeed = ToolBox.RandomSeed(8);
 
-            subs = SubmarineInfo.SavedSubmarines.Where(s => !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+            subs = SubmarineInfo.SavedSubmarines.Where(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)).ToList();
 
             if (subs == null || subs.Count() == 0)
             {
@@ -176,7 +235,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < GameModes.Length; i++)
             {
-                if ((GameModes[i].Identifier == "multiplayercampaign") == enabled)
+                if ((GameModes[i] == GameModePreset.MultiPlayerCampaign) == enabled)
                 {
                     selectedModeIndex = i;
                     break;
@@ -190,6 +249,10 @@ namespace Barotrauma
         {
             base.Select();
             GameMain.Server.ServerSettings.Voting.ResetVotes(GameMain.Server.ConnectedClients);
+            if (SelectedMode != GameModePreset.MultiPlayerCampaign && GameMain.GameSession?.GameMode is CampaignMode && Selected == this)
+            {
+                GameMain.GameSession = null;
+            }
         }
 
         public void RandomizeSettings()
@@ -203,7 +266,7 @@ namespace Barotrauma
             }
             if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)
             {
-                var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m.Identifier != "multiplayercampaign");
+                var allowedGameModes = Array.FindAll(GameModes, m => !m.IsSinglePlayer && m != GameModePreset.MultiPlayerCampaign);
                 SelectedModeIdentifier = allowedGameModes[Rand.Range(0, allowedGameModes.Length)].Identifier;
             }
         }

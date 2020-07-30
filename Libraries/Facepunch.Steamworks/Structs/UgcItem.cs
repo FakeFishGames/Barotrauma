@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Steamworks.Data;
 
@@ -37,6 +38,11 @@ namespace Steamworks.Ugc
 		/// A list of tags for this item, all lowercase
 		/// </summary>
 		public string[] Tags { get; internal set; }
+
+		/// <summary>
+		/// A dictionary of key value tags for this item, only available from queries WithKeyValueTags(true)
+		/// </summary>
+		public Dictionary<string,string> KeyValueTags { get; internal set; }
 
 		/// <summary>
 		/// App Id of the app that created this item
@@ -125,7 +131,7 @@ namespace Steamworks.Ugc
 
 		/// <summary>
 		/// Start downloading this item.
-		/// If this returns false the item isn#t getting downloaded.
+		/// If this returns false the item isn't getting downloaded.
 		/// </summary>
 		public bool Download( Action onInstalled = null, bool highPriority = false )
 		{
@@ -182,8 +188,7 @@ namespace Steamworks.Ugc
 
 				ulong size = 0;
 				uint ts = 0;
-
-				if ( !SteamUGC.Internal.GetItemInstallInfo( Id, ref size, out var strVal, ref ts ) )
+				if ( !SteamUGC.Internal.GetItemInstallInfo( Id, ref size, out _, ref ts ) )
 					return 0;
 
 				return (long) size;
@@ -197,7 +202,9 @@ namespace Steamworks.Ugc
 		{
 			get
 			{
-				if ( !NeedsUpdate ) return 1;
+				//changed from NeedsUpdate as it's false when validating and redownloading ugc
+				//possibly similar properties should also be changed
+				if ( !IsDownloading ) return 1;
 
 				ulong downloaded = 0;
 				ulong total = 0;
@@ -215,10 +222,18 @@ namespace Steamworks.Ugc
 
 		public static async Task<Item?> GetAsync( PublishedFileId id, int maxageseconds = 60 * 30 )
 		{
-			var result = await SteamUGC.Internal.RequestUGCDetails( id, (uint) maxageseconds );
-			if ( !result.HasValue ) return null;
+			var file = await Steamworks.Ugc.Query.All
+											.WithFileId( id )
+											.WithLongDescription( true )
+											.GetPageAsync( 1 );
 
-			return From( result.Value.Details );
+			if ( !file.HasValue ) return null;
+			using ( file.Value )
+			{
+				if ( file.Value.ResultCount == 0 ) return null;
+
+				return file.Value.Entries.First();
+			}
 		}
 
 		internal static Item From( SteamUGCDetails_t details )
@@ -254,28 +269,67 @@ namespace Steamworks.Ugc
             return result?.Result == Result.OK;
         }
 
-        /// <summary>
-        /// Allows the user to unsubscribe from this item
-        /// </summary>
-        public async Task<bool> Unsubscribe ()
+		/// <summary>
+		/// Allows the user to subscribe to download this item asyncronously
+		/// If CancellationToken is default then there is 60 seconds timeout
+		/// Progress will be set to 0-1
+		/// </summary>
+		public async Task<bool> DownloadAsync( Action<float> progress = null, int milisecondsUpdateDelay = 60, CancellationToken ct = default )
+		{
+			return await SteamUGC.DownloadAsync( Id, progress, milisecondsUpdateDelay, ct );
+		}
+
+		/// <summary>
+		/// Allows the user to unsubscribe from this item
+		/// </summary>
+		public async Task<bool> Unsubscribe ()
         {
             var result = await SteamUGC.Internal.UnsubscribeItem( _id );
             return result?.Result == Result.OK;
         }
 
         /// <summary>
+        /// Adds item to user favorite list
+        /// </summary>
+	    public async Task<bool> AddFavorite()
+	    {
+	        var result = await SteamUGC.Internal.AddItemToFavorites(details.ConsumerAppID, _id);
+	        return result?.Result == Result.OK;
+	    }
+
+	    /// <summary>
+	    /// Removes item from user favorite list
+	    /// </summary>
+        public async Task<bool> RemoveFavorite()
+	    {
+	        var result = await SteamUGC.Internal.RemoveItemFromFavorites(details.ConsumerAppID, _id);
+	        return result?.Result == Result.OK;
+	    }
+
+        /// <summary>
         /// Allows the user to rate a workshop item up or down.
         /// </summary>
-        public async Task<bool> Vote( bool up )
+        public async Task<Result?> Vote( bool up )
 		{
 			var r = await SteamUGC.Internal.SetUserItemVote( Id, up );
-			return r?.Result == Result.OK;
+			return r?.Result;
 		}
 
-		/// <summary>
-		/// Return a URL to view this item online
-		/// </summary>
-		public string Url => $"http://steamcommunity.com/sharedfiles/filedetails/?source=Facepunch.Steamworks&id={Id}";
+        /// <summary>
+        /// Gets the current users vote on the item
+        /// </summary>
+	    public async Task<UserItemVote?> GetUserVote()
+	    {
+	        var result = await SteamUGC.Internal.GetUserItemVote(_id);
+	        if (!result.HasValue)
+	            return null;
+	        return UserItemVote.From(result.Value);
+	    }
+
+        /// <summary>
+        /// Return a URL to view this item online
+        /// </summary>
+        public string Url => $"http://steamcommunity.com/sharedfiles/filedetails/?source=Facepunch.Steamworks&id={Id}";
 
 		/// <summary>
 		/// The URl to view this item's changelog
@@ -311,10 +365,15 @@ namespace Steamworks.Ugc
 		public ulong NumSecondsPlayedDuringTimePeriod { get; internal set; }
 		public ulong NumPlaytimeSessionsDuringTimePeriod { get; internal set; }
 
-        /// <summary>
-        /// The URL to the preview image for this item
-        /// </summary>
-        public string PreviewImageUrl { get; internal set; }
+		/// <summary>
+		/// The URL to the preview image for this item
+		/// </summary>
+		public string PreviewImageUrl { get; internal set; }
+
+		/// <summary>
+		/// The metadata string for this item, only available from queries WithMetadata(true)
+		/// </summary>
+		public string Metadata { get; internal set; }
 
 		/// <summary>
 		/// Edit this item
@@ -323,6 +382,7 @@ namespace Steamworks.Ugc
 		{
 			return new Ugc.Editor( Id );
 		}
+		
+		public Result Result => details.Result;
 	}
-
 }

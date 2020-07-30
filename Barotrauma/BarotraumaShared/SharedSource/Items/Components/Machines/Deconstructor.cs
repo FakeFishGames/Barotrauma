@@ -23,6 +23,11 @@ namespace Barotrauma.Items.Components
         {
             get { return outputContainer; }
         }
+        
+        [Editable, Serialize(1.0f, true)]
+        public float DeconstructionSpeed { get; set; }
+
+        public override bool RecreateGUIOnResolutionChange => true;
 
         public Deconstructor(Item item, XElement element)
             : base(item, element)
@@ -77,7 +82,7 @@ namespace Barotrauma.Items.Components
             var targetItem = inputContainer.Inventory.Items.LastOrDefault(i => i != null);
             if (targetItem == null) { return; }
 
-            float deconstructTime = targetItem.Prefab.DeconstructItems.Any() ? targetItem.Prefab.DeconstructTime : 1.0f;
+            float deconstructTime = targetItem.Prefab.DeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / DeconstructionSpeed : 1.0f;
 
             progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
             if (progressTimer > deconstructTime)

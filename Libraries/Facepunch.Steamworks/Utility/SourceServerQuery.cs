@@ -13,27 +13,82 @@ namespace Steamworks
 	{
 		private static readonly byte[] A2S_SERVERQUERY_GETCHALLENGE = { 0x55, 0xFF, 0xFF, 0xFF, 0xFF };
 		//      private static readonly byte A2S_PLAYER = 0x55;
-		private static readonly byte A2S_RULES = 0x56;
+		private const byte A2S_RULES = 0x56;
 
-		internal static async Task<Dictionary<string, string>> GetRules( ServerInfo server )
-		{
-			try
+        private static readonly Dictionary<IPEndPoint, Task<Dictionary<string, string>>> PendingQueries =
+            new Dictionary<IPEndPoint, Task<Dictionary<string, string>>>();
+
+		private static HashSet<int> activeRequests = new HashSet<int>();
+		private static int lastRequestId = 0;
+
+		internal static Task<Dictionary<string, string>> GetRules( ServerInfo server )
+        {
+			var endpoint = new IPEndPoint(server.Address, server.QueryPort);
+
+            lock (PendingQueries)
+            {
+                if (PendingQueries.TryGetValue(endpoint, out var pending))
+                    return pending;
+
+                var task = GetRulesImpl( endpoint )
+                    .ContinueWith(t =>
+                    {
+                        lock (PendingQueries)
+                        {
+                            PendingQueries.Remove(endpoint);
+                        }
+
+                        return t;
+                    })
+                    .Unwrap();
+
+                PendingQueries.Add(endpoint, task);
+                return task;
+            }
+        }
+
+		private static async Task<Dictionary<string, string>> GetRulesImpl( IPEndPoint endpoint )
+        {
+			int currId;
+			lock (activeRequests)
 			{
-				var endpoint = new IPEndPoint( server.Address, server.QueryPort );
-
-				using ( var client = new UdpClient() )
-				{
-					client.Client.SendTimeout = 3000;
-					client.Client.ReceiveTimeout = 3000;
-					client.Connect( endpoint );
-
-					return await GetRules( client );
-				}
+				lastRequestId++;
+				currId = lastRequestId;
+				activeRequests.Add(currId);
 			}
-			catch ( System.Exception e )
+
+			try
+            {
+				await Task.Yield();
+				while (true)
+				{
+					lock (activeRequests)
+					{
+						if (!activeRequests.Any() || (currId - activeRequests.Min()) < 25) { break; }
+					}
+					await Task.Delay(25);
+				}
+
+				using (var client = new UdpClient())
+                {
+                    client.Client.SendTimeout = 3000;
+                    client.Client.ReceiveTimeout = 3000;
+                    client.Connect(endpoint);
+
+                    return await GetRules(client);
+                }
+            }
+            catch (System.Exception)
+            {
+                //Console.Error.WriteLine( e.Message );
+                return null;
+            }
+			finally
 			{
-				Console.Error.WriteLine( e.Message );
-				return null;
+				lock (activeRequests)
+				{
+					activeRequests.Remove(currId);
+				}
 			}
 		}
 
@@ -54,14 +109,14 @@ namespace Steamworks
 				var numRules = br.ReadUInt16();
 				for ( int index = 0; index < numRules; index++ )
 				{
-					rules.Add( br.ReadNullTerminatedUTF8String( readBuffer ), br.ReadNullTerminatedUTF8String( readBuffer ) );
+					rules.Add( br.ReadNullTerminatedUTF8String(), br.ReadNullTerminatedUTF8String() );
 				}
 			}
 
 			return rules;
 		}
 
-		static byte[] readBuffer = new byte[1024 * 8];
+
 
 		static async Task<byte[]> Receive( UdpClient client )
 		{
@@ -70,8 +125,13 @@ namespace Steamworks
 
 			do
 			{
-				var result = await client.ReceiveAsync();
-				var buffer = result.Buffer;
+				Task<UdpReceiveResult> result = client.ReceiveAsync();
+				await Task.WhenAny(result, Task.Delay(3000));
+				if (!result.IsCompleted)
+				{
+					throw new Exception("Receive timed out");
+				}
+				var buffer = result.Result.Buffer;
 
 				using ( var br = new BinaryReader( new MemoryStream( buffer ) ) )
 				{
@@ -120,10 +180,10 @@ namespace Steamworks
 			return challengeData;
 		}
 
-		static byte[] sendBuffer = new byte[1024];
-
 		static async Task Send( UdpClient client, byte[] message )
 		{
+			var sendBuffer = new byte[message.Length + 4];
+
 			sendBuffer[0] = 0xFF;
 			sendBuffer[1] = 0xFF;
 			sendBuffer[2] = 0xFF;

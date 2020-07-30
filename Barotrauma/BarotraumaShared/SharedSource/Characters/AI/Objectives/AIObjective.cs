@@ -31,6 +31,7 @@ namespace Barotrauma
         public virtual bool KeepDivingGearOn => false;
         public virtual bool UnequipItems => false;
         public virtual bool AllowOutsideSubmarine => false;
+        public virtual bool AllowInFriendlySubs => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         private float _cumulatedDevotion;
@@ -46,6 +47,8 @@ namespace Barotrauma
         /// Final priority value after all calculations.
         /// </summary>
         public float Priority { get; set; }
+        public float BasePriority { get; set; }
+
         public float PriorityModifier { get; private set; } = 1;
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
@@ -182,7 +185,18 @@ namespace Barotrauma
             }
         }
 
-        protected bool IsAllowed => AllowOutsideSubmarine || character.Submarine != null && character.Submarine.TeamID == character.TeamID && character.Submarine.Info.IsPlayer;
+        protected bool IsAllowed
+        {
+            get 
+            { 
+                if (AllowOutsideSubmarine) { return true; }
+                if (character.Submarine == null) { return false; }
+                return 
+                    character.Submarine.TeamID == character.TeamID || 
+                    (AllowInFriendlySubs && character.Submarine.TeamID == Character.TeamType.FriendlyNPC) || 
+                    character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
+            }
+        }
 
         /// <summary>
         /// Call this only when the priority needs to be recalculated. Use the cached Priority property when you don't need to recalculate.
@@ -200,7 +214,7 @@ namespace Barotrauma
             }
             else
             {
-                Priority = CumulatedDevotion;
+                Priority = BasePriority + CumulatedDevotion;
             }
             return Priority;
         }
@@ -336,7 +350,12 @@ namespace Barotrauma
             }
             protected set
             {
+                if (isCompleted == value) { return; }
                 isCompleted = value;
+                if (isCompleted)
+                {
+                    OnCompleted();
+                }
             }
         }
 
@@ -346,7 +365,7 @@ namespace Barotrauma
         {
             hasBeenChecked = true;
             CheckSubObjectives();
-            if (subObjectives.None())
+            if (subObjectives.None() || ConcurrentObjectives && subObjectives.All(so => so is AIObjectiveGoTo))
             {
                 if (Check())
                 {

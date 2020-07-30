@@ -130,6 +130,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         public Sonar(Item item, XElement element)
             : base(item, element)
         {
@@ -230,7 +232,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return currentPingIndex != -1;
+            return currentPingIndex != -1 && (character == null || characterUsable);
         }
 
         private static readonly Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();

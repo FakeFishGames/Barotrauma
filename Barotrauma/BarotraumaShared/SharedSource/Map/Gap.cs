@@ -65,7 +65,19 @@ namespace Barotrauma
 
         public float Size => IsHorizontal ? Rect.Height : Rect.Width;
 
-        public Door ConnectedDoor;
+        private Door connectedDoor;
+        public Door ConnectedDoor
+        {
+            get
+            {
+                if (connectedDoor != null && connectedDoor.Item.Removed)
+                {
+                    connectedDoor = null;
+                }
+                return connectedDoor;
+            }
+            set { connectedDoor = value; }
+        }
 
         public Structure ConnectedWall;
 
@@ -719,9 +731,12 @@ namespace Barotrauma
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";
             }
 
-            Gap g = new Gap(rect, isHorizontal, submarine);
-            g.ID = (ushort)int.Parse(element.Attribute("ID").Value);            
-            g.linkedToID = new List<ushort>();
+            Gap g = new Gap(rect, isHorizontal, submarine)
+            {
+                ID = (ushort)int.Parse(element.Attribute("ID").Value),
+                linkedToID = new List<ushort>(),
+            };
+            g.OriginalID = g.ID;
             return g;
         }
 

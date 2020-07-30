@@ -376,7 +376,7 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (!engineer_brokenJunctionBox.IsFullCondition); // Wait until repaired
+            } while (engineer_brokenJunctionBox.Condition < repairableJunctionBoxComponent.RepairThreshold); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(segments[2]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
@@ -408,15 +408,20 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(4); // Repair junction box
             while (ContentRunning) yield return null;
-            SetHighlight(engineer_submarineJunctionBox_1, true);
-            SetHighlight(engineer_submarineJunctionBox_2, true);
-            SetHighlight(engineer_submarineJunctionBox_3, true);
             engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_1, engineer_repairIcon, engineer_repairIconColor);
             engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_2, engineer_repairIcon, engineer_repairIconColor);
             engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_3, engineer_repairIcon, engineer_repairIconColor);
+            SetHighlight(engineer_submarineJunctionBox_1, true);
+            SetHighlight(engineer_submarineJunctionBox_2, true);
+            SetHighlight(engineer_submarineJunctionBox_3, true);
+
+            Repairable repairableJunctionBoxComponent1 = engineer_submarineJunctionBox_1.GetComponent<Repairable>();
+            Repairable repairableJunctionBoxComponent2 = engineer_submarineJunctionBox_2.GetComponent<Repairable>();
+            Repairable repairableJunctionBoxComponent3 = engineer_submarineJunctionBox_3.GetComponent<Repairable>();
+
             // Remove highlights when each individual machine is repaired
-            do { CheckJunctionBoxHighlights(); yield return null; } while (!engineer_submarineJunctionBox_1.IsFullCondition || !engineer_submarineJunctionBox_2.IsFullCondition || !engineer_submarineJunctionBox_3.IsFullCondition);
-            CheckJunctionBoxHighlights();
+            do { CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3); yield return null; } while (engineer_submarineJunctionBox_1.Condition < repairableJunctionBoxComponent1.RepairThreshold || engineer_submarineJunctionBox_2.Condition < repairableJunctionBoxComponent2.RepairThreshold || engineer_submarineJunctionBox_3.Condition < repairableJunctionBoxComponent3.RepairThreshold);
+            CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3);
             RemoveCompletedObjective(segments[4]);
             yield return new WaitForSeconds(2f, false);
 
@@ -557,19 +562,19 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        private void CheckJunctionBoxHighlights()
+        private void CheckJunctionBoxHighlights(Repairable comp1, Repairable comp2, Repairable comp3)
         {
-            if (engineer_submarineJunctionBox_1.IsFullCondition && engineer_submarineJunctionBox_1.ExternalHighlight)
+            if (engineer_submarineJunctionBox_1.Condition > comp1.RepairThreshold && engineer_submarineJunctionBox_1.ExternalHighlight)
             {
                 SetHighlight(engineer_submarineJunctionBox_1, false);
                 engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_1);
             }
-            if (engineer_submarineJunctionBox_2.IsFullCondition && engineer_submarineJunctionBox_2.ExternalHighlight)
+            if (engineer_submarineJunctionBox_2.Condition > comp2.RepairThreshold && engineer_submarineJunctionBox_2.ExternalHighlight)
             {
                 SetHighlight(engineer_submarineJunctionBox_2, false);
                 engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_2);
             }
-            if (engineer_submarineJunctionBox_3.IsFullCondition && engineer_submarineJunctionBox_3.ExternalHighlight)
+            if (engineer_submarineJunctionBox_3.Condition > comp3.RepairThreshold && engineer_submarineJunctionBox_3.ExternalHighlight)
             {
                 SetHighlight(engineer_submarineJunctionBox_3, false);
                 engineer.RemoveActiveObjectiveEntity(engineer_submarineJunctionBox_3);

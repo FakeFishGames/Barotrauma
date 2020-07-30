@@ -136,6 +136,7 @@ namespace Barotrauma
                 {
                     if (Owner == c.Character)
                     {
+                        HumanAIController.ItemTaken(item, c.Character);
                         GameServer.Log(GameServer.CharacterLogName(c.Character) + " picked up " + item.Name, ServerLog.MessageType.Inventory);
                     }
                     else

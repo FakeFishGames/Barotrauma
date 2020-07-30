@@ -69,12 +69,19 @@ namespace Barotrauma
 
         static void CrashDump(string filePath, Exception exception)
         {
-            GameMain.Server?.ServerSettings?.SaveSettings();
-            GameMain.Server?.ServerSettings?.BanList.Save();
-            if (GameMain.Server?.ServerSettings?.KarmaPreset == "custom")
+            try
             {
-                GameMain.Server?.KarmaManager?.SaveCustomPreset();
-                GameMain.Server?.KarmaManager?.Save();
+                GameMain.Server?.ServerSettings?.SaveSettings();
+                GameMain.Server?.ServerSettings?.BanList.Save();
+                if (GameMain.Server?.ServerSettings?.KarmaPreset == "custom")
+                {
+                    GameMain.Server?.KarmaManager?.SaveCustomPreset();
+                    GameMain.Server?.KarmaManager?.Save();
+                }
+            }
+            catch (Exception e)
+            {
+                //couldn't save, whatever
             }
 
             int existingFiles = 0;
@@ -146,11 +153,11 @@ namespace Barotrauma
             {
                 GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
                 GameAnalytics.OnQuit();
-                Console.Write("A crash report (\"crashreport.log\") was saved in the root folder of the game and sent to the developers.");
+                Console.Write("A crash report (\"servercrashreport.log\") was saved in the root folder of the game and sent to the developers.");
             }
             else
             {
-                Console.Write("A crash report(\"crashreport.log\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
+                Console.Write("A crash report(\"servercrashreport.log\") was saved in the root folder of the game. The error was not sent to the developers because user statistics have been disabled, but" +
                     " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/");
             }
             SteamManager.ShutDown();

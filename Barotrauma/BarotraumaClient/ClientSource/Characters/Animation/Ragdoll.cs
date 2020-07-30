@@ -268,7 +268,7 @@ namespace Barotrauma
             }
             else if (body.UserData is Limb || body == Collider.FarseerBody)
             {
-                if (!character.IsRemotePlayer && impact > ImpactTolerance)
+                if (!character.IsRemotelyControlled && impact > ImpactTolerance)
                 {
                     SoundPlayer.PlayDamageSound("LimbBlunt", strongestImpact, Collider);
                 }
@@ -460,21 +460,14 @@ namespace Barotrauma
         /// </summary>
         public float GetDepthOffset()
         {
+            float maxDepth = 0.0f;
+            float minDepth = 1.0f;
             float depthOffset = 0.0f;
             var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
+            
             if (ladder != null)
             {
-                float maxDepth = 0.0f;
-                float minDepth = 1.0f;
-                foreach (Limb limb in Limbs)
-                {
-                    var activeSprite = limb.ActiveSprite;
-                    if (activeSprite != null)
-                    {
-                        maxDepth = Math.Max(activeSprite.Depth, maxDepth);
-                        minDepth = Math.Min(activeSprite.Depth, minDepth);
-                    }
-                }
+                CalculateLimbDepths();
                 if (character.WorldPosition.X < character.SelectedConstruction.WorldPosition.X)
                 {
                     //at the left side of the ladder, needs to be drawn in front of the rungs
@@ -486,6 +479,36 @@ namespace Barotrauma
                     depthOffset = Math.Max(ladder.BackgroundSpriteDepth + 0.01f - minDepth, 0.0f);
                 }
             }
+            else
+            {
+                CalculateLimbDepths();
+                var controller = character.SelectedConstruction?.GetComponent<Controller>();
+                if (controller != null && controller.ControlCharacterPose && controller.User == character)
+                {
+                    if (controller.Item.SpriteDepth > maxDepth)
+                    {
+                        depthOffset = Math.Max(controller.Item.SpriteDepth - 0.0001f - maxDepth, 0.0f);
+                    }
+                    else
+                    {
+                        depthOffset = Math.Max(controller.Item.SpriteDepth + 0.0001f - minDepth, -minDepth);
+                    }
+                }
+            }
+
+            void CalculateLimbDepths()
+            {
+                foreach (Limb limb in Limbs)
+                {
+                    var activeSprite = limb.ActiveSprite;
+                    if (activeSprite != null)
+                    {
+                        maxDepth = Math.Max(activeSprite.Depth, maxDepth);
+                        minDepth = Math.Min(activeSprite.Depth, minDepth);
+                    }
+                }
+            }
+
             return depthOffset;
         }
 
@@ -498,10 +521,15 @@ namespace Barotrauma
             {
                 if (limb.PullJointEnabled)
                 {
-                    Vector2 pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorA);
+                    Vector2 pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorB);
                     if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
                     GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), GUI.Style.Red, true, 0.01f);
+
+                    pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorA);
+                    if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
+                    pos.Y = -pos.Y;
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), Color.Cyan, true, 0.01f);
                 }
 
                 limb.body.DebugDraw(spriteBatch, inWater ? (currentHull == null ? Color.Blue : Color.Cyan) : Color.White);

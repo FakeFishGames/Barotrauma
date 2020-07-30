@@ -163,7 +163,8 @@ namespace Barotrauma
             position = Vector2.Zero;
 
             CreateMatrices();
-            GameMain.Instance.OnResolutionChanged += () => { CreateMatrices(); };
+            // TODO: Needs to unregister if ever destroy cameras.
+            GameMain.Instance.ResolutionChanged += CreateMatrices;
 
             UpdateTransform(false);
         }
@@ -260,27 +261,30 @@ namespace Barotrauma
             if (targetPos == Vector2.Zero)
             {
                 Vector2 moveInput = Vector2.Zero;
-                if (allowMove && GUI.KeyboardDispatcher.Subscriber == null)
+                if (allowMove)
                 {
-                    if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
-                    if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
-
-                    if (GameMain.Config.KeyBind(InputType.Left).IsDown())   moveInput.X -= 1.0f;
-                    if (GameMain.Config.KeyBind(InputType.Right).IsDown())  moveInput.X += 1.0f;
-                    if (GameMain.Config.KeyBind(InputType.Down).IsDown())   moveInput.Y -= 1.0f;
-                    if (GameMain.Config.KeyBind(InputType.Up).IsDown())     moveInput.Y += 1.0f;
-                }
-
-                velocity = Vector2.Lerp(velocity, moveInput, deltaTime * 10.0f);
-                moveCam = velocity * moveSpeed * deltaTime * 60.0f;
-                
-                if (Screen.Selected == GameMain.GameScreen && FollowSub)
-                {
-                    var closestSub = Submarine.FindClosest(WorldViewCenter);
-                    if (closestSub != null)
+                    if (GUI.KeyboardDispatcher.Subscriber == null)
                     {
-                        moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(closestSub.Velocity * deltaTime);
+                        if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
+                        if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
+
+                        if (GameMain.Config.KeyBind(InputType.Left).IsDown()) moveInput.X -= 1.0f;
+                        if (GameMain.Config.KeyBind(InputType.Right).IsDown()) moveInput.X += 1.0f;
+                        if (GameMain.Config.KeyBind(InputType.Down).IsDown()) moveInput.Y -= 1.0f;
+                        if (GameMain.Config.KeyBind(InputType.Up).IsDown()) moveInput.Y += 1.0f;
                     }
+
+                    velocity = Vector2.Lerp(velocity, moveInput, deltaTime * 10.0f);
+                    moveCam = velocity * moveSpeed * deltaTime * 60.0f;
+
+                    if (Screen.Selected == GameMain.GameScreen && FollowSub)
+                    {
+                        var closestSub = Submarine.FindClosest(WorldViewCenter);
+                        if (closestSub != null)
+                        {
+                            moveCam += FarseerPhysics.ConvertUnits.ToDisplayUnits(closestSub.Velocity * deltaTime);
+                        }
+                    }                    
                 }
                  
                 if (allowZoom && GUI.MouseOn == null)
@@ -311,7 +315,7 @@ namespace Barotrauma
                 {
                     Freeze = true;
                 }
-                if (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen)
+                if (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen || ConversationAction.IsDialogOpen)
                 {
                     offset *= 0;
                     Freeze = false;

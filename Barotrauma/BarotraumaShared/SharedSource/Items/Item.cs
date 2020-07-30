@@ -167,6 +167,22 @@ namespace Barotrauma
             set;
         }
 
+        private float rotation;
+
+        [Editable(0.0f, 360.0f, DecimalCount = 1, ValueStep = 1f), Serialize(0.0f, true)]
+        public float Rotation
+        {
+            get
+            {
+                return MathHelper.ToDegrees(rotation);
+            }
+            set
+            {
+                if (!Prefab.AllowRotatingInEditor) { return; }
+                rotation = MathHelper.ToRadians(value);
+            }
+        }
+
         public float ImpactTolerance
         {
             get { return Prefab.ImpactTolerance; }
@@ -359,9 +375,30 @@ namespace Barotrauma
         }
 
         public bool IsFullCondition => MathUtils.NearlyEqual(Condition, MaxCondition);
-        public float MaxCondition => Prefab.Health;
+        public float MaxCondition => Prefab.Health * healthMultiplier;
         public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
 
+        private float offsetOnSelectedMultiplier = 1.0f;
+        
+        [Serialize(1.0f, false)]
+        public float OffsetOnSelectedMultiplier
+        {
+            get => offsetOnSelectedMultiplier;
+            set => offsetOnSelectedMultiplier = value;
+        }
+        
+        private float healthMultiplier = 1.0f;
+
+        [Serialize(1.0f, true, "Multiply the maximum condition by this value")]
+        public float HealthMultiplier
+        {
+            get => healthMultiplier;
+            set
+            {
+                healthMultiplier = value;
+            }
+        }
+        
         //the default value should be Prefab.Health, but because we can't use it in the attribute, 
         //we'll just use NaN (which does nothing) and set the default value in the constructor/load
         [Serialize(float.NaN, false), Editable]
@@ -379,7 +416,7 @@ namespace Barotrauma
                 float prev = condition;
                 bool wasInFullCondition = IsFullCondition;
 
-                condition = MathHelper.Clamp(value, 0.0f, Prefab.Health);
+                condition = MathHelper.Clamp(value, 0.0f, MaxCondition);
                 if (condition == 0.0f && prev > 0.0f)
                 {
 #if CLIENT
@@ -406,7 +443,7 @@ namespace Barotrauma
                         conditionUpdatePending = true;
                         isActive = true;
                     }
-                    else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= Prefab.Health))
+                    else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= MaxCondition))
                     {
                         sendConditionUpdateTimer = 0.0f;
                         conditionUpdatePending = true;
@@ -429,6 +466,37 @@ namespace Barotrauma
         {
             get { return indestructible ?? Prefab.Indestructible; }
             set { indestructible = value; }
+        }
+
+        public bool StolenDuringRound;
+
+        private bool spawnedInOutpost;
+        public bool SpawnedInOutpost
+        {
+            get { return spawnedInOutpost; }
+            set
+            {
+                if (!spawnedInOutpost && value)
+                {
+                    OriginalOutpost = GameMain.GameSession?.StartLocation?.BaseName ?? "";
+                }
+                spawnedInOutpost = value;
+            }
+        }
+
+        private string originalOutpost;
+        [Serialize("", true, alwaysUseInstanceValues: true)]
+        public string OriginalOutpost
+        {
+            get { return originalOutpost; }
+            set
+            {
+                originalOutpost = value;
+                if (!string.IsNullOrEmpty(value) && GameMain.GameSession?.StartLocation?.BaseName == value)
+                {
+                    spawnedInOutpost = true;
+                }
+            }
         }
 
         [Editable, Serialize("", true)]
@@ -599,7 +667,7 @@ namespace Barotrauma
             defaultRect = newRect;
             rect = newRect;
 
-            condition = itemPrefab.Health;
+            condition = MaxCondition;
             lastSentCondition = condition;
 
             allPropertyObjects.Add(this);
@@ -664,6 +732,8 @@ namespace Barotrauma
                     case "fabricableitem":
                     case "upgrade":
                     case "preferredcontainer":
+                    case "upgrademodule":
+                    case "upgradeoverride":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -1316,7 +1386,7 @@ namespace Barotrauma
                 HandleCollision(impact);
             }
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && (!Submarine?.Loading ?? true))
             {
                 sendConditionUpdateTimer -= deltaTime;
                 if (conditionUpdatePending && sendConditionUpdateTimer <= 0.0f)
@@ -1337,7 +1407,16 @@ namespace Barotrauma
 
                 if (ic.IsActiveConditionals != null)
                 {
-                    ic.IsActive = ic.IsActiveConditionals.All(conditional => ConditionalMatches(conditional));
+                    bool shouldBeActive = true;
+                    foreach (var conditional in ic.IsActiveConditionals)
+                    {
+                        if (!ConditionalMatches(conditional)) 
+                        {
+                            shouldBeActive = false;
+                            break;
+                        }
+                    }
+                    ic.IsActive = shouldBeActive;
                 }
 #if CLIENT
                 if (ic.HasSounds)
@@ -1557,6 +1636,8 @@ namespace Barotrauma
 
         public override void FlipX(bool relativeToSub)
         {
+            if (!Prefab.CanFlipX) { return; }
+
             base.FlipX(relativeToSub);
 
 #if CLIENT
@@ -1574,6 +1655,8 @@ namespace Barotrauma
 
         public override void FlipY(bool relativeToSub)
         {
+            if (!Prefab.CanFlipY) { return; }
+
             base.FlipY(relativeToSub);
 
 #if CLIENT
@@ -1800,6 +1883,7 @@ namespace Barotrauma
 #if CLIENT
             bool hasRequiredSkills = true;
             Skill requiredSkill = null;
+            float skillMultiplier = 1;
 #endif
             if (NonInteractable) { return false; }
             foreach (ItemComponent ic in components)
@@ -1853,7 +1937,7 @@ namespace Barotrauma
                 
                 bool showUiMsg = false;
 #if CLIENT
-                if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) { hasRequiredSkills = false; }
+                if (!ic.HasRequiredSkills(picker, out Skill tempRequiredSkill)) { hasRequiredSkills = false; skillMultiplier = ic.GetSkillMultiplier(); }
                 showUiMsg = picker == Character.Controlled && Screen.Selected != GameMain.SubEditorScreen;
 #endif
                 if (!ignoreRequiredItems && !ic.HasRequiredItems(picker, showUiMsg)) continue;
@@ -1896,7 +1980,7 @@ namespace Barotrauma
                 if (requiredSkill != null)
                 {
                     GUI.AddMessage(TextManager.GetWithVariables("InsufficientSkills", new string[2] { "[requiredskill]", "[requiredlevel]" },
-                        new string[2] { TextManager.Get("SkillName." + requiredSkill.Identifier), ((int)requiredSkill.Level).ToString() }, new bool[2] { true, false }), GUI.Style.Red);
+                        new string[2] { TextManager.Get("SkillName." + requiredSkill.Identifier), ((int)(requiredSkill.Level * skillMultiplier)).ToString() }, new bool[2] { true, false }), GUI.Style.Red);
                 }
             }
 #endif
@@ -2338,7 +2422,6 @@ namespace Barotrauma
             return Load(element, submarine, createNetworkEvent: false);
         }
 
-
         /// <summary>
         /// Instantiate a new item and load its data from the XML element.
         /// </summary>
@@ -2371,6 +2454,7 @@ namespace Barotrauma
                 ID = (ushort)int.Parse(element.Attribute("ID").Value),
                 linkedToID = new List<ushort>()
             };
+            item.OriginalID = item.ID;
 
 #if SERVER
             if (createNetworkEvent)
@@ -2413,16 +2497,41 @@ namespace Barotrauma
             List<ItemComponent> unloadedComponents = new List<ItemComponent>(item.components);
             foreach (XElement subElement in element.Elements())
             {
-                ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
-                if (component == null) { continue; }
-                component.Load(subElement, usePrefabValues);
-                unloadedComponents.Remove(component);
+                switch (subElement.Name.ToString().ToLowerInvariant()) 
+                {
+                    case "upgrade":
+                    {
+                        var upgradeIdentifier = subElement.GetAttributeString("identifier", string.Empty);
+                        UpgradePrefab upgradePrefab = UpgradePrefab.Find(upgradeIdentifier);
+                        int level = subElement.GetAttributeInt("level", 1);
+                        if (upgradePrefab != null)
+                        {
+                            item.AddUpgrade(new Upgrade(item, upgradePrefab, level, subElement));
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"An upgrade with identifier \"{upgradeIdentifier}\" on {item.Name} was not found. " +
+                                                    "It's effect will not be applied and won't be saved after the round ends.");
+                        }
+                        break;
+                    }
+                    default: 
+                    {
+                        ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
+                        if (component == null) { continue; }
+                        component.Load(subElement, usePrefabValues);
+                        unloadedComponents.Remove(component);
+                        break;
+                    }
+                }
             }
             if (usePrefabValues)
             {
                 //use prefab scale when overriding a non-overridden item or vice versa
                 item.Scale = prefab.ConfigElement.GetAttributeFloat(item.scale, "scale", "Scale");
             }
+            
+            item.Upgrades.ForEach(upgrade => upgrade.ApplyUpgrade());
 
             if (element.GetAttributeBool("flippedx", false)) { item.FlipX(false); }
             if (element.GetAttributeBool("flippedy", false)) { item.FlipY(false); }
@@ -2455,13 +2564,20 @@ namespace Barotrauma
                 new XAttribute("identifier", Prefab.Identifier),
                 new XAttribute("ID", ID));
 
+            if (Rotation != 0f) { element.Add(new XAttribute("rotation", Rotation)); }
+
             if (Prefab.IsOverride) { element.Add(new XAttribute("isoverride", "true")); }
             if (FlippedX) { element.Add(new XAttribute("flippedx", true)); }
             if (FlippedY) { element.Add(new XAttribute("flippedy", true)); }
 
-            if (condition < Prefab.Health)
+            if (condition < MaxCondition)
             {
                 element.Add(new XAttribute("condition", condition.ToString("G", CultureInfo.InvariantCulture)));
+            }
+
+            if (!MathUtils.NearlyEqual(healthMultiplier, 1.0f))
+            {
+                element.Add(new XAttribute("healthmultiplier", HealthMultiplier.ToString("G", CultureInfo.InvariantCulture)));
             }
 
             Item rootContainer = GetRootContainer() ?? this;
@@ -2478,7 +2594,8 @@ namespace Barotrauma
             
             if (linkedTo != null && linkedTo.Count > 0)
             {
-                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved).ToList();
+                bool isOutpost = Submarine != null && Submarine.Info.IsOutpost;
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved && !l.Removed && (l.Submarine == null || l.Submarine.Info.IsOutpost == isOutpost));
                 element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
             }
 
@@ -2487,6 +2604,11 @@ namespace Barotrauma
             foreach (ItemComponent ic in components)
             {
                 ic.Save(element);
+            }
+
+            foreach (var upgrade in Upgrades)
+            {
+                upgrade.Save(element);
             }
 
             parentElement.Add(element);
@@ -2499,7 +2621,7 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, Prefab.ConfigElement);
             Sprite.ReloadXML();
             SpriteDepth = Sprite.Depth;
-            condition = Prefab.Health;
+            condition = MaxCondition;
             components.ForEach(c => c.Reset());
         }
 
@@ -2551,6 +2673,17 @@ namespace Barotrauma
                 for (int i = 0; i < character.SelectedItems.Length; i++)
                 {
                     if (character.SelectedItems[i] == this) character.SelectedItems[i] = null;
+                }
+            }
+
+            Door door = GetComponent<Door>();
+            Ladder ladder = GetComponent<Ladder>();
+            if (door != null || ladder != null)
+            {
+                foreach (WayPoint wp in WayPoint.WayPointList)
+                {
+                    if (door != null && wp.ConnectedDoor == door) { wp.ConnectedGap = null; }
+                    if (ladder != null && wp.Ladders == ladder) { wp.Ladders = null; }
                 }
             }
 

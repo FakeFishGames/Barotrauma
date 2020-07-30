@@ -36,6 +36,12 @@ namespace Barotrauma
             get;
             private set;
         }
+        
+        public bool MaintainBorderAspectRatio
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// How much the borders of a sliced sprite are allowed to scale
@@ -52,6 +58,7 @@ namespace Barotrauma
         {
             Sprite = new Sprite(element);
             MaintainAspectRatio = element.GetAttributeBool("maintainaspectratio", false);
+            MaintainBorderAspectRatio = element.GetAttributeBool("maintainborderaspectratio", false);
             Tile = element.GetAttributeBool("tile", true);
             CrossFadeIn = element.GetAttributeBool("crossfadein", CrossFadeIn);
             CrossFadeOut = element.GetAttributeBool("crossfadeout", CrossFadeOut);
@@ -120,13 +127,16 @@ namespace Barotrauma
             {
                 Vector2 pos = new Vector2(rect.X, rect.Y);
 
-                float scale = GetSliceBorderScale(rect.Size);
+                float scale = MaintainBorderAspectRatio ? 1.0f : GetSliceBorderScale(rect.Size);
+                float aspectScale = MaintainBorderAspectRatio ? Math.Min((float)rect.Width / Sprite.SourceRect.Width, (float)rect.Height / Sprite.SourceRect.Height) : 1.0f;
+
                 int centerHeight = rect.Height - (int)((Slices[0].Height + Slices[6].Height) * scale);
-                int centerWidth = rect.Width - (int)((Slices[0].Width + Slices[2].Width) * scale);
+                int centerWidth = rect.Width - (int)((Slices[0].Width + Slices[2].Width) * scale * aspectScale);
 
                 for (int x = 0; x < 3; x++)
                 {
-                    int width = (int)(x == 1 ? centerWidth : Slices[x].Width * scale);
+
+                    int width = (int)(x == 1 ? centerWidth : Slices[x].Width * scale * aspectScale);
                     if (width <= 0) { continue; }
                     for (int y = 0; y < 3; y++)
                     {
@@ -147,7 +157,7 @@ namespace Barotrauma
             else if (Tile)
             {
                 Vector2 startPos = new Vector2(rect.X, rect.Y);
-                Sprite.DrawTiled(spriteBatch, startPos, new Vector2(rect.Width, rect.Height), null, color);
+                Sprite.DrawTiled(spriteBatch, startPos, new Vector2(rect.Width, rect.Height), color);
             }
             else
             {

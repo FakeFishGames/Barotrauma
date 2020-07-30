@@ -223,7 +223,6 @@ namespace Barotrauma.Items.Components
             if (attachable)
             {
                 prevMsg = DisplayMsg;
-                prevPickKey = PickKey;
                 prevRequiredItems = new Dictionary<RelatedItem.RelationType, List<RelatedItem>>(requiredItems);
             }
         }
@@ -254,9 +253,9 @@ namespace Barotrauma.Items.Components
             if (item.body != null) { item.body.Enabled = true; }
             IsActive = false;
 
-            if (picker == null)
+            if (picker == null || picker.Removed)
             {
-                if (dropper == null) { return; }
+                if (dropper == null || dropper.Removed) { return; }
                 picker = dropper;
             }
             if (picker.Inventory == null) { return; }
@@ -285,7 +284,7 @@ namespace Barotrauma.Items.Components
                         heldHand = picker.AnimController.GetLimb(LimbType.RightHand);
                         arm = picker.AnimController.GetLimb(LimbType.RightArm);
                     }
-                    if (heldHand != null && arm != null)
+                    if (heldHand != null && !heldHand.Removed && arm != null && !arm.Removed)
                     {
                         //hand simPosition is actually in the wrist so need to move the item out from it slightly
                         Vector2 diff = new Vector2(
@@ -583,7 +582,7 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 swing = Vector2.Zero;
-            if (swingAmount != Vector2.Zero)
+            if (swingAmount != Vector2.Zero && !picker.IsUnconscious && picker.Stun <= 0.0f)
             {
                 swingState += deltaTime;
                 swingState %= 1.0f;
@@ -607,7 +606,7 @@ namespace Barotrauma.Items.Components
             {
                 scaledHandlePos[0] = handlePos[0] * item.Scale;
                 scaledHandlePos[1] = handlePos[1] * item.Scale;
-                bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && (picker.SelectedConstruction == null || picker.SelectedConstruction.GetComponent<Ladder>() != null);
+                bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && picker.CanAim;
                 picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, aim, holdAngle);
             }
             else
@@ -680,17 +679,14 @@ namespace Barotrauma.Items.Components
             }
 
             var tempMsg = DisplayMsg;
-            var tempPickKey = PickKey;
             var tempRequiredItems = requiredItems;
 
             DisplayMsg = prevMsg;
-            PickKey = prevPickKey;
             requiredItems = prevRequiredItems;
             
             XElement saveElement = base.Save(parentElement);
 
             DisplayMsg = tempMsg;
-            PickKey = tempPickKey;
             requiredItems = tempRequiredItems;
 
             return saveElement;

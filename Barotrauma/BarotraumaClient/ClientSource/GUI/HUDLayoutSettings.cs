@@ -75,6 +75,11 @@ namespace Barotrauma
             get; private set;
         }
 
+        public static Rectangle VotingArea
+        {
+            get; private set;
+        }
+
         public static int Padding
         {
             get; private set;
@@ -84,7 +89,7 @@ namespace Barotrauma
         {
             if (GameMain.Instance != null)
             {
-                GameMain.Instance.OnResolutionChanged += CreateAreas;
+                GameMain.Instance.ResolutionChanged += CreateAreas;
                 GameMain.Config.OnHUDScaleChanged += CreateAreas;
                 CreateAreas();
                 CharacterInfo.Init();
@@ -144,6 +149,13 @@ namespace Barotrauma
             int healthWindowY = GameMain.GraphicsHeight / 2 - healthWindowHeight / 2;
 
             HealthWindowAreaLeft = new Rectangle(healthWindowX, healthWindowY, healthWindowWidth, healthWindowHeight);
+
+            int votingAreaWidth = (int)(400 * GUI.Scale);
+            int votingAreaX = GameMain.GraphicsWidth - Padding - votingAreaWidth;
+            int votingAreaY = Padding + ButtonAreaTop.Height;
+
+            // Height is based on text content
+            VotingArea = new Rectangle(votingAreaX, votingAreaY, votingAreaWidth, 0);
         }
 
         public static void Draw(SpriteBatch spriteBatch)

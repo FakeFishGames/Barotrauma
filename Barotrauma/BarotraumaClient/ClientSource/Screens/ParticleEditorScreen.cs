@@ -88,9 +88,8 @@ namespace Barotrauma
         public ParticleEditorScreen()
         {
             cam = new Camera();
-            GameMain.Instance.OnResolutionChanged += CreateUI;
+            GameMain.Instance.ResolutionChanged += CreateUI;
             CreateUI();
-
         }
 
         private void CreateUI()

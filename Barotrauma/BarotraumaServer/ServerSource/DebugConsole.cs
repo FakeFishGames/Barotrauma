@@ -10,6 +10,7 @@ using System.Threading;
 using Barotrauma.IO;
 using System.Text;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -1213,7 +1214,7 @@ namespace Barotrauma
                     if (int.TryParse(string.Join(" ", args), out index))
                     {
                         if (index > 0 && index < GameMain.NetLobbyScreen.GameModes.Length &&
-                            GameMain.NetLobbyScreen.GameModes[index].Identifier == "multiplayercampaign")
+                            GameMain.NetLobbyScreen.GameModes[index] == GameModePreset.MultiPlayerCampaign)
                         {
                             MultiPlayerCampaign.StartCampaignSetup();
                         }
@@ -1541,6 +1542,11 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     if (Submarine.MainSub == null || Level.Loaded == null) return;
+                    if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+                    {
+                        GameMain.Server.SendConsoleMessage("The teleportsub command is unavailable in outpost levels!", client);
+                        return;
+                    }
 
                     if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                     {
@@ -2056,6 +2062,54 @@ namespace Barotrauma
                     NewMessage(tag, Color.Yellow);
                 }
             }));
+            
+            AssignOnClientRequestExecute(
+                "setskill",
+                (senderClient, cursorWorldPos, args) =>
+                {
+                    if (args.Length < 2)
+                    {
+                        GameMain.Server.SendConsoleMessage($"Missing arguments. Expected at least 2 but got {args.Length} (skill, level, name)", senderClient);
+                        return;
+                    }
+
+                    string skillIdentifier = args[0];
+                    string levelString = args[1];
+                    Character character = args.Length >= 3 ? FindMatchingCharacter(args.Skip(2).ToArray(), false) : senderClient.Character;
+
+                    if (character?.Info?.Job == null)
+                    {
+                        GameMain.Server.SendConsoleMessage("Character is not valid.", senderClient);
+                        return;
+                    }
+
+                    bool isMax = levelString.Equals("max", StringComparison.OrdinalIgnoreCase);
+
+                    if (float.TryParse(levelString, NumberStyles.Number, CultureInfo.InvariantCulture, out float level) || isMax)
+                    {
+                        if (isMax) { level = 100; }
+                        if (skillIdentifier.Equals("all", StringComparison.OrdinalIgnoreCase))
+                        {
+                            foreach (Skill skill in character.Info.Job.Skills)
+                            {
+                                character.Info.SetSkillLevel(skill.Identifier, level, character.WorldPosition);
+                            }
+                            GameMain.Server.SendConsoleMessage($"Set all {character.Name}'s skills to {level}", senderClient);
+                        }
+                        else
+                        {
+                            character.Info.SetSkillLevel(skillIdentifier, level, character.WorldPosition);
+                            GameMain.Server.SendConsoleMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", senderClient);
+                        }
+
+                        GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.UpdateSkills });                
+                    }
+                    else
+                    {
+                        GameMain.Server.SendConsoleMessage($"{levelString} is not a valid level. Expected number or \"max\".", senderClient);
+                    }                  
+                }
+            );
 
 #if DEBUG
             commands.Add(new Command("spamevents", "A debug command that creates a ton of entity events.", (string[] args) =>

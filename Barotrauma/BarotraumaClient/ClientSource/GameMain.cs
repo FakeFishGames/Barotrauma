@@ -17,6 +17,7 @@ using System.Threading;
 using Barotrauma.Tutorials;
 using Barotrauma.Media;
 using Barotrauma.Extensions;
+using System.Threading.Tasks;
 
 namespace Barotrauma
 {
@@ -35,7 +36,6 @@ namespace Barotrauma
 
         public static GameScreen GameScreen;
         public static MainMenuScreen MainMenuScreen;
-        public static LobbyScreen LobbyScreen;
 
         public static NetLobbyScreen NetLobbyScreen;
         public static ServerListScreen ServerListScreen;
@@ -45,7 +45,10 @@ namespace Barotrauma
         public static ParticleEditorScreen ParticleEditorScreen;
         public static LevelEditorScreen LevelEditorScreen;
         public static SpriteEditorScreen SpriteEditorScreen;
+        public static EventEditorScreen EventEditorScreen;
         public static CharacterEditor.CharacterEditorScreen CharacterEditorScreen;
+
+        public static CampaignEndScreen CampaignEndScreen;
 
         public static Lights.LightManager LightManager;
 
@@ -79,6 +82,10 @@ namespace Barotrauma
             set
             {
                 if (gameSession == value) { return; }
+                if (value == null && Screen.Selected == GameScreen && gameSession.GameMode is CampaignMode)
+                {
+                    DebugConsole.AddWarning("GameSession set to null while in the game screen\n" + Environment.StackTrace);
+                }
                 if (gameSession?.GameMode != null && gameSession.GameMode != value?.GameMode)
                 {
                     gameSession.GameMode.Remove();
@@ -100,7 +107,7 @@ namespace Barotrauma
         private CoroutineHandle loadingCoroutine;
         private bool hasLoaded;
 
-        private GameTime fixedTime;
+        private readonly GameTime fixedTime;
 
         public string ConnectName;
         public string ConnectEndpoint;
@@ -110,7 +117,7 @@ namespace Barotrauma
 
         private Viewport defaultViewport;
 
-        public event Action OnResolutionChanged;
+        public event Action ResolutionChanged;
 
         private bool exiting;
 
@@ -190,7 +197,6 @@ namespace Barotrauma
         public GameMain(string[] args)
         {
             Content.RootDirectory = "Content";
-
 #if DEBUG && WINDOWS
             GraphicsAdapter.UseDebugLayers = true;
 #endif
@@ -273,7 +279,7 @@ namespace Barotrauma
 
             defaultViewport = GraphicsDevice.Viewport;
 
-            OnResolutionChanged?.Invoke();
+            ResolutionChanged?.Invoke();
         }
 
         public void SetWindowMode(WindowMode windowMode)
@@ -455,9 +461,10 @@ namespace Barotrauma
             {
                 bool waitingForWorkshopUpdates = true;
                 bool result = false;
-                TaskPool.Add(SteamManager.AutoUpdateWorkshopItemsAsync(), (task) =>
+                TaskPool.Add("AutoUpdateWorkshopItemsAsync",
+                    SteamManager.AutoUpdateWorkshopItemsAsync(), (task) =>
                 {
-                    result = task.Result;
+                    result = ((Task<bool>)task).Result;
                     waitingForWorkshopUpdates = false;
                 });
 
@@ -521,6 +528,10 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
+            TaskPool.Add("InitRelayNetworkAccess", SteamManager.InitRelayNetworkAccess(), (t) => { });
+
+            FactionPrefab.LoadFactions();
+            NPCSet.LoadSets();
             CharacterPrefab.LoadAll();
             MissionPrefab.Init();
             TraitorMissionPrefab.Init();
@@ -528,8 +539,9 @@ namespace Barotrauma
             Tutorials.Tutorial.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
+            OutpostGenerationParams.LoadPresets();
             WreckAIConfig.LoadAll();
-            ScriptedEventSet.LoadPrefabs();
+            EventSet.LoadPrefabs();
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
             Order.Init();
@@ -543,6 +555,10 @@ namespace Barotrauma
 
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             TitleScreen.LoadState = 55.0f;
+        yield return CoroutineStatus.Running;
+        
+            UpgradePrefab.LoadAll(GetFilesOfType(ContentType.UpgradeModules));
+            TitleScreen.LoadState = 56.0f;
         yield return CoroutineStatus.Running;
 
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
@@ -567,7 +583,6 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             MainMenuScreen          = new MainMenuScreen(this);
-            LobbyScreen             = new LobbyScreen();
             ServerListScreen        = new ServerListScreen();
 
             TitleScreen.LoadState = 70.0f;
@@ -594,7 +609,9 @@ namespace Barotrauma
 
             LevelEditorScreen       = new LevelEditorScreen();
             SpriteEditorScreen      = new SpriteEditorScreen();
+            EventEditorScreen       = new EventEditorScreen();
             CharacterEditorScreen   = new CharacterEditor.CharacterEditorScreen();
+            CampaignEndScreen       = new CampaignEndScreen();
 
         yield return CoroutineStatus.Running;
 
@@ -633,7 +650,7 @@ namespace Barotrauma
             foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
             {
                 var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
-                if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
+                if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != Path.GetFileNameWithoutExtension(exePaths.First()))
                 {
                     var msgBox = new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("IncorrectExe",
                         new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
@@ -763,7 +780,7 @@ namespace Barotrauma
                     //reset accumulator if loading
                     // -> less choppy loading screens because the screen is rendered after each update
                     // -> no pause caused by leftover time in the accumulator when starting a new shift
-                    GameMain.ResetFrameTime();
+                    ResetFrameTime();
 
                     if (!TitleScreen.PlayingSplashScreen)
                     {
@@ -777,11 +794,33 @@ namespace Barotrauma
                     }
 
 #if DEBUG
-                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && Config.AutomaticQuickStartEnabled && FirstLoad)
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled) && FirstLoad && !PlayerInput.KeyDown(Keys.LeftShift))
                     {
                         loadingScreenOpen = false;
                         FirstLoad = false;
-                        MainMenuScreen.QuickStart();
+
+                        if (Config.AutomaticQuickStartEnabled)
+                        {
+                            MainMenuScreen.QuickStart();
+                        }
+                        else if (Config.AutomaticCampaignLoadEnabled)
+                        {
+                            IEnumerable<string> saveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
+
+                            if (saveFiles.Count() > 0)
+                            {
+                                saveFiles = saveFiles.OrderBy(file => File.GetLastWriteTime(file));
+                                try
+                                {
+                                    SaveUtil.LoadGame(saveFiles.Last());
+                                }
+                                catch (Exception e)
+                                {
+                                    DebugConsole.ThrowError("Loading save \"" + saveFiles.Last() + "\" failed", e);
+                                    return;
+                                }
+                            }
+                        }
                     }
 #endif
 
@@ -845,6 +884,12 @@ namespace Barotrauma
                         {
                             ((GUIMessageBox)GUIMessageBox.VisibleBox).Close();
                         }
+                        else if (GUIMessageBox.VisibleBox?.UserData is RoundSummary roundSummary &&
+                                roundSummary.ContinueButton != null &&
+                                roundSummary.ContinueButton.Visible)
+                        {
+                            GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                        }
                         else if (Tutorial.Initialized && Tutorial.ContentRunning)
                         {
                             (GameSession.GameMode as TutorialMode).Tutorial.CloseActiveContentGUI();
@@ -868,7 +913,7 @@ namespace Barotrauma
                             GUI.TogglePauseMenu();
                         }
 
-                        bool itemHudActive()
+                        static bool itemHudActive()
                         {
                             if (Character.Controlled?.SelectedConstruction == null) { return false; }
                             return 
@@ -878,7 +923,7 @@ namespace Barotrauma
                     }
 
 #if DEBUG
-                    if (GameMain.NetworkMember == null)
+                    if (NetworkMember == null)
                     {
                         if (PlayerInput.KeyHit(Keys.P) && !(GUI.KeyboardDispatcher.Subscriber is GUITextBox))
                         {
@@ -890,6 +935,10 @@ namespace Barotrauma
                     GUI.ClearUpdateList();
                     Paused = (DebugConsole.IsOpen || GUI.PauseMenuOpen || GUI.SettingsMenuOpen || Tutorial.ContentRunning || DebugConsole.Paused) &&
                              (NetworkMember == null || !NetworkMember.GameStarted);
+                    if (GameSession?.GameMode != null && GameSession.GameMode.Paused)
+                    {
+                        Paused = true;
+                    }
 
 #if !DEBUG
                     if (NetworkMember == null && !WindowActive && !Paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
@@ -921,7 +970,7 @@ namespace Barotrauma
                     {
                         (GameSession.GameMode as TutorialMode).Update((float)Timing.Step);
                     }
-                    else if (DebugConsole.Paused)
+                    else
                     {
                         if (Screen.Selected.Cam == null)
                         {
@@ -929,7 +978,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            Screen.Selected.Cam.MoveCamera((float)Timing.Step);
+                            Screen.Selected.Cam.MoveCamera((float)Timing.Step, allowMove: DebugConsole.Paused, allowZoom: DebugConsole.Paused);
                         }
                     }
 
@@ -1027,41 +1076,53 @@ namespace Barotrauma
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
                 msgBox.Buttons[1].OnClicked += msgBox.Close;
             }
-
         }
 
         public static void QuitToMainMenu(bool save)
         {
             if (save)
             {
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
+                {
+                    GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
+                }
+
+                // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
+                if (GameSession?.Campaign is SinglePlayerCampaign campaign && Level.IsLoadedOutpost && campaign.Map?.CurrentLocation != null && campaign.CargoManager != null)
+                {
+                    campaign.Map.CurrentLocation.AddToStock(campaign.CargoManager.SoldItems);
+                    campaign.CargoManager.ClearSoldItemsProjSpecific();
+                    campaign.Map.CurrentLocation.RemoveFromStock(campaign.CargoManager.PurchasedItems);
+                }
+
+                SaveUtil.SaveGame(GameSession.SavePath);
             }
 
-            if (GameMain.Client != null)
+            if (Client != null)
             {
-                GameMain.Client.Disconnect();
-                GameMain.Client = null;
+                Client.Disconnect();
+                Client = null;
             }
 
             CoroutineManager.StopCoroutines("EndCinematic");
 
-            if (GameMain.GameSession != null)
+            if (GameSession != null)
             {
                 if (Tutorial.Initialized)
                 {
-                    ((TutorialMode)GameMain.GameSession.GameMode).Tutorial?.Stop();
+                    ((TutorialMode)GameSession.GameMode).Tutorial?.Stop();
                 }
 
                 if (GameSettings.SendUserStatistics)
                 {
-                    Mission mission = GameMain.GameSession.Mission;
+                    Mission mission = GameSession.Mission;
                     GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
                     GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
                 }
-                GameMain.GameSession = null;
             }
             GUIMessageBox.CloseAll();
-            GameMain.MainMenuScreen.Select();
+            MainMenuScreen.Select();
+            GameSession = null;
         }
 
         public void ShowCampaignDisclaimer(Action onContinue = null)
@@ -1071,12 +1132,7 @@ namespace Barotrauma
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
-                var roadMap = new GUIMessageBox(TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("CampaignRoadMapText"),
-                                new string[] { TextManager.Get("Back"), TextManager.Get("OK") });
-                roadMap.Buttons[0].OnClicked += roadMap.Close;
-                roadMap.Buttons[0].OnClicked += (_, __) => { ShowCampaignDisclaimer(onContinue); return true; };
-                roadMap.Buttons[1].OnClicked += roadMap.Close;
-                roadMap.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
+                ShowOpenUrlInWebBrowserPrompt("https://trello.com/b/hBXI8ltN/barotrauma-roadmap-known-issues");
                 return true;
             };
             msgBox.Buttons[0].OnClicked += msgBox.Close;
@@ -1094,9 +1150,9 @@ namespace Barotrauma
             linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
             List<Pair<string, string>> links = new List<Pair<string, string>>()
             {
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"),TextManager.Get("EditorDisclaimerWikiUrl")),
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"),TextManager.Get("EditorDisclaimerDiscordUrl")),
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"),TextManager.Get("EditorDisclaimerForumUrl")),
+                new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"), TextManager.Get("EditorDisclaimerWikiUrl")),
+                new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"), TextManager.Get("EditorDisclaimerDiscordUrl")),
+                new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"), TextManager.Get("EditorDisclaimerForumUrl")),
             };
             foreach (var link in links)
             {
@@ -1124,8 +1180,10 @@ namespace Barotrauma
                 return;
             }
 
-            var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "");
-            msgBox.UserData = "bugreporter";
+            var msgBox = new GUIMessageBox(TextManager.Get("bugreportbutton"), "")
+            {
+                UserData = "bugreporter"
+            };
             var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
             linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
 
@@ -1189,7 +1247,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error while cleaning unnecessary save files", e);
             }
 
-            if (GameSettings.SendUserStatistics){ GameAnalytics.OnQuit(); }
+            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
             if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
 
             base.OnExiting(sender, args);

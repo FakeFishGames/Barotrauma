@@ -56,7 +56,6 @@ namespace Barotrauma
             return frameHolder;
         }
 
-
         public class OutfitPreview
         {
             /// <summary>

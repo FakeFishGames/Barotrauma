@@ -13,8 +13,6 @@ namespace Barotrauma.Items.Components
 
         private GUICustomComponent guiCustomComponent;
 
-        private Point prevResolution;
-
         public Sprite InventoryTopSprite
         {
             get { return inventoryTopSprite; }
@@ -115,16 +113,16 @@ namespace Barotrauma.Items.Components
                 {
                     CanBeFocused = false
                 };
+                GuiFrame.RectTransform.ParentChanged += OnGUIParentChanged;
             }
             else
             {
                 //if a GUIFrame has been defined, draw the inventory inside it
                 CreateGUI();
-                prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             }
         }
 
-        private void CreateGUI()
+        protected override void CreateGUI()
         {
             var content = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) { AbsoluteOffset = GUIStyle.ItemFrameOffset },
                 style: null)
@@ -167,16 +165,6 @@ namespace Barotrauma.Items.Components
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (hideItems || (item.body != null && !item.body.Enabled)) { return; }
-            
-            if ((prevResolution.X > 0 && prevResolution.Y > 0) &&
-                (prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight))
-            {
-                GuiFrame.ClearChildren(); 
-                CreateGUI();
-
-                prevResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            }
-
             DrawContainedItems(spriteBatch, itemDepth);
         }
 
@@ -238,7 +226,7 @@ namespace Barotrauma.Items.Components
                 if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
 
                 float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth;
-                containedSpriteDepth = itemDepth + (containedSpriteDepth - item.SpriteDepth) / 10000.0f;
+                containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
 
                 containedItem.Sprite.Draw(
                     spriteBatch,

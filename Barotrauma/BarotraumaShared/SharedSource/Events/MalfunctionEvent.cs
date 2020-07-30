@@ -6,7 +6,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    class MalfunctionEvent : ScriptedEvent
+    class MalfunctionEvent : Event
     {
         private string[] targetItemIdentifiers;
 
@@ -25,7 +25,7 @@ namespace Barotrauma
             return "MalfunctionEvent (" + string.Join(", ", targetItemIdentifiers) + ")";
         }
         
-        public MalfunctionEvent(ScriptedEventPrefab prefab)
+        public MalfunctionEvent(EventPrefab prefab)
             : base(prefab)
         {
             targetItems = new List<Item>();

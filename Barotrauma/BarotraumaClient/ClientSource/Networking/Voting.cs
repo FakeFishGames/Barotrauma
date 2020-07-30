@@ -112,11 +112,10 @@ namespace Barotrauma
 
             switch (voteType)
             {
-                case VoteType.Sub:
+                case VoteType.Sub:                    
                     SubmarineInfo sub = data as SubmarineInfo;
                     if (sub == null) { return; }
-
-                    msg.Write(sub.Name);
+                    msg.Write(sub.EqualityCheckVal);
                     break;
                 case VoteType.Mode:
                     GameModePreset gameMode = data as GameModePreset;
@@ -136,6 +135,25 @@ namespace Barotrauma
                 case VoteType.StartRound:
                     if (!(data is bool)) return;
                     msg.Write((bool)data);
+                    break;
+
+                case VoteType.PurchaseAndSwitchSub:
+                case VoteType.PurchaseSub:
+                case VoteType.SwitchSub:
+                    if (!VoteRunning)
+                    {
+                        SubmarineInfo voteSub = data as SubmarineInfo;
+                        if (voteSub == null) return;
+                        msg.Write(true);
+                        msg.Write(voteSub.Name);
+                    }
+                    else
+                    {
+                        if (!(data is int)) { return; }
+                        msg.Write(false);
+                        msg.Write((int)data);
+                    }
+
                     break;
             }
 
@@ -182,6 +200,128 @@ namespace Barotrauma
                 GameMain.NetworkMember.EndVoteMax = inc.ReadByte();
             }
             AllowVoteKick = inc.ReadBoolean();
+
+            byte subVoteStateByte = inc.ReadByte();
+            VoteState subVoteState = VoteState.None;
+            try
+            {
+                subVoteState = (VoteState)subVoteStateByte;
+            }
+            catch (System.Exception e)
+            {
+                DebugConsole.ThrowError("Failed to cast vote type \"" + subVoteStateByte + "\"", e);
+            }
+
+            if (subVoteState != VoteState.None)
+            {
+                byte voteTypeByte = inc.ReadByte();
+                VoteType voteType = VoteType.Unknown;
+
+                try
+                {
+                    voteType = (VoteType)voteTypeByte;
+                }
+                catch (System.Exception e)
+                {
+                    DebugConsole.ThrowError("Failed to cast vote type \"" + voteTypeByte + "\"", e);
+                }
+
+                if (voteType != VoteType.Unknown)
+                {
+                    byte yesClientCount = inc.ReadByte();
+                    for (int i = 0; i < yesClientCount; i++)
+                    {
+                        byte clientID = inc.ReadByte();
+                        var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
+                        matchingClient?.SetVote(voteType, 2);
+                    }
+
+                    byte noClientCount = inc.ReadByte();
+                    for (int i = 0; i < noClientCount; i++)
+                    {
+                        byte clientID = inc.ReadByte();
+                        var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
+                        matchingClient?.SetVote(voteType, 1);
+                    }
+
+                    GameMain.NetworkMember.SubmarineVoteYesCount = yesClientCount;
+                    GameMain.NetworkMember.SubmarineVoteNoCount = noClientCount;
+                    GameMain.NetworkMember.SubmarineVoteMax = inc.ReadByte();
+
+                    switch (subVoteState)
+                    {
+                        case VoteState.Started:
+                            Client myClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == GameMain.Client.ID);
+                            if (!myClient.InGame)
+                            {
+                                VoteRunning = true;
+                                return;
+                            }
+
+                            string subName1 = inc.ReadString();
+                            SubmarineInfo info = GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName1);
+
+                            if (info == null)
+                            {
+                                DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
+                                return;
+                            }
+
+                            VoteRunning = true;
+                            byte starterID = inc.ReadByte();
+                            Client starterClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == starterID);
+                            float timeOut = inc.ReadByte();
+                            GameMain.Client.ShowSubmarineChangeVoteInterface(starterClient, info, voteType, timeOut);
+                            break;
+                        case VoteState.Running:
+                            // Nothing specific
+                            break;
+                        case VoteState.Passed:
+                        case VoteState.Failed:
+                            VoteRunning = false;
+
+                            bool passed = inc.ReadBoolean();
+                            string subName2 = inc.ReadString();
+                            SubmarineInfo subInfo = GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
+
+                            if (subInfo == null)
+                            {
+                                DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
+                                return;
+                            }
+
+                            if (GameMain.Client.VotingInterface != null)
+                            {
+                                GameMain.Client.VotingInterface.EndVote(passed, yesClientCount, noClientCount);
+                            }
+                            else if (GameMain.Client.ConnectedClients.Count > 1)
+                            {
+                                GameMain.NetworkMember.AddChatMessage(VotingInterface.GetSubmarineVoteResultMessage(subInfo, voteType, yesClientCount.ToString(), noClientCount.ToString(), passed), ChatMessageType.Server);
+                            }
+
+                            if (passed)
+                            {
+                                int deliveryFee = inc.ReadInt16();
+                                switch (voteType)
+                                {
+                                    case VoteType.PurchaseAndSwitchSub:
+                                        GameMain.GameSession.PurchaseSubmarine(subInfo);
+                                        GameMain.GameSession.SwitchSubmarine(subInfo, 0);
+                                        break;
+                                    case VoteType.PurchaseSub:
+                                        GameMain.GameSession.PurchaseSubmarine(subInfo);
+                                        break;
+                                    case VoteType.SwitchSub:
+                                        GameMain.GameSession.SwitchSubmarine(subInfo, deliveryFee);
+                                        break;
+                                }
+
+                                SubmarineSelection.ContentRefreshRequired = true;
+                            }
+                            break;
+                    }
+                }
+            }       
 
             GameMain.NetworkMember.ConnectedClients.ForEach(c => c.SetVote(VoteType.StartRound, false));
             byte readyClientCount = inc.ReadByte();

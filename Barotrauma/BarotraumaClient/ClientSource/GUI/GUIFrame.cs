@@ -6,6 +6,8 @@ namespace Barotrauma
 {
     public class GUIFrame : GUIComponent
     {      
+        public int OutlineThickness { get; set; }
+
         public GUIFrame(RectTransform rectT, string style = "", Color? color = null) : base(style, rectT)
         {
             Enabled = true;
@@ -26,7 +28,7 @@ namespace Barotrauma
 
             if (OutlineColor != Color.Transparent)
             {
-                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor * (OutlineColor.A/255.0f), false);
+                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor * (OutlineColor.A/255.0f), false, thickness: OutlineThickness);
             }
         }
     }

@@ -212,6 +212,11 @@ namespace Barotrauma
                     }
                 }
 
+                if (((width & 0x03) != 0) || ((height & 0x03) != 0))
+                {
+                    DebugConsole.AddWarning($"Cannot compress a texture because the dimensions are not a multiple of 4 (path: {path ?? "null"}, size: {width}x{height})");
+                }
+
                 Texture2D tex = null;
                 CrossThread.RequestExecutionOnMainThread(() =>
                 {

@@ -59,6 +59,8 @@ namespace Barotrauma.Items.Components
 
         private Vector2 sectionExtents;
 
+        private float currLength;
+
         public bool Hidden;
 
         private float removeNodeDelay;
@@ -287,7 +289,7 @@ namespace Barotrauma.Items.Components
                     Structure attachTarget = Structure.GetAttachTarget(item.WorldPosition);
                     canPlaceNode = attachTarget != null;
 
-                    sub = sub ?? attachTarget?.Submarine;
+                    sub ??= attachTarget?.Submarine;
                     Vector2 attachPos = GetAttachPosition(user);
                     newNodePos = sub == null ?
                         attachPos :
@@ -308,20 +310,25 @@ namespace Barotrauma.Items.Components
                     Vector2 prevNodePos = nodes[nodes.Count - 1];
                     if (sub != null) { prevNodePos += sub.HiddenSubPosition; }
 
-                    float currLength = 0.0f;
+                    currLength = 0.0f;
                     for (int i = 0; i < nodes.Count - 1; i++)
                     {
                         currLength += Vector2.Distance(nodes[i], nodes[i + 1]);
                     }
-                    currLength += Vector2.Distance(nodes[nodes.Count - 1], newNodePos);
-
+                    Vector2 itemPos = item.Position;
+                    if (sub != null && user.Submarine == null) { prevNodePos += sub.Position; }
+                    currLength += Vector2.Distance(prevNodePos, itemPos);
                     if (currLength > MaxLength)
                     {
-                        Vector2 diff = nodes[nodes.Count - 1] - newNodePos;
+                        Vector2 diff = prevNodePos - user.Position;
                         Vector2 pullBackDir = diff == Vector2.Zero ? Vector2.Zero : Vector2.Normalize(diff);
-
-                        user.AnimController.Collider.ApplyForce(pullBackDir * user.Mass * 50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
-                        user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * 200.0f);
+                        Vector2 forceDir = pullBackDir;
+                        if (!user.AnimController.InWater) { forceDir.Y = 0.0f; }
+                        user.AnimController.Collider.ApplyForce(forceDir * user.Mass * 50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
+                        if (diff.LengthSquared() > 50.0f * 50.0f)
+                        {
+                            user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
+                        }
 
                         if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                         {
@@ -564,7 +571,7 @@ namespace Barotrauma.Items.Components
                 int wireIndex = connections[i].FindWireIndex(item);
                 if (wireIndex == -1) { continue; }
 #if SERVER
-                if (!connections[i].Item.Removed)
+                if (!connections[i].Item.Removed && (!connections[i].Item.Submarine?.Loading ?? true) && (!Level.Loaded?.Generating ?? true))
                 {
                     connections[i].Item.CreateServerEvent(connections[i].Item.GetComponent<ConnectionPanel>());
                 }

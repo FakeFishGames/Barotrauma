@@ -67,10 +67,10 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (connector == null)
             {
-                connector = GUI.Style.GetComponentStyle("ConnectionPanelConnector").Sprites[GUIComponent.ComponentState.None][0].Sprite;
-                wireVertical = GUI.Style.GetComponentStyle("ConnectionPanelWire").Sprites[GUIComponent.ComponentState.None][0].Sprite;
-                connectionSprite = GUI.Style.GetComponentStyle("ConnectionPanelConnection").Sprites[GUIComponent.ComponentState.None][0].Sprite;
-                connectionSpriteHighlight = GUI.Style.GetComponentStyle("ConnectionPanelConnection").Sprites[GUIComponent.ComponentState.Hover][0].Sprite;
+                connector = GUI.Style.GetComponentStyle("ConnectionPanelConnector").GetDefaultSprite();
+                wireVertical = GUI.Style.GetComponentStyle("ConnectionPanelWire").GetDefaultSprite();
+                connectionSprite = GUI.Style.GetComponentStyle("ConnectionPanelConnection").GetDefaultSprite();
+                connectionSpriteHighlight = GUI.Style.GetComponentStyle("ConnectionPanelConnection").GetSprite(GUIComponent.ComponentState.Hover);
                 screwSprites = GUI.Style.GetComponentStyle("ConnectionPanelScrew").Sprites[GUIComponent.ComponentState.None].Select(s => s.Sprite).ToList();
             }
 #endif
@@ -202,16 +202,17 @@ namespace Barotrauma.Items.Components
             return -1;
         }
 
-        public void TryAddLink(Wire wire)
+        public bool TryAddLink(Wire wire)
         {
             for (int i = 0; i < MaxLinked; i++)
             {
                 if (wires[i] == null)
                 {
                     SetWire(i, wire);
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
         public void SetWire(int index, Wire wire)

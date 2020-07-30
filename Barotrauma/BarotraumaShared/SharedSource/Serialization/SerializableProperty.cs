@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,11 @@ namespace Barotrauma
         /// Labels of the components of a vector property (defaults to x,y,z,w)
         /// </summary>
         public string[] VectorComponentLabels;
+
+        /// <summary>
+        /// If a translation can't be found for the property name, this tag is used instead
+        /// </summary>
+        public string FallBackTextTag;
 
         /// <summary>
         /// Currently implemented only for int fields. TODO: implement the remaining types (SerializableEntityEditor)
@@ -704,7 +710,7 @@ namespace Barotrauma
                     if (attributeName == "gameversion") { continue; }
                     if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                     {
-                        property.TrySetValue(entity, attribute.Value);
+                        FixValue(property, entity, attribute);
                     }
                     else if (entity is Item item1)
                     {
@@ -712,9 +718,38 @@ namespace Barotrauma
                         {
                             if (component.SerializableProperties.TryGetValue(attributeName, out SerializableProperty componentProperty))
                             {
-                                componentProperty.TrySetValue(component, attribute.Value);
+                                FixValue(componentProperty, component, attribute);
                             }
                         }
+                    }
+                }
+
+                void FixValue(SerializableProperty property, object parentObject, XAttribute attribute)
+                {
+                    if (attribute.Value.Length > 0 && attribute.Value[0] == '*')
+                    {
+                        float.TryParse(attribute.Value.Substring(1), NumberStyles.Float, CultureInfo.InvariantCulture, out float multiplier);
+
+                        if (property.PropertyType == typeof(int))
+                        {
+                            property.TrySetValue(parentObject, (int)(((int)property.GetValue(parentObject)) * multiplier));
+                        }
+                        else if (property.PropertyType == typeof(float))
+                        {
+                            property.TrySetValue(parentObject, (float)property.GetValue(parentObject) * multiplier);
+                        }
+                        else if (property.PropertyType == typeof(Vector2))
+                        {
+                            property.TrySetValue(parentObject, (Vector2)property.GetValue(parentObject) * multiplier);
+                        }
+                        else if (property.PropertyType == typeof(Point))
+                        {
+                            property.TrySetValue(parentObject, ((Point)property.GetValue(parentObject)).Multiply(multiplier));
+                        }
+                    }
+                    else
+                    {
+                        property.TrySetValue(parentObject, attribute.Value);
                     }
                 }
 

@@ -134,7 +134,7 @@ namespace Barotrauma
                     (RectTransform.Children.Count(c => !c.GUIComponent.IgnoreLayoutGroups) - 1) * 
                     (absoluteSpacing + relativeSpacing * thisSize);
 
-                stretchFactor = totalSize <= 0.0f || minSize >= thisSize ? 
+                stretchFactor = totalSize <= 0.0f || minSize >= thisSize || totalSize == minSize ? 
                     1.0f : 
                     (thisSize - minSize) / (totalSize - minSize);
             }

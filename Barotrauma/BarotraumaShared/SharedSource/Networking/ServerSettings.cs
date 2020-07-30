@@ -642,6 +642,20 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool DestructibleOutposts
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, true)]
+        public bool KillableNPCs
+        {
+            get;
+            set;
+        }
+
         [Serialize(true, true)]
         public bool BanAfterWrongPassword
         {
@@ -664,6 +678,13 @@ namespace Barotrauma.Networking
         }
         [Serialize("", true)]
         public string SelectedShuttle
+        {
+            get;
+            set;
+        }
+
+        [Serialize("", true)]
+        public string CampaignSubmarines
         {
             get;
             set;
@@ -747,6 +768,20 @@ namespace Barotrauma.Networking
 
         [Serialize(0.6f, true)]
         public float EndVoteRequiredRatio
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(0.6f, true)]
+        public float SubmarineVoteRequiredRatio
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(30f, true)]
+        public float SubmarineVoteTimeout
         {
             get;
             private set;

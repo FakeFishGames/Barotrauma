@@ -604,19 +604,7 @@ namespace Barotrauma.Items.Components
             }
             if (item.RequireAimToUse)
             {
-                bool isOperatingButtons = false;
-                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
-                {
-                    var door = indoorSteering.CurrentPath?.CurrentNode?.ConnectedDoor;
-                    if (door != null && !door.IsOpen)
-                    {
-                        isOperatingButtons = door.HasIntegratedButtons || door.Item.GetConnectedComponents<Controller>(true).Any();
-                    }
-                }
-                if (!isOperatingButtons)
-                {
-                    character.SetInput(InputType.Aim, false, true);
-                }
+                character.SetInput(InputType.Aim, false, true);
                 sinTime += deltaTime * 5;
             }
             // Press the trigger only when the tool is approximately facing the target.

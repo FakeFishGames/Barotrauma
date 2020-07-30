@@ -492,7 +492,7 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 MeasureString(string text)
+        public Vector2 MeasureString(string text, bool removeExtraSpacing = false)
         {
             if (text == null)
             {
@@ -501,7 +501,16 @@ namespace Barotrauma
 
             float currentLineX = 0.0f;
             Vector2 retVal = Vector2.Zero;
-            retVal.Y = baseHeight * 1.8f;
+
+            if (!removeExtraSpacing)
+            {
+                retVal.Y = baseHeight * 1.8f;
+            }
+            else
+            {
+                retVal.Y = baseHeight;
+            }
+
             for (int i = 0; i < text.Length; i++)
             {
                 if (text[i] == '\n')

@@ -179,7 +179,7 @@ namespace Barotrauma
         private float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
 
-        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center, float? relativeButtonAreaWidth = null) : base(style, rectT)
+        public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center, float? relativeButtonAreaWidth = null, bool hidePlusMinusButtons = false) : base(style, rectT)
         {
             LayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, rectT), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
@@ -235,7 +235,7 @@ namespace Barotrauma
                 return true;
             };
 
-            if (inputType != NumberType.Int)
+            if (inputType != NumberType.Int || hidePlusMinusButtons)
             {
                 HidePlusMinusButtons();
             }

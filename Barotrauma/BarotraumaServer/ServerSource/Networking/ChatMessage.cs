@@ -169,6 +169,10 @@ namespace Barotrauma.Networking
             {
                 msg.Write(Sender.ID);
             }
+            if (Type == ChatMessageType.ServerMessageBoxInGame)
+            {
+                msg.Write(IconStyle);
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
-            if (monsters.Count == 0 && monsterFiles.Count > 0)
+            if (monsters.Count == 0 && monsterPrefabs.Count > 0)
             {
                 throw new InvalidOperationException("Server attempted to write monster mission data when no monsters had been spawned.");
             }

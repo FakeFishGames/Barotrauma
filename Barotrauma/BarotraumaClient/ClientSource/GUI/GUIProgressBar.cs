@@ -121,7 +121,7 @@ namespace Barotrauma
                 (int)(Rect.Width - style.Padding.X + style.Padding.Z), 
                 (int)(Rect.Height - style.Padding.Y + style.Padding.W));
             frame.Visible = showFrame;
-            slider.Visible = true;
+            slider.Visible = BarSize > 0.0f;
 
             if (showFrame)
             {

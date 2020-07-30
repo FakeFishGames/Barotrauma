@@ -322,7 +322,7 @@ namespace Barotrauma.Tutorials
             do
             {
                 float distance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerhead.WorldPosition);
-                if (distance > originalDistance * 1.5f)
+                if (distance > originalDistance * 1.5f || officer_hammerhead.WorldPosition.Y > officer_coilgunPeriscope.WorldPosition.Y)
                 {
                     // Don't let the Hammerhead go too far.
                     officer_hammerhead.TeleportTo(officer_hammerheadSpawnPos + new Vector2(0, -1000));

@@ -42,16 +42,31 @@ namespace Barotrauma
             { 
                 return crop;
             }
-            set
+        }
+
+        public void SetCrop(bool state, bool center = true)
+        {
+            crop = state;
+            if (crop && sprite != null)
             {
-                crop = value;
-                if (crop)
-                {                                
-                    sourceRect.Width = Math.Min(sprite.SourceRect.Width, Rect.Width);
-                    sourceRect.Height = Math.Min(sprite.SourceRect.Height, Rect.Height);
+                sourceRect.Width = Math.Min(sprite.SourceRect.Width, (int)(Rect.Width / Scale));
+                sourceRect.Height = Math.Min(sprite.SourceRect.Height, (int)(Rect.Height / Scale));
+
+                if (center)
+                {
+                    sourceRect.X = (sprite.SourceRect.Width - sourceRect.Width) / 2;
+                    sourceRect.Y = (sprite.SourceRect.Height - sourceRect.Height) / 2;
                 }
+
+                origin = sourceRect.Size.ToVector2() / 2;
+            }
+            else
+            {
+                origin = sprite == null ? Vector2.Zero : sprite.size / 2;
             }
         }
+
+        private Vector2 origin;
 
         public float Scale
         {
@@ -72,7 +87,8 @@ namespace Barotrauma
             {
                 if (sprite == value) return;
                 sprite = value;
-                sourceRect = sprite.SourceRect;
+                sourceRect = value == null ? Rectangle.Empty : value.SourceRect;
+                origin = value == null ? Vector2.Zero : value.size / 2;
                 if (scaleToFit) RecalculateScale();                
             }
         }
@@ -134,7 +150,8 @@ namespace Barotrauma
                 {
                     loadingTextures = true;
                     loading = true;
-                    TaskPool.Add(LoadTextureAsync(), (Task) =>
+                    TaskPool.Add("LoadTextureAsync",
+                        LoadTextureAsync(), (Task) =>
                     {
                         loading = false;
                         lazyLoaded = true;
@@ -178,7 +195,7 @@ namespace Barotrauma
             }
             else if (sprite?.Texture != null)
             {
-                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currentColor * (currentColor.A / 255.0f), Rotation, sprite.size / 2,
+                spriteBatch.Draw(sprite.Texture, Rect.Center.ToVector2(), sourceRect, currentColor * (currentColor.A / 255.0f), Rotation, origin,
                     Scale, SpriteEffects, 0.0f);
             }
 

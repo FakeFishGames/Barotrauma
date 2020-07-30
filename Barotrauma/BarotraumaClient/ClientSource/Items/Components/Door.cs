@@ -48,6 +48,8 @@ namespace Barotrauma.Items.Components
 
         private void UpdateConvexHulls()
         {
+            if (item.Removed) { return; }
+
             doorRect = new Rectangle(
                 item.Rect.Center.X - (int)(doorSprite.size.X / 2 * item.Scale),
                 item.Rect.Y - item.Rect.Height / 2 + (int)(doorSprite.size.Y / 2.0f * item.Scale),
@@ -92,8 +94,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            
-            if (convexHull == null) return;
+
+            if (convexHull == null) { return; }
 
             if (rect.Height == 0 || rect.Width == 0)
             {
@@ -128,7 +130,7 @@ namespace Barotrauma.Items.Components
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
-                color *= (item.Condition / item.Prefab.Health);
+                color *= (item.Condition / item.MaxCondition);
                 color.A = 255;
             }
             
@@ -162,10 +164,10 @@ namespace Barotrauma.Items.Components
                         color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
                 }
 
-                if (brokenSprite != null && item.Health < item.Prefab.Health)
+                if (brokenSprite != null && item.Health < item.MaxCondition)
                 {
-                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f, 1.0f - item.Health / item.Prefab.Health) : Vector2.One;
-                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.Prefab.Health : 1.0f;
+                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f, 1.0f - item.Health / item.MaxCondition) : Vector2.One;
+                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
                     spriteBatch.Draw(brokenSprite.Texture, pos,
                         new Rectangle((int)(brokenSprite.SourceRect.X + brokenSprite.size.X * openState), brokenSprite.SourceRect.Y,
                             (int)(brokenSprite.size.X * (1.0f - openState)), (int)brokenSprite.size.Y),
@@ -188,10 +190,10 @@ namespace Barotrauma.Items.Components
                         color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
                 }
 
-                if (brokenSprite != null && item.Health < item.Prefab.Health)
+                if (brokenSprite != null && item.Health < item.MaxCondition)
                 {
-                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - item.Health / item.Prefab.Health, 1.0f) : Vector2.One;
-                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.Prefab.Health : 1.0f;
+                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - item.Health / item.MaxCondition, 1.0f) : Vector2.One;
+                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
                     spriteBatch.Draw(brokenSprite.Texture, pos,
                         new Rectangle(brokenSprite.SourceRect.X, (int)(brokenSprite.SourceRect.Y + brokenSprite.size.Y * openState),
                             (int)brokenSprite.size.X, (int)(brokenSprite.size.Y * (1.0f - openState))),

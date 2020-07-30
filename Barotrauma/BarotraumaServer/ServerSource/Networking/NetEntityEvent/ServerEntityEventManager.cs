@@ -255,8 +255,8 @@ namespace Barotrauma.Networking
                         (firstEventToResend.CreateTime > c.MidRoundSyncTimeOut || lastSentToAnyoneTime > c.MidRoundSyncTimeOut || Timing.TotalTime > c.MidRoundSyncTimeOut + 10.0));
                     toKick.ForEach(c =>
                         {
-                            DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected old event " + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
-                            GameServer.Log("Disconnecting client " + GameServer.ClientLogName(c) + " due to excessive desync (expected old event "
+                            DebugConsole.NewMessage(c.Name + " was kicked because they were expecting a very old network event (" + (c.LastRecvEntityEventID + 1).ToString() + ")", Color.Red);
+                            GameServer.Log(GameServer.ClientLogName(c) + " was kicked because they were expecting a very old network event ("
                                 + (c.LastRecvEntityEventID + 1).ToString() +
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago, " +
                                 (lastSentToAnyoneTime - firstEventToResend.CreateTime).ToString("0.##") + " s older than last event sent to anyone)" +
@@ -273,8 +273,8 @@ namespace Barotrauma.Networking
                     List<Client> toKick = inGameClients.FindAll(c => NetIdUtils.IdMoreRecent(events[0].ID, (UInt16)(c.LastRecvEntityEventID + 1)));
                     toKick.ForEach(c =>
                     {
-                        DebugConsole.NewMessage(c.Name + " was kicked due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
-                        GameServer.Log("Disconnecting client " + GameServer.ClientLogName(c) + " due to excessive desync (expected removed event " + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
+                        DebugConsole.NewMessage(c.Name + " was kicked because they were expecting a removed network event (" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
+                        GameServer.Log(GameServer.ClientLogName(c) + " was kicked because they were expecting a removed network event (" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
                         server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncRemovedEvent + "/ServerMessage.ExcessiveDesyncRemovedEvent");
                     });
                 }

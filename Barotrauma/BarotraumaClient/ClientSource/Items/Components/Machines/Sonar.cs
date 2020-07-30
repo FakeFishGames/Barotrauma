@@ -157,16 +157,15 @@ namespace Barotrauma.Items.Components
                 }
             }
             CreateGUI();
-            GameMain.Instance.OnResolutionChanged += RecreateGUI;
         }
 
-        private void RecreateGUI()
+        protected override void OnResolutionChanged()
         {
-            GuiFrame.ClearChildren();
-            CreateGUI();
+            base.OnResolutionChanged();
+            UpdateGUIElements();
         }
 
-        private void CreateGUI()
+        protected override void CreateGUI()
         {
             bool isConnectedToSteering = item.GetComponent<Steering>() != null;
             Vector2 size = isConnectedToSteering ? controlBoxSize : new Vector2(controlBoxSize.X * 2.0f, controlBoxSize.Y);
@@ -667,23 +666,27 @@ namespace Barotrauma.Items.Components
                 signalWarningText.Visible = false;
             }
 
-            if (GameMain.GameSession == null) { return; }
+            if (GameMain.GameSession == null || Level.Loaded == null) { return; }
 
-            if (Level.Loaded == null) { return; }
+            if (Level.Loaded.StartLocation != null)
+            {
+                DrawMarker(spriteBatch,
+                    Level.Loaded.StartLocation.Name,
+                    "outpost",
+                    Level.Loaded.StartLocation.Name,
+                    Level.Loaded.StartPosition, transducerCenter,
+                    displayScale, center, DisplayRadius);
+            }
 
-            DrawMarker(spriteBatch,
-                GameMain.GameSession.StartLocation.Name,
-                "outpost",
-                GameMain.GameSession.StartLocation.Name,
-                Level.Loaded.StartPosition, transducerCenter,
-                displayScale, center, DisplayRadius);
-
-            DrawMarker(spriteBatch,
-                GameMain.GameSession.EndLocation.Name,
-                "outpost",
-                GameMain.GameSession.EndLocation.Name,
-                Level.Loaded.EndPosition, transducerCenter, 
-                displayScale, center, DisplayRadius);
+            if (Level.Loaded.EndLocation != null && Level.Loaded.Type == LevelData.LevelType.LocationConnection)
+            {
+                DrawMarker(spriteBatch,
+                    Level.Loaded.EndLocation.Name,
+                    "outpost",
+                    Level.Loaded.EndLocation.Name,
+                    Level.Loaded.EndPosition, transducerCenter,
+                    displayScale, center, DisplayRadius);
+            }
 
             foreach (AITarget aiTarget in AITarget.List)
             {
@@ -1444,8 +1447,6 @@ namespace Barotrauma.Items.Components
                 sprite.Remove();
             }
             targetIcons.Clear();
-
-            GameMain.Instance.OnResolutionChanged -= RecreateGUI;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

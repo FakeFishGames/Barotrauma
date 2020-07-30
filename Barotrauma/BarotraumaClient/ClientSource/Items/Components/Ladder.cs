@@ -27,8 +27,9 @@ namespace Barotrauma.Items.Components
             if (backgroundSprite == null) { return; }
 
             backgroundSprite.DrawTiled(spriteBatch,
-                new Vector2(item.DrawPosition.X - item.Rect.Width / 2, -(item.DrawPosition.Y + item.Rect.Height / 2)) - backgroundSprite.Origin,
-                new Vector2(backgroundSprite.size.X, item.Rect.Height), color: item.Color,
+                new Vector2(item.DrawPosition.X - item.Rect.Width / 2 * item.Scale, -(item.DrawPosition.Y + item.Rect.Height / 2)) - backgroundSprite.Origin * item.Scale,
+                new Vector2(backgroundSprite.size.X * item.Scale, item.Rect.Height), color: item.Color,
+                textureScale: Vector2.One * item.Scale,
                 depth: BackgroundSpriteDepth);
         }
 

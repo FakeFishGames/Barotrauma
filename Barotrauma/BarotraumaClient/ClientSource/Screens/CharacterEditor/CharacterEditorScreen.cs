@@ -159,7 +159,7 @@ namespace Barotrauma.CharacterEditor
                 OnPostSpawn();
             }
             OpenDoors();
-            GameMain.Instance.OnResolutionChanged += OnResolutionChanged;
+            GameMain.Instance.ResolutionChanged += OnResolutionChanged;
             Instance = this;
 
             if (!GameMain.Config.EditorDisclaimerShown)
@@ -266,7 +266,7 @@ namespace Barotrauma.CharacterEditor
                 Reset(Character.CharacterList.Where(c => VanillaCharacters.Any(vchar => vchar == c.ConfigPath)));
 #endif
             }
-            GameMain.Instance.OnResolutionChanged -= OnResolutionChanged;
+            GameMain.Instance.ResolutionChanged -= OnResolutionChanged;
             GameMain.LightManager.LightingEnabled = true;
             ClearWidgets();
             ClearSelection();

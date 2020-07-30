@@ -202,7 +202,7 @@ namespace Barotrauma
             return false;
         }
 
-        public static string Get(string textTag, bool returnNull = false, string fallBackTag = null)
+        public static string Get(string textTag, bool returnNull = false, string fallBackTag = null, bool useEnglishAsFallBack = true)
         {
             lock (mutex)
             {
@@ -246,7 +246,7 @@ namespace Barotrauma
 
                 //if text was not found and we're using a language other than English, see if we can find an English version
                 //may happen, for example, if a user has selected another language and using mods that haven't been translated to that language
-                if (Language != "English" && textPacks.ContainsKey("English"))
+                if (useEnglishAsFallBack && Language != "English" && textPacks.ContainsKey("English"))
                 {
                     foreach (TextPack textPack in textPacks["English"])
                     {
@@ -517,6 +517,7 @@ namespace Barotrauma
         // Format: ServerMessage.Identifier1/ServerMessage.Indentifier2~[variable1]=value~[variable2]=value
         // Also: replacement=ServerMessage.Identifier1~[variable1]=value/ServerMessage.Identifier2~[variable2]=replacement
         // And: replacement=formatter(value)
+        // Variable that requires translation -> ServerMessage.Indentifier1~[variable1]=§value
         public static string GetServerMessage(string serverMessage)
         {
             lock (mutex)
@@ -611,7 +612,7 @@ namespace Barotrauma
                         for (int j = 1; j < messageWithVariables.Length; j++)
                         {
                             string[] variableAndValue = messageWithVariables[j].Split('=');
-                            messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1]);
+                            messages[i] = messages[i].Replace(variableAndValue[0], variableAndValue[1].Length > 1 && variableAndValue[1][0] == '§' ? Get(variableAndValue[1].Substring(1)) : variableAndValue[1]);
                         }
 
                         if (messageVariable != null)
@@ -713,12 +714,6 @@ namespace Barotrauma
                     break;
             }
             return string.Join(separator, texts);
-        }
-
-        public static string EnsureUTF8(string text)
-        {
-            byte[] bytes = Encoding.Default.GetBytes(text);
-            return Encoding.UTF8.GetString(bytes);
         }
 
         public static List<string> GetAll(string textTag)
@@ -869,7 +864,7 @@ namespace Barotrauma
         }
 #endif
 
-        private static string Capitalize(string str)
+        public static string Capitalize(string str)
         {
             if (string.IsNullOrWhiteSpace(str))
             {

@@ -16,6 +16,9 @@ namespace Barotrauma
         public string[] ignoredContainerIdentifiers;
         public bool checkInventory = true;
 
+        //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
+        private bool spawnItemIfNotFound = false;
+
         //can either be a tag or an identifier
         public readonly string[] itemIdentifiers;
         public readonly ItemContainer container;
@@ -38,13 +41,14 @@ namespace Barotrauma
             this.item = item;
         }
 
-        public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1)
-            : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier) { }
+        public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false)
+            : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier, spawnItemIfNotFound) { }
 
-        public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
+        public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
+            this.spawnItemIfNotFound = spawnItemIfNotFound;
             for (int i = 0; i < itemIdentifiers.Length; i++)
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
@@ -147,7 +151,7 @@ namespace Barotrauma
             {
                 // No matching items in the inventory, try to get an item
                 TryAddSubObjective(ref getItemObjective, () =>
-                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: Equip, checkInventory: checkInventory)
+                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: Equip, checkInventory: checkInventory, spawnItemIfNotFound: spawnItemIfNotFound)
                     {
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = ignoredContainerIdentifiers,

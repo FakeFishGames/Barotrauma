@@ -137,8 +137,15 @@ namespace Steamworks.Ugc
 			}
 			else
 			{
-				handle = SteamUGC.Internal.CreateQueryAllUGCRequest1( queryType, matchingType, creatorApp.Value, consumerApp.Value, (uint)page );
+				handle = SteamUGC.Internal.CreateQueryAllUGCRequest( queryType, matchingType, creatorApp.Value, consumerApp.Value, (uint)page );
 			}
+
+		    ApplyReturns(handle);
+
+		    if (maxCacheAge.HasValue)
+		    {
+		        SteamUGC.Internal.SetAllowCachedResponse(handle, (uint)maxCacheAge.Value);
+		    }
 
 			ApplyConstraints( handle );
 
@@ -154,29 +161,15 @@ namespace Steamworks.Ugc
 				Handle = result.Value.Handle,
 				ResultCount = (int) result.Value.NumResultsReturned,
 				TotalCount = (int)result.Value.TotalMatchingResults,
-				CachedData = result.Value.CachedData
+				CachedData = result.Value.CachedData,
+				ReturnsKeyValueTags = WantsReturnKeyValueTags ?? false,
+				ReturnsDefaultStats = WantsDefaultStats ?? true, //true by default
+				ReturnsMetadata = WantsReturnMetadata ?? false,
 			};
 		}
 
-
-		#region SharedConstraints
+	    #region SharedConstraints
 		public QueryType WithType( UgcType type ) { matchingType = type; return this; }
-		bool? WantsReturnOnlyIDs;
-		public QueryType WithOnlyIDs( bool b ) { WantsReturnOnlyIDs = b; return this; }
-		bool? WantsReturnKeyValueTags;
-		public QueryType WithKeyValueTag( bool b ) { WantsReturnKeyValueTags = b; return this; }
-		bool? WantsReturnLongDescription;
-		public QueryType WithLongDescription( bool b ) { WantsReturnLongDescription = b; return this; }
-		bool? WantsReturnMetadata;
-		public QueryType WithMetadata( bool b ) { WantsReturnMetadata = b; return this; }
-		bool? WantsReturnChildren;
-		public QueryType WithChildren( bool b ) { WantsReturnChildren = b; return this; }
-		bool? WantsReturnAdditionalPreviews;
-		public QueryType WithAdditionalPreviews( bool b ) { WantsReturnAdditionalPreviews = b; return this; }
-		bool? WantsReturnTotalOnly;
-		public QueryType WithTotalOnly( bool b ) { WantsReturnTotalOnly = b; return this; }
-		bool? WantsReturnPlaytimeStats;
-		public QueryType WithPlaytimeStats( bool b ) { WantsReturnPlaytimeStats = b; return this; }
 		int? maxCacheAge;
 		public QueryType AllowCachedResponse( int maxSecondsAge ) { maxCacheAge = maxSecondsAge; return this; }
 		string language;
@@ -221,6 +214,13 @@ namespace Steamworks.Ugc
 			return this;
 		}
 
+		public QueryType AddRequiredKeyValueTag(string key, string value)
+		{
+			if (requiredKv == null) requiredKv = new Dictionary<string, string>();
+			requiredKv.Add(key, value);
+			return this;
+		}
+
 		void ApplyConstraints( UGCQueryHandle_t handle )
 		{
 			if ( requiredTags != null )
@@ -259,7 +259,82 @@ namespace Steamworks.Ugc
             SteamUGC.Internal.SetReturnLongDescription( handle, returnLongDescription );
 		}
 
-		#endregion
+        #endregion
 
+        #region ReturnValues
+
+	    bool? WantsReturnOnlyIDs;
+	    public QueryType WithOnlyIDs(bool b) { WantsReturnOnlyIDs = b; return this; }
+	    bool? WantsReturnKeyValueTags;
+		public QueryType WithKeyValueTags(bool b) { WantsReturnKeyValueTags = b; return this; }
+		[Obsolete( "Renamed to WithKeyValueTags" )]
+        public QueryType WithKeyValueTag(bool b) { WantsReturnKeyValueTags = b; return this; }
+	    bool? WantsReturnLongDescription;
+	    public QueryType WithLongDescription(bool b) { WantsReturnLongDescription = b; return this; }
+	    bool? WantsReturnMetadata;
+	    public QueryType WithMetadata(bool b) { WantsReturnMetadata = b; return this; }
+	    bool? WantsReturnChildren;
+	    public QueryType WithChildren(bool b) { WantsReturnChildren = b; return this; }
+	    bool? WantsReturnAdditionalPreviews;
+	    public QueryType WithAdditionalPreviews(bool b) { WantsReturnAdditionalPreviews = b; return this; }
+	    bool? WantsReturnTotalOnly;
+	    public QueryType WithTotalOnly(bool b) { WantsReturnTotalOnly = b; return this; }
+	    uint? WantsReturnPlaytimeStats;
+	    public QueryType WithPlaytimeStats(uint unDays) { WantsReturnPlaytimeStats = unDays; return this; }
+
+        private void ApplyReturns(UGCQueryHandle_t handle)
+	    {
+	        if (WantsReturnOnlyIDs.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnOnlyIDs(handle, WantsReturnOnlyIDs.Value);
+	        }
+
+	        if (WantsReturnKeyValueTags.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnKeyValueTags(handle, WantsReturnKeyValueTags.Value);
+	        }
+
+	        if (WantsReturnLongDescription.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnLongDescription(handle, WantsReturnLongDescription.Value);
+	        }
+
+	        if (WantsReturnMetadata.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnMetadata(handle, WantsReturnMetadata.Value);
+	        }
+
+	        if (WantsReturnChildren.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnChildren(handle, WantsReturnChildren.Value);
+	        }
+
+	        if (WantsReturnAdditionalPreviews.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnAdditionalPreviews(handle, WantsReturnAdditionalPreviews.Value);
+	        }
+
+	        if (WantsReturnTotalOnly.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnTotalOnly(handle, WantsReturnTotalOnly.Value);
+	        }
+
+	        if (WantsReturnPlaytimeStats.HasValue)
+	        {
+	            SteamUGC.Internal.SetReturnPlaytimeStats(handle, WantsReturnPlaytimeStats.Value);
+	        }
+	    }
+
+        #endregion
+
+		#region LoadingBehaviour
+
+		bool? WantsDefaultStats; //true by default
+		/// <summary>
+		/// Set to false to disable, by default following stats are loaded: NumSubscriptions, NumFavorites, NumFollowers, NumUniqueSubscriptions, NumUniqueFavorites, NumUniqueFollowers, NumUniqueWebsiteViews, ReportScore, NumSecondsPlayed, NumPlaytimeSessions, NumComments, NumSecondsPlayedDuringTimePeriod, NumPlaytimeSessionsDuringTimePeriod
+		/// </summary>
+		public QueryType WithDefaultStats( bool b ) { WantsDefaultStats = b; return this; }
+
+		#endregion
 	}
 }

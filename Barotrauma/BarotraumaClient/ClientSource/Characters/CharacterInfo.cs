@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -12,9 +13,11 @@ namespace Barotrauma
     {
         private static Sprite infoAreaPortraitBG;
 
+        public bool LastControlled;
+
         public static void Init()
         {
-            infoAreaPortraitBG = GUI.Style.GetComponentStyle("InfoAreaPortraitBG")?.Sprites[GUIComponent.ComponentState.None][0].Sprite;
+            infoAreaPortraitBG = GUI.Style.GetComponentStyle("InfoAreaPortraitBG")?.GetDefaultSprite();
             new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(833, 298, 142, 98), null, 0);
         }
 
@@ -117,6 +120,7 @@ namespace Barotrauma
 
         private void DrawInfoFrameCharacterIcon(SpriteBatch sb, Rectangle componentRect)
         {
+            if (headSprite == null) { return; }
             Vector2 targetAreaSize = componentRect.Size.ToVector2();
             float scale = Math.Min(targetAreaSize.X / headSprite.size.X, targetAreaSize.Y / headSprite.size.Y);
             DrawIcon(sb, componentRect.Location.ToVector2() + headSprite.size / 2 * scale, targetAreaSize);
@@ -140,6 +144,9 @@ namespace Barotrauma
 
         partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
         {
+            if (TeamID == Character.TeamType.FriendlyNPC) { return; }
+            if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
+
             if (newLevel - prevLevel > 0.1f)
             {
                 GUI.AddMessage(

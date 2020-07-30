@@ -18,32 +18,47 @@ namespace Barotrauma
 
         public static void LoadCache()
         {
-            if (!File.Exists(cachePath)) { return; }
-            string[] lines = File.ReadAllLines(cachePath);
-            if (lines.Length <= 0 || lines[0] != GameMain.Version.ToString()) { return; }
-            foreach (string line in lines.Skip(1))
+            try
             {
-                if (string.IsNullOrWhiteSpace(line)) { continue; }
-                string[] parts = line.Split('|');
-                if (parts.Length < 3) { continue; }
-
-                string path = parts[0].CleanUpPath();
-                string hashStr = parts[1];
-                long timeLong = long.Parse(parts[2]);
-
-                Md5Hash hash = new Md5Hash(hashStr);
-                DateTime time = DateTime.FromBinary(timeLong);
-
-                if (File.GetLastWriteTime(path) == time && !cache.ContainsKey(path))
+                if (!File.Exists(cachePath)) { return; }
+                string[] lines = File.ReadAllLines(cachePath, Encoding.UTF8);
+                if (lines.Length <= 0 || lines[0] != GameMain.Version.ToString()) { return; }
+                foreach (string line in lines.Skip(1))
                 {
-                    cache.Add(path, new Tuple<Md5Hash, long>(hash, timeLong));
+                    if (string.IsNullOrWhiteSpace(line)) { continue; }
+                    string[] parts = line.Split('|');
+                    if (parts.Length < 3) { continue; }
+
+                    string path = parts[0].CleanUpPath();
+                    string hashStr = parts[1];
+                    long timeLong = long.Parse(parts[2]);
+
+                    Md5Hash hash = new Md5Hash(hashStr);
+                    DateTime time = DateTime.FromBinary(timeLong);
+
+                    if (File.GetLastWriteTime(path) == time && !cache.ContainsKey(path))
+                    {
+                        cache.Add(path, new Tuple<Md5Hash, long>(hash, timeLong));
+                    }
                 }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.NewMessage($"Failed to load hash cache: {e.Message}\n{e.StackTrace}", Microsoft.Xna.Framework.Color.Orange);
+                cache.Clear();
             }
         }
 
         public static void SaveCache()
         {
-            string[] lines = new string[cache.Count+1];
+#if SERVER
+            //don't save to the cache if the server is owned by a client,
+            //since this suggests that they're running concurrently and
+            //will interfere with each other here
+            if (GameMain.Server?.OwnerConnection != null) { return; }
+#endif
+
+            string[] lines = new string[cache.Count + 1];
             lines[0] = GameMain.Version.ToString();
             int i = 1;
             foreach (KeyValuePair<string, Tuple<Md5Hash, long>> kpv in cache)
@@ -51,7 +66,7 @@ namespace Barotrauma
                 lines[i] = kpv.Key + "|" + kpv.Value.Item1 + "|" + kpv.Value.Item2;
                 i++;
             }
-            File.WriteAllLines(cachePath, lines);
+            File.WriteAllLines(cachePath, lines, Encoding.UTF8);
         }
 
         private bool LoadFromCache(string filename)

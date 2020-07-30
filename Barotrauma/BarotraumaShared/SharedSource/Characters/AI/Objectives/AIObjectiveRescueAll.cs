@@ -9,9 +9,10 @@ namespace Barotrauma
         public override string DebugTag => "rescue all";
         public override bool ForceRun => true;
         public override bool InverseTargetEvaluation => true;
+        public override bool AllowOutsideSubmarine => true;
 
-        private const float vitalityThreshold = 80;
-        private const float vitalityThresholdForOrders = 100;
+        private const float vitalityThreshold = 75;
+        private const float vitalityThresholdForOrders = 85;
         public static float GetVitalityThreshold(AIObjectiveManager manager, Character character, Character target)
         {
             if (manager == null)
@@ -71,7 +72,8 @@ namespace Barotrauma
         public static bool IsValidTarget(Character target, Character character)
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
-            if (!HumanAIController.IsFriendly(character, target)) { return false; }
+            if (target.TurnedHostileByEvent) { return false; }
+            if (!HumanAIController.IsFriendly(character, target, onlySameTeam: true)) { return false; }
             if (character.AIController is HumanAIController humanAI)
             {
                 if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target)) { return false; }
@@ -94,13 +96,8 @@ namespace Barotrauma
                 if (GetVitalityFactor(target) >= vitalityThreshold) { return false; }
             }
             if (target.Submarine == null || character.Submarine == null) { return false; }
-            if (target.Submarine.TeamID != character.Submarine.TeamID) { return false; }
-            if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null)
-            {
-                if (target.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
-                if (character.Submarine != null && !character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
-            }
+            // Don't allow going into another sub, unless it's connected and of the same team and type.
+            if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
             if (target != character &&!target.IsPlayer && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {
                 // Ignore all concious targets that are currently fighting, fleeing or treating characters

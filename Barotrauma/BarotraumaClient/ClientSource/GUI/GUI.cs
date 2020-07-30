@@ -79,6 +79,8 @@ namespace Barotrauma
         public static readonly string[] rectComponentLabels = { "X", "Y", "W", "H" };
         public static readonly string[] colorComponentLabels = { "R", "G", "B", "A" };
 
+        private static readonly object mutex = new object();
+
         public static Vector2 ReferenceResolution => new Vector2(1920f, 1080f);
         public static float Scale => (UIWidth / ReferenceResolution.X + GameMain.GraphicsHeight / ReferenceResolution.Y) / 2.0f * GameSettings.HUDScale;
         public static float xScale => UIWidth / ReferenceResolution.X * GameSettings.HUDScale;
@@ -126,7 +128,9 @@ namespace Barotrauma
         private static Texture2D t;
         private static Sprite[] MouseCursorSprites => Style.CursorSprite;
 
-        private static bool debugDrawSounds, debugDrawEvents;
+        private static bool debugDrawSounds, debugDrawEvents, debugDrawMetadata;
+        private static int debugDrawMetadataOffset;
+        private static readonly string[] ignoredMetadataInfo = { string.Empty, string.Empty, string.Empty, string.Empty };
 
         public static GraphicsDevice GraphicsDevice { get; private set; }
 
@@ -287,23 +291,26 @@ namespace Barotrauma
         /// </summary>
         public static void Draw(Camera cam, SpriteBatch spriteBatch)
         {
-            if (ScreenChanged)
+            lock (mutex)
             {
-                updateList.Clear();
-                updateListSet.Clear();
-                Screen.Selected?.AddToGUIUpdateList();
-                ScreenChanged = false;
-            }
 
-            updateList.ForEach(c => c.DrawAuto(spriteBatch));
+                if (ScreenChanged)
+                {
+                    updateList.Clear();
+                    updateListSet.Clear();
+                    Screen.Selected?.AddToGUIUpdateList();
+                    ScreenChanged = false;
+                }
 
-            if (ScreenOverlayColor.A > 0.0f)
-            {
-                DrawRectangle(
-                    spriteBatch,
-                    new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                    ScreenOverlayColor, true);
-            }
+                updateList.ForEach(c => c.DrawAuto(spriteBatch));
+
+                if (ScreenOverlayColor.A > 0.0f)
+                {
+                    DrawRectangle(
+                        spriteBatch,
+                        new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                        ScreenOverlayColor, true);
+                }
 
 #if UNSTABLE
             string line1 = "Barotrauma Unstable v" + GameMain.Version;
@@ -343,293 +350,319 @@ namespace Barotrauma
             }
 #endif
 
-            if (DisableHUD) { return; }
+                if (DisableHUD) { return; }
 
-            if (GameMain.ShowFPS || GameMain.DebugDraw)
-            {
-                DrawString(spriteBatch, new Vector2(10, 10),
-                    "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
-                    Color.White, Color.Black * 0.5f, 0, SmallFont);
-            }
-
-            if (GameMain.ShowPerf)
-            {
-                int y = 10;
-                DrawString(spriteBatch, new Vector2(300, y), 
-                    "Draw - Avg: " + GameMain.PerformanceCounter.DrawTimeGraph.Average().ToString("0.00") + " ms" +
-                    " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms", 
-                    GUI.Style.Green, Color.Black * 0.8f, font: SmallFont);
-                y += 15;
-                GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, GUI.Style.Green);
-                y += 50;
-
-                DrawString(spriteBatch, new Vector2(300, y),
-                    "Update - Avg: " + GameMain.PerformanceCounter.UpdateTimeGraph.Average().ToString("0.00") + " ms" +
-                    " Max: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue().ToString("0.00") + " ms", 
-                    Color.LightBlue, Color.Black * 0.8f, font: SmallFont);
-                y += 15;
-                GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.LightBlue);
-                GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), 20, 0, GUI.Style.Red);
-                y += 50;
-                foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
+                if (GameMain.ShowFPS || GameMain.DebugDraw)
                 {
-                    float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
+                    DrawString(spriteBatch, new Vector2(10, 10),
+                        "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
+                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+                }
+
+                if (GameMain.ShowPerf)
+                {
+                    int y = 10;
                     DrawString(spriteBatch, new Vector2(300, y),
-                        key + ": " + elapsedMillisecs.ToString("0.00"),
-                        Color.Lerp(Color.LightGreen, GUI.Style.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-
+                        "Draw - Avg: " + GameMain.PerformanceCounter.DrawTimeGraph.Average().ToString("0.00") + " ms" +
+                        " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms",
+                        GUI.Style.Green, Color.Black * 0.8f, font: SmallFont);
                     y += 15;
-                }
+                    GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, GUI.Style.Green);
+                    y += 50;
 
-                if (Settings.EnableDiagnostics)
-                {
-                    DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                    DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
-                }
-            }
-
-            if (GameMain.DebugDraw)
-            {
-                DrawString(spriteBatch, new Vector2(10, 25),
-                    "Physics: " + GameMain.World.UpdateTime,
-                    Color.White, Color.Black * 0.5f, 0, SmallFont);
-
-                DrawString(spriteBatch, new Vector2(10, 40),
-                    $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled).Count} dynamic)",
-                    Color.White, Color.Black * 0.5f, 0, SmallFont);
-
-                if (Screen.Selected.Cam != null)
-                {
-                    DrawString(spriteBatch, new Vector2(10, 55),
-                        "Camera pos: " + Screen.Selected.Cam.Position.ToPoint() + ", zoom: " + Screen.Selected.Cam.Zoom,
-                        Color.White, Color.Black * 0.5f, 0, SmallFont);
-                }
-
-                if (Submarine.MainSub != null)
-                {
-                    DrawString(spriteBatch, new Vector2(10, 70),
-                        "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
-                        Color.White, Color.Black * 0.5f, 0, SmallFont);
-                }
-
-                DrawString(spriteBatch, new Vector2(10, 90),
-                    "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
-                    Color.Lerp(GUI.Style.Green, GUI.Style.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
-
-                DrawString(spriteBatch, new Vector2(10, 115),
-                    "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)",
-                    Color.White, Color.Black * 0.5f, 0, SmallFont);
-
-                if (debugDrawSounds)
-                {
-                    int y = 0;
-                    DrawString(spriteBatch, new Vector2(500, y),
-                        "Sounds (Ctrl+S to hide): ", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    DrawString(spriteBatch, new Vector2(300, y),
+                        "Update - Avg: " + GameMain.PerformanceCounter.UpdateTimeGraph.Average().ToString("0.00") + " ms" +
+                        " Max: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue().ToString("0.00") + " ms",
+                        Color.LightBlue, Color.Black * 0.8f, font: SmallFont);
                     y += 15;
-
-                    DrawString(spriteBatch, new Vector2(500, y),
-                        "Current playback amplitude: " + GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
-
-                    y += 15;
-
-                    DrawString(spriteBatch, new Vector2(500, y),
-                        "Compressed dynamic range gain: " + GameMain.SoundManager.CompressionDynamicRangeGain.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
-
-                    y += 15;
-
-                    DrawString(spriteBatch, new Vector2(500, y),
-                        "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, SmallFont);
-                    y += 15;
-
-                    for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
+                    GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), null, 0, Color.LightBlue);
+                    GameMain.PerformanceCounter.UpdateIterationsGraph.Draw(spriteBatch, new Rectangle(300, y, 170, 50), 20, 0, GUI.Style.Red);
+                    y += 50;
+                    foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
                     {
-                        Color clr = Color.White;
-                        string soundStr = i + ": ";
-                        SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(SoundManager.SourcePoolIndex.Default, i);
-                        if (playingSoundChannel == null)
+                        float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
+                        DrawString(spriteBatch, new Vector2(300, y),
+                            key + ": " + elapsedMillisecs.ToString("0.00"),
+                            Color.Lerp(Color.LightGreen, GUI.Style.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+
+                        y += 15;
+                    }
+
+                    if (Settings.EnableDiagnostics)
+                    {
+                        DrawString(spriteBatch, new Vector2(320, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                        DrawString(spriteBatch, new Vector2(320, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                        DrawString(spriteBatch, new Vector2(320, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                        DrawString(spriteBatch, new Vector2(320, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                        DrawString(spriteBatch, new Vector2(320, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                        DrawString(spriteBatch, new Vector2(320, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, SmallFont);
+                    }
+                }
+
+                if (GameMain.DebugDraw)
+                {
+                    DrawString(spriteBatch, new Vector2(10, 25),
+                        "Physics: " + GameMain.World.UpdateTime,
+                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                    DrawString(spriteBatch, new Vector2(10, 40),
+                        $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.FindAll(b => b.Awake && b.Enabled).Count} awake, {GameMain.World.BodyList.FindAll(b => b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled).Count} dynamic)",
+                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                    if (Screen.Selected.Cam != null)
+                    {
+                        DrawString(spriteBatch, new Vector2(10, 55),
+                            "Camera pos: " + Screen.Selected.Cam.Position.ToPoint() + ", zoom: " + Screen.Selected.Cam.Zoom,
+                            Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    }
+
+                    if (Submarine.MainSub != null)
+                    {
+                        DrawString(spriteBatch, new Vector2(10, 70),
+                            "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
+                            Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    }
+
+                    DrawString(spriteBatch, new Vector2(10, 90),
+                        "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
+                        Color.Lerp(GUI.Style.Green, GUI.Style.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
+
+                    DrawString(spriteBatch, new Vector2(10, 115),
+                        "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)",
+                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                    if (debugDrawSounds)
+                    {
+                        int y = 0;
+                        DrawString(spriteBatch, new Vector2(500, y),
+                            "Sounds (Ctrl+S to hide): ", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                        y += 15;
+
+                        DrawString(spriteBatch, new Vector2(500, y),
+                            "Current playback amplitude: " + GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                        y += 15;
+
+                        DrawString(spriteBatch, new Vector2(500, y),
+                            "Compressed dynamic range gain: " + GameMain.SoundManager.CompressionDynamicRangeGain.ToString(), Color.White, Color.Black * 0.5f, 0, SmallFont);
+
+                        y += 15;
+
+                        DrawString(spriteBatch, new Vector2(500, y),
+                            "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                        y += 15;
+
+                        for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                         {
-                            soundStr += "none";
-                            clr *= 0.5f;
+                            Color clr = Color.White;
+                            string soundStr = i + ": ";
+                            SoundChannel playingSoundChannel = GameMain.SoundManager.GetSoundChannelFromIndex(SoundManager.SourcePoolIndex.Default, i);
+                            if (playingSoundChannel == null)
+                            {
+                                soundStr += "none";
+                                clr *= 0.5f;
+                            }
+                            else
+                            {
+                                soundStr += Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
+
+#if DEBUG
+                                if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.G))
+                                {
+                                    if (PlayerInput.MousePosition.Y >= y && PlayerInput.MousePosition.Y <= y + 12)
+                                    {
+                                        GameMain.SoundManager.DebugSource(i);
+                                    }
+                                }
+#endif
+
+                                if (playingSoundChannel.Looping)
+                                {
+                                    soundStr += " (looping)";
+                                    clr = Color.Yellow;
+                                }
+                                if (playingSoundChannel.IsStream)
+                                {
+                                    soundStr += " (streaming)";
+                                    clr = Color.Lime;
+                                }
+                                if (!playingSoundChannel.IsPlaying)
+                                {
+                                    soundStr += " (stopped)";
+                                    clr *= 0.5f;
+                                }
+                                else if (playingSoundChannel.Muffled)
+                                {
+                                    soundStr += " (muffled)";
+                                    clr = Color.Lerp(clr, Color.LightGray, 0.5f);
+                                }
+                            }
+
+                            DrawString(spriteBatch, new Vector2(500, y), soundStr, clr, Color.Black * 0.5f, 0, SmallFont);
+                            y += 15;
+                        }
+                    }
+                    else
+                    {
+                        DrawString(spriteBatch, new Vector2(500, 0),
+                            "Ctrl+S to show sound debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    }
+
+
+                    if (debugDrawEvents)
+                    {
+                        DrawString(spriteBatch, new Vector2(10, 300),
+                            "Ctrl+E to hide EventManager debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                        GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch, 315);
+                    }
+                    else
+                    {
+                        DrawString(spriteBatch, new Vector2(10, 300),
+                            "Ctrl+E to show EventManager debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    }
+
+                    if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
+                    {
+                        if (debugDrawMetadata)
+                        {
+                            string text = "Ctrl+M to hide campaign metadata debug info\n\n" +
+                                          $"Ctrl+1 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[0]) ? "hide" : "show")} outpost reputations, \n" +
+                                          $"Ctrl+2 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[1]) ? "hide" : "show")} faction reputations, \n" +
+                                          $"Ctrl+3 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[2]) ? "hide" : "show")} upgrade levels, \n" +
+                                          $"Ctrl+4 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[3]) ? "hide" : "show")} upgrade prices";
+                            var (x, y) = SmallFont.MeasureString(text);
+                            Vector2 pos = new Vector2(GameMain.GraphicsWidth - (x + 10), 300);
+                            DrawString(spriteBatch, pos, text, Color.White, Color.Black * 0.5f, 0, SmallFont);
+                            pos.Y += y + 8;
+                            campaignMode.CampaignMetadata?.DebugDraw(spriteBatch, pos, debugDrawMetadataOffset, ignoredMetadataInfo);
                         }
                         else
                         {
-                            soundStr += Path.GetFileNameWithoutExtension(playingSoundChannel.Sound.Filename);
+                            const string text = "Ctrl+M to show campaign metadata debug info";
+                            DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (SmallFont.MeasureString(text).X + 10), 300),
+                                text, Color.White, Color.Black * 0.5f, 0, SmallFont);
+                        }
+                    }
 
-#if DEBUG
-                            if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.G))
+                    if (MouseOn != null)
+                    {
+                        RectTransform mouseOnRect = MouseOn.RectTransform;
+                        bool isAbsoluteOffsetInUse = mouseOnRect.AbsoluteOffset != Point.Zero || mouseOnRect.RelativeOffset == Vector2.Zero;
+
+                        string selectedString = $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}";
+                        string offsetString = $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}";
+                        string anchorPivotString = $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}";
+                        Vector2 selectedStringSize = SmallFont.MeasureString(selectedString);
+                        Vector2 offsetStringSize = SmallFont.MeasureString(offsetString);
+                        Vector2 anchorPivotStringSize = SmallFont.MeasureString(anchorPivotString);
+
+                        int padding = IntScale(10);
+                        int yPos = padding;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)selectedStringSize.X - padding, yPos), selectedString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)selectedStringSize.Y + padding / 2;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)offsetStringSize.X - padding, yPos), offsetString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)offsetStringSize.Y + padding / 2;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)anchorPivotStringSize.Y + padding / 2;
+                    }
+                    else
+                    {
+                        string guiScaleString = $"GUI.Scale: {Scale}";
+                        string guixScaleString = $"GUI.xScale: {xScale}";
+                        string guiyScaleString = $"GUI.yScale: {yScale}";
+                        string relativeHorizontalAspectRatioString = $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}";
+                        string relativeVerticalAspectRatioString = $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}";
+                        Vector2 guiScaleStringSize = SmallFont.MeasureString(guiScaleString);
+                        Vector2 guixScaleStringSize = SmallFont.MeasureString(guixScaleString);
+                        Vector2 guiyScaleStringSize = SmallFont.MeasureString(guiyScaleString);
+                        Vector2 relativeHorizontalAspectRatioStringSize = SmallFont.MeasureString(relativeHorizontalAspectRatioString);
+                        Vector2 relativeVerticalAspectRatioStringSize = SmallFont.MeasureString(relativeVerticalAspectRatioString);
+
+                        int padding = IntScale(10);
+                        int yPos = padding;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiScaleStringSize.X - padding, yPos), guiScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)guiScaleStringSize.Y + padding / 2;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guixScaleStringSize.X - padding, yPos), guixScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)guixScaleStringSize.Y + padding / 2;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiyScaleStringSize.X - padding, yPos), guiyScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)guiyScaleStringSize.Y + padding / 2;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeHorizontalAspectRatioStringSize.X - padding, yPos), relativeHorizontalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)relativeHorizontalAspectRatioStringSize.Y + padding / 2;
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
+                    }
+                }
+
+                GameMain.GameSession?.EventManager?.DrawPinnedEvent(spriteBatch);
+
+                if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
+
+                if (GameMain.Client != null) GameMain.Client.Draw(spriteBatch);
+
+                if (Character.Controlled?.Inventory != null)
+                {
+                    if (!Character.Controlled.LockHands && Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
+                    {
+                        Inventory.DrawFront(spriteBatch);
+                    }
+                }
+
+                DrawMessages(spriteBatch, cam);
+
+                if (MouseOn != null && !string.IsNullOrWhiteSpace(MouseOn.ToolTip))
+                {
+                    MouseOn.DrawToolTip(spriteBatch);
+                }
+
+                if (SubEditorScreen.IsSubEditor())
+                {
+                    // Draw our "infinite stack" on the cursor
+                    switch (SubEditorScreen.DraggedItemPrefab)
+                    {
+                        case ItemPrefab itemPrefab:
                             {
-                                if (PlayerInput.MousePosition.Y >= y && PlayerInput.MousePosition.Y <= y + 12)
+                                var sprite = itemPrefab.InventoryIcon ?? itemPrefab.sprite;
+                                sprite?.Draw(spriteBatch, PlayerInput.MousePosition, scale: Math.Min(64 / sprite.size.X, 64 / sprite.size.Y) * Scale);
+                                break;
+                            }
+                        case ItemAssemblyPrefab iPrefab:
+                            {
+                                var (x, y) = PlayerInput.MousePosition;
+                                foreach (var pair in iPrefab.DisplayEntities)
                                 {
-                                    GameMain.SoundManager.DebugSource(i);
+                                    Rectangle dRect = pair.Second;
+                                    dRect = new Rectangle(x: (int)(dRect.X * iPrefab.Scale + x),
+                                                          y: (int)(dRect.Y * iPrefab.Scale - y),
+                                                          width: (int)(dRect.Width * iPrefab.Scale),
+                                                          height: (int)(dRect.Height * iPrefab.Scale));
+                                    pair.First.DrawPlacing(spriteBatch, dRect, pair.First.Scale * iPrefab.Scale);
                                 }
+                                break;
                             }
-#endif
-
-                            if (playingSoundChannel.Looping)
-                            {
-                                soundStr += " (looping)";
-                                clr = Color.Yellow;
-                            }
-                            if (playingSoundChannel.IsStream)
-                            {
-                                soundStr += " (streaming)";
-                                clr = Color.Lime;
-                            }
-                            if (!playingSoundChannel.IsPlaying)
-                            {
-                                soundStr += " (stopped)";
-                                clr *= 0.5f;
-                            }
-                            else if (playingSoundChannel.Muffled)
-                            {
-                                soundStr += " (muffled)";
-                                clr = Color.Lerp(clr, Color.LightGray, 0.5f);
-                            }
-                        }
-
-                        DrawString(spriteBatch, new Vector2(500, y), soundStr, clr, Color.Black * 0.5f, 0, SmallFont);
-                        y += 15;
                     }
                 }
-                else
+
+                if (GameMain.WindowActive && !HideCursor)
                 {
-                    DrawString(spriteBatch, new Vector2(500, 0),
-                        "Ctrl+S to show sound debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    spriteBatch.End();
+                    spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
+
+                    var sprite = MouseCursorSprites[(int)MouseCursor] ?? MouseCursorSprites[(int)CursorState.Default];
+                    sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
+
+                    spriteBatch.End();
+                    spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState, rasterizerState: GameMain.ScissorTestEnable);
                 }
-
-
-                if (debugDrawEvents)
-                {
-                    DrawString(spriteBatch, new Vector2(10, 300),
-                        "Ctrl+E to hide EventManager debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
-                    GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch, 315);
-                }
-                else
-                {
-                    DrawString(spriteBatch, new Vector2(10, 300),
-                        "Ctrl+E to show EventManager debug info", Color.White, Color.Black * 0.5f, 0, SmallFont);
-                }
-
-                if (MouseOn != null)
-                {
-                    RectTransform mouseOnRect = MouseOn.RectTransform;
-                    bool isAbsoluteOffsetInUse = mouseOnRect.AbsoluteOffset != Point.Zero || mouseOnRect.RelativeOffset == Vector2.Zero;
-
-                    string selectedString = $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}";
-                    string offsetString = $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}";
-                    string anchorPivotString = $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}";
-                    Vector2 selectedStringSize = SmallFont.MeasureString(selectedString);
-                    Vector2 offsetStringSize = SmallFont.MeasureString(offsetString);
-                    Vector2 anchorPivotStringSize = SmallFont.MeasureString(anchorPivotString);
-
-                    int padding = IntScale(10);
-                    int yPos = padding;
-                    
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)selectedStringSize.X - padding, yPos), selectedString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)selectedStringSize.Y + padding / 2;
-
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)offsetStringSize.X - padding, yPos), offsetString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)offsetStringSize.Y + padding / 2;
-
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)anchorPivotStringSize.Y + padding / 2;
-                }
-                else
-                {
-                    string guiScaleString = $"GUI.Scale: {Scale}";
-                    string guixScaleString = $"GUI.xScale: {xScale}";
-                    string guiyScaleString = $"GUI.yScale: {yScale}";
-                    string relativeHorizontalAspectRatioString = $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}";
-                    string relativeVerticalAspectRatioString = $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}";
-                    Vector2 guiScaleStringSize = SmallFont.MeasureString(guiScaleString);
-                    Vector2 guixScaleStringSize = SmallFont.MeasureString(guixScaleString);
-                    Vector2 guiyScaleStringSize = SmallFont.MeasureString(guiyScaleString);
-                    Vector2 relativeHorizontalAspectRatioStringSize = SmallFont.MeasureString(relativeHorizontalAspectRatioString);
-                    Vector2 relativeVerticalAspectRatioStringSize = SmallFont.MeasureString(relativeVerticalAspectRatioString);
-
-                    int padding = IntScale(10);
-                    int yPos = padding;
-
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiScaleStringSize.X - padding, yPos), guiScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)guiScaleStringSize.Y + padding / 2;
-
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guixScaleStringSize.X - padding, yPos), guixScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)guixScaleStringSize.Y + padding / 2;
-
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiyScaleStringSize.X - padding, yPos), guiyScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)guiyScaleStringSize.Y + padding / 2;
-
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeHorizontalAspectRatioStringSize.X - padding, yPos), relativeHorizontalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)relativeHorizontalAspectRatioStringSize.Y + padding / 2;
-
-                    DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                    yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
-                }
+                HideCursor = false;
             }
-
-            if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
-
-            if (GameMain.Client != null) GameMain.Client.Draw(spriteBatch);
-
-            if (Character.Controlled?.Inventory != null)
-            {
-                if (!Character.Controlled.LockHands && Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
-                {
-                    Inventory.DrawFront(spriteBatch);
-                }
-            }
-
-            DrawMessages(spriteBatch, cam);
-
-            if (MouseOn != null && !string.IsNullOrWhiteSpace(MouseOn.ToolTip))
-            {
-                MouseOn.DrawToolTip(spriteBatch);
-            }
-
-            if (SubEditorScreen.IsSubEditor())
-            {
-                // Draw our "infinite stack" on the cursor
-                switch (SubEditorScreen.DraggedItemPrefab) 
-                {
-                    case ItemPrefab itemPrefab: 
-                    {
-                        var sprite = itemPrefab.InventoryIcon ?? itemPrefab.sprite;
-                        sprite?.Draw(spriteBatch, PlayerInput.MousePosition, scale: Math.Min(64 / sprite.size.X, 64 / sprite.size.Y) * Scale);
-                        break;
-                    }
-                    case ItemAssemblyPrefab iPrefab: 
-                    {
-                        var (x, y) = PlayerInput.MousePosition;
-                        foreach (var pair in iPrefab.DisplayEntities)
-                        {
-                            Rectangle dRect = pair.Second;
-                            dRect = new Rectangle(x:      (int)(dRect.X      * iPrefab.Scale + x), 
-                                                  y:      (int)(dRect.Y      * iPrefab.Scale - y), 
-                                                  width:  (int)(dRect.Width  * iPrefab.Scale), 
-                                                  height: (int)(dRect.Height * iPrefab.Scale));
-                            pair.First.DrawPlacing(spriteBatch, dRect, pair.First.Scale * iPrefab.Scale);
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if (GameMain.WindowActive && !HideCursor)
-            {
-                spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
-                
-                var sprite = MouseCursorSprites[(int) MouseCursor] ?? MouseCursorSprites[(int)CursorState.Default];
-                sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
-
-                spriteBatch.End();
-                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-            }
-            HideCursor = false;
         }
 
         public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float aberrationStrength = 1.0f)
@@ -682,24 +715,27 @@ namespace Barotrauma
         /// </summary>
         public static void AddToUpdateList(GUIComponent component)
         {
-            if (component == null)
+            lock (mutex)
             {
-                DebugConsole.ThrowError("Trying to add a null component on the GUI update list!");
-                return;
-            }
-            if (!component.Visible) { return; }
-            if (component.UpdateOrder < 0)
-            {
-                first.Add(component);
-            }
-            else if (component.UpdateOrder > 0)
-            {
-                last.Add(component);
-            }
-            else
-            {
-                additions.Enqueue(component);
-            }
+                if (component == null)
+                {
+                    DebugConsole.ThrowError("Trying to add a null component on the GUI update list!");
+                    return;
+                }
+                if (!component.Visible) { return; }
+                if (component.UpdateOrder < 0)
+                {
+                    first.Add(component);
+                }
+                else if (component.UpdateOrder > 0)
+                {
+                    last.Add(component);
+                }
+                else
+                {
+                    additions.Enqueue(component);
+                }   
+            }            
         }
 
         /// <summary>
@@ -708,117 +744,138 @@ namespace Barotrauma
         /// </summary>
         public static void RemoveFromUpdateList(GUIComponent component, bool alsoChildren = true)
         {
-            if (updateListSet.Contains(component))
+            lock (mutex)
             {
-                removals.Enqueue(component);
-            }
-            if (alsoChildren)
-            {
-                if (component.RectTransform != null)
+                if (updateListSet.Contains(component))
                 {
-                    component.RectTransform.Children.ForEach(c => RemoveFromUpdateList(c.GUIComponent));
+                    removals.Enqueue(component);
                 }
-                else
+                if (alsoChildren)
                 {
-                    component.Children.ForEach(c => RemoveFromUpdateList(c));
+                    if (component.RectTransform != null)
+                    {
+                        component.RectTransform.Children.ForEach(c => RemoveFromUpdateList(c.GUIComponent));
+                    }
+                    else
+                    {
+                        component.Children.ForEach(c => RemoveFromUpdateList(c));
+                    }
                 }
-            }
+            }            
         }
 
         public static void ClearUpdateList()
         {
-            if (KeyboardDispatcher.Subscriber is GUIComponent && !updateList.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
+            lock (mutex)
             {
-                KeyboardDispatcher.Subscriber = null;
+                if (KeyboardDispatcher.Subscriber is GUIComponent && !updateList.Contains(KeyboardDispatcher.Subscriber as GUIComponent))
+                {
+                    KeyboardDispatcher.Subscriber = null;
+                }
+                updateList.Clear();
+                updateListSet.Clear();
             }
-            updateList.Clear();
-            updateListSet.Clear();
         }
 
         private static void RefreshUpdateList()
         {
-            foreach (var component in updateList)
+            lock (mutex)
             {
-                if (!component.Visible)
+                foreach (var component in updateList)
                 {
-                    RemoveFromUpdateList(component);
+                    if (!component.Visible)
+                    {
+                        RemoveFromUpdateList(component);
+                    }
                 }
+                ProcessHelperList(first);
+                ProcessAdditions();
+                ProcessHelperList(last);
+                ProcessRemovals();
             }
-            ProcessHelperList(first);
-            ProcessAdditions();
-            ProcessHelperList(last);
-            ProcessRemovals();
         }
 
         private static void ProcessAdditions()
         {
-            while (additions.Count > 0)
+            lock (mutex)
             {
-                var component = additions.Dequeue();
-                if (!updateListSet.Contains(component))
+                while (additions.Count > 0)
                 {
-                    updateList.Add(component);
-                    updateListSet.Add(component);
+                    var component = additions.Dequeue();
+                    if (!updateListSet.Contains(component))
+                    {
+                        updateList.Add(component);
+                        updateListSet.Add(component);
+                    }
                 }
             }
         }
 
         private static void ProcessRemovals()
         {
-            while (removals.Count > 0)
+            lock (mutex)
             {
-                var component = removals.Dequeue();
-                updateList.Remove(component);
-                updateListSet.Remove(component);
-                if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
+                while (removals.Count > 0)
                 {
-                    KeyboardDispatcher.Subscriber = null;
+                    var component = removals.Dequeue();
+                    updateList.Remove(component);
+                    updateListSet.Remove(component);
+                    if (component as IKeyboardSubscriber == KeyboardDispatcher.Subscriber)
+                    {
+                        KeyboardDispatcher.Subscriber = null;
+                    }
                 }
             }
         }
 
         private static void ProcessHelperList(List<GUIComponent> list)
         {
-            if (list.Count == 0) { return; }
-            foreach (var item in list)
+            lock (mutex)
             {
-                int index = 0;
-                if (updateList.Count > 0)
+                if (list.Count == 0) { return; }
+                foreach (var item in list)
                 {
-                    index = updateList.Count - 1;
-                    while (updateList[index].UpdateOrder > item.UpdateOrder)
+                    int index = 0;
+                    if (updateList.Count > 0)
                     {
-                        index--;
-                        if (index == 0) { break; }
+                        index = updateList.Count - 1;
+                        while (updateList[index].UpdateOrder > item.UpdateOrder)
+                        {
+                            index--;
+                            if (index == 0) { break; }
+                        }
+                    }
+                    if (!updateListSet.Contains(item))
+                    {
+                        updateList.Insert(index, item);
+                        updateListSet.Add(item);
                     }
                 }
-                if (!updateListSet.Contains(item))
-                {
-                    updateList.Insert(index, item);
-                    updateListSet.Add(item);
-                }
+                list.Clear();
             }
-            list.Clear();
         }
 
         private static void HandlePersistingElements(float deltaTime)
         {
-            GUIMessageBox.AddActiveToGUIUpdateList();
+            lock (mutex)
+            {
+                GUIMessageBox.AddActiveToGUIUpdateList();
 
-            if (pauseMenuOpen)
-            {
-                PauseMenu.AddToGUIUpdateList();
-            }
-            if (settingsMenuOpen)
-            {
-                GameMain.Config.SettingsFrame.AddToGUIUpdateList();
-            }
+                if (pauseMenuOpen)
+                {
+                    PauseMenu.AddToGUIUpdateList();
+                }
+                if (settingsMenuOpen)
+                {
+                    GameMain.Config.SettingsFrame.AddToGUIUpdateList();
+                }
 
-            //the "are you sure you want to quit" prompts are drawn on top of everything else
-            if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt" || GUIMessageBox.VisibleBox?.UserData as string == "bugreporter")
-            {
-                GUIMessageBox.VisibleBox.AddToGUIUpdateList();
-            }
+                //the "are you sure you want to quit" prompts are drawn on top of everything else
+                if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt" || GUIMessageBox.VisibleBox?.UserData as string == "bugreporter")
+                {
+                    GUIMessageBox.VisibleBox.AddToGUIUpdateList();
+                }
+            }            
         }
         #endregion
 
@@ -826,14 +883,20 @@ namespace Barotrauma
 
         public static bool IsMouseOn(GUIComponent target)
         {
-            if (target == null) { return false; }
-            //if (MouseOn == null) { return true; }
-            return target == MouseOn || target.IsParentOf(MouseOn);
+            lock (mutex)
+            {
+                if (target == null) { return false; }
+                //if (MouseOn == null) { return true; }
+                return target == MouseOn || target.IsParentOf(MouseOn);
+            }
         }
 
         public static void ForceMouseOn(GUIComponent c)
         {
-            MouseOn = c;
+            lock (mutex)
+            {
+                MouseOn = c;
+            }
         }
 
         /// <summary>
@@ -841,223 +904,219 @@ namespace Barotrauma
         /// </summary>
         public static GUIComponent UpdateMouseOn()
         {
-            GUIComponent prevMouseOn = MouseOn;
-            MouseOn = null;
-            int inventoryIndex = -1;
+            lock (mutex)
+            {
+                GUIComponent prevMouseOn = MouseOn;
+                MouseOn = null;
+                int inventoryIndex = -1;
             
-            if (Inventory.IsMouseOnInventory())
-            {
-                inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
-            }
-
-            if (!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked())
-            {
-                for (var i = updateList.Count - 1; i > inventoryIndex; i--)
+                if (Inventory.IsMouseOnInventory())
                 {
-                    var c = updateList[i];
-                    if (!c.CanBeFocused) { continue; }
-                    if (c.MouseRect.Contains(PlayerInput.MousePosition))
+                    inventoryIndex = updateList.IndexOf(CharacterHUD.HUDFrame);
+                }
+
+                if (!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked())
+                {
+                    for (var i = updateList.Count - 1; i > inventoryIndex; i--)
                     {
-                        if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
+                        var c = updateList[i];
+                        if (!c.CanBeFocused) { continue; }
+                        if (c.MouseRect.Contains(PlayerInput.MousePosition))
                         {
-                            MouseOn = c;
+                            if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
+                            {
+                                MouseOn = c;
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
-            }
-            else
-            {
-                MouseOn = prevMouseOn;
-            }
+                else
+                {
+                    MouseOn = prevMouseOn;
+                }
 
-            MouseCursor = UpdateMouseCursorState(MouseOn);
-            return MouseOn;
+                MouseCursor = UpdateMouseCursorState(MouseOn);
+                return MouseOn;
+            }
+            
         }
         
         private static CursorState UpdateMouseCursorState(GUIComponent c)
         {
-            // Waiting and drag cursor override everything else
-            if (MouseCursor == CursorState.Waiting) { return CursorState.Waiting; }
-            if (GUIScrollBar.DraggingBar != null) { return GUIScrollBar.DraggingBar.Bar.HoverCursor; }
-
-            if (SubEditorScreen.IsSubEditor() && SubEditorScreen.DraggedItemPrefab != null) { return CursorState.Hand; }
-
-            // Wire cursors
-            if (Character.Controlled != null)
+            lock (mutex)
             {
-                if (Character.Controlled.SelectedConstruction?.GetComponent<ConnectionPanel>() != null)
+                // Waiting and drag cursor override everything else
+                if (MouseCursor == CursorState.Waiting) { return CursorState.Waiting; }
+                if (GUIScrollBar.DraggingBar != null) { return GUIScrollBar.DraggingBar.Bar.HoverCursor; }
+
+                if (SubEditorScreen.IsSubEditor() && SubEditorScreen.DraggedItemPrefab != null) { return CursorState.Hand; }
+
+                // Wire cursors
+                if (Character.Controlled != null)
                 {
-                    if (Connection.DraggingConnected != null)
+                    if (Character.Controlled.SelectedConstruction?.GetComponent<ConnectionPanel>() != null)
                     {
-                        return CursorState.Dragging;
+                        if (Connection.DraggingConnected != null)
+                        {
+                            return CursorState.Dragging;
+                        }
+                        else if (ConnectionPanel.HighlightedWire != null)
+                        {
+                            return CursorState.Hand;
+                        }
                     }
-                    else if (ConnectionPanel.HighlightedWire != null)
-                    {
-                        return CursorState.Hand;
-                    }
+                    if (Wire.DraggingWire != null) { return CursorState.Dragging; }
                 }
-                if (Wire.DraggingWire != null) { return CursorState.Dragging; }
-            }
            
-            if (c == null || c is GUICustomComponent)
-            {
-                switch (Screen.Selected)
+                if (c == null || c is GUICustomComponent)
                 {
-                    // Character editor limbs
-                    case CharacterEditorScreen editor:
-                        return editor.GetMouseCursorState();
-                    // Portrait area during gameplay
-                    case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
-                        if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ||
-                            Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea).Contains(PlayerInput.MousePosition))
-                        {
-                            return CursorState.Hand;
-                        }
-                        break;
-                    // Sub editor drag and highlight
-                    case SubEditorScreen editor:
+                    switch (Screen.Selected)
                     {
-                        // Portrait area
-                        if (editor.WiringMode && HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
-                        {
-                            return CursorState.Hand;
-                        }
-                        
-                        foreach (var mapEntity in MapEntity.mapEntityList)
-                        {
-                            if (MapEntity.StartMovingPos != Vector2.Zero)
-                            {
-                                return CursorState.Dragging;
-                            }
-                            if (mapEntity.IsHighlighted)
+                        // Character editor limbs
+                        case CharacterEditorScreen editor:
+                            return editor.GetMouseCursorState();
+                        // Portrait area during gameplay
+                        case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
+                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ||
+                                Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea).Contains(PlayerInput.MousePosition))
                             {
                                 return CursorState.Hand;
                             }
+                            break;
+                        // Sub editor drag and highlight
+                        case SubEditorScreen editor:
+                        {
+                            // Portrait area
+                            if (editor.WiringMode && HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
+                            {
+                                return CursorState.Hand;
+                            }
+                        
+                            foreach (var mapEntity in MapEntity.mapEntityList)
+                            {
+                                if (MapEntity.StartMovingPos != Vector2.Zero)
+                                {
+                                    return CursorState.Dragging;
+                                }
+                                if (mapEntity.IsHighlighted)
+                                {
+                                    return CursorState.Hand;
+                                }
+                            }
+                            break;
                         }
-                        break;
-                    }
-                    
-                    // Campaign map highlighted location
-                    case LobbyScreen lobby:
-                    {
-                        if (lobby.CampaignUI?.Campaign.Map.HighlightedLocation != null) { return CursorState.Hand; }
-                        break;
-                    }
-                    
-                    case NetLobbyScreen lobby:
-                    {
-                        if (lobby.CampaignUI?.Campaign.Map.HighlightedLocation != null) { return CursorState.Hand; }
-                        break;
                     }
                 }
-            }
             
-            if (c != null && c.Visible)
-            {
-                // When a button opens a submenu, it increases to the size of the entire screen.
-                // And this is of course picked up as clickable area.
-                // There has to be a better way of checking this but for now this works.
-                var monitorRect = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-                
-                var parent = FindInteractParent(c);
-                
-                if (c.Enabled)
+                if (c != null && c.Visible)
                 {
-                    // Some parent elements take priority
-                    // but not when the child is a GUIButton or GUITickBox
-                    if (!(parent is GUIButton) && !(parent is GUIListBox) || 
-                              (c is GUIButton) || (c is GUITickBox))
+                    if (c.AlwaysOverrideCursor) { return c.HoverCursor; }
+
+                    // When a button opens a submenu, it increases to the size of the entire screen.
+                    // And this is of course picked up as clickable area.
+                    // There has to be a better way of checking this but for now this works.
+                    var monitorRect = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                
+                    var parent = FindInteractParent(c);
+                
+                    if (c.Enabled)
                     {
-                        if (!c.Rect.Equals(monitorRect)) { return c.HoverCursor; }
+                        // Some parent elements take priority
+                        // but not when the child is a GUIButton or GUITickBox
+                        if (!(parent is GUIButton) && !(parent is GUIListBox) || 
+                                  (c is GUIButton) || (c is GUITickBox))
+                        {
+                            if (!c.Rect.Equals(monitorRect)) { return c.HoverCursor; }
+                        }
+                    }
+                
+                    // Children in list boxes can be interacted with despite not having
+                    // a GUIButton inside of them so instead of hard coding we check if
+                    // the children can be interacted with by checking their hover state
+                    if (parent is GUIListBox listBox)
+                    {
+                        if (listBox.DraggedElement != null) { return CursorState.Dragging; }
+                        if (listBox.CanDragElements) { return CursorState.Move; }
+                    
+                        var hoverParent = c;
+                        while (true)
+                        {
+                            if (hoverParent == parent || hoverParent == null) { break; }
+                            if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
+                            hoverParent = hoverParent.Parent;
+                        }
+                    }
+                
+                    if (parent != null)
+                    {
+                        if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
                     }
                 }
-                
-                // Children in list boxes can be interacted with despite not having
-                // a GUIButton inside of them so instead of hard coding we check if
-                // the children can be interacted with by checking their hover state
-                if (parent is GUIListBox listBox)
+            
+                if (Inventory.IsMouseOnInventory()) { return Inventory.GetInventoryMouseCursor(); }
+
+                var character = Character.Controlled;
+                // ReSharper disable once InvertIf
+                if (character != null)
                 {
-                    if (listBox.DraggedElement != null) { return CursorState.Dragging; }
-                    if (listBox.CanDragElements) { return CursorState.Move; }
-                    
-                    var hoverParent = c;
+                    // Health menus
+                    if (character.CharacterHealth.MouseOnElement) { return CursorState.Hand; }
+                
+                    if (character.SelectedCharacter != null)
+                    {
+                        if (character.SelectedCharacter.CharacterHealth.MouseOnElement)
+                        {
+                            return CursorState.Hand;
+                        }
+                    }
+
+                    // Character is hovering over an item placed in the world
+                    if (character.FocusedItem != null) { return CursorState.Hand; }
+                }
+            
+                return CursorState.Default;
+
+                static GUIComponent FindInteractParent(GUIComponent component)
+                {
                     while (true)
                     {
-                        if (hoverParent == parent || hoverParent == null) { break; }
-                        if (hoverParent.State == GUIComponent.ComponentState.Hover) { return CursorState.Hand; }
-                        hoverParent = hoverParent.Parent;
-                    }
-                }
-                
-                if (parent != null)
-                {
-                    if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
-                }
-            }
-            
-            if (Inventory.IsMouseOnInventory()) { return Inventory.GetInventoryMouseCursor(); }
+                        var parent = component.Parent;
+                        if (parent == null) { return null; }
 
-            var character = Character.Controlled;
-            // ReSharper disable once InvertIf
-            if (character != null)
-            {
-                // Health menus
-                if (character.CharacterHealth.MouseOnElement) { return CursorState.Hand; }
-                
-                if (character.SelectedCharacter != null)
-                {
-                    if (character.SelectedCharacter.CharacterHealth.MouseOnElement)
-                    {
-                        return CursorState.Hand;
-                    }
-                }
-
-                // Character is hovering over an item placed in the world
-                if (character.FocusedItem != null) { return CursorState.Hand; }
-            }
-            
-            return CursorState.Default;
-
-            static GUIComponent FindInteractParent(GUIComponent component)
-            {
-                while (true)
-                {
-                    var parent = component.Parent;
-                    if (parent == null) { return null; }
-
-                    if (ContainsMouse(parent))
-                    {
-                        if (parent.Enabled)
+                        if (ContainsMouse(parent))
                         {
-                            switch (parent)
+                            if (parent.Enabled)
                             {
-                                case GUIButton button:
-                                    return button;
-                                case GUITextBox box:
-                                    return box;
-                                case GUIListBox list:
-                                    return list;
-                                case GUIScrollBar bar:
-                                    return bar;
+                                switch (parent)
+                                {
+                                    case GUIButton button:
+                                        return button;
+                                    case GUITextBox box:
+                                        return box;
+                                    case GUIListBox list:
+                                        return list;
+                                    case GUIScrollBar bar:
+                                        return bar;
+                                }
                             }
+                            component = parent;
                         }
-                        component = parent;
-                    }
-                    else
-                    {
-                        return null;
+                        else
+                        {
+                            return null;
+                        }
                     }
                 }
-            }
             
-            static bool ContainsMouse(GUIComponent component)
-            {
-                // If component has a mouse rectangle then use that, if not use it's physical rect
-                return !component.MouseRect.Equals(Rectangle.Empty) ?
-                    component.MouseRect.Contains(PlayerInput.MousePosition) :
-                    component.Rect.Contains(PlayerInput.MousePosition);
-            }
+                static bool ContainsMouse(GUIComponent component)
+                {
+                    // If component has a mouse rectangle then use that, if not use it's physical rect
+                    return !component.MouseRect.Equals(Rectangle.Empty) ?
+                        component.MouseRect.Contains(PlayerInput.MousePosition) :
+                        component.Rect.Contains(PlayerInput.MousePosition);
+                }
+            }            
         }
 
         /// <summary>
@@ -1080,8 +1139,11 @@ namespace Barotrauma
         
         public static void ClearCursorWait()
         {
-            CoroutineManager.StopCoroutines("WaitCursorTimeout");
-            MouseCursor = CursorState.Default;
+            lock (mutex)
+            {
+                CoroutineManager.StopCoroutines("WaitCursorTimeout");
+                MouseCursor = CursorState.Default;
+            }
         }
 
         public static bool HasSizeChanged(Point referenceResolution, float referenceUIScale, float referenceHUDScale)
@@ -1092,58 +1154,110 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.S))
+            lock (mutex)
             {
-                debugDrawSounds = !debugDrawSounds;
-            }
-            if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.E))
-            {
-                debugDrawEvents = !debugDrawEvents;
-            }
+                if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.S))
+                {
+                    debugDrawSounds = !debugDrawSounds;
+                }
+                if (PlayerInput.KeyDown(Keys.LeftControl) && PlayerInput.KeyHit(Keys.E))
+                {
+                    debugDrawEvents = !debugDrawEvents;
+                }
+                if (PlayerInput.IsCtrlDown() && PlayerInput.KeyHit(Keys.M))
+                {
+                    debugDrawMetadata = !debugDrawMetadata;
+                }
 
-            HandlePersistingElements(deltaTime);
-            RefreshUpdateList();
-            UpdateMouseOn();
-            Debug.Assert(updateList.Count == updateListSet.Count);
-            updateList.ForEach(c => c.UpdateAuto(deltaTime));
-            UpdateMessages(deltaTime);
+                if (debugDrawMetadata)
+                {
+                    if (PlayerInput.KeyHit(Keys.Up))
+                    {
+                        debugDrawMetadataOffset--;
+                    }
+                
+                    if (PlayerInput.KeyHit(Keys.Down))
+                    {
+                        debugDrawMetadataOffset++;
+                    }
+
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        if (PlayerInput.KeyHit(Keys.D1))
+                        {
+                            ignoredMetadataInfo[0] = ignoredMetadataInfo[0] == string.Empty ? "reputation.location" : string.Empty;
+                            debugDrawMetadataOffset = 0;
+                        }
+
+                        if (PlayerInput.KeyHit(Keys.D2))
+                        {
+                            ignoredMetadataInfo[1] = ignoredMetadataInfo[1] == string.Empty ? "reputation.faction" : string.Empty;
+                            debugDrawMetadataOffset = 0;
+                        }
+
+                        if (PlayerInput.KeyHit(Keys.D3))
+                        {
+                            ignoredMetadataInfo[2] = ignoredMetadataInfo[2] == string.Empty ? "upgrade." : string.Empty;
+                            debugDrawMetadataOffset = 0;
+                        }
+
+                        if (PlayerInput.KeyHit(Keys.D4))
+                        {
+                            ignoredMetadataInfo[3] = ignoredMetadataInfo[3] == string.Empty ? "upgradeprice." : string.Empty;
+                            debugDrawMetadataOffset = 0;
+                        }
+                    }
+                
+                }
+
+                HandlePersistingElements(deltaTime);
+                RefreshUpdateList();
+                UpdateMouseOn();
+                Debug.Assert(updateList.Count == updateListSet.Count);
+                updateList.ForEach(c => c.UpdateAuto(deltaTime));
+                UpdateMessages(deltaTime);
+            }            
         }
 
         private static void UpdateMessages(float deltaTime)
         {
-            foreach (GUIMessage msg in messages)
+            lock (mutex)
             {
-                if (msg.WorldSpace) continue;
-                msg.Timer -= deltaTime;
+                foreach (GUIMessage msg in messages)
+                {
+                    if (msg.WorldSpace) continue;
+                    msg.Timer -= deltaTime;
 
-                if (msg.Size.X > HUDLayoutSettings.MessageAreaTop.Width)
-                {
-                    msg.Pos = Vector2.Lerp(Vector2.Zero, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), 1.0f - msg.Timer / msg.LifeTime);
-                }
-                else
-                {
-                    //enough space to show the full message, position it at the center of the msg area
-                    if (msg.Timer > 1.0f)
+                    if (msg.Size.X > HUDLayoutSettings.MessageAreaTop.Width)
                     {
-                        msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width / 2 - msg.Size.X / 2, 0), Math.Min(deltaTime * 10.0f, 1.0f));
+                        msg.Pos = Vector2.Lerp(Vector2.Zero, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), 1.0f - msg.Timer / msg.LifeTime);
                     }
                     else
                     {
-                        msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), deltaTime * 10.0f);
+                        //enough space to show the full message, position it at the center of the msg area
+                        if (msg.Timer > 1.0f)
+                        {
+                            msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width / 2 - msg.Size.X / 2, 0), Math.Min(deltaTime * 10.0f, 1.0f));
+                        }
+                        else
+                        {
+                            msg.Pos = Vector2.Lerp(msg.Pos, new Vector2(-HUDLayoutSettings.MessageAreaTop.Width - msg.Size.X, 0), deltaTime * 10.0f);
+                        }
                     }
+                    //only the first message (the currently visible one) is updated at a time
+                    break;
                 }
-                //only the first message (the currently visible one) is updated at a time
-                break;
+            
+                foreach (GUIMessage msg in messages)
+                {
+                    if (!msg.WorldSpace) continue;
+                    msg.Timer -= deltaTime;                
+                    msg.Pos += msg.Velocity * deltaTime;                
+                }
+
+                messages.RemoveAll(m => m.Timer <= 0.0f);
             }
             
-            foreach (GUIMessage msg in messages)
-            {
-                if (!msg.WorldSpace) continue;
-                msg.Timer -= deltaTime;                
-                msg.Pos += msg.Velocity * deltaTime;                
-            }
-
-            messages.RemoveAll(m => m.Timer <= 0.0f);
         }
 
         #region Element drawing
@@ -2012,9 +2126,13 @@ namespace Barotrauma
                             };
                             msgBox.Buttons[0].OnClicked = (_, userdata) =>
                             {
+                                if (GameMain.GameSession.RoundSummary?.Frame != null)
+                                {
+                                    GUIMessageBox.MessageBoxes.Remove(GameMain.GameSession.RoundSummary.Frame);
+                                }
+
                                 TogglePauseMenu(btn, userData);
-                                GameMain.GameSession.LoadPrevious();
-                                GameMain.LobbyScreen.Select();
+                                GameMain.GameSession.LoadPreviousSave();
                                 return true;
                             };
                             msgBox.Buttons[0].OnClicked += msgBox.Close;
@@ -2026,15 +2144,20 @@ namespace Barotrauma
                             };
                             return true;
                         };
+                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
+                        {
+                            UserData = "save"
+                        };
+                        button.OnClicked += QuitClicked;
+                        button.OnClicked += TogglePauseMenu;
                     }
-                    else if (GameMain.GameSession.GameMode is SubTestMode)
+                    else if (GameMain.GameSession.GameMode is TestGameMode)
                     {
                         button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("PauseMenuReturnToEditor"))
                         {
                             OnClicked = (btn, userdata) =>
                             {
-                                GameMain.GameSession.GameMode.End("");
-
+                                GameMain.GameSession.EndRound("");
                                 return true;
                             }
                         };
@@ -2042,14 +2165,17 @@ namespace Barotrauma
                     }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                     {
-                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("EndRound"))
+                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), 
+                            text: TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "ReturnToServerlobby": "EndRound"))
                         {
                             OnClicked = (btn, userdata) =>
                             {
                                 if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
-                                if (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition)
+                                if (GameMain.GameSession.GameMode is CampaignMode || (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition))
                                 {
-                                    var msgBox = new GUIMessageBox("", TextManager.Get("EndRoundSubNotAtLevelEnd"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                                    var msgBox = new GUIMessageBox("", 
+                                        TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd"), 
+                                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
                                     {
                                         UserData = "verificationprompt"
                                     };
@@ -2072,20 +2198,7 @@ namespace Barotrauma
                         };
                     }
                 }
-
-                if (Screen.Selected == GameMain.LobbyScreen)
-                {
-                    if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
-                    {
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
-                        {
-                            UserData = "save"
-                        };
-                        button.OnClicked += QuitClicked;
-                        button.OnClicked += TogglePauseMenu;
-                    }
-                }
-                
+                                
                 button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuQuit"));
                 button.OnClicked += (btn, userData) =>
                 {
@@ -2118,6 +2231,8 @@ namespace Barotrauma
                     }
                     return true;
                 };
+
+                GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(c => ((GUIButton)c).TextBlock));
             }
         }
 

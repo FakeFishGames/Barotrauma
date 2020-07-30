@@ -233,7 +233,7 @@ namespace Barotrauma.Networking
                 }
 
                 //restore other items to full condition and recharge batteries
-                item.Condition = item.Prefab.Health;
+                item.Condition = item.MaxCondition;
                 item.GetComponent<Repairable>()?.ResetDeterioration();
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)

@@ -104,9 +104,9 @@ namespace Barotrauma
         public override void Start(Level level)
         {
 #if SERVER
-            originalItemID = Entity.NullEntityID;
             originalInventoryID = Entity.NullEntityID;
 #endif
+            item = null;
             if (!IsClient)
             {
                 //ruin/wreck items are allowed to spawn close to the sub
@@ -129,7 +129,7 @@ namespace Barotrauma
                         case Level.PositionType.Wreck:
                             foreach (Item it in suitableItems)
                             {
-                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineInfo.SubmarineType.Wreck) { continue; }
+                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
                                 Rectangle worldBorders = it.Submarine.Borders;
                                 worldBorders.Location += it.Submarine.WorldPosition.ToPoint();
                                 if (Submarine.RectContains(worldBorders, it.WorldPosition))
@@ -151,9 +151,6 @@ namespace Barotrauma
                     item.body.FarseerBody.BodyType = BodyType.Kinematic;
                     item.FindHull();
                 }
-#if SERVER
-                originalItemID = item.ID;
-#endif
 
                 for (int i = 0; i < statusEffects.Count; i++)
                 {
@@ -184,7 +181,7 @@ namespace Barotrauma
                                 if (it.ParentRuin == null) { continue; }
                                 break;
                             case Level.PositionType.Wreck:
-                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineInfo.SubmarineType.Wreck) { continue; }
+                                if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
                                 break;
                         }
                         var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
@@ -193,6 +190,7 @@ namespace Barotrauma
                         {
 #if SERVER
                             originalInventoryID = it.ID;
+                            originalItemContainerIndex = (byte)it.GetComponentIndex(itemContainer);
 #endif
                             break; 
                         } // Placement successful
@@ -222,11 +220,15 @@ namespace Barotrauma
                     if (item.ParentInventory != null && item.body != null) { item.body.FarseerBody.BodyType = BodyType.Dynamic; }
                     if (showMessageWhenPickedUp)
                     {
-                        if (!(item.ParentInventory?.Owner is Character)) { return; }
+                        if (!(item.GetRootInventoryOwner() is Character)) { return; }
                     }
                     else
                     {
-                        if (item.CurrentHull?.Submarine == null || item.CurrentHull.Submarine.Info.Type != SubmarineInfo.SubmarineType.Player) { return; }
+                        Submarine parentSub = item.CurrentHull?.Submarine ?? item.GetRootInventoryOwner()?.Submarine;
+                        if (parentSub == null || parentSub.Info.Type != SubmarineType.Player) 
+                        {
+                            return; 
+                        }
                     }
                     State = 1;
                     break;

@@ -147,6 +147,9 @@ namespace Barotrauma
             }
         }
 
+        public XElement InventoryData;
+        public XElement HealthData;
+
         private static ushort idCounter;
 
         public string Name;
@@ -287,20 +290,20 @@ namespace Barotrauma
 
         public bool StartItemsGiven;
 
+        public bool IsNewHire;
+
         public CauseOfDeath CauseOfDeath;
 
         public Character.TeamType TeamID;
 
         private NPCPersonalityTrait personalityTrait;
 
-        public Order CurrentOrder { get; set;}
+        public Order CurrentOrder { get; set; }
         public string CurrentOrderOption { get; set; }
 
         //unique ID given to character infos in MP
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary
         public ushort ID;
-
-        public XElement InventoryData;
 
         public List<string> SpriteTags
         {
@@ -564,6 +567,22 @@ namespace Barotrauma
             }
         }
 
+        public int GetIdentifier()
+        {
+            int id = ToolBox.StringToInt(Name);
+            id ^= HeadSpriteId;
+            id ^= (int)Race << 6;
+            id ^= HairIndex << 12;
+            id ^= BeardIndex << 18;
+            id ^= MoustacheIndex << 24;
+            id ^= FaceAttachmentIndex << 30;
+            if (Job != null)
+            {
+                id ^= ToolBox.StringToInt(Job.Prefab.Identifier);
+            }
+            return id;
+        }
+
         public IEnumerable<XElement> FilterByTypeAndHeadID(IEnumerable<XElement> elements, WearableType targetType)
         {
             if (elements == null) { return elements; }
@@ -813,20 +832,17 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites(bool omitJob);
         
-        // TODO: change the formula so that it's not linear and so that it takes into account the usefulness of the skill 
-        // -> give a weight to each skill, because some are much more valuable than others?
         private int CalculateSalary()
         {
-            if (Name == null || Job == null) return 0;
+            if (Name == null || Job == null) { return 0; }
 
-            int salary = Math.Abs(Name.GetHashCode()) % 100;
-
+            int salary = 0;
             foreach (Skill skill in Job.Skills)
             {
-                salary += (int)skill.Level * 50;
+                salary += (int)(skill.Level * skill.Prefab.PriceMultiplier);
             }
 
-            return salary;
+            return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
         public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
@@ -871,7 +887,7 @@ namespace Barotrauma
 
         partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos);
 
-        public virtual XElement Save(XElement parentElement)
+        public XElement Save(XElement parentElement)
         {
             XElement charElement = new XElement("Character");
 
@@ -971,7 +987,12 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        public void ApplyHealthData(Character character, XElement healthData)
+        {
+            if (healthData != null) { character?.CharacterHealth.Load(healthData); }
+        }
+
         public void ReloadHeadAttachments()
         {
             ResetLoadedAttachments();

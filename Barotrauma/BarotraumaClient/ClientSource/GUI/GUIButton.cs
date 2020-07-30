@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
@@ -145,6 +146,11 @@ namespace Barotrauma
                 textBlock.ToolTip = value;                
             }
         }
+
+        public bool Pulse { get; set; }
+        private float pulseTimer;
+        private float pulseExpand;
+        private bool flashed;
         
         public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
@@ -196,7 +202,14 @@ namespace Barotrauma
 
         protected override void Draw(SpriteBatch spriteBatch)
         {
-            //do nothing
+            if (Pulse && pulseTimer > 1.0f)
+            {
+                Rectangle expandRect = Rect;
+                float expand = (pulseExpand * 20.0f) * GUI.Scale;
+                expandRect.Inflate(expand, expand);
+                
+                GUI.Style.ButtonPulse.Draw(spriteBatch, expandRect, ToolBox.GradientLerp(pulseExpand, Color.White, Color.White, Color.Transparent));
+            }
         }
 
         protected override void Update(float deltaTime)
@@ -244,12 +257,40 @@ namespace Barotrauma
             }
             else
             {
-                State = Selected ? ComponentState.Selected : ComponentState.None;
+                if (!ExternalHighlight)
+                {
+                    State = Selected ? ComponentState.Selected : ComponentState.None;
+                }
+                else
+                {
+                    State = ComponentState.Hover;
+                }
             }
 
             foreach (GUIComponent child in Children)
             {
                 child.State = State;
+            }
+
+            if (Pulse)
+            {
+                pulseTimer += deltaTime;
+                if (pulseTimer > 1.0f)
+                {
+                    if (!flashed)
+                    {
+                        flashed = true;
+                        Frame.Flash(Color.White * 0.2f, 0.8f, true);
+                    }
+
+                    pulseExpand += deltaTime;
+                    if (pulseExpand > 1.0f)
+                    {
+                        pulseTimer = 0.0f;
+                        pulseExpand = 0.0f;
+                        flashed = false;
+                    }
+                }
             }
         }
     }

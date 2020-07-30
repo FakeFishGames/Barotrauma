@@ -246,7 +246,7 @@ namespace Barotrauma
             float fadeInBrokenSpriteAlpha = 0.0f;
             float displayCondition = FakeBroken ? 0.0f : condition;
             Vector2 drawOffset = Vector2.Zero;
-            if (displayCondition < Prefab.Health)
+            if (displayCondition < MaxCondition)
             {
                 for (int i = 0; i < Prefab.BrokenSprites.Count; i++)
                 {
@@ -299,22 +299,23 @@ namespace Barotrauma
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
                             Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                             decorativeSprite.Sprite.DrawTiled(spriteBatch, 
-                                new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)), 
-                                new Vector2(rect.Width, rect.Height), color: color,
+                                new Vector2(DrawPosition.X + offset.X - rect.Width / 2, -(DrawPosition.Y + offset.Y + rect.Height / 2)),
+                                size, color: color,
+                                textureScale: Vector2.One * Scale,
                                 depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth), 0.999f));
                         }
                     }
                     else
                     {
-                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, SpriteRotation, Scale, activeSprite.effects, depth);
-                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + fadeInBrokenSprite.Offset.ToVector2() * Scale, color * fadeInBrokenSpriteAlpha, SpriteRotation, Scale, activeSprite.effects, depth - 0.000001f);
+                        activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, SpriteRotation + rotation, Scale, activeSprite.effects, depth);
+                        fadeInBrokenSprite?.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + fadeInBrokenSprite.Offset.ToVector2() * Scale, color * fadeInBrokenSpriteAlpha, SpriteRotation + rotation, Scale, activeSprite.effects, depth - 0.000001f);
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                            float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
+                            float rot = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
                             Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, 
-                                SpriteRotation + rotation, decorativeSprite.Scale * Scale, activeSprite.effects,
+                                SpriteRotation + rotation + rot, decorativeSprite.Scale * Scale, activeSprite.effects,
                                 depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth), 0.999f));
                         }
                     }
@@ -328,7 +329,7 @@ namespace Barotrauma
                         if (holdable.Picker.SelectedItems[0] == this)
                         {
                             Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.RightHand);
-                            if (holdLimb != null)
+                            if (holdLimb?.ActiveSprite != null)
                             {
                                 depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() + depthStep * 2;
                                 foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
@@ -340,7 +341,7 @@ namespace Barotrauma
                         else if (holdable.Picker.SelectedItems[1] == this)
                         {
                             Limb holdLimb = holdable.Picker.AnimController.GetLimb(LimbType.LeftHand);
-                            if (holdLimb != null)
+                            if (holdLimb?.ActiveSprite != null)
                             {
                                 depth = holdLimb.ActiveSprite.Depth + holdable.Picker.AnimController.GetDepthOffset() - depthStep * 2;
                                 foreach (WearableSprite wearableSprite in holdLimb.WearingItems)
@@ -367,6 +368,23 @@ namespace Barotrauma
                             -body.Rotation + rotation, decorativeSprite.Scale * Scale, activeSprite.effects,
                             depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
                     }
+                }
+                
+                foreach (var upgrade in Upgrades)
+                {
+                    var upgradeSprites = GetUpgradeSprites(upgrade);
+                    
+                    foreach (var decorativeSprite in upgradeSprites)
+                    {
+                        if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
+                        float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
+                        var (xOff, yOff) = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+
+                        decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + xOff, -(DrawPosition.Y + yOff)), color,
+                            rotation, decorativeSprite.Scale * Scale, activeSprite.effects,
+                            depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
+                    }
+                    
                 }
 
                 activeSprite.effects = oldEffects;
@@ -437,6 +455,21 @@ namespace Barotrauma
             }
         }
 
+        private void DrawDecorativeSprite(SpriteBatch spriteBatch, DecorativeSprite decorativeSprite, Color color, float depth)
+        {
+            if (!spriteAnimState[decorativeSprite].IsActive) { return; }
+            float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
+            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+
+            var ca = (float)Math.Cos(-body.Rotation);
+            var sa = (float)Math.Sin(-body.Rotation);
+            Vector2 transformedOffset = new Vector2(ca * offset.X + sa * offset.Y, -sa * offset.X + ca * offset.Y);
+
+            decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + transformedOffset.X, -(DrawPosition.Y + transformedOffset.Y)), color,
+                -body.Rotation + rotation, decorativeSprite.Scale * Scale, activeSprite.effects,
+                depth: depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth));
+        }
+
         partial void OnCollisionProjSpecific(float impact)
         {
             if (impact > 1.0f &&
@@ -451,6 +484,22 @@ namespace Barotrauma
         public void UpdateSpriteStates(float deltaTime)
         {
             DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);
+            
+            foreach (var upgrade in Upgrades)
+            {
+                var upgradeSprites = GetUpgradeSprites(upgrade);
+                
+                foreach (var decorativeSprite in upgradeSprites)
+                {
+                    var spriteState = spriteAnimState[decorativeSprite];
+                    spriteState.IsActive = true;
+                    foreach (var _ in decorativeSprite.IsActiveConditionals.Where(conditional => !ConditionalMatches(conditional)))
+                    {
+                        spriteState.IsActive = false;
+                        break;
+                    }
+                }
+            }
         }
 
         public override void UpdateEditing(Camera cam)
@@ -541,12 +590,14 @@ namespace Barotrauma
                     linkText.TextColor = GUI.Style.Orange;
                     itemsText.TextColor = GUI.Style.Orange;
                 }
+
                 var buttonContainer = new GUILayoutGroup(new RectTransform(new Point(listBox.Content.Rect.Width, heightScaled)), isHorizontal: true)
                 {
                     Stretch = true,
                     RelativeSpacing = 0.02f,
                     CanBeFocused = true
                 };
+
                 new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
                 {
                     ToolTip = TextManager.Get("MirrorEntityXToolTip"),
@@ -588,6 +639,22 @@ namespace Barotrauma
                 buttonContainer.RectTransform.IsFixedSize = true;
                 itemEditor.AddCustomContent(buttonContainer, itemEditor.ContentCount);
                 GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Select(b => ((GUIButton)b).TextBlock));
+
+                if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)
+                {
+                    GUITickBox tickBox = new GUITickBox(new RectTransform(new Point(listBox.Content.Rect.Width, 10)), TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.name"))
+                    {
+                        Font = GUI.SmallFont,
+                        Selected = RemoveIfLinkedOutpostDoorInUse,
+                        ToolTip = TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.description"),
+                        OnSelected = (tickBox) =>
+                        {
+                            RemoveIfLinkedOutpostDoorInUse = tickBox.Selected;
+                            return true;
+                        }
+                    };
+                    itemEditor.AddCustomContent(tickBox, 1);
+                }
             }
 
             foreach (ItemComponent ic in components)
@@ -665,6 +732,39 @@ namespace Barotrauma
             SetHUDLayout();
 
             return editingHUD;
+        }
+
+        private List<DecorativeSprite> GetUpgradeSprites(Upgrade upgrade)
+        {
+            var upgradeSprites = upgrade.Prefab.DecorativeSprites;
+
+            if (Prefab.UpgradeOverrideSprites.ContainsKey(upgrade.Prefab.Identifier))
+            {
+                upgradeSprites = Prefab.UpgradeOverrideSprites[upgrade.Prefab.Identifier];
+            }
+
+            return upgradeSprites;
+        }
+        
+        public override bool AddUpgrade(Upgrade upgrade, bool createNetworkEvent = false)
+        {
+            if (upgrade.Prefab.IsWallUpgrade) { return false; }
+            bool result = base.AddUpgrade(upgrade, createNetworkEvent);
+            if (result && !upgrade.Disposed)
+            {
+                List<DecorativeSprite> upgradeSprites = GetUpgradeSprites(upgrade);
+
+                if (upgradeSprites.Any())
+                {
+                    foreach (DecorativeSprite decorativeSprite in upgradeSprites)
+                    {
+                        decorativeSprite.Sprite.EnsureLazyLoaded();
+                        spriteAnimState.Add(decorativeSprite, new DecorativeSprite.State());
+                    }
+                    UpdateSpriteStates(0.0f);
+                }
+            }
+            return result;
         }
 
         private void CreateTagPicker(GUITextBox textBox, IEnumerable<string> availableTags)
@@ -756,6 +856,10 @@ namespace Barotrauma
 
         private readonly List<Rectangle> debugInitialHudPositions = new List<Rectangle>();
 
+        private readonly List<ItemComponent> prevActiveHUDs = new List<ItemComponent>();
+        private readonly List<ItemComponent> activeComponents = new List<ItemComponent>();
+        private readonly List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();
+
         public void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             bool editingHUDCreated = false;
@@ -774,8 +878,11 @@ namespace Barotrauma
                 editingHUDRefreshTimer -= deltaTime;
             }
 
-            List<ItemComponent> prevActiveHUDs = new List<ItemComponent>(activeHUDs);
-            List<ItemComponent> activeComponents = new List<ItemComponent>(components);
+            prevActiveHUDs.Clear();
+            prevActiveHUDs.AddRange(activeHUDs);
+            activeComponents.Clear();
+            activeComponents.AddRange(components);
+
             foreach (MapEntity entity in linkedTo)
             {
                 if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
@@ -788,12 +895,11 @@ namespace Barotrauma
             activeHUDs.Clear();
             //the HUD of the component with the highest priority will be drawn
             //if all components have a priority of 0, all of them are drawn
-            List<ItemComponent> maxPriorityHUDs = new List<ItemComponent>();
+            maxPriorityHUDs.Clear();
+            bool DrawHud(ItemComponent ic) => ic.ShouldDrawHUD(character) && (ic.CanBeSelected && ic.HasRequiredItems(character, addMessage: false) || (character.HasEquippedItem(this) && ic.DrawHudWhenEquipped));
             foreach (ItemComponent ic in activeComponents)
             {
-                if (ic.HudPriority > 0 && ic.ShouldDrawHUD(character) &&
-                    (ic.CanBeSelected || (character.HasEquippedItem(this) && ic.DrawHudWhenEquipped)) &&
-                    (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
+                if (ic.HudPriority > 0 && DrawHud(ic) && (maxPriorityHUDs.Count == 0 || ic.HudPriority >= maxPriorityHUDs[0].HudPriority))
                 {
                     if (maxPriorityHUDs.Count > 0 && ic.HudPriority > maxPriorityHUDs[0].HudPriority) { maxPriorityHUDs.Clear(); }
                     maxPriorityHUDs.Add(ic);
@@ -808,8 +914,7 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in activeComponents)
                 {
-                    if (ic.ShouldDrawHUD(character) &&
-                        (ic.CanBeSelected || (character.HasEquippedItem(this) && ic.DrawHudWhenEquipped)))
+                    if (DrawHud(ic))
                     {
                         activeHUDs.Add(ic);
                     }
@@ -914,11 +1019,11 @@ namespace Barotrauma
                         color = Color.Cyan;
                     }
                 }
-                texts.Add(new ColoredText(ic.DisplayMsg, color, false));
+                texts.Add(new ColoredText(ic.DisplayMsg, color, false, false));
             }
             if ((PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift)) && CrewManager.DoesItemHaveContextualOrders(this))
             {
-                texts.Add(new ColoredText(TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders")), Color.Cyan, false));
+                texts.Add(new ColoredText(TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders")), Color.Cyan, false, false));
             }
             return texts;
         }
@@ -1048,6 +1153,29 @@ namespace Barotrauma
                     ReadPropertyChange(msg, false);
                     editingHUDRefreshPending = true;
                     break;
+                case NetEntityEvent.Type.Upgrade:
+                {
+                    string identifier = msg.ReadString();
+                    byte level = msg.ReadByte();
+                    if (UpgradePrefab.Find(identifier) is { } upgradePrefab)
+                    {
+                        Upgrade upgrade = new Upgrade(this, upgradePrefab, level);
+                        
+                        byte targetCount = msg.ReadByte();
+                        for (int i = 0; i < targetCount; i++)
+                        {
+                            byte propertyCount = msg.ReadByte();
+                            for (int j = 0; j < propertyCount; j++)
+                            {
+                                float value = msg.ReadSingle();
+                                upgrade.TargetComponents.ElementAt(i).Value[j].SetOriginalValue(value);
+                            }
+                        }
+
+                        AddUpgrade(upgrade, false);
+                    }
+                    break;
+                }
                 case NetEntityEvent.Type.Invalid:
                     break;
             }
@@ -1220,7 +1348,7 @@ namespace Barotrauma
             ushort itemId = msg.ReadUInt16();
             ushort inventoryId = msg.ReadUInt16();
 
-            DebugConsole.Log("Received entity spawn message for item " + itemName + ".");
+            DebugConsole.Log($"Received entity spawn message for item \"{itemName}\" (identifier: {itemIdentifier}, id: {itemId})");
 
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;
@@ -1243,10 +1371,10 @@ namespace Barotrauma
                 }
             }
 
-            byte bodyType = msg.ReadByte();
-
-            byte teamID = msg.ReadByte();
-            bool tagsChanged = msg.ReadBoolean();
+            byte bodyType           = msg.ReadByte();
+            bool spawnedInOutpost   = msg.ReadBoolean();
+            byte teamID             = msg.ReadByte();
+            bool tagsChanged        = msg.ReadBoolean();
             string tags = "";
             if (tagsChanged)
             {
@@ -1289,6 +1417,7 @@ namespace Barotrauma
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                             errorMsg);
                         DebugConsole.ThrowError(errorMsg);
+                        inventory = parentItem.GetComponent<ItemContainer>()?.Inventory;
                     }
                     else if (parentItem.components[itemContainerIndex] is ItemContainer container)
                     {
@@ -1307,7 +1436,8 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, pos, sub)
             {
-                ID = itemId
+                ID = itemId,
+                SpawnedInOutpost = spawnedInOutpost
             };
 
             if (item.body != null)

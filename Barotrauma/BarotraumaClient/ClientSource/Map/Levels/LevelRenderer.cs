@@ -209,7 +209,7 @@ namespace Barotrauma
                     level.GenerationParams.WaterParticles.DrawTiled(
                         spriteBatch, origin + offsetS, 
                         new Vector2(cam.WorldView.Width - offsetS.X, cam.WorldView.Height - offsetS.Y), 
-                        rect: srcRect, color: Color.White * alpha, textureScale: new Vector2(texScale));                    
+                        color: Color.White * alpha, textureScale: new Vector2(texScale));                    
                 }
             }
 

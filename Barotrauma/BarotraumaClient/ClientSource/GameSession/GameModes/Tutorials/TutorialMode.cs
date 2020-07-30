@@ -11,8 +11,8 @@ namespace Barotrauma
             tutorial.Initialize();
         }
 
-        public TutorialMode(GameModePreset preset, object param)
-            : base(preset, param)
+        public TutorialMode(GameModePreset preset)
+            : base(preset)
         {
         }
 
@@ -21,6 +21,11 @@ namespace Barotrauma
             base.Start();
             GameMain.GameSession.CrewManager = new CrewManager(true);
             Tutorial.Start();
+            foreach (Item item in Item.ItemList)
+            {
+                //don't consider the items to belong in the outpost to prevent the stealing icon from showing
+                item.SpawnedInOutpost = false;
+            }
         }
 
         public override void AddToGUIUpdateList()

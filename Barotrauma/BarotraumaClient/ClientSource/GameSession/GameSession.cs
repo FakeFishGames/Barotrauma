@@ -1,13 +1,18 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
     partial class GameSession
     {
-        public RoundSummary RoundSummary { get; private set; }
+        public RoundSummary RoundSummary
+        {
+            get;
+            private set;
+        }
+
         public static bool IsTabMenuOpen => GameMain.GameSession?.tabMenu != null;
         public static TabMenu TabMenuInstance => GameMain.GameSession?.tabMenu;
+
 
         private TabMenu tabMenu;
 
@@ -46,30 +51,20 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime)
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD) { return; }
 
-            if (GameMode.IsRunning)
+            if (tabMenu == null)
             {
-                if (tabMenu == null)
+                if (PlayerInput.KeyHit(InputType.InfoTab) && GUI.KeyboardDispatcher.Subscriber is GUITextBox == false)
                 {
-                    if (PlayerInput.KeyHit(InputType.InfoTab) && GUI.KeyboardDispatcher.Subscriber is GUITextBox == false)
-                    {
-                        ToggleTabMenu();
-                    }
-                }
-                else
-                {
-                    tabMenu.Update();
-
-                    if (PlayerInput.KeyHit(InputType.InfoTab) && GUI.KeyboardDispatcher.Subscriber is GUITextBox == false)
-                    {
-                        ToggleTabMenu();
-                    }
+                    ToggleTabMenu();
                 }
             }
             else
             {
-                if (tabMenu != null)
+                tabMenu.Update();
+
+                if (PlayerInput.KeyHit(InputType.InfoTab) && GUI.KeyboardDispatcher.Subscriber is GUITextBox == false)
                 {
                     ToggleTabMenu();
                 }
@@ -97,7 +92,6 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            if (GUI.DisableHUD) return;
             GameMode?.Draw(spriteBatch);
         }
     }

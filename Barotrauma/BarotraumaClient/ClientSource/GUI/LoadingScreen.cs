@@ -165,7 +165,7 @@ namespace Barotrauma
             float noiseStrength = (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0);
             float noiseScale = (float)PerlinNoise.CalculatePerlin(noiseT * 5.0f, noiseT * 2.0f, 0) * 4.0f;
             noiseSprite.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                startOffset: new Point(Rand.Range(0, noiseSprite.SourceRect.Width), Rand.Range(0, noiseSprite.SourceRect.Height)),
+                startOffset: new Vector2(Rand.Range(0.0f, noiseSprite.SourceRect.Width), Rand.Range(0.0f, noiseSprite.SourceRect.Height)),
                 color: Color.White * noiseStrength * 0.1f,
                 textureScale: Vector2.One * noiseScale);
 
@@ -185,7 +185,7 @@ namespace Barotrauma
                     if (LoadState == 100.0f)
                     {
 #if DEBUG
-                        if (GameMain.Config.AutomaticQuickStartEnabled && GameMain.FirstLoad)
+                        if (GameMain.Config.AutomaticQuickStartEnabled || GameMain.Config.AutomaticCampaignLoadEnabled && GameMain.FirstLoad)
                         {
                             loadText = "QUICKSTARTING ...";
                         }

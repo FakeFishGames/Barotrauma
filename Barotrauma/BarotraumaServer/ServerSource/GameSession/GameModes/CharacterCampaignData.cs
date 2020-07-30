@@ -25,9 +25,19 @@ namespace Barotrauma
             }
         }
 
+        public bool IsDuplicate(CharacterCampaignData other)
+        {
+            return other.SteamID == SteamID && other.ClientEndPoint == ClientEndPoint;
+        }
+
         public void SpawnInventoryItems(CharacterInfo characterInfo, Inventory inventory)
         {
             characterInfo.SpawnInventoryItems(inventory, itemData);
+        }
+
+        public void ApplyHealthData(CharacterInfo characterInfo, Character character)
+        {            
+            characterInfo.ApplyHealthData(character, healthData);
         }
     }
 }

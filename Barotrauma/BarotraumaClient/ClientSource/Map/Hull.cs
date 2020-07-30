@@ -201,7 +201,7 @@ namespace Barotrauma
             for (int i = 1; i < waveY.Length - 1; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));
-                if (maxDelta > Rand.Range(1.0f, 10.0f))
+                if (maxDelta > 1.0f && maxDelta > Rand.Range(1.0f, 10.0f))
                 {
                     var particlePos = new Vector2(rect.X + WaveWidth * i, surface + waveY[i]);
                     if (Submarine != null) particlePos += Submarine.Position;

@@ -98,20 +98,23 @@ namespace Barotrauma
 
         public void Init()
         {
+            NPCSet.LoadSets();
+            FactionPrefab.LoadFactions();
             CharacterPrefab.LoadAll();
             MissionPrefab.Init();
             TraitorMissionPrefab.Init();
             MapEntityPrefab.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
-            ScriptedEventSet.LoadPrefabs();
+            OutpostGenerationParams.LoadPresets();
+            EventSet.LoadPrefabs();
             Order.Init();
             EventManagerSettings.Init();
-
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
+            UpgradePrefab.LoadAll(GetFilesOfType(ContentType.UpgradeModules));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             CorpsePrefab.LoadAll(GetFilesOfType(ContentType.Corpses));
             NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
@@ -344,7 +347,10 @@ namespace Barotrauma
                 {
                     Timing.TotalTime += Timing.Step;
                     DebugConsole.Update();
-                    Screen.Selected?.Update((float)Timing.Step);
+                    if (GameSession?.GameMode == null || !GameSession.GameMode.Paused)
+                    {
+                        Screen.Selected?.Update((float)Timing.Step);
+                    }
                     Server.Update((float)Timing.Step);
                     if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);

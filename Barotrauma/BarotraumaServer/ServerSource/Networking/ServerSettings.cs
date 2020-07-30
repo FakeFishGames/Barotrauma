@@ -11,6 +11,7 @@ namespace Barotrauma.Networking
     partial class ServerSettings
     {
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
+        public static readonly char SubmarineSeparatorChar = '|';
 
         partial void InitProjSpecific()
         {

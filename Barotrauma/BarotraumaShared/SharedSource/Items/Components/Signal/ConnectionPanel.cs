@@ -64,7 +64,14 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
+        private bool linksInitialized;
         public override void OnMapLoaded()
+        {
+            if (linksInitialized) { return; }
+            InitializeLinks();
+        }
+
+        public void InitializeLinks()
         {
             foreach (Connection c in Connections)
             {
@@ -90,6 +97,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            linksInitialized = true;
         }
 
         public override void OnItemLoaded()
@@ -260,6 +269,7 @@ namespace Barotrauma.Items.Components
 
         protected override void RemoveComponentSpecific()
         {
+            base.RemoveComponentSpecific();
             foreach (Wire wire in DisconnectedWires.ToList())
             {
                 if (wire.OtherConnection(null) == null) //wire not connected to anything else

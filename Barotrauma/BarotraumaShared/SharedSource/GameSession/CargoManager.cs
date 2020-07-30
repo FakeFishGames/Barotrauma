@@ -1,93 +1,151 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
+#if SERVER
+using Barotrauma.Networking;
+#endif
 
 namespace Barotrauma
 {
     class PurchasedItem
     {
-        public readonly ItemPrefab ItemPrefab;
-        public int Quantity;
+        public ItemPrefab ItemPrefab { get; }
+        public int Quantity { get; set; }
 
         public PurchasedItem(ItemPrefab itemPrefab, int quantity)
         {
-            this.ItemPrefab = itemPrefab;
-            this.Quantity = quantity;
+            ItemPrefab = itemPrefab;
+            Quantity = quantity;
         }
     }
 
-    class CargoManager
+    class SoldItem
+    {
+        public ItemPrefab ItemPrefab { get; }
+        public ushort ID { get; }
+        public bool Removed { get; set; }
+        public byte SellerID { get; }
+
+        public SoldItem(ItemPrefab itemPrefab, ushort id, bool removed, byte sellerId)
+        {
+            ItemPrefab = itemPrefab;
+            ID = id;
+            Removed = removed;
+            SellerID = sellerId;
+        }
+    }
+
+    partial class CargoManager
     {
         public const int MaxQuantity = 100;
 
-        private readonly List<PurchasedItem> purchasedItems;
+        public List<PurchasedItem> ItemsInBuyCrate { get; } = new List<PurchasedItem>();
+        public List<PurchasedItem> ItemsInSellCrate { get; } = new List<PurchasedItem>();
+        public List<PurchasedItem> PurchasedItems { get; } = new List<PurchasedItem>();
+        public List<SoldItem> SoldItems { get; } = new List<SoldItem>();
+
         private readonly CampaignMode campaign;
 
-        public Action OnItemsChanged;
+        private Location location => campaign.Map.CurrentLocation;
 
-        public List<PurchasedItem> PurchasedItems
-        {
-            get { return purchasedItems; }
-        }
+        public Action OnItemsInBuyCrateChanged;
+        public Action OnItemsInSellCrateChanged;
+        public Action OnPurchasedItemsChanged;
+        public Action OnSoldItemsChanged;
         
         public CargoManager(CampaignMode campaign)
         {
-            purchasedItems = new List<PurchasedItem>();
             this.campaign = campaign;
+        }
+
+        public void ClearItemsInBuyCrate()
+        {
+            ItemsInBuyCrate.Clear();
+            OnItemsInBuyCrateChanged?.Invoke();
+        }
+
+        public void ClearItemsInSellCrate()
+        {
+            ItemsInSellCrate.Clear();
+            OnItemsInSellCrateChanged?.Invoke();
         }
 
         public void SetPurchasedItems(List<PurchasedItem> items)
         {
-            purchasedItems.Clear();
-            purchasedItems.AddRange(items);
-
-            OnItemsChanged?.Invoke();
+            PurchasedItems.Clear();
+            PurchasedItems.AddRange(items);
+            OnPurchasedItemsChanged?.Invoke();
         }
 
-        public void PurchaseItem(ItemPrefab item, int quantity = 1)
+        public void ModifyItemQuantityInBuyCrate(ItemPrefab itemPrefab, int changeInQuantity)
         {
-            PurchasedItem purchasedItem = PurchasedItems.Find(pi => pi.ItemPrefab == item);
-
-            campaign.Money -= item.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
-            if (purchasedItem != null)
+            PurchasedItem itemInCrate = ItemsInBuyCrate.Find(i => i.ItemPrefab == itemPrefab);
+            if (itemInCrate != null)
             {
-                purchasedItem.Quantity += quantity;
+                itemInCrate.Quantity += changeInQuantity;
+                if (itemInCrate.Quantity < 1)
+                {
+                    ItemsInBuyCrate.Remove(itemInCrate);
+                }
             }
-            else
+            else if(changeInQuantity > 0)
             {
-                purchasedItem = new PurchasedItem(item, quantity);
-                purchasedItems.Add(purchasedItem);
+                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity);
+                ItemsInBuyCrate.Add(itemInCrate);
             }
-
-            OnItemsChanged?.Invoke();
+            OnItemsInBuyCrateChanged?.Invoke();
         }
 
-        public void SellItem(PurchasedItem purchasedItem, int quantity = 1)
+        public void PurchaseItems(List<PurchasedItem> itemsToPurchase, bool removeFromCrate)
         {
-            quantity = Math.Min(purchasedItem.Quantity, quantity);
-            campaign.Money += purchasedItem.ItemPrefab.GetPrice(campaign.Map.CurrentLocation).BuyPrice * quantity;
-            purchasedItem.Quantity -= quantity;
-            if (purchasedItem != null && purchasedItem.Quantity <= 0)
+            foreach (PurchasedItem item in itemsToPurchase)
             {
-                PurchasedItems.Remove(purchasedItem);
+                // Add to the purchased items
+                var purchasedItem = PurchasedItems.Find(pi => pi.ItemPrefab == item.ItemPrefab);
+                if (purchasedItem != null)
+                {
+                    purchasedItem.Quantity += item.Quantity;
+                }
+                else
+                {
+                    purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity);
+                    PurchasedItems.Add(purchasedItem);
+                }
+
+                // Exchange money
+                var itemValue = GetBuyValueAtCurrentLocation(item);
+                campaign.Money -= itemValue;
+                campaign.Map.CurrentLocation.StoreCurrentBalance += itemValue;
+
+                if (removeFromCrate)
+                {
+                    // Remove from the shopping crate
+                    var crateItem = ItemsInBuyCrate.Find(pi => pi.ItemPrefab == item.ItemPrefab);
+                    if (crateItem != null)
+                    {
+                        crateItem.Quantity -= item.Quantity;
+                        if (crateItem.Quantity < 1) { ItemsInBuyCrate.Remove(crateItem); }
+                    }
+                }
             }
-
-            OnItemsChanged?.Invoke();
+            OnPurchasedItemsChanged?.Invoke();
         }
 
-        public int GetTotalItemCost()
-        {
-            if (purchasedItems == null) return 0;
-            return purchasedItems.Sum(i => i.ItemPrefab.GetPrice(campaign.Map.CurrentLocation).BuyPrice * i.Quantity);
-        }
+        public int GetBuyValueAtCurrentLocation(PurchasedItem item) => item?.ItemPrefab != null && campaign?.Map?.CurrentLocation != null ?
+            item.Quantity* campaign.Map.CurrentLocation.GetAdjustedItemBuyPrice(item.ItemPrefab) : 0;
 
-        public void CreateItems()
+        public int GetSellValueAtCurrentLocation(ItemPrefab itemPrefab, int quantity = 1) => itemPrefab != null && campaign?.Map?.CurrentLocation != null ?
+            quantity * campaign.Map.CurrentLocation.GetAdjustedItemSellPrice(itemPrefab) : 0;
+
+        public void CreatePurchasedItems()
         {
-            CreateItems(purchasedItems);
-            OnItemsChanged?.Invoke();
+            CreateItems(PurchasedItems);
+            OnPurchasedItemsChanged?.Invoke();
         }
 
         public static void CreateItems(List<PurchasedItem> itemsToSpawn)
@@ -110,7 +168,14 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            new GUIMessageBox("", TextManager.GetWithVariable("CargoSpawnNotification", "[roomname]", cargoRoom.DisplayName, true));
+            new GUIMessageBox("", TextManager.GetWithVariable("CargoSpawnNotification", "[roomname]", cargoRoom.DisplayName, true), new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "StoreShoppingCrateIcon");
+#else
+            foreach (Client client in GameMain.Server.ConnectedClients)
+            {
+                ChatMessage msg = ChatMessage.Create("", $"CargoSpawnNotification~[roomname]=§{cargoRoom.RoomName}", ChatMessageType.ServerMessageBoxInGame, null);
+                msg.IconStyle = "StoreShoppingCrateIcon";
+                GameMain.Server.SendDirectChatMessage(msg, client);
+            }
 #endif
 
             Dictionary<ItemContainer, int> availableContainers = new Dictionary<ItemContainer, int>();
@@ -179,11 +244,12 @@ namespace Barotrauma
                         //no container, place at the waypoint
                         if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
-                            Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, position, wp.Submarine);
+                            Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, position, wp.Submarine, onSpawned: itemSpawned);
                         }
                         else
                         {
-                            new Item(pi.ItemPrefab, position, wp.Submarine);
+                            var item = new Item(pi.ItemPrefab, position, wp.Submarine);
+                            itemSpawned(item);
                         }
                         continue;
                     }
@@ -205,12 +271,25 @@ namespace Barotrauma
                     //place in the container
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
-                        Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory);
+                        Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory, onSpawned: itemSpawned);
                     }
                     else
                     {
                         var item = new Item(pi.ItemPrefab, position, wp.Submarine);
                         itemContainer.Inventory.TryPutItem(item, null);
+                        itemSpawned(item);
+                    }
+
+                    static void itemSpawned(Item item)
+                    {
+                        Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;
+                        if (sub != null)
+                        {
+                            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                            {
+                                wifiComponent.TeamID = sub.TeamID;
+                            }
+                        }
                     }
 
                     //reduce the number of available slots in the container
@@ -226,6 +305,37 @@ namespace Barotrauma
                 }
             }
             itemsToSpawn.Clear();
+        }
+
+        public void SavePurchasedItems(XElement parentElement)
+        {
+            var itemsElement = new XElement("cargo");
+            foreach (PurchasedItem item in PurchasedItems)
+            {
+                if (item?.ItemPrefab == null) { continue; }
+                itemsElement.Add(new XElement("item",
+                    new XAttribute("id", item.ItemPrefab.Identifier),
+                    new XAttribute("qty", item.Quantity)));
+            }
+            parentElement.Add(itemsElement);
+        }
+
+        public void LoadPurchasedItems(XElement element)
+        {
+            var purchasedItems = new List<PurchasedItem>();
+            if (element != null)
+            {
+                foreach (XElement itemElement in element.GetChildElements("item"))
+                {
+                    var id = itemElement.GetAttributeString("id", null);
+                    if (string.IsNullOrWhiteSpace(id)) { continue; }
+                    var prefab = ItemPrefab.Prefabs.Find(p => p.Identifier == id);
+                    if (prefab == null) { continue; }
+                    var qty = itemElement.GetAttributeInt("qty", 0);
+                    purchasedItems.Add(new PurchasedItem(prefab, qty));
+                }
+            }
+            SetPurchasedItems(purchasedItems);
         }
     }
 }

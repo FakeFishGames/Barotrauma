@@ -152,11 +152,11 @@ namespace Barotrauma.RuinGeneration
                 {
                     mainElement = doc.Root.FirstElement();
                     paramsList.Clear();
-                    DebugConsole.NewMessage($"Overriding all ruin configuration parameters using the file {configFile.Path}.", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all ruin generation parameters using the file {configFile.Path}.", Color.Yellow);
                 }
                 else if (paramsList.Any())
                 {
-                    DebugConsole.NewMessage($"Adding additional ruin configuration parameters from file '{configFile.Path}'");
+                    DebugConsole.NewMessage($"Adding additional ruin generation parameters from file '{configFile.Path}'");
                 }
                 var newParams = new RuinGenerationParams(mainElement)
                 {

@@ -65,6 +65,7 @@ namespace Barotrauma.Sounds
 
         public void Dispose()
         {
+            if (ALSources == null) { return; }
             for (int i = 0; i < ALSources.Length; i++)
             {
                 Al.DeleteSource(ALSources[i]);

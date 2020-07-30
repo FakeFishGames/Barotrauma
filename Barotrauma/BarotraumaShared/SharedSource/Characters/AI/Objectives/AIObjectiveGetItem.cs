@@ -22,7 +22,11 @@ namespace Barotrauma
         private string[] itemIdentifiers;
         public IEnumerable<string> Identifiers => itemIdentifiers;
 
+        //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
+        private bool spawnItemIfNotFound = false;
+
         private Item targetItem;
+        private Item originalTarget;
         private ISpatialEntity moveToTarget;
         private bool isDoneSeeking;
         public Item TargetItem => targetItem;
@@ -41,19 +45,21 @@ namespace Barotrauma
         {
             currSearchIndex = -1;
             this.equip = equip;
+            originalTarget = targetItem;
             this.targetItem = targetItem;
             moveToTarget = targetItem?.GetRootInventoryOwner();
         }
 
-        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1) 
-            : this(character, new string[] { itemIdentifier }, objectiveManager, equip, checkInventory, priorityModifier) { }
+        public AIObjectiveGetItem(Character character, string itemIdentifier, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
+            : this(character, new string[] { itemIdentifier }, objectiveManager, equip, checkInventory, priorityModifier, spawnItemIfNotFound) { }
 
-        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1) 
+        public AIObjectiveGetItem(Character character, string[] itemIdentifiers, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
             this.equip = equip;
             this.itemIdentifiers = itemIdentifiers;
+            this.spawnItemIfNotFound = spawnItemIfNotFound;
             for (int i = 0; i < itemIdentifiers.Length; i++)
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
@@ -113,13 +119,28 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
+            else if (isDoneSeeking && moveToTarget == null)
+            {
+#if DEBUG
+                DebugConsole.NewMessage($"{character.Name}: Move target null. Aborting.", Color.Red);
+#endif
+                Abandon = true;
+                return;
+            }
             if (character.IsItemTakenBySomeoneElse(targetItem))
             {
 #if DEBUG
                 DebugConsole.NewMessage($"{character.Name}: Found an item, but it's already equipped by someone else.", Color.Yellow);
 #endif
-                // Try again
-                Reset();
+                if (originalTarget == null)
+                {
+                    // Try again
+                    Reset();
+                }
+                else
+                {
+                    Abandon = true;
+                }
                 return;
             }
             bool canInteract = false;
@@ -155,30 +176,7 @@ namespace Barotrauma
 
                 if (equip)
                 {
-                    int targetSlot = -1;
-                    //check if all the slots required by the item are free
-                    foreach (InvSlotType slots in pickable.AllowedSlots)
-                    {
-                        if (slots.HasFlag(InvSlotType.Any)) { continue; }
-                        for (int i = 0; i < character.Inventory.Items.Length; i++)
-                        {
-                            //slot not needed by the item, continue
-                            if (!slots.HasFlag(character.Inventory.SlotTypes[i])) { continue; }
-                            targetSlot = i;
-                            //slot free, continue
-                            var otherItem = character.Inventory.Items[i];
-                            if (otherItem == null) { continue; }
-                            //try to move the existing item to LimbSlot.Any and continue if successful
-                            if (otherItem.AllowedSlots.Contains(InvSlotType.Any) && 
-                                character.Inventory.TryPutItem(otherItem, character, new List<InvSlotType>() { InvSlotType.Any }))
-                            {
-                                continue;
-                            }
-                            //if everything else fails, simply drop the existing item
-                            otherItem.Drop(character);
-                        }
-                    }
-                    if (character.Inventory.TryPutItem(targetItem, targetSlot, false, false, character))
+                    if (HumanAIController.TryToMoveItem(targetItem, character.Inventory))
                     {
                         targetItem.Equip(character);
                         IsCompleted = true;
@@ -193,7 +191,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (character.Inventory.TryPutItem(targetItem, null, new List<InvSlotType>() { InvSlotType.Any }))
+                    if (character.Inventory.TryPutItem(targetItem, character, new List<InvSlotType>() { InvSlotType.Any }))
                     {
                         IsCompleted = true;
                     }
@@ -283,10 +281,34 @@ namespace Barotrauma
                 isDoneSeeking = true;
                 if (targetItem == null)
                 {
+                    if (spawnItemIfNotFound)
+                    {
+                        if (!(MapEntityPrefab.List.FirstOrDefault(me => me is ItemPrefab ip && itemIdentifiers.Any(id => id == ip.Identifier || ip.Tags.Contains(id))) is ItemPrefab prefab))
+                        {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
+                            DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}, tried to spawn the item but no matching item prefabs were found.", Color.Yellow);
 #endif
-                    Abandon = true;
+                            Abandon = true;
+                        }
+                        else
+                        {
+                            Entity.Spawner.AddToSpawnQueue(prefab, character.Inventory, onSpawned: (Item spawnedItem) => 
+                            {
+                                targetItem = spawnedItem; 
+                                if (character.TeamID == Character.TeamType.FriendlyNPC && (character.Submarine?.Info.IsOutpost ?? false))
+                                {
+                                    spawnedItem.SpawnedInOutpost = true;
+                                }
+                            });
+                        }
+                    }
+                    else
+                    {
+#if DEBUG
+                        DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}", Color.Yellow);
+#endif
+                        Abandon = true;
+                    }
                 }
             }
         }
@@ -323,8 +345,8 @@ namespace Barotrauma
         {
             base.Reset();
             RemoveSubObjective(ref goToObjective);
-            targetItem = null;
-            moveToTarget = null;
+            targetItem = originalTarget;
+            moveToTarget = targetItem?.GetRootInventoryOwner();
             isDoneSeeking = false;
             currSearchIndex = 0;
         }

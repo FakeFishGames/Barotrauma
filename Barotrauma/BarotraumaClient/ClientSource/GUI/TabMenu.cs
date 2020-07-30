@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
 using Barotrauma.Networking;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -13,7 +14,7 @@ namespace Barotrauma
 
         private static bool initialized = false;
 
-        private static UISprite spectateIcon, deadIcon, disconnectedIcon;
+        private static UISprite spectateIcon, disconnectedIcon;
         private static Sprite ownerIcon, moderatorIcon;
 
         private enum InfoFrameTab { Crew, Mission, MyCharacter, Traitor };
@@ -31,7 +32,7 @@ namespace Barotrauma
         private List<Character.TeamType> teamIDs;
         private const string inLobbyString = "\u2022 \u2022 \u2022";
 
-        private static Color ownCharacterBGColor = Color.Gold * 0.7f;
+        public static Color OwnCharacterBGColor = Color.Gold * 0.7f;
 
         private class LinkedGUI
         {
@@ -115,10 +116,9 @@ namespace Barotrauma
         public void Initialize()
         {
             spectateIcon = GUI.Style.GetComponentStyle("SpectateIcon").Sprites[GUIComponent.ComponentState.None][0];
-            deadIcon = GUI.Style.GetComponentStyle("DeadIcon").Sprites[GUIComponent.ComponentState.None][0];
             disconnectedIcon = GUI.Style.GetComponentStyle("DisconnectedIcon").Sprites[GUIComponent.ComponentState.None][0];
-            ownerIcon = GUI.Style.GetComponentStyle("OwnerIcon").Sprites[GUIComponent.ComponentState.None][0].Sprite;
-            moderatorIcon = GUI.Style.GetComponentStyle("ModeratorIcon").Sprites[GUIComponent.ComponentState.None][0].Sprite;
+            ownerIcon = GUI.Style.GetComponentStyle("OwnerIcon").GetDefaultSprite();
+            moderatorIcon = GUI.Style.GetComponentStyle("ModeratorIcon").GetDefaultSprite();
             initialized = true;
         }
 
@@ -279,7 +279,7 @@ namespace Barotrauma
             teamIDs = crew.Select(c => c.TeamID).Distinct().ToList();
 
             // Show own team first when there's more than one team
-            if (teamIDs.Count > 1 && GameMain.Client.Character != null)
+            if (teamIDs.Count > 1 && GameMain.Client?.Character != null)
             {
                 Character.TeamType ownTeam = GameMain.Client.Character.TeamID;
                 teamIDs = teamIDs.OrderBy(i => i != ownTeam).ThenBy(i => i).ToList();
@@ -408,7 +408,7 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(crewListArray[i].Content.Rect.Width, GUI.IntScale(33f)), crewListArray[i].Content.RectTransform), style: "ListBoxElement")
             {
                 UserData = character,
-                Color = (Character.Controlled == character) ? ownCharacterBGColor : Color.Transparent
+                Color = (Character.Controlled == character) ? OwnCharacterBGColor : Color.Transparent
             };
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), frame.RectTransform, Anchor.Center), isHorizontal: true)
@@ -486,7 +486,7 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(crewListArray[i].Content.Rect.Width, GUI.IntScale(33f)), crewListArray[i].Content.RectTransform), style: "ListBoxElement")
             {
                 UserData = character,
-                Color = (GameMain.NetworkMember != null && GameMain.Client.Character == character) ? ownCharacterBGColor : Color.Transparent
+                Color = (GameMain.NetworkMember != null && GameMain.Client.Character == character) ? OwnCharacterBGColor : Color.Transparent
             };
 
             frame.OnSecondaryClicked += (component, data) =>
@@ -631,7 +631,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null || client == null || !client.HasPermissions) return null;
 
-            if (!client.AllowKicking) // Owner cannot be kicked
+            if (client.IsOwner) // Owner cannot be kicked
             {
                 return ownerIcon;
             }
@@ -649,7 +649,10 @@ namespace Barotrauma
             }
             else if (client.Character != null && client.Character.IsDead)
             {
-                client.Character.Info.DrawJobIcon(spriteBatch, area);
+                if (client.Character.Info != null)
+                {
+                    client.Character.Info.DrawJobIcon(spriteBatch, area);
+                }
             }
             else
             {
@@ -780,7 +783,7 @@ namespace Barotrauma
                
         public static void StorePlayerConnectionChangeMessage(ChatMessage message)
         {
-            if (!GameMain.GameSession?.GameMode?.IsRunning ?? true) { return; }
+            if (!GameMain.GameSession?.IsRunning ?? true) { return; }
 
             string msg = ChatMessage.GetTimeStamp() + message.TextWithSender;
             storedMessages.Add(new Pair<string, PlayerConnectionChangeType>(msg, message.ChangeType));
@@ -847,15 +850,15 @@ namespace Barotrauma
             infoFrame.ClearChildren();
             GUIFrame missionFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = (int)(0.0245f * missionFrame.Rect.Height);
-            Location endLocation = GameMain.GameSession.EndLocation;
-            Sprite portrait = endLocation.Type.GetPortrait(endLocation.PortraitId);
+            Location location = GameMain.GameSession.EndLocation != null ? GameMain.GameSession.EndLocation : GameMain.GameSession.StartLocation;
+            Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             bool hasPortrait = portrait != null && portrait.SourceRect.Width > 0 && portrait.SourceRect.Height > 0;
             int contentWidth = hasPortrait ? (int)(missionFrame.Rect.Width * 0.951f) : missionFrame.Rect.Width - padding * 2;
 
-            Vector2 locationNameSize = GUI.LargeFont.MeasureString(endLocation.Name);
-            Vector2 locationTypeSize = GUI.SubHeadingFont.MeasureString(endLocation.Name);
-            GUITextBlock locationNameText = new GUITextBlock(new RectTransform(new Point(contentWidth, (int)locationNameSize.Y), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, padding) }, endLocation.Name, font: GUI.LargeFont);
-            GUITextBlock locationTypeText = new GUITextBlock(new RectTransform(new Point(contentWidth, (int)locationTypeSize.Y), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationNameText.Rect.Height + padding) }, endLocation.Type.Name, font: GUI.SubHeadingFont);
+            Vector2 locationNameSize = GUI.LargeFont.MeasureString(location.Name);
+            Vector2 locationTypeSize = GUI.SubHeadingFont.MeasureString(location.Name);
+            GUITextBlock locationNameText = new GUITextBlock(new RectTransform(new Point(contentWidth, (int)locationNameSize.Y), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, padding) }, location.Name, font: GUI.LargeFont);
+            GUITextBlock locationTypeText = new GUITextBlock(new RectTransform(new Point(contentWidth, (int)locationTypeSize.Y), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationNameText.Rect.Height + padding) }, location.Type.Name, font: GUI.SubHeadingFont);
 
             int locationInfoYOffset = locationNameText.Rect.Height + locationTypeText.Rect.Height + padding * 2;
 
@@ -881,7 +884,8 @@ namespace Barotrauma
 
                 string missionNameString = ToolBox.WrapText(mission.Name, missionTextGroup.Rect.Width, GUI.LargeFont);
                 string missionDescriptionString = ToolBox.WrapText(mission.Description, missionTextGroup.Rect.Width, GUI.Font);
-                string missionRewardString = ToolBox.WrapText(TextManager.GetWithVariable("MissionReward", "[reward]", mission.Reward.ToString()), missionTextGroup.Rect.Width, GUI.Font);
+                string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward));
+                string missionRewardString = ToolBox.WrapText(TextManager.GetWithVariable("MissionReward", "[reward]", rewardText), missionTextGroup.Rect.Width, GUI.Font);
 
                 Vector2 missionNameSize = GUI.LargeFont.MeasureString(missionNameString);
                 Vector2 missionDescriptionSize = GUI.Font.MeasureString(missionDescriptionString);
@@ -890,13 +894,15 @@ namespace Barotrauma
                 missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)(missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y));
                 missionTextGroup.RectTransform.NonScaledSize = new Point(missionTextGroup.RectTransform.NonScaledSize.X, missionDescriptionHolder.RectTransform.NonScaledSize.Y);
 
-                float iconAspectRatio = mission.Prefab.Icon.SourceRect.Width / mission.Prefab.Icon.SourceRect.Height;
-                int iconWidth = (int)(0.225f * missionDescriptionHolder.RectTransform.NonScaledSize.X);
-                int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
-                Point iconSize = new Point(iconWidth, iconHeight);
+                if (mission.Prefab.Icon != null)
+                {
+                    float iconAspectRatio = mission.Prefab.Icon.SourceRect.Width / mission.Prefab.Icon.SourceRect.Height;
+                    int iconWidth = (int)(0.225f * missionDescriptionHolder.RectTransform.NonScaledSize.X);
+                    int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
+                    Point iconSize = new Point(iconWidth, iconHeight);
 
-                new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) { Color = mission.Prefab.IconColor };
-
+                    new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) { Color = mission.Prefab.IconColor };
+                }
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUI.LargeFont);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardString);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);

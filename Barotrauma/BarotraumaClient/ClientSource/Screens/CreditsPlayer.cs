@@ -12,9 +12,39 @@ namespace Barotrauma
 
         private float scrollSpeed;
 
+        public bool AutoRestart = true;
+
+        public bool Finished
+        {
+            get { return listBox.BarScroll >= 1.0f; }
+        }
+
+        public bool ScrollBarEnabled
+        {
+            get { return listBox.ScrollBarEnabled; }
+            set { listBox.ScrollBarEnabled = value; }
+        }
+
+        public bool AllowMouseWheelScroll
+        {
+            get { return listBox.AllowMouseWheelScroll; }
+            set { listBox.AllowMouseWheelScroll = value; }
+        }
+
+        public float Scroll
+        {
+            get { return listBox.BarScroll; }
+            set { listBox.BarScroll = value; }
+        }
+
+
         public CreditsPlayer(RectTransform rectT, string configFile) : base(null, rectT)
         {
-            GameMain.Instance.OnResolutionChanged += () => { ClearChildren(); Load(); };
+            GameMain.Instance.ResolutionChanged += () =>
+            {
+                ClearChildren();
+                Load();
+            };
 
             var doc = XMLExtensions.TryLoadXml(configFile);
             if (doc == null) { return; }
@@ -35,7 +65,7 @@ namespace Barotrauma
 
             foreach (XElement subElement in configElement.Elements())
             {
-                GUIComponent.FromXML(subElement, listBox.Content.RectTransform);
+                FromXML(subElement, listBox.Content.RectTransform);
             }
             foreach (GUIComponent child in listBox.Content.Children)
             {
@@ -53,9 +83,11 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
+            if (!Visible) { return; }
+
             listBox.BarScroll += scrollSpeed / listBox.TotalSize * deltaTime;
 
-            if (listBox.BarScroll >= 1.0f)
+            if (AutoRestart && listBox.BarScroll >= 1.0f)
             {
                 listBox.BarScroll = 0.0f;
             }

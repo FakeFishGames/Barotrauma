@@ -125,7 +125,7 @@ namespace Barotrauma
             if (GameMain.GameSession != null)
             {
 #if CLIENT
-                if (Character.Controlled != null && !(GameMain.GameSession.GameMode is SubTestMode)) 
+                if (Character.Controlled != null && !(GameMain.GameSession.GameMode is TestGameMode)) 
                 { 
                     CheckMidRoundAchievements(Character.Controlled); 
                 }

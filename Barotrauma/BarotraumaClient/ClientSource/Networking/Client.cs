@@ -18,6 +18,7 @@ namespace Barotrauma.Networking
         public bool Muted;
         public bool InGame;
         public bool HasPermissions;
+        public bool IsOwner;
         public bool AllowKicking;
     }
 
@@ -43,6 +44,8 @@ namespace Barotrauma.Networking
 #endif
             }
         }
+
+        public bool IsOwner;
 
         public bool AllowKicking;
 

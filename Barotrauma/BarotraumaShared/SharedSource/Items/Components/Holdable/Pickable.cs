@@ -25,7 +25,14 @@ namespace Barotrauma.Items.Components
 
         public Character Picker
         {
-            get { return picker; }
+            get 
+            {
+                if (picker != null && picker.Removed)
+                {
+                    picker = null;
+                }
+                return picker; 
+            }
         }
         
         public Pickable(Item item, XElement element)

@@ -19,6 +19,9 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
+    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck }
+    public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
+
     partial class SubmarineInfo : IDisposable
     {
         public const string SavePath = "Submarines";
@@ -38,6 +41,11 @@ namespace Barotrauma
 
         public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
         public string RecommendedCrewExperience;
+
+        /// <summary>
+        /// A random int that gets assigned when saving the sub. Used in mp campaign to verify that sub files match
+        /// </summary>
+        public int EqualityCheckVal { get; private set; }
 
         public HashSet<string> RequiredContentPackages = new HashSet<string>();
 
@@ -59,19 +67,36 @@ namespace Barotrauma
             set;
         }
 
+        public int Price
+        {
+            get;
+            set;
+        }
+
+        public bool InitialSuppliesSpawned
+        {
+            get;
+            set;
+        }
+
         public Version GameVersion
         {
             get;
             set;
         }
 
+        public SubmarineType Type { get; set; }
+
+        public SubmarineClass SubmarineClass;
+
+        public OutpostModuleInfo OutpostModuleInfo { get; set; }
+
         public bool IsOutpost => Type == SubmarineType.Outpost;
         public bool IsWreck => Type == SubmarineType.Wreck;
-
         public bool IsPlayer => Type == SubmarineType.Player;
 
-        public enum SubmarineType { Player, Outpost, Wreck }
-        public SubmarineType Type { get; set; }
+        public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
+        public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
 
         public Md5Hash MD5Hash
         {
@@ -142,11 +167,18 @@ namespace Barotrauma
                 return subsLeftBehind.Value;
             }
         }
+        
+        public readonly List<ushort> LeftBehindDockingPortIDs = new List<ushort>();
+        public readonly List<ushort> BlockedDockingPortIDs = new List<ushort>();
 
         public bool LeftBehindSubDockingPortOccupied
         {
             get; private set;
         }
+
+        public OutpostGenerationParams OutpostGenerationParams;
+
+        public readonly Dictionary<string, List<Character>> OutpostNPCs = new Dictionary<string, List<Character>>();
 
         //constructors & generation ----------------------------------------------------
         public SubmarineInfo()
@@ -209,18 +241,26 @@ namespace Barotrauma
             Name = original.Name;
             DisplayName = original.DisplayName;
             Description = original.Description;
+            Price = original.Price;
+            InitialSuppliesSpawned = original.InitialSuppliesSpawned;
             GameVersion = original.GameVersion;
             Type = original.Type;
+            SubmarineClass = original.SubmarineClass;
             hash = !string.IsNullOrEmpty(original.FilePath) ? original.MD5Hash : null;
             Dimensions = original.Dimensions;
             FilePath = original.FilePath;
             RequiredContentPackages = new HashSet<string>(original.RequiredContentPackages);
             IsFileCorrupted = original.IsFileCorrupted;
             SubmarineElement = original.SubmarineElement;
+            EqualityCheckVal = original.EqualityCheckVal;
             RecommendedCrewExperience = original.RecommendedCrewExperience;
             RecommendedCrewSizeMin = original.RecommendedCrewSizeMin;
             RecommendedCrewSizeMax = original.RecommendedCrewSizeMax;
             Tags = original.Tags;
+            if (original.OutpostModuleInfo != null)
+            {
+                OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
+            }
 #if CLIENT
             PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage.Texture, null, null) : null;
 #endif
@@ -258,6 +298,12 @@ namespace Barotrauma
             Description = TextManager.Get("Submarine.Description." + Name, true);
             if (string.IsNullOrEmpty(Description)) { Description = SubmarineElement.GetAttributeString("description", ""); }
 
+            EqualityCheckVal = SubmarineElement.GetAttributeInt("checkval", 0);
+
+            Price = SubmarineElement.GetAttributeInt("price", 1000);
+
+            InitialSuppliesSpawned = SubmarineElement.GetAttributeBool("initialsuppliesspawned", false);
+
             GameVersion = new Version(SubmarineElement.GetAttributeString("gameversion", "0.0.0.0"));
             if (Enum.TryParse(SubmarineElement.GetAttributeString("tags", ""), out SubmarineTag tags))
             {
@@ -267,6 +313,33 @@ namespace Barotrauma
             RecommendedCrewSizeMin = SubmarineElement.GetAttributeInt("recommendedcrewsizemin", 0);
             RecommendedCrewSizeMax = SubmarineElement.GetAttributeInt("recommendedcrewsizemax", 0);
             RecommendedCrewExperience = SubmarineElement.GetAttributeString("recommendedcrewexperience", "Unknown");
+
+            if (SubmarineElement?.Attribute("type") != null)
+            {
+                if (Enum.TryParse(SubmarineElement.GetAttributeString("type", ""), out SubmarineType type))
+                {
+                    Type = type;
+                    if (Type == SubmarineType.OutpostModule)
+                    {
+                        OutpostModuleInfo = new OutpostModuleInfo(this, SubmarineElement);
+                    }
+                }
+            }
+
+            if (Type == SubmarineType.Player)
+            {
+                if (SubmarineElement?.Attribute("class") != null)
+                {
+                    if (Enum.TryParse(SubmarineElement.GetAttributeString("class", "Undefined"), out SubmarineClass submarineClass))
+                    {
+                        SubmarineClass = submarineClass;
+                    }
+                }
+            }
+            else
+            {
+                SubmarineClass = SubmarineClass.Undefined;
+            }
 
             //backwards compatibility (use text tags instead of the actual text)
             if (RecommendedCrewExperience == "Beginner")
@@ -304,7 +377,10 @@ namespace Barotrauma
             var vanilla = GameMain.VanillaContent;
             if (vanilla != null)
             {
-                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine);
+                var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine)
+                    .Concat(vanilla.GetFilesOfType(ContentType.Wreck))
+                    .Concat(vanilla.GetFilesOfType(ContentType.Outpost))
+                    .Concat(vanilla.GetFilesOfType(ContentType.OutpostModule));
                 string pathToCompare = FilePath.Replace(@"\", @"/").ToLowerInvariant();
                 if (vanillaSubs.Any(sub => sub.Replace(@"\", @"/").ToLowerInvariant() == pathToCompare))
                 {
@@ -351,6 +427,8 @@ namespace Barotrauma
 
             subsLeftBehind = false;
             LeftBehindSubDockingPortOccupied = false;
+            LeftBehindDockingPortIDs.Clear();
+            BlockedDockingPortIDs.Clear();
             foreach (XElement subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("linkedsubmarine", StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -358,10 +436,12 @@ namespace Barotrauma
 
                 subsLeftBehind = true;
                 ushort targetDockingPortID = (ushort)subElement.GetAttributeInt("originallinkedto", 0);
+                LeftBehindDockingPortIDs.Add(targetDockingPortID);
                 XElement targetPortElement = targetDockingPortID == 0 ? null :
                     element.Elements().FirstOrDefault(e => e.GetAttributeInt("ID", 0) == targetDockingPortID);
                 if (targetPortElement != null && targetPortElement.GetAttributeIntArray("linked", new int[0]).Length > 0)
                 {
+                    BlockedDockingPortIDs.Add(targetDockingPortID);
                     LeftBehindSubDockingPortOccupied = true;
                 }
             }
@@ -369,12 +449,17 @@ namespace Barotrauma
 
 
         //saving/loading ----------------------------------------------------
-        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage=null)
+        public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
             var newElement = new XElement(SubmarineElement.Name,
                 SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
                                                          !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)),
                 SubmarineElement.Elements());
+            if (Type == SubmarineType.OutpostModule)
+            {
+                OutpostModuleInfo.Save(newElement);
+                OutpostModuleInfo = new OutpostModuleInfo(this, newElement);
+            }
             XDocument doc = new XDocument(newElement);
 
             doc.Root.Add(new XAttribute("name", Name));
@@ -383,10 +468,10 @@ namespace Barotrauma
             {
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }
-
             try
             {
                 SaveUtil.CompressStringToFile(filePath, doc.ToString());
+                Md5Hash.RemoveFromCache(filePath);
             }
             catch (Exception e)
             {
@@ -426,7 +511,9 @@ namespace Barotrauma
 
         public static void RefreshSavedSubs()
         {
-            var contentPackageSubs = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Submarine);
+            var contentPackageSubs = ContentPackage.GetFilesOfType(
+                GameMain.Config.SelectedContentPackages, 
+                ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule, ContentType.Wreck);
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {

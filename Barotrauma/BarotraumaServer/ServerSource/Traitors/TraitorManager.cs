@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-   partial class TraitorManager
+    partial class TraitorManager
     {
         public static readonly Random Random = new Random((int)DateTime.UtcNow.Ticks);
 
@@ -182,14 +182,21 @@ namespace Barotrauma
             }
         }
 
-        public string GetEndMessage()
+        public List<TraitorMissionResult> GetEndResults()
         {
-#if DISABLE_MISSIONS
-            return "";
-#endif
-            if (GameMain.Server == null || !Missions.Any()) return "";
+            List<TraitorMissionResult> results = new List<TraitorMissionResult>();
 
-            return TextManager.JoinServerMessages("\n\n", Missions.Select(mission => mission.Value.GlobalEndMessage).ToArray());
+#if DISABLE_MISSIONS
+            return results;
+#endif
+            if (GameMain.Server == null || !Missions.Any()) { return results; }
+
+            foreach (var mission in Missions)
+            {
+                results.Add(new TraitorMissionResult(mission.Value));
+            }
+
+            return results;
         }
     }
 }

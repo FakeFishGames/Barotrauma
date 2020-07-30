@@ -41,13 +41,21 @@ namespace Barotrauma
         private static bool shouldRecreateHudTexts = true;
         private static bool heldDownShiftWhenGotHudTexts;
 
+        public static bool IsCampaignInterfaceOpen =>
+            GameMain.GameSession?.Campaign != null && 
+            (GameMain.GameSession.Campaign.ShowCampaignUI || GameMain.GameSession.Campaign.ForceMapUI);
+
         private static bool ShouldDrawInventory(Character character)
         {
+            var controller = character.SelectedConstruction?.GetComponent<Controller>();
+
             return 
                 character?.Inventory != null && 
                 character.AllowInput &&
-                !character.LockHands && 
-                character.SelectedConstruction?.GetComponent<Controller>()?.User != character;
+                !character.LockHands &&
+                (controller?.User != character || !controller.HideHUD) &&
+                !IsCampaignInterfaceOpen &&
+                !ConversationAction.FadeScreenToBlack;
         }
 
         private static string GetCachedHudText(string textTag, string keyBind)
@@ -65,7 +73,7 @@ namespace Barotrauma
         {
             if (GUI.DisableHUD) return;
             
-            if (!character.IsIncapacitated && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
             {
                 if (character.Inventory != null)
                 {
@@ -92,9 +100,17 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character, Camera cam)
         {
-            if (GUI.DisableHUD) { return; }
-            
-            if (!character.IsIncapacitated && character.Stun <= 0.0f)
+            if (GUI.DisableHUD)
+            {
+                if (character.Inventory != null && !LockInventory(character))
+                {
+                    character.Inventory.UpdateSlotInput();
+                }
+
+                return;
+            }
+
+            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
             {
                 if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null)
                 {
@@ -163,7 +179,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Submarine == null || item.Submarine.TeamID != character.TeamID || item.Submarine.Info.IsWreck) { continue; }
-                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.RepairThreshold)) { continue; }
+                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.RepairIconThreshold)) { continue; }
                     if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
                     Vector2 diff = item.WorldPosition - character.WorldPosition;
@@ -211,7 +227,7 @@ namespace Barotrauma
                     Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);                
             }
 
-            if (!character.IsIncapacitated && character.Stun <= 0.0f)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
             {
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
@@ -299,6 +315,8 @@ namespace Barotrauma
                 character.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
             }
 
+            if (IsCampaignInterfaceOpen) { return; }
+
             if (character.Inventory != null)
             {
                 for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
@@ -308,10 +326,11 @@ namespace Barotrauma
 
                     foreach (ItemComponent ic in item.Components)
                     {
-                        if (ic.DrawHudWhenEquipped) ic.DrawHUD(spriteBatch, character);
+                        if (ic.DrawHudWhenEquipped) { ic.DrawHUD(spriteBatch, character); }
                     }
                 }
             }
+
             bool mouseOnPortrait = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
@@ -421,7 +440,7 @@ namespace Barotrauma
                     GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
                 textPos.Y += textSize.Y;
             }
-            if (!string.IsNullOrEmpty(character.FocusedCharacter.customInteractHUDText))
+            if (!string.IsNullOrEmpty(character.FocusedCharacter.customInteractHUDText) && character.FocusedCharacter.AllowCustomInteract)
             {
                 GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.customInteractHUDText, GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
                 textPos.Y += textSize.Y;
@@ -430,7 +449,7 @@ namespace Barotrauma
 
         private static bool LockInventory(Character character)
         {
-            if (character?.Inventory == null || !character.AllowInput || character.LockHands) { return true; }
+            if (character?.Inventory == null || !character.AllowInput || character.LockHands || IsCampaignInterfaceOpen) { return true; }
 
             return character.ShouldLockHud();
         }

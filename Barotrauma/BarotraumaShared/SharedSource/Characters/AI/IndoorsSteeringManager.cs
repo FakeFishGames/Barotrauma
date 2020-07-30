@@ -101,7 +101,7 @@ namespace Barotrauma
         {
             currentPath = path;
             if (path.Nodes.Any()) currentTarget = path.Nodes[path.Nodes.Count - 1].SimPosition;
-            findPathTimer = 1.0f;
+            findPathTimer = Math.Min(findPathTimer, 1.0f);
             IsPathDirty = false;
         }
 
@@ -138,6 +138,21 @@ namespace Barotrauma
                     {
                         return node.Ladders;
                     }
+                    //if the next node is a hatch, check if the node after that is a ladder
+                    else if (node.ConnectedDoor != null && node.ConnectedDoor.IsHorizontal)
+                    {
+                        index++;
+                        if (currentPath.Nodes.Count > index)
+                        {
+                            node = currentPath.Nodes[index];
+                            if (node == null) { return null; }
+                            if (node.Ladders != null && !node.Ladders.Item.NonInteractable)
+                            {
+                                return node.Ladders;
+                            }
+                        }
+                    }
+
                 }
                 return null;
             }
@@ -246,14 +261,33 @@ namespace Barotrauma
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
             // Only humanoids can climb ladders
             bool canClimb = character.AnimController is HumanoidAnimController;
-            if (canClimb && !isDiving && IsNextLadderSameAsCurrent)
+            var ladders = GetNextLadder();
+            if (canClimb && !isDiving && ladders != null && character.SelectedConstruction != ladders.Item)
             {
-                var ladders = currentPath.CurrentNode.Ladders;
-                if (character.SelectedConstruction != ladders.Item && ladders.Item.IsInsideTrigger(character.WorldPosition))
+                if (IsNextNodeLadder || currentPath.CurrentIndex == currentPath.Nodes.Count - 1)
                 {
-                    currentPath.CurrentNode.Ladders.Item.TryInteract(character, false, true);
+                    if (character.CanInteractWith(ladders.Item))
+                    {
+                        ladders.Item.TryInteract(character, false, true);
+                    }
+                    else
+                    {
+                        // Cannot interact with the current (or next) ladder,
+                        // Try to select the previous ladder, unless it's already selected, unless the previous ladder is not adjacent to the current ladder.
+                        // The intention of this code is to prevent the bots from dropping from the "double ladders".
+                        var previousLadders = currentPath.PrevNode?.Ladders;
+                        if (previousLadders != null && previousLadders != ladders && character.SelectedConstruction != previousLadders.Item && 
+                            character.CanInteractWith(previousLadders.Item) && Math.Abs(previousLadders.Item.WorldPosition.X - ladders.Item.WorldPosition.X) < 5)
+                        {
+                            previousLadders.Item.TryInteract(character, false, true);
+                        }
+                    }
                 }
-            }         
+                else if (!IsNextLadderSameAsCurrent && character.SelectedConstruction?.GetComponent<Ladder>() != null && character.CanInteractWith(ladders.Item))
+                {
+                    ladders.Item.TryInteract(character, false, true);
+                }
+            }
             var collider = character.AnimController.Collider;
             if (character.IsClimbing && !isDiving)
             {
@@ -420,7 +454,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        door = currentWaypoint.ConnectedGap.ConnectedDoor;
+                        door = currentWaypoint.ConnectedDoor;
                         if (door.LinkedGap.IsHorizontal)
                         {
                             int dir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
@@ -437,7 +471,7 @@ namespace Barotrauma
                 if (door == null) { return; }
                 
                 //toggle the door if it's the previous node and open, or if it's current node and closed
-                if (door.IsOpen != shouldBeOpen)
+                if ((door.IsOpen || door.IsBroken) != shouldBeOpen)
                 {
                     Controller closestButton = null;
                     float closestDist = 0;
@@ -447,12 +481,12 @@ namespace Barotrauma
                         // Check that the button is on the right side of the door.
                         if (door.LinkedGap.IsHorizontal)
                         {
-                            int dir = Math.Sign(nextWaypoint.WorldPosition.X - door.Item.WorldPosition.X);
+                            int dir = Math.Sign((nextWaypoint ?? currentWaypoint).WorldPosition.X - door.Item.WorldPosition.X);
                             if (button.Item.WorldPosition.X * dir > door.Item.WorldPosition.X * dir) { return false; }
                         }
                         else
                         {
-                            int dir = Math.Sign(nextWaypoint.WorldPosition.Y - door.Item.WorldPosition.Y);
+                            int dir = Math.Sign((nextWaypoint ?? currentWaypoint).WorldPosition.Y - door.Item.WorldPosition.Y);
                             if (button.Item.WorldPosition.Y * dir > door.Item.WorldPosition.Y * dir) { return false; }
                         }
                         float distance = Vector2.DistanceSquared(button.Item.WorldPosition, character.WorldPosition);
@@ -583,6 +617,12 @@ namespace Barotrauma
                 {
                     penalty += 1000.0f;
                 }
+            }
+
+            float yDist = Math.Abs(node.Position.Y - nextNode.Position.Y);
+            if (node.Waypoint.Ladders == null && nextNode.Waypoint.Ladders == null)
+            {
+                penalty += yDist * 10.0f;
             }
 
             return penalty;

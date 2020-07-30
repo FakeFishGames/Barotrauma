@@ -57,7 +57,7 @@ namespace Barotrauma
         
         public GUIMessage(string text, Color color, float lifeTime, ScalableFont font = null)
         {
-            coloredText = new ColoredText(text, color, false);
+            coloredText = new ColoredText(text, color, false, false);
             this.lifeTime = lifeTime;
             Timer = lifeTime;
 
@@ -69,7 +69,7 @@ namespace Barotrauma
 
         public GUIMessage(string text, Color color, Vector2 worldPosition, Vector2 velocity, float lifeTime, Alignment textAlignment = Alignment.Center, ScalableFont font = null)
         {
-            coloredText = new ColoredText(text, color, false);
+            coloredText = new ColoredText(text, color, false, false);
             WorldSpace = true;
             pos = worldPosition;
             Timer = lifeTime;

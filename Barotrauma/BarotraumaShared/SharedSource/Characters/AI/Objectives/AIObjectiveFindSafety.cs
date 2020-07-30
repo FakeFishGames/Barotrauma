@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarseerPhysics;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -140,7 +141,7 @@ namespace Barotrauma
                 {
                     searchHullTimer = SearchHullInterval * Rand.Range(0.9f, 1.1f);
                     previousSafeHull = currentSafeHull;
-                    currentSafeHull = FindBestHull();
+                    currentSafeHull = FindBestHull(allowChangingTheSubmarine: character.TeamID != Character.TeamType.FriendlyNPC);
                     if (currentSafeHull == null)
                     {
                         currentSafeHull = previousSafeHull;
@@ -233,12 +234,30 @@ namespace Barotrauma
 
         public Hull FindBestHull(IEnumerable<Hull> ignoredHulls = null, bool allowChangingTheSubmarine = true)
         {
+            //sort the hulls based on distance and which sub they're in
+            //tends to make the method much faster, because we find a potential hull earlier and can discard further-away hulls more easily
+            //(for instance, an NPC in an outpost might otherwise go through all the hulls in the main sub first and do tons of expensive
+            //path calculations, only to discard all of them when going through the hulls in the outpost)
+            float EstimateHullSuitability(Hull hull)
+            {
+                float dist =
+                    Math.Abs(hull.WorldPosition.X - character.WorldPosition.X) +
+                    Math.Abs(hull.WorldPosition.Y - character.WorldPosition.Y) * 3;
+                float suitability = -dist;
+                if (hull.Submarine != character.Submarine)
+                {
+                    suitability -= 10000.0f;
+                }
+                return suitability;
+            }
+
             Hull bestHull = null;
             float bestValue = 0;
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.hullList.OrderByDescending(h => EstimateHullSuitability(h)))
             {
                 if (hull.Submarine == null) { continue; }
                 if (!allowChangingTheSubmarine && hull.Submarine != character.Submarine) { continue; }
+                if (hull.Rect.Height < ConvertUnits.ToDisplayUnits(character.AnimController.ColliderHeightFromFloor) * 2) { continue; }
                 if (ignoredHulls != null && ignoredHulls.Contains(hull)) { continue; }
                 if (HumanAIController.UnreachableHulls.Contains(hull)) { continue; }
                 float hullSafety = 0;
@@ -255,6 +274,11 @@ namespace Barotrauma
                     //skip the hull if the safety is already less than the best hull
                     //(no need to do the expensive pathfinding if we already know we're not going to choose this hull)
                     if (hullSafety < bestValue) { continue; }
+                    //avoid airlock modules if not allowed to change the sub
+                    if (!allowChangingTheSubmarine && hull.OutpostModuleTags.Any(t => t.Equals("airlock", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
                     // Don't allow to go outside if not already outside.
                     var path = PathSteering.PathFinder.FindPath(character.SimPosition, hull.SimPosition, nodeFilter: node => node.Waypoint.CurrentHull != null);
                     if (path.Unreachable)
