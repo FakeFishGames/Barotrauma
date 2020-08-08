@@ -337,6 +337,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
             item.SendSignal(0, ((int)-CurrPowerConsumption).ToString(), "power_value_out", null);
             item.SendSignal(0, ((int)load).ToString(), "load_value_out", null);
+            item.SendSignal(0, ((int)AvailableFuel).ToString(), "fuel_out", null);
 
             UpdateFailures(deltaTime);
 #if CLIENT
