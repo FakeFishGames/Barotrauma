@@ -598,30 +598,41 @@ namespace Barotrauma
         {
             if (targetIdentifiers == null) { return true; }
 
+            string currentTargetType = null;
+            string currentTargetIdentifier = null;
+
             if (entity is Item item)
             {
-                if (targetIdentifiers.Contains("item")) return true;
                 if (item.HasTag(targetIdentifiers)) return true;
-                if (targetIdentifiers.Any(id => id == item.Prefab.Identifier)) return true;
+
+                currentTargetType = "item";
+                currentTargetIdentifier = item.Prefab.Identifier;
             }
             else if (entity is ItemComponent itemComponent)
             {
-                if (targetIdentifiers.Contains("itemcomponent")) return true;
                 if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
-                if (targetIdentifiers.Any(id => id == itemComponent.Item.Prefab.Identifier)) return true;
+
+                currentTargetType = "itemcomponent";
+                currentTargetIdentifier = itemComponent.Item.Prefab.Identifier;
             }
             else if (entity is Structure structure)
             {
-                if (targetIdentifiers.Contains("structure")) return true;
-                if (targetIdentifiers.Any(id => id == structure.Prefab.Identifier)) return true;
+                currentTargetType = "structure";
+                currentTargetIdentifier = structure.Prefab.Identifier;
             }
             else if (entity is Character character)
             {
-                if (targetIdentifiers.Contains("character")) return true;
-                if (targetIdentifiers.Any(id => id == character.SpeciesName)) return true;
+                currentTargetType = "character";
+                currentTargetIdentifier = character.SpeciesName;
             }
 
-            return targetIdentifiers.Any(id => id == entity.Name);
+            if (currentTargetType == null && currentTargetIdentifier == null)
+            {
+                return false;
+            }
+
+            return targetIdentifiers.Contains(currentTargetType.ToLowerInvariant())
+                || targetIdentifiers.Contains(currentTargetIdentifier.ToLowerInvariant());
         }
 
         public void SetUser(Character user)
