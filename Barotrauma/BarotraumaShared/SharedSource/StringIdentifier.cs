@@ -56,26 +56,25 @@ namespace Barotrauma
 
             string OutString = null;
 
-            AllIdentifiers.TryGetValue(Hash, out OutString);
-
-            if (OutString == null)
+            for (int i = 0; i < ProbingLimit; i++)
             {
-                AllIdentifiers.Add(Hash, LowerCasedIdentifierString);
-                return;
-            }
+                AllIdentifiers.TryGetValue(Hash, out OutString);
 
-            if (OutString == LowerCasedIdentifierString)
-            {
-                return;
-            }
+                if (OutString == null)
+                {
+                    AllIdentifiers.Add(Hash, LowerCasedIdentifierString);
+                    return;
+                }
 
-            while (AllIdentifiers.ContainsKey(Hash))
-            {
+                if (OutString == LowerCasedIdentifierString)
+                {
+                    return;
+                }
+
                 Hash++;
             }
 
-            int HashDifference = Hash - NativeHash;
-            HasNoHash = HashDifference > ProbingLimit || HashDifference < 0;
+            HasNoHash = true;
         }
     }
 }
