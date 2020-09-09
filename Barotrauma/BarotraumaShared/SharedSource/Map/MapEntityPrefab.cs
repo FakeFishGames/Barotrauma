@@ -44,6 +44,21 @@ namespace Barotrauma
         protected string originalName;
         protected string identifier;
 
+        StringIdentifier _MapEntityIdentifier;
+        public StringIdentifier MapEntityIdentifier
+        {
+            //TODO: actually put this somewhere in the constructor, but this will do for now
+            get
+            {
+                if (_MapEntityIdentifier == null)
+                {
+                    _MapEntityIdentifier = new StringIdentifier(identifier);
+                }
+
+                return _MapEntityIdentifier;
+            }
+        }
+
         public Sprite sprite;
 
         //the position where the structure is being placed (needed when stretching the structure)

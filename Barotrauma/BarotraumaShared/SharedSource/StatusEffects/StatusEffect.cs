@@ -132,7 +132,7 @@ namespace Barotrauma
         }
 
         private readonly TargetType targetTypes;
-        protected HashSet<string> targetIdentifiers;
+        protected HashSet<StringIdentifier> targetIdentifiers;
 
         private readonly List<RelatedItem> requiredItems;
 
@@ -178,7 +178,7 @@ namespace Barotrauma
 
         public readonly float SeverLimbsProbability;
 
-        public HashSet<string> TargetIdentifiers
+        public HashSet<StringIdentifier> TargetIdentifiers
         {
             get { return targetIdentifiers; }
         }
@@ -298,10 +298,12 @@ namespace Barotrauma
                     case "targetidentifiers":
                     case "targettags":
                         string[] identifiers = attribute.Value.Split(',');
-                        targetIdentifiers = new HashSet<string>();
+
+                        targetIdentifiers = new HashSet<StringIdentifier>();
+
                         for (int i = 0; i < identifiers.Length; i++)
                         {
-                            targetIdentifiers.Add(identifiers[i].Trim().ToLowerInvariant());
+                            targetIdentifiers.Add(new StringIdentifier(identifiers[i]));
                         }
                         break;
                     case "duration":
@@ -596,44 +598,52 @@ namespace Barotrauma
 
         protected bool IsValidTarget(ISerializableEntity entity)
         {
+            //TODO: entity names are already done fully with the hashed identifiers
+            //      but tags still use string compares, they will be alot more effort to replace
+
             if (targetIdentifiers == null) { return true; }
 
-            string currentTargetType = null;
-            string currentTargetIdentifier = null;
+            StringIdentifier currentTargetType = StringIdentifier.Empty;
+            StringIdentifier currentTargetIdentifier = StringIdentifier.Empty;
 
             if (entity is Item item)
             {
-                if (item.HasTag(targetIdentifiers)) return true;
+                foreach (StringIdentifier Target in targetIdentifiers)
+                {
+                    if (item.HasTag(Target.IdentifierString)) return true;
+                }
 
-                currentTargetType = "item";
-                currentTargetIdentifier = item.Prefab.Identifier;
+                currentTargetType = StringIdentifier.Item;
+                currentTargetIdentifier = item.Prefab.MapEntityIdentifier;
             }
             else if (entity is ItemComponent itemComponent)
             {
-                if (itemComponent.Item.HasTag(targetIdentifiers)) return true;
+                foreach (StringIdentifier Target in targetIdentifiers)
+                {
+                    if (itemComponent.Item.HasTag(Target.IdentifierString)) return true;
+                }
 
-                currentTargetType = "itemcomponent";
-                currentTargetIdentifier = itemComponent.Item.Prefab.Identifier;
+                currentTargetType = StringIdentifier.ItemComponent;
+                currentTargetIdentifier = itemComponent.Item.Prefab.MapEntityIdentifier;
             }
             else if (entity is Structure structure)
             {
-                currentTargetType = "structure";
-                currentTargetIdentifier = structure.Prefab.Identifier;
+                currentTargetType = StringIdentifier.Structure;
+                currentTargetIdentifier = structure.Prefab.MapEntityIdentifier;
             }
             else if (entity is Character character)
             {
-                currentTargetType = "character";
-                currentTargetIdentifier = character.SpeciesName;
+                currentTargetType = StringIdentifier.Character;
+                currentTargetIdentifier = character.SpeciesNameIdentifier;
             }
-
-            if (currentTargetIdentifier == null)
+            else
             {
-                currentTargetIdentifier = entity.Name;
+                currentTargetIdentifier = new StringIdentifier(entity.Name);
             }
 
-            bool containsTargetType = currentTargetType != null ? targetIdentifiers.Contains(currentTargetType.ToLowerInvariant()) : false;
+            bool containsTargetType = currentTargetType == StringIdentifier.Empty ? targetIdentifiers.Contains(currentTargetType) : false;
 
-            return containsTargetType || targetIdentifiers.Contains(currentTargetIdentifier.ToLowerInvariant());
+            return containsTargetType || targetIdentifiers.Contains(currentTargetIdentifier);
         }
 
         public void SetUser(Character user)

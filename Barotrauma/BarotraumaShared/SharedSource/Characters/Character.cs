@@ -140,6 +140,22 @@ namespace Barotrauma
 
         public readonly CharacterParams Params;
         public string SpeciesName => Params.SpeciesName;
+
+        private StringIdentifier _SpeciesNameIdentifier;
+        public StringIdentifier SpeciesNameIdentifier
+        {
+            //TODO: actually put this somewhere in the constructor, but this will do for now
+            get
+            {
+                if (_SpeciesNameIdentifier == null)
+                {
+                    _SpeciesNameIdentifier = new StringIdentifier(SpeciesName);
+                }
+
+                return _SpeciesNameIdentifier;
+            }
+        }
+
         public bool IsHumanoid => Params.Humanoid;
         public bool IsHusk => Params.Husk;
 

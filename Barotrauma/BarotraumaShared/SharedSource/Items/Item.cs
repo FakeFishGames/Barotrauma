@@ -1276,8 +1276,8 @@ namespace Barotrauma
                     {
                         if (containedItem == null) continue;
                         if (effect.TargetIdentifiers != null &&
-                            !effect.TargetIdentifiers.Contains(containedItem.prefab.Identifier) &&
-                            !effect.TargetIdentifiers.Any(id => containedItem.HasTag(id)))
+                            !effect.TargetIdentifiers.Contains(containedItem.prefab.MapEntityIdentifier) &&
+                            !effect.TargetIdentifiers.Any(id => containedItem.HasTag(id.IdentifierString)))
                         {
                             continue;
                         }
