@@ -626,7 +626,7 @@ namespace Barotrauma
                 currentTargetIdentifier = character.SpeciesName;
             }
 
-            if (currentTargetType == null && currentTargetIdentifier == null)
+            if (currentTargetType == null || currentTargetIdentifier == null)
             {
                 return false;
             }
