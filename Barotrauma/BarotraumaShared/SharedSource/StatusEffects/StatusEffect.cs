@@ -626,13 +626,14 @@ namespace Barotrauma
                 currentTargetIdentifier = character.SpeciesName;
             }
 
-            if (currentTargetType == null || currentTargetIdentifier == null)
+            if (currentTargetIdentifier == null)
             {
-                return false;
+                currentTargetIdentifier = entity.Name;
             }
 
-            return targetIdentifiers.Contains(currentTargetType.ToLowerInvariant())
-                || targetIdentifiers.Contains(currentTargetIdentifier.ToLowerInvariant());
+            bool containsTargetType = currentTargetType != null ? targetIdentifiers.Contains(currentTargetType.ToLowerInvariant()) : false;
+
+            return containsTargetType || targetIdentifiers.Contains(currentTargetIdentifier.ToLowerInvariant());
         }
 
         public void SetUser(Character user)
