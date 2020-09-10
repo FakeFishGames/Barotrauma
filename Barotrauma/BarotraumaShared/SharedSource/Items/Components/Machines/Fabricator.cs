@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (recipe.SuitableFabricatorIdentifiers.Length > 0)
                     {
-                        if (!recipe.SuitableFabricatorIdentifiers.Any(i => item.prefab.Identifier == i || item.HasTag(i)))
+                        if (!recipe.SuitableFabricatorIdentifiers.Any(i => item.prefab.Identifier == i || item.ItemTags.HasTag(i)))
                         {
                             continue;
                         }

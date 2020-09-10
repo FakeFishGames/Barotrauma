@@ -87,18 +87,18 @@ namespace Barotrauma.Tutorials
             captain_steerIconColor = steerOrder.Color;
 
             // Room 2
-            captain_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("captain_equipmentobjectivesensor")).GetComponent<MotionSensor>();
-            captain_equipmentCabinet = Item.ItemList.Find(i => i.HasTag("captain_equipmentcabinet")).GetComponent<ItemContainer>();
-            captain_firstDoor = Item.ItemList.Find(i => i.HasTag("captain_firstdoor")).GetComponent<Door>();
-            captain_firstDoorLight = Item.ItemList.Find(i => i.HasTag("captain_firstdoorlight")).GetComponent<LightComponent>();
+            captain_equipmentObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_equipmentobjectivesensor")).GetComponent<MotionSensor>();
+            captain_equipmentCabinet = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_equipmentcabinet")).GetComponent<ItemContainer>();
+            captain_firstDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_firstdoor")).GetComponent<Door>();
+            captain_firstDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_firstdoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(captain_firstDoor, captain_firstDoorLight, true);
 
             // Room 3
-            captain_medicObjectiveSensor = Item.ItemList.Find(i => i.HasTag("captain_medicobjectivesensor")).GetComponent<MotionSensor>();
-            captain_medicSpawnPos = Item.ItemList.Find(i => i.HasTag("captain_medicspawnpos")).WorldPosition;
-            tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
-            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
+            captain_medicObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_medicobjectivesensor")).GetComponent<MotionSensor>();
+            captain_medicSpawnPos = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_medicspawnpos")).WorldPosition;
+            tutorial_submarineDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
+            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
             var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("medicaldoctor"));
             captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
             captain_medic.TeamID = Character.TeamType.Team1;
@@ -107,18 +107,18 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
 
             // Submarine
-            captain_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("captain_enteredsubmarinesensor")).GetComponent<MotionSensor>();
-            tutorial_submarineReactor = Item.ItemList.Find(i => i.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
-            captain_navConsole = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
-            captain_navConsoleCustomInterface = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<CustomInterface>();
+            captain_enteredSubmarineSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_enteredsubmarinesensor")).GetComponent<MotionSensor>();
+            tutorial_submarineReactor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
+            captain_navConsole = Item.ItemList.Find(i => i.ItemTags.HasTag("command")).GetComponent<Steering>();
+            captain_navConsoleCustomInterface = Item.ItemList.Find(i => i.ItemTags.HasTag("command")).GetComponent<CustomInterface>();
             captain_sonar = captain_navConsole.Item.GetComponent<Sonar>();
-            captain_statusMonitor = Item.ItemList.Find(i => i.HasTag("captain_statusmonitor"));
+            captain_statusMonitor = Item.ItemList.Find(i => i.ItemTags.HasTag("captain_statusmonitor"));
 
             tutorial_submarineReactor.CanBeSelected = false;
             tutorial_submarineReactor.IsActive = tutorial_submarineReactor.AutoTemp = false;
 
-            tutorial_lockedDoor_1 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_1")).GetComponent<Door>();
-            tutorial_lockedDoor_2 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_2")).GetComponent<Door>();
+            tutorial_lockedDoor_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_lockeddoor_1")).GetComponent<Door>();
+            tutorial_lockedDoor_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_lockeddoor_2")).GetComponent<Door>();
             SetDoorAccess(tutorial_lockedDoor_1, null, false);
             SetDoorAccess(tutorial_lockedDoor_2, null, false);
 

@@ -78,7 +78,7 @@ namespace Barotrauma
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage > ConditionLevel;
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.ItemTags.HasTag(id)) && i.ConditionPercentage > ConditionLevel;
 
         protected override void Act(float deltaTime)
         {

@@ -251,11 +251,11 @@ namespace Barotrauma
                 if (item.Submarine != this) { continue; }
                 if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard") 
                 {
-                    foreach (string tag in item.GetTags().ToList())
+                    foreach (string tag in item.ItemTags.ToStringEnumerable().ToList())
                     {
                         if (tag == "smallitem") { continue; }
                         string newTag = Level.Loaded.GetWreckIDTag(tag, this);
-                        item.ReplaceTag(tag, newTag);
+                        item.ItemTags.ReplaceTag(tag, newTag);
                         ReplaceIDCardTagRequirements(tag, newTag);
                     } 
                 }
@@ -279,9 +279,7 @@ namespace Barotrauma
                 if (!ic.requiredItems.ContainsKey(relationType)) { return; }
                 foreach (RelatedItem requiredItem in ic.requiredItems[relationType])
                 {
-                    int index = Array.IndexOf(requiredItem.Identifiers, oldTag);
-                    if (index == -1) { continue; }
-                    requiredItem.Identifiers[index] = newTag;
+                    requiredItem.Identifiers.ReplaceTag(oldTag, newTag);
                 }
             }
         }
@@ -968,7 +966,7 @@ namespace Barotrauma
             {
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
-                if (pump == null || !item.HasTag("ballast") || item.CurrentHull == null) { continue; }
+                if (pump == null || !item.ItemTags.HasTag("ballast") || item.CurrentHull == null) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);
             }

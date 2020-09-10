@@ -238,7 +238,7 @@ namespace Barotrauma
                     _ => throw new NotImplementedException()
                 };
 
-                var item = potentialItems.Where(it => it.HasTag(SpawnPointTag)).GetRandom();
+                var item = potentialItems.Where(it => it.ItemTags.HasTag(SpawnPointTag)).GetRandom();
                 if (item != null) { return item; }
 
                 var target = ParentEvent.GetTargets(SpawnPointTag).GetRandom();

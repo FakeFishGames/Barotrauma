@@ -308,7 +308,7 @@ namespace Barotrauma
                         // TODO: could also target gaps that get us inside?
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull != hull && item.HasTag("airlock"))
+                            if (item.CurrentHull != hull && item.ItemTags.HasTag("airlock"))
                             {
                                 hullSafety = 100;
                                 break;

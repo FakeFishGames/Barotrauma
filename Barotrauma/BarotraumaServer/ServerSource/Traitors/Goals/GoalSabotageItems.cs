@@ -32,7 +32,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (item.Condition > conditionThreshold && (item.Prefab?.Identifier == tag || item.HasTag(tag)))
+                    if (item.Condition > conditionThreshold && (item.Prefab?.Identifier == tag || item.ItemTags.HasTag(tag)))
                     {
                         targetItems.Add(item);
                     }

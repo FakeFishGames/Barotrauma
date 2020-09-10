@@ -46,7 +46,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("", "Open the door at your right side by highlighting the button next to it with your cursor and pressing E");
 
-            Door tutorialDoor = Item.ItemList.Find(i => i.HasTag("tutorialdoor")).GetComponent<Door>();
+            Door tutorialDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorialdoor")).GetComponent<Door>();
 
             while (!tutorialDoor.IsOpen && Controlled.WorldPosition.X < tutorialDoor.Item.WorldPosition.X)
             {
@@ -68,7 +68,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("", "At the moment the submarine has no power, which means that crucial systems such as the oxygen generator or the engine aren't running. Let's fix this: go to the upper left corner of the submarine, where you'll find a nuclear reactor.");
 
-            Reactor reactor = Item.ItemList.Find(i => i.HasTag("tutorialreactor")).GetComponent<Reactor>();
+            Reactor reactor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorialreactor")).GetComponent<Reactor>();
             //reactor.MeltDownTemp = 20000.0f;
 
             while (Vector2.Distance(Controlled.Position, reactor.Item.Position) > 200.0f)
@@ -149,7 +149,7 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("", "That's the basics of operating the reactor! Now that there's power available for the engines, it's time to get the submarine moving. "
                 + "Deselect the reactor by pressing E and head to the command room at the right edge of the vessel.");
 
-            Steering steering = Item.ItemList.Find(i => i.HasTag("tutorialsteering")).GetComponent<Steering>();
+            Steering steering = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorialsteering")).GetComponent<Steering>();
             Sonar sonar = steering.Item.GetComponent<Sonar>();
 
             while (Vector2.Distance(Controlled.Position, steering.Item.Position) > 150.0f)
@@ -199,7 +199,7 @@ namespace Barotrauma.Tutorials
 
             infoBox = CreateInfoFrame("", "Head back to the navigation terminal to fix the wiring.");
 
-            PowerTransfer junctionBox = Item.ItemList.Find(i => i != null && i.HasTag("tutorialjunctionbox")).GetComponent<PowerTransfer>();
+            PowerTransfer junctionBox = Item.ItemList.Find(i => i != null && i.ItemTags.HasTag("tutorialjunctionbox")).GetComponent<PowerTransfer>();
 
             while ((Controlled.SelectedConstruction != junctionBox.Item &&
                 Controlled.SelectedConstruction != steering.Item) ||
@@ -364,14 +364,14 @@ namespace Barotrauma.Tutorials
 
             Submarine.MainSub.GodMode = true;
 
-            var capacitor1 = Item.ItemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
-            var capacitor2 = Item.ItemList.Find(i => i.HasTag("capacitor1")).GetComponent<PowerContainer>();
+            var capacitor1 = Item.ItemList.Find(i => i.ItemTags.HasTag("capacitor1")).GetComponent<PowerContainer>();
+            var capacitor2 = Item.ItemList.Find(i => i.ItemTags.HasTag("capacitor1")).GetComponent<PowerContainer>();
             CoroutineManager.StartCoroutine(KeepEnemyAway(moloch, new PowerContainer[] { capacitor1, capacitor2 }));
 
             infoBox = CreateInfoFrame("", "The hull has been breached! Close all the doors to the command room to stop the water from flooding the entire sub!");
 
-            Door commandDoor1 = Item.ItemList.Find(i => i.HasTag("commanddoor1")).GetComponent<Door>();
-            Door commandDoor2 = Item.ItemList.Find(i => i.HasTag("commanddoor2")).GetComponent<Door>();
+            Door commandDoor1 = Item.ItemList.Find(i => i.ItemTags.HasTag("commanddoor1")).GetComponent<Door>();
+            Door commandDoor2 = Item.ItemList.Find(i => i.ItemTags.HasTag("commanddoor2")).GetComponent<Door>();
 
             //wait until the player is out of the room and the doors are closed
             while (Controlled.WorldPosition.X > commandDoor1.Item.WorldPosition.X ||
@@ -532,7 +532,7 @@ namespace Barotrauma.Tutorials
             infoBox = CreateInfoFrame("", "The hull is fixed now, but there's still quite a bit of water inside the sub. It should be pumped out "
                 + "using the bilge pump in the room at the bottom of the submarine.");
 
-            Pump pump = Item.ItemList.Find(i => i.HasTag("tutorialpump")).GetComponent<Pump>();
+            Pump pump = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorialpump")).GetComponent<Pump>();
 
             while (Vector2.Distance(Controlled.Position, pump.Item.Position) > 100.0f)
             {

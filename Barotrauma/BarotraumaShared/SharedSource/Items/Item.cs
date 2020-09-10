@@ -24,8 +24,6 @@ namespace Barotrauma
         public ItemPrefab Prefab => prefab as ItemPrefab;
 
         public static bool ShowLinks = true;
-                
-        private HashSet<string> tags;
 
         private bool isWire;
 
@@ -502,24 +500,11 @@ namespace Barotrauma
         [Editable, Serialize("", true)]
         public string Tags
         {
-            get { return string.Join(",", tags); }
-            set
-            {
-                tags.Clear();
-                // Always add prefab tags
-                prefab.Tags.ForEach(t => tags.Add(t));
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    string[] splitTags = value.Split(',');
-                    foreach (string tag in splitTags)
-                    {
-                        string[] splitTag = tag.Trim().Split(':');
-                        splitTag[0] = splitTag[0].ToLowerInvariant();
-                        tags.Add(string.Join(":", splitTag));
-                    }
-                }
-            }
+            get => ItemTags.AllTagsString;
+            set => ItemTags.AllTagsString = value;
         }
+
+        public StringTags ItemTags;
 
         public bool FireProof
         {
@@ -661,8 +646,10 @@ namespace Barotrauma
 
             components          = new List<ItemComponent>();
             drawableComponents  = new List<IDrawableComponent>(); hasComponentsToDraw = false;
-            tags                = new HashSet<string>();
             repairables         = new List<Repairable>();
+
+            ItemTags            = new StringTags();
+            ItemTags.PrefabTags = prefab.Tags;
 
             defaultRect = newRect;
             rect = newRect;
@@ -1191,40 +1178,6 @@ namespace Barotrauma
                 (component as ItemContainer)?.SetContainedItemPositions();
             }
         }
-        
-        public void AddTag(string tag)
-        {
-            if (tags.Contains(tag)) { return; }
-            tags.Add(tag);
-        }
-
-        public bool HasTag(string tag)
-        {
-            if (tag == null) { return true; }
-            return tags.Contains(tag) || prefab.Tags.Contains(tag);
-        }
-
-        public void ReplaceTag(string tag, string newTag)
-        {
-            if (!tags.Contains(tag)) { return; }
-            tags.Remove(tag);
-            tags.Add(newTag);
-        }
-
-        public IEnumerable<string> GetTags()
-        {
-            return tags;
-        }
-
-        public bool HasTag(IEnumerable<string> allowedTags)
-        {
-            if (allowedTags == null) return true;
-            foreach (string tag in allowedTags)
-            {
-                if (tags.Contains(tag)) return true;
-            }
-            return false;
-        }
 
         private bool ConditionalMatches(PropertyConditional conditional)
         {
@@ -1277,7 +1230,7 @@ namespace Barotrauma
                         if (containedItem == null) continue;
                         if (effect.TargetIdentifiers != null &&
                             !effect.TargetIdentifiers.Contains(containedItem.prefab.MapEntityIdentifier) &&
-                            !effect.TargetIdentifiers.Any(id => containedItem.HasTag(id.IdentifierString)))
+                            !effect.TargetIdentifiers.Any(id => containedItem.ItemTags.HasTag(id.IdentifierString)))
                         {
                             continue;
                         }

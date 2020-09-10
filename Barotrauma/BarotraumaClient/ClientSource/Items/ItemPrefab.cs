@@ -44,7 +44,7 @@ namespace Barotrauma
         {
             if (container == null) { return false; }
             return AllowedContainerIdentifiers.Contains(container.prefab.Identifier) ||
-                AllowedContainerTags.Any(t => container.prefab.Tags.Contains(t));
+                AllowedContainerTags.Any(t => container.prefab.Tags.HasTag(t));
         }
     }
 

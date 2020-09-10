@@ -56,7 +56,7 @@ namespace Barotrauma
 
         private void TagItemsByTag(string tag)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && it.HasTag(tag));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && it.ItemTags.HasTag(tag));
         }
 
         public override void Update(float deltaTime)

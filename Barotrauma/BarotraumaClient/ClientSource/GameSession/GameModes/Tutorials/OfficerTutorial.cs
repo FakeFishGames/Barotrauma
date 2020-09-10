@@ -130,8 +130,8 @@ namespace Barotrauma.Tutorials
             FindOrGiveItem(officer, "antibleeding1");
 
             // Other tutorial items
-            tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
-            tutorial_submarineSteering = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
+            tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
+            tutorial_submarineSteering = Item.ItemList.Find(i => i.ItemTags.HasTag("command")).GetComponent<Steering>();
 
             tutorial_submarineSteering.CanBeSelected = false;
             foreach (ItemComponent ic in tutorial_submarineSteering.Item.Components)
@@ -142,62 +142,62 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(null, tutorial_mechanicFinalDoorLight, false);
 
             // Room 2
-            officer_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("officer_equipmentobjectivesensor")).GetComponent<MotionSensor>();
-            officer_equipmentCabinet = Item.ItemList.Find(i => i.HasTag("officer_equipmentcabinet")).GetComponent<ItemContainer>();
-            officer_firstDoor = Item.ItemList.Find(i => i.HasTag("officer_firstdoor")).GetComponent<Door>();
-            officer_firstDoorLight = Item.ItemList.Find(i => i.HasTag("officer_firstdoorlight")).GetComponent<LightComponent>();
+            officer_equipmentObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_equipmentobjectivesensor")).GetComponent<MotionSensor>();
+            officer_equipmentCabinet = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_equipmentcabinet")).GetComponent<ItemContainer>();
+            officer_firstDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_firstdoor")).GetComponent<Door>();
+            officer_firstDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_firstdoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(officer_firstDoor, officer_firstDoorLight, false);
 
             // Room 3
-            officer_crawlerSensor = Item.ItemList.Find(i => i.HasTag("officer_crawlerobjectivesensor")).GetComponent<MotionSensor>();
-            officer_crawlerSpawnPos = Item.ItemList.Find(i => i.HasTag("officer_crawlerspawn")).WorldPosition;
-            officer_secondDoor = Item.ItemList.Find(i => i.HasTag("officer_seconddoor")).GetComponent<Door>();
-            officer_secondDoorLight = Item.ItemList.Find(i => i.HasTag("officer_seconddoorlight")).GetComponent<LightComponent>();
+            officer_crawlerSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_crawlerobjectivesensor")).GetComponent<MotionSensor>();
+            officer_crawlerSpawnPos = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_crawlerspawn")).WorldPosition;
+            officer_secondDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_seconddoor")).GetComponent<Door>();
+            officer_secondDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_seconddoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(officer_secondDoor, officer_secondDoorLight, false);
 
             // Room 4
-            officer_somethingBigSensor = Item.ItemList.Find(i => i.HasTag("officer_somethingbigobjectivesensor")).GetComponent<MotionSensor>();
-            officer_coilgunLoader = Item.ItemList.Find(i => i.HasTag("officer_coilgunloader")).GetComponent<ItemContainer>();
-            officer_superCapacitor = Item.ItemList.Find(i => i.HasTag("officer_supercapacitor")).GetComponent<PowerContainer>();
-            officer_coilgunPeriscope = Item.ItemList.Find(i => i.HasTag("officer_coilgunperiscope"));
-            officer_hammerheadSpawnPos = Item.ItemList.Find(i => i.HasTag("officer_hammerheadspawn")).WorldPosition;
-            officer_thirdDoor = Item.ItemList.Find(i => i.HasTag("officer_thirddoor")).GetComponent<Door>();
-            officer_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("officer_thirddoorlight")).GetComponent<LightComponent>();
-            officer_ammoShelf_1 = Item.ItemList.Find(i => i.HasTag("officer_ammoshelf_1")).GetComponent<ItemContainer>();
-            officer_ammoShelf_2 = Item.ItemList.Find(i => i.HasTag("officer_ammoshelf_2")).GetComponent<ItemContainer>();
+            officer_somethingBigSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_somethingbigobjectivesensor")).GetComponent<MotionSensor>();
+            officer_coilgunLoader = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_coilgunloader")).GetComponent<ItemContainer>();
+            officer_superCapacitor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_supercapacitor")).GetComponent<PowerContainer>();
+            officer_coilgunPeriscope = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_coilgunperiscope"));
+            officer_hammerheadSpawnPos = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_hammerheadspawn")).WorldPosition;
+            officer_thirdDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_thirddoor")).GetComponent<Door>();
+            officer_thirdDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_thirddoorlight")).GetComponent<LightComponent>();
+            officer_ammoShelf_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_ammoshelf_1")).GetComponent<ItemContainer>();
+            officer_ammoShelf_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_ammoshelf_2")).GetComponent<ItemContainer>();
 
             SetDoorAccess(officer_thirdDoor, officer_thirdDoorLight, false);
 
             // Room 5
-            officer_rangedWeaponSensor = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponobjectivesensor")).GetComponent<MotionSensor>();
-            officer_rangedWeaponCabinet = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponcabinet")).GetComponent<ItemContainer>();
-            officer_rangedWeaponHolder = Item.ItemList.Find(i => i.HasTag("officer_rangedweaponholder")).GetComponent<ItemContainer>();
-            officer_fourthDoor = Item.ItemList.Find(i => i.HasTag("officer_fourthdoor")).GetComponent<Door>();
-            officer_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("officer_fourthdoorlight")).GetComponent<LightComponent>();
+            officer_rangedWeaponSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_rangedweaponobjectivesensor")).GetComponent<MotionSensor>();
+            officer_rangedWeaponCabinet = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_rangedweaponcabinet")).GetComponent<ItemContainer>();
+            officer_rangedWeaponHolder = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_rangedweaponholder")).GetComponent<ItemContainer>();
+            officer_fourthDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_fourthdoor")).GetComponent<Door>();
+            officer_fourthDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_fourthdoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, false);
 
             // Room 6
-            officer_mudraptorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("officer_mudraptorobjectivesensor")).GetComponent<MotionSensor>();
-            officer_mudraptorSpawnPos = Item.ItemList.Find(i => i.HasTag("officer_mudraptorspawn")).WorldPosition;
-            tutorial_securityFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoor")).GetComponent<Door>();
-            tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
+            officer_mudraptorObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_mudraptorobjectivesensor")).GetComponent<MotionSensor>();
+            officer_mudraptorSpawnPos = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_mudraptorspawn")).WorldPosition;
+            tutorial_securityFinalDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_securityfinaldoor")).GetComponent<Door>();
+            tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, false);
 
             // Submarine
-            tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
-            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
-            tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
-            officer_subAmmoBox_1 = Item.ItemList.Find(i => i.HasTag("officer_subammobox_1"));
-            officer_subAmmoBox_2 = Item.ItemList.Find(i => i.HasTag("officer_subammobox_2"));
-            officer_subLoader_1 = Item.ItemList.Find(i => i.HasTag("officer_subloader_1")).GetComponent<ItemContainer>();
-            officer_subLoader_2 = Item.ItemList.Find(i => i.HasTag("officer_subloader_2")).GetComponent<ItemContainer>();
-            officer_subSuperCapacitor_1 = Item.ItemList.Find(i => i.HasTag("officer_subsupercapacitor_1")).GetComponent<PowerContainer>();
-            officer_subSuperCapacitor_2 = Item.ItemList.Find(i => i.HasTag("officer_subsupercapacitor_2")).GetComponent<PowerContainer>();
-            officer_subAmmoShelf = Item.ItemList.Find(i => i.HasTag("officer_subammoshelf")).GetComponent<ItemContainer>();
+            tutorial_submarineDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
+            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
+            tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
+            officer_subAmmoBox_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_subammobox_1"));
+            officer_subAmmoBox_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_subammobox_2"));
+            officer_subLoader_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_subloader_1")).GetComponent<ItemContainer>();
+            officer_subLoader_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_subloader_2")).GetComponent<ItemContainer>();
+            officer_subSuperCapacitor_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_subsupercapacitor_1")).GetComponent<PowerContainer>();
+            officer_subSuperCapacitor_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_subsupercapacitor_2")).GetComponent<PowerContainer>();
+            officer_subAmmoShelf = Item.ItemList.Find(i => i.ItemTags.HasTag("officer_subammoshelf")).GetComponent<ItemContainer>();
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
         }
 

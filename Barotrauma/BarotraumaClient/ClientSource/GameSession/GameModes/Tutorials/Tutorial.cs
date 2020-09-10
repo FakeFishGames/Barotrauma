@@ -198,7 +198,7 @@ namespace Barotrauma.Tutorials
                 var door = item.GetComponent<Door>();
                 if (door != null)
                 {
-                    if (door.requiredItems.Values.None(ris => ris.None(ri => ri.Identifiers.None(i => i == "locked"))))
+                    if (door.requiredItems.Values.None(ris => ris.None(ri => !ri.Identifiers.HasTag("locked"))))
                     {
                         door.requiredItems.Clear();
                     }
@@ -624,7 +624,7 @@ namespace Barotrauma.Tutorials
             if (inventory.slots == null) { return; }
             for (int i = 0; i < inventory.Items.Length; i++)
             {
-                if (inventory.Items[i] != null && inventory.Items[i].HasTag(tag))
+                if (inventory.Items[i] != null && inventory.Items[i].ItemTags.HasTag(tag))
                 {
                     HighlightInventorySlot(inventory, i, color, fadeInDuration, fadeOutDuration, scaleUpAmount);
                 }

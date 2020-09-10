@@ -363,7 +363,7 @@ namespace Barotrauma
             if (ItemComponentType != null || ItemIdentifiers.Length > 0)
             {
                 matchingItems = ItemIdentifiers.Length > 0 ?
-                    Item.ItemList.FindAll(it => ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(ItemIdentifiers)) :
+                    Item.ItemList.FindAll(it => ItemIdentifiers.Contains(it.Prefab.Identifier) || it.ItemTags.HasAnyTag(ItemIdentifiers)) :
                     Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == ItemComponentType));
                 if (mustBelongToPlayerSub)
                 {

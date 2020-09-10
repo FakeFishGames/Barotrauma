@@ -563,7 +563,17 @@ namespace Barotrauma
             public override string Name => "Target";
 
             [Serialize("", true, description: "Can be an item tag, species name or something else. Examples: decoy, provocative, light, dead, human, crawler, wall, nasonov, sonar, door, stronger, weaker, light, human, room..."), Editable()]
-            public string Tag { get; private set; }
+            public string Tag
+            {
+                get => TagIdentifier.IdentifierString;
+                private set => TagIdentifier = new StringIdentifier(value);
+            }
+
+            public StringIdentifier TagIdentifier
+            {
+                get;
+                private set;
+            }
 
             [Serialize(AIState.Idle, true), Editable]
             public AIState State { get; set; }

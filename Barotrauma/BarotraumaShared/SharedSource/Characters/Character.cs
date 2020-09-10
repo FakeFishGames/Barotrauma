@@ -1126,10 +1126,10 @@ namespace Barotrauma
 
             foreach (Item item in Inventory.Items)
             {
-                if (item?.Prefab.Identifier != "idcard") { continue; }
+                if (item?.Prefab.MapEntityIdentifier.IdentifierString != "idcard") { continue; }
                 foreach (string s in spawnPoint.IdCardTags)
                 {
-                    item.AddTag(s);
+                    item.ItemTags.AddTag(s);
                 }
             }
         }
@@ -1686,12 +1686,14 @@ namespace Barotrauma
 
         public bool HasEquippedItem(string itemIdentifier, bool allowBroken = true)
         {
+            StringIdentifier ItemIdentifier = new StringIdentifier(itemIdentifier);
+
             if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 if (Inventory.SlotTypes[i] == InvSlotType.Any || Inventory.Items[i] == null) { continue; }
                 if (!allowBroken && Inventory.Items[i].Condition <= 0.0f) { continue; }
-                if (Inventory.Items[i].Prefab.Identifier == itemIdentifier || Inventory.Items[i].HasTag(itemIdentifier)) { return true; }
+                if (Inventory.Items[i].Prefab.MapEntityIdentifier == ItemIdentifier || Inventory.Items[i].ItemTags.HasTag(ItemIdentifier)) { return true; }
             }
 
             return false;
@@ -1795,7 +1797,7 @@ namespace Barotrauma
                     if (!Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 }
                 if (customPredicate != null && !customPredicate(item)) { continue; }
-                if (identifiers != null && identifiers.None(id => item.Prefab.Identifier == id || item.HasTag(id))) { continue; }
+                if (identifiers != null && identifiers.None(id => item.Prefab.Identifier == id || item.ItemTags.HasTag(id))) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
@@ -2550,7 +2552,7 @@ namespace Barotrauma
             if (IsHuman)
             {
                 var containerPrefab =
-                    ItemPrefab.Prefabs.Find(me => me.Tags.Contains("despawncontainer")) ??
+                    ItemPrefab.Prefabs.Find(me => me.Tags.HasTag("despawncontainer")) ??
                     (MapEntityPrefab.Find(null, identifier: "metalcrate") as ItemPrefab);
                 if (containerPrefab == null)
                 {
@@ -2567,8 +2569,8 @@ namespace Barotrauma
 
                     item.UpdateTransform();
                 
-                    item.AddTag("name:" + Name);
-                    if (info?.Job != null) { item.AddTag("job:" + info.Job.Name); }               
+                    item.ItemTags.AddTag("name:" + Name);
+                    if (info?.Job != null) { item.ItemTags.AddTag("job:" + info.Job.Name); }
 
                     var itemContainer = item?.GetComponent<ItemContainer>();
                     if (itemContainer == null) { return; }

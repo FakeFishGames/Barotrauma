@@ -191,10 +191,10 @@ namespace Barotrauma
             {
                 foreach (string s in spawnPoint.IdCardTags)
                 {
-                    item.AddTag(s);
+                    item.ItemTags.AddTag(s);
                 }
-                item.AddTag("name:" + character.Name);
-                item.AddTag("job:" + Name);
+                item.ItemTags.AddTag("name:" + character.Name);
+                item.ItemTags.AddTag("job:" + Name);
                 if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc))
                     item.Description = spawnPoint.IdCardDesc;
             }

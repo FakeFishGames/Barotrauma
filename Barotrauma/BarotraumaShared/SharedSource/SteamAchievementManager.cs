@@ -253,7 +253,7 @@ namespace Barotrauma
 
             if (causeOfDeath.DamageSource is Item item)
             {
-                if (item.HasTag("tool"))
+                if (item.ItemTags.HasTag("tool"))
                 {
                     UnlockAchievement(causeOfDeath.Killer, "killtool");
                 }

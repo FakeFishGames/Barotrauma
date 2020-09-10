@@ -1972,7 +1972,7 @@ namespace Barotrauma
 
             shortcutNodes.Clear();
 
-            if (shortcutNodes.Count < maxShorcutNodeCount && sub.GetItems(false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
+            if (shortcutNodes.Count < maxShorcutNodeCount && sub.GetItems(false).Find(i => i.ItemTags.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 var reactorOutput = -reactor.CurrPowerConsumption;
                 // If player is not an engineer AND the reactor is not powered up AND nobody is using the reactor
@@ -1991,7 +1991,7 @@ namespace Barotrauma
             // If player is not a captain AND nobody is using the nav terminal AND the nav terminal is powered up
             // --> Create shortcut node for Steer order
             if (shortcutNodes.Count < maxShorcutNodeCount && (Character.Controlled == null || Character.Controlled.Info?.Job?.Prefab != JobPrefab.Get("captain")) &&
-                sub.GetItems(false).Find(i => i.HasTag("navterminal") && !i.NonInteractable) is Item nav && characters.None(c => c.SelectedConstruction == nav) &&
+                sub.GetItems(false).Find(i => i.ItemTags.HasTag("navterminal") && !i.NonInteractable) is Item nav && characters.None(c => c.SelectedConstruction == nav) &&
                 nav.GetComponent<Steering>() is Steering steering && steering.Voltage > steering.MinVoltage)
             {
                 shortcutNodes.Add(
@@ -2105,7 +2105,7 @@ namespace Barotrauma
                 {
                     foreach (Order p in Order.PrefabList)
                     {
-                        if ((p.ItemIdentifiers.Length > 0 && (p.ItemIdentifiers.Contains(itemContext.Prefab.Identifier) || itemContext.HasTag(p.ItemIdentifiers))) ||
+                        if ((p.ItemIdentifiers.Length > 0 && (p.ItemIdentifiers.Contains(itemContext.Prefab.Identifier) || itemContext.ItemTags.HasAnyTag(p.ItemIdentifiers))) ||
                             (p.ItemComponentType != null && itemContext.Components.Any(c => c?.GetType() == p.ItemComponentType)))
                         {
                             contextualOrders.Add(p.HasOptions ? p :
@@ -2189,7 +2189,7 @@ namespace Barotrauma
         public static bool DoesItemHaveContextualOrders(Item item)
         {
             if (Order.PrefabList.Any(o => o.ItemIdentifiers.Length > 0 && o.ItemIdentifiers.Contains(item.Prefab.Identifier))) { return true; }
-            if (Order.PrefabList.Any(o => item.HasTag(o.ItemIdentifiers))) { return true; }
+            if (Order.PrefabList.Any(o => item.ItemTags.HasAnyTag(o.ItemIdentifiers))) { return true; }
             if (Order.PrefabList.Any(o => o.ItemComponentType != null && item.Components.Any(c => c?.GetType() == o.ItemComponentType))) { return true; }
 
             if (item.Repairables.Any()) { return true; }

@@ -34,7 +34,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (item.Prefab?.Identifier == tag || item.HasTag(tag))
+                    if (item.Prefab?.Identifier == tag || item.ItemTags.HasTag(tag))
                     {
                         var connectionPanel = item.GetComponent<ConnectionPanel>();
                         if (connectionPanel != null)

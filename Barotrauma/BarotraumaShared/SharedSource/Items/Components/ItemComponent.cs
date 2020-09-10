@@ -345,7 +345,7 @@ namespace Barotrauma.Items.Components
             RelatedItem ri = RelatedItem.Load(element, returnEmpty, item.Name);
             if (ri != null)
             {
-                if (ri.Identifiers.Length == 0)
+                if (ri.Identifiers.TagIdentifiers.Count == 0)
                 {
                     DisabledRequiredItems.Add(ri);
                 }

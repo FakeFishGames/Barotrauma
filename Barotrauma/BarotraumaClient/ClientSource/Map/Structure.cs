@@ -176,7 +176,7 @@ namespace Barotrauma
                     float impact = Vector2.Dot(f2.Body.LinearVelocity, -normal) * f2.Body.Mass * 0.1f;
                     if (impact > 10.0f)
                     {
-                        SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: Tags);
+                        SoundPlayer.PlayDamageSound("StructureBlunt", impact, SectionPosition(section, true), tags: StructureTags.TagIdentifiers.Select(t => t.IdentifierString));
                     }
                 }
             }

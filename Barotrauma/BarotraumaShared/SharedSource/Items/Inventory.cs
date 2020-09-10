@@ -418,8 +418,10 @@ namespace Barotrauma
 
         public Item FindItemByTag(string tag, bool recursive = false)
         {
+            StringIdentifier Tag = new StringIdentifier(tag);
+
             if (tag == null) { return null; }
-            return FindItem(i => i.HasTag(tag), recursive);
+            return FindItem(i => i.ItemTags.HasTag(Tag), recursive);
         }
 
         public Item FindItemByIdentifier(string identifier, bool recursive = false)

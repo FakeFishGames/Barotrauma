@@ -558,7 +558,7 @@ namespace Barotrauma
 
             originalName = element.GetAttributeString("name", "");
             name = originalName;
-            identifier = element.GetAttributeString("identifier", "");
+            identifier = new StringIdentifier(element.GetAttributeString("identifier", ""));
 
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
@@ -578,7 +578,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    name = TextManager.Get("EntityName." + identifier, true) ?? string.Empty;
+                    name = TextManager.Get("EntityName." + MapEntityIdentifier.IdentifierString, true) ?? string.Empty;
                 }
                 else
                 {
@@ -590,16 +590,16 @@ namespace Barotrauma
                 // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    name = TextManager.Get("EntityName." + identifier, true) ?? originalName;
+                    name = TextManager.Get("EntityName." + MapEntityIdentifier.IdentifierString, true) ?? originalName;
                 }
                 else
                 {
                     name = TextManager.Get("EntityName." + nameIdentifier, true) ?? originalName;
                 }
 
-                if (string.IsNullOrWhiteSpace(identifier))
+                if (string.IsNullOrWhiteSpace(MapEntityIdentifier.IdentifierString))
                 {
-                    identifier = GenerateLegacyIdentifier(originalName);
+                    identifier = new StringIdentifier(GenerateLegacyIdentifier(originalName));
                 }
             }
             
@@ -613,7 +613,7 @@ namespace Barotrauma
             
             if (string.IsNullOrEmpty(name))
             {
-                DebugConsole.ThrowError($"Unnamed item ({identifier})in {filePath}!");
+                DebugConsole.ThrowError($"Unnamed item ({MapEntityIdentifier.IdentifierString})in {filePath}!");
             }
 
             DebugConsole.Log("    " + name);
@@ -628,11 +628,16 @@ namespace Barotrauma
             FabricationRecipes  = new List<FabricationRecipe>();
             DeconstructTime     = 1.0f;
 
-            Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
-            if (!Tags.Any())
+
+            XAttribute TagAttribute = element.Attribute("tags");
+            if (TagAttribute == null)
             {
-                Tags = new HashSet<string>(element.GetAttributeStringArray("Tags", new string[0], convertToLowerInvariant: true));
+                TagAttribute = element.Attribute("Tags");
             }
+
+            Tags = new StringTags();
+
+            Tags.AllTagsString = TagAttribute != null ? TagAttribute.Value : "";
 
             if (element.Attribute("cargocontainername") != null)
             {
@@ -649,7 +654,7 @@ namespace Barotrauma
                 }
                 else if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    Description = TextManager.Get("EntityDescription." + identifier, true) ?? string.Empty;
+                    Description = TextManager.Get("EntityDescription." + MapEntityIdentifier.IdentifierString, true) ?? string.Empty;
                 }
                 else
                 {
@@ -682,7 +687,7 @@ namespace Barotrauma
                         {
                             sprite.Name = Name;
                         }
-                        sprite.EntityID = identifier;
+                        sprite.EntityID = MapEntityIdentifier.IdentifierString;
                         break;
                     case "price":
                         if (locationPrices == null) { locationPrices = new Dictionary<string, PriceInfo>(); }
@@ -871,10 +876,10 @@ namespace Barotrauma
                 };
 #endif
                 size = sprite.size;
-                sprite.EntityID = identifier;
+                sprite.EntityID = MapEntityIdentifier.IdentifierString;
             }
             
-            if (string.IsNullOrEmpty(identifier))
+            if (string.IsNullOrEmpty(MapEntityIdentifier.IdentifierString))
             {
                 DebugConsole.ThrowError(
                     "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
@@ -986,7 +991,7 @@ namespace Barotrauma
             return PreferredContainers.Any(pc => IsContainerPreferred(pc.Secondary, identifiersOrTags));
         }
 
-        public static bool IsContainerPreferred(IEnumerable<string> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
+        public static bool IsContainerPreferred(IEnumerable<string> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.ItemTags.HasTag(id));
         public static bool IsContainerPreferred(IEnumerable<string> preferences, IEnumerable<string> ids) => ids.Any(id => preferences.Contains(id));
     }
 }

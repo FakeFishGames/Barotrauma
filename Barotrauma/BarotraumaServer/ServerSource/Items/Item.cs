@@ -280,7 +280,7 @@ namespace Barotrauma
             }
 
             msg.Write(teamID);
-            bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));
+            bool tagsChanged = ItemTags.TagIdentifiers.Count != prefab.Tags.TagIdentifiers.Count || !ItemTags.TagIdentifiers.All(t => prefab.Tags.HasTag(t));
             msg.Write(tagsChanged);
             if (tagsChanged)
             {

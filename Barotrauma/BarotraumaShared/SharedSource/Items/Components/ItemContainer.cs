@@ -100,12 +100,12 @@ namespace Barotrauma.Items.Components
             isRestrictionsDefined = containableRestrictions.Any();
             if (ContainableItems.None(ri => ri.MatchesItem(item))) { return false; }
             if (!isRestrictionsDefined) { return true; }
-            return containableRestrictions.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+            return containableRestrictions.Any(id => item.Prefab.Identifier == id || item.ItemTags.HasTag(id));
         }
 
         public List<RelatedItem> ContainableItems { get; private set; } = new List<RelatedItem>();
 
-        public IEnumerable<string> GetContainableItemIdentifiers => ContainableItems.SelectMany(ri => ri.Identifiers);
+        public IEnumerable<string> GetContainableItemIdentifiers => ContainableItems.SelectMany(ri => ri.Identifiers.ToStringArray());
 
         public override bool RecreateGUIOnResolutionChange => true;
 

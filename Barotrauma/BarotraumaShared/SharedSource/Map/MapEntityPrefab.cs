@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,21 +43,11 @@ namespace Barotrauma
         }
 
         protected string originalName;
-        protected string identifier;
 
-        StringIdentifier _MapEntityIdentifier;
+        protected StringIdentifier identifier;
         public StringIdentifier MapEntityIdentifier
         {
-            //TODO: actually put this somewhere in the constructor, but this will do for now
-            get
-            {
-                if (_MapEntityIdentifier == null)
-                {
-                    _MapEntityIdentifier = new StringIdentifier(identifier);
-                }
-
-                return _MapEntityIdentifier;
-            }
+            get =>  identifier;
         }
 
         public Sprite sprite;
@@ -101,18 +92,14 @@ namespace Barotrauma
         //Allows changing the name of an item without breaking existing subs or having multiple items with the same name
         public string Identifier
         {
-            get { return identifier; }
+            get { return MapEntityIdentifier.IdentifierString; }
         }
 
         public string FilePath { get; protected set; }
 
         public ContentPackage ContentPackage { get; protected set; }
 
-        public HashSet<string> Tags
-        {
-            get;
-            protected set;
-        } = new HashSet<string>();
+        public StringTags Tags;
 
         public static MapEntityPrefab Selected
         {
@@ -173,7 +160,7 @@ namespace Barotrauma
         {
             CoreEntityPrefab ep = new CoreEntityPrefab
             {
-                identifier = "hull",
+                identifier = new StringIdentifier("hull"),
                 originalName = TextManager.Get("EntityName.hull"),
                 Description = TextManager.Get("EntityDescription.hull"),
                 constructor = typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
@@ -187,7 +174,7 @@ namespace Barotrauma
 
             ep = new CoreEntityPrefab
             {
-                identifier = "gap",
+                identifier = new StringIdentifier("gap"),
                 originalName = TextManager.Get("EntityName.gap"),
                 Description = TextManager.Get("EntityDescription.gap"),
                 constructor = typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
@@ -199,7 +186,7 @@ namespace Barotrauma
 
             ep = new CoreEntityPrefab
             {
-                identifier = "waypoint",
+                identifier = new StringIdentifier("waypoint"),
                 originalName = TextManager.Get("EntityName.waypoint"),
                 Description = TextManager.Get("EntityDescription.waypoint"),
                 constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
@@ -209,7 +196,7 @@ namespace Barotrauma
 
             ep = new CoreEntityPrefab
             {
-                identifier = "spawnpoint",
+                identifier = new StringIdentifier("spawnpoint"),
                 originalName = TextManager.Get("EntityName.spawnpoint"),
                 Description = TextManager.Get("EntityDescription.spawnpoint"),
                 constructor = typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) })
@@ -273,7 +260,7 @@ namespace Barotrauma
             {
                 if (identifier != null)
                 {
-                    if (prefab.identifier != identifier)
+                    if (prefab.MapEntityIdentifier.IdentifierString != identifier)
                     {
                         if (prefab.Aliases != null && prefab.Aliases.Any(a => a.Equals(identifier, StringComparison.OrdinalIgnoreCase)))
                         {
@@ -325,8 +312,8 @@ namespace Barotrauma
             if (target == null) { return false; }
             if (target is StructurePrefab && AllowedLinks.Contains("structure")) { return true; }
             if (target is ItemPrefab && AllowedLinks.Contains("item")) { return true; }
-            return AllowedLinks.Contains(target.Identifier) || target.AllowedLinks.Contains(identifier)
-                || target.Tags.Any(t => AllowedLinks.Contains(t)) || Tags.Any(t => target.AllowedLinks.Contains(t));
+            return AllowedLinks.Contains(target.MapEntityIdentifier.IdentifierString) || target.AllowedLinks.Contains(MapEntityIdentifier.IdentifierString)
+                || (target.Tags != null && target.Tags.TagIdentifiers.Any(t => AllowedLinks.Contains(t.IdentifierString))) || Tags.TagIdentifiers.Any(t => target.AllowedLinks.Contains(t.IdentifierString));
         }
 
         //a method that allows the GUIListBoxes to check through a delegate if the entityprefab is still selected

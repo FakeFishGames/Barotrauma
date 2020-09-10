@@ -1005,7 +1005,7 @@ namespace Barotrauma
                 (!requireEquipped || character.HasEquippedItem(item)) &&
                 (containedTag == null ||
                 (item.ContainedItems != null &&
-                item.ContainedItems.Any(i => i.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage)));
+                item.ContainedItems.Any(i => i.ItemTags.HasTag(containedTag) && i.ConditionPercentage > conditionPercentage)));
         }
 
         public static void ItemTaken(Item item, Character character)
@@ -1014,7 +1014,7 @@ namespace Barotrauma
             Character thief = character;
             bool someoneSpoke = false;
 
-            if (item.SpawnedInOutpost && thief.TeamID != Character.TeamType.FriendlyNPC && !item.HasTag("handlocker"))
+            if (item.SpawnedInOutpost && thief.TeamID != Character.TeamType.FriendlyNPC && !item.ItemTags.HasTag("handlocker"))
             {
                 foreach (Character otherCharacter in Character.CharacterList)
                 {

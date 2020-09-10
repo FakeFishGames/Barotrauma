@@ -799,7 +799,7 @@ namespace Barotrauma
                         }
                         else if (entity is Structure structure)
                         {
-                            if (structure.prefab.Identifier != args[0] && !structure.Tags.Contains(args[0])) { continue; }
+                            if (structure.prefab.Identifier != args[0] && !structure.StructureTags.HasTag(args[0])) { continue; }
                             structure.Reset();
                             if (MapEntity.SelectedList.Contains(structure)) { structure.CreateEditingHUD(); }
                             entityFound = true;

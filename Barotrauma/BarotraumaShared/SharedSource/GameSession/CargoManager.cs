@@ -207,13 +207,13 @@ namespace Barotrauma
                 {
                     itemContainer = availableContainers.Keys.ToList().Find(ac => 
                         ac.Item.Prefab.Identifier == pi.ItemPrefab.CargoContainerIdentifier || 
-                        ac.Item.Prefab.Tags.Contains(pi.ItemPrefab.CargoContainerIdentifier.ToLowerInvariant()));
+                        ac.Item.Prefab.Tags.HasTag(pi.ItemPrefab.CargoContainerIdentifier));
 
                     if (itemContainer == null)
                     {
                         containerPrefab = ItemPrefab.Prefabs.Find(ep => 
                             ep.Identifier == pi.ItemPrefab.CargoContainerIdentifier || 
-                            (ep.Tags != null && ep.Tags.Contains(pi.ItemPrefab.CargoContainerIdentifier.ToLowerInvariant())));
+                            (ep.Tags != null && ep.Tags.HasTag(pi.ItemPrefab.CargoContainerIdentifier)));
 
                         if (containerPrefab == null)
                         {

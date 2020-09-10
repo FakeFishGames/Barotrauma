@@ -329,7 +329,7 @@ namespace Barotrauma
                     {
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull != character.CurrentHull || !item.HasTag("chair")) { continue; }
+                            if (item.CurrentHull != character.CurrentHull || !item.ItemTags.HasTag(StringIdentifier.Chair)) { continue; }
                             var controller = item.GetComponent<Controller>();
                             if (controller == null || controller.User != null) { continue; }
                             item.TryInteract(character, forceSelectKey: true);

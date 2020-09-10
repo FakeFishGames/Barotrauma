@@ -43,15 +43,15 @@ namespace Barotrauma
             if (doc == null) { return; }
 
             originalName = doc.Root.GetAttributeString("name", "");
-            identifier = doc.Root.GetAttributeString("identifier", null) ?? originalName.ToLowerInvariant().Replace(" ", "");
+            identifier = new StringIdentifier(doc.Root.GetAttributeString("identifier", null) ?? originalName.ToLowerInvariant().Replace(" ", ""));
             configElement = doc.Root;
 
             Category = MapEntityCategory.ItemAssembly;
 
             SerializableProperty.DeserializeProperties(this, configElement);
 
-            name = TextManager.Get("EntityName." + identifier, returnNull: true) ?? originalName;
-            Description = TextManager.Get("EntityDescription." + identifier, returnNull: true) ?? Description;
+            name = TextManager.Get("EntityName." + MapEntityIdentifier.IdentifierString, returnNull: true) ?? originalName;
+            Description = TextManager.Get("EntityDescription." + MapEntityIdentifier.IdentifierString, returnNull: true) ?? Description;
 
             List<ushort> containedItemIDs = new List<ushort>();
             foreach (XElement entityElement in doc.Root.Elements())

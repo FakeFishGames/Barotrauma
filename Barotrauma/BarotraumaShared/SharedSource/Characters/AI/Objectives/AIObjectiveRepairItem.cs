@@ -83,7 +83,7 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            subObjectives.Add(new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true));
+                            subObjectives.Add(new AIObjectiveGetItem(character, requiredItem.Identifiers.ToStringArray(), objectiveManager, true));
                         }
                     }
                     return;
@@ -124,7 +124,7 @@ namespace Barotrauma
                 if (fuel == null)
                 {
                     RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager), 
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers.ToStringArray(), repairTool.Item.GetComponent<ItemContainer>(), objectiveManager),
                         onCompleted: () => RemoveSubObjective(ref refuelObjective),
                         onAbandon: () => Abandon = true);
                     return;

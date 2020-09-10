@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Item item in item.ContainedItems)
                 {
-                    if (!item.HasTag("reactorfuel")) continue;
+                    if (!item.ItemTags.HasTag("reactorfuel")) continue;
                     item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                 }
 

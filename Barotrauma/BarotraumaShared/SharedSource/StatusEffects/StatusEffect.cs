@@ -71,7 +71,7 @@ namespace Barotrauma
                     //backwards compatibility
                     DebugConsole.ThrowError("Error in StatusEffect config (" + element.ToString() + ") - use item identifier instead of the name.");
                     string itemPrefabName = element.GetAttributeString("name", "");
-                    ItemPrefab = ItemPrefab.Prefabs.Find(m => m.NameMatches(itemPrefabName, StringComparison.InvariantCultureIgnoreCase) || m.Tags.Contains(itemPrefabName));
+                    ItemPrefab = ItemPrefab.Prefabs.Find(m => m.NameMatches(itemPrefabName, StringComparison.InvariantCultureIgnoreCase) || m.Tags.HasTag(itemPrefabName));
                     if (ItemPrefab == null)
                     {
                         DebugConsole.ThrowError("Error in StatusEffect \"" + parentDebugName + "\" - item prefab \"" + itemPrefabName + "\" not found.");
@@ -610,7 +610,7 @@ namespace Barotrauma
             {
                 foreach (StringIdentifier Target in targetIdentifiers)
                 {
-                    if (item.HasTag(Target.IdentifierString)) return true;
+                    if (item.ItemTags.HasTag(Target.IdentifierString)) return true;
                 }
 
                 currentTargetType = StringIdentifier.Item;
@@ -620,7 +620,7 @@ namespace Barotrauma
             {
                 foreach (StringIdentifier Target in targetIdentifiers)
                 {
-                    if (itemComponent.Item.HasTag(Target.IdentifierString)) return true;
+                    if (itemComponent.Item.ItemTags.HasTag(Target.IdentifierString)) return true;
                 }
 
                 currentTargetType = StringIdentifier.ItemComponent;

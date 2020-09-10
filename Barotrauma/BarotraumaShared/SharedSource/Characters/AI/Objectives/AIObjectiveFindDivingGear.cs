@@ -71,7 +71,7 @@ namespace Barotrauma
                         containedItem.Drop(character);
                     }
                 }
-                if (containedItems.None(it => it.HasTag("oxygensource") && it.Condition > lowOxygenThreshold))
+                if (containedItems.None(it => it.ItemTags.HasTag("oxygensource") && it.Condition > lowOxygenThreshold))
                 {
                     var oxygenTank = character.Inventory.FindItemByTag("oxygensource", true);
                     if (oxygenTank != null)

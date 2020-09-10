@@ -202,7 +202,7 @@ namespace Barotrauma
                         int matches = 0;
                         foreach (string tag in readTags)
                         {
-                            if (target is Item item && item.HasTag(tag))
+                            if (target is Item item && item.ItemTags.HasTag(tag))
                             {
                                 matches++;
                             }

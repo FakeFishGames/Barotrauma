@@ -188,7 +188,7 @@ namespace Barotrauma
             bool success = false;
             if (Rand.Value(Rand.RandSync.Server) > validContainer.Value.SpawnProbability) { return false; }
             // Don't add dangerously reactive materials in thalamus wrecks 
-            if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.Contains("explodesinwater"))
+            if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.HasTag("explodesinwater"))
             {
                 return false;
             }

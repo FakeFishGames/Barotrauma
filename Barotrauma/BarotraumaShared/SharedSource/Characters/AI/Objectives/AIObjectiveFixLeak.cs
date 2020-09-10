@@ -86,7 +86,7 @@ namespace Barotrauma
                         containedItem.Drop(character);
                     }
                 }
-                if (containedItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
+                if (containedItems.None(i => i.ItemTags.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
                     TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
                         onAbandon: () => Abandon = true,

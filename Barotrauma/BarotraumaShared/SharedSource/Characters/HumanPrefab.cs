@@ -153,12 +153,12 @@ namespace Barotrauma
             }
             if (item.Prefab.Identifier == "idcard" || item.Prefab.Identifier == "idcardwreck")
             {
-                item.AddTag("name:" + character.Name);
-                item.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
+                item.ItemTags.AddTag("name:" + character.Name);
+                item.ItemTags.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
                 var job = character.Info?.Job;
                 if (job != null)
                 {
-                    item.AddTag("job:" + job.Name);
+                    item.ItemTags.AddTag("job:" + job.Name);
                 }
             }
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())

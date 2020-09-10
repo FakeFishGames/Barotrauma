@@ -1650,12 +1650,12 @@ namespace Barotrauma
                     foreach (Item containedItem in containedItems)
                     {
                         if (containedItem == null) continue;
-                        if (!containedItem.HasTag("medical") && !containedItem.HasTag("chem")) continue;
+                        if (!containedItem.ItemTags.HasTag("medical") && !containedItem.ItemTags.HasTag("chem")) continue;
                         medicalItems.Add(containedItem);
                     }
                 }
 
-                if (!item.HasTag("medical") && !item.HasTag("chem")) continue;
+                if (!item.ItemTags.HasTag("medical") && !item.ItemTags.HasTag("chem")) continue;
                 medicalItems.Add(item);
             }
 

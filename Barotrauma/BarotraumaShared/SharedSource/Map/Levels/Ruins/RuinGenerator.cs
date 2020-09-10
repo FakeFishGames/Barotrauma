@@ -886,7 +886,7 @@ namespace Barotrauma.RuinGeneration
                     List<RuinEntity> roomContents = ruinEntities.FindAll(re => re.Room == room);
                     for (int j = 0; j < roomContents.Count; j++)
                     {
-                        if (roomContents[j].Entity is Item && (roomContents[j].Entity as Item).HasTag(entityConfig.TargetContainer))
+                        if (roomContents[j].Entity is Item && (roomContents[j].Entity as Item).ItemTags.HasTag(entityConfig.TargetContainer))
                         {
                             container = roomContents[j].Entity as Item;
                             break;

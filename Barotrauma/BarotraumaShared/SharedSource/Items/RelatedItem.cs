@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -38,20 +39,24 @@ namespace Barotrauma
 
         public string JoinedIdentifiers
         {
-            get { return string.Join(",", Identifiers); }
+            get { return string.Join(",", Identifiers.ToStringArray()); }
             set
             {
                 if (value == null) return;
 
-                Identifiers = value.Split(',');
-                for (int i = 0; i < Identifiers.Length; i++)
+                string[] IdentifiersArr = value.Split(',');
+                for (int i = 0; i < IdentifiersArr.Length; i++)
                 {
-                    Identifiers[i] = Identifiers[i].Trim().ToLowerInvariant();
+                    IdentifiersArr[i] = IdentifiersArr[i].Trim().ToLowerInvariant();
                 }
+
+                Identifiers.Reset();
+                IdentifiersArr.ForEach(Id => Identifiers.AddTag(Id));
             }
+
         }
 
-        public string[] Identifiers { get; private set; }
+        public StringTags Identifiers;
 
         public string JoinedExcludedIdentifiers
         {
@@ -71,14 +76,14 @@ namespace Barotrauma
         public bool MatchesItem(Item item)
         {
             if (item == null) { return false; }
-            if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
-            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
+            if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.ItemTags.HasTag(id))) { return false; }
+            return Identifiers.TagIdentifiers.Any(id => item.Prefab.MapEntityIdentifier == id || item.ItemTags.HasTag(id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
             if (itemPrefab == null) { return false; }
-            if (excludedIdentifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id))) { return false; }
-            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id));
+            if (excludedIdentifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.HasTag(id))) { return false; }
+            return Identifiers.TagIdentifiers.Any(id => itemPrefab.MapEntityIdentifier == id || itemPrefab.Tags.HasTag(id));
         }
 
         public RelatedItem(string[] identifiers, string[] excludedIdentifiers)
@@ -87,7 +92,9 @@ namespace Barotrauma
             {
                 identifiers[i] = identifiers[i].Trim().ToLowerInvariant();
             }
-            this.Identifiers = identifiers;
+
+            Identifiers = new StringTags();
+            identifiers.ForEach(Id => Identifiers.AddTag(Id));
 
             for (int i = 0; i < excludedIdentifiers.Length; i++)
             {

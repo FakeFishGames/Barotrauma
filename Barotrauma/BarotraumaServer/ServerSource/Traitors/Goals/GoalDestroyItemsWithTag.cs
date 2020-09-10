@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         public sealed class GoalDestroyItemsWithTag : Goal
         {
-            private readonly string tag;
+            private readonly StringIdentifier GoalTag;
             private readonly bool matchIdentifier;
             private readonly bool matchTag;
             private readonly bool matchInventory;
@@ -51,13 +51,13 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    var identifierMatches = matchIdentifier && item.prefab.Identifier == tag;
+                    var identifierMatches = matchIdentifier && item.prefab.MapEntityIdentifier == GoalTag;
                     if (identifierMatches && tagPrefabName == null)
                     {
                         var textId = item.Prefab.GetItemNameTextId();
                         tagPrefabName = textId != null ? TextManager.FormatServerMessage(textId) : item.Prefab.Name;
                     }
-                    if (identifierMatches || (matchTag && item.HasTag(tag)))
+                    if (identifierMatches || (matchTag && item.ItemTags.HasTag(GoalTag.IdentifierString)))
                     {
                         ++result;
                     }
@@ -66,7 +66,7 @@ namespace Barotrauma
                 // Quick fix
                 if (tagPrefabName == null && matchIdentifier)
                 {
-                    tagPrefabName = TextManager.FormatServerMessage($"entityname.{tag}");
+                    tagPrefabName = TextManager.FormatServerMessage($"entityname.{GoalTag.IdentifierString}");
                 }
 
                 return result;
@@ -96,7 +96,7 @@ namespace Barotrauma
             public GoalDestroyItemsWithTag(string tag, float destroyPercent, bool matchTag, bool matchIdentifier, bool matchInventory) : base()
             {
                 InfoTextId = "TraitorGoalDestroyItems";
-                this.tag = tag;
+                GoalTag = new StringIdentifier(tag);
                 this.destroyPercent = destroyPercent;
                 this.matchTag = matchTag;
                 this.matchIdentifier = matchIdentifier;

@@ -71,8 +71,8 @@ namespace Barotrauma.Tutorials
             morphine.Unequip(doctor);
             doctor.Inventory.RemoveItem(morphine);
 
-            doctor_suppliesCabinet = Item.ItemList.Find(i => i.HasTag("doctor_suppliescabinet"))?.GetComponent<ItemContainer>();
-            doctor_medBayCabinet = Item.ItemList.Find(i => i.HasTag("doctor_medbaycabinet"))?.GetComponent<ItemContainer>();
+            doctor_suppliesCabinet = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_suppliescabinet"))?.GetComponent<ItemContainer>();
+            doctor_medBayCabinet = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_medbaycabinet"))?.GetComponent<ItemContainer>();
 
             var patientHull1 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "waitingroom").CurrentHull;
             var patientHull2 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "airlock").CurrentHull;
@@ -111,20 +111,20 @@ namespace Barotrauma.Tutorials
             subPatient3.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 20.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient3);
 
-            doctor_firstDoor = Item.ItemList.Find(i => i.HasTag("doctor_firstdoor")).GetComponent<Door>();
-            doctor_secondDoor = Item.ItemList.Find(i => i.HasTag("doctor_seconddoor")).GetComponent<Door>();
-            doctor_thirdDoor = Item.ItemList.Find(i => i.HasTag("doctor_thirddoor")).GetComponent<Door>();
-            tutorial_upperFinalDoor = Item.ItemList.Find(i => i.HasTag("tutorial_upperfinaldoor")).GetComponent<Door>();
-            doctor_firstDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_firstdoorlight")).GetComponent<LightComponent>();
-            doctor_secondDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_seconddoorlight")).GetComponent<LightComponent>();
-            doctor_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("doctor_thirddoorlight")).GetComponent<LightComponent>();
+            doctor_firstDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_firstdoor")).GetComponent<Door>();
+            doctor_secondDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_seconddoor")).GetComponent<Door>();
+            doctor_thirdDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_thirddoor")).GetComponent<Door>();
+            tutorial_upperFinalDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_upperfinaldoor")).GetComponent<Door>();
+            doctor_firstDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_firstdoorlight")).GetComponent<LightComponent>();
+            doctor_secondDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_seconddoorlight")).GetComponent<LightComponent>();
+            doctor_thirdDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("doctor_thirddoorlight")).GetComponent<LightComponent>();
             SetDoorAccess(doctor_firstDoor, doctor_firstDoorLight, false);
             SetDoorAccess(doctor_secondDoor, doctor_secondDoorLight, false);
             SetDoorAccess(doctor_thirdDoor, doctor_thirdDoorLight, false);
-            tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
-            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
+            tutorial_submarineDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
+            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
-            tutorial_lockedDoor_2 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_2")).GetComponent<Door>();
+            tutorial_lockedDoor_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_lockeddoor_2")).GetComponent<Door>();
             SetDoorAccess(tutorial_lockedDoor_2, null, true);
 
 

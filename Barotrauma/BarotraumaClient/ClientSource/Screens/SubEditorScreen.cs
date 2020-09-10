@@ -2848,7 +2848,7 @@ namespace Barotrauma
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
                 if (string.IsNullOrEmpty(itemPrefab.Name)) { continue; }
-                if (!itemPrefab.Tags.Contains("wire")) { continue; }
+                if (!itemPrefab.Tags.HasTag("wire")) { continue; }
 
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -3987,7 +3987,7 @@ namespace Barotrauma
 
             if (WiringMode && dummyCharacter != null)
             {
-                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("wire")))
+                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.ItemTags.HasTag("wire")))
                 {
                     wiringToolPanel.GetChild<GUIListBox>().Deselect();
                 }

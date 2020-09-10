@@ -35,7 +35,7 @@ namespace Barotrauma
 
         private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, string tag) => MapEntity.mapEntityList.Where(e => e.Submarine == wreck && e.prefab != null && IsThalamus(e.prefab, tag));
 
-        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.Category == MapEntityCategory.Thalamus || entityPrefab.Tags.Contains(tag);
+        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.Category == MapEntityCategory.Thalamus || entityPrefab.Tags.HasTag(tag);
 
         public WreckAI(Submarine wreck)
         {
@@ -47,7 +47,7 @@ namespace Barotrauma
                 return;
             }
             var thalamusPrefabs = ItemPrefab.Prefabs.Where(p => IsThalamus(p));
-            var brainPrefab = thalamusPrefabs.GetRandom(i => i.Tags.Contains(Config.Brain), Rand.RandSync.Server);
+            var brainPrefab = thalamusPrefabs.GetRandom(i => i.Tags.HasTag(Config.Brain), Rand.RandSync.Server);
             if (brainPrefab == null)
             {
                 DebugConsole.ThrowError($"WreckAI: Could not find any brain prefab with the tag {Config.Brain}! Cannot continue. Failed to create wreck AI.");
@@ -89,12 +89,12 @@ namespace Barotrauma
             brainHull.WaterVolume = brainHull.Volume;
             brain.SetTransform(brainHull.SimPosition, rotation: 0, findNewHull: false);
             brain.CurrentHull = brainHull;
-            var backgroundPrefab = thalamusStructurePrefabs.GetRandom(i => i.Tags.Contains(Config.BrainRoomBackground), Rand.RandSync.Server);
+            var backgroundPrefab = thalamusStructurePrefabs.GetRandom(i => i.Tags.HasTag(Config.BrainRoomBackground), Rand.RandSync.Server);
             if (backgroundPrefab != null)
             {
                 new Structure(brainHull.Rect, backgroundPrefab, Wreck);
             }
-            var horizontalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.Contains(Config.BrainRoomHorizontalWall), Rand.RandSync.Server);
+            var horizontalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.HasTag(Config.BrainRoomHorizontalWall), Rand.RandSync.Server);
             if (horizontalWallPrefab != null)
             {
                 int height = (int)horizontalWallPrefab.Size.Y;
@@ -103,7 +103,7 @@ namespace Barotrauma
                 new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, Wreck);
                 new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top - brainHull.Rect.Height + halfHeight + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, Wreck);
             }
-            var verticalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.Contains(Config.BrainRoomVerticalWall), Rand.RandSync.Server);
+            var verticalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.HasTag(Config.BrainRoomVerticalWall), Rand.RandSync.Server);
             if (verticalWallPrefab != null)
             {
                 int width = (int)verticalWallPrefab.Size.X;
@@ -153,7 +153,7 @@ namespace Barotrauma
                 {
                     turrets.Add(turret);
                 }
-                if (item.HasTag(Config.Spawner))
+                if (item.ItemTags.HasTag(Config.Spawner))
                 {
                     if (!spawnOrgans.Contains(item))
                     {
@@ -374,10 +374,10 @@ namespace Barotrauma
             {
                 // Never target other creatures than humans with the turrets.
                 turret.ThalamusOperate(this, deltaTime, 
-                    !turret.Item.HasTag("ignorecharacters"), 
+                    !turret.Item.ItemTags.HasTag("ignorecharacters"),
                     targetOtherCreatures: false, 
-                    !turret.Item.HasTag("ignoresubmarines"), 
-                    turret.Item.HasTag("ignoreaimdelay"));
+                    !turret.Item.ItemTags.HasTag("ignoresubmarines"),
+                    turret.Item.ItemTags.HasTag("ignoreaimdelay"));
             }
         }
 

@@ -116,7 +116,7 @@ namespace Barotrauma
             
                 if (!string.IsNullOrEmpty(existingItemTag))
                 {
-                    var suitableItems = Item.ItemList.Where(it => it.HasTag(existingItemTag));
+                    var suitableItems = Item.ItemList.Where(it => it.ItemTags.HasTag(existingItemTag));
                     switch (spawnPositionType)
                     {
                         case Level.PositionType.Cave:
@@ -169,7 +169,7 @@ namespace Barotrauma
                 {
                     foreach (Item it in Item.ItemList)
                     {
-                        if (!it.HasTag(containerTag)) { continue; }
+                        if (!it.ItemTags.HasTag(containerTag)) { continue; }
                         if (it.NonInteractable) { continue; }
                         switch (spawnPositionType)
                         {

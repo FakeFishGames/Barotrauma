@@ -34,7 +34,7 @@ namespace Barotrauma
                 if (!(target is Character chr)) { continue; }
                 if (chr.Inventory == null) { continue; }
 
-                if (itemTags.Any(tag => chr.Inventory.Items.Any(item => item != null && item.HasTag(tag)))) { return true; }
+                if (itemTags.Any(tag => chr.Inventory.Items.Any(item => item != null && item.ItemTags.HasTag(tag)))) { return true; }
 
                 foreach (var identifier in itemIdentifierSplit)
                 {

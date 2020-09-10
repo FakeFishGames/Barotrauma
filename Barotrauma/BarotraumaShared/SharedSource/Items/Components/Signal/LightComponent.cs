@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
-            item.AddTag("light");
+            item.ItemTags.AddTag("light");
         }
         
         public override void Update(float deltaTime, Camera cam)

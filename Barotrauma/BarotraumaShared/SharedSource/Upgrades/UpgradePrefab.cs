@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -87,26 +88,26 @@ namespace Barotrauma
 
         public bool CanBeApplied(Item item, UpgradePrefab? upgradePrefab = null)
         {
-            if (IsWallUpgrade) { return false; }
+            if (IsWallUpgrade) return false;
 
-            if (upgradePrefab != null && item.disallowedUpgrades.Contains(upgradePrefab.Identifier)) { return false; }
+            if (upgradePrefab != null && item.disallowedUpgrades.Contains(upgradePrefab.Identifier)) return false;
 
             return item.prefab.GetAllowedUpgrades().Contains(Identifier) ||
-                   ItemTags.Any(tag => item.Prefab.Tags.Contains(tag) || item.Prefab.Identifier.Equals(tag, StringComparison.OrdinalIgnoreCase));
+                   ItemTags.Any(tag => item.Prefab.Tags.HasTag(tag) || item.Prefab.MapEntityIdentifier == tag);
         }
         
         public bool CanBeApplied(XElement element)
         {
-            if (string.Equals("Structure", element.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { return IsWallUpgrade; }
+            if (string.Equals("Structure", element.Name.ToString(), StringComparison.OrdinalIgnoreCase)) return IsWallUpgrade;
 
             string identifier = element.GetAttributeString("identifier", string.Empty);
-            if (string.IsNullOrWhiteSpace(identifier)) { return false; }
+            if (string.IsNullOrWhiteSpace(identifier)) return false;
 
             ItemPrefab? item = ItemPrefab.Find(null, identifier);
-            if (item == null) { return false; }
+            if (item == null) return false;
 
             return item.GetAllowedUpgrades().Contains(Identifier) || 
-                   ItemTags.Any(tag => item.Tags.Contains(tag) || item.Identifier.Equals(tag, StringComparison.OrdinalIgnoreCase));
+                   ItemTags.Any(tag => item.Tags.HasTag(tag) || item.MapEntityIdentifier == tag);
         }
 
         public static UpgradeCategory? Find(string idenfitier)

@@ -862,7 +862,7 @@ namespace Barotrauma
                     impact * 10.0f,
                     ConvertUnits.ToDisplayUnits(impactPos),
                     MathHelper.Lerp(2000.0f, 10000.0f, (impact - MinCollisionImpact) / 2.0f),
-                    maxDamageStructure.Tags);            
+                    maxDamageStructure.StructureTags.TagIdentifiers.Select(t => t.IdentifierString));
             }
 #endif
         }

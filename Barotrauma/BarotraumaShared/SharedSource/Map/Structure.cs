@@ -137,11 +137,8 @@ namespace Barotrauma
 
         public StructurePrefab Prefab => prefab as StructurePrefab;
 
-        public HashSet<string> Tags
-        {
-            get { return prefab.Tags; }
-        }
-        
+        public StringTags StructureTags => prefab.Tags;
+
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", true)]
         public Color SpriteColor
@@ -402,7 +399,7 @@ namespace Barotrauma
             }
 
             // Only add ai targets automatically to submarine/outpost walls 
-            if (aiTarget == null && HasBody && Tags.Contains("wall") && submarine != null && !submarine.Info.IsWreck && !NoAITarget)
+            if (aiTarget == null && HasBody && StructureTags.HasTag("wall") && submarine != null && !submarine.Info.IsWreck && !NoAITarget)
             {
                 aiTarget = new AITarget(this)
                 {
@@ -919,7 +916,7 @@ namespace Barotrauma
 #if CLIENT
             if (playSound)
             {
-                SoundPlayer.PlayDamageSound(attack.StructureSoundType, damageAmount, worldPosition, tags: Tags);
+                SoundPlayer.PlayDamageSound(attack.StructureSoundType, damageAmount, worldPosition, tags: StructureTags.TagIdentifiers.Select(t => t.IdentifierString));
             }
 #endif
 

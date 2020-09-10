@@ -132,8 +132,8 @@ namespace Barotrauma.Tutorials
                 DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
                 return;
             }
-            idCard.AddTag("com");
-            idCard.AddTag("eng");
+            idCard.ItemTags.AddTag("com");
+            idCard.ItemTags.AddTag("eng");
 
             foreach (Item item in Item.ItemList)
             {

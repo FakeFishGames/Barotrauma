@@ -1263,7 +1263,7 @@ namespace Barotrauma
                     LatchOntoAI?.SetAttachTarget(wall.Submarine.PhysicsBody.FarseerBody, wall.Submarine, ConvertUnits.ToSimUnits(sectionPos), attachTargetNormal);
                     if (Character.AnimController.CanEnterSubmarine || !wall.SectionBodyDisabled(sectionIndex) && !IsWallDisabled(wall))
                     {
-                        if (AIParams.TargetOuterWalls || wall.prefab.Tags.Contains("inner"))
+                        if (AIParams.TargetOuterWalls || wall.prefab.Tags.HasTag(StringIdentifier.Inner))
                         {
                             wallTarget = new WallTarget(sectionPos, wall, sectionIndex);
                         }
@@ -1674,7 +1674,7 @@ namespace Barotrauma
                         }
                         foreach (var prio in AIParams.Targets)
                         {
-                            if (item.HasTag(prio.Tag))
+                            if (item.ItemTags.HasTag(prio.TagIdentifier))
                             {
                                 targetingTag = prio.Tag;
                                 break;
@@ -1716,7 +1716,7 @@ namespace Barotrauma
                         if (s.IsPlatform) { continue; }
                         if (s.Submarine == null) { continue; }
                         bool isCharacterInside = character.CurrentHull != null;
-                        bool isInnerWall = s.prefab.Tags.Contains("inner");
+                        bool isInnerWall = s.prefab.Tags.HasTag(StringIdentifier.Inner);
                         if (isInnerWall && !isCharacterInside)
                         {
                             // Ignore inner walls when outside (walltargets still work)

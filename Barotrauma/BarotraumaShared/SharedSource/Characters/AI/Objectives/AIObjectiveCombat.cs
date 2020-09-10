@@ -386,7 +386,7 @@ namespace Barotrauma
                     {
                         lethalDmg = attack.GetTotalDamage();
                         float max = lethalDmg + 1;
-                        if (weapon.Item.HasTag("stunner"))
+                        if (weapon.Item.ItemTags.HasTag("stunner"))
                         {
                             priority = max;
                         }
@@ -401,7 +401,7 @@ namespace Barotrauma
                 else if (Mode == CombatMode.Arrest)
                 {
                     // Enemy is not stunned, increase the priority of stunner weapons and decrease the priority of lethal weapons.
-                    if (weapon.Item.HasTag("stunner"))
+                    if (weapon.Item.ItemTags.HasTag("stunner"))
                     {
                         priority *= 2;
                     }
@@ -430,7 +430,7 @@ namespace Barotrauma
             if (bestPriority < 1) { return null; }
             if (Mode == CombatMode.Arrest)
             {
-                if (weaponComponent.Item.HasTag("stunner"))
+                if (weaponComponent.Item.ItemTags.HasTag("stunner"))
                 {
                     isLethalWeapon = false;
                 }
@@ -764,7 +764,7 @@ namespace Barotrauma
                     return true;
                 }
                 item = requiredItem;
-                ammunitionIdentifiers = requiredItem.Identifiers;
+                ammunitionIdentifiers = requiredItem.Identifiers.ToStringArray();
             }
             // No ammo
             if (ammunition == null)
@@ -772,7 +772,7 @@ namespace Barotrauma
                 if (ammunitionIdentifiers != null)
                 {
                     // Try reload ammunition from inventory
-                    ammunition = character.Inventory.FindItem(i => ammunitionIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+                    ammunition = character.Inventory.FindItem(i => ammunitionIdentifiers.Any(id => id == i.Prefab.Identifier || i.ItemTags.HasTag(id)) && i.Condition > 0, true);
                     if (ammunition != null)
                     {
                         var container = Weapon.GetComponent<ItemContainer>();

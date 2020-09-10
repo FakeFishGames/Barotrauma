@@ -245,7 +245,7 @@ namespace Barotrauma
             };
             sp.name = sp.originalName;
             sp.ConfigElement = element;
-            sp.identifier = element.GetAttributeString("identifier", "");
+            sp.identifier = new StringIdentifier(element.GetAttributeString("identifier", ""));
             
             var parentType = element.Parent?.GetAttributeString("prefabtype", "") ?? string.Empty;
             
@@ -256,7 +256,7 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    sp.name = TextManager.Get("EntityName." + sp.identifier, true) ?? string.Empty;
+                    sp.name = TextManager.Get("EntityName." + sp.MapEntityIdentifier.IdentifierString, true) ?? string.Empty;
                 }
                 else
                 {
@@ -266,15 +266,17 @@ namespace Barotrauma
             
             if (string.IsNullOrEmpty(sp.name))
             {
-                sp.name = TextManager.Get("EntityName." + sp.identifier, returnNull: true) ?? $"Not defined ({sp.identifier})";
+                sp.name = TextManager.Get("EntityName." + sp.MapEntityIdentifier.IdentifierString, returnNull: true) ?? $"Not defined ({sp.MapEntityIdentifier.IdentifierString})";
             }
-            sp.Tags = new HashSet<string>();
-            string joinedTags = element.GetAttributeString("tags", "");
-            if (string.IsNullOrEmpty(joinedTags)) joinedTags = element.GetAttributeString("Tags", "");
-            foreach (string tag in joinedTags.Split(','))
+
+            string TagsAttribute = element.GetAttributeString("tags", "");
+            if (string.IsNullOrEmpty(TagsAttribute))
             {
-                sp.Tags.Add(tag.Trim().ToLowerInvariant());
+                TagsAttribute = element.GetAttributeString("Tags", "");
             }
+
+            sp.Tags = new StringTags();
+            sp.Tags.AllTagsString = TagsAttribute;
 
             if (element.Attribute("ishorizontal") != null)
             {
@@ -304,7 +306,7 @@ namespace Barotrauma
                         {
                             sp.sprite.Name = sp.Name;
                         }
-                        sp.sprite.EntityID = sp.identifier;
+                        sp.sprite.EntityID = sp.MapEntityIdentifier.IdentifierString;
                         break;
                     case "backgroundsprite":
                         sp.BackgroundSprite = new Sprite(subElement, lazyLoad: true);
@@ -368,9 +370,9 @@ namespace Barotrauma
 
             if (category.HasFlag(MapEntityCategory.Legacy))
             {
-                if (string.IsNullOrWhiteSpace(sp.identifier))
+                if (string.IsNullOrWhiteSpace(sp.MapEntityIdentifier.IdentifierString))
                 {
-                    sp.identifier = "legacystructure_" + sp.name.ToLowerInvariant().Replace(" ", "");
+                    sp.identifier = new StringIdentifier("legacystructure_" + sp.name.ToLowerInvariant().Replace(" ", ""));
                 }
             }
 
@@ -384,7 +386,7 @@ namespace Barotrauma
             SerializableProperty.DeserializeProperties(sp, element);
             if (sp.Body)
             {
-                sp.Tags.Add("wall");
+                sp.Tags.AddTag("wall");
             }
 
             if (string.IsNullOrEmpty(sp.Description))
@@ -395,7 +397,7 @@ namespace Barotrauma
                 }
                 else  if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    sp.Description = TextManager.Get("EntityDescription." + sp.identifier, returnNull: true) ?? string.Empty;
+                    sp.Description = TextManager.Get("EntityDescription." + sp.MapEntityIdentifier.IdentifierString, returnNull: true) ?? string.Empty;
                 }
                 else
                 {
@@ -419,7 +421,7 @@ namespace Barotrauma
                 }
             }
 
-            if (string.IsNullOrEmpty(sp.identifier))
+            if (string.IsNullOrEmpty(sp.MapEntityIdentifier.IdentifierString))
             {
                 DebugConsole.ThrowError(
                     "Structure prefab \"" + sp.name + "\" has no identifier. All structure prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");

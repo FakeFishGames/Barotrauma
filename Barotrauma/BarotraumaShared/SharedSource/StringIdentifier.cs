@@ -43,6 +43,8 @@ namespace Barotrauma
         public static StringIdentifier Item = new StringIdentifier("item");
         public static StringIdentifier ItemComponent = new StringIdentifier("itemcomponent");
         public static StringIdentifier Character = new StringIdentifier("character");
+        public static StringIdentifier Chair = new StringIdentifier("chair");
+        public static StringIdentifier Inner = new StringIdentifier("inner");
 
         public StringIdentifier(string IdentifierString)
         {

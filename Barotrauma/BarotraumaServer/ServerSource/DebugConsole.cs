@@ -2056,7 +2056,7 @@ namespace Barotrauma
 
             commands.Add(new Command("tags|taglist", "tags: list all the tags used in the game", (string[] args) =>
             {
-                var tagList = MapEntityPrefab.List.SelectMany(p => p.Tags.Select(t => t)).Distinct();
+                var tagList = MapEntityPrefab.List.SelectMany(p => p.Tags.TagIdentifiers.Select(t => t.IdentifierString)).Distinct();
                 foreach (var tag in tagList)
                 {
                     NewMessage(tag, Color.Yellow);

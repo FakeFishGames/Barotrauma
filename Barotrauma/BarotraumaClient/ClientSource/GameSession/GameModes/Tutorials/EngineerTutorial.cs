@@ -100,9 +100,9 @@ namespace Barotrauma.Tutorials
             engineer_reactorIconColor = reactorOrder.Color;
 
             // Other tutorial items
-            tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
-            tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
-            tutorial_submarineSteering = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
+            tutorial_securityFinalDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_securityfinaldoorlight")).GetComponent<LightComponent>();
+            tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
+            tutorial_submarineSteering = Item.ItemList.Find(i => i.ItemTags.HasTag("command")).GetComponent<Steering>();
 
             tutorial_submarineSteering.CanBeSelected = false;
             foreach (ItemComponent ic in tutorial_submarineSteering.Item.Components)
@@ -114,32 +114,32 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(null, tutorial_mechanicFinalDoorLight, false);
 
             // Room 2
-            engineer_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_equipmentobjectivesensor")).GetComponent<MotionSensor>();
-            engineer_equipmentCabinet = Item.ItemList.Find(i => i.HasTag("engineer_equipmentcabinet")).GetComponent<ItemContainer>();
-            engineer_firstDoor = Item.ItemList.Find(i => i.HasTag("engineer_firstdoor")).GetComponent<Door>();
-            engineer_firstDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_firstdoorlight")).GetComponent<LightComponent>();
+            engineer_equipmentObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_equipmentobjectivesensor")).GetComponent<MotionSensor>();
+            engineer_equipmentCabinet = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_equipmentcabinet")).GetComponent<ItemContainer>();
+            engineer_firstDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_firstdoor")).GetComponent<Door>();
+            engineer_firstDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_firstdoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, false);
 
             // Room 3
-            engineer_reactorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_reactorobjectivesensor")).GetComponent<MotionSensor>();
-            tutorial_oxygenGenerator = Item.ItemList.Find(i => i.HasTag("tutorial_oxygengenerator")).GetComponent<Powered>();
-            engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
+            engineer_reactorObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_reactorobjectivesensor")).GetComponent<MotionSensor>();
+            tutorial_oxygenGenerator = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_oxygengenerator")).GetComponent<Powered>();
+            engineer_reactor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_reactor")).GetComponent<Reactor>();
             engineer_reactor.FireDelay = engineer_reactor.MeltdownDelay = float.PositiveInfinity;
             engineer_reactor.FuelConsumptionRate = 0.0f;
             engineer_reactor.PowerOn = true;
             reactorOperatedProperly = false;
 
-            engineer_secondDoor = Item.ItemList.Find(i => i.HasTag("engineer_seconddoor")).GetComponent<Door>(); ;
-            engineer_secondDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_seconddoorlight")).GetComponent<LightComponent>();
+            engineer_secondDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_seconddoor")).GetComponent<Door>(); ;
+            engineer_secondDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_seconddoorlight")).GetComponent<LightComponent>();
 
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, false);
 
             // Room 4
-            engineer_repairJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_repairjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
-            engineer_brokenJunctionBox = Item.ItemList.Find(i => i.HasTag("engineer_brokenjunctionbox"));
-            engineer_thirdDoor = Item.ItemList.Find(i => i.HasTag("engineer_thirddoor")).GetComponent<Door>();
-            engineer_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_thirddoorlight")).GetComponent<LightComponent>();
+            engineer_repairJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_repairjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
+            engineer_brokenJunctionBox = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_brokenjunctionbox"));
+            engineer_thirdDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_thirddoor")).GetComponent<Door>();
+            engineer_thirdDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_thirddoorlight")).GetComponent<LightComponent>();
 
             engineer_brokenJunctionBox.Indestructible = false;
             engineer_brokenJunctionBox.Condition = 0f;
@@ -147,14 +147,14 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, false);
 
             // Room 5
-            engineer_disconnectedJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
+            engineer_disconnectedJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_disconnectedjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
 
             engineer_disconnectedJunctionBoxes = new PowerTransfer[4];
             engineer_disconnectedConnectionPanels = new ConnectionPanel[4];
 
             for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
             {
-                engineer_disconnectedJunctionBoxes[i] = Item.ItemList.Find(item => item.HasTag($"engineer_disconnectedjunctionbox_{i + 1}")).GetComponent<PowerTransfer>();
+                engineer_disconnectedJunctionBoxes[i] = Item.ItemList.Find(item => item.ItemTags.HasTag($"engineer_disconnectedjunctionbox_{i + 1}")).GetComponent<PowerTransfer>();
                 engineer_disconnectedConnectionPanels[i] = engineer_disconnectedJunctionBoxes[i].Item.GetComponent<ConnectionPanel>();
                 engineer_disconnectedConnectionPanels[i].Locked = false;
 
@@ -168,33 +168,33 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            engineer_wire_1 = Item.ItemList.Find(i => i.HasTag("engineer_wire_1"));
+            engineer_wire_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_wire_1"));
             engineer_wire_1.SpriteColor = Color.Transparent;
-            engineer_wire_2 = Item.ItemList.Find(i => i.HasTag("engineer_wire_2"));
+            engineer_wire_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_wire_2"));
             engineer_wire_2.SpriteColor = Color.Transparent;
-            engineer_lamp_1 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_1")).GetComponent<Powered>();
-            engineer_lamp_2 = Item.ItemList.Find(i => i.HasTag("engineer_lamp_2")).GetComponent<Powered>();
-            engineer_fourthDoor = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoor")).GetComponent<Door>();
-            engineer_fourthDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_fourthdoorlight")).GetComponent<LightComponent>();
+            engineer_lamp_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_lamp_1")).GetComponent<Powered>();
+            engineer_lamp_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_lamp_2")).GetComponent<Powered>();
+            engineer_fourthDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_fourthdoor")).GetComponent<Door>();
+            engineer_fourthDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_fourthdoorlight")).GetComponent<LightComponent>();
             SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, false);
 
             // Room 6
-            engineer_workingPump = Item.ItemList.Find(i => i.HasTag("engineer_workingpump")).GetComponent<Pump>();
+            engineer_workingPump = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_workingpump")).GetComponent<Pump>();
             engineer_workingPump.Item.CurrentHull.WaterVolume += engineer_workingPump.Item.CurrentHull.Volume;
             engineer_workingPump.IsActive = true;
-            tutorial_lockedDoor_1 = Item.ItemList.Find(i => i.HasTag("tutorial_lockeddoor_1")).GetComponent<Door>();
+            tutorial_lockedDoor_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_lockeddoor_1")).GetComponent<Door>();
             SetDoorAccess(tutorial_lockedDoor_1, null, true);
 
             // Submarine
-            tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
-            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
+            tutorial_submarineDoor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
+            tutorial_submarineDoorLight = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
 
-            tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
-            engineer_submarineJunctionBox_1 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_1"));
-            engineer_submarineJunctionBox_2 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_2"));
-            engineer_submarineJunctionBox_3 = Item.ItemList.Find(i => i.HasTag("engineer_submarinejunctionbox_3"));
-            engineer_submarineReactor = Item.ItemList.Find(i => i.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
+            tutorial_enteredSubmarineSensor = Item.ItemList.Find(i => i.ItemTags.HasTag("tutorial_enteredsubmarinesensor")).GetComponent<MotionSensor>();
+            engineer_submarineJunctionBox_1 = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_submarinejunctionbox_1"));
+            engineer_submarineJunctionBox_2 = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_submarinejunctionbox_2"));
+            engineer_submarineJunctionBox_3 = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_submarinejunctionbox_3"));
+            engineer_submarineReactor = Item.ItemList.Find(i => i.ItemTags.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
             engineer_submarineReactor.PowerOn = true;
             engineer_submarineReactor.IsActive = engineer_submarineReactor.AutoTemp = false;
 

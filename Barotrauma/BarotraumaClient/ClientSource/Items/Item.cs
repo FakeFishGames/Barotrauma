@@ -777,7 +777,7 @@ namespace Barotrauma
                 OnSelected = (component, userData) =>
                 {
                     string text = userData as string ?? "";
-                    AddTag(text);
+                    ItemTags.AddTag(text);
                     textBox.Text = Tags;
                     msgBox.Close();
                     return true;
@@ -1450,7 +1450,7 @@ namespace Barotrauma
                 wifiComponent.TeamID = (Character.TeamType)teamID;
             }
             if (descriptionChanged) { item.Description = itemDesc; }
-            if (tagsChanged) { item.Tags = tags; }
+            if (tagsChanged) { item.ItemTags.AllTagsString = tags; }
 
             if (sub != null)
             {

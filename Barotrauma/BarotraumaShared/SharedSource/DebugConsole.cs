@@ -165,9 +165,9 @@ namespace Barotrauma
                 {
                     if (string.IsNullOrEmpty(itemPrefab.Name)) continue;
                     string text = $"- {itemPrefab.Name}";
-                    if (itemPrefab.Tags.Any())
+                    if (itemPrefab.Tags.TagIdentifiers.Any())
                     {
-                        text += $" ({string.Join(", ", itemPrefab.Tags)})";
+                        text += $" ({itemPrefab.Tags.AllTagsString})";
                     }
                     if (itemPrefab.AllowedLinks.Any())
                     {
@@ -1042,7 +1042,7 @@ namespace Barotrauma
                     {
                         if (args.Length > 2)
                         {
-                            targetItems.AddRange(Item.ItemList.Where(item => item.Submarine == Submarine.MainSub).Where(item => item.HasTag(args[2])).Cast<MapEntity>());
+                            targetItems.AddRange(Item.ItemList.Where(item => item.Submarine == Submarine.MainSub).Where(item => item.ItemTags.HasTag(args[2])).Cast<MapEntity>());
                         }
                         else
                         {

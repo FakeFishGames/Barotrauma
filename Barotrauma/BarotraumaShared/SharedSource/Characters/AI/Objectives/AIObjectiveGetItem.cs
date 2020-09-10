@@ -283,7 +283,7 @@ namespace Barotrauma
                 {
                     if (spawnItemIfNotFound)
                     {
-                        if (!(MapEntityPrefab.List.FirstOrDefault(me => me is ItemPrefab ip && itemIdentifiers.Any(id => id == ip.Identifier || ip.Tags.Contains(id))) is ItemPrefab prefab))
+                        if (!(MapEntityPrefab.List.FirstOrDefault(me => me is ItemPrefab ip && itemIdentifiers.Any(id => id == ip.Identifier || ip.Tags.HasTag(id))) is ItemPrefab prefab))
                         {
 #if DEBUG
                             DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", itemIdentifiers)}, tried to spawn the item but no matching item prefabs were found.", Color.Yellow);
@@ -338,7 +338,7 @@ namespace Barotrauma
             if (ignoredItems.Contains(item)) { return false; };
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
-            return itemIdentifiers.Any(id => id == item.Prefab.Identifier || item.HasTag(id));
+            return itemIdentifiers.Any(id => id == item.Prefab.Identifier || item.ItemTags.HasTag(id));
         }
 
         public override void Reset()

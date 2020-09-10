@@ -70,7 +70,7 @@ namespace Barotrauma
             //try to find an artifact holder and place the artifact inside it
             foreach (Item it in Item.ItemList)
             {
-                if (it.Submarine != null || !it.HasTag("artifactholder")) continue;
+                if (it.Submarine != null || !it.ItemTags.HasTag("artifactholder")) continue;
 
                 var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
                 if (itemContainer == null) continue;
