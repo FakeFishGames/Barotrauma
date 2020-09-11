@@ -89,35 +89,36 @@ namespace Barotrauma
             }
 
             List<T> list = null;
-            List<T> newList = null;
-            if (!prefabs.TryGetValue(prefab.Identifier, out list))
+
+            bool BasePrefabExists = prefabs.TryGetValue(prefab.Identifier, out list);
+
+            //Handle bad overrides and duplicates
+            if (BasePrefabExists && !isOverride)
             {
-                newList = new List<T>(); newList.Add(null);
-                list = newList;
+                DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): base already exists; try overriding");
+                return;
             }
 
-            if (isOverride)
+            /*if (!BasePrefabExists && isOverride)
             {
-                /*if (list[0] == null)
-                {
-                    DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): overriding when base doesn't exist");
-                    return;
-                }*/
-                list.Add(prefab);
-            }
-            else
+                DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): overriding when base doesn't exist");
+                return;
+            }*/
+
+            //Add to list
+            if (!BasePrefabExists)
             {
-                if (list[0] != null)
-                {
-                    DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): base already exists; try overriding");
-                    return;
-                }
-                list[0] = prefab;
+                list = new List<T>();
             }
+
+            list.Add(prefab);
 
             Sort(list);
 
-            if (newList != null) { prefabs.Add(prefab.Identifier, newList); }
+            if (!BasePrefabExists)
+            {
+                prefabs.Add(prefab.Identifier, list);
+            }
         }
 
         /// <summary>
