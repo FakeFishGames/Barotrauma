@@ -444,6 +444,11 @@ namespace Barotrauma
             }
         }
 
+        public bool IsCurrentlyRagdolled
+        {
+            get; private set;
+        }
+
         private float ragdollingLockTimer;
         public bool IsRagdolled;
         public bool IsForceRagdolled;
@@ -2227,6 +2232,8 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, Camera cam)
         {
+            IsCurrentlyRagdolled = false;
+
             UpdateProjSpecific(deltaTime, cam);
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) { return; }
@@ -2342,6 +2349,9 @@ namespace Barotrauma
             {
                 UpdateOxygen(deltaTime);
             }
+
+            IsCurrentlyRagdolled = IsDead || IsIncapacitated || Stun > 0.0f;
+
             CharacterHealth.Update(deltaTime);
 
             if (IsIncapacitated)
