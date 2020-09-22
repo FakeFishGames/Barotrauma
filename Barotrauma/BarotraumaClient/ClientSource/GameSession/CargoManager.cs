@@ -10,8 +10,17 @@ namespace Barotrauma
         {
             public enum SellStatus
             {
+                /// <summary>
+                /// Entity sold in SP. Or, entity sold by client and confirmed by server in MP.
+                /// </summary>
                 Confirmed,
+                /// <summary>
+                /// Entity sold by client in MP. Client has received at least one update from server after selling, but this entity wasn't yet confirmed.
+                /// </summary>
                 Unconfirmed,
+                /// <summary>
+                /// Entity sold by client in MP. Client hasn't yet received an update from server after selling.
+                /// </summary>
                 Local
             }
 
@@ -36,28 +45,41 @@ namespace Barotrauma
 
             // Only consider items which have been:
             // a) sold in singleplayer or confirmed by server (SellStatus.Confirmed); or
-            // b) sold locally in multiplier (SellStatus.Local), but the client has not received a campaing state update yet after selling them
+            // b) sold locally in multiplayer (SellStatus.Local), but the client has not received a campaing state update yet after selling them
             var soldEntities = SoldEntities.Where(se => se.Status != SoldEntity.SellStatus.Unconfirmed);
 
             var sellables = Item.ItemList.FindAll(i => i?.Prefab != null && !i.Removed &&
                 i.GetRootInventoryOwner() == character &&
                 !i.SpawnedInOutpost &&
                 (i.ContainedItems == null || i.ContainedItems.None() || i.ContainedItems.All(ci => soldEntities.Any(se => se.Item == ci))) &&
-                i.IsFullCondition && soldEntities.None(se => se.Item == i));
+                i.Condition >= 0.9f * i.MaxCondition && soldEntities.None(se => se.Item == i));
 
-            // Prevent selling things like battery cells from headsets and oxygen tanks from diving masks
-            var slots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.OuterClothes, InvSlotType.Headset };
+            // Prevent selling items in equipment slots
+            var slots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
             foreach (InvSlotType slot in slots)
             {
                 var index = character.Inventory.FindLimbSlot(slot);
-                if (character.Inventory.Items[index] is Item item && item.ContainedItems != null)
+                if (character.Inventory.Items[index] is Item item)
+                {
+                    // Don't prevent selling of items which can only be put in equipment slots (like diving suits)
+                    if (item.AllowedSlots.Contains(InvSlotType.Any))
+                    {
+                        sellables.Remove(item);
+                    }
+                }
+            }
+
+            // Prevent selling items contained in certain equipped items (like battery cell in equipped headset or oxygen tank in equipped diving mask)
+            slots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.OuterClothes, InvSlotType.Headset };
+            foreach (InvSlotType slot in slots)
+            {
+                var index = character.Inventory.FindLimbSlot(slot);
+                if (character.Inventory.Items[index] is Item item &&
+                    item.ContainedItems != null && item.AllowedSlots.Contains(InvSlotType.Any))
                 {
                     foreach (Item containedItem in item.ContainedItems)
                     {
-                        if (containedItem != null)
-                        {
-                            sellables.Remove(containedItem);
-                        }
+                        sellables.Remove(containedItem);
                     }
                 }
             }
@@ -123,7 +145,7 @@ namespace Barotrauma
                 var itemValue = GetSellValueAtCurrentLocation(item.ItemPrefab, quantity: item.Quantity);
 
                 // check if the store can afford the item
-                if (location.StoreCurrentBalance < itemValue) { continue; }
+                if (Location.StoreCurrentBalance < itemValue) { continue; }
 
                 var matchingItems = itemsInInventory.FindAll(i => i.Prefab == item.ItemPrefab);
                 if (matchingItems.Count <= item.Quantity)
@@ -147,7 +169,7 @@ namespace Barotrauma
                 }
 
                 // Exchange money
-                campaign.Map.CurrentLocation.StoreCurrentBalance -= itemValue;
+                Location.StoreCurrentBalance -= itemValue;
                 campaign.Money += itemValue;
 
                 // Remove from the sell crate

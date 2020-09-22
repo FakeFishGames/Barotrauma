@@ -23,7 +23,7 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null)
         {
             emitTimer += deltaTime * amountMultiplier;
             burstEmitTimer -= deltaTime;
@@ -33,7 +33,7 @@ namespace Barotrauma.Particles
                 float emitInterval = 1.0f / Prefab.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
-                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier);
+                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier);
                     emitTimer -= emitInterval;
                 }
             }
@@ -43,11 +43,11 @@ namespace Barotrauma.Particles
             burstEmitTimer = Prefab.EmitInterval;
             for (int i = 0; i < Prefab.ParticleAmount * amountMultiplier; i++)
             {
-                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier);
+                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier);
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier)
+        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null)
         {
             angle += Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
 
@@ -61,6 +61,7 @@ namespace Barotrauma.Particles
             {
                 particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax) * sizeMultiplier;
                 particle.HighQualityCollisionDetection = Prefab.HighQualityCollisionDetection;
+                if (colorMultiplier.HasValue) { particle.ColorMultiplier = colorMultiplier.Value.ToVector4(); }
             }
         }
 

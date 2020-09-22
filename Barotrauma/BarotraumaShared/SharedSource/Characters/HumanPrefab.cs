@@ -154,7 +154,10 @@ namespace Barotrauma
             if (item.Prefab.Identifier == "idcard" || item.Prefab.Identifier == "idcardwreck")
             {
                 item.AddTag("name:" + character.Name);
-                item.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
+                if (Level.Loaded != null)
+                {
+                    item.ReplaceTag("wreck_id", Level.Loaded.GetWreckIDTag("wreck_id", submarine));
+                }
                 var job = character.Info?.Job;
                 if (job != null)
                 {

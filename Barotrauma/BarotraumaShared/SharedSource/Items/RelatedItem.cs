@@ -134,7 +134,7 @@ namespace Barotrauma
 
         private bool CheckContained(Item parentItem)
         {
-            var containedItems = parentItem.ContainedItems;
+            var containedItems = parentItem.OwnInventory?.Items;
             if (containedItems == null) { return false; }
 
             if (MatchOnEmpty && !containedItems.Any(ci => ci != null))
@@ -221,9 +221,15 @@ namespace Barotrauma
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
             {
-                if (element.Name.ToString().Equals("containable", StringComparison.OrdinalIgnoreCase))
+                switch (element.Name.ToString().ToLowerInvariant())
                 {
-                    typeStr = "Contained";
+                    case "containable":
+                        typeStr = "Contained";
+                        break;
+                    case "suitablefertilizer":
+                    case "suitableseed":
+                        typeStr = "None";
+                        break;
                 }
             }
             if (!Enum.TryParse(typeStr, true, out ri.type))

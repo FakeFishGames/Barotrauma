@@ -56,8 +56,10 @@ namespace Barotrauma.Items.Components
                     item.SendSignal(0, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     break;
                 case FunctionType.SquareRoot:
-                    double square = value > 0 ? Math.Sqrt(value) : 0;
-                    item.SendSignal(0, square.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    if (value > 0)
+                    {
+                        item.SendSignal(0, Math.Sqrt(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    }
                     break;
                 default:
                     throw new NotImplementedException($"Function {Function} has not been implemented.");

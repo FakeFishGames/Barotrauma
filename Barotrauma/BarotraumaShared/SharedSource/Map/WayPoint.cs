@@ -707,7 +707,7 @@ namespace Barotrauma
                 int i = 0;
                 foreach (MapEntity e in linkedTo)
                 {
-                    if (!e.ShouldBeSaved || e.Removed) { continue; }
+                    if (!e.ShouldBeSaved || (e.Removed != Removed)) { continue; }
                     if (e.Submarine?.Info.Type != Submarine?.Info.Type) { continue; }
                     element.Add(new XAttribute("linkedto" + i, e.ID));
                     i += 1;

@@ -325,7 +325,7 @@ namespace Barotrauma
         {
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
-            var contentPackages = GameMain.Config.SelectedContentPackages.ToList();
+            var contentPackages = GameMain.Config.AllEnabledPackages.ToList();
 
 #if !DEBUG
             var vanilla = GameMain.VanillaContent;

@@ -109,7 +109,7 @@ namespace Barotrauma
             this.submarine = sub;
 
             Body farseerBody = null;
-            if (!Hull.hullList.Any())
+            if (!Hull.hullList.Any(h => h.Submarine == sub))
             {
                 farseerBody = GameMain.World.CreateRectangle(1.0f, 1.0f, 1.0f);
                 if (showWarningMessages)

@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +29,7 @@ namespace Barotrauma
         private readonly HashSet<Item> containedItems = new HashSet<Item>();
 
         public bool AllowToFindDivingGear { get; set; } = true;
+        public bool AllowDangerousPressure { get; set; }
         public float ConditionLevel { get; set; }
         public bool Equip { get; set; }
         public bool RemoveEmpty { get; set; } = true;
@@ -53,13 +53,17 @@ namespace Barotrauma
             {
                 itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
             }
-
             this.container = container;
         }
 
         protected override bool Check()
         {
             if (IsCompleted) { return true; }
+            if (container == null)
+            {
+                Abandon = true;
+                return false;
+            }
             if (item != null)
             {
                 return container.Inventory.Items.Contains(item);
@@ -143,8 +147,8 @@ namespace Barotrauma
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name
                     },
-                        onAbandon: () => Abandon = true,
-                        onCompleted: () => RemoveSubObjective(ref goToObjective));
+                    onAbandon: () => Abandon = true,
+                    onCompleted: () => RemoveSubObjective(ref goToObjective));
                 }
             }
             else
@@ -156,7 +160,9 @@ namespace Barotrauma
                         GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = ignoredContainerIdentifiers,
                         ignoredItems = containedItems,
-                        AllowToFindDivingGear = this.AllowToFindDivingGear
+                        AllowToFindDivingGear = AllowToFindDivingGear,
+                        AllowDangerousPressure = AllowDangerousPressure,
+                        TargetCondition = ConditionLevel
                     }, onAbandon: () =>
                     {
                         Abandon = true;
@@ -166,20 +172,17 @@ namespace Barotrauma
                         {
                             containedItems.Add(getItemObjective.TargetItem);
                         }
-                        else
-                        {
-                            if (container.Inventory.FindItem(i => CheckItem(i), recursive: false) != null)
-                            {
-                                IsCompleted = true;
-                            }
-                            else
-                            {
-                                Abandon = true;
-                            }
-                        }
                         RemoveSubObjective(ref getItemObjective);
                     });
             }
-        }  
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            getItemObjective = null;
+            goToObjective = null;
+            containedItems.Clear();
+        }
     }
 }

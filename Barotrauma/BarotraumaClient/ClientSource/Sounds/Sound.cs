@@ -114,12 +114,17 @@ namespace Barotrauma.Sounds
 
         public virtual SoundChannel Play(float gain, float range, Vector2 position, bool muffle = false)
         {
-            return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), range * 0.4f, range, "default", muffle);
+            return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), 1.0f, range * 0.4f, range, "default", muffle);
         }
 
-        public virtual SoundChannel Play(Vector3? position, float gain, bool muffle = false)
+        public virtual SoundChannel Play(float gain, float range, float freqMult, Vector2 position, bool muffle = false)
         {
-            return new SoundChannel(this, gain, position, BaseNear, BaseFar, "default", muffle);
+            return new SoundChannel(this, gain, new Vector3(position.X, position.Y, 0.0f), freqMult, range * 0.4f, range, "default", muffle);
+        }
+
+        public virtual SoundChannel Play(Vector3? position, float gain, float freqMult = 1.0f, bool muffle = false)
+        {
+            return new SoundChannel(this, gain, position, freqMult, BaseNear, BaseFar, "default", muffle);
         }
 
         public virtual SoundChannel Play(float gain)
@@ -135,7 +140,7 @@ namespace Barotrauma.Sounds
         public virtual SoundChannel Play(float? gain, string category)
         {
             if (Owner.CountPlayingInstances(this) >= MaxSimultaneousInstances) { return null; }
-            return new SoundChannel(this, gain ?? BaseGain, null, BaseNear, BaseFar, category);
+            return new SoundChannel(this, gain ?? BaseGain, null, 1.0f, BaseNear, BaseFar, category);
         }
 
         static protected void CastBuffer(float[] inBuffer, short[] outBuffer, int length)

@@ -13,12 +13,6 @@ namespace Barotrauma
 
         private AIState state;
 
-        protected void ResetAITarget()
-        {
-            _lastAiTarget = null;
-            _selectedAiTarget = null;
-        }
-
         // Update only when the value changes, not when it keeps the same.
         protected AITarget _lastAiTarget;
         // Updated each time the value is updated (also when the value is the same).
@@ -140,6 +134,17 @@ namespace Barotrauma
                 hullVisibilityTimer = hullVisibilityInterval;
                 VisibleHulls = Character.GetVisibleHulls();
             }
+        }
+
+        public virtual void Reset()
+        {
+            ResetAITarget();
+        }
+
+        protected void ResetAITarget()
+        {
+            _lastAiTarget = null;
+            _selectedAiTarget = null;
         }
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }

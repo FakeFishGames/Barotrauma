@@ -67,6 +67,11 @@ namespace Barotrauma
             return false;
         }
 
+        protected bool HasBeenDetermined()
+        {
+            return succeeded.HasValue;
+        }
+
         public override bool SetGoToTarget(string goTo)
         {
             if (Success != null && Success.SetGoToTarget(goTo))

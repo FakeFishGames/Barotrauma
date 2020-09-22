@@ -36,7 +36,7 @@ namespace Barotrauma
             }
         }
 
-        private GUIButton suicideButton;
+        public GUIButton SuicideButton { get; private set; }
 
         // healthbars
         private GUIProgressBar healthBar;
@@ -247,22 +247,6 @@ namespace Barotrauma
 
         private GUIFrame healthBarHolder;
 
-        private Point healthBarOffset
-        {
-            get
-            {
-                return new Point(Math.Max(2, GUI.IntScaleCeiling(1.5f)), Math.Min(GUI.IntScaleFloor(18f), 19));
-            }
-        }
-
-        private Point healthBarSize
-        {
-            get
-            {
-                return new Point(healthBarHolder.Rect.Width - Math.Min(GUI.IntScale(45f), 47), GUI.IntScale(15f));
-            }
-        }
-
         partial void InitProjSpecific(XElement element, Character character)
         {
             DisplayedVitality = MaxVitality;
@@ -290,28 +274,21 @@ namespace Barotrauma
             healthBarHolder.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarArea.Size;
             healthBarHolder.RectTransform.RelativeOffset = Vector2.Zero;
 
-            GUIFrame healthBarBG = new GUIFrame(new RectTransform(Vector2.One, healthBarHolder.RectTransform), style: "CharacterHealthBarBG")
-            {
-                CanBeFocused = false
-            };
-
-            healthBarShadow = new GUIProgressBar(new RectTransform(healthBarSize, healthBarHolder.RectTransform, Anchor.BottomRight),
-            barSize: 1.0f, color: Color.Green, style: horizontal ? "CharacterHealthBarSlider" : "GUIProgressBarVertical", showFrame: false)
+            healthBarShadow = new GUIProgressBar(new RectTransform(Vector2.One, healthBarHolder.RectTransform, Anchor.BottomRight),
+                barSize: 1.0f, color: Color.Green, style: horizontal ? "CharacterHealthBar" : "GUIProgressBarVertical", showFrame: false)
             {
                 IsHorizontal = horizontal
             };
             healthBarShadow.Visible = false;
             healthShadowSize = 1.0f;
 
-            healthBar = new GUIProgressBar(new RectTransform(healthBarSize, healthBarHolder.RectTransform, Anchor.BottomRight),
-                barSize: 1.0f, color: GUI.Style.HealthBarColorHigh, style: horizontal ? "CharacterHealthBarSlider" : "GUIProgressBarVertical", showFrame: false)
+            healthBar = new GUIProgressBar(new RectTransform(Vector2.One, healthBarHolder.RectTransform, Anchor.BottomRight),
+                barSize: 1.0f, color: GUI.Style.HealthBarColorHigh, style: horizontal ? "CharacterHealthBar" : "GUIProgressBarVertical")
             {
                 HoverCursor = CursorState.Hand,
                 Enabled = true,
                 IsHorizontal = horizontal
             };
-
-            healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = healthBarOffset;
 
             healthInterfaceFrame = new GUIFrame(new RectTransform(new Vector2(0.7f, 0.55f), GUI.Canvas, anchor: Anchor.Center, scaleBasis: ScaleBasis.Smallest), style: "ItemUI");
 
@@ -519,7 +496,7 @@ namespace Barotrauma
 
             UpdateAlignment();
 
-            suicideButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.02f), GUI.Canvas, Anchor.TopCenter)
+            SuicideButton = new GUIButton(new RectTransform(new Vector2(0.1f, 0.02f), GUI.Canvas, Anchor.TopCenter)
             {
                 MinSize = new Point(150, 20), RelativeOffset = new Vector2(0.0f, 0.01f)
             },
@@ -546,7 +523,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            suicideButton.TextBlock.AutoScaleHorizontal = true;
+            SuicideButton.TextBlock.AutoScaleHorizontal = true;
 
             if (element != null)
             {
@@ -590,9 +567,6 @@ namespace Barotrauma
             healthBarHolder.RectTransform.AbsoluteOffset = HUDLayoutSettings.HealthBarArea.Location;
             healthBarHolder.RectTransform.NonScaledSize = HUDLayoutSettings.HealthBarArea.Size;
             healthBarHolder.RectTransform.RelativeOffset = Vector2.Zero;
-
-            healthBar.RectTransform.NonScaledSize = healthBarShadow.RectTransform.NonScaledSize = healthBarSize;
-            healthBar.RectTransform.AbsoluteOffset = healthBarShadow.RectTransform.AbsoluteOffset = healthBarOffset;
 
             switch (alignment)
             {
@@ -943,23 +917,7 @@ namespace Barotrauma
                 healthBar.State = GUIComponent.ComponentState.None;
             }
 
-            suicideButton.Visible = Character == Character.Controlled && !Character.IsDead && Character.IsIncapacitated;
-
-            if (GameMain.GameSession?.Campaign is { } campaign)
-            {
-                RectTransform endRoundButton = campaign?.EndRoundButton.RectTransform;
-                if (endRoundButton != null)
-                {
-                    if (suicideButton.Visible)
-                    {
-                        endRoundButton.ScreenSpaceOffset = new Point(0, suicideButton.Rect.Height);
-                    } 
-                    else if (endRoundButton.ScreenSpaceOffset != Point.Zero)
-                    {
-                        endRoundButton.ScreenSpaceOffset = Point.Zero;
-                    }
-                }
-            }
+            SuicideButton.Visible = Character == Character.Controlled && !Character.IsDead && Character.IsIncapacitated;
 
             cprButton.Visible =
                 Character == Character.Controlled?.SelectedCharacter
@@ -992,9 +950,9 @@ namespace Barotrauma
             {
                 healthBarHolder.AddToGUIUpdateList();          
             }
-            if (suicideButton.Visible && Character == Character.Controlled)
+            if (SuicideButton.Visible && Character == Character.Controlled)
             {
-                suicideButton.AddToGUIUpdateList();
+                SuicideButton.AddToGUIUpdateList();
             }
             if (cprButton != null && cprButton.Visible)
             {
@@ -1907,6 +1865,8 @@ namespace Barotrauma
 
         private readonly List<Pair<AfflictionPrefab, float>> newAfflictions = new List<Pair<AfflictionPrefab, float>>();
         private readonly List<Triplet<LimbHealth, AfflictionPrefab, float>> newLimbAfflictions = new List<Triplet<LimbHealth, AfflictionPrefab, float>>();
+        private readonly List<Pair<AfflictionPrefab.PeriodicEffect, float>> newPeriodicEffects = new List<Pair<AfflictionPrefab.PeriodicEffect, float>>();
+
         public void ClientRead(IReadMessage inc)
         {
             newAfflictions.Clear();
@@ -1920,9 +1880,20 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error while reading character health data: affliction with the uint ID " + afflictionID + " not found.");
                     //read the 8 bytes for affliction strength anyway to prevent messing up reading rest of the message
                     _ = inc.ReadRangedSingle(0.0f, 100.0f, 8);
+                    int _periodicAfflictionCount = inc.ReadByte();
+                    for (int j = 0; j < _periodicAfflictionCount; j++)
+                    {
+                        _ = inc.ReadByte();
+                    }
                     continue;
                 }
                 float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
+                int periodicAfflictionCount = inc.ReadByte();
+                for (int j = 0; j < periodicAfflictionCount; j++)
+                {
+                    float periodicAfflictionTimer = inc.ReadRangedSingle(afflictionPrefab.PeriodicEffects[j].MinInterval, afflictionPrefab.PeriodicEffects[j].MaxInterval, 8);
+                    newPeriodicEffects.Add(new Pair<AfflictionPrefab.PeriodicEffect, float>(afflictionPrefab.PeriodicEffects[j], periodicAfflictionTimer));
+                }
                 newAfflictions.Add(new Pair<AfflictionPrefab, float>(afflictionPrefab, afflictionStrength));
             }
 
@@ -1940,12 +1911,26 @@ namespace Barotrauma
                 Affliction existingAffliction = afflictions.Find(a => a.Prefab == newAffliction.First);
                 if (existingAffliction == null)
                 {
-                    afflictions.Add(newAffliction.First.Instantiate(newAffliction.Second));
+                    existingAffliction = newAffliction.First.Instantiate(newAffliction.Second);
+                    afflictions.Add(existingAffliction);
                 }
-                else
+                existingAffliction.SetStrength(newAffliction.Second);
+                if (existingAffliction == stunAffliction)
                 {
-                    existingAffliction.Strength = newAffliction.Second;
-                    if (existingAffliction == stunAffliction) Character.SetStun(existingAffliction.Strength, true, true);
+                    Character.SetStun(existingAffliction.Strength, true, true);
+                }
+                foreach (var periodicEffect in newPeriodicEffects)
+                {
+                    if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.First)) { continue; }
+                    //timer has wrapped around, apply the effect
+                    if (periodicEffect.Second - existingAffliction.PeriodicEffectTimers[periodicEffect.First] > periodicEffect.First.MinInterval / 2)
+                    {
+                        existingAffliction.PeriodicEffectTimers[periodicEffect.First] = periodicEffect.Second;
+                        foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
+                        {
+                            existingAffliction.ApplyStatusEffect(effect, deltaTime: 1.0f, this, targetLimb: null);
+                        }
+                    }
                 }
             }
 
@@ -1961,9 +1946,20 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error while reading character health data: affliction with the uint ID " + afflictionID + " not found.");
                     //read the 8 bytes for affliction strength anyway to prevent messing up reading rest of the message
                     _ = inc.ReadRangedSingle(0.0f, 100.0f, 8);
+                    int _periodicAfflictionCount = inc.ReadByte();
+                    for (int j = 0; j < _periodicAfflictionCount; j++)
+                    {
+                        _ = inc.ReadByte();
+                    }
                     continue;
                 }
                 float afflictionStrength = inc.ReadRangedSingle(0.0f, afflictionPrefab.MaxStrength, 8);
+                int periodicAfflictionCount = inc.ReadByte();
+                for (int j = 0; j < periodicAfflictionCount; j++)
+                {
+                    float periodicAfflictionTimer = inc.ReadRangedSingle(afflictionPrefab.PeriodicEffects[j].MinInterval, afflictionPrefab.PeriodicEffects[j].MaxInterval, 8);
+                    newPeriodicEffects.Add(new Pair<AfflictionPrefab.PeriodicEffect, float>(afflictionPrefab.PeriodicEffects[j], periodicAfflictionTimer));
+                }
                 newLimbAfflictions.Add(new Triplet<LimbHealth, AfflictionPrefab, float>(limbHealths[limbIndex], afflictionPrefab, afflictionStrength));
             }
 
@@ -1980,15 +1976,28 @@ namespace Barotrauma
 
                 foreach (Triplet<LimbHealth, AfflictionPrefab, float> newAffliction in newLimbAfflictions)
                 {
-                    if (newAffliction.First != limbHealth) continue;
+                    if (newAffliction.First != limbHealth) { continue; }
                     Affliction existingAffliction = limbHealth.Afflictions.Find(a => a.Prefab == newAffliction.Second);
                     if (existingAffliction == null)
                     {
-                        limbHealth.Afflictions.Add(newAffliction.Second.Instantiate(newAffliction.Third));
+                        existingAffliction = newAffliction.Second.Instantiate(newAffliction.Third);
+                        limbHealth.Afflictions.Add(existingAffliction);
                     }
-                    else
+                    existingAffliction.SetStrength(newAffliction.Third);
+
+                    foreach (var periodicEffect in newPeriodicEffects)
                     {
-                        existingAffliction.Strength = newAffliction.Third;
+                        if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.First)) { continue; }
+                        //timer has wrapped around, apply the effect
+                        if (periodicEffect.Second - existingAffliction.PeriodicEffectTimers[periodicEffect.First] > periodicEffect.First.MinInterval / 2)
+                        {
+                            existingAffliction.PeriodicEffectTimers[periodicEffect.First] = periodicEffect.Second;
+                            foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
+                            {
+                                Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == limbHealths.IndexOf(newAffliction.First));
+                                existingAffliction.ApplyStatusEffect(effect, deltaTime: 1.0f, this, targetLimb: targetLimb);
+                            }
+                        }
                     }
                 }
             }

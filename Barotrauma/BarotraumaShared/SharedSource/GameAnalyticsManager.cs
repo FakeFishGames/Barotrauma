@@ -63,16 +63,17 @@ namespace Barotrauma
                 GameSettings.SendUserStatistics = false;
                 return;
             }
-            
-            if (GameMain.Config?.SelectedContentPackages.Count > 0)
+
+            var allPackages = GameMain.Config?.AllEnabledPackages.ToList();
+            if (allPackages?.Count > 0)
             {
                 StringBuilder sb = new StringBuilder("ContentPackage: ");
                 int i = 0;
-                foreach (ContentPackage cp in GameMain.Config.SelectedContentPackages)
+                foreach (ContentPackage cp in allPackages)
                 {
                     string trimmedName = cp.Name.Replace(":", "").Replace(" ", "");
                     sb.Append(trimmedName.Substring(0, Math.Min(32, trimmedName.Length)));
-                    if (i < GameMain.Config.SelectedContentPackages.Count - 1) { sb.Append(" "); }
+                    if (i < allPackages.Count - 1) { sb.Append(" "); }
                 }
                 GameAnalytics.AddDesignEvent(sb.ToString());
             }
@@ -86,9 +87,9 @@ namespace Barotrauma
             if (!GameSettings.SendUserStatistics) { return; }
             if (sentEventIdentifiers.Contains(identifier)) { return; }
 
-            if (GameMain.SelectedPackages != null)
+            if (GameMain.Config.AllEnabledPackages != null)
             {
-                if (GameMain.VanillaContent == null || GameMain.SelectedPackages.Any(p => p.HasMultiplayerIncompatibleContent && p != GameMain.VanillaContent))
+                if (GameMain.VanillaContent == null || GameMain.Config.AllEnabledPackages.Any(p => p.HasMultiplayerIncompatibleContent && p != GameMain.VanillaContent))
                 {
                     message = "[MODDED] " + message;
                 }

@@ -42,7 +42,7 @@ namespace Barotrauma
             var targets = ParentEvent.GetTargets(TargetTag).Where(e => e is Character).Select(e => e as Character);
             foreach (var target in targets)
             {
-                target.Info?.IncreaseSkillLevel(Skill, Amount, target.WorldPosition + Vector2.UnitY * 150.0f);
+                target.Info?.IncreaseSkillLevel(Skill?.ToLowerInvariant(), Amount, target.WorldPosition + Vector2.UnitY * 150.0f);
             }
             isFinished = true;
         }

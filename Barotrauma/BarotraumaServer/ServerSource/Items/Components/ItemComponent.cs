@@ -17,6 +17,8 @@ namespace Barotrauma.Items.Components
             }
             return true; //element processed
         }
+
+        public virtual void ServerAppendExtraData(ref object[] extraData) { }
     }
 
 }

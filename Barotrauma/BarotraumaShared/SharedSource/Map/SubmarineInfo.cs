@@ -2,7 +2,11 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+#if DEBUG
+using System.IO;
+#else
 using Barotrauma.IO;
+#endif
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -149,7 +153,7 @@ namespace Barotrauma
             get
             {
                 if (requiredContentPackagesInstalled.HasValue) { return requiredContentPackagesInstalled.Value; }
-                return RequiredContentPackages.All(cp => GameMain.SelectedPackages.Any(cp2 => cp2.Name == cp));
+                return RequiredContentPackages.All(cp => GameMain.Config.AllEnabledPackages.Any(cp2 => cp2.Name == cp));
             }
             set
             {
@@ -512,7 +516,7 @@ namespace Barotrauma
         public static void RefreshSavedSubs()
         {
             var contentPackageSubs = ContentPackage.GetFilesOfType(
-                GameMain.Config.SelectedContentPackages, 
+                GameMain.Config.AllEnabledPackages, 
                 ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule, ContentType.Wreck);
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)

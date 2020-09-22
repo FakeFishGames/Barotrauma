@@ -90,18 +90,23 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            if (character.SelectedConstruction != null && Targets.Any(t => character.SelectedConstruction == t && t.ConditionPercentage < 100))
+            var selectedItem = character.SelectedConstruction;
+            if (selectedItem != null && AIObjectiveRepairItem.IsRepairing(character, selectedItem) && selectedItem.ConditionPercentage < 100)
             {
-                // Don't stop fixing until done
+                // Don't stop fixing until completely done
                 return 100;
             }
             int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveRepairItems>() && !c.Character.IsIncapacitated, onlyBots: true);
             int items = Targets.Count;
+            if (items == 0)
+            {
+                return 0;
+            }
             bool anyFixers = otherFixers > 0;
             float ratio = anyFixers ? items / (float)otherFixers : 1;
             if (objectiveManager.CurrentOrder == this)
             {
-                return Targets.Sum(t => 100 - t.ConditionPercentage) * ratio;
+                return Targets.Sum(t => 100 - t.ConditionPercentage);
             }
             else
             {
@@ -151,8 +156,7 @@ namespace Barotrauma
             if (item.Repairables.None()) { return false; }
             if (character.Submarine != null)
             {
-                if (item.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
-                if (!character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+                if (!character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
             }
             return true;
         }

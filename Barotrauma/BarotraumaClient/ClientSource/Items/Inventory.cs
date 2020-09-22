@@ -715,13 +715,20 @@ namespace Barotrauma
         /// <returns></returns>
         public static bool IsMouseOnInventory(bool ignoreDraggedItem = false)
         {
-            var isSubEditor = Screen.Selected is SubEditorScreen editor && !editor.WiringMode;
+            if (GameMain.GameSession?.Campaign != null &&
+                (GameMain.GameSession.Campaign.ShowCampaignUI || GameMain.GameSession.Campaign.ForceMapUI))
+            {
+                return false;
+            }
+
             if (Character.Controlled == null) { return false; }
 
             if (!ignoreDraggedItem)
             {
                 if (draggingItem != null || DraggingInventory != null) { return true; }
             }
+
+            var isSubEditor = Screen.Selected is SubEditorScreen editor && !editor.WiringMode;
 
             if (Character.Controlled.Inventory != null && !isSubEditor)
             {
@@ -840,7 +847,8 @@ namespace Barotrauma
                 foreach (var ic in character.SelectedConstruction.ActiveHUDs)
                 {
                     var itemContainer = ic as ItemContainer;
-                    if (itemContainer?.Inventory?.slots == null) continue;
+                    if (itemContainer?.Inventory?.slots == null) { continue; }
+                    if (ic.Item.NonInteractable) { continue; }
 
                     foreach (var slot in itemContainer.Inventory.slots)
                     {
@@ -1127,7 +1135,6 @@ namespace Barotrauma
             return hoverArea;
         }
 
-
         public static void DrawFront(SpriteBatch spriteBatch)
         {
             if (GUI.PauseMenuOpen || GUI.SettingsMenuOpen) { return; }
@@ -1202,6 +1209,7 @@ namespace Barotrauma
             }
 
             Color slotColor = Color.White;
+            if ((inventory?.Owner as Item)?.NonInteractable ?? false) { slotColor = Color.Gray; }
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -1470,18 +1478,19 @@ namespace Barotrauma
             {
                 if (receivedItemIDs[i] == 0 || (Entity.FindEntityByID(receivedItemIDs[i]) as Item != Items[i]))
                 {
-                    if (Items[i] != null) Items[i].Drop(null);
+                    Items[i]?.Drop(null);
                     System.Diagnostics.Debug.Assert(Items[i] == null);
                 }
             }
 
-            for (int i = 0; i < capacity; i++)
+            //iterate backwards to get the item to the Any slots first
+            for (int i = capacity - 1; i >= 0; i--)
             {
                 if (receivedItemIDs[i] > 0)
                 {
                     if (!(Entity.FindEntityByID(receivedItemIDs[i]) is Item item) || Items[i] == item) { continue; }
 
-                    TryPutItem(item, i, true, true, null, false);
+                    TryPutItem(item, i, false, false, null, false);
                     for (int j = 0; j < capacity; j++)
                     {
                         if (Items[j] == item && receivedItemIDs[j] != item.ID)

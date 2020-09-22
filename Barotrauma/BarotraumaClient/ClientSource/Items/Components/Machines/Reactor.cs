@@ -131,17 +131,23 @@ namespace Barotrauma.Items.Components
             criticalHeatWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
-                CanBeFocused = false
+                Selected = false,
+                Enabled = false,
+                ToolTip = TextManager.Get("ReactorHeatTip")
             };
             lowTemperatureWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalLowTemp"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
-                CanBeFocused = false
+                Selected = false,
+                Enabled = false,
+                ToolTip = TextManager.Get("ReactorTempTip")
             };
             criticalOutputWarning = new GUITickBox(new RectTransform(new Vector2(0.33f, 1.0f), topLeftArea.RectTransform) { MaxSize = maxIndicatorSize },
                 TextManager.Get("ReactorWarningCriticalOutput"), font: GUI.SubHeadingFont, style: "IndicatorLightRed")
             {
-                CanBeFocused = false
+                Selected = false,
+                Enabled = false,
+                ToolTip = TextManager.Get("ReactorOutputTip")
             };
             List<GUITickBox> indicatorLights = new List<GUITickBox>() { criticalHeatWarning, lowTemperatureWarning, criticalOutputWarning };
             indicatorLights.ForEach(l => l.TextBlock.OverrideTextColor(GUI.Style.TextColor));

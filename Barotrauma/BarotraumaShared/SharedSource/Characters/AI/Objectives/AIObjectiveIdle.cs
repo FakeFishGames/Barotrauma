@@ -10,7 +10,7 @@ namespace Barotrauma
     class AIObjectiveIdle : AIObjective
     {
         public override string DebugTag => "idle";
-        public override bool UnequipItems => true;
+        public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowOutsideSubmarine => true;
 
         private BehaviorType behavior;
@@ -69,6 +69,8 @@ namespace Barotrauma
         const float chairCheckInterval = 5.0f;
         private float chairCheckTimer;
 
+        private float autonomousObjectiveRetryTimer = 10;
+
         private readonly List<Hull> targetHulls = new List<Hull>(20);
         private readonly List<float> hullWeights = new List<float>(20);
 
@@ -87,11 +89,6 @@ namespace Barotrauma
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace); }
 
         public readonly HashSet<string> PreferredOutpostModuleTypes = new HashSet<string>();
-
-        private bool IsInWrongSub() => 
-            character.Submarine == null ||
-            currentTarget != null && currentTarget.Submarine != character.Submarine ||
-            character.TeamID == Character.TeamType.FriendlyNPC && character.Submarine.TeamID != character.TeamID;
 
         public void CalculatePriority(float max = 0)
         {
@@ -149,6 +146,18 @@ namespace Barotrauma
         {
             if (PathSteering == null) { return; }
 
+            if (objectiveManager.FailedAutonomousObjectives)
+            {
+                if (autonomousObjectiveRetryTimer > 0)
+                {
+                    autonomousObjectiveRetryTimer -= deltaTime;
+                }
+                else
+                {
+                    objectiveManager.CreateAutonomousObjectives();
+                }
+            }
+
             //don't keep dragging others when idling
             if (character.SelectedCharacter != null)
             {
@@ -160,13 +169,34 @@ namespace Barotrauma
                 bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || 
                     (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
 
-                bool IsSteeringFinished() => PathSteering.CurrentPath != null && PathSteering.CurrentPath.Finished;
+                bool IsSteeringFinished() => PathSteering.CurrentPath != null && (PathSteering.CurrentPath.Finished || PathSteering.CurrentPath.Unreachable);
 
-                if (currentTargetIsInvalid || currentTarget == null || IsSteeringFinished() && (IsForbidden(character.CurrentHull) || IsInWrongSub()))
+                if (currentTarget != null && !currentTargetIsInvalid)
                 {
-                    //don't reset to zero, otherwise the character will keep calling FindTargetHulls 
-                    //almost constantly when there's a small number of potential hulls to move to
-                    SetTargetTimerLow();
+                    if (character.TeamID == Character.TeamType.FriendlyNPC)
+                    {
+                        if (currentTarget.Submarine.TeamID != character.TeamID)
+                        {
+                            currentTargetIsInvalid = true;
+                        }
+                    }
+                    else
+                    {
+                        if (currentTarget.Submarine != character.Submarine)
+                        {
+                            currentTargetIsInvalid = true;
+                        }
+                    }
+                }
+
+                if (currentTargetIsInvalid || currentTarget == null || IsForbidden(character.CurrentHull) && IsSteeringFinished())
+                {
+                    if (newTargetTimer > timerMargin)
+                    {
+                        //don't reset to zero, otherwise the character will keep calling FindTargetHulls 
+                        //almost constantly when there's a small number of potential hulls to move to
+                        SetTargetTimerLow();
+                    }
                 }
                 else if (character.IsClimbing)
                 {
@@ -200,7 +230,8 @@ namespace Barotrauma
                     {
                         //choose a random available hull
                         currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-                        bool isCurrentHullAllowed = !IsInWrongSub() && !IsForbidden(character.CurrentHull);
+                        bool isInWrongSub = character.TeamID == Character.TeamType.FriendlyNPC && character.Submarine.TeamID != character.TeamID;
+                        bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
                         var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: $"AIObjectiveIdle {character.DisplayName}", nodeFilter: node =>
                         {
                             if (node.Waypoint.CurrentHull == null) { return false; }
@@ -285,12 +316,12 @@ namespace Barotrauma
                 if (standStillTimer > 0.0f)
                 {
                     walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
-
-                    if (character.CurrentHull != null && character.CurrentHull.Rect.Width > 150 && tooCloseCharacter == null)
+                    var currentHull = character.CurrentHull;
+                    if (currentHull != null && currentHull.Rect.Width > IndoorsSteeringManager.smallRoomSize / 2 && tooCloseCharacter == null)
                     {
                         foreach (Character c in Character.CharacterList)
                         {
-                            if (c == character || !c.IsBot || c.CurrentHull != character.CurrentHull || !(c.AIController is HumanAIController humanAI)) { continue; }
+                            if (c == character || !c.IsBot || c.CurrentHull != currentHull || !(c.AIController is HumanAIController humanAI)) { continue; }
                             if (Vector2.DistanceSquared(c.WorldPosition, character.WorldPosition) > 60.0f * 60.0f) { continue; }
                             if ((humanAI.ObjectiveManager.CurrentObjective is AIObjectiveIdle idleObjective && idleObjective.standStillTimer > 0.0f) ||
                                 (humanAI.ObjectiveManager.CurrentObjective is AIObjectiveGoTo gotoObjective && gotoObjective.IsCloseEnough))
@@ -303,7 +334,7 @@ namespace Barotrauma
                                     tooCloseCharacter = null;
                                     break;
                                 }
-                                tooCloseCharacter = c; 
+                                tooCloseCharacter = c;
                             }
                             HumanAIController.FaceTarget(c);                            
                         }
@@ -313,9 +344,24 @@ namespace Barotrauma
                     {
                         Vector2 diff = character.WorldPosition - tooCloseCharacter.WorldPosition;
                         if (diff.LengthSquared() < 0.0001f) { diff = Rand.Vector(1.0f); }
-                        if (diff.X > 0 && character.WorldPosition.X > character.CurrentHull.WorldRect.Right - 50) { diff.X = -diff.X; }
-                        if (diff.X < 0 && character.WorldPosition.X < character.CurrentHull.WorldRect.X + 50) { diff.X = -diff.X; }
-                        PathSteering.SteeringManual(deltaTime, Vector2.Normalize(diff));
+                        if (Math.Abs(diff.X) > 0 && 
+                            (character.WorldPosition.X > currentHull.WorldRect.Right - 50 || character.WorldPosition.X < currentHull.WorldRect.Left + 50))
+                        {
+                            // Between a wall and a character -> move away
+                            tooCloseCharacter = null;
+                            PathSteering.Reset();
+                            standStillTimer = 0;
+                            walkDuration = Math.Min(walkDuration, walkDurationMin);
+                            if (Behavior != BehaviorType.StayInHull && (currentHull.Size.X < IndoorsSteeringManager.smallRoomSize || currentHull.Size.X < (IndoorsSteeringManager.smallRoomSize / 2 * Character.CharacterList.Count(c => c.CurrentHull == currentHull))))
+                            {
+                                // Small room -> find another
+                                newTargetTimer = Math.Min(newTargetTimer, 1);
+                            }
+                        }
+                        else
+                        {
+                            PathSteering.SteeringManual(deltaTime, Vector2.Normalize(diff));
+                        }
                         return;
                     }
                     else
@@ -329,14 +375,13 @@ namespace Barotrauma
                     {
                         foreach (Item item in Item.ItemList)
                         {
-                            if (item.CurrentHull != character.CurrentHull || !item.HasTag("chair")) { continue; }
+                            if (item.CurrentHull != currentHull || !item.HasTag("chair")) { continue; }
                             var controller = item.GetComponent<Controller>();
                             if (controller == null || controller.User != null) { continue; }
                             item.TryInteract(character, forceSelectKey: true);
                         }
                         chairCheckTimer = chairCheckInterval;
                     }
-
                     return;
                 }
                 if (standStillTimer < -walkDuration)
@@ -376,7 +421,9 @@ namespace Barotrauma
                 }
                 if (IsForbidden(hull)) { continue; }
                 // Check that the hull is linked
-                if (!character.Submarine.GetConnectedSubs().Contains(hull.Submarine)) { continue; }
+                if (!character.Submarine.IsConnectedTo(hull.Submarine)) { continue; }
+                // Ignore very narrow hulls.
+                if (hull.RectWidth < 200) { continue; }
                 // Ignore hulls that are too low to stand inside.
                 if (character.AnimController is HumanoidAnimController animController)
                 {
@@ -388,13 +435,14 @@ namespace Barotrauma
                 if (!targetHulls.Contains(hull))
                 {
                     targetHulls.Add(hull);
-                    float weight = hull.Volume;
+                    float weight = hull.RectWidth;
                     // Prefer rooms that are closer. Avoid rooms that are not in the same level.
                     float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
                     yDist = yDist > 100 ? yDist * 5 : 0;
                     float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
                     float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 2500, dist));
-                    weight *= distanceFactor;
+                    float waterFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 100, hull.WaterPercentage * 2));
+                    weight *= distanceFactor * waterFactor;
                     hullWeights.Add(weight);
                 }
             }
@@ -417,6 +465,17 @@ namespace Barotrauma
             string hullName = hull.RoomName;
             if (hullName == null) { return false; }
             return hullName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || hullName.Contains("airlock", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            currentTarget = null;
+            searchingNewHull = false;
+            tooCloseCharacter = null;
+            targetHulls.Clear();
+            hullWeights.Clear();
+            autonomousObjectiveRetryTimer = 10;
         }
     }
 }

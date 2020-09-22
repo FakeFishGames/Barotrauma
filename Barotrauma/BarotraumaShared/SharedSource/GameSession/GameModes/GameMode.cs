@@ -36,6 +36,8 @@ namespace Barotrauma
             get { return false; }
         }
 
+        public virtual void UpdateWhilePaused(float deltaTime) { }
+
         public GameModePreset Preset
         {
             get { return preset; }

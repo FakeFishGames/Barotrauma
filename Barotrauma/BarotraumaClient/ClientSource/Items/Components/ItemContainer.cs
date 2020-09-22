@@ -172,6 +172,8 @@ namespace Barotrauma.Items.Components
         {
             Vector2 transformedItemPos = ItemPos * item.Scale;
             Vector2 transformedItemInterval = ItemInterval * item.Scale;
+            Vector2 transformedItemIntervalHorizontal = new Vector2(transformedItemInterval.X, 0.0f);
+            Vector2 transformedItemIntervalVertical = new Vector2(0.0f, transformedItemInterval.Y);
 
             if (item.body == null)
             {
@@ -180,15 +182,26 @@ namespace Barotrauma.Items.Components
                     transformedItemPos.X = -transformedItemPos.X;
                     transformedItemPos.X += item.Rect.Width;
                     transformedItemInterval.X = -transformedItemInterval.X;
+                    transformedItemIntervalHorizontal.X = -transformedItemIntervalHorizontal.X;
                 }
                 if (item.FlippedY)
                 {
                     transformedItemPos.Y = -transformedItemPos.Y;
                     transformedItemPos.Y -= item.Rect.Height;
                     transformedItemInterval.Y = -transformedItemInterval.Y;
+                    transformedItemIntervalVertical.Y = -transformedItemIntervalVertical.Y;
                 }
                 transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
                 if (item.Submarine != null) { transformedItemPos += item.Submarine.DrawPosition; }
+
+                if (Math.Abs(item.Rotation) > 0.01f)
+                {
+                    Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
+                    transformedItemPos = Vector2.Transform(transformedItemPos - item.DrawPosition, transform) + item.DrawPosition;
+                    transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
+                    transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
+                    transformedItemIntervalVertical = Vector2.Transform(transformedItemIntervalVertical, transform);
+                }
             }
             else
             {
@@ -197,9 +210,12 @@ namespace Barotrauma.Items.Components
                 {
                     transformedItemPos.X = -transformedItemPos.X;
                     transformedItemInterval.X = -transformedItemInterval.X;
+                    transformedItemIntervalHorizontal.X = -transformedItemIntervalHorizontal.X;
                 }
+
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
+                transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
 
                 transformedItemPos += item.DrawPosition;
             }
@@ -207,8 +223,14 @@ namespace Barotrauma.Items.Components
             Vector2 currentItemPos = transformedItemPos;
 
             SpriteEffects spriteEffects = SpriteEffects.None;
-            if ((item.body != null && item.body.Dir == -1) || item.FlippedX) { spriteEffects |= SpriteEffects.FlipHorizontally; }
-            if (item.FlippedY) { spriteEffects |= SpriteEffects.FlipVertically; }
+            if ((item.body != null && item.body.Dir == -1) || item.FlippedX) 
+            { 
+                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
+            }
+            if (item.FlippedY)
+            {
+                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
+            }
 
             int i = 0;
             foreach (Item containedItem in Inventory.Items)
@@ -233,7 +255,7 @@ namespace Barotrauma.Items.Components
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
                     containedItem.GetSpriteColor(),
                     origin,
-                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation),
+                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation + MathHelper.ToRadians(-item.Rotation)),
                     containedItem.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);
@@ -248,11 +270,11 @@ namespace Barotrauma.Items.Components
                 if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
                 {
                     //interval set on both axes -> use a grid layout
-                    currentItemPos.X += transformedItemInterval.X;
+                    currentItemPos += transformedItemIntervalHorizontal;
                     if (i % ItemsPerRow == 0)
                     {
-                        currentItemPos.X = transformedItemPos.X;
-                        currentItemPos.Y += transformedItemInterval.Y;
+                        currentItemPos = transformedItemPos;
+                        currentItemPos += transformedItemIntervalVertical * (i / ItemsPerRow);
                     }
                 }
                 else
@@ -264,6 +286,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
+            if (item.NonInteractable) { return; }
             if (Inventory.RectTransform != null)
             {
                 guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;
@@ -272,7 +295,7 @@ namespace Barotrauma.Items.Components
             //if the item is in the character's inventory, no need to update the item's inventory 
             //because the player can see it by hovering the cursor over the item
             guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
-            if (!guiCustomComponent.Visible) return;
+            if (!guiCustomComponent.Visible) { return; }
 
             Inventory.Update(deltaTime, cam);
         }

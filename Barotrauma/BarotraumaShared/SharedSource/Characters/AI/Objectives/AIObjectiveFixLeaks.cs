@@ -37,11 +37,9 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>() && !c.Character.IsIncapacitated, onlyBots: true);
             int totalLeaks = Targets.Count();
             if (totalLeaks == 0) { return 0; }
-            int secondaryLeaks = Targets.Count(l => l.IsRoomToRoom);
-            int leaks = totalLeaks - secondaryLeaks;
+            int otherFixers = HumanAIController.CountCrew(c => c != HumanAIController && c.ObjectiveManager.IsCurrentObjective<AIObjectiveFixLeaks>() && !c.Character.IsIncapacitated, onlyBots: true);
             bool anyFixers = otherFixers > 0;
             if (objectiveManager.CurrentOrder == this)
             {
@@ -50,6 +48,8 @@ namespace Barotrauma
             }
             else
             {
+                int secondaryLeaks = Targets.Count(l => l.IsRoomToRoom);
+                int leaks = totalLeaks - secondaryLeaks;
                 float ratio = leaks == 0 ? 1 : anyFixers ? leaks / otherFixers : 1;
                 if (anyFixers && (ratio <= 1 || otherFixers > 5 || otherFixers / (float)HumanAIController.CountCrew(onlyBots: true) > 0.75f))
                 {
@@ -62,7 +62,7 @@ namespace Barotrauma
 
         protected override IEnumerable<Gap> GetList() => Gap.GapList;
         protected override AIObjective ObjectiveConstructor(Gap gap) 
-            => new AIObjectiveFixLeak(gap, character, objectiveManager, priorityModifier: PriorityModifier, ignoreSeverityAndDistance: gap.FlowTargetHull == PrioritizedHull);
+            => new AIObjectiveFixLeak(gap, character, objectiveManager, priorityModifier: PriorityModifier, isPriority: gap.FlowTargetHull == PrioritizedHull);
 
         protected override void OnObjectiveCompleted(AIObjective objective, Gap target)
             => HumanAIController.RemoveTargets<AIObjectiveFixLeaks, Gap>(character, target);
@@ -75,8 +75,7 @@ namespace Barotrauma
             if (gap.Submarine.TeamID != character.TeamID) { return false; }
             if (character.Submarine != null)
             {
-                if (gap.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
-                if (!character.Submarine.IsEntityFoundOnThisSub(gap, true)) { return false; }
+                if (!character.Submarine.IsConnectedTo(gap.Submarine)) { return false; }
             }
             return true;
         }

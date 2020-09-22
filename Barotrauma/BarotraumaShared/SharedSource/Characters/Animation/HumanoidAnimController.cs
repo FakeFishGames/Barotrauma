@@ -1873,6 +1873,7 @@ namespace Barotrauma
                 forearm = GetLimb(LimbType.RightForearm);
                 RightHandIKPos = pos;
             }
+            if (arm == null) { return; }
 
             //distance from shoulder to holdpos
             float c = Vector2.Distance(pos, shoulderPos);
@@ -2018,12 +2019,9 @@ namespace Barotrauma
                 {
                     break;
                 }
-                if (character.SelectedItems[i]?.body != null && !character.SelectedItems[i].Removed)
+                if (character.SelectedItems[i]?.body != null && !character.SelectedItems[i].Removed && character.SelectedItems[i].GetComponent<Holdable>() != null)
                 {
-                    /*character.SelectedItems[i].body.SetTransform(
-                        character.SelectedItems[i].body.SimPosition,
-                        MathUtils.WrapAngleTwoPi(character.SelectedItems[i].body.Rotation + MathHelper.Pi));*/
-                    character.SelectedItems[i].GetComponent<Holdable>()?.Flip();
+                    character.SelectedItems[i].FlipX(relativeToSub: false);
                 }
             }
 

@@ -184,7 +184,7 @@ namespace Barotrauma
         [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards). The attacker's facing direction is taken into account."), Editable]
         public Vector2 TargetForceWorld { get; private set; }
 
-        [Serialize(0.0f, true, description: "How likely the attack causes target limbs to be severed when the target is dead."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.0f, true, description: "How likely the attack causes target limbs to be severed."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float SeverLimbsProbability { get; set; }
 
         // TODO: disabled because not synced
@@ -235,7 +235,7 @@ namespace Barotrauma
             List<Affliction> multipliedAfflictions = new List<Affliction>();
             foreach (Affliction affliction in Afflictions.Keys)
             {
-                multipliedAfflictions.Add(affliction.Prefab.Instantiate(affliction.Strength * multiplier, affliction.Source));
+                multipliedAfflictions.Add(affliction.CreateMultiplied(multiplier));
             }
             return multipliedAfflictions;
         }
@@ -495,14 +495,14 @@ namespace Barotrauma
             if (SecondaryCoolDownTimer < 0) { SecondaryCoolDownTimer = 0; }
         }
 
-        public void UpdateAttackTimer(float deltaTime)
+        public void UpdateAttackTimer(float deltaTime, Character character)
         {
             IsRunning = true;
             AttackTimer += deltaTime;
             if (AttackTimer >= Duration)
             {
                 ResetAttackTimer();
-                SetCoolDown();
+                SetCoolDown(applyRandom: !character.IsPlayer);
             }
         }
 
@@ -512,13 +512,22 @@ namespace Barotrauma
             IsRunning = false;
         }
 
-        public void SetCoolDown()
+        public void SetCoolDown(bool applyRandom)
         {
-            float randomFraction = CoolDown * CoolDownRandomFactor;
-            CurrentRandomCoolDown = MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value());
-            CoolDownTimer = CoolDown + CurrentRandomCoolDown;
-            randomFraction = SecondaryCoolDown * CoolDownRandomFactor;
-            SecondaryCoolDownTimer = SecondaryCoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value());
+            if (applyRandom)
+            {
+                float randomFraction = CoolDown * CoolDownRandomFactor;
+                CurrentRandomCoolDown = MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value());
+                CoolDownTimer = CoolDown + CurrentRandomCoolDown;
+                randomFraction = SecondaryCoolDown * CoolDownRandomFactor;
+                SecondaryCoolDownTimer = SecondaryCoolDown + MathHelper.Lerp(-randomFraction, randomFraction, Rand.Value());
+            }
+            else
+            {
+                CoolDownTimer = CoolDown;
+                SecondaryCoolDownTimer = SecondaryCoolDown;
+                CurrentRandomCoolDown = 0;
+            }
         }
 
         public void ResetCoolDown()

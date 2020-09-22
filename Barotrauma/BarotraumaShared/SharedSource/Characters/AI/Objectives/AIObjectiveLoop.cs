@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
@@ -89,10 +88,6 @@ namespace Barotrauma
             {
                 syncTimer -= deltaTime;
             }
-            if (Objectives.None() && Targets.Any(t => !ignoreList.Contains(t)))
-            {
-                CreateObjectives();
-            }
         }
 
         // the timer is set between 1 and 10 seconds, depending on the priority modifier and a random +-25%
@@ -113,7 +108,7 @@ namespace Barotrauma
                 Priority = 0;
                 return Priority;
             }
-            if (character.LockHands || character.Submarine == null || Targets.None())
+            if (character.LockHands || character.Submarine == null)
             {
                 Priority = 0;
             }

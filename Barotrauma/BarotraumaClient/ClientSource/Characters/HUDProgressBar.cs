@@ -38,25 +38,43 @@ namespace Barotrauma
 
         public Vector2 Size;
 
-        private Submarine parentSub;
+        private readonly Submarine parentSub;
+        public string Text
+        {
+            get;
+            private set;
+        }
 
-        public HUDProgressBar(Vector2 worldPosition, Submarine parentSubmarine = null)
-            : this(worldPosition, parentSubmarine, GUI.Style.Red, GUI.Style.Green)
+        private string textTag;
+        public string TextTag
+        {
+            get { return textTag; }
+            set 
+            {
+                if (textTag == value) { return; }
+                textTag = value;
+                Text = string.IsNullOrEmpty(textTag) ? string.Empty : TextManager.Get(textTag);
+            }
+        }
+
+        public HUDProgressBar(Vector2 worldPosition, string textTag, Submarine parentSubmarine = null)
+            : this(worldPosition, parentSubmarine, GUI.Style.Red, GUI.Style.Green, textTag)
         {
         }
 
-        public HUDProgressBar(Vector2 worldPosition, Submarine parentSubmarine, Color emptyColor, Color fullColor)
+        public HUDProgressBar(Vector2 worldPosition, Submarine parentSubmarine, Color emptyColor, Color fullColor, string textTag)
         {
             this.emptyColor = emptyColor;
             this.fullColor = fullColor;
-            
             parentSub = parentSubmarine;
-
             WorldPosition = worldPosition;
-
             Size = new Vector2(100.0f, 20.0f);
-
             FadeTimer = 1.0f;
+            if (!string.IsNullOrEmpty(textTag))
+            {
+                textTag = textTag;
+                Text = TextManager.Get(textTag);
+            }
         }
 
         public void Update(float deltatime)
@@ -76,12 +94,21 @@ namespace Barotrauma
             }
 
             pos = cam.WorldToScreen(pos);
-            
+            Color color = Color.Lerp(emptyColor, fullColor, progress);
             GUI.DrawProgressBar(spriteBatch,
                 new Vector2(pos.X, -pos.Y),
-                Size, progress, 
-                Color.Lerp(emptyColor, fullColor, progress) * a,
+                Size, progress,
+                color * a,
                 Color.White * a * 0.8f);
+
+            if (!string.IsNullOrEmpty(Text))
+            {
+                Vector2 textSize = GUI.SmallFont.MeasureString(Text);
+                Vector2 textPos = new Vector2(pos.X + (Size.X - textSize.X) / 2, pos.Y - textSize.Y * 1.2f);
+                GUI.DrawString(spriteBatch, textPos - Vector2.One, Text, Color.Black * a, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, textPos, Text, Color.White * a, font: GUI.SmallFont);
+            }
+
         }
     }
 }

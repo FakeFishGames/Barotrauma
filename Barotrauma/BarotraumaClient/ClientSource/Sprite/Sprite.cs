@@ -4,12 +4,15 @@ using System;
 using Barotrauma.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Barotrauma
 {
     public partial class Sprite
     {
         private bool cannotBeLoaded;
+
+        protected volatile bool loadingAsync = false;
 
         protected Texture2D texture;
         public Texture2D Texture
@@ -64,9 +67,17 @@ namespace Barotrauma
             if (sourceVector.W == 0.0f) sourceVector.W = texture.Height;
         }
 
-        public void EnsureLazyLoaded()
+        public async Task LazyLoadAsync()
         {
-            if (!LazyLoad || texture != null || cannotBeLoaded) { return; }
+            await Task.Yield();
+            if (!LazyLoad || texture != null || cannotBeLoaded || loadingAsync) { return; }
+            EnsureLazyLoaded(isAsync: true);
+        }
+
+        public void EnsureLazyLoaded(bool isAsync=false)
+        {
+            if (!LazyLoad || texture != null || cannotBeLoaded || loadingAsync) { return; }
+            loadingAsync = isAsync;
 
             Vector4 sourceVector = Vector4.Zero;
             bool temp2 = false;

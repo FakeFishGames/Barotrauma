@@ -639,6 +639,7 @@ namespace Barotrauma
         }
 
         private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
+        private readonly List<DamageModifier> tempModifiers = new List<DamageModifier>();
         private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
         public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound)
         {
@@ -646,6 +647,7 @@ namespace Barotrauma
             afflictionsCopy.Clear();
             foreach (var affliction in afflictions)
             {
+                tempModifiers.Clear();
                 var newAffliction = affliction;
                 float random = Rand.Value(Rand.RandSync.Unsynced);
                 if (random > affliction.Probability) { continue; }
@@ -660,8 +662,7 @@ namespace Barotrauma
                     }
                     if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                     {
-                        newAffliction = affliction.CreateMultiplied(damageModifier.DamageMultiplier);
-                        appliedDamageModifiers.Add(damageModifier);
+                        tempModifiers.Add(damageModifier);
                     }
                 }
                 foreach (WearableSprite wearable in wearingItems)
@@ -676,18 +677,49 @@ namespace Barotrauma
                         }
                         if (SectorHit(damageModifier.ArmorSectorInRadians, simPosition))
                         {
-                            newAffliction = affliction.CreateMultiplied(damageModifier.DamageMultiplier);
-                            appliedDamageModifiers.Add(damageModifier);
+                            tempModifiers.Add(damageModifier);
                         }
                     }
                 }
+                float finalDamageModifier = 1.0f;
+                foreach (DamageModifier damageModifier in tempModifiers)
+                {
+                    finalDamageModifier *= damageModifier.DamageMultiplier;
+                }
+                if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
+                {
+                    newAffliction = affliction.CreateMultiplied(finalDamageModifier);
+                }
+
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);
                 }
+                appliedDamageModifiers.AddRange(tempModifiers);
             }
             var result = new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
             AddDamageProjSpecific(playSound, result);
+
+            float bleedingDamage = 0;
+            if (character.CharacterHealth.DoesBleed)
+            {
+                foreach (var affliction in result.Afflictions)
+                {
+                    if (affliction is AfflictionBleeding)
+                    {
+                        bleedingDamage += affliction.GetVitalityDecrease(character.CharacterHealth);
+                    }
+                }
+                if (bleedingDamage > 0)
+                {
+                    float bloodDecalSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
+                    if (character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
+                    {
+                        character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodDecalSize, 0.5f, 1.0f), true);
+                    }
+                }
+            }
+
             return result;
         }
 
@@ -751,7 +783,7 @@ namespace Barotrauma
             Vector2 simPos = ragdoll.SimplePhysicsEnabled ? character.SimPosition : SimPosition;
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
-            attack.UpdateAttackTimer(deltaTime);
+            attack.UpdateAttackTimer(deltaTime, character);
 
             bool wasHit = false;
             Body structureBody = null;
@@ -762,7 +794,11 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);                            
+                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);    
+                            if (structureBody?.UserData as string == "ruinroom")
+                            {
+                                structureBody = null;
+                            }
                             if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
                             {
                                 // If the attack is aimed to an item and hits an item, it's successful.
@@ -917,7 +953,7 @@ namespace Barotrauma
                 StickTo(structureBody, from, to);
             }*/
             attack.ResetAttackTimer();
-            attack.SetCoolDown();
+            attack.SetCoolDown(applyRandom: !character.IsPlayer);
         }
 
         private WeldJoint attachJoint;

@@ -286,7 +286,8 @@ namespace Barotrauma.Items.Components
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             float userSkill = 0.0f;
-            if (user != null && (user.SelectedConstruction == item || item.linkedTo.Contains(user.SelectedConstruction)))
+            if (user != null && controlledSub != null &&
+                (user.SelectedConstruction == item || item.linkedTo.Contains(user.SelectedConstruction)))
             {
                 userSkill = user.GetSkillLevel("helm") / 100.0f;
             }
@@ -298,7 +299,9 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (user != null && user.Info != null && user.SelectedConstruction == item)
+                if (user != null && user.Info != null && 
+                    user.SelectedConstruction == item && 
+                    controlledSub != null && controlledSub.Velocity.LengthSquared() > 0.01f)
                 {
                     IncreaseSkillLevel(user, deltaTime);
                 }
@@ -320,13 +323,13 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-
-            item.SendSignal(0, targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out", null);
+            
+            item.SendSignal(0, targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out", user);
 
             float targetLevel = -targetVelocity.Y;
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", null);
+            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", user);
         }
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
@@ -335,12 +338,11 @@ namespace Barotrauma.Items.Components
             // Do not increase the helm skill when "steering" the sub in an outpost level
             if (GameMain.GameSession?.Campaign != null && Level.IsLoadedOutpost) { return; }
 
-            float userSkill = user.GetSkillLevel("helm") / 100.0f;
+            float userSkill = Math.Max(user.GetSkillLevel("helm"), 1.0f) / 100.0f;
             user.Info.IncreaseSkillLevel(
                 "helm",
-                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / Math.Max(userSkill, 1.0f) * deltaTime,
+                SkillSettings.Current.SkillIncreasePerSecondWhenSteering / userSkill * deltaTime,
                 user.WorldPosition + Vector2.UnitY * 150.0f);
-
         }
 
         private void UpdateAutoPilot(float deltaTime)
@@ -599,6 +601,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "navigateback":
+                    if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
                         item.SendSignal(0, "1", "toggle_docking", sender: null);
@@ -613,6 +616,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "navigatetodestination":
+                    if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
                         item.SendSignal(0, "1", "toggle_docking", sender: null);

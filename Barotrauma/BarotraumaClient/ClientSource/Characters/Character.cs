@@ -97,8 +97,6 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public string BloodDecalName => Params.BloodDecal;
-
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
         {
@@ -617,7 +615,7 @@ namespace Barotrauma
 
         partial void SetOrderProjSpecific(Order order, string orderOption)
         {
-            GameMain.GameSession?.CrewManager?.DisplayCharacterOrder(this, order, orderOption);
+            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption);
         }
 
         public static void AddAllToGUIUpdateList()
@@ -786,7 +784,7 @@ namespace Barotrauma
                 }
                 if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
                 {
-                    var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + CampaignInteractionType);
+                    var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
                     if (iconStyle != null)
                     {
                         Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
@@ -825,14 +823,18 @@ namespace Barotrauma
         /// Creates a progress bar that's "linked" to the specified object (or updates an existing one if there's one already linked to the object)
         /// The progress bar will automatically fade out after 1 sec if the method hasn't been called during that time
         /// </summary>
-        public HUDProgressBar UpdateHUDProgressBar(object linkedObject, Vector2 worldPosition, float progress, Color emptyColor, Color fullColor)
+        public HUDProgressBar UpdateHUDProgressBar(object linkedObject, Vector2 worldPosition, float progress, Color emptyColor, Color fullColor, string textTag = "")
         {
-            if (controlled != this) return null;
+            if (controlled != this) { return null; }
 
             if (!hudProgressBars.TryGetValue(linkedObject, out HUDProgressBar progressBar))
             {
-                progressBar = new HUDProgressBar(worldPosition, Submarine, emptyColor, fullColor);
+                progressBar = new HUDProgressBar(worldPosition, Submarine, emptyColor, fullColor, textTag);
                 hudProgressBars.Add(linkedObject, progressBar);
+            }
+            else
+            {
+                progressBar.TextTag = textTag;
             }
 
             progressBar.WorldPosition = worldPosition;
@@ -859,7 +861,7 @@ namespace Barotrauma
             }
             var selectedSound = matchingSounds.GetRandom();
             if (selectedSound?.Sound == null) { return; }
-            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, CurrentHull);
+            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: CurrentHull);
             soundTimer = soundInterval;
         }
 

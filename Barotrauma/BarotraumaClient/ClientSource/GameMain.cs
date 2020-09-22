@@ -56,11 +56,6 @@ namespace Barotrauma
 
         public static Thread MainThread { get; private set; }
 
-        public static IEnumerable<ContentPackage> SelectedPackages
-        {
-            get { return Config?.SelectedContentPackages; }
-        }
-
         private static ContentPackage vanillaContent;
         public static ContentPackage VanillaContent
         {
@@ -69,7 +64,7 @@ namespace Barotrauma
                 if (vanillaContent == null)
                 {
                     // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
+                    vanillaContent = ContentPackage.CorePackages.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
                 }
                 return vanillaContent;
             }
@@ -454,40 +449,31 @@ namespace Barotrauma
                 }
             }
 
-            GUI.Init(Window, Config.SelectedContentPackages, GraphicsDevice);
+            GUI.Init(Window, Config.AllEnabledPackages, GraphicsDevice);
             DebugConsole.Init();
 
             if (Config.AutoUpdateWorkshopItems)
             {
-                bool waitingForWorkshopUpdates = true;
-                bool result = false;
+                Config.WaitingForAutoUpdate = true;
                 TaskPool.Add("AutoUpdateWorkshopItemsAsync",
                     SteamManager.AutoUpdateWorkshopItemsAsync(), (task) =>
                 {
-                    result = ((Task<bool>)task).Result;
-                    waitingForWorkshopUpdates = false;
+                    bool result = ((Task<bool>)task).Result;
+
+                    Config.WaitingForAutoUpdate = false;
                 });
 
-                while (waitingForWorkshopUpdates) { yield return CoroutineStatus.Running; }
-
-                if (result)
-                {
-                    CrossThread.RequestExecutionOnMainThread(() =>
-                    {
-                        ContentPackage.LoadAll();
-                        Config.ReloadContentPackages();
-                    });
-                }
+                while (Config.WaitingForAutoUpdate) { yield return CoroutineStatus.Running; }
             }
             
 
-            if (SelectedPackages.None())
+            if (Config.AllEnabledPackages.None())
             {
                 DebugConsole.Log("No content packages selected");
             }
             else
             {
-                DebugConsole.Log("Selected content packages: " + string.Join(", ", SelectedPackages.Select(cp => cp.Name)));
+                DebugConsole.Log("Selected content packages: " + string.Join(", ", Config.AllEnabledPackages.Select(cp => cp.Name)));
             }
 
 #if DEBUG
@@ -542,6 +528,7 @@ namespace Barotrauma
             OutpostGenerationParams.LoadPresets();
             WreckAIConfig.LoadAll();
             EventSet.LoadPrefabs();
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
             Order.Init();
@@ -550,10 +537,6 @@ namespace Barotrauma
         yield return CoroutineStatus.Running;
 
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
-            TitleScreen.LoadState = 53.0f;
-        yield return CoroutineStatus.Running;
-
-            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             TitleScreen.LoadState = 55.0f;
         yield return CoroutineStatus.Running;
         
@@ -628,8 +611,6 @@ namespace Barotrauma
             LocationType.Init();
             MainMenuScreen.Select();
 
-            CheckContentPackage();
-
             foreach (string steamError in SteamManager.InitializationErrors)
             {
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
@@ -643,29 +624,6 @@ namespace Barotrauma
             }
         yield return CoroutineStatus.Success;
 
-        }
-
-        private void CheckContentPackage()
-        {
-            foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
-            {
-                var exePaths = contentPackage.GetFilesOfType(ContentType.Executable);
-                if (exePaths.Any() && AppDomain.CurrentDomain.FriendlyName != Path.GetFileNameWithoutExtension(exePaths.First()))
-                {
-                    var msgBox = new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("IncorrectExe",
-                        new string[2] { "[selectedpackage]", "[exename]" }, new string[2] { contentPackage.Name, exePaths.First() }),
-                        new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                    msgBox.Buttons[0].OnClicked += (_, userdata) =>
-                    {
-                        string fullPath = Path.GetFullPath(exePaths.First());
-                        ToolBox.OpenFileWithShell(fullPath);
-                        Exit();
-                        return true;
-                    };
-                    msgBox.Buttons[1].OnClicked = msgBox.Close;
-                    break;
-                }
-            }
         }
 
         /// <summary>
@@ -690,11 +648,11 @@ namespace Barotrauma
         {
             if (searchAllContentPackages)
             {
-                return ContentPackage.GetFilesOfType(ContentPackage.List, type);
+                return ContentPackage.GetFilesOfType(ContentPackage.AllPackages, type);
             }
             else
             {
-                return ContentPackage.GetFilesOfType(SelectedPackages, type);
+                return ContentPackage.GetFilesOfType(Config.AllEnabledPackages, type);
             }
         }
 
@@ -938,6 +896,7 @@ namespace Barotrauma
                     if (GameSession?.GameMode != null && GameSession.GameMode.Paused)
                     {
                         Paused = true;
+                        GameSession.GameMode.UpdateWhilePaused((float)Timing.Step);
                     }
 
 #if !DEBUG
@@ -960,7 +919,6 @@ namespace Barotrauma
                     DebugConsole.AddToGUIUpdateList();
 
                     DebugConsole.Update((float)Timing.Step);
-                    Paused = Paused || (DebugConsole.IsOpen && (NetworkMember == null || !NetworkMember.GameStarted));
 
                     if (!Paused)
                     {
@@ -1088,11 +1046,11 @@ namespace Barotrauma
                 }
 
                 // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
-                if (GameSession?.Campaign is SinglePlayerCampaign campaign && Level.IsLoadedOutpost && campaign.Map?.CurrentLocation != null && campaign.CargoManager != null)
+                if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedOutpost && spCampaign.Map?.CurrentLocation != null && spCampaign.CargoManager != null)
                 {
-                    campaign.Map.CurrentLocation.AddToStock(campaign.CargoManager.SoldItems);
-                    campaign.CargoManager.ClearSoldItemsProjSpecific();
-                    campaign.Map.CurrentLocation.RemoveFromStock(campaign.CargoManager.PurchasedItems);
+                    spCampaign.Map.CurrentLocation.AddToStock(spCampaign.CargoManager.SoldItems);
+                    spCampaign.CargoManager.ClearSoldItemsProjSpecific();
+                    spCampaign.Map.CurrentLocation.RemoveFromStock(spCampaign.CargoManager.PurchasedItems);
                 }
 
                 SaveUtil.SaveGame(GameSession.SavePath);

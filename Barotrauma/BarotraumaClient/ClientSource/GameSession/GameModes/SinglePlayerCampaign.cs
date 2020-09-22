@@ -11,6 +11,35 @@ namespace Barotrauma
 {
     class SinglePlayerCampaign : CampaignMode
     {
+        public override bool Paused
+        {
+            get { return ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition") || ShowCampaignUI && CampaignUI.SelectedTab == InteractionType.Map; }
+        }
+
+        public override void UpdateWhilePaused(float deltaTime)
+        {
+            if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
+
+            if (PlayerInput.RightButtonClicked() ||
+                PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
+            {
+                ShowCampaignUI = false;
+                if (GUIMessageBox.VisibleBox?.UserData is RoundSummary roundSummary &&
+                    roundSummary.ContinueButton != null &&
+                    roundSummary.ContinueButton.Visible)
+                {
+                    GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
+                }
+            }
+
+            if (CrewManager.ChatBox != null)
+            {
+                CrewManager.ChatBox.Update(deltaTime);
+            }
+
+            CrewManager.UpdateReports();
+        }
+
         private float endTimer;
         
         private bool savedOnStart;
@@ -124,7 +153,7 @@ namespace Barotrauma
         private void InitUI()
         {
             int buttonHeight = (int)(GUI.Scale * 40);
-            int buttonWidth = GUI.IntScale(200);
+            int buttonWidth = GUI.IntScale(450);
 
             endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle((GameMain.GraphicsWidth / 2) - (buttonWidth / 2), HUDLayoutSettings.ButtonAreaTop.Center.Y - (buttonHeight / 2), buttonWidth, buttonHeight), GUICanvas.Instance),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
@@ -357,9 +386,10 @@ namespace Barotrauma
                     break;
                 case TransitionType.ProgressToNextLocation:
                     Map.MoveToNextLocation();
-                    Map.ProgressWorld();
                     break;
             }
+
+            Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
 
             var endTransition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null,
                 transitionType == TransitionType.LeaveLocation ? Alignment.BottomCenter : Alignment.Center,
@@ -383,6 +413,8 @@ namespace Barotrauma
 
             //--------------------------------------
 
+            bool save = false;
+
             if (success)
             {
                 if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
@@ -398,20 +430,32 @@ namespace Barotrauma
                 }
 
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+
+                if (PendingSubmarineSwitch != null)
+                {
+                    SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
+                    GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
+                    PendingSubmarineSwitch = null;
+
+                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
+                    {
+                        if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
+                        {
+                            GameMain.GameSession.OwnedSubmarines[i] = previousSub;
+                            break;
+                        }
+                    }
+                }
+
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
             {
+                PendingSubmarineSwitch = null;
                 EnableRoundSummaryGameOverState();
             }
 
             //--------------------------------------
-
-            if (PendingSubmarineSwitch != null)
-            {
-                GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-                PendingSubmarineSwitch = null;
-            }
 
             SelectSummaryScreen(roundSummary, newLevel, mirror, () =>
             {
@@ -473,7 +517,7 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            if (PlayerInput.RightButtonClicked() ||
+            if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {
                 ShowCampaignUI = false;
@@ -581,7 +625,7 @@ namespace Barotrauma
             }
             else if (transitionType == TransitionType.ProgressToNextEmptyLocation)
             {
-                Map.SetLocation(Map.Locations.IndexOf(Level.Loaded.EndLocation));
+                Map.SetLocation(Map.Locations.IndexOf(Level.Loaded.EndLocation ?? Map.CurrentLocation));
             }
 
             var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);

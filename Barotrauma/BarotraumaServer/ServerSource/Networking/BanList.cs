@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Net;
+using Barotrauma.Steam;
 
 namespace Barotrauma.Networking
 {
@@ -10,15 +11,16 @@ namespace Barotrauma.Networking
     {
         private static UInt16 LastIdentifier = 0;
 
-        public BannedPlayer(string name, string ip, string reason, DateTime? expirationTime)
+        public BannedPlayer(string name, string endPoint, string reason, DateTime? expirationTime)
         {
             this.Name = name;
-            this.IP = ip;
+            this.EndPoint = endPoint;
+            ParseEndPointAsSteamId();
             this.Reason = reason;
             this.ExpirationTime = expirationTime;
             this.UniqueIdentifier = LastIdentifier; LastIdentifier++;
 
-            this.IsRangeBan = IP.IndexOf(".x") > -1;
+            this.IsRangeBan = EndPoint.IndexOf(".x") > -1;
         }
 
         public BannedPlayer(string name, ulong steamID, string reason, DateTime? expirationTime)
@@ -31,27 +33,27 @@ namespace Barotrauma.Networking
 
             this.IsRangeBan = false;
 
-            this.IP = "";
+            this.EndPoint = "";
         }
 
-        public bool CompareTo(string ipCompare)
+        public bool CompareTo(string endpointCompare)
         {
-            if (string.IsNullOrEmpty(IP) || string.IsNullOrEmpty(IP)) { return false; }
+            if (string.IsNullOrEmpty(EndPoint) || string.IsNullOrEmpty(EndPoint)) { return false; }
             if (!IsRangeBan)
             {
-                return ipCompare == IP;
+                return endpointCompare == EndPoint;
             }
             else
             {
-                int rangeBanIndex = IP.IndexOf(".x");
-                if (ipCompare.Length < rangeBanIndex) return false;
-                return ipCompare.Substring(0, rangeBanIndex) == IP.Substring(0, rangeBanIndex);
+                int rangeBanIndex = EndPoint.IndexOf(".x");
+                if (endpointCompare.Length < rangeBanIndex) return false;
+                return endpointCompare.Substring(0, rangeBanIndex) == EndPoint.Substring(0, rangeBanIndex);
             }
         }
 
         public bool CompareTo(IPAddress ipCompare)
         {
-            if (string.IsNullOrEmpty(IP) || ipCompare == null) { return false; }
+            if (string.IsNullOrEmpty(EndPoint) || ipCompare == null) { return false; }
             if (ipCompare.IsIPv4MappedToIPv6 && CompareTo(ipCompare.MapToIPv4NoThrow().ToString()))
             {
                 return true;
@@ -123,7 +125,10 @@ namespace Barotrauma.Networking
         {
             reason = string.Empty;
             if (IPAddress.IsLoopback(IP)) { return false; }
-            var bannedPlayer = bannedPlayers.Find(bp => bp.CompareTo(IP) || (steamID > 0 && bp.SteamID == steamID));
+            var bannedPlayer = bannedPlayers.Find(bp =>
+                bp.CompareTo(IP) ||
+                (steamID > 0 && bp.SteamID == steamID) ||
+                (SteamManager.SteamIDStringToUInt64(bp.EndPoint) == steamID));
             reason = bannedPlayer?.Reason;
             return bannedPlayer != null;
         }
@@ -142,7 +147,9 @@ namespace Barotrauma.Networking
         {
             reason = string.Empty;
             bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
-            var bannedPlayer = bannedPlayers.Find(bp => steamID > 0 && bp.SteamID == steamID);
+            var bannedPlayer = bannedPlayers.Find(bp =>
+                steamID > 0 &&
+                (bp.SteamID == steamID || SteamManager.SteamIDStringToUInt64(bp.EndPoint) == steamID));
             reason = bannedPlayer?.Reason;
             return bannedPlayer != null;
         }
@@ -153,9 +160,9 @@ namespace Barotrauma.Networking
             BanPlayer(name, ipStr, 0, reason, duration);
         }
 
-        public void BanPlayer(string name, string ip, string reason, TimeSpan? duration)
+        public void BanPlayer(string name, string endPoint, string reason, TimeSpan? duration)
         {
-            BanPlayer(name, ip, 0, reason, duration);
+            BanPlayer(name, endPoint, 0, reason, duration);
         }
 
         public void BanPlayer(string name, ulong steamID, string reason, TimeSpan? duration)
@@ -163,9 +170,9 @@ namespace Barotrauma.Networking
             BanPlayer(name, "", steamID, reason, duration);
         }
 
-        private void BanPlayer(string name, string ip, ulong steamID, string reason, TimeSpan? duration)
+        private void BanPlayer(string name, string endPoint, ulong steamID, string reason, TimeSpan? duration)
         {
-            var existingBan = bannedPlayers.Find(bp => bp.IP == ip && bp.SteamID == steamID);
+            var existingBan = bannedPlayers.Find(bp => bp.EndPoint == endPoint && bp.SteamID == steamID);
             if (existingBan != null)
             {
                 if (!duration.HasValue) return;
@@ -190,9 +197,9 @@ namespace Barotrauma.Networking
                 expirationTime = DateTime.Now + duration.Value;
             }
 
-            if (!string.IsNullOrEmpty(ip))
+            if (!string.IsNullOrEmpty(endPoint))
             {
-                bannedPlayers.Add(new BannedPlayer(name, ip, reason, expirationTime));
+                bannedPlayers.Add(new BannedPlayer(name, endPoint, reason, expirationTime));
             }
             else if (steamID > 0)
             {
@@ -221,12 +228,15 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void UnbanIP(string ip)
+        public void UnbanEndPoint(string endPoint)
         {
-            var player = bannedPlayers.Find(bp => bp.IP == ip);
+            ulong steamId = SteamManager.SteamIDStringToUInt64(endPoint);
+            var player = bannedPlayers.Find(bp =>
+                bp.EndPoint == endPoint ||
+                (steamId != 0 && steamId == SteamManager.SteamIDStringToUInt64(bp.EndPoint)));
             if (player == null)
             {
-                DebugConsole.Log("Could not unban IP \"" + ip + "\". Matching player not found.");
+                DebugConsole.Log("Could not unban endpoint \"" + endPoint + "\". Matching player not found.");
             }
             else
             {
@@ -246,10 +256,10 @@ namespace Barotrauma.Networking
 
         private void RangeBan(BannedPlayer banned)
         {
-            banned.IP = ToRange(banned.IP);
+            banned.EndPoint = ToRange(banned.EndPoint);
 
             BannedPlayer bp;
-            while ((bp = bannedPlayers.Find(x => banned.CompareTo(x.IP))) != null)
+            while ((bp = bannedPlayers.Find(x => banned.CompareTo(x.EndPoint))) != null)
             {
                 //remove all specific bans that are now covered by the rangeban
                 bannedPlayers.Remove(bp);
@@ -270,7 +280,7 @@ namespace Barotrauma.Networking
             foreach (BannedPlayer banned in bannedPlayers)
             {
                 string line = banned.Name;
-                line += "," + ((banned.SteamID > 0) ? banned.SteamID.ToString() : banned.IP);
+                line += "," + ((banned.SteamID > 0) ? SteamManager.SteamIDUInt64ToString(banned.SteamID) : banned.EndPoint);
                 line += "," + (banned.ExpirationTime.HasValue ? banned.ExpirationTime.Value.ToString() : "");
                 if (!string.IsNullOrWhiteSpace(banned.Reason)) line += "," + banned.Reason;
 
@@ -314,7 +324,7 @@ namespace Barotrauma.Networking
                     outMsg.Write(bannedPlayer.IsRangeBan); outMsg.WritePadBits();
                     if (c.Connection == GameMain.Server.OwnerConnection)
                     {
-                        outMsg.Write(bannedPlayer.IP);
+                        outMsg.Write(bannedPlayer.EndPoint);
                         outMsg.Write(bannedPlayer.SteamID);
                     }
                 }
@@ -347,7 +357,7 @@ namespace Barotrauma.Networking
                     BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (bannedPlayer != null)
                     {
-                        GameServer.Log(GameServer.ClientLogName(c) + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
+                        GameServer.Log(GameServer.ClientLogName(c) + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.EndPoint + ")", ServerLog.MessageType.ConsoleUsage);
                         RemoveBan(bannedPlayer);
                     }
                 }
@@ -358,7 +368,7 @@ namespace Barotrauma.Networking
                     BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (bannedPlayer != null)
                     {
-                        GameServer.Log(GameServer.ClientLogName(c) + " rangebanned " + bannedPlayer.Name + " (" + bannedPlayer.IP + ")", ServerLog.MessageType.ConsoleUsage);
+                        GameServer.Log(GameServer.ClientLogName(c) + " rangebanned " + bannedPlayer.Name + " (" + bannedPlayer.EndPoint + ")", ServerLog.MessageType.ConsoleUsage);
                         RangeBan(bannedPlayer);
                     }
                 }

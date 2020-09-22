@@ -148,7 +148,6 @@ namespace Barotrauma.Steam
             if (Steamworks.SteamServer.IsValid) { Steamworks.SteamServer.RunCallbacks(); }
 
             SteamAchievementManager.Update(deltaTime);
-            UpdateProjectSpecific(deltaTime);
         }
 
         public static void ShutDown()
@@ -158,6 +157,56 @@ namespace Barotrauma.Steam
             if (Steamworks.SteamClient.IsValid) { Steamworks.SteamClient.Shutdown(); }
             if (Steamworks.SteamServer.IsValid) { Steamworks.SteamServer.Shutdown(); }
             isInitialized = false;
+        }
+
+        public static IEnumerable<ulong> ParseWorkshopIds(string workshopIdData)
+        {
+            string[] workshopIds = workshopIdData.Split(',');
+            foreach (string id in workshopIds)
+            {
+                if (ulong.TryParse(id, out ulong idCast))
+                {
+                    yield return idCast;
+                }
+                else
+                {
+                    yield return 0;
+                }
+            }
+        }
+
+        public static IEnumerable<ulong> WorkshopUrlsToIds(IEnumerable<string> urls)
+        {
+            return urls.Select((u) =>
+            {
+                if (string.IsNullOrEmpty(u))
+                {
+                    return (ulong)0;
+                }
+                else
+                {
+                    return GetWorkshopItemIDFromUrl(u);
+                }
+            });
+        }
+
+        public static ulong GetWorkshopItemIDFromUrl(string url)
+        {
+            try
+            {
+                Uri uri = new Uri(url);
+                string idStr = HttpUtility.ParseQueryString(uri.Query)["id"];
+                if (ulong.TryParse(idStr, out ulong id))
+                {
+                    return id;
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \"" + url + "\"!", e);
+            }
+
+            return 0;
         }
 
         public static UInt64 SteamIDStringToUInt64(string str)

@@ -52,7 +52,9 @@ namespace Barotrauma.Items.Components
                 RelativeOffset = new Vector2(0.05f, 0)
             }, TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
             {
-                CanBeFocused = false
+                Selected = false,
+                Enabled = false,
+                ToolTip = TextManager.Get("AutoControlTip")
             };
             powerIndicator.TextBlock.Wrap = autoControlIndicator.TextBlock.Wrap = true;
             powerIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);
@@ -75,6 +77,7 @@ namespace Barotrauma.Items.Components
                     if (Math.Abs(newTargetForce - targetForce) < 0.01) { return false; }
 
                     targetForce = newTargetForce;
+                    User = Character.Controlled;
 
                     if (GameMain.Client != null)
                     {
@@ -145,7 +148,7 @@ namespace Barotrauma.Items.Components
                 propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
             }
 
-            if (editing)
+            if (editing && !GUI.DisableHUD)
             {
                 Vector2 drawPos = item.DrawPosition;
                 drawPos += PropellerPos;
@@ -164,11 +167,16 @@ namespace Barotrauma.Items.Components
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(5), sendingTime);
+                StartDelayedCorrection(type, msg.ExtractBits(5 + 16), sendingTime);
                 return;
             }
 
             targetForce = msg.ReadRangedInteger(-10, 10) * 10.0f;
+            UInt16 userID = msg.ReadUInt16();
+            if (userID != Entity.NullEntityID)
+            {
+                User = Entity.FindEntityByID(userID) as Character;
+            }
         }
     }
 }

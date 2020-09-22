@@ -9,6 +9,7 @@ namespace Barotrauma.Items.Components
         {
             //force can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(targetForce / 10.0f), -10, 10);
+            msg.Write(User == null ? Entity.NullEntityID : User.ID);
         }
 
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
@@ -23,6 +24,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 targetForce = newTargetForce;
+                User = c.Character;
             }
 
             //notify all clients of the changed state

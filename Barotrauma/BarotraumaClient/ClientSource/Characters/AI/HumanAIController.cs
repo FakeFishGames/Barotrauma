@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using FarseerPhysics;
-using System.Linq;
 
 namespace Barotrauma
 {
@@ -63,6 +62,27 @@ namespace Barotrauma
                     {
                         GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60 + offset), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
                     }
+                }
+                for (int i = 0; i < ObjectiveManager.Objectives.Count; i++)
+                {
+                    var objective = ObjectiveManager.Objectives[i];
+                    int offsetMultiplier;
+                    if (ObjectiveManager.CurrentOrder == null)
+                    {
+                        if (i == 0)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            offsetMultiplier = i - 1;
+                        }
+                    }
+                    else
+                    {
+                        offsetMultiplier = i + 1;
+                    }
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(120, offsetMultiplier * 18 + 100), $"{objective.DebugTag} ({objective.Priority.FormatZeroDecimal()})", Color.White, Color.Black * 0.5f);
                 }
             }
 

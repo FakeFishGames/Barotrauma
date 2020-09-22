@@ -88,9 +88,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Prefab \"{prefab.OriginalName}\" has no identifier!");
             }
 
-            List<T> list = null;
             List<T> newList = null;
-            if (!prefabs.TryGetValue(prefab.Identifier, out list))
+            if (!prefabs.TryGetValue(prefab.Identifier, out List<T> list))
             {
                 newList = new List<T>(); newList.Add(null);
                 list = newList;
@@ -177,7 +176,8 @@ namespace Barotrauma
         {
             if (list.Count <= 1) { return; }
 
-            var newList = list.Skip(1).OrderByDescending(p => GameMain.Config.SelectedContentPackages.IndexOf(p.ContentPackage)).ToList();
+            var newList = list.Skip(1)
+                .OrderByDescending(p => GameMain.Config.EnabledRegularPackages.IndexOf(p.ContentPackage)).ToList();
 
             list.RemoveRange(1, list.Count - 1);
             list.AddRange(newList);

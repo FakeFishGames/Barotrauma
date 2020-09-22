@@ -19,6 +19,8 @@ namespace Barotrauma
 
         const float CalculateDistanceTraveledInterval = 5.0f;
 
+        const int MaxEventHistory = 20;
+
         private Level level;
 
         private readonly List<Sprite> preloadedSprites = new List<Sprite>();
@@ -110,10 +112,25 @@ namespace Barotrauma
             
             if (level?.LevelData?.Type == LevelData.LevelType.Outpost)
             {
-                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab));
-                if (level.LevelData.EventHistory.Count > 10)
+                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
+                if (level.LevelData.EventHistory.Count > MaxEventHistory)
                 {
-                    level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - 10);
+                    level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
+                }
+                AddChildEvents(initialEventSet);                
+                void AddChildEvents(EventSet eventSet)
+                {
+                    foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.First))
+                    {
+                        if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
+                        {
+                            level.LevelData.NonRepeatableEvents.Add(ep);
+                        }
+                    }
+                    foreach (EventSet childSet in eventSet.ChildSets)
+                    {
+                        AddChildEvents(childSet);
+                    }
                 }
             }
 
@@ -301,6 +318,7 @@ namespace Barotrauma
 
         private float CalculateCommonness(Pair<EventPrefab, float> eventPrefab)
         {
+            if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab.First)) { return 0.0f; }
             float retVal = eventPrefab.Second;
             if (level.LevelData.EventHistory.Contains(eventPrefab.First)) { retVal *= 0.1f; }
             return retVal;
@@ -324,7 +342,13 @@ namespace Barotrauma
                 {
                     if (eventSet.EventPrefabs.Count > 0)
                     {
-                        MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+                        int seed = ToolBox.StringToInt(level.Seed);
+                        foreach (var previousEvent in level.LevelData.EventHistory)
+                        {
+                            seed |= ToolBox.StringToInt(previousEvent.Identifier);
+                        }
+
+                        MTRandom rand = new MTRandom(seed);
                         List<Pair<EventPrefab, float>> unusedEvents = new List<Pair<EventPrefab, float>>(eventSet.EventPrefabs);
                         for (int j = 0; j < eventSet.EventCount; j++)
                         {
@@ -476,37 +500,42 @@ namespace Barotrauma
 
             eventThreshold += settings.EventThresholdIncrease * deltaTime;
             eventCoolDown -= deltaTime;
-            
+
             if (currentIntensity < eventThreshold)
             {
-                //activate pending event sets that can be activated
-                for (int i = pendingEventSets.Count - 1; i >= 0; i--)
+                bool recheck = false;
+                do
                 {
-                    var eventSet = pendingEventSets[i];
-                    if (eventCoolDown > 0.0f && !eventSet.IgnoreCoolDown) { continue; }
-
-                    if (!CanStartEventSet(eventSet)) { continue; }
-
-                    eventThreshold = settings.DefaultEventThreshold;
-                    eventCoolDown = settings.EventCooldown;
-
-                    pendingEventSets.RemoveAt(i);
-
-                    if (selectedEvents.ContainsKey(eventSet))
+                    recheck = false;
+                    //activate pending event sets that can be activated
+                    for (int i = pendingEventSets.Count - 1; i >= 0; i--)
                     {
-                        //start events in this set
-                        foreach (Event ev in selectedEvents[eventSet])
+                        var eventSet = pendingEventSets[i];
+                        if (eventCoolDown > 0.0f && !eventSet.IgnoreCoolDown) { continue; }
+
+                        if (!CanStartEventSet(eventSet)) { continue; }
+
+                        pendingEventSets.RemoveAt(i);
+
+                        if (selectedEvents.ContainsKey(eventSet))
                         {
-                            activeEvents.Add(ev);
+                            //start events in this set
+                            foreach (Event ev in selectedEvents[eventSet])
+                            {
+                                activeEvents.Add(ev);
+                                eventThreshold = settings.DefaultEventThreshold;
+                                eventCoolDown = settings.EventCooldown;
+                            }
+                        }
+
+                        //add child event sets to pending
+                        foreach (EventSet childEventSet in eventSet.ChildSets)
+                        {
+                            pendingEventSets.Add(childEventSet);
+                            recheck = true;
                         }
                     }
-
-                    //add child event sets to pending
-                    foreach (EventSet childEventSet in eventSet.ChildSets)
-                    {
-                        pendingEventSets.Add(childEventSet);                        
-                    }
-                }
+                } while (recheck);
             }
 
             foreach (Event ev in activeEvents)
@@ -568,7 +597,7 @@ namespace Barotrauma
                 {
                     //enemy outside and targeting the sub or something in it
                     //moloch adds 0.24 to enemy danger, a crawler 0.02
-                    enemyDanger += enemyAI.CombatStrength / 5000.0f;
+                    enemyDanger += enemyAI.CombatStrength / 2000.0f;
                 }
             }
             enemyDanger = MathHelper.Clamp(enemyDanger, 0.0f, 1.0f);

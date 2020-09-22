@@ -135,7 +135,7 @@ namespace Barotrauma.Networking
 
             if (!File.Exists(filePath))
             {
-                DebugConsole.ThrowError("Failed to initiate file transfer (file \"" + filePath + "\" not found.");
+                DebugConsole.ThrowError("Failed to initiate file transfer (file \"" + filePath + "\" not found).\n" + Environment.StackTrace);
                 return null;
             }
 

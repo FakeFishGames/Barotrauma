@@ -121,7 +121,6 @@ namespace Barotrauma.Items.Components
             : base(item, element)
         {
             IsActive = true;
-
             InitProjSpecific();
         }
 
@@ -184,23 +183,25 @@ namespace Barotrauma.Items.Components
                 charge = 0.0f;
                 return;
             }
-
-            //output starts dropping when the charge is less than 10%
-            float maxOutputRatio = 1.0f;
-            if (chargeRatio < 0.1f)
+            else
             {
-                maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
+                //output starts dropping when the charge is less than 10%
+                float maxOutputRatio = 1.0f;
+                if (chargeRatio < 0.1f)
+                {
+                    maxOutputRatio = Math.Max(chargeRatio * 10.0f, 0.0f);
+                }
+
+                CurrPowerOutput += (gridLoad - gridPower) * deltaTime;
+
+                float maxOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
+                CurrPowerOutput = MathHelper.Clamp(CurrPowerOutput, 0.0f, maxOutput);
+                Charge -= CurrPowerOutput / 3600.0f;            
             }
 
-            CurrPowerOutput += (gridLoad - gridPower) * deltaTime;
-
-            float maxOutput = Math.Min(MaxOutPut * maxOutputRatio, gridLoad);
-            CurrPowerOutput = MathHelper.Clamp(CurrPowerOutput, 0.0f, maxOutput);
-            Charge -= CurrPowerOutput / 3600.0f;
-            
             item.SendSignal(0, ((int)Math.Round(Charge)).ToString(), "charge", null);
-            item.SendSignal(0, ((int)Math.Round((Charge / capacity) * 100)).ToString(), "charge_%", null);
-            item.SendSignal(0, ((int)Math.Round((RechargeSpeed / maxRechargeSpeed) * 100)).ToString(), "charge_rate", null);
+            item.SendSignal(0, ((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%", null);
+            item.SendSignal(0, ((int)Math.Round(RechargeSpeed / maxRechargeSpeed * 100)).ToString(), "charge_rate", null);
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

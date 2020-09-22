@@ -15,12 +15,23 @@ namespace Barotrauma
         public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
 
         protected float _strength;
+
         [Serialize(0f, true), Editable]
         public virtual float Strength
         {
             get { return _strength; }
-            set { _strength = MathHelper.Clamp(value, 0.0f, Prefab.MaxStrength); }
+            set
+            {
+                if (_nonClampedStrength < 0 && value > 0)
+                {
+                    _nonClampedStrength = value;
+                }
+                _strength = MathHelper.Clamp(value, 0.0f, Prefab.MaxStrength);
+            }
         }
+
+        private float _nonClampedStrength = -1;
+        public float NonClampedStrength => _nonClampedStrength > 0 ? _nonClampedStrength : _strength;
 
         [Serialize("", true), Editable]
         public string Identifier { get; private set; }
@@ -35,6 +46,8 @@ namespace Barotrauma
         public float StrengthDiminishMultiplier = 1.0f;
         public Affliction MultiplierSource;
 
+        public readonly Dictionary<AfflictionPrefab.PeriodicEffect, float> PeriodicEffectTimers = new Dictionary<AfflictionPrefab.PeriodicEffect, float>();
+
         /// <summary>
         /// Which character gave this affliction
         /// </summary>
@@ -45,6 +58,11 @@ namespace Barotrauma
             Prefab = prefab;
             _strength = strength;
             Identifier = prefab?.Identifier;
+
+            foreach (var periodicEffect in prefab.PeriodicEffects)
+            {
+                PeriodicEffectTimers[periodicEffect] = Rand.Range(periodicEffect.MinInterval, periodicEffect.MaxInterval);
+            }
         }
 
         public void Serialize(XElement element)
@@ -59,24 +77,27 @@ namespace Barotrauma
 
         public Affliction CreateMultiplied(float multiplier)
         {
-            return Prefab.Instantiate(Strength * multiplier, Source);
+            return Prefab.Instantiate(NonClampedStrength * multiplier, Source);
         }
 
         public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";
 
         public float GetVitalityDecrease(CharacterHealth characterHealth)
         {
-            if (Strength < Prefab.ActivationThreshold) return 0.0f;
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return 0.0f;
-            if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) return 0.0f;
+            if (currentEffect == null) { return 0.0f; }
+            if (currentEffect.MaxStrength - currentEffect.MinStrength <= 0.0f) { return 0.0f; }
 
             float currVitalityDecrease = MathHelper.Lerp(
                 currentEffect.MinVitalityDecrease, 
                 currentEffect.MaxVitalityDecrease, 
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
 
-            if (currentEffect.MultiplyByMaxVitality) currVitalityDecrease *= characterHealth == null ? 100.0f : characterHealth.MaxVitality;
+            if (currentEffect.MultiplyByMaxVitality)
+            {
+                currVitalityDecrease *= characterHealth == null ? 100.0f : characterHealth.MaxVitality;
+            }
 
             return currVitalityDecrease;
         }
@@ -173,8 +194,28 @@ namespace Barotrauma
 
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
+            foreach (AfflictionPrefab.PeriodicEffect periodicEffect in Prefab.PeriodicEffects)
+            {
+                PeriodicEffectTimers[periodicEffect] -= deltaTime;
+                if (PeriodicEffectTimers[periodicEffect] <= 0.0f)
+                {
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                    {
+                        PeriodicEffectTimers[periodicEffect] = 0.0f;
+                    }
+                    else
+                    {
+                        foreach (StatusEffect statusEffect in periodicEffect.StatusEffects)
+                        {
+                            ApplyStatusEffect(statusEffect, 1.0f, characterHealth, targetLimb);
+                            PeriodicEffectTimers[periodicEffect] = Rand.Range(periodicEffect.MinInterval, periodicEffect.MaxInterval);
+                        }
+                    }
+                }
+            }            
+
             AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
-            if (currentEffect == null) return;
+            if (currentEffect == null) { return; }
 
             if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
             {
@@ -184,32 +225,44 @@ namespace Barotrauma
             {
                 _strength += currentEffect.StrengthChange * deltaTime * (1f - characterHealth.GetResistance(Prefab.Identifier));
             }
-            // Don't use the property, because its virtual and some afflictions like husk overload it for external use.
+            // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
 
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
-                statusEffect.SetUser(Source);
-                if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
-                {
-                    statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
-                }
-                if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
-                {
-                    statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, targetLimb);
-                }
-                if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
-                {
-                    statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
-                }
-                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) || 
-                    statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
-                {
-                    var targets = new List<ISerializableEntity>();
-                    statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets);
-                    statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targets);
-                }
+                ApplyStatusEffect(statusEffect, deltaTime, characterHealth, targetLimb);
             }
         }
+
+        public void ApplyStatusEffect(StatusEffect statusEffect, float deltaTime, CharacterHealth characterHealth, Limb targetLimb)
+        {
+            statusEffect.SetUser(Source);
+            if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+            {
+                statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
+            }
+            if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+            {
+                statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, targetLimb);
+            }
+            if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+            {
+                statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+            }
+            if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+            {
+                var targets = new List<ISerializableEntity>();
+                statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets);
+                statusEffect.Apply(ActionType.OnActive, deltaTime, targetLimb.character, targets);
+            }
+        }
+
+        /// <summary>
+        /// Use this method to skip clamping and additional logic of the setters.
+        /// Intended only to be used when the value is already clamped! (networking code)
+        /// Ideally we would keep this private, but doing so would require too much refactoring.
+        /// </summary>
+        public void SetStrength(float strength) => _strength = strength;
     }
 }

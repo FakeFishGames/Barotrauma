@@ -55,6 +55,7 @@ namespace Barotrauma
         public List<ContainedItemSprite> ContainedSprites = new List<ContainedItemSprite>();
         public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
         public Sprite InventoryIcon;
+        public Sprite MinimapIcon;
 
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
         [Serialize("1.0,1.0,1.0,1.0", false)]
@@ -90,6 +91,7 @@ namespace Barotrauma
                     };
                     item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                     item.FindHull();
+                    item.Submarine = Submarine.MainSub;
 
                     if (PlayerInput.IsShiftDown())
                     {

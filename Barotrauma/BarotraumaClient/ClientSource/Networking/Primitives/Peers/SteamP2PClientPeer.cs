@@ -12,10 +12,6 @@ namespace Barotrauma.Networking
     {
         private bool isActive;
         private UInt64 hostSteamId;
-        private ConnectionInitialization initializationStep;
-        private bool contentPackageOrderReceived;
-        private int passwordSalt;
-        private Steamworks.AuthTicket steamAuthTicket;
         private double timeout;
         private double heartbeatTimer;
         private double connectionStatusTimer;
@@ -89,6 +85,7 @@ namespace Barotrauma.Networking
                 Steamworks.SteamNetworking.AcceptP2PSessionWithUser(steamId);
             }
             else if (initializationStep != ConnectionInitialization.Password &&
+                     initializationStep != ConnectionInitialization.ContentPackageOrder &&
                      initializationStep != ConnectionInitialization.Success)
             {
                 DebugConsole.ThrowError($"Connection from incorrect SteamID was rejected: "+
@@ -105,7 +102,7 @@ namespace Barotrauma.Networking
             OnDisconnectMessageReceived?.Invoke($"SteamP2P connection failed: {error}");
         }
 
-        private void OnP2PData(ulong steamId, byte[] data, int dataLength, int channel)
+        private void OnP2PData(ulong steamId, byte[] data, int dataLength)
         {
             if (!isActive) { return; }
             if (steamId != hostSteamId) { return; }
@@ -165,6 +162,7 @@ namespace Barotrauma.Networking
             heartbeatTimer -= deltaTime;
 
             if (initializationStep != ConnectionInitialization.Password &&
+                initializationStep != ConnectionInitialization.ContentPackageOrder &&
                 initializationStep != ConnectionInitialization.Success)
             {
                 connectionStatusTimer -= deltaTime;
@@ -194,7 +192,7 @@ namespace Barotrauma.Networking
                 var packet = Steamworks.SteamNetworking.ReadP2PPacket();
                 if (packet.HasValue)
                 {
-                    OnP2PData(packet?.SteamId ?? 0, packet?.Data, packet?.Data.Length ?? 0, 0);
+                    OnP2PData(packet?.SteamId ?? 0, packet?.Data, packet?.Data.Length ?? 0);
                     receivedBytes += packet?.Data.Length ?? 0;
                 }
             }
@@ -249,88 +247,6 @@ namespace Barotrauma.Networking
             incomingDataMessages.Clear();
         }
 
-        private void ReadConnectionInitializationStep(IReadMessage inc)
-        {
-            if (!isActive) { return; }
-
-            ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
-
-            IWriteMessage outMsg;
-
-            //DebugConsole.NewMessage(step + " " + initializationStep);
-            switch (step)
-            {
-                case ConnectionInitialization.SteamTicketAndVersion:
-                    if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
-                    outMsg = new WriteOnlyMessage();
-                    outMsg.Write((byte)DeliveryMethod.Reliable);
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
-                    outMsg.Write(Name);
-                    outMsg.Write(SteamManager.GetSteamID());
-                    outMsg.Write((UInt16)steamAuthTicket.Data.Length);
-                    outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
-
-                    outMsg.Write(GameMain.Version.ToString());
-
-                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
-                    outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count());
-                    foreach (ContentPackage contentPackage in mpContentPackages)
-                    {
-                        outMsg.Write(contentPackage.Name);
-                        outMsg.Write(contentPackage.MD5hash.Hash);
-                    }
-
-                    heartbeatTimer = 5.0;
-                    Steamworks.SteamNetworking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes, 0, Steamworks.P2PSend.Reliable);
-                    sentBytes += outMsg.LengthBytes;
-                    break;
-                case ConnectionInitialization.ContentPackageOrder:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion ||
-                        initializationStep == ConnectionInitialization.Password) { initializationStep = ConnectionInitialization.ContentPackageOrder; }
-                    if (initializationStep != ConnectionInitialization.ContentPackageOrder) { return; }
-                    outMsg = new WriteOnlyMessage();
-                    outMsg.Write((byte)DeliveryMethod.Reliable);
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.ContentPackageOrder);
-
-                    UInt32 cpCount = inc.ReadVariableUInt32();
-                    List<ContentPackage> serverContentPackages = new List<ContentPackage>();
-                    for (int i = 0; i < cpCount; i++)
-                    {
-                        string hash = inc.ReadString();
-                        serverContentPackages.Add(GameMain.Config.SelectedContentPackages.Find(cp => cp.MD5hash.Hash == hash));
-                    }
-
-                    if (!contentPackageOrderReceived)
-                    {
-                        GameMain.Config.ReorderSelectedContentPackages(cp => serverContentPackages.Contains(cp) ?
-                                                                             serverContentPackages.IndexOf(cp) :
-                                                                             serverContentPackages.Count + GameMain.Config.SelectedContentPackages.IndexOf(cp));
-                        contentPackageOrderReceived = true;
-                    }
-
-                    Steamworks.SteamNetworking.SendP2PPacket(hostSteamId, outMsg.Buffer, outMsg.LengthBytes, 0, Steamworks.P2PSend.Reliable);
-                    sentBytes += outMsg.LengthBytes;
-                    break;
-                case ConnectionInitialization.Password:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }
-                    if (initializationStep != ConnectionInitialization.Password) { return; }
-                    bool incomingSalt = inc.ReadBoolean(); inc.ReadPadBits();
-                    int retries = 0;
-                    if (incomingSalt)
-                    {
-                        passwordSalt = inc.ReadInt32();
-                    }
-                    else
-                    {
-                        retries = inc.ReadInt32();
-                    }
-                    OnRequestPassword?.Invoke(passwordSalt, retries);
-                    break;
-            }
-        }
-
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
         {
             if (!isActive) { return; }
@@ -339,8 +255,7 @@ namespace Barotrauma.Networking
             buf[0] = (byte)deliveryMethod;
 
             byte[] bufAux = new byte[msg.LengthBytes];
-            bool isCompressed; int length;
-            msg.PrepareForSending(ref bufAux, out isCompressed, out length);
+            msg.PrepareForSending(ref bufAux, out bool isCompressed, out int length);
 
             buf[1] = (byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None);
 
@@ -426,7 +341,7 @@ namespace Barotrauma.Networking
             sentBytes += outMsg.LengthBytes;
         }
         
-        public override void Close(string msg = null)
+        public override void Close(string msg = null, bool disableReconnect = false)
         {
             if (!isActive) { return; }
 
@@ -451,13 +366,38 @@ namespace Barotrauma.Networking
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             hostSteamId = 0;
 
-            OnDisconnect?.Invoke();
+            OnDisconnect?.Invoke(disableReconnect);
         }
 
         ~SteamP2PClientPeer()
         {
             OnDisconnect = null;
             Close();
+        }
+
+        protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)
+        {
+            Steamworks.P2PSend sendType;
+            switch (deliveryMethod)
+            {
+                case DeliveryMethod.Reliable:
+                case DeliveryMethod.ReliableOrdered:
+                    //the documentation seems to suggest that the Reliable send type
+                    //enforces packet order (TODO: verify)
+                    sendType = Steamworks.P2PSend.Reliable;
+                    break;
+                default:
+                    sendType = Steamworks.P2PSend.Unreliable;
+                    break;
+            }
+
+            IWriteMessage msgToSend = new WriteOnlyMessage();
+            msgToSend.Write((byte)deliveryMethod);
+            msgToSend.Write(msg.Buffer, 0, msg.LengthBytes);
+
+            heartbeatTimer = 5.0;
+            Steamworks.SteamNetworking.SendP2PPacket(hostSteamId, msgToSend.Buffer, msgToSend.LengthBytes, 0, sendType);
+            sentBytes += msg.LengthBytes;
         }
 
 #if DEBUG

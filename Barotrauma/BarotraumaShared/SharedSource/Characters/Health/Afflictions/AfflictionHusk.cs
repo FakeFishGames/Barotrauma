@@ -29,8 +29,9 @@ namespace Barotrauma
             set
             {
                 // Don't allow to set the strength too high (from outside) to avoid rapid transformation into husk when taking lots of damage from husks.
-                // If the strength is more than the value, this will effectively reset the current strength to the max. That's why we use two steps.
-                float max = _strength > ActiveThreshold ? ActiveThreshold + 1 : DormantThreshold - 1;
+                float previousValue = _strength;
+                float threshold = _strength > ActiveThreshold ? ActiveThreshold + 1 : DormantThreshold - 1;
+                float max = Math.Max(threshold, previousValue);
                 _strength = Math.Clamp(value, 0, max);
             }
         }
@@ -79,7 +80,7 @@ namespace Barotrauma
             {
                 if (State != InfectionState.Active)
                 {
-                    character.SetStun(Rand.Range(2, 4, Rand.RandSync.Server));
+                    character.SetStun(Rand.Range(2, 4));
                 }
                 State = InfectionState.Active;
                 ActivateHusk();
@@ -101,7 +102,7 @@ namespace Barotrauma
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.IsSevered) { continue; }
-                float random = Rand.Value(Rand.RandSync.Server);
+                float random = Rand.Value();
                 huskInfection.Clear();
                 huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * 10 * deltaTime / limbCount));
                 character.LastDamageSource = null;

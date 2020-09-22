@@ -54,6 +54,9 @@
   <Item file="Content/Items/Legacy/legacysearchlight.xml" />
   <Item file="Content/Items/Shipwrecks/wreckeditems.xml" />
   <Item file="Content/Map/Thalamus/thalamusitems.xml" />
+  <Item file="Content/Items/Gardening/growableplants.xml" />
+  <Item file="Content/Items/Gardening/gardeningtools.xml" />
+  <Item file="Content/Items/Gardening/plantproducts.xml" />
   <Character file="Content/Characters/Carrier/Carrier.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
@@ -107,6 +110,7 @@
   <Submarine file="Submarines/Typhon2.sub" />
   <Submarine file="Submarines/Venture.sub" />
   <Submarine file="Submarines/Azimuth.sub" />
+  <Submarine file="Submarines/R-29.sub" />
   <Text file="Content/Texts/English/EnglishVanilla.xml" />
   <Text file="Content/Texts/German/GermanVanilla.xml" />
   <Text file="Content/Texts/French/FrenchVanilla.xml" />
@@ -163,7 +167,6 @@
   <Sounds file="Content/Sounds/sounds.xml" />
   <Tutorials file="Content/Tutorials/Tutorials.xml" />
   <SkillSettings file="Content/SkillSettings.xml" />
-  <Executable file="Barotrauma" />
   <ServerExecutable file="DedicatedServer" />
   <Factions file="Content/Map/factions.xml" />
   <Outpost file="Content/Map/Outposts/Outpost.sub" />

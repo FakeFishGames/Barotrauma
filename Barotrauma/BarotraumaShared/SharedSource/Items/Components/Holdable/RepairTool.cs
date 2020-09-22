@@ -52,11 +52,15 @@ namespace Barotrauma.Items.Components
         {
             get; set;
         }
+
         [Serialize(0.0f, false, description: "How much the item decreases the size of fires per second.")]
         public float ExtinguishAmount
         {
             get; set;
         }
+
+        [Serialize(0.0f, false, description: "How much water the item provides to planters per second.")]
+        public float WaterAmount { get; set; }
 
         [Serialize("0.0,0.0", false, description: "The position of the barrel as an offset from the item's center (in pixels).")]
         public Vector2 BarrelPos { get; set; }
@@ -82,13 +86,19 @@ namespace Barotrauma.Items.Components
         [Serialize(0.0f, false, description: "Force applied to the entity the ray hits.")]
         public float TargetForce { get; set; }
 
+        [Serialize(0.0f, false, description: "Rotation of the barrel in degrees."), Editable(MinValueFloat = 0, MaxValueFloat = 360, VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" })]
+        public float BarrelRotation
+        {
+            get; set;
+        }
+
         public Vector2 TransformedBarrelPos
         {
             get
             {
-                Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation);
+                Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation + MathHelper.ToRadians(BarrelRotation));
                 Vector2 flippedPos = BarrelPos;
-                if (item.body.Dir < 0.0f) flippedPos.X = -flippedPos.X;
+                if (item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
                 return (Vector2.Transform(flippedPos, bodyTransform));
             }
         }
@@ -188,7 +198,7 @@ namespace Barotrauma.Items.Components
             }
 
             float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
-            float angle = item.body.Rotation + spread * Rand.Range(-0.5f, 0.5f);
+            float angle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + spread * Rand.Range(-0.5f, 0.5f);
             Vector2 rayEnd = rayStart + 
                 ConvertUnits.ToSimUnits(new Vector2(
                     (float)Math.Cos(angle),
@@ -276,7 +286,7 @@ namespace Barotrauma.Items.Components
                     ignoreSensors: false,
                     customPredicate: (Fixture f) => 
                     {
-                        if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure) { return false; }
+                        if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure || (f.Body?.UserData is Item it && it.GetComponent<Planter>() != null)) { return false; }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
                         return true;
                     },
@@ -373,6 +383,42 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (WaterAmount > 0.0f && item.CurrentHull?.Submarine != null)
+            {
+                Vector2 pos = ConvertUnits.ToDisplayUnits(rayStart + item.Submarine.SimPosition);
+
+                // Could probably be done much efficiently here
+                foreach (Item it in Item.ItemList)
+                {
+                    if (it.Submarine == item.Submarine && it.GetComponent<Planter>() is { } planter)
+                    {
+                        if (it.GetComponent<Holdable>() is { } holdable && holdable.Attachable && !holdable.Attached) { continue; }
+
+                        Rectangle collisionRect = it.WorldRect;
+                        collisionRect.Y -= collisionRect.Height;
+                        if (collisionRect.Left < pos.X && collisionRect.Right > pos.X && collisionRect.Bottom < pos.Y)
+                        {
+                            Body collision = Submarine.PickBody(rayStart, it.SimPosition, ignoredBodies, collisionCategories);
+                            if (collision == null)
+                            {
+                                for (var i = 0; i < planter.GrowableSeeds.Length; i++)
+                                {
+                                    Growable seed = planter.GrowableSeeds[i];
+                                    if (seed == null || seed.Decayed) { continue; }
+
+                                    seed.Health += WaterAmount * deltaTime;
+
+#if CLIENT
+                                    float barOffset = 10f * GUI.Scale;
+                                    Vector2 offset = planter.PlantSlots.ContainsKey(i) ? planter.PlantSlots[i].Offset : Vector2.Zero;
+                                    user.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUI.Style.Blue, GUI.Style.Blue, "progressbar.watering");
+#endif
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
@@ -464,7 +510,7 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Item targetItem)
             {
-                if (!HitItems) { return false; }
+                if (!HitItems || targetItem.NonInteractable) { return false; }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
@@ -477,8 +523,9 @@ namespace Barotrauma.Items.Components
                         this,
                         targetItem.WorldPosition,
                         levelResource.DeattachTimer / levelResource.DeattachDuration,
-                        GUI.Style.Red, GUI.Style.Green);
+                        GUI.Style.Red, GUI.Style.Green, "progressbar.deattaching");
 #endif
+                    FixItemProjSpecific(user, deltaTime, targetItem);
                     return true;
                 }
                 
@@ -571,34 +618,31 @@ namespace Barotrauma.Items.Components
                     character.AIController.SteeringManager.SteeringSeek(standPos);
                 }
             }
-            else
+            if (dist < reach / 2)
             {
-                if (dist < reach / 2)
+                // Too close -> steer away
+                character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
+            }
+            else if (dist < reach * 2)
+            {
+                // In or almost in range
+                character.CursorPosition = leak.Position;
+                character.CursorPosition += VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, dist / 2);
+                if (character.AnimController.InWater)
                 {
-                    // Too close -> steer away
-                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
-                }
-                else if (dist <= reach)
-                {
-                    // In range
-                    character.CursorPosition = leak.Position;
-                    character.CursorPosition += VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, dist / 2);
-                    if (character.AnimController.InWater)
-                    {
-                        var torso = character.AnimController.GetLimb(LimbType.Torso);
-                        // Turn facing the target when not moving (handled in the animcontroller if not moving)
-                        Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
-                        Vector2 diff = (mousePos - torso.SimPosition) * character.AnimController.Dir;
-                        float newRotation = MathUtils.VectorToAngle(diff);
-                        character.AnimController.Collider.SmoothRotate(newRotation, 5.0f);
+                    var torso = character.AnimController.GetLimb(LimbType.Torso);
+                    // Turn facing the target when not moving (handled in the animcontroller if not moving)
+                    Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                    Vector2 diff = (mousePos - torso.SimPosition) * character.AnimController.Dir;
+                    float newRotation = MathUtils.VectorToAngle(diff);
+                    character.AnimController.Collider.SmoothRotate(newRotation, 5.0f);
 
-                        if (VectorExtensions.Angle(VectorExtensions.Forward(torso.body.TransformedRotation), fromCharacterToLeak) < MathHelper.PiOver4)
-                        {
-                            // Swim past
-                            Vector2 moveDir = leak.IsHorizontal ? Vector2.UnitY : Vector2.UnitX;
-                            moveDir *= character.AnimController.Dir;
-                            character.AIController.SteeringManager.SteeringManual(deltaTime, moveDir);
-                        }
+                    if (VectorExtensions.Angle(VectorExtensions.Forward(torso.body.TransformedRotation), fromCharacterToLeak) < MathHelper.PiOver4)
+                    {
+                        // Swim past
+                        Vector2 moveDir = leak.IsHorizontal ? Vector2.UnitY : Vector2.UnitX;
+                        moveDir *= character.AnimController.Dir;
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, moveDir);
                     }
                 }
             }
@@ -674,9 +718,8 @@ namespace Barotrauma.Items.Components
                 // A general purpose system could be better, but it would most likely require changes in the way we define the status effects in xml.
                 foreach (ISerializableEntity target in targets)
                 {
-                    if (!(target is Door door)) { continue; }
-                    
-                    if (!door.CanBeWelded) { continue; }
+                    if (!(target is Door door)) { continue; }                    
+                    if (!door.CanBeWelded || door.Item.NonInteractable) { continue; }
                     for (int i = 0; i < effect.propertyNames.Length; i++)
                     {
                         string propertyName = effect.propertyNames[i];
@@ -685,7 +728,7 @@ namespace Barotrauma.Items.Components
                         object value = property.GetValue(target);
                         if (door.Stuck > 0)
                         {
-                            var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White);
+                            var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White, "progressbar.welding");
                             if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                         }
                     }                    

@@ -381,7 +381,7 @@ namespace Barotrauma.Lights
             if (GUI.DisableItemHighlights) { return false; }
 
             highlightedEntities.Clear();
-            if (Character.Controlled != null)
+            if (Character.Controlled != null && (!Character.Controlled.IsKeyDown(InputType.Aim) || Character.Controlled.SelectedItems.Any(it => it?.GetComponent<Sprayer>() == null)))
             {
                 if (Character.Controlled.FocusedItem != null)
                 {
@@ -532,28 +532,16 @@ namespace Barotrauma.Lights
                         Vector2 relativeLightPos = pos;
                         if (convexHull.ParentEntity?.Submarine != null) relativeLightPos -= convexHull.ParentEntity.Submarine.Position;
 
-                        convexHull.CalculateShadowVertices(relativeLightPos, true);
+                        convexHull.CalculateLosVertices(relativeLightPos);
 
-                        //convert triangle strips to a triangle list
-                        for (int i = 0; i < convexHull.ShadowVertexCount * 2 - 2; i++)
+                        for (int i = 0; i < convexHull.ShadowVertexCount; i++)
                         {
-                            if (i % 2 == 0)
-                            {
-                                shadowVerts.Add(convexHull.ShadowVertices[i]);
-                                shadowVerts.Add(convexHull.ShadowVertices[i + 1]);
-                                shadowVerts.Add(convexHull.ShadowVertices[i + 2]);
-                            }
-                            else
-                            {
-                                shadowVerts.Add(convexHull.ShadowVertices[i]);
-                                shadowVerts.Add(convexHull.ShadowVertices[i + 2]);
-                                shadowVerts.Add(convexHull.ShadowVertices[i + 1]);
-                            }
+                            shadowVerts.Add(convexHull.ShadowVertices[i]);
                         }
 
-                        if (convexHull.ShadowVertexCount > 0)
+                        for (int i = 0; i < convexHull.PenumbraVertexCount; i++)
                         {
-                            penumbraVerts.AddRange(convexHull.PenumbraVertices);
+                            penumbraVerts.Add(convexHull.PenumbraVertices[i]);
                         }
                     }
 

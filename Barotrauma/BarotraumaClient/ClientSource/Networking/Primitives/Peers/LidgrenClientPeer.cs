@@ -14,11 +14,6 @@ namespace Barotrauma.Networking
         private NetClient netClient;
         private NetPeerConfiguration netPeerConfiguration;
 
-        private ConnectionInitialization initializationStep;
-        private bool contentPackageOrderReceived;
-        private int ownerKey;
-        private int passwordSalt;
-        private Steamworks.AuthTicket steamAuthTicket;
         List<NetIncomingMessage> incomingLidgrenMessages;
 
         public LidgrenClientPeer(string name)
@@ -128,7 +123,7 @@ namespace Barotrauma.Networking
 
             if (isConnectionInitializationStep && initializationStep != ConnectionInitialization.Success)
             {
-                ReadConnectionInitializationStep(inc);
+                ReadConnectionInitializationStep(new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));
             }
             else
             {
@@ -158,99 +153,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void ReadConnectionInitializationStep(NetIncomingMessage inc)
-        {
-            if (!isActive) { return; }
-
-            ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
-            //Console.WriteLine(step + " " + initializationStep);
-            NetOutgoingMessage outMsg; NetSendResult result;
-
-            switch (step)
-            {
-                case ConnectionInitialization.SteamTicketAndVersion:
-                    if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
-                    outMsg = netClient.CreateMessage();
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
-                    outMsg.Write(Name);
-                    outMsg.Write(ownerKey);
-                    outMsg.Write(SteamManager.GetSteamID());
-                    if (steamAuthTicket == null)
-                    {
-                        outMsg.Write((UInt16)0);
-                    }
-                    else
-                    {
-                        outMsg.Write((UInt16)steamAuthTicket.Data.Length);
-                        outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
-                    }
-
-                    outMsg.Write(GameMain.Version.ToString());
-
-                    IEnumerable<ContentPackage> mpContentPackages = GameMain.SelectedPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
-                    outMsg.WriteVariableInt32(mpContentPackages.Count());
-                    foreach (ContentPackage contentPackage in mpContentPackages)
-                    {
-                        outMsg.Write(contentPackage.Name);
-                        outMsg.Write(contentPackage.MD5hash.Hash);
-                    }
-
-                    result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
-                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
-                    {
-                        DebugConsole.NewMessage("Failed to send "+initializationStep.ToString()+" message to host: " + result);
-                    }
-                    break;
-                case ConnectionInitialization.ContentPackageOrder:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion ||
-                        initializationStep == ConnectionInitialization.Password) { initializationStep = ConnectionInitialization.ContentPackageOrder; }
-                    if (initializationStep != ConnectionInitialization.ContentPackageOrder) { return; }
-                    outMsg = netClient.CreateMessage();
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.ContentPackageOrder);
-
-                    Int32 cpCount = inc.ReadVariableInt32();
-                    List<ContentPackage> serverContentPackages = new List<ContentPackage>();
-                    for (int i = 0; i < cpCount; i++)
-                    {
-                        string hash = inc.ReadString();
-                        serverContentPackages.Add(GameMain.Config.SelectedContentPackages.Find(cp => cp.MD5hash.Hash == hash));
-                    }
-
-                    if (!contentPackageOrderReceived)
-                    {
-                        GameMain.Config.ReorderSelectedContentPackages(cp => serverContentPackages.Contains(cp) ?
-                                                                             serverContentPackages.IndexOf(cp) :
-                                                                             serverContentPackages.Count + GameMain.Config.SelectedContentPackages.IndexOf(cp));
-                        contentPackageOrderReceived = true;
-                    }
-
-                    result = netClient.SendMessage(outMsg, NetDeliveryMethod.ReliableUnordered);
-                    if (result != NetSendResult.Queued && result != NetSendResult.Sent)
-                    {
-                        DebugConsole.NewMessage("Failed to send " + initializationStep.ToString() + " message to host: " + result);
-                    }
-
-                    break;
-                case ConnectionInitialization.Password:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }
-                    if (initializationStep != ConnectionInitialization.Password) { return; }
-                    bool incomingSalt = inc.ReadBoolean(); inc.ReadPadBits();
-                    int retries = 0;
-                    if (incomingSalt)
-                    {
-                        passwordSalt = inc.ReadInt32();
-                    }
-                    else
-                    {
-                        retries = inc.ReadInt32();
-                    }
-                    OnRequestPassword?.Invoke(passwordSalt, retries);
-                    break;
-            }
-        }
-
         public override void SendPassword(string password)
         {
             if (!isActive) { return; }
@@ -269,7 +171,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Close(string msg = null)
+        public override void Close(string msg = null, bool disableReconnect = false)
         {
             if (!isActive) { return; }
 
@@ -278,7 +180,7 @@ namespace Barotrauma.Networking
             netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
             netClient = null;
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
-            OnDisconnect?.Invoke();
+            OnDisconnect?.Invoke(disableReconnect);
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
@@ -317,6 +219,18 @@ namespace Barotrauma.Networking
             if (result != NetSendResult.Queued && result != NetSendResult.Sent)
             {
                 DebugConsole.NewMessage("Failed to send message to host: " + result);
+            }
+        }
+
+        protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)
+        {
+            NetOutgoingMessage lidgrenMsg = netClient.CreateMessage();
+            lidgrenMsg.Write(msg.Buffer, 0, msg.LengthBytes);
+
+            NetSendResult result = netClient.SendMessage(lidgrenMsg, NetDeliveryMethod.ReliableUnordered);
+            if (result != NetSendResult.Queued && result != NetSendResult.Sent)
+            {
+                DebugConsole.NewMessage("Failed to send message to host: " + result + "\n" + Environment.StackTrace);
             }
         }
 

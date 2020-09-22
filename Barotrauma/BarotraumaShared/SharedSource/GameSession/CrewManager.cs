@@ -114,7 +114,7 @@ namespace Barotrauma
             }
 #if CLIENT
             AddCharacterToCrewList(character);
-            DisplayCharacterOrder(character, character.CurrentOrder, character.CurrentOrderOption);
+            AddCurrentOrderIcon(character, character.CurrentOrder, character.CurrentOrderOption);
 #endif
         }
 
@@ -193,7 +193,8 @@ namespace Barotrauma
 #endif
             }
 
-            conversationTimer = Rand.Range(5.0f, 10.0f);
+            //longer delay in multiplayer to prevent the server from triggering NPC conversations while the players are still loading the round
+            conversationTimer = IsSinglePlayer ? Rand.Range(5.0f, 10.0f) : Rand.Range(45.0f, 60.0f);
         }
 
         public void FireCharacter(CharacterInfo characterInfo)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,6 +35,7 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
+            if (Targets.None()) { return 100; }
             if (objectiveManager.CurrentOrder != this)
             {
                 if (!character.IsMedic && HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsMedic && !c.Character.IsUnconscious))
@@ -72,7 +74,7 @@ namespace Barotrauma
         public static bool IsValidTarget(Character target, Character character)
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
-            if (target.TurnedHostileByEvent) { return false; }
+            if (target.IsInstigator) { return false; }
             if (!HumanAIController.IsFriendly(character, target, onlySameTeam: true)) { return false; }
             if (character.AIController is HumanAIController humanAI)
             {
@@ -83,7 +85,7 @@ namespace Barotrauma
                     {
                         // Don't allow to treat others autonomously
                         return false;
-                }
+                    }
                     // Ignore unsafe hulls, unless ordered
                     if (humanAI.UnsafeHulls.Contains(target.CurrentHull))
                     {
@@ -100,10 +102,11 @@ namespace Barotrauma
             if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
             if (target != character &&!target.IsPlayer && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {
-                // Ignore all concious targets that are currently fighting, fleeing or treating characters
+                // Ignore all concious targets that are currently fighting, fleeing, fixing, or treating characters
                 if (targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveCombat>() ||
                     targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveFindSafety>() ||
-                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
+                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveRescue>() ||
+                    targetAI.ObjectiveManager.HasActiveObjective<AIObjectiveFixLeak>())
                 {
                     return false;
                 }

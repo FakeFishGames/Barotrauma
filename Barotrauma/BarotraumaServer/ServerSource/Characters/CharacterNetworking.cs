@@ -17,6 +17,8 @@ namespace Barotrauma
 
         private double LastInputTime;
 
+        public bool HealthUpdatePending;
+
         public float GetPositionUpdateInterval(Client recipient)
         {
             if (!Enabled) { return 1000.0f; }
@@ -418,6 +420,7 @@ namespace Barotrauma
                 if (writeStatus)
                 {
                     WriteStatus(tempBuffer);
+                    HealthUpdatePending = false;
                 }
 
                 tempBuffer.WritePadBits();

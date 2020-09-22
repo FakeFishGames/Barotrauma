@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
 
@@ -129,6 +128,13 @@ namespace Barotrauma
                 itemToDecontain.Drop(character);
                 IsCompleted = true;
             }
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            goToObjective = null;
+            containObjective = null;
         }
     }
 }

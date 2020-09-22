@@ -41,12 +41,17 @@ namespace Barotrauma
         }
         public override void Reset()
         {
+            isRunning = false;
             isFinished = false;
         }
+
+        public bool isRunning = false;
 
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
+
+            isRunning = true;
 
             var targets1 = ParentEvent.GetTargets(Target1Tag);
             if (!targets1.Any()) { return; }
@@ -155,6 +160,8 @@ namespace Barotrauma
             {
                 ParentEvent.AddTarget(ApplyToTarget2, entity2);
             }
+
+            isRunning = false;
             isFinished = true;
         }
 
@@ -162,11 +169,11 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(TargetModuleType))
             {
-                return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TriggerAction)} -> (Distance: {((int)distance).ColorizeObject()}, Radius: {Radius.ColorizeObject()}, TargetTags: {Target1Tag.ColorizeObject()}, {Target2Tag.ColorizeObject()})";
+                return $"{ToolBox.GetDebugSymbol(isFinished, isRunning)} {nameof(TriggerAction)} -> (Distance: {((int)distance).ColorizeObject()}, Radius: {Radius.ColorizeObject()}, TargetTags: {Target1Tag.ColorizeObject()}, {Target2Tag.ColorizeObject()})";
             }
             else
             {
-                return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TriggerAction)} -> (TargetTags: {Target1Tag.ColorizeObject()}, {TargetModuleType.ColorizeObject()})";
+                return $"{ToolBox.GetDebugSymbol(isFinished, isRunning)} {nameof(TriggerAction)} -> (TargetTags: {Target1Tag.ColorizeObject()}, {TargetModuleType.ColorizeObject()})";
             }
         }
     }

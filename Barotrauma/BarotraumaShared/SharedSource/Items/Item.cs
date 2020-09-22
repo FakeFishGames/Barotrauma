@@ -167,19 +167,19 @@ namespace Barotrauma
             set;
         }
 
-        private float rotation;
+        private float rotationRad;
 
         [Editable(0.0f, 360.0f, DecimalCount = 1, ValueStep = 1f), Serialize(0.0f, true)]
         public float Rotation
         {
             get
             {
-                return MathHelper.ToDegrees(rotation);
+                return MathHelper.ToDegrees(rotationRad);
             }
             set
             {
                 if (!Prefab.AllowRotatingInEditor) { return; }
-                rotation = MathHelper.ToRadians(value);
+                rotationRad = MathHelper.ToRadians(value);
             }
         }
 
@@ -734,6 +734,7 @@ namespace Barotrauma
                     case "preferredcontainer":
                     case "upgrademodule":
                     case "upgradeoverride":
+                    case "minimapicon":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -1070,6 +1071,12 @@ namespace Barotrauma
 
         public void Move(Vector2 amount, bool ignoreContacts)
         {
+            if (!MathUtils.IsValid(amount))
+            {
+                DebugConsole.ThrowError($"Attempted to move an item by an invalid amount ({amount})\n{Environment.StackTrace}");
+                return;
+            }
+
             base.Move(amount);
 
             if (ItemList != null && body != null)
@@ -1093,18 +1100,25 @@ namespace Barotrauma
 
         public Rectangle TransformTrigger(Rectangle trigger, bool world = false)
         {
-            return world ? 
+            Rectangle baseRect = world ? WorldRect : Rect;
+
+            Rectangle transformedRect =
                 new Rectangle(
-                    (int)(WorldRect.X + trigger.X * Scale),
-                    (int)(WorldRect.Y + trigger.Y * Scale),
-                    (trigger.Width == 0) ? Rect.Width : (int)(trigger.Width * Scale),
-                    (trigger.Height == 0) ? Rect.Height : (int)(trigger.Height * Scale))
-                    :
-                new Rectangle(
-                    (int)(Rect.X + trigger.X * Scale),
-                    (int)(Rect.Y + trigger.Y * Scale),
+                    (int)(baseRect.X + trigger.X * Scale),
+                    (int)(baseRect.Y + trigger.Y * Scale),
                     (trigger.Width == 0) ? Rect.Width : (int)(trigger.Width * Scale),
                     (trigger.Height == 0) ? Rect.Height : (int)(trigger.Height * Scale));
+
+            if (FlippedX)
+            {
+                transformedRect.X = baseRect.X + (baseRect.Right - transformedRect.Right);
+            }
+            if (FlippedY)
+            {
+                transformedRect.Y = baseRect.Y + ((baseRect.Y - baseRect.Height) - (transformedRect.Y - transformedRect.Height));
+            }
+
+            return transformedRect;
         }
 
         /// <summary>
@@ -1269,12 +1283,12 @@ namespace Barotrauma
             
             if (effect.HasTargetType(StatusEffect.TargetType.Contained))
             {
-                var containedItems = ContainedItems;
+                var containedItems = ownInventory?.Items;
                 if (containedItems != null)
                 {
                     foreach (Item containedItem in containedItems)
                     {
-                        if (containedItem == null) continue;
+                        if (containedItem == null) { continue; }
                         if (effect.TargetIdentifiers != null &&
                             !effect.TargetIdentifiers.Contains(containedItem.prefab.Identifier) &&
                             !effect.TargetIdentifiers.Any(id => containedItem.HasTag(id)))
@@ -1534,10 +1548,12 @@ namespace Barotrauma
                 body.SetTransform(body.SimPosition + prevSub.SimPosition - Submarine.SimPosition, body.Rotation);
             }
 
-            if (Submarine != prevSub && ContainedItems != null)
+            var containedItems = ownInventory?.Items;
+            if (Submarine != prevSub && containedItems != null)
             {
                 foreach (Item containedItem in ContainedItems)
                 {
+                    if (containedItem == null) { continue; }
                     containedItem.Submarine = Submarine;
                 }
             }
@@ -1621,11 +1637,12 @@ namespace Barotrauma
 #endif
                 }
 
-                var containedItems = ContainedItems;
+                var containedItems = ownInventory?.Items;
                 if (containedItems != null)
                 {
                     foreach (Item contained in containedItems)
                     {
+                        if (contained == null) { continue; }
                         if (contained.body != null) { contained.HandleCollision(impact); }
                     }
                 }
@@ -1687,7 +1704,7 @@ namespace Barotrauma
             }
 
             ConnectionPanel connectionPanel = GetComponent<ConnectionPanel>();
-            if (connectionPanel == null) return connectedComponents;
+            if (connectionPanel == null) { return connectedComponents; }
 
             foreach (Connection c in connectionPanel.Connections)
             {
@@ -1695,7 +1712,10 @@ namespace Barotrauma
                 foreach (Connection recipient in recipients)
                 {
                     var component = recipient.Item.GetComponent<T>();
-                    if (component != null) connectedComponents.Add(component);
+                    if (component != null && !connectedComponents.Contains(component))
+                    {
+                        connectedComponents.Add(component);
+                    } 
                 }
             }
 
@@ -1748,7 +1768,7 @@ namespace Barotrauma
             {
                 if (alreadySearched.Contains(recipient)) { continue; }
                 var component = recipient.Item.GetComponent<T>();                    
-                if (component != null)
+                if (component != null && !connectedComponents.Contains(component))
                 {
                     connectedComponents.Add(component);
                 }
@@ -2143,8 +2163,6 @@ namespace Barotrauma
 
         public void Drop(Character dropper, bool createNetworkEvent = true)
         {
-            Inventory prevInventory = parentInventory;
-            
             if (createNetworkEvent)
             {
                 if (parentInventory != null && !parentInventory.Owner.Removed && !Removed &&
@@ -2311,6 +2329,8 @@ namespace Barotrauma
             }
         }
 
+        private CoroutineHandle logPropertyChangeCoroutine;
+
         private void ReadPropertyChange(IReadMessage msg, bool inGameEditableOnly, Client sender = null)
         {
             var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
@@ -2336,62 +2356,79 @@ namespace Barotrauma
             }
 
             Type type = property.PropertyType;
+            string logValue = "";
             if (type == typeof(string))
             {
                 string val = msg.ReadString();
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                if (allowEditing) 
+                { 
+                    property.TrySetValue(parentObject, val);
+                }
             }
             else if (type == typeof(float))
             {
                 float val = msg.ReadSingle();
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = val.ToString("G", CultureInfo.InvariantCulture);
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(int))
             {
                 int val = msg.ReadInt32();
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = val.ToString();
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(bool))
             {
                 bool val = msg.ReadBoolean();
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = val.ToString();
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(Color))
             {
                 Color val = new Color(msg.ReadByte(), msg.ReadByte(), msg.ReadByte(), msg.ReadByte());
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = XMLExtensions.ColorToString(val);
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(Vector2))
             {
                 Vector2 val = new Vector2(msg.ReadSingle(), msg.ReadSingle());
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = XMLExtensions.Vector2ToString(val);
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(Vector3))
             {
                 Vector3 val = new Vector3(msg.ReadSingle(), msg.ReadSingle(), msg.ReadSingle());
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = XMLExtensions.Vector3ToString(val);
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(Vector4))
             {
                 Vector4 val = new Vector4(msg.ReadSingle(), msg.ReadSingle(), msg.ReadSingle(), msg.ReadSingle());
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = XMLExtensions.Vector4ToString(val);
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(Point))
             {
                 Point val = new Point(msg.ReadInt32(), msg.ReadInt32());
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = XMLExtensions.PointToString(val);
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (type == typeof(Rectangle))
             {
                 Rectangle val = new Rectangle(msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32(), msg.ReadInt32());
-                if (allowEditing) property.TrySetValue(parentObject, val);
+                logValue = XMLExtensions.RectToString(val);
+                if (allowEditing) { property.TrySetValue(parentObject, val); }
             }
             else if (typeof(Enum).IsAssignableFrom(type))
             {
                 int intVal = msg.ReadInt32();
                 try
                 {
-                    if (allowEditing) property.TrySetValue(parentObject, Enum.ToObject(type, intVal));
+                    if (allowEditing) 
+                    { 
+                        property.TrySetValue(parentObject, Enum.ToObject(type, intVal));
+                        logValue = property.GetValue(parentObject).ToString();
+                    }
                 }
                 catch (Exception e)
                 {
@@ -2408,7 +2445,22 @@ namespace Barotrauma
             {
                 return;
             }
-            
+
+#if SERVER
+            if (allowEditing)
+            {
+                //the property change isn't logged until the value stays unchanged for 1 second to prevent log spam when a player adjusts a value
+                if (logPropertyChangeCoroutine != null)
+                {
+                    CoroutineManager.StopCoroutines(logPropertyChangeCoroutine);
+                }
+                logPropertyChangeCoroutine = CoroutineManager.InvokeAfter(() =>
+                {
+                    GameServer.Log($"{sender.Character.Name} set the value \"{property.Name}\" of the item \"{Name}\" to \"{logValue}\".", ServerLog.MessageType.ItemInteraction);
+                }, delay: 1.0f);
+            }
+#endif
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
                 GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ChangeProperty, property });
@@ -2595,7 +2647,7 @@ namespace Barotrauma
             if (linkedTo != null && linkedTo.Count > 0)
             {
                 bool isOutpost = Submarine != null && Submarine.Info.IsOutpost;
-                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved && !l.Removed && (l.Submarine == null || l.Submarine.Info.IsOutpost == isOutpost));
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved && (l.Removed == Removed) && (l.Submarine == null || l.Submarine.Info.IsOutpost == isOutpost));
                 element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
             }
 

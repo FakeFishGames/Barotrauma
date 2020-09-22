@@ -165,6 +165,12 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                if (!string.IsNullOrEmpty(target.customInteractHUDText) && target.AllowCustomInteract)
+                {
+                    texts.Add(target.customInteractHUDText);
+                    textColors.Add(GUI.Style.Green);
+                }
+
                 if (target.IsUnconscious)
                 {
                     texts.Add(TextManager.Get("Unconscious"));

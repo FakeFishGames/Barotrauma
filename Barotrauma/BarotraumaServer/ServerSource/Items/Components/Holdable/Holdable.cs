@@ -31,6 +31,8 @@ namespace Barotrauma.Items.Components
             AttachToWall();
 
             item.CreateServerEvent(this);
+            c.Character.Inventory?.CreateNetworkEvent();
+
             GameServer.Log(GameServer.CharacterLogName(c.Character) + " attached " + item.Name + " to a wall", ServerLog.MessageType.ItemInteraction);
         }
     }

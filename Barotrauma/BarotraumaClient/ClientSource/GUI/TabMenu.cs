@@ -788,17 +788,12 @@ namespace Barotrauma
             string msg = ChatMessage.GetTimeStamp() + message.TextWithSender;
             storedMessages.Add(new Pair<string, PlayerConnectionChangeType>(msg, message.ChangeType));
 
-            if (GameSession.IsTabMenuOpen)
+            if (GameSession.IsTabMenuOpen && selectedTab == InfoFrameTab.Crew)
             {
                 TabMenu instance = GameSession.TabMenuInstance;
                 instance.AddLineToLog(msg, message.ChangeType);
-
-                // Update crew
-                if (selectedTab == InfoFrameTab.Crew)
-                {
-                    instance.RemoveCurrentElements();
-                    instance.CreateMultiPlayerList(true);
-                }
+                instance.RemoveCurrentElements();
+                instance.CreateMultiPlayerList(true);                
             }
         }
 
@@ -835,14 +830,15 @@ namespace Barotrauma
                     break;
             }
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), logList.Content.RectTransform), line, wrap: true, font: GUI.SmallFont)
+            if (logList != null)
             {
-                TextColor = textColor,
-                CanBeFocused = false,
-                UserData = line
-            }.CalculateHeightFromText();
-
-            //if ((prevSize == 1.0f && listBox.BarScroll == 0.0f) || (prevSize < 1.0f && listBox.BarScroll == 1.0f)) listBox.BarScroll = 1.0f;
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), logList.Content.RectTransform), line, wrap: true, font: GUI.SmallFont)
+                {
+                    TextColor = textColor,
+                    CanBeFocused = false,
+                    UserData = line
+                }.CalculateHeightFromText();
+            }
         }
 
         private void CreateMissionInfo(GUIFrame infoFrame)

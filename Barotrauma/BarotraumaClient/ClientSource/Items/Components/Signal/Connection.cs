@@ -192,6 +192,7 @@ namespace Barotrauma.Items.Components
             foreach (Wire wire in panel.DisconnectedWires)
             {
                 if (wire == DraggingConnected && mouseInRect) { continue; }
+                if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
                 Connection recipient = wire.OtherConnection(null);
                 string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
@@ -238,6 +239,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < MaxLinked; i++)
             {
                 if (wires[i] == null || wires[i].Hidden || (DraggingConnected == wires[i] && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
+                if (wires[i].HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
                 string label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
@@ -289,7 +291,7 @@ namespace Barotrauma.Items.Components
                     flashColor * (float)Math.Sin(FlashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), scale: connectorSpriteScale);
             }
 
-            if (Wires.Any(w => w != null && w != DraggingConnected && !w.Hidden))
+            if (Wires.Any(w => w != null && w != DraggingConnected && !w.Hidden && (!w.HiddenInGame || Screen.Selected != GameMain.GameScreen)))
             {
                 int screwIndex = (int)Math.Floor(position.Y / 30.0f) % screwSprites.Count;
                 screwSprites[screwIndex].Draw(spriteBatch, position, scale: connectorSpriteScale);
@@ -325,7 +327,7 @@ namespace Barotrauma.Items.Components
                 canDrag &&
                 ((PlayerInput.MousePosition.X > Math.Min(start.X, end.X) &&
                 PlayerInput.MousePosition.X < Math.Max(start.X, end.X) &&
-                MathUtils.LineToPointDistance(start, end, PlayerInput.MousePosition) < 6) ||
+                MathUtils.LineToPointDistanceSquared(start, end, PlayerInput.MousePosition) < 36) ||
                 Vector2.Distance(end, PlayerInput.MousePosition) < 20.0f ||
                 new Rectangle((start.X < end.X) ? textX - 100 : textX, (int)start.Y - 5, 100, 14).Contains(PlayerInput.MousePosition));
 

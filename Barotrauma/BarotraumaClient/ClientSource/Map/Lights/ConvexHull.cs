@@ -2,6 +2,7 @@
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpFont;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -87,6 +88,12 @@ namespace Barotrauma.Lights
         }
     }
 
+    class VectorPair
+    {
+        public Vector2? A = null;
+        public Vector2? B = null;
+    }
+
     class ConvexHull
     {
         public static List<ConvexHullList> HullLists = new List<ConvexHullList>();
@@ -96,6 +103,7 @@ namespace Barotrauma.Lights
         private readonly Segment[] segments = new Segment[4];
         private readonly SegmentPoint[] vertices = new SegmentPoint[4];
         private readonly SegmentPoint[] losVertices = new SegmentPoint[4];
+        private readonly VectorPair[] losOffsets = new VectorPair[4];
         
         private readonly bool[] backFacing;
         private readonly bool[] ignoreEdge;
@@ -105,6 +113,7 @@ namespace Barotrauma.Lights
         public VertexPositionColor[] ShadowVertices { get; private set; }
         public VertexPositionTexture[] PenumbraVertices { get; private set; }
         public int ShadowVertexCount { get; private set; }
+        public int PenumbraVertexCount { get; private set; }
 
         private readonly HashSet<ConvexHull> overlappingHulls = new HashSet<ConvexHull>();
 
@@ -157,15 +166,24 @@ namespace Barotrauma.Lights
 
             ParentEntity = parent;
 
-            ShadowVertices = new VertexPositionColor[6 * 2];
-            PenumbraVertices = new VertexPositionTexture[6];
+            ShadowVertices = new VertexPositionColor[6 * 4];
+            PenumbraVertices = new VertexPositionTexture[6 * 4];
             
             backFacing = new bool[4];
             ignoreEdge = new bool[4];
 
-            SetVertices(points);          
-                        
-            Enabled = true;
+            float minX = points[0].X, minY = points[0].Y, maxX = points[0].X, maxY = points[0].Y;
+
+            for (int i = 1; i < vertices.Length; i++)
+            {
+                if (points[i].X < minX) minX = points[i].X;
+                if (points[i].Y < minY) minY = points[i].Y;
+
+                if (points[i].X > maxX) maxX = points[i].X;
+                if (points[i].Y > minY) maxY = points[i].Y;
+            }
+
+            BoundingBox = new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
 
             isHorizontal = BoundingBox.Width > BoundingBox.Height;
             if (ParentEntity is Structure structure)
@@ -179,6 +197,10 @@ namespace Barotrauma.Lights
                 var door = item.GetComponent<Door>();
                 if (door != null) { isHorizontal = door.IsHorizontal; }
             }
+
+            SetVertices(points);          
+            
+            Enabled = true;
 
             var chList = HullLists.Find(h => h.Submarine == parent.Submarine);
             if (chList == null)
@@ -202,11 +224,17 @@ namespace Barotrauma.Lights
 
             if (isHorizontal == ch.isHorizontal)
             {
-                if (BoundingBox == ch.BoundingBox) { return; }
-
                 //hide segments that are roughly at the some position as some other segment (e.g. the ends of two adjacent wall pieces)
-                float mergeDist = 32;
+                float mergeDist = 16;
                 float mergeDistSqr = mergeDist * mergeDist;
+
+                Rectangle intersection = Rectangle.Intersect(BoundingBox, ch.BoundingBox);
+                int intersectionArea = intersection.Width * intersection.Height;
+                int bboxArea = BoundingBox.Width * BoundingBox.Height;
+                int otherBboxArea = ch.BoundingBox.Width * ch.BoundingBox.Height;
+                if (Math.Abs(intersectionArea - bboxArea) < mergeDistSqr) { return; }
+                if (Math.Abs(intersectionArea - otherBboxArea) < mergeDistSqr) { return; }
+
                 for (int i = 0; i < segments.Length; i++)
                 {
                     for (int j = 0; j < ch.segments.Length; j++)
@@ -237,27 +265,142 @@ namespace Barotrauma.Lights
                     }             
                 }
             }
-            else
+
+            for (int i = 0; i < segments.Length; i++)
             {
-                //TODO: do something to corner areas where a vertical wall meets a horizontal one
+                if (ignoreEdge[i]) { continue; }
+                if (Vector2.DistanceSquared(segments[i].Start.Pos, segments[i].End.Pos) < 1.0f) { continue; }
+                for (int j = 0; j < ch.segments.Length; j++)
+                {
+                    if (ch.ignoreEdge[j]) { continue; }
+                    if (Vector2.DistanceSquared(ch.segments[j].Start.Pos, ch.segments[j].End.Pos) < 1.0f) { continue; }
+                    if (IsSegmentAInB(segments[i], ch.segments[j]))
+                    {
+                        ignoreEdge[i] = true;
+                        if (Vector2.DistanceSquared(ch.segments[j].Start.Pos, segments[i].Start.Pos) < 4.0f)
+                        {
+                            ch.ShiftSegmentPoint(j, false, segments[i].End.Pos);
+                        }
+                        else if (Vector2.DistanceSquared(ch.segments[j].Start.Pos, segments[i].End.Pos) < 4.0f)
+                        {
+                            ch.ShiftSegmentPoint(j, false, segments[i].Start.Pos);
+                        }
+
+                        if (Vector2.DistanceSquared(ch.segments[j].End.Pos, segments[i].Start.Pos) < 4.0f)
+                        {
+                            ch.ShiftSegmentPoint(j, true, segments[i].End.Pos);
+                        }
+                        else if (Vector2.DistanceSquared(ch.segments[j].End.Pos, segments[i].End.Pos) < 4.0f)
+                        {
+                            ch.ShiftSegmentPoint(j, true, segments[i].Start.Pos);
+                        }
+                    }
+                    else if (IsSegmentAInB(ch.segments[j], segments[i]))
+                    {
+                        ch.ignoreEdge[j] = true;
+
+                        if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].Start.Pos) < 4.0f)
+                        {
+                            ShiftSegmentPoint(i, false, ch.segments[j].End.Pos);
+                        }
+                        else if (Vector2.DistanceSquared(segments[i].Start.Pos, ch.segments[j].End.Pos) < 4.0f)
+                        {
+                            ShiftSegmentPoint(i, false, ch.segments[j].Start.Pos);
+                        }
+
+                        if (Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].Start.Pos) < 4.0f)
+                        {
+                            ShiftSegmentPoint(i, true, ch.segments[j].End.Pos);
+                        }
+                        else if (Vector2.DistanceSquared(segments[i].End.Pos, ch.segments[j].End.Pos) < 4.0f)
+                        {
+                            ShiftSegmentPoint(i, true, ch.segments[j].Start.Pos);
+                        }
+                    }
+                }
             }
             
             //ignore edges that are inside some other convex hull
             for (int i = 0; i < vertices.Length; i++)
             {
-                if (vertices[i].Pos.X >= ch.BoundingBox.X && vertices[i].Pos.X <= ch.BoundingBox.Right && 
-                    vertices[i].Pos.Y >= ch.BoundingBox.Y && vertices[i].Pos.Y <= ch.BoundingBox.Bottom)
+                if (ch.IsPointInside(vertices[i].Pos))
                 {
-                    Vector2 p = vertices[(i + 1) % vertices.Length].Pos;
-
-                    if (p.X >= ch.BoundingBox.X && p.X <= ch.BoundingBox.Right && 
-                        p.Y >= ch.BoundingBox.Y && p.Y <= ch.BoundingBox.Bottom)
+                    if (ch.IsPointInside(vertices[(i + 1) % vertices.Length].Pos))
                     {
                         ignoreEdge[i] = true;
                         overlappingHulls.Add(ch);
                     }
                 }
             }
+        }
+
+        private void ShiftSegmentPoint(int segmentIndex, bool end, Vector2 newPos)
+        {
+            var segment = segments[segmentIndex];
+
+            losOffsets[segmentIndex] ??= new VectorPair();
+            bool flipped = false;
+            if (Vector2.DistanceSquared(vertices[segmentIndex].Pos, segment.Start.Pos) > Vector2.DistanceSquared(vertices[segmentIndex].Pos, segment.End.Pos))
+            {
+                flipped = true;
+            }
+            if (end == !flipped)
+            {
+                losOffsets[segmentIndex].B = newPos;
+            }
+            else
+            {
+                losOffsets[segmentIndex].A = newPos;
+            }
+        }
+
+        public bool IsSegmentAInB(Segment a, Segment b)
+        {
+            if (Vector2.DistanceSquared(a.Start.Pos, a.End.Pos) > Vector2.DistanceSquared(b.Start.Pos, b.End.Pos))
+            {
+                return false;
+            }
+
+            Vector2 min = new Vector2(Math.Min(b.Start.Pos.X, b.End.Pos.X), Math.Min(b.Start.Pos.Y, b.End.Pos.Y));
+            Vector2 max = new Vector2(Math.Max(b.Start.Pos.X, b.End.Pos.X), Math.Max(b.Start.Pos.Y, b.End.Pos.Y));
+            min.X -= 1.0f; min.Y -= 1.0f;
+            max.X += 1.0f; max.Y += 1.0f;
+
+            if (a.Start.Pos.X < min.X) { return false; }
+            if (a.Start.Pos.Y < min.Y) { return false; }
+            if (a.End.Pos.X < min.X) { return false; }
+            if (a.End.Pos.Y < min.Y) { return false; }
+
+            if (a.Start.Pos.X > max.X) { return false; }
+            if (a.Start.Pos.Y > max.Y) { return false; }
+            if (a.End.Pos.X > max.X) { return false; }
+            if (a.End.Pos.Y > max.Y) { return false; }
+
+            float startDist = MathUtils.LineToPointDistanceSquared(b.Start.Pos, b.End.Pos, a.Start.Pos);
+            if (startDist > 1.0f) { return false; }
+            float endDist = MathUtils.LineToPointDistanceSquared(b.Start.Pos, b.End.Pos, a.End.Pos);
+            if (endDist > 1.0f) { return false; }
+            return true;
+        }
+
+        public bool IsPointInside(Vector2 point)
+        {
+            if (!BoundingBox.Contains(point)) { return false; }
+
+            Vector2 center = (vertices[0].Pos + vertices[1].Pos + vertices[2].Pos + vertices[3].Pos) * 0.25f;
+            for (int i=0;i<4;i++)
+            {
+                Vector2 segmentVector = vertices[(i + 1) % 4].Pos - vertices[i].Pos;
+                Vector2 centerToVertex = center - vertices[i].Pos;
+                Vector2 pointToVertex = point - vertices[i].Pos;
+
+                float dotCenter = Vector2.Dot(centerToVertex, segmentVector);
+                float dotPoint = Vector2.Dot(pointToVertex, segmentVector);
+
+                if ((dotCenter > 0f && dotPoint < 0f) || (dotCenter < 0f && dotPoint > 0f)) { return false; }
+            }
+
+            return true;
         }
 
         private void MergeSegments(Segment segment1, Segment segment2, bool startPointsMatch)
@@ -344,6 +487,8 @@ namespace Barotrauma.Lights
                 vertices[i].Pos         += amount;
                 losVertices[i].Pos      += amount;
 
+                losOffsets[i] = null;
+
                 segments[i].Start.Pos   += amount;
                 segments[i].End.Pos     += amount;
             }
@@ -406,6 +551,7 @@ namespace Barotrauma.Lights
             {
                 vertices[i]     = new SegmentPoint(points[i], this);
                 losVertices[i]  = new SegmentPoint(points[i], this);
+                losOffsets[i] = null;
             }
 
             for (int i = 0; i < 4; i++)
@@ -517,7 +663,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public void CalculateShadowVertices(Vector2 lightSourcePos, bool los = true)
+        public void CalculateLosVertices(Vector2 lightSourcePos)
         {
             Vector3 offset = Vector3.Zero;
             if (ParentEntity != null && ParentEntity.Submarine != null)
@@ -527,8 +673,6 @@ namespace Barotrauma.Lights
 
             ShadowVertexCount = 0;
 
-            var vertices = los ? losVertices : this.vertices;
-            
             //compute facing of each edge, using N*L
             for (int i = 0; i < 4; i++)
             {
@@ -538,8 +682,8 @@ namespace Barotrauma.Lights
                     continue;
                 }
 
-                Vector2 firstVertex = vertices[i].Pos;
-                Vector2 secondVertex = vertices[(i+1) % 4].Pos;
+                Vector2 firstVertex = losVertices[i].Pos;
+                Vector2 secondVertex = losVertices[(i+1) % 4].Pos;
 
                 Vector2 L = lightSourcePos - ((firstVertex + secondVertex) / 2.0f);
 
@@ -547,121 +691,144 @@ namespace Barotrauma.Lights
                     -(secondVertex.Y - firstVertex.Y),
                     secondVertex.X - firstVertex.X);
 
-                backFacing[i] = (Vector2.Dot(N, L) < 0) == los;
+                backFacing[i] = (Vector2.Dot(N, L) < 0);
             }
 
-            //find beginning and ending vertices which
-            //belong to the shadow
-            int startingIndex = -1;
-            int endingIndex = -1;
-            for (int i = 0; i < 4; i++)
+            ShadowVertexCount = 0;
+            for (int i=0;i<4;i++)
             {
-                int currentEdge = i;
-                int nextEdge = (i + 1) % 4;
+                if (!backFacing[i]) { continue; }
+                int currentIndex = i;
+                Vector3 vertexPos0 = new Vector3(losOffsets[currentIndex]?.A ?? losVertices[currentIndex].Pos, 0.0f);
+                Vector3 vertexPos1 = new Vector3(losOffsets[currentIndex]?.B ?? losVertices[(currentIndex + 1) % 4].Pos, 0.0f);
 
-                if (backFacing[currentEdge] && !backFacing[nextEdge])
-                    endingIndex = nextEdge;
+                if (Vector3.DistanceSquared(vertexPos0, vertexPos1) < 1.0f) { continue; }
 
-                if (!backFacing[currentEdge] && backFacing[nextEdge])
-                    startingIndex = nextEdge;
-            }
+                Vector3 L2P0 = vertexPos0 - new Vector3(lightSourcePos, 0);
+                L2P0.Normalize();
+                Vector3 extruded0 = new Vector3(lightSourcePos, 0) + L2P0 * 9000;
 
-            if (startingIndex == -1 || endingIndex == -1) { return; }
+                Vector3 L2P1 = vertexPos1 - new Vector3(lightSourcePos, 0);
+                L2P1.Normalize();
+                Vector3 extruded1 = new Vector3(lightSourcePos, 0) + L2P1 * 9000;
 
-            //nr of vertices that are in the shadow
-            if (endingIndex > startingIndex)
-                ShadowVertexCount = endingIndex - startingIndex + 1;
-            else
-                ShadowVertexCount = 4 + 1 - startingIndex + endingIndex;
-
-            //shadowVertices = new VertexPositionColor[shadowVertexCount * 2];
-
-            //create a triangle strip that has the shape of the shadow
-            int currentIndex = startingIndex;
-            int svCount = 0;
-            while (svCount != ShadowVertexCount * 2)
-            {
-                Vector3 vertexPos = new Vector3(vertices[currentIndex].Pos, 0.0f);
-
-                int i = los ? svCount : svCount + 1;
-                int j = los ? svCount + 1 : svCount;
-
-                //one vertex on the hull
-                ShadowVertices[i] = new VertexPositionColor
+                ShadowVertices[ShadowVertexCount + 0] = new VertexPositionColor
                 {
-                    Color = los ? Color.Black : Color.Transparent,
-                    Position = vertexPos + offset
+                    Color = Color.Black,
+                    Position = vertexPos1 + offset
                 };
 
-                //one extruded by the light direction
-                ShadowVertices[j] = new VertexPositionColor
+                ShadowVertices[ShadowVertexCount + 1] = new VertexPositionColor
                 {
-                    Color = ShadowVertices[i].Color
+                    Color = Color.Black,
+                    Position = vertexPos0 + offset
                 };
 
-                Vector3 L2P = vertexPos - new Vector3(lightSourcePos, 0);
-                L2P.Normalize();
-                
-                ShadowVertices[j].Position = new Vector3(lightSourcePos, 0) + L2P * 9000 + offset;
+                ShadowVertices[ShadowVertexCount + 2] = new VertexPositionColor
+                {
+                    Color = Color.Black,
+                    Position = extruded0 + offset
+                };
 
-                svCount += 2;
-                currentIndex = (currentIndex + 1) % 4;
+                ShadowVertices[ShadowVertexCount + 3] = new VertexPositionColor
+                {
+                    Color = Color.Black,
+                    Position = vertexPos1 + offset
+                };
+
+                ShadowVertices[ShadowVertexCount + 4] = new VertexPositionColor
+                {
+                    Color = Color.Black,
+                    Position = extruded0 + offset
+                };
+
+                ShadowVertices[ShadowVertexCount + 5] = new VertexPositionColor
+                {
+                    Color = Color.Black,
+                    Position = extruded1 + offset
+                };
+
+                ShadowVertexCount += 6;
             }
 
-            if (los)
-            {
-                CalculatePenumbraVertices(startingIndex, endingIndex, lightSourcePos, los);
-            }
+            CalculateLosPenumbraVertices(lightSourcePos);
         }
 
-        private void CalculatePenumbraVertices(int startingIndex, int endingIndex, Vector2 lightSourcePos, bool los)
+        private void CalculateLosPenumbraVertices(Vector2 lightSourcePos)
         {
-            var vertices = los ? losVertices : this.vertices;
-
             Vector3 offset = Vector3.Zero;
             if (ParentEntity != null && ParentEntity.Submarine != null)
             {
                 offset = new Vector3(ParentEntity.Submarine.DrawPosition.X, ParentEntity.Submarine.DrawPosition.Y, 0.0f);
             }
 
-            for (int n = 0; n < 4; n += 3)
+            PenumbraVertexCount = 0;
+            for (int i = 0; i < 4; i++)
             {
-                Vector3 penumbraStart = new Vector3((n == 0) ? vertices[startingIndex].Pos : vertices[endingIndex].Pos, 0.0f);
+                int currentIndex = i;
+                int prevIndex = (i + 3) % 4;
+                int nextIndex = (i + 1) % 4;
+                bool disjointed = losOffsets[i]?.A != null;
+                Vector2 vertexPos0 = losOffsets[currentIndex]?.A ?? losVertices[currentIndex].Pos;
+                Vector2 vertexPos1 = losOffsets[currentIndex]?.B ?? losVertices[nextIndex].Pos;
 
-                PenumbraVertices[n] = new VertexPositionTexture
+                if (Vector2.DistanceSquared(vertexPos0, vertexPos1) < 1.0f) { continue; }
+
+                if (backFacing[currentIndex] && (disjointed || (!backFacing[prevIndex])))
                 {
-                    Position = penumbraStart + offset,
-                    TextureCoordinate = new Vector2(0.0f, 1.0f)
-                };
+                    Vector3 penumbraStart = new Vector3(vertexPos0, 0.0f);
 
-                for (int i = 0; i < 2; i++)
-                {
-                    PenumbraVertices[n + i + 1] = new VertexPositionTexture();
-                    Vector3 vertexDir = penumbraStart - new Vector3(lightSourcePos, 0);
-                    vertexDir.Normalize();
-
-                    Vector3 normal = (i == 0) ? new Vector3(-vertexDir.Y, vertexDir.X, 0.0f) : new Vector3(vertexDir.Y, -vertexDir.X, 0.0f) * 0.05f;
-                    if (n > 0) normal = -normal;
-
-                    vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
-                    vertexDir.Normalize();
-                    PenumbraVertices[n + i + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000 + offset;
-
-                    if (los)
+                    PenumbraVertices[PenumbraVertexCount] = new VertexPositionTexture
                     {
-                        PenumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
-                    }
-                    else
+                        Position = penumbraStart + offset,
+                        TextureCoordinate = new Vector2(0.0f, 1.0f)
+                    };
+
+                    for (int j = 0; j < 2; j++)
                     {
-                        PenumbraVertices[n + i + 1].TextureCoordinate = (i == 0) ? new Vector2(1.0f, 0.0f) : Vector2.Zero;
+                        PenumbraVertices[PenumbraVertexCount + j + 1] = new VertexPositionTexture();
+                        Vector3 vertexDir = penumbraStart - new Vector3(lightSourcePos, 0);
+                        vertexDir.Normalize();
+
+                        Vector3 normal = (j == 0) ? new Vector3(-vertexDir.Y, vertexDir.X, 0.0f) : new Vector3(vertexDir.Y, -vertexDir.X, 0.0f) * 0.05f;
+
+                        vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) - normal * 20.0f);
+                        vertexDir.Normalize();
+                        PenumbraVertices[PenumbraVertexCount + j + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000 + offset;
+
+                        PenumbraVertices[PenumbraVertexCount + j + 1].TextureCoordinate = (j == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
                     }
+
+                    PenumbraVertexCount += 3;
                 }
 
-                if (n > 0)
+                disjointed = losOffsets[i]?.B != null;
+                if (backFacing[currentIndex] && (disjointed || (!backFacing[nextIndex])))
                 {
-                    var temp = PenumbraVertices[4];
-                    PenumbraVertices[4] = PenumbraVertices[5];
-                    PenumbraVertices[5] = temp;
+                    Vector3 penumbraStart = new Vector3(vertexPos1, 0.0f);
+
+                    PenumbraVertices[PenumbraVertexCount] = new VertexPositionTexture
+                    {
+                        Position = penumbraStart + offset,
+                        TextureCoordinate = new Vector2(0.0f, 1.0f)
+                    };
+
+                    for (int j = 0; j < 2; j++)
+                    {
+                        PenumbraVertices[PenumbraVertexCount + (1 - j) + 1] = new VertexPositionTexture();
+                        Vector3 vertexDir = penumbraStart - new Vector3(lightSourcePos, 0);
+                        vertexDir.Normalize();
+
+                        Vector3 normal = (j == 0) ? new Vector3(-vertexDir.Y, vertexDir.X, 0.0f) : new Vector3(vertexDir.Y, -vertexDir.X, 0.0f) * 0.05f;
+
+                        vertexDir = penumbraStart - (new Vector3(lightSourcePos, 0) + normal * 20.0f);
+                        vertexDir.Normalize();
+                        PenumbraVertices[PenumbraVertexCount + (1 - j) + 1].Position = new Vector3(lightSourcePos, 0) + vertexDir * 9000 + offset;
+
+                        PenumbraVertices[PenumbraVertexCount + (1 - j) + 1].TextureCoordinate = (j == 0) ? new Vector2(0.05f, 0.0f) : new Vector2(1.0f, 0.0f);
+                    }
+
+                    PenumbraVertexCount += 3;
                 }
             }
         }

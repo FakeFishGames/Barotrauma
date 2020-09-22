@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -392,6 +393,8 @@ namespace Barotrauma.Items.Components
 
             if (item.GetComponent<LevelResource>() != null) { return true; }
 
+            if (item.GetComponent<Planter>() is { } planter && planter.GrowableSeeds.Any(seed => seed != null)) { return false; } 
+
             //if the item has a connection panel and rewiring is disabled, don't allow deattaching
             var connectionPanel = item.GetComponent<ConnectionPanel>();
             if (connectionPanel != null && (connectionPanel.Locked || !(GameMain.NetworkMember?.ServerSettings?.AllowRewiring ?? true)))
@@ -476,12 +479,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            var containedItems = item.ContainedItems;
+            var containedItems = item.OwnInventory?.Items;
             if (containedItems != null)
             {
                 foreach (Item contained in containedItems)
                 {
-                    if (contained.body == null) continue;
+                    if (contained == null) { continue; }
+                    if (contained.body == null) { continue; }
                     contained.SetTransform(item.SimPosition, contained.body.Rotation);
                 }
             }
@@ -573,7 +577,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (item.body == null || !item.body.Enabled) return;
+            if (item.body == null || !item.body.Enabled) { return; }
             if (picker == null || !picker.HasEquippedItem(item))
             {
                 if (Pusher != null) { Pusher.Enabled = false; }
@@ -598,7 +602,10 @@ namespace Barotrauma.Items.Components
             
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) Flip();
+            if (item.body.Dir != picker.AnimController.Dir) 
+            {
+                item.FlipX(relativeToSub: false);
+            }
 
             item.Submarine = picker.Submarine;
             
@@ -635,11 +642,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Flip()
+        public override void FlipX(bool relativeToSub)
         {
             handlePos[0].X = -handlePos[0].X;
             handlePos[1].X = -handlePos[1].X;
-            item.body.Dir = -item.body.Dir;
+            if (item.body != null)
+            {
+                item.body.Dir = -item.body.Dir;
+            }
         }
 
         public override void OnItemLoaded()

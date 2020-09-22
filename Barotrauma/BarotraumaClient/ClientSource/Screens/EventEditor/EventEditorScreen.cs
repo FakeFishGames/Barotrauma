@@ -32,9 +32,12 @@ namespace Barotrauma
         private EditorNode? draggedNode;
         private Vector2 dragOffset;
 
-        private Dictionary<EditorNode, Vector2> markedNodes = new Dictionary<EditorNode, Vector2>();
+        private readonly Dictionary<EditorNode, Vector2> markedNodes = new Dictionary<EditorNode, Vector2>();
 
         private static string projectName = string.Empty;
+
+        private OutpostGenerationParams? lastTestParam;
+        private LocationType? lastTestType;
 
         private int CreateID()
         {
@@ -292,6 +295,8 @@ namespace Barotrauma
                 string filePath = System.IO.Path.Combine(directory, $"{projectName}.sevproj");
                 File.WriteAllText(Path.Combine(directory, $"{projectName}.sevproj"), save.ToString());
                 GUI.AddMessage($"Project saved to {filePath}", GUI.Style.Green);
+
+                AskForConfirmation(TextManager.Get("EventEditor.TestPromptHeader"), TextManager.Get("EventEditor.TestPromptBody"), CreateTestSetupMenu);
                 return true;
             };
             return true;
@@ -520,15 +525,12 @@ namespace Barotrauma
 
         public override void Select()
         {
-            Cam.Position = Vector2.Zero;
-            nodeList.Clear();
             projectName = TextManager.Get("EventEditor.Unnamed");
             base.Select();
         }
 
         public override void Deselect()
         {
-            nodeList.Clear();
             base.Deselect();
         }
 
@@ -597,9 +599,9 @@ namespace Barotrauma
                 optionElement.Add(new XAttribute("text", text));
                 if (end) { optionElement.Add(new XAttribute("endconversation", true)); }
 
-                if (node != null)
+                if (node is EventNode eventNode)
                 {
-                    ExportChildNodes((EventNode) node, optionElement);
+                    ExportChildNodes(eventNode, optionElement);
                 }
 
                 newElement.Add(optionElement);
@@ -748,6 +750,57 @@ namespace Barotrauma
                 return true;
             };
         }
+        
+        private bool CreateTestSetupMenu()
+        {
+            var msgBox = new GUIMessageBox(TextManager.Get("EventEditor.TestPromptHeader"), "", new[] { TextManager.Get("Cancel"), TextManager.Get("OK") },  
+                relativeSize: new Vector2(0.2f, 0.3f), minSize: new Point(300, 175));
+
+            var layout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), msgBox.Content.RectTransform));
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), TextManager.Get("EventEditor.OutpostGenParams"), font: GUI.SubHeadingFont);
+            GUIDropDown paramInput = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), string.Empty, OutpostGenerationParams.Params.Count);
+            foreach (OutpostGenerationParams param in OutpostGenerationParams.Params)
+            {
+                paramInput.AddItem(param.Identifier, param);
+            }
+            paramInput.OnSelected = (_, param) =>
+            {
+                lastTestParam = param as OutpostGenerationParams;
+                return true;
+            };
+            paramInput.SelectItem(lastTestParam ?? OutpostGenerationParams.Params.FirstOrDefault());
+
+            new GUITextBlock(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), TextManager.Get("EventEditor.LocationType"), font: GUI.SubHeadingFont);
+            GUIDropDown typeInput = new GUIDropDown(new RectTransform(new Vector2(1, 0.25f), layout.RectTransform), string.Empty, LocationType.List.Count);
+            foreach (LocationType type in LocationType.List)
+            {
+                typeInput.AddItem(type.Identifier, type);
+            }
+            typeInput.OnSelected = (_, type) =>
+            {
+                lastTestType = type as LocationType;
+                return true;
+            };
+            typeInput.SelectItem(lastTestType ?? LocationType.List.FirstOrDefault());
+
+            // Cancel button
+            msgBox.Buttons[0].OnClicked = (button, o) =>
+            {
+                msgBox.Close();
+                return true;
+            };
+
+            // Ok button
+            msgBox.Buttons[1].OnClicked = (button, o) =>
+            {
+                TestEvent(lastTestParam, lastTestType);
+                msgBox.Close();
+                return true;
+            };
+
+            return true;
+        }
 
         private static void CreateEditMenu(ValueNode? node, NodeConnection? connection = null)
         {
@@ -858,6 +911,40 @@ namespace Barotrauma
                 msgBox.Close();
                 return true;
             };
+        }
+
+        private bool TestEvent(OutpostGenerationParams? param, LocationType? type)
+        {
+            SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(info => info.HasTag(SubmarineTag.Shuttle));
+
+            XElement? eventXml = ExportXML();
+            EventPrefab? prefab;
+            if (eventXml != null)
+            { 
+                prefab = new EventPrefab(eventXml);
+            }
+            else
+            {
+                GUI.AddMessage("Unable to open test enviroment because the event contains errors.", GUI.Style.Red);
+                return false;
+            }
+
+            GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, null);
+            TestGameMode gameMode = (TestGameMode) gameSession.GameMode;
+
+            gameMode.SpawnOutpost = true;
+            gameMode.OutpostParams = param;
+            gameMode.OutpostType = type;
+            gameMode.TriggeredEvent = prefab;
+            gameMode.OnRoundEnd = () =>
+            {
+                Submarine.Unload();
+                GameMain.EventEditorScreen.Select();
+            };
+
+            GameMain.GameScreen.Select();
+            gameSession.StartRound(null, false);
+            return true;
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

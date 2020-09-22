@@ -702,8 +702,8 @@ namespace Barotrauma
             {
                 if (!subElement.Name.ToString().Equals("upgrade", StringComparison.OrdinalIgnoreCase)) { continue; }
                 var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
-                if (savedVersion >= upgradeVersion) { continue; }         
-                
+                if (savedVersion >= upgradeVersion) { continue; }
+
                 foreach (XAttribute attribute in subElement.Attributes())
                 {
                     string attributeName = attribute.Name.ToString().ToLowerInvariant();
@@ -756,9 +756,17 @@ namespace Barotrauma
                 if (entity is Item item2)
                 {
                     XElement componentElement = subElement.FirstElement();
-                    if (componentElement == null) continue;
+                    if (componentElement == null) { continue; }
                     ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
-                    if (itemComponent == null) continue;
+                    if (itemComponent == null) { continue; }
+                    foreach (XAttribute attribute in componentElement.Attributes())
+                    {
+                        string attributeName = attribute.Name.ToString().ToLowerInvariant();
+                        if (itemComponent.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
+                        {
+                            FixValue(property, itemComponent, attribute);
+                        }
+                    }
                     foreach (XElement element in componentElement.Elements())
                     {
                         switch (element.Name.ToString().ToLowerInvariant())

@@ -151,6 +151,7 @@ namespace Barotrauma.Items.Components
             if (user == null 
                 || user.Removed
                 || user.SelectedConstruction != item
+                || item.ParentInventory != null
                 || !user.CanInteractWith(item) 
                 || (UsableIn == UseEnvironment.Water && !user.AnimController.InWater)
                 || (UsableIn == UseEnvironment.Air && user.AnimController.InWater))
@@ -221,7 +222,7 @@ namespace Barotrauma.Items.Components
 
             user.AnimController.ResetPullJoints();
 
-            if (dir != 0) user.AnimController.TargetDir = dir;
+            if (dir != 0) { user.AnimController.TargetDir = dir; }
 
             foreach (LimbPos lb in limbPositions)
             {

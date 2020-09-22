@@ -36,14 +36,22 @@ namespace Barotrauma
     {
         public class RequiredItem
         {
-            public readonly ItemPrefab ItemPrefab;
+            public readonly List<ItemPrefab> ItemPrefabs;
             public int Amount;
             public readonly float MinCondition;
             public readonly bool UseCondition;
 
             public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, bool useCondition)
             {
-                ItemPrefab = itemPrefab;
+                ItemPrefabs = new List<ItemPrefab>() { itemPrefab };
+                Amount = amount;
+                MinCondition = minCondition;
+                UseCondition = useCondition;
+            }
+
+            public RequiredItem(IEnumerable<ItemPrefab> itemPrefabs, int amount, float minCondition, bool useCondition)
+            {
+                ItemPrefabs = new List<ItemPrefab>(itemPrefabs);
                 Amount = amount;
                 MinCondition = minCondition;
                 UseCondition = useCondition;
@@ -89,9 +97,10 @@ namespace Barotrauma
                     case "item":
                     case "requireditem":
                         string requiredItemIdentifier = subElement.GetAttributeString("identifier", "");
-                        if (string.IsNullOrWhiteSpace(requiredItemIdentifier))
+                        string requiredItemTag = subElement.GetAttributeString("tag", "");
+                        if (string.IsNullOrWhiteSpace(requiredItemIdentifier) && string.IsNullOrEmpty(requiredItemTag))
                         {
-                            DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! One of the required items has no identifier.");
+                            DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! One of the required items has no identifier or tag.");
                             continue;
                         }
 
@@ -100,26 +109,43 @@ namespace Barotrauma
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int count = subElement.GetAttributeInt("count", 1);
 
-
-                        ItemPrefab requiredItem = MapEntityPrefab.Find(null, requiredItemIdentifier.Trim()) as ItemPrefab;
-                        if (requiredItem == null)
+                        if (!string.IsNullOrEmpty(requiredItemIdentifier))
                         {
-                            DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! Required item \"" + requiredItemIdentifier + "\" not found.");
-                            continue;
-                        }
+                            if (!(MapEntityPrefab.Find(null, requiredItemIdentifier.Trim()) is ItemPrefab requiredItem))
+                            {
+                                DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! Required item \"" + requiredItemIdentifier + "\" not found.");
+                                continue;
+                            }
 
-                        var existing = RequiredItems.Find(r => r.ItemPrefab == requiredItem);
-                        if (existing == null)
-                        {
-                            RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
+                            var existing = RequiredItems.Find(r => r.ItemPrefabs.Count == 1 && r.ItemPrefabs[0] == requiredItem);
+                            if (existing == null)
+                            {
+                                RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
+                            }
+                            else
+                            {
+                                existing.Amount += count;
+                            }
                         }
                         else
                         {
+                            var matchingItems = ItemPrefab.Prefabs.Where(ip => ip.Tags.Any(t => t.Equals(requiredItemTag, StringComparison.OrdinalIgnoreCase)));
+                            if (!matchingItems.Any())
+                            {
+                                DebugConsole.ThrowError("Error in fabricable item " + itemPrefab.Name + "! Could not find any items with the tag \"" + requiredItemTag + "\".");
+                                continue;
+                            }
 
-                            RequiredItems.Remove(existing);
-                            RequiredItems.Add(new RequiredItem(requiredItem, existing.Amount + count, minCondition, useCondition));
+                            var existing = RequiredItems.Find(r => r.ItemPrefabs.SequenceEqual(matchingItems));
+                            if (existing == null)
+                            {
+                                RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, useCondition));
+                            }
+                            else
+                            {
+                                existing.Amount += count;
+                            }
                         }
-
                         break;
                 }
             }
@@ -161,7 +187,7 @@ namespace Barotrauma
 
     partial class ItemPrefab : MapEntityPrefab
     {
-        private string name;
+        private readonly string name;
         public override string Name => name;
 
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
@@ -405,6 +431,8 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(null, false)]
+        public string EquipConfirmationText { get; set; }
 
         [Serialize(true, false, description: "Can the item be rotated in the sprite editor.")]
         public bool AllowRotatingInEditor { get; set; }
@@ -717,12 +745,24 @@ namespace Barotrauma
                     }
 #if CLIENT
                     case "inventoryicon":
-                        string iconFolder = "";
-                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            iconFolder = Path.GetDirectoryName(filePath);
+                            string iconFolder = "";
+                            if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                            {
+                                iconFolder = Path.GetDirectoryName(filePath);
+                            }
+                            InventoryIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
-                        InventoryIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
+                        break;
+                    case "minimapicon":
+                        {
+                            string iconFolder = "";
+                            if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                            {
+                                iconFolder = Path.GetDirectoryName(filePath);
+                            }
+                            MinimapIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
+                        }
                         break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
@@ -942,7 +982,7 @@ namespace Barotrauma
 
         public int? GetMinPrice()
         {
-            int? minPrice = locationPrices?.Values.Min(p => p.Price);
+            int? minPrice = locationPrices != null && locationPrices.Values.Any() ? locationPrices?.Values.Min(p => p.Price) : null;
             if (minPrice.HasValue)
             {
                 if (defaultPrice != null)

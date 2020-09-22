@@ -23,8 +23,9 @@ namespace Barotrauma
         private readonly float screenColorRange, screenColorDuration;
 
         private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
-        private float flashDuration;
-        private float? flashRange;
+        private bool applyFireEffects;
+        private readonly float flashDuration;
+        private readonly float? flashRange;
         private readonly string decal;
         private readonly float decalSize;
 
@@ -57,6 +58,8 @@ namespace Barotrauma
             underwaterBubble = element.GetAttributeBool("underwaterbubble", true);
             smoke       = element.GetAttributeBool("smoke", true);
 
+            applyFireEffects = element.GetAttributeBool("applyfireeffects", flames);
+
             flash           = element.GetAttributeBool("flash", true);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
             if (element.Attribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
@@ -64,7 +67,7 @@ namespace Barotrauma
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
 
             decal       = element.GetAttributeString("decal", "");
-            decalSize   = element.GetAttributeFloat("decalSize", 1.0f);
+            decalSize   = element.GetAttributeFloat(1.0f, "decalSize", "decalsize");
 
             cameraShake = element.GetAttributeFloat("camerashake", attack.Range * 0.1f);
             cameraShakeRange = element.GetAttributeFloat("camerashakerange", attack.Range);
@@ -98,8 +101,12 @@ namespace Barotrauma
             }
 
             Hull hull = Hull.FindHull(worldPosition);
-
             ExplodeProjSpecific(worldPosition, hull);
+
+            if (hull != null && !string.IsNullOrWhiteSpace(decal) && decalSize > 0.0f)
+            {
+                hull.AddDecal(decal, worldPosition, decalSize, true);
+            }
 
             float displayRange = attack.Range;
 
@@ -161,7 +168,7 @@ namespace Barotrauma
                 {
                     if (item.Condition <= 0.0f) { continue; }
                     if (Vector2.Distance(item.WorldPosition, worldPosition) > attack.Range * 0.5f) { continue; }
-                    if (flames && !item.FireProof)
+                    if (applyFireEffects && !item.FireProof)
                     {
                         //don't apply OnFire effects if the item is inside a fireproof container
                         //(or if it's inside a container that's inside a fireproof container, etc)
@@ -231,8 +238,11 @@ namespace Barotrauma
 
                 Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
                 Dictionary<Limb, float> damages = new Dictionary<Limb, float>();
+                List<Affliction> modifiedAfflictions = new List<Affliction>();
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
+                    if (limb.IsSevered || limb.ignoreCollisions) { continue; }
+
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
                     
                     //calculate distance from the "outer surface" of the physics body
@@ -244,19 +254,49 @@ namespace Barotrauma
 
                     float distFactor = 1.0f - dist / attack.Range;
 
-                    //solid obstacles between the explosion and the limb reduce the effect of the explosion by 90%
-                    if (Submarine.CheckVisibility(limb.SimPosition, explosionPos) != null)
+                    //solid obstacles between the explosion and the limb reduce the effect of the explosion
+                    var obstacles = Submarine.PickBodies(limb.SimPosition, explosionPos, collisionCategory: Physics.CollisionItem | Physics.CollisionItemBlocking | Physics.CollisionWall);
+                    foreach (var body in obstacles)
                     {
-                        distFactor *= 0.1f;
+                        if (body.UserData is Item item)
+                        {
+                            var door = item.GetComponent<Door>();
+                            if (door != null && !door.IsBroken) { distFactor *= 0.01f; }
+                        }
+                        else if (body.UserData is Structure structure)
+                        {
+                            int sectionIndex = structure.FindSectionIndex(worldPosition, world: true, clamp: true);  
+                            if (structure.SectionBodyDisabled(sectionIndex))
+                            {
+                                continue;
+                            }
+                            else if (structure.SectionIsLeaking(sectionIndex))
+                            {
+                                distFactor *= 0.1f;
+                            }
+                            else
+                            {
+                                distFactor *= 0.01f;
+                            }
+                        }
+                        else
+                        {
+                            distFactor *= 0.1f;
+                        }
                     }
-                    
+                    if (distFactor <= 0.05f) { continue; }
+
                     distFactors.Add(limb, distFactor);
-                    
-                    List<Affliction> modifiedAfflictions = new List<Affliction>();
-                    int limbCount = c.AnimController.Limbs.Count(l => !l.IsSevered && !l.ignoreCollisions);
+
+                    modifiedAfflictions.Clear();
                     foreach (Affliction affliction in attack.Afflictions.Keys)
                     {
-                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / limbCount));
+                        //previously the damage would be divided by the number of limbs (the intention was to prevent characters with more limbs taking more damage from explosions)
+                        //that didn't work well on large characters like molochs and endworms: the explosions tend to only damage one or two of their limbs, and since the characters
+                        //have lots of limbs, they tended to only take a fraction of the damage they should
+
+                        //now we just divide by 10, which keeps the damage to normal-sized characters roughly the same as before and fixes the large characters
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / 10));
                     }
                     c.LastDamageSource = damageSource;
                     if (attacker == null)
@@ -273,7 +313,8 @@ namespace Barotrauma
 
                     //use a position slightly from the limb's position towards the explosion
                     //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
-                    Vector2 hitPos = limb.WorldPosition + (worldPosition - limb.WorldPosition) / dist * 0.01f;
+                    Vector2 dir = worldPosition - limb.WorldPosition;
+                    Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
                     AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker);
                     damages.Add(limb, attackResult.Damage);
                     

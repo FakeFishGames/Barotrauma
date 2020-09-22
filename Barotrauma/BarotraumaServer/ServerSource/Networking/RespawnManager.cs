@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,12 +8,27 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
-        private List<Client> GetClientsToRespawn()
+        private DateTime despawnTime;
+
+        private IEnumerable<Client> GetClientsToRespawn()
         {
-            return networkMember.ConnectedClients.FindAll(c =>
-                c.InGame &&
-                (!c.SpectateOnly || (!GameMain.Server.ServerSettings.AllowSpectating && GameMain.Server.OwnerConnection != c.Connection)) &&
-                (c.Character == null || c.Character.IsDead));
+            MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
+            foreach (Client c in networkMember.ConnectedClients)
+            {
+                if (!c.InGame) { continue; }
+                if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { continue; }
+                if (c.Character != null && !c.Character.IsDead) { continue; }
+
+                //don't allow respawning if the client has previously disconnected and their corpse is still present on the server
+                var matchingData = campaign?.GetClientCharacterData(c);
+                if (matchingData != null && matchingData.HasSpawned && 
+                    Character.CharacterList.Any(c => c.Info == matchingData.CharacterInfo && c.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
+                {
+                    continue;
+                }
+
+                yield return c;
+            }
         }
 
         private List<CharacterInfo> GetBotsToRespawn()
@@ -56,7 +70,7 @@ namespace Barotrauma.Networking
 
         private bool RespawnPending()
         {
-            int characterToRespawnCount = GetClientsToRespawn().Count;
+            int characterToRespawnCount = GetClientsToRespawn().Count();
             int totalCharacterCount = GameMain.Server.ConnectedClients.Count;
             return (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * GameMain.Server.ServerSettings.MinRespawnRatio, 1.0f);
         }
@@ -82,15 +96,9 @@ namespace Barotrauma.Networking
             if (RespawnShuttle == null) { return; }
 
             RespawnShuttle.Velocity = Vector2.Zero;
-
-            if (shuttleSteering != null)
-            {
-                shuttleSteering.AutoPilot = false;
-                shuttleSteering.MaintainPos = false;
-            }
         }
 
-        partial void DispatchShuttle()
+        private void DispatchShuttle()
         {
             if (RespawnShuttle != null)
             {
@@ -118,13 +126,8 @@ namespace Barotrauma.Networking
                 {
                     RespawnShuttle.SetPosition(spawnPos);
                     RespawnShuttle.Velocity = Vector2.Zero;
-                    if (shuttleSteering != null)
-                    {
-                        shuttleSteering.AutoPilot = true;
-                        shuttleSteering.MaintainPos = true;
-                        shuttleSteering.PosToMaintain = RespawnShuttle.WorldPosition;
-                        shuttleSteering.UnsentChanges = true;
-                    }
+                    RespawnShuttle.NeutralizeBallast();
+                    RespawnShuttle.EnableMaintainPosition();
                 }
             }
             else
@@ -219,11 +222,19 @@ namespace Barotrauma.Networking
         {
             var respawnSub = RespawnShuttle ?? Submarine.MainSub;
 
-            var clients = GetClientsToRespawn();
+            MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
+
+            var clients = GetClientsToRespawn().ToList();
             foreach (Client c in clients)
             {
                 //get rid of the existing character
                 c.Character?.DespawnNow();
+
+                var matchingData = campaign?.GetClientCharacterData(c);
+                if (matchingData != null && !matchingData.HasSpawned)
+                {
+                    c.CharacterInfo = matchingData.CharacterInfo;
+                }                
 
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
@@ -238,7 +249,10 @@ namespace Barotrauma.Networking
             GameMain.Server.AssignJobs(clients);
             foreach (Client c in clients)
             {
-                c.CharacterInfo.Job = new Job(c.AssignedJob.First, c.AssignedJob.Second);
+                if (campaign?.GetClientCharacterData(c) == null || c.CharacterInfo.Job == null)
+                {
+                    c.CharacterInfo.Job = new Job(c.AssignedJob.First, c.AssignedJob.Second);
+                }
             }
 
             //the spawnpoints where the characters will spawn
@@ -314,19 +328,37 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                //give the character the items they would've gotten if they had spawned in the main sub
-                character.GiveJobItems(mainSubSpawnPoints[i]);
+                var characterData = campaign?.GetClientCharacterData(clients[i]);
+                if (characterData == null || characterData.HasSpawned)
+                {
+                    //give the character the items they would've gotten if they had spawned in the main sub
+                    character.GiveJobItems(mainSubSpawnPoints[i]);
+                    if (campaign != null)
+                    {
+                        characterData = campaign.SetClientCharacterData(clients[i]);
+                        characterData.HasSpawned = true;
+                    }
+                }
+                else
+                {
+                    characterData.SpawnInventoryItems(character.Info, character.Inventory);
+                    characterData.ApplyHealthData(character.Info, character);
+                    character.GiveIdCardTags(mainSubSpawnPoints[i]);
+                    characterData.HasSpawned = true;
+                }
 
                 //add the ID card tags they should've gotten when spawning in the shuttle
                 foreach (Item item in character.Inventory.Items)
                 {
-                    if (item == null || item.Prefab.Identifier != "idcard") continue;
+                    if (item == null || item.Prefab.Identifier != "idcard") { continue; }
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);
                     }
                     if (!string.IsNullOrWhiteSpace(shuttleSpawnPoints[i].IdCardDesc))
+                    {
                         item.Description = shuttleSpawnPoints[i].IdCardDesc;
+                    }
                 }
             }
         }

@@ -43,15 +43,12 @@ namespace Barotrauma
         //but they're checked for all over the place
         //TODO: maybe clean up instead of having these constants
         public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
-        
+
+        public static DecalManager DecalManager;
+
         public static bool ShouldRun = true;
 
         private static Stopwatch stopwatch;
-
-        public static IEnumerable<ContentPackage> SelectedPackages
-        {
-            get { return Config?.SelectedContentPackages; }
-        }
 
         private static ContentPackage vanillaContent;
         public static ContentPackage VanillaContent
@@ -61,7 +58,7 @@ namespace Barotrauma
                 if (vanillaContent == null)
                 {
                     // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.List.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
+                    vanillaContent = ContentPackage.CorePackages.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
                 }
                 return vanillaContent;
             }
@@ -110,10 +107,10 @@ namespace Barotrauma
             EventSet.LoadPrefabs();
             Order.Init();
             EventManagerSettings.Init();
+            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
             StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
-            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             UpgradePrefab.LoadAll(GetFilesOfType(ContentType.UpgradeModules));
             JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
             CorpsePrefab.LoadAll(GetFilesOfType(ContentType.Corpses));
@@ -122,6 +119,7 @@ namespace Barotrauma
             LevelObjectPrefab.LoadAll();
 
             GameModePreset.Init();
+            DecalManager = new DecalManager();
             LocationType.Init();
 
             SubmarineInfo.RefreshSavedSubs();
@@ -136,8 +134,8 @@ namespace Barotrauma
 
         private void CheckContentPackage()
         {
-
-            foreach (ContentPackage contentPackage in Config.SelectedContentPackages)
+            //TODO: reimplement using only core package?
+            /*foreach (ContentPackage contentPackage in Config.AllEnabledPackages)
             {
                 var exePaths = contentPackage.GetFilesOfType(ContentType.ServerExecutable);
                 if (exePaths.Count() > 0 && AppDomain.CurrentDomain.FriendlyName != exePaths.First())
@@ -155,7 +153,7 @@ namespace Barotrauma
                         });
                     break;
                 }
-            }
+            }*/
         }
 
         /// <summary>
@@ -167,11 +165,11 @@ namespace Barotrauma
         {
             if (searchAllContentPackages)
             {
-                return ContentPackage.GetFilesOfType(ContentPackage.List, type);
+                return ContentPackage.GetFilesOfType(ContentPackage.AllPackages, type);
             }
             else
             {
-                return ContentPackage.GetFilesOfType(SelectedPackages, type);
+                return ContentPackage.GetFilesOfType(Config.AllEnabledPackages, type);
             }
         }
 

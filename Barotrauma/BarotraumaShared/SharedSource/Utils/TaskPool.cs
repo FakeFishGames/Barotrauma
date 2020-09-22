@@ -18,17 +18,25 @@ namespace Barotrauma
             public object UserData;
         }
 
-        private static List<TaskAction> taskActions = new List<TaskAction>();
+        private static readonly List<TaskAction> taskActions = new List<TaskAction>();
 
-        public static void ListTasks(string[] args)
+        public static void ListTasks()
         {
             lock (taskActions)
             {
                 DebugConsole.NewMessage($"Task count: {taskActions.Count}");
-                for (int i=0;i<taskActions.Count;i++)
+                for (int i = 0; i < taskActions.Count; i++)
                 {
                     DebugConsole.NewMessage($" -{i}: {taskActions[i].Name}, {taskActions[i].Task.Status}");
                 }
+            }
+        }
+
+        public static bool IsTaskRunning(string name)
+        {
+            lock (taskActions)
+            {
+                return taskActions.Any(t => t.Name == name);
             }
         }
 

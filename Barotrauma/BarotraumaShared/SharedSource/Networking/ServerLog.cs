@@ -19,11 +19,11 @@ namespace Barotrauma.Networking
             {
                 if (type.HasFlag(MessageType.Chat))
                 {
-                    Text = $"[{DateTime.Now.ToString()}]\n  {text}";
+                    Text = $"[{DateTime.Now}]\n  {text}";
                 }
                 else
                 {
-                    Text = $"[{DateTime.Now.ToString()}]\n  {TextManager.GetServerMessage(text)}";
+                    Text = $"[{DateTime.Now}]\n  {TextManager.GetServerMessage(text)}";
                 }
                 RichData = RichTextData.GetRichTextData(Text, out SanitizedText);
 

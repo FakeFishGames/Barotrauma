@@ -36,6 +36,8 @@ namespace Barotrauma
         public float OffsetAnimSpeed { get; private set; }
 
         private float rotationSpeedRadians;
+        private float absRotationSpeedRadians;
+
         [Serialize(0.0f, true), Editable]
         public float RotationSpeed
         {
@@ -46,6 +48,7 @@ namespace Barotrauma
             private set
             {
                 rotationSpeedRadians = MathHelper.ToRadians(value);
+                absRotationSpeedRadians = Math.Abs(rotationSpeedRadians);
             }
         }
 
@@ -121,43 +124,46 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 GetOffset(ref float offsetState)
+        public Vector2 GetOffset(ref float offsetState, float rotation = 0.0f)
         {
-            if (OffsetAnimSpeed <= 0.0f)
+            Vector2 offset = Offset;
+            if (OffsetAnimSpeed > 0.0f)
             {
-                return Offset;
-            }
-            switch (OffsetAnim)
-            {
-                case AnimationType.Sine:
-                    offsetState %= (MathHelper.TwoPi / OffsetAnimSpeed);
-                    return Offset * (float)Math.Sin(offsetState * OffsetAnimSpeed);
-                case AnimationType.Noise:
-                    offsetState %= (1.0f / (OffsetAnimSpeed * 0.1f));
+                switch (OffsetAnim)
+                {
+                    case AnimationType.Sine:
+                        offsetState %= (MathHelper.TwoPi / OffsetAnimSpeed);
+                        offset *= (float)Math.Sin(offsetState * OffsetAnimSpeed);
+                        break;
+                    case AnimationType.Noise:
+                        offsetState %= 1.0f / (OffsetAnimSpeed * 0.1f);
 
-                    float t = offsetState * 0.1f * OffsetAnimSpeed;
-                    return new Vector2(
-                        Offset.X * (PerlinNoise.GetPerlin(t, t) - 0.5f),
-                        Offset.Y * (PerlinNoise.GetPerlin(t + 0.5f, t + 0.5f) - 0.5f));
-                default:
-                    return Offset;
+                        float t = offsetState * 0.1f * OffsetAnimSpeed;
+                        offset = new Vector2(
+                            offset.X * (PerlinNoise.GetPerlin(t, t) - 0.5f),
+                            offset.Y * (PerlinNoise.GetPerlin(t + 0.5f, t + 0.5f) - 0.5f));
+                        break;
+                }
             }
+            if (Math.Abs(rotation) > 0.01f)
+            {
+                Matrix transform = Matrix.CreateRotationZ(rotation);
+                offset = Vector2.Transform(offset, transform);
+            }
+            return offset;
         }
 
         public float GetRotation(ref float rotationState)
         {
-            if (rotationSpeedRadians <= 0.0f)
-            {
-                return rotationRadians;
-            }
+            RotationSpeed = -Math.Abs(RotationSpeed);
             switch (RotationAnim)
             {
                 case AnimationType.Sine:
-                    rotationState = rotationState % (MathHelper.TwoPi / rotationSpeedRadians);
+                    rotationState %= MathHelper.TwoPi / absRotationSpeedRadians;
                     return rotationRadians * (float)Math.Sin(rotationState * rotationSpeedRadians);
                 case AnimationType.Noise:
-                    rotationState = rotationState % (1.0f / rotationSpeedRadians);
-                    return rotationRadians * (PerlinNoise.GetPerlin(rotationState * rotationSpeedRadians, rotationState * rotationSpeedRadians) - 0.5f);
+                    rotationState %= 1.0f / absRotationSpeedRadians;
+                    return rotationRadians * (PerlinNoise.GetPerlin(rotationState * absRotationSpeedRadians, rotationState * absRotationSpeedRadians) - 0.5f);
                 default:
                     return rotationState * rotationSpeedRadians;
             }

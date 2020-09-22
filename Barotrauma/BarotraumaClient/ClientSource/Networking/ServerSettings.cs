@@ -477,10 +477,6 @@ namespace Barotrauma.Networking
             GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
             playstyleList.RectTransform.MinSize = new Point(0, (int)(playstyleList.Content.Children.First().Rect.Height * 2.0f + playstyleList.Padding.Y + playstyleList.Padding.W));
 
-            var endBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
-                TextManager.Get("ServerSettingsEndRoundWhenDestReached"));
-            GetPropertyData("EndRoundAtLevelEnd").AssignGUIComponent(endBox);
-            
             var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundVoting"));
             GetPropertyData("AllowEndVoting").AssignGUIComponent(endVoteBox);
@@ -569,6 +565,8 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
+            var traitorsMinPlayerCount = CreateLabeledNumberInput(roundsTab, "ServerSettingsTraitorsMinPlayerCount", 1, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
+            GetPropertyData("TraitorsMinPlayerCount").AssignGUIComponent(traitorsMinPlayerCount);
 
             var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
             GetPropertyData("AllowRagdollButton").AssignGUIComponent(ragdollButtonBox);
@@ -576,53 +574,6 @@ namespace Barotrauma.Networking
             var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
             GetPropertyData("DisableBotConversations").AssignGUIComponent(disableBotConversationsBox);
 
-            /*var traitorRatioBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsUseTraitorRatio"));
-
-            CreateLabeledSlider(roundsTab, "", out slider, out sliderLabel);
-            var traitorRatioSlider = slider;
-            traitorRatioBox.OnSelected = (GUITickBox) =>
-            {
-                traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
-                return true;
-            };
-
-            if (TraitorUseRatio)
-            {
-                traitorRatioSlider.Range = new Vector2(0.1f, 1.0f);
-            }
-            else
-            {
-                traitorRatioSlider.Range = new Vector2(1.0f, maxPlayers);
-            }
-
-            string traitorRatioLabel = TextManager.Get("ServerSettingsTraitorRatio") + " ";
-            string traitorCountLabel = TextManager.Get("ServerSettingsTraitorCount") + " ";
-
-            traitorRatioSlider.Range = new Vector2(0.1f, 1.0f);
-            traitorRatioSlider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
-            {
-                GUITextBlock traitorText = scrollBar.UserData as GUITextBlock;
-                if (traitorRatioBox.Selected)
-                {
-                    scrollBar.Step = 0.01f;
-                    scrollBar.Range = new Vector2(0.1f, 1.0f);
-                    traitorText.Text = traitorRatioLabel + (int)MathUtils.Round(scrollBar.BarScrollValue * 100.0f, 1.0f) + " %";
-                }
-                else
-                {
-                    scrollBar.Step = 1f / (maxPlayers - 1);
-                    scrollBar.Range = new Vector2(1.0f, maxPlayers);
-                    traitorText.Text = traitorCountLabel + scrollBar.BarScrollValue;
-                }
-                return true;
-            };
-
-            GetPropertyData("TraitorUseRatio").AssignGUIComponent(traitorRatioBox);
-            GetPropertyData("TraitorRatio").AssignGUIComponent(traitorRatioSlider);
-
-            traitorRatioSlider.OnMoved(traitorRatioSlider, traitorRatioSlider.BarScroll);
-            traitorRatioBox.OnSelected(traitorRatioBox);*/
-            
             var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
@@ -919,7 +870,7 @@ namespace Barotrauma.Networking
             slider.UserData = label;
         }
 
-        private GUINumberInput CreateLabeledNumberInput(GUIComponent parent, string labelTag, int min, int max)
+        private GUINumberInput CreateLabeledNumberInput(GUIComponent parent, string labelTag, int min, int max, string toolTipTag = null)
         {
             var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), isHorizontal: true)
             {
@@ -928,11 +879,15 @@ namespace Barotrauma.Networking
                 ToolTip = TextManager.Get(labelTag)
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform),
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform),
                 TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUI.SmallFont)
             {
                 AutoScaleHorizontal = true
             };
+            if (!string.IsNullOrEmpty(toolTipTag))
+            {
+                label.ToolTip = TextManager.Get(toolTipTag);
+            }
             var input = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
             {
                 MinValueInt = min,

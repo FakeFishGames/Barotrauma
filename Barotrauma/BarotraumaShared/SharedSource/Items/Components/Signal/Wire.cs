@@ -87,7 +87,14 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
-                
+
+        [Serialize(false, false, description: "If enabled, the wire will not be visible in connection panels outside the submarine editor.")]
+        public bool HiddenInGame
+        {
+            get;
+            set;
+        }
+
         public Wire(Item item, XElement element)
             : base(item, element)
         {
@@ -673,12 +680,13 @@ namespace Barotrauma.Items.Components
             closestDist = 0.0f;
             int closestIndex = -1;
 
+            maxDist *= maxDist;
             for (int i = 0; i < nodes.Count-1; i++)
             {
                 if ((Math.Abs(nodes[i].X - nodes[i + 1].X)<5 || Math.Sign(mousePos.X - nodes[i].X) != Math.Sign(mousePos.X - nodes[i + 1].X)) &&
                      (Math.Abs(nodes[i].Y - nodes[i + 1].Y)<5 || Math.Sign(mousePos.Y - nodes[i].Y) != Math.Sign(mousePos.Y - nodes[i + 1].Y)))
                 {
-                    float dist = MathUtils.LineToPointDistance(nodes[i], nodes[i + 1], mousePos);
+                    float dist = MathUtils.LineToPointDistanceSquared(nodes[i], nodes[i + 1], mousePos);
                     if (dist > maxDist) continue;
 
                     if (closestIndex == -1 || dist < closestDist)
@@ -688,12 +696,15 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            closestDist = (float)Math.Sqrt(closestDist);
 
             return closestIndex;
         }
 
         public override void FlipX(bool relativeToSub)
         {
+            if (item.ParentInventory != null) { return; }
+
             Vector2 refPos = item.Submarine == null ?
                 Vector2.Zero :
                item.Position - item.Submarine.HiddenSubPosition;

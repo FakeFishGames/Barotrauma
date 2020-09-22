@@ -721,9 +721,23 @@ namespace Barotrauma.Networking
 
     public class ReadWriteMessage : IWriteMessage, IReadMessage
     {
-        private byte[] buf = new byte[MsgConstants.InitialBufferSize];
+        private byte[] buf;
         private int seekPos = 0;
         private int lengthBits = 0;
+
+        public ReadWriteMessage()
+        {
+            buf = new byte[MsgConstants.InitialBufferSize];
+            seekPos = 0;
+            lengthBits = 0;
+        }
+
+        public ReadWriteMessage(byte[] b, int sPos, int lBits, bool copyBuf)
+        {
+            buf = copyBuf ? (byte[])b.Clone() : b;
+            seekPos = sPos;
+            lengthBits = lBits;
+        }
 
         public int BitPosition
         {

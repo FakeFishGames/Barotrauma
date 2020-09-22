@@ -100,7 +100,7 @@ namespace Barotrauma
                     head = value;
                     if (head.race == Race.None)
                     {
-                        head.race = GetRandomRace();
+                        head.race = GetRandomRace(Rand.RandSync.Unsynced);
                     }
                     CalculateHeadSpriteRange();
                     Head.HeadSpriteId = value.HeadSpriteId;
@@ -296,7 +296,7 @@ namespace Barotrauma
 
         public Character.TeamType TeamID;
 
-        private NPCPersonalityTrait personalityTrait;
+        private readonly NPCPersonalityTrait personalityTrait;
 
         public Order CurrentOrder { get; set; }
         public string CurrentOrderOption { get; set; }
@@ -400,7 +400,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0)
+        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -417,12 +417,12 @@ namespace Barotrauma
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders)
             {
-                Head.gender = GetRandomGender();
+                Head.gender = GetRandomGender(randSync);
             }
-            Head.race = GetRandomRace();
+            Head.race = GetRandomRace(randSync);
             CalculateHeadSpriteRange();
-            Head.HeadSpriteId = GetRandomHeadID();
-            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Server) : new Job(jobPrefab, variant);
+            Head.HeadSpriteId = GetRandomHeadID(randSync);
+            Job = (jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, variant);
 
             if (!string.IsNullOrEmpty(name))
             {
@@ -485,7 +485,7 @@ namespace Barotrauma
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders && gender == Gender.None)
             {
-                gender = GetRandomGender();
+                gender = GetRandomGender(Rand.RandSync.Unsynced);
             }
             else if (!HasGenders)
             {
@@ -539,11 +539,9 @@ namespace Barotrauma
             LoadHeadAttachments();
         }
 
-        public int SetRandomHead() => HeadSpriteId = GetRandomHeadID();
-
-        public Gender GetRandomGender() => (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) < CharacterConfigElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
-        public Race GetRandomRace() => new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(Rand.RandSync.Server);
-        public int GetRandomHeadID() => Head.headSpriteRange != Vector2.Zero ? Rand.Range((int)Head.headSpriteRange.X, (int)Head.headSpriteRange.Y + 1, Rand.RandSync.Server) : 0;
+        public Gender GetRandomGender(Rand.RandSync randSync) => (Rand.Range(0.0f, 1.0f, randSync) < CharacterConfigElement.GetAttributeFloat("femaleratio", 0.5f)) ? Gender.Female : Gender.Male;
+        public Race GetRandomRace(Rand.RandSync randSync) => new Race[] { Race.White, Race.Black, Race.Asian }.GetRandom(randSync);
+        public int GetRandomHeadID(Rand.RandSync randSync) => Head.headSpriteRange != Vector2.Zero ? Rand.Range((int)Head.headSpriteRange.X, (int)Head.headSpriteRange.Y + 1, randSync) : 0;
 
         private List<XElement> hairs;
         private List<XElement> beards;
@@ -670,11 +668,15 @@ namespace Barotrauma
         {
             if (HasGenders && gender == Gender.None)
             {
-                gender = GetRandomGender();
+                gender = GetRandomGender(Rand.RandSync.Unsynced);
             }
             else if (!HasGenders)
             {
                 gender = Gender.None;
+            }
+            if (heads == null)
+            {
+                LoadHeadPresets();
             }
             head = new HeadInfo(headID, gender, race, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             CalculateHeadSpriteRange();
@@ -788,7 +790,7 @@ namespace Barotrauma
                     Head.FaceAttachmentIndex = faceAttachments.IndexOf(Head.FaceAttachment);
                 }
 
-                List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
+                static List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
                 {
                     // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
                     var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness));
@@ -799,10 +801,9 @@ namespace Barotrauma
 
                 XElement GetRandomElement(IEnumerable<XElement> elements)
                 {
-                    var filtered = elements.Where(e => IsWearableAllowed(e)).ToList();
-                    if (filtered.Count == 0) { return null; }
-                    var weights = GetWeights(filtered).ToList();
-                    var element = ToolBox.SelectWeightedRandom(filtered, weights, Rand.RandSync.Server);
+                    var filtered = elements.Where(e => IsWearableAllowed(e));
+                    if (filtered.Count() == 0) { return null; }
+                    var element = ToolBox.SelectWeightedRandom(filtered.ToList(), GetWeights(filtered).ToList(), Rand.RandSync.Unsynced);
                     return element == null || element.Name == "Empty" ? null : element;
                 }
 
@@ -825,8 +826,9 @@ namespace Barotrauma
                     return true;
                 }
 
-                bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
-                IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
+                static bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
+
+                static IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
             }
         }
 
@@ -861,7 +863,7 @@ namespace Barotrauma
 
             OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && (int)newLevel != (int)prevLevel)
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !MathUtils.NearlyEqual(newLevel, prevLevel))
             {
                 GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
             }

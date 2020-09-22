@@ -13,6 +13,8 @@ namespace Barotrauma
 
         private RectTransform prevGuiElementParent;
 
+        public Exception LoadException;
+
         public static RoundSummaryScreen Select(Sprite backgroundSprite, RoundSummary roundSummary)
         {
             var summaryScreen = new RoundSummaryScreen()
@@ -50,6 +52,17 @@ namespace Barotrauma
             GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight * 0.95f) - textSize / 2, loadingText, Color.White, font: GUI.LargeFont);
 
             spriteBatch.End();
+        }
+
+        public override void Update(double deltaTime)
+        {
+            base.Update(deltaTime);
+            if (LoadException != null)
+            {
+                var temp = LoadException;
+                LoadException = null;
+                throw temp;
+            }
         }
     }
 }

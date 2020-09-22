@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata;
 
 namespace Barotrauma.Particles
 {
@@ -60,6 +61,8 @@ namespace Barotrauma.Particles
         private float collisionUpdateTimer;
 
         public bool HighQualityCollisionDetection;
+
+        public Vector4 ColorMultiplier;
 
         public bool DrawOnTop { get; private set; }
                 
@@ -141,7 +144,8 @@ namespace Barotrauma.Particles
 
             color = prefab.StartColor;
             changeColor = prefab.StartColor != prefab.EndColor;
-            
+            ColorMultiplier = Vector4.One;
+
             velocityChange = prefab.VelocityChangeDisplay;
             velocityChangeWater = prefab.VelocityChangeWaterDisplay;
 
@@ -287,22 +291,42 @@ namespace Barotrauma.Particles
                 Vector2 collisionNormal = Vector2.Zero;
                 if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
-                    if (prefab.DeleteOnCollision) return false;
+                    if (prefab.DeleteOnCollision) { return false; }
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
                 else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
-                    if (prefab.DeleteOnCollision) return false;
+                    if (prefab.DeleteOnCollision) { return false; }
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
-                else if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
+
+                if (collisionNormal != Vector2.Zero)
                 {
-                    if (prefab.DeleteOnCollision) return false;
+                    bool gapFound = false;
+                    foreach (Gap gap in hullGaps)
+                    {
+                        if (gap.Open <= 0.9f || gap.IsHorizontal) { continue; }
+
+                        if (gap.WorldRect.X > position.X || gap.WorldRect.Right < position.X) { continue; }
+                        float hullCenterY = currentHull.WorldRect.Y - currentHull.WorldRect.Height / 2;
+                        int gapDir = Math.Sign(gap.WorldRect.Y - hullCenterY);
+                        if (Math.Sign(velocity.Y) != gapDir || Math.Sign(position.Y - hullCenterY) != gapDir) { continue; }
+
+                        gapFound = true;
+                        break;
+                    }
+
+                    handleCollision(gapFound, collisionNormal);
+                }
+
+                if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
+                {
+                    if (prefab.DeleteOnCollision) { return false; }
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
                 else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
                 {
-                    if (prefab.DeleteOnCollision) return false;
+                    if (prefab.DeleteOnCollision) { return false; }
                     collisionNormal = new Vector2(-1.0f, 0.0f);
                 }
 
@@ -311,26 +335,21 @@ namespace Barotrauma.Particles
                     bool gapFound = false;
                     foreach (Gap gap in hullGaps)
                     {
-                        if (gap.Open <= 0.9f || gap.IsHorizontal != (collisionNormal.X != 0.0f)) continue;
+                        if (gap.Open <= 0.9f || !gap.IsHorizontal) { continue; }
 
-                        if (gap.IsHorizontal)
-                        {
-                            if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) continue;
-                            int gapDir = Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X);
-                            if (Math.Sign(velocity.X) != gapDir || Math.Sign(position.X - currentHull.WorldRect.Center.X) != gapDir) continue;
-                        }
-                        else
-                        {
-                            if (gap.WorldRect.X > position.X || gap.WorldRect.Right < position.X) continue;
-                            float hullCenterY = currentHull.WorldRect.Y - currentHull.WorldRect.Height / 2;
-                            int gapDir = Math.Sign(gap.WorldRect.Y - hullCenterY);
-                            if (Math.Sign(velocity.Y) != gapDir || Math.Sign(position.Y - hullCenterY) != gapDir) continue;
-                        }
+                        if (gap.WorldRect.Y < position.Y || gap.WorldRect.Y - gap.WorldRect.Height > position.Y) { continue; }
+                        int gapDir = Math.Sign(gap.WorldRect.Center.X - currentHull.WorldRect.Center.X);
+                        if (Math.Sign(velocity.X) != gapDir || Math.Sign(position.X - currentHull.WorldRect.Center.X) != gapDir) { continue; }
 
                         gapFound = true;
                         break;
                     }
 
+                    handleCollision(gapFound, collisionNormal);
+                }
+
+                void handleCollision(bool gapFound, Vector2 collisionNormal)
+                {
                     if (!gapFound)
                     {
                         OnWallCollisionInside(currentHull, collisionNormal);
@@ -378,6 +397,8 @@ namespace Barotrauma.Particles
 
         private void OnWallCollisionInside(Hull prevHull, Vector2 collisionNormal)
         {
+            if (prevHull == null) { return; }
+
             Rectangle prevHullRect = prevHull.WorldRect;
 
             Vector2 subVel = prevHull?.Submarine != null ? ConvertUnits.ToDisplayUnits(prevHull.Submarine.Velocity) : Vector2.Zero;
@@ -465,12 +486,14 @@ namespace Barotrauma.Particles
                 drawSize *= ((totalLifeTime - lifeTime) / prefab.GrowTime);
             }
 
+            Color currColor = new Color(color.ToVector4() * ColorMultiplier);
+
             if (prefab.Sprites[spriteIndex] is SpriteSheet)
             {
                 ((SpriteSheet)prefab.Sprites[spriteIndex]).Draw(
                     spriteBatch, animFrame,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * (color.A / 255.0f),
+                    currColor * (currColor.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }
@@ -478,7 +501,7 @@ namespace Barotrauma.Particles
             {
                 prefab.Sprites[spriteIndex].Draw(spriteBatch,
                     new Vector2(drawPosition.X, -drawPosition.Y),
-                    color * (color.A / 255.0f),
+                    currColor * (currColor.A / 255.0f),
                     prefab.Sprites[spriteIndex].Origin, drawRotation,
                     drawSize, SpriteEffects.None, prefab.Sprites[spriteIndex].Depth);
             }

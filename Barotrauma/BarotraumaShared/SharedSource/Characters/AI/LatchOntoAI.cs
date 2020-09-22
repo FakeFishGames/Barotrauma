@@ -125,8 +125,14 @@ namespace Barotrauma
                 }
             }
 
-            attachCooldown -= deltaTime;
-            deattachTimer -= deltaTime;
+            if (attachCooldown > 0)
+            {
+                attachCooldown -= deltaTime;
+            }
+            if (deattachTimer > 0)
+            {
+                deattachTimer -= deltaTime;
+            }
 
             Vector2 transformedAttachPos = wallAttachPos;
             if (character.Submarine == null && attachTargetSubmarine != null)
@@ -255,6 +261,7 @@ namespace Barotrauma
 
         private void AttachToBody(PhysicsBody collider, Limb attachLimb, Body targetBody, Vector2 attachPos)
         {
+            if (attachCooldown > 0) { return; }
             //already attached to something
             if (attachJoints.Count > 0)
             {

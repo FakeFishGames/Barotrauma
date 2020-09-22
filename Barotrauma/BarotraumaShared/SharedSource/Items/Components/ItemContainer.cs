@@ -44,6 +44,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, false, "Allow dragging and dropping items to deposit items into this inventory.")]
+        public bool AllowDragAndDrop
+        {
+            get;
+            set;
+        }
+
 
         [Serialize(false, false, description: "If set to true, interacting with this item will make the character interact with the contained item(s), automatically picking them up if they can be picked up.")]
         public bool AutoInteractWithContained
@@ -166,17 +173,21 @@ namespace Barotrauma.Items.Components
         public bool CanBeContained(Item item)
         {
             if (ContainableItems.Count == 0) { return true; }
-            return (ContainableItems.Find(c => c.MatchesItem(item)) != null);
+            return ContainableItems.Find(c => c.MatchesItem(item)) != null;
         }
         public bool CanBeContained(ItemPrefab itemPrefab)
         {
             if (ContainableItems.Count == 0) { return true; }
-            return (ContainableItems.Find(c => c.MatchesItem(itemPrefab)) != null);
+            return ContainableItems.Find(c => c.MatchesItem(itemPrefab)) != null;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (item.body != null && 
+            if (item.ParentInventory is CharacterInventory)
+            {
+                item.SetContainedItemPositions();
+            }
+            else if (item.body != null && 
                 item.body.Enabled &&
                 item.body.FarseerBody.Awake)
             {
@@ -205,22 +216,6 @@ namespace Barotrauma.Items.Components
                     var targets = new List<ISerializableEntity>();
                     effect.GetNearbyTargets(item.WorldPosition, targets);
                     effect.Apply(ActionType.OnActive, deltaTime, item, targets);
-                }
-            }
-        }
-
-        public override void OnItemLoaded()
-        {
-            base.OnItemLoaded();
-            if (SpawnWithId.Length > 0)
-            {
-                ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);                
-                if (prefab != null)
-                {                    
-                    if (Inventory != null && Inventory.Items.Any(it => it == null))
-                    {
-                        Entity.Spawner?.AddToSpawnQueue(prefab, Inventory);
-                    }
                 }
             }
         }
@@ -284,6 +279,8 @@ namespace Barotrauma.Items.Components
 
         public override bool Combine(Item item, Character user)
         {
+            if (!AllowDragAndDrop && user != null) { return false; }
+
             if (!ContainableItems.Any(x => x.MatchesItem(item))) { return false; }
             if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
             
@@ -354,16 +351,28 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            if (itemIds == null) { return; }
-
-            for (ushort i = 0; i < itemIds.Length; i++)
-            {
-                if (!(Entity.FindEntityByID(itemIds[i]) is Item item)) { continue; }
-                if (i >= Inventory.Capacity) { continue; }
-                Inventory.TryPutItem(item, i, false, false, null, false);
+            if (itemIds != null)            
+            { 
+                for (ushort i = 0; i < itemIds.Length; i++)
+                {
+                    if (!(Entity.FindEntityByID(itemIds[i]) is Item item)) { continue; }
+                    if (i >= Inventory.Capacity) { continue; }
+                    Inventory.TryPutItem(item, i, false, false, null, false);
+                }
+                itemIds = null;
             }
 
-            itemIds = null;
+            if (SpawnWithId.Length > 0)
+            {
+                ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);
+                if (prefab != null)
+                {
+                    if (Inventory != null && Inventory.Items.Any(it => it == null))
+                    {
+                        Entity.Spawner?.AddToSpawnQueue(prefab, Inventory);
+                    }
+                }
+            }
         }
 
         protected override void ShallowRemoveComponentSpecific()

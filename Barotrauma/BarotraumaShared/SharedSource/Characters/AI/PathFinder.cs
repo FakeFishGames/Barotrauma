@@ -160,7 +160,7 @@ namespace Barotrauma
 
         private static readonly List<PathNode> sortedNodes = new List<PathNode>();
 
-        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
+        public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
             //sort nodes roughly according to distance
             sortedNodes.Clear();
@@ -202,12 +202,12 @@ namespace Barotrauma
                     //if searching for a path inside the sub, make sure the waypoint is visible
                     if (InsideSubmarine)
                     {
+                        // Always check the visibility for the start node
                         var body = Submarine.PickBody(
                             start, node.TempPosition, null, 
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs);
                         if (body != null)
                         {
-                            //if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) { continue; }
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
                         }
@@ -257,14 +257,13 @@ namespace Barotrauma
                     if (endNodeFilter != null && !endNodeFilter(node)) { continue; }
 
                     //if searching for a path inside the sub, make sure the waypoint is visible
-                    if (InsideSubmarine)
+                    if (InsideSubmarine && checkVisibility)
                     {
+                        // Only check the visibility for the end node when allowed (fix leaks)
                         var body = Submarine.PickBody(end, node.TempPosition, null,
                             Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionStairs );
-
                         if (body != null)
                         {
-                            //if (body.UserData is Submarine) continue;
                             if (body.UserData is Structure && !((Structure)body.UserData).IsPlatform) { continue; }
                             if (body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall)) { continue; }
                         }

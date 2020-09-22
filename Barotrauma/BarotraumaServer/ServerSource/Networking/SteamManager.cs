@@ -8,8 +8,6 @@ namespace Barotrauma.Steam
 
         private static void InitializeProjectSpecific() { isInitialized = true; }
 
-        private static void UpdateProjectSpecific(float deltaTime) { }
-
         public static bool CreateServer(Networking.GameServer server, bool isPublic)
         {
             isInitialized = true;
@@ -17,8 +15,8 @@ namespace Barotrauma.Steam
             Steamworks.SteamServerInit options = new Steamworks.SteamServerInit("Barotrauma", "Barotrauma")
             {
                 GamePort = (ushort)server.Port,
-                QueryPort = (ushort)server.QueryPort,
-                Secure = false
+                QueryPort = isPublic ? (ushort)server.QueryPort : (ushort)0,
+                Mode = isPublic ? Steamworks.InitServerMode.Authentication : Steamworks.InitServerMode.NoAuthentication
             };
             //options.QueryShareGamePort();
 
@@ -46,7 +44,7 @@ namespace Barotrauma.Steam
                 return false;
             }
 
-            var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+            var contentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
 
             // These server state variables may be changed at any time.  Note that there is no longer a mechanism
             // to send the player count.  The player count is maintained by steam and you should use the player
@@ -55,12 +53,13 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.MaxPlayers = server.ServerSettings.MaxPlayers;
             Steamworks.SteamServer.Passworded = server.ServerSettings.HasPassword;
             Steamworks.SteamServer.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName ?? "";
+            Steamworks.SteamServer.SetKey("haspassword", server.ServerSettings.HasPassword.ToString());
             Steamworks.SteamServer.SetKey("message", GameMain.Server.ServerSettings.ServerMessageText);
             Steamworks.SteamServer.SetKey("version", GameMain.Version.ToString());
             Steamworks.SteamServer.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString());
             Steamworks.SteamServer.SetKey("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             Steamworks.SteamServer.SetKey("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
-            Steamworks.SteamServer.SetKey("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
+            Steamworks.SteamServer.SetKey("contentpackageid", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopId)));
             Steamworks.SteamServer.SetKey("usingwhitelist", (server.ServerSettings.Whitelist != null && server.ServerSettings.Whitelist.Enabled).ToString());
             Steamworks.SteamServer.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
@@ -70,6 +69,7 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
             Steamworks.SteamServer.SetKey("gamestarted", server.GameStarted.ToString());
             Steamworks.SteamServer.SetKey("gamemode", server.ServerSettings.GameModeIdentifier);
+            Steamworks.SteamServer.SetKey("playstyle", server.ServerSettings.PlayStyle.ToString());
 
             Steamworks.SteamServer.DedicatedServer = true;
 

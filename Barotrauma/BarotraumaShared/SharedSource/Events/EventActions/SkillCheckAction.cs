@@ -32,15 +32,9 @@ namespace Barotrauma
 
         public override string ToDebugString()
         {
-            string subActionStr = "";
-            if (succeeded.HasValue)
-            {
-                subActionStr = $"\n            Sub action: {(succeeded.Value ? Success : Failure)?.CurrentSubAction.ColorizeObject()}";
-            }
-            return $"{ToolBox.GetDebugSymbol(DetermineFinished())} {nameof(SkillCheckAction)} -> (TargetTag: {TargetTag.ColorizeObject()}, " +
-                   $"Required skill: {RequiredSkill.ColorizeObject()}, Required level: {RequiredLevel.ColorizeObject()}, " +
-                   $"Succeeded: {(succeeded.HasValue ? succeeded.Value.ToString() : "not determined").ColorizeObject()})" +
-                   subActionStr;
+            return $"{ToolBox.GetDebugSymbol(HasBeenDetermined())} {nameof(SkillCheckAction)} -> (Target: {TargetTag.ColorizeObject()}, " +
+                   $"Skill: {RequiredSkill.ColorizeObject()}, Level: {RequiredLevel.ColorizeObject()}, " +
+                   $"Succeeded: {succeeded.ColorizeObject()})";
         }
     }
 }

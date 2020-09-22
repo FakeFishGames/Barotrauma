@@ -209,15 +209,17 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
             {
+                originalDockingTargetID = DockingTarget.item.ID;
                 item.CreateServerEvent(this);
             }
 #endif
         }
 
+
         public void Lock(bool isNetworkMessage, bool forcePosition = false)
         {
 #if CLIENT
-            if (GameMain.Client != null && !isNetworkMessage) return;
+            if (GameMain.Client != null && !isNetworkMessage) { return; }
 #endif
 
             if (DockingTarget == null)
@@ -251,6 +253,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
                 {
+                    originalDockingTargetID = DockingTarget.item.ID;
                     item.CreateServerEvent(this);
                 }
 #else
@@ -332,20 +335,45 @@ namespace Barotrauma.Items.Components
         {
             if (DockingDir != 0) { return DockingDir; }
 
-            if (Door != null)
+            if (Door != null && Door.LinkedGap.linkedTo.Count > 0)
             {
-                if (Door.LinkedGap.linkedTo.Count == 1)
+                Hull refHull = null;
+                float largestHullSize = 0.0f;
+                foreach (MapEntity linked in Door.LinkedGap.linkedTo)
+                {
+                    if (!(linked is Hull hull)) { continue; }
+                    if (hull.Volume > largestHullSize)
+                    {
+                        refHull = hull;
+                        largestHullSize = hull.Volume;
+                    }
+                }
+                if (refHull != null)
                 {
                     return IsHorizontal ?
-                        Math.Sign(Door.Item.WorldPosition.X - Door.LinkedGap.linkedTo[0].WorldPosition.X) :
-                        Math.Sign(Door.Item.WorldPosition.Y - Door.LinkedGap.linkedTo[0].WorldPosition.Y);
+                        Math.Sign(Door.Item.WorldPosition.X - refHull.WorldPosition.X) :
+                        Math.Sign(Door.Item.WorldPosition.Y - refHull.WorldPosition.Y);
                 }
-                else if (dockingTarget?.Door?.LinkedGap != null && dockingTarget.Door.LinkedGap.linkedTo.Count == 1)
+            }
+            if (dockingTarget?.Door?.LinkedGap != null && dockingTarget.Door.LinkedGap.linkedTo.Count > 0)
+            {
+                Hull refHull = null;
+                float largestHullSize = 0.0f;
+                foreach (MapEntity linked in dockingTarget.Door.LinkedGap.linkedTo)
+                {
+                    if (!(linked is Hull hull)) { continue; }
+                    if (hull.Volume > largestHullSize)
+                    {
+                        refHull = hull;
+                        largestHullSize = hull.Volume;
+                    }
+                }
+                if (refHull != null)
                 {
                     return IsHorizontal ?
-                        Math.Sign(dockingTarget.Door.LinkedGap.linkedTo[0].WorldPosition.X - dockingTarget.Door.Item.WorldPosition.X) :
-                        Math.Sign(dockingTarget.Door.LinkedGap.linkedTo[0].WorldPosition.Y - dockingTarget.Door.Item.WorldPosition.Y);
-                }
+                        Math.Sign(refHull.WorldPosition.X - dockingTarget.Door.Item.WorldPosition.X) :
+                        Math.Sign(refHull.WorldPosition.Y - dockingTarget.Door.Item.WorldPosition.Y);
+                }                
             }
             if (dockingTarget != null)
             {
@@ -838,6 +866,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
             {
+                originalDockingTargetID = Entity.NullEntityID;
                 item.CreateServerEvent(this);
             }
 #endif
@@ -1010,9 +1039,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-#if CLIENT
-            if (GameMain.Client != null) return;
-#endif
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             bool wasDocked = docked;
             DockingPort prevDockingTarget = DockingTarget;
@@ -1020,7 +1047,10 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "toggle":
-                    Docked = !docked;
+                    if (signal != "0")
+                    {
+                        Docked = !docked;
+                    }
                     break;
                 case "set_active":
                 case "set_state":
@@ -1043,17 +1073,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 #endif
-        }
-
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
-        {
-            msg.Write(docked);
-
-            if (docked)
-            {
-                msg.Write(DockingTarget.item.ID);                
-                msg.Write(hulls != null && hulls[0] != null && hulls[1] != null && gap != null);
-            }
         }
     }
 }

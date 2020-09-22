@@ -86,6 +86,8 @@ namespace Barotrauma
         public readonly bool PerRuin;
         public readonly bool PerWreck;
 
+        public readonly bool OncePerOutpost;
+
         public readonly Dictionary<string, float> Commonness;
 
         //Pair.First: event prefab, Pair.Second: commonness
@@ -134,6 +136,7 @@ namespace Barotrauma
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? false);
             PerRuin = element.GetAttributeBool("perruin", false);
             PerWreck = element.GetAttributeBool("perwreck", false);
+            OncePerOutpost = element.GetAttributeBool("perwreck", false);
 
             Commonness[""] = 1.0f;
             foreach (XElement subElement in element.Elements())

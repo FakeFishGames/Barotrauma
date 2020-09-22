@@ -323,7 +323,7 @@ namespace Barotrauma
 
             if (Screen.Selected == GameMain.GameScreen)
             {
-                yOffset = -HUDLayoutSettings.ChatBoxArea.Height;
+                yOffset = (int)(-HUDLayoutSettings.ChatBoxArea.Height * 1.2f);
                 watermarkRect.Y += yOffset;
             }
 
@@ -609,7 +609,7 @@ namespace Barotrauma
 
                 if (Character.Controlled?.Inventory != null)
                 {
-                    if (!Character.Controlled.LockHands && Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
+                    if (Character.Controlled.Stun < 0.1f && !Character.Controlled.IsDead)
                     {
                         Inventory.DrawFront(spriteBatch);
                     }
@@ -1267,7 +1267,7 @@ namespace Barotrauma
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
-            float symbolScale = 64.0f / sprite.size.X;
+            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f);
 
             if (dist > hideDist)
             {
@@ -2089,8 +2089,8 @@ namespace Barotrauma
                     Stretch = true,
                     RelativeSpacing = 0.05f
                 };
-
-                var button = new GUIButton(new RectTransform(new Vector2(0.1f, 0.1f), pauseMenuInner.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point((int)(15 * GUI.Scale)) }, 
+                
+                new GUIButton(new RectTransform(new Vector2(0.1f, 0.1f), pauseMenuInner.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point((int)(15 * GUI.Scale)) }, 
                     "", style: "GUIBugButton")
                 {
                     IgnoreLayoutGroups = true,
@@ -2098,12 +2098,12 @@ namespace Barotrauma
                     OnClicked = (btn, userdata) => { GameMain.Instance.ShowBugReporter(); return true; }
                 };
 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"))
+                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuResume"))
                 {
                     OnClicked = TogglePauseMenu
                 };
 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSettings"))
+                new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSettings"))
                 {
                     OnClicked = (btn, userData) =>
                     {
@@ -2117,8 +2117,8 @@ namespace Barotrauma
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
                     {
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuRetry"));
-                        button.OnClicked += (btn, userData) =>
+                        var retryButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuRetry"));
+                        retryButton.OnClicked += (btn, userData) =>
                         {
                             var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuRetryVerification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
                             {
@@ -2131,6 +2131,7 @@ namespace Barotrauma
                                     GUIMessageBox.MessageBoxes.Remove(GameMain.GameSession.RoundSummary.Frame);
                                 }
 
+                                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction");
                                 TogglePauseMenu(btn, userData);
                                 GameMain.GameSession.LoadPreviousSave();
                                 return true;
@@ -2144,24 +2145,57 @@ namespace Barotrauma
                             };
                             return true;
                         };
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
+                        var saveAndQuitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
                         {
                             UserData = "save"
                         };
-                        button.OnClicked += QuitClicked;
-                        button.OnClicked += TogglePauseMenu;
+                        saveAndQuitButton.OnClicked += (btn, userdata) =>
+                        {
+                            //Only allow saving mid-round in outpost levels. Quitting in the middle of a mission reset progress to the start of the round.
+                            if (GameMain.GameSession == null)
+                            {
+                                pauseMenuOpen = false;
+
+                            }
+                            else if (GameMain.GameSession?.Campaign == null || Level.IsLoadedOutpost)
+                            {
+                                pauseMenuOpen = false;
+                                GameMain.QuitToMainMenu(save: true);
+                            }
+                            else
+                            {
+                                var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuSaveAndQuitVerification", fallBackTag: "pausemenuquitverification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                                {
+                                    UserData = "verificationprompt"
+                                };
+                                msgBox.Buttons[0].OnClicked = (_, userdata) =>
+                                {
+                                    pauseMenuOpen = false;
+                                    GameMain.QuitToMainMenu(save: false);
+                                    return true;
+                                };
+                                msgBox.Buttons[0].OnClicked += msgBox.Close;
+                                msgBox.Buttons[1].OnClicked = (_, userdata) =>
+                                {
+                                    pauseMenuOpen = false;
+                                    msgBox.Close();
+                                    return true;
+                                };
+                            }
+                            return true;
+                        };
                     }
                     else if (GameMain.GameSession.GameMode is TestGameMode)
                     {
-                        button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("PauseMenuReturnToEditor"))
+                        new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), text: TextManager.Get("PauseMenuReturnToEditor"))
                         {
                             OnClicked = (btn, userdata) =>
                             {
                                 GameMain.GameSession.EndRound("");
+                                pauseMenuOpen = false;
                                 return true;
                             }
                         };
-                        button.OnClicked += TogglePauseMenu;
                     }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                     {
@@ -2181,7 +2215,7 @@ namespace Barotrauma
                                     };
                                     msgBox.Buttons[0].OnClicked = (_, __) =>
                                     {
-                                        TogglePauseMenu(btn, userdata);
+                                        pauseMenuOpen = false;
                                         GameMain.Client.RequestRoundEnd();
                                         return true;
                                     };
@@ -2190,7 +2224,7 @@ namespace Barotrauma
                                 }
                                 else
                                 {
-                                    TogglePauseMenu(btn, userdata);
+                                    pauseMenuOpen = false;
                                     GameMain.Client.RequestRoundEnd();
                                 }
                                 return true;
@@ -2199,10 +2233,9 @@ namespace Barotrauma
                     }
                 }
                                 
-                button = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuQuit"));
-                button.OnClicked += (btn, userData) =>
+                var quitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuQuit"));
+                quitButton.OnClicked += (btn, userData) =>
                 {
-                    var quitButton = button;
                     if (GameMain.GameSession != null || (Screen.Selected is CharacterEditorScreen || Screen.Selected is SubEditorScreen))
                     {
                         string text = GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification";
@@ -2212,21 +2245,21 @@ namespace Barotrauma
                         };
                         msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
                         {
-                            QuitClicked(quitButton, quitButton.UserData);
+                            GameMain.QuitToMainMenu(save: false);
                             pauseMenuOpen = false;
                             return true;
                         };
                         msgBox.Buttons[0].OnClicked += msgBox.Close;
                         msgBox.Buttons[1].OnClicked = (_, userdata) =>
                         {
-                            TogglePauseMenu(btn, userData);
+                            pauseMenuOpen = false;
                             msgBox.Close();
                             return true;
                         };
                     }
                     else
                     {
-                        QuitClicked(quitButton, quitButton.UserData);
+                        GameMain.QuitToMainMenu(save: false);
                         pauseMenuOpen = false;
                     }
                     return true;
@@ -2239,12 +2272,6 @@ namespace Barotrauma
         private static bool TogglePauseMenu(GUIButton button, object obj)
         {
             pauseMenuOpen = !pauseMenuOpen;
-            return true;
-        }
-
-        public static bool QuitClicked(GUIButton button, object obj)
-        {
-            GameMain.QuitToMainMenu(button.UserData as string == "save");
             return true;
         }
 

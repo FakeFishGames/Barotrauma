@@ -43,22 +43,22 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 Reactor reactor = item.GetComponent<Reactor>();
-                if (reactor != null) roundData.Reactors.Add(reactor);
+                if (reactor != null) { roundData.Reactors.Add(reactor); }
             }
         }
 
         public static void Update(float deltaTime)
         {
-            if (GameMain.GameSession == null) return;
+            if (GameMain.GameSession == null) { return; }
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
 
             updateTimer -= deltaTime;
-            if (updateTimer > 0.0f) return;
+            if (updateTimer > 0.0f) { return; }
             updateTimer = UpdateInterval;
             
-            if (Level.Loaded != null)
+            if (Level.Loaded != null && roundData != null && Screen.Selected == GameMain.GameScreen)
             {
                 if (GameMain.GameSession.EventManager.CurrentIntensity > 0.99f)
                 {
@@ -243,12 +243,25 @@ namespace Barotrauma
                     UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("boss", "") + "indoors");
                 }
             }
+            if (character.SpeciesName.EndsWith("_m"))
+            {
+                UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("_m", ""));
+                if (character.CurrentHull != null)
+                {
+                    UnlockAchievement(causeOfDeath.Killer, "kill" + character.SpeciesName.Replace("_m", "") + "indoors");
+                }
+            }
 
             if (character.HasEquippedItem("clownmask") && 
                 character.HasEquippedItem("clowncostume") &&
                 causeOfDeath.Killer != character)
             {
                 UnlockAchievement(causeOfDeath.Killer, "killclown");
+            }
+
+            if (character.CharacterHealth?.GetAffliction("morbusinepoisoning") != null)
+            {
+                UnlockAchievement(causeOfDeath.Killer, "killpoison");
             }
 
             if (causeOfDeath.DamageSource is Item item)

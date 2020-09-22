@@ -92,6 +92,7 @@ namespace Barotrauma
         }
 
         public Dictionary<AIObjective, CoroutineHandle> DelayedObjectives { get; private set; } = new Dictionary<AIObjective, CoroutineHandle>();
+        public bool FailedAutonomousObjectives { get; private set; }
 
         private void ClearIgnored()
         {
@@ -118,10 +119,11 @@ namespace Barotrauma
             }
             DelayedObjectives.Clear();
             Objectives.Clear();
+            FailedAutonomousObjectives = false;
             AddObjective(new AIObjectiveFindSafety(character, this));
             AddObjective(new AIObjectiveIdle(character, this));
             int objectiveCount = Objectives.Count;
-            foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjective)
+            foreach (var autonomousObjective in character.Info.Job.Prefab.AutonomousObjectives)
             {
                 var orderPrefab = Order.GetPrefab(autonomousObjective.identifier);
                 if (orderPrefab == null) { throw new Exception($"Could not find a matching prefab by the identifier: '{autonomousObjective.identifier}'"); }
@@ -129,6 +131,7 @@ namespace Barotrauma
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity,
                     item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType), orderGiver: character);
                 if (order == null) { continue; }
+                if (autonomousObjective.ignoreAtOutpost && Level.IsLoadedOutpost && character.TeamID != Character.TeamType.FriendlyNPC) { continue; }
                 var objective = CreateObjective(order, autonomousObjective.option, character, isAutonomous: true, autonomousObjective.priorityModifier);
                 if (objective != null && objective.CanBeCompleted)
                 {
@@ -220,7 +223,7 @@ namespace Barotrauma
                 if (objective.IsCompleted)
                 {
 #if DEBUG
-                    DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it is completed.", Color.LightGreen);
+                    DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it is completed.", Color.LightBlue);
 #endif
                     Objectives.Remove(objective);
                 }
@@ -230,6 +233,7 @@ namespace Barotrauma
                     DebugConsole.NewMessage($"{character.Name}: Removing objective {objective.DebugTag}, because it cannot be completed.", Color.Red);
 #endif
                     Objectives.Remove(objective);
+                    FailedAutonomousObjectives = true;
                 }
                 else
                 {
@@ -286,6 +290,7 @@ namespace Barotrauma
             }
             else
             {
+                // This should be redundant, because all the objectives are reset when they are selected as active.
                 CurrentOrder.Reset();
             }
         }

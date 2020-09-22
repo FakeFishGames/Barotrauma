@@ -251,7 +251,24 @@ namespace Barotrauma
             set { TextManager.Language = value; }
         }
 
-        public readonly List<ContentPackage> SelectedContentPackages = new List<ContentPackage>();
+        public ContentPackage CurrentCorePackage { get; private set; }
+        private readonly List<ContentPackage> enabledRegularPackages = new List<ContentPackage>();
+        public IReadOnlyList<ContentPackage> EnabledRegularPackages
+        {
+            get { return enabledRegularPackages; }
+        }
+
+        public IEnumerable<ContentPackage> AllEnabledPackages
+        {
+            get
+            {
+                yield return CurrentCorePackage;
+                foreach (var package in EnabledRegularPackages)
+                {
+                    yield return package;
+                }
+            }
+        }
 
         public bool ContentPackageSelectionDirtyNotification
         {
@@ -267,6 +284,8 @@ namespace Barotrauma
 
         public volatile bool SuppressModFolderWatcher;
 
+        public volatile bool WaitingForAutoUpdate;
+
 #if DEBUG
         public bool AutomaticQuickStartEnabled { get; set; }
         public bool AutomaticCampaignLoadEnabled { get; set; }
@@ -275,7 +294,7 @@ namespace Barotrauma
 
         private System.IO.FileSystemWatcher modsFolderWatcher;
 
-        private int ContentFileLoadOrder(ContentFile a)
+        private static int ContentFileLoadOrder(ContentFile a)
         {
             switch (a.Type)
             {
@@ -292,62 +311,185 @@ namespace Barotrauma
 
         public void SelectCorePackage(ContentPackage contentPackage, bool forceReloadAll = false)
         {
+            if (!contentPackage.IsCorePackage) { return; }
             if (!contentPackage.ContainsRequiredCorePackageFiles(out _)) { return; }
 
-            ContentPackage otherCorePackage = SelectedContentPackages.Where(cp => cp.CorePackage).First();
+            ContentPackage prevCorePackage = CurrentCorePackage;
 
-            SelectedContentPackages.Remove(otherCorePackage);
-            SelectedContentPackages.Add(contentPackage);
+            CurrentCorePackage = contentPackage;
 
-            ContentPackage.SortContentPackages();
+            if (prevCorePackage != null)
+            {
+                List<ContentFile> filesToRemove = prevCorePackage.Files.Where(f1 => forceReloadAll ||
+                    !contentPackage.Files.Any(f2 =>
+                        Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
 
-            List<ContentFile> filesToRemove = otherCorePackage.Files.Where(f1 => forceReloadAll ||
-                !contentPackage.Files.Any(f2 =>
-                    Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+                List<ContentFile> filesToAdd = contentPackage.Files.Where(f1 => forceReloadAll ||
+                    !prevCorePackage.Files.Any(f2 =>
+                        Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
 
-            List<ContentFile> filesToAdd = contentPackage.Files.Where(f1 => forceReloadAll ||
-                !otherCorePackage.Files.Any(f2 =>
-                    Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+                DisableContentPackageItems(filesToRemove);
+                EnableContentPackageItems(filesToAdd);
 
-            DisableContentPackageItems(filesToRemove.OrderBy(ContentFileLoadOrder));
-            EnableContentPackageItems(filesToAdd.OrderBy(ContentFileLoadOrder));
-
-            RefreshContentPackageItems(filesToAdd.Concat(filesToRemove));
+                RefreshContentPackageItems(filesToAdd.Concat(filesToRemove));
+            }
+            else
+            {
+                EnableContentPackageItems(contentPackage.Files);
+                RefreshContentPackageItems(contentPackage.Files);
+            }
         }
 
         public void AutoSelectCorePackage(IEnumerable<ContentPackage> toRemove)
         {
-            SelectCorePackage(ContentPackage.List.Find(cpp =>
-                cpp.CorePackage &&
-                !toRemove.Contains(cpp) &&
+            SelectCorePackage(ContentPackage.CorePackages.Find(cpp =>
+                (toRemove == null || !toRemove.Contains(cpp)) &&
                 cpp.ContainsRequiredCorePackageFiles(out _)));
         }
 
-        public void SelectContentPackage(ContentPackage contentPackage)
-        {
-            if (!SelectedContentPackages.Contains(contentPackage))
-            {
-                SelectedContentPackages.Add(contentPackage);
-                ContentPackage.SortContentPackages();
+        private List<Tuple<ContentPackage, bool>> backupModOrder;
 
-                EnableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder));
+        public void SwapPackages(ContentPackage corePackage, List<ContentPackage> regularPackages)
+        {
+            backupModOrder = new List<Tuple<ContentPackage, bool>>();
+            backupModOrder.Add(new Tuple<ContentPackage, bool>(CurrentCorePackage, true));
+            for (int i=0;i<ContentPackage.RegularPackages.Count;i++)
+            {
+                var p = ContentPackage.RegularPackages[i];
+                backupModOrder.Add(new Tuple<ContentPackage, bool>(p, EnabledRegularPackages.Contains(p)));
+            }
+
+            List<ContentPackage> packagesToDisable = new List<ContentPackage>();
+            packagesToDisable.Add(CurrentCorePackage);
+            packagesToDisable.AddRange(EnabledRegularPackages.Where(p => p.HasMultiplayerIncompatibleContent));
+            List<ContentPackage> packagesToEnable = new List<ContentPackage>();
+            packagesToEnable.Add(corePackage);
+            packagesToEnable.AddRange(regularPackages);
+
+            IEnumerable<ContentFile> filesOfDisabledPkgs = packagesToDisable.SelectMany(p => p.Files);
+            IEnumerable<ContentFile> filesOfEnabledPkgs = packagesToEnable.SelectMany(p => p.Files);
+
+            List<ContentFile> filesToDisable = filesOfDisabledPkgs.Where(f1 =>
+                    !filesOfEnabledPkgs.Any(f2 =>
+                        Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+
+            List<ContentFile> filesToEnable = filesOfEnabledPkgs.Where(f1 =>
+                !filesOfDisabledPkgs.Any(f2 =>
+                    Path.GetFullPath(f1.Path).CleanUpPath() == Path.GetFullPath(f2.Path).CleanUpPath())).ToList();
+
+            CurrentCorePackage = corePackage;
+            enabledRegularPackages.RemoveAll(p => p.HasMultiplayerIncompatibleContent); enabledRegularPackages.AddRange(regularPackages);
+
+            DisableContentPackageItems(filesToDisable);
+            EnableContentPackageItems(filesToEnable);
+
+            RefreshContentPackageItems(filesOfEnabledPkgs.Concat(filesToDisable));
+
+            ContentPackage.SortContentPackages(p => -regularPackages.IndexOf(p));
+        }
+
+        public void RestoreBackupPackages()
+        {
+            if (backupModOrder == null) { return; }
+
+            SwapPackages(
+                backupModOrder[0].Item1,
+                backupModOrder.Skip(1).Where(p => p.Item2).Select(p => p.Item1).ToList());
+            ContentPackage.SortContentPackages(p => backupModOrder.FindIndex(n => n.Item1 == p));
+
+            backupModOrder = null;
+        }
+
+        public void EnableRegularPackage(ContentPackage contentPackage)
+        {
+            if (contentPackage.IsCorePackage) { return; }
+            if (!enabledRegularPackages.Contains(contentPackage))
+            {
+                enabledRegularPackages.Add(contentPackage);
+                SortContentPackages();
+
+                EnableContentPackageItems(contentPackage.Files);
                 RefreshContentPackageItems(contentPackage.Files);
             }
         }
 
-        public void DeselectContentPackage(ContentPackage contentPackage)
+        public void DisableRegularPackage(ContentPackage contentPackage)
         {
-            if (SelectedContentPackages.Contains(contentPackage))
+            if (contentPackage.IsCorePackage) { return; }
+            if (enabledRegularPackages.Contains(contentPackage))
             {
-                SelectedContentPackages.Remove(contentPackage);
-                ContentPackage.SortContentPackages();
-                DisableContentPackageItems(contentPackage.Files.OrderBy(ContentFileLoadOrder));
+                enabledRegularPackages.Remove(contentPackage);
+                SortContentPackages();
+
+                DisableContentPackageItems(contentPackage.Files);
                 RefreshContentPackageItems(contentPackage.Files);
             }
         }
 
-        private void EnableContentPackageItems(IOrderedEnumerable<ContentFile> files)
+        public void SortContentPackages(bool refreshAll = false)
         {
+            for (int i = enabledRegularPackages.Count - 1; i >= 0; i--)
+            {
+                var package = enabledRegularPackages[i];
+                if (!ContentPackage.RegularPackages.Contains(package))
+                {
+                    ContentPackage replacement = ContentPackage.RegularPackages.Find(p => p.Name.Equals(package.Name, StringComparison.OrdinalIgnoreCase));
+                    if (replacement != null)
+                    {
+                        enabledRegularPackages[i] = replacement;
+                    }
+                    else
+                    {
+                        DisableRegularPackage(package);
+                    }
+                }
+            }
+
+            if (CurrentCorePackage == null)
+            {
+                AutoSelectCorePackage(null);
+            }
+            else if (!ContentPackage.CorePackages.Contains(CurrentCorePackage))
+            {
+                ContentPackage replacement = ContentPackage.CorePackages.Find(p => p.Name.Equals(CurrentCorePackage.Name, StringComparison.OrdinalIgnoreCase));
+                if (replacement != null)
+                {
+                    SelectCorePackage(replacement);
+                }
+                else
+                {
+                    AutoSelectCorePackage(null);
+                }
+            }
+
+            var sortedSelected = enabledRegularPackages
+                    .OrderBy(p => -ContentPackage.RegularPackages.IndexOf(p))
+                    .ToList();
+            enabledRegularPackages.Clear(); enabledRegularPackages.AddRange(sortedSelected);
+
+            CharacterPrefab.Prefabs.SortAll();
+            AfflictionPrefab.Prefabs.SortAll();
+            JobPrefab.Prefabs.SortAll();
+            ItemPrefab.Prefabs.SortAll();
+            CoreEntityPrefab.Prefabs.SortAll();
+            ItemAssemblyPrefab.Prefabs.SortAll();
+            StructurePrefab.Prefabs.SortAll();
+
+#if CLIENT
+            GameMain.DecalManager?.Prefabs.SortAll();
+            GameMain.ParticleManager?.Prefabs.SortAll();
+#endif
+
+            if (refreshAll)
+            {
+                RefreshContentPackageItems(AllEnabledPackages.SelectMany(p => p.Files));
+            }
+        }
+
+        public void EnableContentPackageItems(IEnumerable<ContentFile> unorderedFiles)
+        {
+            if (WaitingForAutoUpdate) { return; }
+            IOrderedEnumerable<ContentFile> files = unorderedFiles.OrderBy(ContentFileLoadOrder);
             foreach (ContentFile file in files)
             {
                 switch (file.Type)
@@ -390,8 +532,10 @@ namespace Barotrauma
             }
         }
 
-        private void DisableContentPackageItems(IOrderedEnumerable<ContentFile> files)
+        public void DisableContentPackageItems(IEnumerable<ContentFile> unorderedFiles)
         {
+            if (WaitingForAutoUpdate) { return; }
+            IOrderedEnumerable<ContentFile> files = unorderedFiles.OrderBy(ContentFileLoadOrder);
             foreach (ContentFile file in files)
             {
                 switch (file.Type)
@@ -434,9 +578,9 @@ namespace Barotrauma
             }
         }
 
-        private void RefreshContentPackageItems(IEnumerable<ContentFile> files)
+        public void RefreshContentPackageItems(IEnumerable<ContentFile> files)
         {
-            if (files.Any(f => f.Type == ContentType.LocationTypes)) { LocationType.Init(); }
+            if (WaitingForAutoUpdate) { return; }
             if (files.Any(f => f.Type == ContentType.Afflictions)) { AfflictionPrefab.LoadAll(GameMain.Instance.GetFilesOfType(ContentType.Afflictions)); }
             if (files.Any(f => f.Type == ContentType.Submarine ||
                                f.Type == ContentType.Outpost ||
@@ -447,7 +591,13 @@ namespace Barotrauma
             if (files.Any(f => f.Type == ContentType.Factions)) { FactionPrefab.LoadFactions(); }
             if (files.Any(f => f.Type == ContentType.Item)) { ItemPrefab.InitFabricationRecipes(); }
             if (files.Any(f => f.Type == ContentType.RuinConfig)) { RuinGeneration.RuinGenerationParams.ClearAll(); }
-            if (files.Any(f => f.Type == ContentType.RandomEvents)) { EventSet.LoadPrefabs(); }
+            if (files.Any(f => f.Type == ContentType.RandomEvents ||
+                               f.Type == ContentType.LocationTypes))
+            {
+                LocationType.List.Clear();
+                EventSet.LoadPrefabs();
+                LocationType.Init();
+            }
             if (files.Any(f => f.Type == ContentType.Missions)) { MissionPrefab.Init(); }
             if (files.Any(f => f.Type == ContentType.LevelObjectPrefabs)) { LevelObjectPrefab.LoadAll(); }
             if (files.Any(f => f.Type == ContentType.MapGenerationParameters)) { MapGenerationParams.Init(); }
@@ -515,49 +665,6 @@ namespace Barotrauma
             }
         }
 
-        public void ReorderSelectedContentPackages<T>(Func<ContentPackage, T> orderFunction)
-        {
-            ContentPackage.List = ContentPackage.List
-                                    .OrderByDescending(p => p.CorePackage)
-                                    .ThenBy(orderFunction)
-                                    .ToList();
-
-            ContentPackage.SortContentPackages();
-
-            CharacterPrefab.Prefabs.SortAll();
-            AfflictionPrefab.Prefabs.SortAll();
-            JobPrefab.Prefabs.SortAll();
-            ItemPrefab.Prefabs.SortAll();
-            CoreEntityPrefab.Prefabs.SortAll();
-            ItemAssemblyPrefab.Prefabs.SortAll();
-            StructurePrefab.Prefabs.SortAll();
-
-            SubmarineInfo.RefreshSavedSubs();
-            ItemPrefab.InitFabricationRecipes();
-            RuinGeneration.RuinGenerationParams.ClearAll();
-            EventSet.LoadPrefabs();
-            MissionPrefab.Init();
-            LevelObjectPrefab.LoadAll();
-            LocationType.Init();
-            MapGenerationParams.Init();
-            LevelGenerationParams.LoadPresets();
-            OutpostGenerationParams.LoadPresets();
-            TraitorMissionPrefab.Init();
-            Order.Init();
-            EventManagerSettings.Init();
-            WreckAIConfig.LoadAll();
-            SkillSettings.Load(GameMain.Instance.GetFilesOfType(ContentType.SkillSettings));
-
-#if CLIENT
-            GameMain.DecalManager.Prefabs.SortAll();
-            GameMain.ParticleManager.Prefabs.SortAll();
-            SoundPlayer.Init().ForEach(_ => { return; });
-#endif
-        }
-
-
-        private HashSet<string> selectedContentPackagePaths = new HashSet<string>();
-
         public string MasterServerUrl { get; set; }
         public string RemoteContentUrl { get; set; }
         public bool AutoCheckUpdates { get; set; }
@@ -621,6 +728,7 @@ namespace Barotrauma
         private bool showTutorialSkipWarning = true;
 
         public static bool EnableSubmarineAutoSave { get; set; }
+        public static int MaximumAutoSaves { get; set; }
         public static Color SubEditorBackgroundColor { get; set; }
 
         public bool ShowTutorialSkipWarning
@@ -662,54 +770,64 @@ namespace Barotrauma
                 case System.IO.WatcherChangeTypes.Created:
                     {
                         string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        if (File.Exists(cpPath) && !ContentPackage.List.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
+                        if (File.Exists(cpPath) &&
+                            !ContentPackage.AllPackages.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
                         {
-                            var cp = new ContentPackage(cpPath);
-                            ContentPackage.List.Add(cp);
+                            ContentPackage.AddPackage(new ContentPackage(cpPath));
                         }
                     }
                     break;
                 case System.IO.WatcherChangeTypes.Deleted:
                     {
                         string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
-                        var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
-                        foreach (var cp in packagesToDeselect)
-                        {
-                            if (cp.CorePackage)
-                            {
-                                GameMain.Config.AutoSelectCorePackage(toRemove);
-                            }
-                            else
-                            {
-                                GameMain.Config.DeselectContentPackage(cp);
-                            }
-                        }
-
+                        var toRemove = ContentPackage.RegularPackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
                         foreach (var cp in toRemove)
                         {
-                            ContentPackage.List.Remove(cp);
+                            if (enabledRegularPackages.Contains(cp)) { DisableRegularPackage(cp); }
                         }
+
+                        toRemove.AddRange(ContentPackage.CorePackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath));
+                        bool reselectCore = false;
+                        foreach (var cp in toRemove)
+                        {
+                            ContentPackage.RemovePackage(cp);
+                            if (cp.IsCorePackage)
+                            {
+                                reselectCore = true;
+                            }
+                        }
+                        if (reselectCore) { AutoSelectCorePackage(null); }
                     }
                     break;
                 case System.IO.WatcherChangeTypes.Renamed:
                     {
                         System.IO.RenamedEventArgs renameArgs = e as System.IO.RenamedEventArgs;
 
-                        string cpPath = Path.GetFullPath(Path.Combine(renameArgs.OldFullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        var toRemove = ContentPackage.List.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
+                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
+                        var toRemove = ContentPackage.RegularPackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
                         foreach (var cp in toRemove)
                         {
-                            GameMain.Config.DeselectContentPackage(cp);
-                            ContentPackage.List.Remove(cp);
+                            if (enabledRegularPackages.Contains(cp)) { DisableRegularPackage(cp); }
+                        }
+
+                        toRemove.AddRange(ContentPackage.CorePackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath));
+                        bool reselectCore = false;
+                        foreach (var cp in toRemove)
+                        {
+                            ContentPackage.RemovePackage(cp);
+                            if (cp.IsCorePackage)
+                            {
+                                reselectCore = true;
+                            }
                         }
 
                         cpPath = Path.GetFullPath(Path.Combine(renameArgs.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        if (File.Exists(cpPath) && !ContentPackage.List.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
+                        if (File.Exists(cpPath) &&
+                            !ContentPackage.AllPackages.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
                         {
-                            var cp = new ContentPackage(cpPath);
-                            ContentPackage.List.Add(cp);
+                            ContentPackage.AddPackage(new ContentPackage(cpPath));
                         }
+                        if (reselectCore) { AutoSelectCorePackage(null); }
                     }
                     break;
             }
@@ -723,7 +841,7 @@ namespace Barotrauma
                 GraphicsWidth = 1024;
                 GraphicsHeight = 768;
                 MasterServerUrl = "";
-                SelectContentPackage(ContentPackage.List.Any() ? ContentPackage.List[0] : new ContentPackage(""));
+                SelectCorePackage(ContentPackage.CorePackages.FirstOrDefault());
                 jobPreferences = new List<Pair<string, int>>();
                 return;
             }
@@ -778,6 +896,7 @@ namespace Barotrauma
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("submarineautosave", EnableSubmarineAutoSave),
+                new XAttribute("maxautosaves", MaximumAutoSaves),
                 new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
@@ -831,11 +950,11 @@ namespace Barotrauma
                 new XAttribute("hudscale", HUDScale),
                 new XAttribute("inventoryscale", InventoryScale));
 
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
+            foreach (ContentPackage contentPackage in ContentPackage.CorePackages)
             {
                 if (contentPackage.Path.Contains(VanillaContentPackagePath))
                 {
-                    doc.Root.Add(new XElement("contentpackage", new XAttribute("path", contentPackage.Path)));
+                    doc.Root.Add(new XElement("contentpackages", new XElement("core", new XAttribute("name", contentPackage.Name))));
                     break;
                 }
             }
@@ -978,112 +1097,6 @@ namespace Barotrauma
             return true;
         }
 
-        public void ReloadContentPackages()
-        {
-            LoadContentPackages(selectedContentPackagePaths);
-        }
-
-        private void LoadContentPackages(IEnumerable<string> contentPackagePaths)
-        {
-            var missingPackagePaths = new List<string>();
-            var incompatiblePackages = new List<ContentPackage>();
-            var packagesWithErrors = new List<ContentPackage>();
-            SelectedContentPackages.Clear();
-            foreach (string path in contentPackagePaths)
-            {
-                var matchingContentPackage = ContentPackage.List.Find(cp => Barotrauma.IO.Path.GetFullPath(cp.Path).CleanUpPath() == path.CleanUpPath());
-
-                if (matchingContentPackage == null)
-                {
-                    missingPackagePaths.Add(path);
-                }
-                else if (!matchingContentPackage.IsCompatible())
-                {
-                    DebugConsole.NewMessage(
-                        $"Content package \"{matchingContentPackage.Name}\" is not compatible with this version of Barotrauma (game version: {GameMain.Version}, content package version: {matchingContentPackage.GameVersion})",
-                        Color.Red);
-                    incompatiblePackages.Add(matchingContentPackage);
-                }
-                else
-                {
-                    if (!matchingContentPackage.CheckErrors(out List<string> errorMessages))
-                    {
-                        DebugConsole.NewMessage(
-                        $"Errors found in content package \"{matchingContentPackage.Name}\": " + string.Join(", ", errorMessages),
-                        Color.Red);
-                        packagesWithErrors.Add(matchingContentPackage);
-                    }
-                    //add content packages with errors as they are generally able to load most of their assets
-                    SelectedContentPackages.Add(matchingContentPackage);
-                }
-            }
-
-            EnsureCoreContentPackageSelected(gameLoaded: false);
-
-            ContentPackage.SortContentPackages();
-            TextManager.LoadTextPacks(SelectedContentPackages);
-
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
-            {
-                foreach (ContentFile file in contentPackage.Files)
-                {
-                    ToolBox.IsProperFilenameCase(file.Path);
-                }
-            }
-
-            //save to get rid of the invalid selected packages in the config file
-            if (missingPackagePaths.Count > 0 || incompatiblePackages.Count > 0 || packagesWithErrors.Count > 0) { SaveNewPlayerConfig(); }
-
-            //display error messages after all content packages have been loaded
-            //to make sure the package that contains text files has been loaded before we attempt to use TextManager
-            foreach (string missingPackagePath in missingPackagePaths)
-            {
-                DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageNotFound", "[packagepath]", missingPackagePath));
-            }
-            foreach (ContentPackage invalidPackage in packagesWithErrors)
-            {
-                DebugConsole.ThrowError(TextManager.GetWithVariable("ContentPackageHasErrors", "[packagename]", invalidPackage.Name), createMessageBox: true);
-            }
-            foreach (ContentPackage incompatiblePackage in incompatiblePackages)
-            {
-                DebugConsole.ThrowError(TextManager.GetWithVariables(incompatiblePackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
-                    new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { incompatiblePackage.Name, incompatiblePackage.GameVersion.ToString(), GameMain.Version.ToString() }),
-                    createMessageBox: true);
-            }
-        }
-
-        public void EnsureCoreContentPackageSelected(bool gameLoaded=true)
-        {
-            if (SelectedContentPackages.Any(cp => cp.CorePackage)) { return; }
-
-            if (GameMain.VanillaContent != null)
-            {
-                if (gameLoaded)
-                {
-                    SelectContentPackage(GameMain.VanillaContent);
-                }
-                else
-                {
-                    SelectedContentPackages.Add(GameMain.VanillaContent);
-                }
-            }
-            else
-            {
-                var availablePackage = ContentPackage.List.FirstOrDefault(cp => cp.IsCompatible() && cp.CorePackage);
-                if (availablePackage != null)
-                {
-                    if (gameLoaded)
-                    {
-                        SelectContentPackage(availablePackage);
-                    }
-                    else
-                    {
-                        SelectedContentPackages.Add(availablePackage);
-                    }
-                }
-            }
-        }
-
 #endregion
 
 #region Save PlayerConfig
@@ -1106,6 +1119,7 @@ namespace Barotrauma
                 new XAttribute("verboselogging", VerboseLogging),
                 new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("submarineautosave", EnableSubmarineAutoSave),
+                new XAttribute("maxautosaves", MaximumAutoSaves),
                 new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
                 new XAttribute("enablesplashscreen", EnableSplashScreen),
                 new XAttribute("usesteammatchmaking", UseSteamMatchmaking),
@@ -1202,11 +1216,32 @@ namespace Barotrauma
                 new XAttribute("hudscale", HUDScale),
                 new XAttribute("inventoryscale", InventoryScale));
 
-            foreach (ContentPackage contentPackage in SelectedContentPackages)
+            XElement contentPackagesElement = new XElement("contentpackages");
+
+            string corePackageName = (CurrentCorePackage ?? ContentPackage.CorePackages.FirstOrDefault()).Name;
+            contentPackagesElement.Add(new XElement("core", new XAttribute("name", corePackageName)));
+
+            XElement regularPackagesElement = new XElement("regular");
+            foreach (ContentPackage package in ContentPackage.RegularPackages)
             {
-                doc.Root.Add(new XElement("contentpackage",
-                    new XAttribute("path", contentPackage.Path)));
+                XElement packageElement = new XElement("package", new XAttribute("name", package.Name));
+                if (EnabledRegularPackages.Contains(package)) { packageElement.Add(new XAttribute("enabled", "true")); }
+                regularPackagesElement.Add(packageElement);
             }
+            contentPackagesElement.Add(regularPackagesElement);
+
+            doc.Root.Add(contentPackagesElement);
+
+#if UNSTABLE
+            //TODO: remove at some point
+            foreach (ContentPackage package in AllEnabledPackages)
+            {
+                XElement compatibilityElement = new XElement("contentpackage");
+                compatibilityElement.Add(new XAttribute("path", package.Path));
+
+                doc.Root.Add(compatibilityElement);
+            }
+#endif
 
 #if CLIENT
             var keyMappingElement = new XElement("keymapping");
@@ -1318,6 +1353,7 @@ namespace Barotrauma
             sendUserStatistics = doc.Root.GetAttributeBool("senduserstatistics", sendUserStatistics);
             QuickStartSubmarineName = doc.Root.GetAttributeString("quickstartsub", QuickStartSubmarineName);
             EnableSubmarineAutoSave = doc.Root.GetAttributeBool("submarineautosave", true);
+            MaximumAutoSaves = doc.Root.GetAttributeInt("maxautosaves", 8);
             SubEditorBackgroundColor = doc.Root.GetAttributeColor("subeditorbackground", new Color(0.051f, 0.149f, 0.271f, 1.0f));
             UseSteamMatchmaking = doc.Root.GetAttributeBool("usesteammatchmaking", UseSteamMatchmaking);
             RequireSteamAuthentication = doc.Root.GetAttributeBool("requiresteamauthentication", RequireSteamAuthentication);
@@ -1441,18 +1477,79 @@ namespace Barotrauma
 
         private void LoadContentPackages(XDocument doc)
         {
-            selectedContentPackagePaths = new HashSet<string>();
-            foreach (XElement subElement in doc.Root.Elements())
+            CurrentCorePackage = null;
+            enabledRegularPackages.Clear();
+
+            var contentPackagesElement = doc.Root.Element("contentpackages");
+            if (contentPackagesElement != null)
             {
-                switch (subElement.Name.ToString().ToLowerInvariant())
+                string coreName = contentPackagesElement.Element("core")?.GetAttributeString("name", "");
+                ContentPackage corePackage = ContentPackage.CorePackages.Find(p => p.Name.Equals(coreName, StringComparison.OrdinalIgnoreCase));
+                if (corePackage != null)
                 {
-                    case "contentpackage":
-                        string path = Path.GetFullPath(subElement.GetAttributeString("path", ""));
-                        selectedContentPackagePaths.Add(path);
-                        break;
+                    CurrentCorePackage = corePackage;
+                }
+
+                XElement regularElement = contentPackagesElement.Element("regular");
+
+                List<XElement> subElements = regularElement?.Elements()?.ToList();
+                if (subElements != null)
+                {
+                    ContentPackage.SortContentPackages(p =>
+                    {
+                        int index = subElements.FindIndex(e =>
+                        {
+                            string name = e.GetAttributeString("name", null);
+                            return p.Name.Equals(name, StringComparison.OrdinalIgnoreCase);
+                        });
+                        return index;
+                    });
+
+                    foreach (var subElement in subElements)
+                    {
+                        if (!bool.TryParse(subElement.GetAttributeString("enabled", "false"), out bool enabled) || !enabled) { continue; }
+
+                        string name = subElement.GetAttributeString("name", null);
+                        if (string.IsNullOrEmpty(name)) { continue; }
+
+                        var package = ContentPackage.RegularPackages.Find(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                        if (package == null) { continue; }
+                        enabledRegularPackages.Add(package);
+                    }
                 }
             }
-            LoadContentPackages(selectedContentPackagePaths);
+            else
+            {
+                var enabledContentPackagePaths = new List<string>();
+                foreach (XElement subElement in doc.Root.Elements())
+                {
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "contentpackage":
+                            string path = subElement.GetAttributeString("path", "");
+                            enabledContentPackagePaths.Add(path.CleanUpPath().ToLowerInvariant());
+                            break;
+                    }
+                }
+
+                ContentPackage.SortContentPackages(p => enabledContentPackagePaths.IndexOf(p.Path.CleanUpPath().ToLowerInvariant()));
+
+                foreach (string path in enabledContentPackagePaths)
+                {
+                    ContentPackage package = ContentPackage.AllPackages
+                        .FirstOrDefault(p => p.Path.CleanUpPath().Equals(path, StringComparison.OrdinalIgnoreCase));
+                    if (package == null) { continue; }
+                    if (package.IsCorePackage) { CurrentCorePackage = package; }
+                    else { enabledRegularPackages.Add(package); }
+                }
+            }
+
+            if (CurrentCorePackage == null)
+            {
+                CurrentCorePackage = ContentPackage.CorePackages.First();
+            }
+
+            TextManager.LoadTextPacks(AllEnabledPackages);
         }
 #endregion
 

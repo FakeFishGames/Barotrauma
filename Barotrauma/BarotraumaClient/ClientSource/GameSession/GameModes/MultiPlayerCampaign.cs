@@ -3,7 +3,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -12,6 +12,11 @@ namespace Barotrauma
     partial class MultiPlayerCampaign : CampaignMode
     {
         public bool SuppressStateSending = false;
+
+        public override bool Paused
+        {
+            get { return ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"); }
+        }
 
         private UInt16 pendingSaveID = 1;
         public UInt16 PendingSaveID
@@ -100,7 +105,7 @@ namespace Barotrauma
             };
             
             int buttonHeight = (int)(GUI.Scale * 40);
-            int buttonWidth = GUI.IntScale(200);
+            int buttonWidth = GUI.IntScale(450);
 
             endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle((GameMain.GraphicsWidth / 2) - (buttonWidth / 2), HUDLayoutSettings.ButtonAreaTop.Center.Y - (buttonHeight / 2), buttonWidth, buttonHeight), GUICanvas.Instance),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
@@ -209,6 +214,7 @@ namespace Barotrauma
                         Character.Controlled = null;
                         prevControlled.ClearInputs();
                     }
+                    GameMain.GameScreen.Cam.Freeze = true;
                     overlayTextColor = Color.Lerp(Color.Transparent, Color.White, (timer - 1.0f) / fadeInDuration);
                     timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
                     yield return CoroutineStatus.Running;
@@ -357,7 +363,7 @@ namespace Barotrauma
 
             base.Update(deltaTime);
 
-            if (PlayerInput.RightButtonClicked() ||
+            if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {
                 ShowCampaignUI = false;
@@ -402,6 +408,14 @@ namespace Barotrauma
                 }
 
                 if (CampaignUI == null) { InitCampaignUI(); }
+            }
+            else
+            {
+                var transitionType = GetAvailableTransition(out _, out _);
+                if (transitionType == TransitionType.None && CampaignUI?.SelectedTab == InteractionType.Map)
+                {
+                    ShowCampaignUI = false;
+                }
             }
         }
         public override void End(TransitionType transitionType = TransitionType.None)
@@ -528,6 +542,7 @@ namespace Barotrauma
             UInt16 currentLocIndex      = msg.ReadUInt16();
             UInt16 selectedLocIndex     = msg.ReadUInt16();
             byte selectedMissionIndex   = msg.ReadByte();
+            bool allowDebugTeleport     = msg.ReadBoolean();
             float? reputation = null;
             if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
             
@@ -640,6 +655,7 @@ namespace Barotrauma
                     campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                     campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                     campaign.Map.SelectMission(selectedMissionIndex);
+                    campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
                     campaign.CargoManager.SetPurchasedItems(purchasedItems);
                     campaign.CargoManager.SetSoldItems(soldItems);

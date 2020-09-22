@@ -90,8 +90,10 @@ namespace Barotrauma.Items.Components
             get { return stuck; }
             set
             {
-                if (isOpen || isBroken || !CanBeWelded) return;
+                if (isOpen || isBroken || !CanBeWelded) { return; }
                 stuck = MathHelper.Clamp(value, 0.0f, 100.0f);
+                //don't allow clients to make the door stuck unless the server says so (handled in ClientRead)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
                 if (stuck <= 0.0f) { IsStuck = false; }
                 if (stuck >= 99.0f) { IsStuck = true; }
             }
@@ -366,12 +368,24 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Body.Enabled = Impassable || openState < 1.0f;                
+                bool wasEnabled = Body.Enabled;
+                Body.Enabled = Impassable || openState < 1.0f;
+                if (wasEnabled && !Body.Enabled && IsHorizontal)
+                {
+                    //when opening a hatch, force characters above it to refresh the floor position
+                    //(otherwise the character won't fall through the hatch until it moves)
+                    foreach (Character c in Character.CharacterList)
+                    {
+                        if (c.WorldPosition.Y < item.WorldPosition.Y) { continue; }
+                        if (c.WorldPosition.X < item.WorldRect.X || c.WorldPosition.X > item.WorldRect.Right) { continue; }
+                        c.AnimController?.ForceRefreshFloorY();
+                    }
+                }
             }
 
             //don't use the predicted state here, because it might set
             //other items to an incorrect state if the prediction is wrong
-            item.SendSignal(0, (isOpen) ? "1" : "0", "state_out", null);
+            item.SendSignal(0, isOpen ? "1" : "0", "state_out", null);
         }
 
         partial void UpdateProjSpecific(float deltaTime);
@@ -616,12 +630,13 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (IsStuck) return;
+            if (IsStuck) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             
             if (connection.Name == "toggle")
             {
+                if (signal == "0") { return; }
                 if (toggleCooldownTimer > 0.0f && sender != lastUser) { OnFailedToOpen(); return; }
                 if (IsStuck) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
                 toggleCooldownTimer = ToggleCoolDown;

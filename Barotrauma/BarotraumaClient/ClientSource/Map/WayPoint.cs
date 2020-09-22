@@ -238,42 +238,7 @@ namespace Barotrauma
             return true;
         }
 
-        private bool EnterIDCardDesc(GUITextBox textBox, string text)
-        {
-            IdCardDesc = text;
-            textBox.Text = text;
-            textBox.Color = GUI.Style.Green;
-
-            textBox.Deselect();
-
-            return true;
-        }
-        private bool EnterIDCardTags(GUITextBox textBox, string text)
-        {
-            IdCardTags = text.Split(',');
-            textBox.Text = string.Join(",", IdCardTags);
-            textBox.Flash(GUI.Style.Green);
-            textBox.Deselect();
-            return true;
-        }
-
-        private bool EnterTags(GUITextBox textBox, string text)
-        {
-            tags = text.Split(',').ToList();
-            textBox.Text = string.Join(",", Tags);
-            textBox.Flash(GUI.Style.Green);
-            textBox.Deselect();
-            return true;
-        }
-
-        private bool TextBoxChanged(GUITextBox textBox, string text)
-        {
-            textBox.Color = GUI.Style.Red;
-
-            return true;
-        }
-
-        private GUIComponent CreateEditingHUD(bool inGame = false)
+        private GUIComponent CreateEditingHUD()
         {
             int width = 500;
             int height = spawnType == SpawnType.Path ? 80 : 200;
@@ -326,21 +291,48 @@ namespace Barotrauma
                 GUITextBox propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), descText.RectTransform, Anchor.CenterRight), IdCardDesc)
                 {
                     MaxTextLength = 150,
-                    OnEnterPressed = EnterIDCardDesc,
                     ToolTip = TextManager.Get("IDCardDescriptionTooltip")
                 };
-                propertyBox.OnTextChanged += TextBoxChanged;
+                propertyBox.OnTextChanged += (textBox, text) =>
+                {
+                    IdCardDesc = text;
+                    return true;
+                };
+                propertyBox.OnEnterPressed += (textBox, text) =>
+                {
+                    IdCardDesc = text;
+                    textBox.Flash(GUI.Style.Green);
+                    return true;
+                };
+                propertyBox.OnDeselected += (textBox, keys) =>
+                {
+                    IdCardDesc = textBox.Text;
+                    textBox.Flash(GUI.Style.Green);
+                };
 
                 var idCardTagsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
                     TextManager.Get("IDCardTags"), font: GUI.SmallFont);
                 propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), idCardTagsText.RectTransform, Anchor.CenterRight), string.Join(", ", idCardTags))
                 {
                     MaxTextLength = 60,
-                    OnEnterPressed = EnterIDCardTags,
                     ToolTip = TextManager.Get("IDCardTagsTooltip")
                 };
-                propertyBox.OnTextChanged += TextBoxChanged;
-
+                propertyBox.OnTextChanged += (textBox, text) =>
+                {
+                    IdCardTags = text.Split(',');
+                    return true;
+                };
+                propertyBox.OnEnterPressed += (textBox, text) =>
+                {
+                    textBox.Text = string.Join(",", IdCardTags);
+                    textBox.Flash(GUI.Style.Green);
+                    return true;
+                };
+                propertyBox.OnDeselected += (textBox, keys) =>
+                {
+                    textBox.Text = string.Join(",", IdCardTags);
+                    textBox.Flash(GUI.Style.Green);
+                };
 
                 var jobsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
                     TextManager.Get("SpawnpointJobs"), font: GUI.SmallFont)
@@ -368,12 +360,26 @@ namespace Barotrauma
                 propertyBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), tagsText.RectTransform, Anchor.CenterRight), string.Join(", ", tags))
                 {
                     MaxTextLength = 60,
-                    OnEnterPressed = EnterTags,
                     ToolTip = TextManager.Get("spawnpointtagstooltip")
                 };
-                propertyBox.OnTextChanged += TextBoxChanged;
+                propertyBox.OnTextChanged += (textBox, text) =>
+                {
+                    tags = text.Split(',').ToList();
+                    return true;
+                };
+                propertyBox.OnEnterPressed += (textBox, text) =>
+                {
+                    textBox.Text = string.Join(",", tags);
+                    textBox.Flash(GUI.Style.Green);
+                    return true;
+                };
+                propertyBox.OnDeselected += (textBox, keys) =>
+                {
+                    textBox.Text = string.Join(",", tags);
+                    textBox.Flash(GUI.Style.Green);
+                };
             }
-            
+
             PositionEditingHUD();
 
             return editingHUD;

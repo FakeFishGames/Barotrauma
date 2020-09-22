@@ -109,7 +109,7 @@ namespace Barotrauma
         {
             get
             {
-                if (Level.Loaded != null && !Level.Loaded.Generating &&
+                if (Level.Loaded?.EndLocation != null && !Level.Loaded.Generating &&
                     Level.Loaded.Type == LevelData.LevelType.LocationConnection &&
                     GetAvailableTransition(out _, out _) == TransitionType.ProgressToNextEmptyLocation)
                 {
@@ -270,7 +270,9 @@ namespace Barotrauma
             {
                 if (leavingSub.AtEndPosition)
                 {
-                    if (Map.EndLocation != null && map.SelectedLocation == Map.EndLocation)
+                    if (Map.EndLocation != null && 
+                        map.SelectedLocation == Map.EndLocation && 
+                        Map.EndLocation.Connections.Any(c => c.LevelData == Level.Loaded.LevelData))
                     {
                         nextLevel = map.StartLocation.LevelData;
                         return TransitionType.End;
@@ -463,8 +465,12 @@ namespace Barotrauma
                 }
             }
 
-            foreach (CharacterInfo ci in CrewManager.CharacterInfos)
+            foreach (CharacterInfo ci in CrewManager.CharacterInfos.ToList())
             {
+                if (ci.CauseOfDeath != null)
+                {
+                    CrewManager.RemoveCharacterInfo(ci);
+                }
                 ci?.ResetCurrentOrder();
             }
 
@@ -677,7 +683,7 @@ namespace Barotrauma
 
         public void OutpostNPCAttacked(Character npc, Character attacker, AttackResult attackResult)
         {
-            if (npc == null || attacker == null || npc.IsDead || npc.TurnedHostileByEvent) { return; }
+            if (npc == null || attacker == null || npc.IsDead || npc.IsInstigator) { return; }
             if (npc.TeamID != Character.TeamType.FriendlyNPC) { return; }
             if (!attacker.IsRemotePlayer && attacker != Character.Controlled) { return; }
             Location location = Map?.CurrentLocation;

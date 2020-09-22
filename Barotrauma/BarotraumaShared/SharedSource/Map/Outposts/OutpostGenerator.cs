@@ -3,7 +3,6 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Barotrauma
@@ -68,7 +67,7 @@ namespace Barotrauma
 
         private static Submarine Generate(OutpostGenerationParams generationParams, LocationType locationType, Location location, bool onlyEntrance = false)
         {
-            var outpostModuleFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.OutpostModule);
+            var outpostModuleFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.OutpostModule);
             
             //load the infos of the outpost module files
             List<SubmarineInfo> outpostModules = new List<SubmarineInfo>();
@@ -110,7 +109,7 @@ namespace Barotrauma
 
                 selectedModules.Clear();
                 //select which module types the outpost should consist of
-                var pendingModuleFlags = onlyEntrance ? new List<string>() : SelectModules(outpostModules, generationParams);
+                var pendingModuleFlags = onlyEntrance ? new List<string>() { generationParams.ModuleCounts.First().Key } : SelectModules(outpostModules, generationParams);
                 foreach (string flag in pendingModuleFlags.Distinct().ToList())
                 {
                     if (flag.Equals("none", StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -132,13 +131,11 @@ namespace Barotrauma
                     }
                 }
 
-                //the first airlock is forced to spawn manually, remove it from the list of pending modules
-                if (pendingModuleFlags.Contains("airlock"))
-                {
-                    pendingModuleFlags.Remove("airlock");
-                }
+                //the first module is spawned separately, remove it from the list of pending modules
+                string initialModuleFlag = pendingModuleFlags.FirstOrDefault() ?? "airlock";
+                pendingModuleFlags.Remove(initialModuleFlag);                
 
-                var initialModule = GetRandomModule(outpostModules, "airlock", locationType);
+                var initialModule = GetRandomModule(outpostModules, initialModuleFlag, locationType);
                 if (initialModule == null)
                 {
                     throw new Exception("Failed to generate an outpost (no airlock modules found).");
@@ -155,7 +152,7 @@ namespace Barotrauma
                 }
 
                 selectedModules.Add(new PlacedModule(initialModule, null, OutpostModuleInfo.GapPosition.None));
-                selectedModules.Last().FulfilledModuleTypes.Add("airlock");
+                selectedModules.Last().FulfilledModuleTypes.Add(initialModuleFlag);
                 AppendToModule(selectedModules.Last(), outpostModules.ToList(), pendingModuleFlags, selectedModules, locationType);
                 if (pendingModuleFlags.Any(flag => !flag.Equals("none", StringComparison.OrdinalIgnoreCase)))
                 {
@@ -202,7 +199,7 @@ namespace Barotrauma
 
             DebugConsole.NewMessage("Failed to generate an outpost without overlapping modules. Trying to use a pre-built outpost instead...");
 
-            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost);
+            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Outpost);
             if (!outpostFiles.Any())
             {
                 throw new Exception("Failed to generate an outpost. Could not generate an outpost from the available outpost modules and there are no pre-built outposts available.");
@@ -354,6 +351,9 @@ namespace Barotrauma
             int totalModuleCount = generationParams.TotalModuleCount;
             var pendingModuleFlags = new List<string>();
             bool availableModulesFound = true;
+
+            string initialModuleFlag = generationParams.ModuleCounts.FirstOrDefault().Key;
+            pendingModuleFlags.Add(initialModuleFlag);
             while (pendingModuleFlags.Count < totalModuleCount && availableModulesFound)
             {
                 availableModulesFound = false;
@@ -378,8 +378,13 @@ namespace Barotrauma
                 //don't place "none" modules at the end because
                 // a. "filler rooms" at the end of a hallway are pointless
                 // b. placing the unnecessary filler rooms first give more options for the placement of the more important modules 
-                pendingModuleFlags.Insert(Rand.Int(pendingModuleFlags.Count - 1, Rand.RandSync.Server),"none");
+                pendingModuleFlags.Insert(Rand.Int(pendingModuleFlags.Count - 1, Rand.RandSync.Server), "none");
             }
+
+            //make sure the initial module is inserted first
+            pendingModuleFlags.Remove(initialModuleFlag);
+            pendingModuleFlags.Insert(0, initialModuleFlag);
+
             return pendingModuleFlags;
         }
 
@@ -615,7 +620,7 @@ namespace Barotrauma
                 Vector2 moveDir = GetMoveDir(module.ThisGapPosition);
                 Vector2 moveStep = moveDir * 50.0f;
                 Vector2 currentMove = Vector2.Zero;
-                float maxMoveAmount = 1500.0f;
+                float maxMoveAmount = 2000.0f;
 
                 List<PlacedModule> subsequentModules2 = new List<PlacedModule>();
                 GetSubsequentModules(module, movableModules, ref subsequentModules2);
@@ -1342,7 +1347,7 @@ namespace Barotrauma
             Dictionary<HumanPrefab, CharacterInfo> selectedCharacters = new Dictionary<HumanPrefab, CharacterInfo>();
             foreach (HumanPrefab humanPrefab in outpost.Info.OutpostGenerationParams.GetHumanPrefabs(Rand.RandSync.Server))
             {
-                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.Server));
+                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.Server), randSync: Rand.RandSync.Server);
                 if (location != null && location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier())) 
                 {
                     killedCharacters.Add(humanPrefab);
@@ -1357,7 +1362,7 @@ namespace Barotrauma
                 int tries = 0;
                 while (tries < 100)
                 {
-                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: killedCharacter.GetJobPrefab(Rand.RandSync.Server));
+                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: killedCharacter.GetJobPrefab(Rand.RandSync.Server), randSync: Rand.RandSync.Server);
                     if (!location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier()))
                     {
                         selectedCharacters.Add(killedCharacter, characterInfo);

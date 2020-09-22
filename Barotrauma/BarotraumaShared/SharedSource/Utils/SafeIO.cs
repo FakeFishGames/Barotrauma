@@ -1,4 +1,3 @@
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 
@@ -8,7 +7,9 @@ namespace Barotrauma.IO
     {
         static readonly string[] unwritableDirs = new string[] { "Content", "Data/ContentPackages" };
 
-        public static bool CanWrite(string path, bool canWarn = true)
+        public static bool DevException;
+
+        public static bool CanWrite(string path)
         {
             path = System.IO.Path.GetFullPath(path).CleanUpPath();
 
@@ -19,11 +20,7 @@ namespace Barotrauma.IO
                 if (path.StartsWith(dir, StringComparison.InvariantCultureIgnoreCase))
                 {
 #if DEBUG
-                    if (canWarn)
-                    {
-                        DebugConsole.NewMessage($"WARNING: writing to \"{path}\" is disallowed in Release builds!\n{Environment.StackTrace}", Color.Orange);
-                    }
-                    return true;
+                    return DevException;
 #else
                     return false;
 #endif
@@ -44,6 +41,16 @@ namespace Barotrauma.IO
                 return;
             }
             doc.Save(path);
+        }
+
+        public static void SaveSafe(this System.Xml.Linq.XElement element, string path)
+        {
+            if (!Validation.CanWrite(path))
+            {
+                DebugConsole.ThrowError($"Cannot save XML element to \"{path}\": failed validation");
+                return;
+            }
+            element.Save(path);
         }
 
         public static void SaveSafe(this System.Xml.Linq.XDocument doc, XmlWriter writer)
@@ -297,7 +304,7 @@ namespace Barotrauma.IO
                     break;
             }
             return new FileStream(path, System.IO.File.Open(path, mode,
-                !Validation.CanWrite(path, false) ?
+                !Validation.CanWrite(path) ?
                 System.IO.FileAccess.Read :
                 access));
         }

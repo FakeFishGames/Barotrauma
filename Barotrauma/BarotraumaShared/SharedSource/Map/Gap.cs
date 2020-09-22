@@ -160,9 +160,15 @@ namespace Barotrauma
 
         public override void Move(Vector2 amount)
         {
+            if (!MathUtils.IsValid(amount))
+            {
+                DebugConsole.ThrowError($"Attempted to move a gap by an invalid amount ({amount})\n{Environment.StackTrace}");
+                return;
+            }
+
             base.Move(amount);
 
-            if (!DisableHullRechecks) FindHulls();
+            if (!DisableHullRechecks) { FindHulls(); }
         }
 
         public static void UpdateHulls()

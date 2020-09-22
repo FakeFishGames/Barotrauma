@@ -35,7 +35,7 @@ namespace Barotrauma
         public static string MultiplayerSaveFolder = Path.Combine(SaveFolder, "Multiplayer");
 
         public static readonly string SubmarineDownloadFolder = Path.Combine("Submarines", "Downloaded");
-        public static readonly string CampaignDownloadFolder = Path.Combine("Data", "Saves", "Multiplayer");
+        public static readonly string CampaignDownloadFolder = Path.Combine("Data", "Saves", "Multiplayer_Downloaded");
 
         public delegate void ProgressDelegate(string sMessage);
 

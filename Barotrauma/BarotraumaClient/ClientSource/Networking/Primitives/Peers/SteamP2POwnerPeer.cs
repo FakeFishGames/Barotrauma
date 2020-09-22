@@ -1,8 +1,6 @@
-﻿using System;
+﻿using Barotrauma.Steam;
+using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using Barotrauma.Steam;
 using System.Linq;
 using System.Threading;
 
@@ -12,7 +10,6 @@ namespace Barotrauma.Networking
     {
         private bool isActive;
 
-        private ConnectionInitialization initializationStep;
         private readonly UInt64 selfSteamID;
 
         private long sentBytes, receivedBytes;
@@ -61,7 +58,7 @@ namespace Barotrauma.Networking
 
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
-            ServerConnection = new PipeConnection();
+            ServerConnection = new PipeConnection(selfSteamID);
             ServerConnection.Status = NetworkConnectionStatus.Connected;
 
             remotePeers = new List<RemotePeer>();
@@ -161,6 +158,7 @@ namespace Barotrauma.Networking
                             remotePeer.Authenticating = true;
                             
                             authMsg.ReadString(); //skip name
+                            authMsg.ReadInt32(); //skip owner key
                             authMsg.ReadUInt64(); //skip steamid
                             UInt16 ticketLength = authMsg.ReadUInt16();
                             byte[] ticket = authMsg.ReadBytes(ticketLength);
@@ -395,7 +393,7 @@ namespace Barotrauma.Networking
             return; //owner doesn't send passwords
         }
 
-        public override void Close(string msg = null)
+        public override void Close(string msg = null, bool disableReconnect = false)
         {
             if (!isActive) { return; }
 
@@ -415,7 +413,7 @@ namespace Barotrauma.Networking
 
             ChildServerRelay.ClosePipes();
 
-            OnDisconnect?.Invoke();
+            OnDisconnect?.Invoke(disableReconnect);
 
             SteamManager.LeaveLobby();
             Steamworks.SteamNetworking.ResetActions();
@@ -443,6 +441,12 @@ namespace Barotrauma.Networking
         {
             OnDisconnect = null;
             Close();
+        }
+
+        protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)
+        {
+            //not currently used by SteamP2POwnerPeer
+            throw new NotImplementedException();
         }
 
 #if DEBUG

@@ -164,6 +164,19 @@ namespace Barotrauma.Networking
             
             for (int i = 0; i < eventCount; i++)
             {
+                //16 = entity ID, 8 = msg length
+                if (msg.BitPosition + 16 + 8 > msg.LengthBits)
+                {
+                    string errorMsg = $"Error while reading a message from the server. Entity event data exceeds the size of the buffer (current position: {msg.BitPosition}, length: {msg.LengthBits}).";
+                    errorMsg += "\nPrevious entities:";
+                    for (int j = entities.Count - 1; j >= 0; j--)
+                    {
+                        errorMsg += "\n" + (entities[j] == null ? "NULL" : entities[j].ToString());
+                    }
+                    DebugConsole.ThrowError(errorMsg);
+                    return false;
+                }
+
                 UInt16 thisEventID = (UInt16)(firstEventID + (UInt16)i);                
                 UInt16 entityID = msg.ReadUInt16();
                 
@@ -176,7 +189,7 @@ namespace Barotrauma.Networking
                     }
                     msg.ReadPadBits();
                     entities.Add(null);
-                    if (thisEventID == (UInt16)(lastReceivedID + 1)) lastReceivedID++;
+                    if (thisEventID == (UInt16)(lastReceivedID + 1)) { lastReceivedID++; }
                     continue;
                 }
 
@@ -248,10 +261,8 @@ namespace Barotrauma.Networking
                             errorMsg += "\n" + (entities[j] == null ? "NULL" : entities[j].ToString());
                         }
 
-                        if (GameSettings.VerboseLogging)
-                        {
-                            DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
-                        }
+                        DebugConsole.ThrowError("Failed to read event for entity \"" + entity.ToString() + "\"!", e);
+
                         GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                         msg.BitPosition = (int)(msgPosition + msgLength * 8);

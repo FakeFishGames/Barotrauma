@@ -14,6 +14,8 @@ namespace Barotrauma.Networking
         public byte ID;
         public UInt64 SteamID;
 
+        public string Language;
+
         public UInt16 Ping;
 
         public string PreferredJob;
@@ -196,11 +198,13 @@ namespace Barotrauma.Networking
             {
                 votes[i] = null;
             }
+
+            kickVoters.Clear();
         }
 
         public void AddKickVote(Client voter)
         {
-            if (!kickVoters.Contains(voter)) kickVoters.Add(voter);
+            if (voter != null && !kickVoters.Contains(voter)) { kickVoters.Add(voter); }
         }
 
 

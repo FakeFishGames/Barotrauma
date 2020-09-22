@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -28,11 +29,6 @@ namespace Barotrauma
         {
             get;
             protected set;
-        }
-
-        public override bool Paused
-        {
-            get { return ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"); }
         }
 
         private bool showCampaignUI;
@@ -165,7 +161,6 @@ namespace Barotrauma
                     }
                     break;
                 case TransitionType.LeaveLocation:
-                    // not sure why this can happen at an outpost but it apparently can in multiplayer
                     buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                     endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
                     break;
@@ -195,14 +190,26 @@ namespace Barotrauma
 
             if (endRoundButton.Visible)
             {
+                if (!AllowedToEndRound()) { buttonText = TextManager.Get("map"); }
                 endRoundButton.Text = ToolBox.LimitString(buttonText, endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 if (endRoundButton.Text != buttonText)
                 {
                     endRoundButton.ToolTip = buttonText;
                 }
-                endRoundButton.Enabled = AllowedToEndRound();
+                if (Character.Controlled?.ViewTarget is Item item)
+                {
+                    Turret turret = item.GetComponent<Turret>();
+                    endRoundButton.RectTransform.ScreenSpaceOffset = turret == null ? Point.Zero : new Point(0, (int)(turret.UIElementHeight * 1.25f));
+                }
+                else if (Character.Controlled?.CharacterHealth?.SuicideButton?.Visible ?? false)
+                {
+                    endRoundButton.RectTransform.ScreenSpaceOffset = new Point(0, Character.Controlled.CharacterHealth.SuicideButton.Rect.Height);
+                }
+                else
+                {
+                    endRoundButton.RectTransform.ScreenSpaceOffset = Point.Zero;
+                }
             }
-
             endRoundButton.DrawManually(spriteBatch);
         }
 
@@ -216,7 +223,14 @@ namespace Barotrauma
             {
                 await Task.Yield();
                 Rand.ThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-                GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
+                try
+                {
+                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
+                }
+                catch (Exception e)
+                {
+                    roundSummaryScreen.LoadException = e;
+                }
                 Rand.ThreadId = 0;
             });
             TaskPool.Add("AsyncCampaignStartRound", loadTask, (t) =>

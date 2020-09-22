@@ -14,7 +14,8 @@ namespace Barotrauma
         public override bool IgnoreUnsafeHulls => true;
         public override bool ConcurrentObjectives => true;
         public override bool AllowOutsideSubmarine => true;
-        public override bool IsLoop { get => true; set => throw new System.Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
+        public override bool AbandonWhenCannotCompleteSubjectives => false;
+        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace); }
 
         // TODO: expose?
         const float priorityIncrease = 100;
@@ -48,7 +49,7 @@ namespace Barotrauma
             }
             else
             {
-                if (HumanAIController.NeedsDivingGear(character, character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character))
+                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character))
                 {
                     Priority = 100;
                 }
@@ -64,6 +65,14 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (retryTimer > 0)
+            {
+                retryTimer -= deltaTime;
+                if (retryTimer <= 0)
+                {
+                    retryCounter = 0;
+                }
+            }
             if (resetPriority)
             {
                 Priority = 0;
@@ -92,39 +101,56 @@ namespace Barotrauma
 
         private Hull currentSafeHull;
         private Hull previousSafeHull;
+        private bool cannotFindSafeHull;
+        private bool cannotFindDivingGear;
+        private readonly int findDivingGearAttempts = 2;
+        private int retryCounter;
+        private readonly float retryResetTime = 5;
+        private float retryTimer;
         protected override void Act(float deltaTime)
         {
             var currentHull = character.CurrentHull;
-            bool dangerousPressure = currentHull == null || currentHull.LethalPressure > 0;
-            if (!dangerousPressure)
+            bool dangerousPressure = currentHull == null || currentHull.LethalPressure > 0 && character.PressureProtection <= 0;
+            if (!character.LockHands && (!dangerousPressure || cannotFindSafeHull))
             {
-                // Don't try to seek diving gear if the pressure is dangerous. Just get out.
-                bool needsDivingGear = HumanAIController.NeedsDivingGear(character, currentHull, out bool needsDivingSuit);
+                bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull, out bool needsDivingSuit);
                 bool needsEquipment = false;
                 if (needsDivingSuit)
                 {
-                    needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
+                    needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
                 }
                 else if (needsDivingGear)
                 {
-                    needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
+                    needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
                 }
-                if (needsEquipment && divingGearObjective == null && !character.LockHands)
+                if (needsEquipment)
                 {
-                    RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref divingGearObjective,
+                    if (cannotFindDivingGear && retryCounter < findDivingGearAttempts)
+                    {
+                        retryTimer = retryResetTime;
+                        retryCounter++;
+                        needsDivingSuit = !needsDivingSuit;
+                        RemoveSubObjective(ref divingGearObjective);
+                    }
+                    if (divingGearObjective == null)
+                    {
+                        cannotFindDivingGear = false;
+                        RemoveSubObjective(ref goToObjective);
+                        TryAddSubObjective(ref divingGearObjective,
                         constructor: () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
                         onAbandon: () =>
                         {
                             searchHullTimer = Math.Min(1, searchHullTimer);
-                        // Don't reset the diving gear objective, because it's possible that there is no diving gear -> seek a safe hull and then reset so that we can check again.
-                    },
+                            cannotFindDivingGear = true;
+                            // Don't reset the diving gear objective, because it's possible that there is no diving gear -> seek a safe hull and then reset so that we can check again.
+                        },
                         onCompleted: () =>
                         {
                             resetPriority = true;
                             searchHullTimer = Math.Min(1, searchHullTimer);
                             RemoveSubObjective(ref divingGearObjective);
                         });
+                    }
                 }
             }
             if (divingGearObjective == null || !divingGearObjective.CanBeCompleted)
@@ -142,6 +168,7 @@ namespace Barotrauma
                     searchHullTimer = SearchHullInterval * Rand.Range(0.9f, 1.1f);
                     previousSafeHull = currentSafeHull;
                     currentSafeHull = FindBestHull(allowChangingTheSubmarine: character.TeamID != Character.TeamType.FriendlyNPC);
+                    cannotFindSafeHull = currentSafeHull == null || HumanAIController.NeedsDivingGear(currentSafeHull, out _);
                     if (currentSafeHull == null)
                     {
                         currentSafeHull = previousSafeHull;
@@ -153,35 +180,38 @@ namespace Barotrauma
                             RemoveSubObjective(ref goToObjective);
                         }
                         TryAddSubObjective(ref goToObjective,
-                            constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: true)
+                        constructor: () => new AIObjectiveGoTo(currentSafeHull, character, objectiveManager, getDivingGearIfNeeded: true)
+                        {
+                            AllowGoingOutside = HumanAIController.HasDivingSuit(character, conditionPercentage: 50)
+                        },
+                        onCompleted: () =>
+                        {
+                            if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD ||
+                                HumanAIController.NeedsDivingGear(currentHull, out bool needsSuit) && (needsSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingMask(character)))
                             {
-                                AllowGoingOutside = HumanAIController.HasDivingSuit(character, conditionPercentage: 50)
-                            },
-                            onCompleted: () =>
+                                resetPriority = true;
+                                searchHullTimer = Math.Min(1, searchHullTimer);
+                            }
+                            RemoveSubObjective(ref goToObjective);
+                            if (cannotFindDivingGear)
                             {
-                                if (currenthullSafety > HumanAIController.HULL_SAFETY_THRESHOLD ||
-                                    HumanAIController.NeedsDivingGear(character, currentHull, out bool needsSuit) && (needsSuit ? HumanAIController.HasDivingSuit(character) : HumanAIController.HasDivingMask(character)))
-                                {
-                                    resetPriority = true;
-                                    searchHullTimer = Math.Min(1, searchHullTimer);
-                                }
-                                RemoveSubObjective(ref goToObjective);
                                 // If diving gear objective failed, let's reset it here.
                                 RemoveSubObjective(ref divingGearObjective);
-                            },
-                            onAbandon: () =>
+                            }
+                        },
+                        onAbandon: () =>
+                        {
+                            // Don't ignore any hulls if outside, because apparently it happens that we can't find a path, in which case we just want to try again.
+                            // If we ignore the hull, it might be the only airlock in the target sub, which ignores the whole sub.
+                            if (currentHull != null && goToObjective != null)
                             {
-                                // Don't ignore any hulls if outside, because apparently it happens that we can't find a path, in which case we just want to try again.
-                                // If we ignore the hull, it might be the only airlock in the target sub, which ignores the whole sub.
-                                if (currentHull != null && goToObjective != null)
+                                if (goToObjective.Target is Hull hull)
                                 {
-                                    if (goToObjective.Target is Hull hull)
-                                    {
-                                        HumanAIController.UnreachableHulls.Add(hull);
-                                    }
+                                    HumanAIController.UnreachableHulls.Add(hull);
                                 }
-                                RemoveSubObjective(ref goToObjective);
-                            });
+                            }
+                            RemoveSubObjective(ref goToObjective);
+                        });
                     }
                     else
                     {
@@ -194,12 +224,14 @@ namespace Barotrauma
                     //goto objective doesn't exist (a safe hull not found, or a path to a safe hull not found)
                     // -> attempt to manually steer away from hazards
                     Vector2 escapeVel = Vector2.Zero;
-                    // TODO: optimize
-                    foreach (FireSource fireSource in HumanAIController.VisibleHulls.SelectMany(h => h.FireSources))
+                    foreach (Hull hull in HumanAIController.VisibleHulls)
                     {
-                        Vector2 dir = character.Position - fireSource.Position;
-                        float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
-                        escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                        foreach (FireSource fireSource in hull.FireSources)
+                        {
+                            Vector2 dir = character.Position - fireSource.Position;
+                            float distMultiplier = MathHelper.Clamp(100.0f / Vector2.Distance(fireSource.Position, character.Position), 0.1f, 10.0f);
+                            escapeVel += new Vector2(Math.Sign(dir.X) * distMultiplier, !character.IsClimbing ? 0 : Math.Sign(dir.Y) * distMultiplier);
+                        }
                     }
                     foreach (Character enemy in Character.CharacterList)
                     {
@@ -334,6 +366,18 @@ namespace Barotrauma
                 }
             }
             return bestHull;
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            goToObjective = null;
+            divingGearObjective = null;
+            currentSafeHull = null;
+            previousSafeHull = null;
+            retryCounter = 0;
+            cannotFindDivingGear = false;
+            cannotFindSafeHull = false;
         }
     }
 }

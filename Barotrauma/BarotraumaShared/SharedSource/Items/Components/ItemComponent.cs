@@ -76,6 +76,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize("", false, description: "What to display on the progress bar when this item is being picked.")]
+        public string PickingMsg
+        {
+            get;
+            set;
+        }
+
         public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
 
         public Action<bool> OnActiveStateChanged;

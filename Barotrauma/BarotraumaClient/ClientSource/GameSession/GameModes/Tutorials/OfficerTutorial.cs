@@ -293,7 +293,9 @@ namespace Barotrauma.Tutorials
 
             // Room 4
             do { yield return null; } while (!officer_somethingBigSensor.MotionDetected);
-            TriggerTutorialSegment(3); // Arm railgun
+            GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.SomethingBig"), ChatMessageType.Radio, null);
+            yield return new WaitForSeconds(2f, false);
+            TriggerTutorialSegment(3); // Arm coilgun
             do
             {
                 SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.Items[0] == null || officer_coilgunLoader.Inventory.Items[0].Condition == 0);

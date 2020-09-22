@@ -20,12 +20,12 @@ namespace Barotrauma
         private AIObjectiveGoTo gotoObjective;
         private AIObjectiveOperateItem operateObjective;
 
-        public bool IgnoreSeverityAndDistance { get; private set; }
+        public readonly bool isPriority;
 
-        public AIObjectiveFixLeak(Gap leak, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool ignoreSeverityAndDistance = false) : base (character, objectiveManager, priorityModifier)
+        public AIObjectiveFixLeak(Gap leak, Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool isPriority = false) : base (character, objectiveManager, priorityModifier)
         {
             Leak = leak;
-            IgnoreSeverityAndDistance = ignoreSeverityAndDistance;
+            this.isPriority = isPriority;
         }
 
         protected override bool Check() => Leak.Open <= 0 || Leak.Removed;
@@ -41,15 +41,21 @@ namespace Barotrauma
             {
                 Priority = 0;
             }
+            else if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeak>()?.Leak == Leak))
+            {
+                Priority = 0;
+                Abandon = true;
+            }
             else
             {
                 float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
                 float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
                 // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
                 // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
-                float distanceFactor = IgnoreSeverityAndDistance || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, xDist + yDist * 3.0f));
-                float severity = IgnoreSeverityAndDistance ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
-                float max = Math.Min((AIObjectiveManager.OrderPriority - 1), 90);
+                float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
+                float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
+                float reduction = isPriority ? 1 : 2;
+                float max = MathHelper.Min(AIObjectiveManager.OrderPriority - reduction, 90);
                 float devotion = CumulatedDevotion / 100;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
             }
@@ -68,7 +74,7 @@ namespace Barotrauma
             }
             else
             {
-                var containedItems = weldingTool.ContainedItems;
+                var containedItems = weldingTool.OwnInventory?.Items;
                 if (containedItems == null)
                 {
 #if DEBUG
@@ -86,7 +92,7 @@ namespace Barotrauma
                         containedItem.Drop(character);
                     }
                 }
-                if (containedItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
+                if (containedItems.None(i => i != null && i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
                     TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
                         onAbandon: () => Abandon = true,
@@ -130,11 +136,10 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(Leak, character, objectiveManager)
                 {
-                    // Disabled for now
-                    //AllowGoingOutside = !Leak.IsRoomToRoom && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>() && HumanAIController.HasDivingSuit(character, conditionPercentage: 50),
                     CloseEnough = reach,
                     DialogueIdentifier = Leak.FlowTargetHull != null ? "dialogcannotreachleak" : null,
-                    TargetName = Leak.FlowTargetHull?.DisplayName
+                    TargetName = Leak.FlowTargetHull?.DisplayName,
+                    CheckVisibility = false
                 },
                 onAbandon: () =>
                 {
@@ -152,6 +157,15 @@ namespace Barotrauma
                 },
                 onCompleted: () => RemoveSubObjective(ref gotoObjective));
             }
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            getWeldingTool = null;
+            refuelObjective = null;
+            gotoObjective = null;
+            operateObjective = null;
         }
     }
 }

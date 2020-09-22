@@ -170,12 +170,12 @@ namespace Barotrauma
         {
             get
             {
-                if (!Character.NeedsOxygen || Unkillable) { return 100.0f; }
+                if (!Character.NeedsOxygen || Unkillable || Character.GodMode) { return 100.0f; }
                 return -oxygenLowAffliction.Strength + 100;
             }
             set
             {
-                if (!Character.NeedsOxygen || Unkillable) { return; }
+                if (!Character.NeedsOxygen || Unkillable || Character.GodMode) { return; }
                 oxygenLowAffliction.Strength = MathHelper.Clamp(-value + 100, 0.0f, 200.0f);
             }
         }
@@ -399,7 +399,7 @@ namespace Barotrauma
 
         public void ApplyAffliction(Limb targetLimb, Affliction affliction)
         {
-            if (Unkillable) { return; }
+            if (Unkillable || Character.GodMode) { return; }
             if (affliction.Prefab.LimbSpecific)
             {
                 if (targetLimb == null)
@@ -481,7 +481,7 @@ namespace Barotrauma
 
         public void ApplyDamage(Limb hitLimb, AttackResult attackResult)
         {
-            if (Unkillable) { return; }
+            if (Unkillable || Character.GodMode) { return; }
             if (hitLimb.HealthIndex < 0 || hitLimb.HealthIndex >= limbHealths.Count)
             {
                 DebugConsole.ThrowError("Limb health index out of bounds. Character\"" + Character.Name +
@@ -504,7 +504,7 @@ namespace Barotrauma
         
         public void SetAllDamage(float damageAmount, float bleedingDamageAmount, float burnDamageAmount)
         {
-            if (Unkillable) { return; }
+            if (Unkillable || Character.GodMode) { return; }
             foreach (LimbHealth limbHealth in limbHealths)
             {
                 limbHealth.Afflictions.RemoveAll(a => 
@@ -741,7 +741,7 @@ namespace Barotrauma
         public void CalculateVitality()
         {
             Vitality = MaxVitality;
-            if (Unkillable) { return; }
+            if (Unkillable || Character.GodMode) { return; }
 
             float damageResistanceMultiplier = 1f - GetResistance("damage");
 
@@ -777,7 +777,7 @@ namespace Barotrauma
 
         private void Kill()
         {
-            if (Unkillable) { return; }
+            if (Unkillable || Character.GodMode) { return; }
             
             var causeOfDeath = GetCauseOfDeath();
             Character.Kill(causeOfDeath.First, causeOfDeath.Second);
@@ -913,6 +913,11 @@ namespace Barotrauma
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
+                msg.Write((byte)affliction.Prefab.PeriodicEffects.Count());
+                foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
+                {
+                    msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
+                }
             }
 
             limbAfflictions.Clear();
@@ -933,6 +938,11 @@ namespace Barotrauma
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(limbAffliction.Second.Strength, 0.0f, limbAffliction.Second.Prefab.MaxStrength), 
                     0.0f, limbAffliction.Second.Prefab.MaxStrength, 8);
+                msg.Write((byte)limbAffliction.Second.Prefab.PeriodicEffects.Count());
+                foreach (AfflictionPrefab.PeriodicEffect periodicEffect in limbAffliction.Second.Prefab.PeriodicEffects)
+                {
+                    msg.WriteRangedSingle(limbAffliction.Second.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
+                }
             }
         }
 

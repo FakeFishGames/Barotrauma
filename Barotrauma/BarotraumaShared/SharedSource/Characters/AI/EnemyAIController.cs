@@ -153,6 +153,11 @@ namespace Barotrauma
             {
                 throw new Exception($"Tried to create an enemy ai controller for human!");
             }
+            if (Character.Params.Group.Equals("human", StringComparison.OrdinalIgnoreCase))
+            {
+                // Pet
+                Character.TeamID = Character.TeamType.FriendlyNPC;
+            }
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(c.SpeciesName);
             var mainElement = prefab.XDocument.Root.IsOverride() ? prefab.XDocument.Root.FirstElement() : prefab.XDocument.Root;
             targetMemories = new Dictionary<AITarget, AITargetMemory>();
@@ -733,7 +738,7 @@ namespace Barotrauma
                         {
                             if (door.LinkedGap.Size > ConvertUnits.ToDisplayUnits(colliderWidth))
                             {
-                                LatchOntoAI?.DeattachFromBody();
+                                LatchOntoAI?.DeattachFromBody(cooldown: 2);
                                 Character.AnimController.ReleaseStuckLimbs();
                                 var velocity = Vector2.Normalize(door.LinkedGap.FlowTargetHull.WorldPosition - Character.WorldPosition);
                                 steeringManager.SteeringManual(deltaTime, velocity);
@@ -1121,7 +1126,7 @@ namespace Barotrauma
         {
             IsSteeringThroughGap = true;
             wallTarget = null;
-            LatchOntoAI?.DeattachFromBody();
+            LatchOntoAI?.DeattachFromBody(cooldown: 2);
             Character.AnimController.ReleaseStuckLimbs();
             Hull targetHull = section.gap?.FlowTargetHull;
             float maxDistance = Math.Min(wall.Rect.Width, wall.Rect.Height);
@@ -1303,7 +1308,7 @@ namespace Barotrauma
 
             bool wasLatched = IsLatchedOnSub;
             Character.AnimController.ReleaseStuckLimbs();
-            LatchOntoAI?.DeattachFromBody();
+            LatchOntoAI?.DeattachFromBody(cooldown: 1);
             if (attacker == null || attacker.AiTarget == null) { return; }
             bool isFriendly = IsFriendly(Character, attacker);
             if (wasLatched)
@@ -1544,39 +1549,6 @@ namespace Barotrauma
         //sight/hearing range
         public AITarget UpdateTargets(Character character, out CharacterParams.TargetParams targetingParams)
         {
-            if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
-            {
-                var wall = SelectedAiTarget.Entity as Structure;
-                if (wall == null)
-                {
-                    wall = wallTarget?.Structure;
-                }
-                // The target is not a wall or it's not the same as we are attached to -> release
-                bool releaseTarget = wall == null || !wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB);
-                if (!releaseTarget)
-                {
-                    for (int i = 0; i < wall.Sections.Length; i++)
-                    {
-                        if (CanPassThroughHole(wall, i))
-                        {
-                            releaseTarget = true;
-                        }
-                    }
-                }
-                if (releaseTarget)
-                {
-                    SelectedAiTarget = null;
-                    wallTarget = null;
-                    LatchOntoAI.DeattachFromBody(cooldown: 1);
-                }
-                else if (SelectedAiTarget?.Entity == wallTarget?.Structure)
-                {
-                    // If attached to a valid target, just keep the target.
-                    // Priority not used in this case.
-                    targetingParams = null;
-                    return SelectedAiTarget;
-                }
-            }
             AITarget newTarget = null;
             targetValue = 0;
             selectedTargetMemory = null;
@@ -1611,42 +1583,44 @@ namespace Barotrauma
                     {
                         targetingTag = tP.Tag;
                     }
-                    else if (targetCharacter.AIController is EnemyAIController enemy)
+                    else
                     {
-                        if (targetCharacter.Params.CompareGroup(Character.Params.Group))
+                        if (IsFriendly(Character, targetCharacter))
                         {
-                            // Ignore targets that are in the same group (treat them like they were of the same species)
                             continue;
                         }
-                        if (targetCharacter.IsHusk && AIParams.HasTag("husk"))
+                        if (targetCharacter.AIController is EnemyAIController enemy)
                         {
-                            targetingTag = "husk";
-                        }
-                        else
-                        {
-                            if (enemy.CombatStrength > CombatStrength)
+                            if (targetCharacter.IsHusk && AIParams.HasTag("husk"))
                             {
-                                targetingTag = "stronger";
+                                targetingTag = "husk";
                             }
-                            else if (enemy.CombatStrength < CombatStrength)
+                            else
                             {
-                                targetingTag = "weaker";
-                            }
-                            if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
-                            {
-                                if (SelectedAiTarget == aiTarget)
+                                if (enemy.CombatStrength > CombatStrength)
                                 {
-                                    // Freightened -> hold on to the target
-                                    valueModifier *= 2;
+                                    targetingTag = "stronger";
                                 }
-                                if (IsBeingChasedBy(targetCharacter))
+                                else if (enemy.CombatStrength < CombatStrength)
                                 {
-                                    valueModifier *= 2;
+                                    targetingTag = "weaker";
                                 }
-                                if (Character.CurrentHull != null && !VisibleHulls.Contains(targetCharacter.CurrentHull))
+                                if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
                                 {
-                                    // Inside but in a different room
-                                    valueModifier /= 2;
+                                    if (SelectedAiTarget == aiTarget)
+                                    {
+                                        // Freightened -> hold on to the target
+                                        valueModifier *= 2;
+                                    }
+                                    if (IsBeingChasedBy(targetCharacter))
+                                    {
+                                        valueModifier *= 2;
+                                    }
+                                    if (Character.CurrentHull != null && !VisibleHulls.Contains(targetCharacter.CurrentHull))
+                                    {
+                                        // Inside but in a different room
+                                        valueModifier /= 2;
+                                    }
                                 }
                             }
                         }
@@ -1855,25 +1829,28 @@ namespace Barotrauma
 
                 if (valueModifier == 0.0f) { continue; }
 
-                if (SwarmBehavior != null && SwarmBehavior.Members.Any())
+                if (targetingTag != "decoy")
                 {
-                    // Halve the priority for each swarm mate targeting the same target -> reduces stacking
-                    foreach (Character otherCharacter in SwarmBehavior.Members)
+                    if (SwarmBehavior != null && SwarmBehavior.Members.Any())
                     {
-                        if (otherCharacter == character) { continue; }
-                        if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
-                        valueModifier /= 2;
+                        // Halve the priority for each swarm mate targeting the same target -> reduces stacking
+                        foreach (Character otherCharacter in SwarmBehavior.Members)
+                        {
+                            if (otherCharacter == character) { continue; }
+                            if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
+                            valueModifier /= 2;
+                        }
                     }
-                }
-                else
-                {
-                    // The same as above, but using all the friendly characters in the level.
-                    foreach (Character otherCharacter in Character.CharacterList)
+                    else
                     {
-                        if (otherCharacter == character) { continue; }
-                        if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
-                        if (!IsFriendly(character, otherCharacter)) { continue; }
-                        valueModifier /= 2;
+                        // The same as above, but using all the friendly characters in the level.
+                        foreach (Character otherCharacter in Character.CharacterList)
+                        {
+                            if (otherCharacter == character) { continue; }
+                            if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
+                            if (!IsFriendly(character, otherCharacter)) { continue; }
+                            valueModifier /= 2;
+                        }
                     }
                 }
 
@@ -1969,7 +1946,34 @@ namespace Barotrauma
             SelectedAiTarget = newTarget;
             if (SelectedAiTarget != _previousAiTarget)
             {
-                wallTarget = null;
+                if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
+                {
+                    if (!(SelectedAiTarget.Entity is Structure wall))
+                    {
+                        wall = wallTarget?.Structure;
+                    }
+                    // The target is not a wall or it's not the same as we are attached to -> release
+                    bool releaseTarget = wall == null || !wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB);
+                    if (!releaseTarget)
+                    {
+                        for (int i = 0; i < wall.Sections.Length; i++)
+                        {
+                            if (CanPassThroughHole(wall, i))
+                            {
+                                releaseTarget = true;
+                            }
+                        }
+                    }
+                    if (releaseTarget)
+                    {
+                        wallTarget = null;
+                        LatchOntoAI.DeattachFromBody(cooldown: 1);
+                    }
+                }
+                else
+                {
+                    wallTarget = null;
+                }
             }
             return SelectedAiTarget;
         }

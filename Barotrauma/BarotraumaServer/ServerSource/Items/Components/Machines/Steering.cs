@@ -22,13 +22,12 @@ namespace Barotrauma.Items.Components
             bool autoPilot = msg.ReadBoolean();
             bool dockingButtonClicked = msg.ReadBoolean();
             Vector2 newSteeringInput = targetVelocity;
-            bool maintainPos = false;
             Vector2? newPosToMaintain = null;
             bool headingToStart = false;
 
             if (autoPilot)
             {
-                maintainPos = msg.ReadBoolean();
+                bool maintainPos = msg.ReadBoolean();
                 if (maintainPos)
                 {
                     newPosToMaintain = new Vector2(

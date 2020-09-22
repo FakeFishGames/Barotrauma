@@ -161,13 +161,14 @@ namespace Barotrauma
                     break;
                 case TransitionType.ProgressToNextLocation:
                     Map.MoveToNextLocation();
-                    Map.ProgressWorld();
                     break;
                 case TransitionType.End:
                     EndCampaign();
                     IsFirstRound = true;
                     break;
             }
+
+            Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
 
@@ -196,7 +197,7 @@ namespace Barotrauma
                 {
                     if (data.HasSpawned && !characterData.Any(cd => cd.IsDuplicate(data)))
                     {
-                        var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo);
+                        var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
                         if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
                         {
                             data.Refresh(character);
@@ -243,10 +244,28 @@ namespace Barotrauma
                 }
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+
+                if (PendingSubmarineSwitch != null)
+                {
+                    SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
+                    GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
+                    PendingSubmarineSwitch = null;
+
+                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
+                    {
+                        if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
+                        {
+                            GameMain.GameSession.OwnedSubmarines[i] = previousSub;
+                            break;
+                        }
+                    }
+                }
+
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
             {
+                PendingSubmarineSwitch = null;
                 GameMain.Server.EndGame(TransitionType.None);
                 LoadCampaign(GameMain.GameSession.SavePath);
                 LastSaveID++;
@@ -262,23 +281,6 @@ namespace Barotrauma
 
             NextLevel = newLevel;
             MirrorLevel = mirror;
-            if (PendingSubmarineSwitch != null) 
-            {
-                SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
-                GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-                PendingSubmarineSwitch = null;
-
-                for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
-                {
-                    if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
-                    {
-                        GameMain.GameSession.OwnedSubmarines[i] = previousSub;
-                    }
-                }
-
-                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                LastSaveID++;
-            }
 
             //give clients time to play the end cinematic before starting the next round
             if (transitionType == TransitionType.End)
@@ -305,6 +307,7 @@ namespace Barotrauma
                 UpgradeManager.OnUpgradesChanged += () => { LastUpdateID++; };
                 Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
                 Map.OnMissionSelected += (loc, mission) => { LastUpdateID++; };
+                Reputation.OnAnyReputationValueChanged += () => { LastUpdateID++; };
             }
             //increment save ID so clients know they're lacking the most up-to-date save file
             LastSaveID++;
@@ -363,13 +366,16 @@ namespace Barotrauma
                     {
                         LoadNewLevel();
                     }
-                    else if (transitionType == TransitionType.ProgressToNextLocation && Level.Loaded.EndOutpost != null && Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
+                    else if (GameMain.Server.ConnectedClients.Count == 0 || GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead))
                     {
-                        LoadNewLevel();
-                    }
-                    else if (transitionType == TransitionType.ReturnToPreviousLocation && Level.Loaded.StartOutpost != null && Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
-                    {
-                        LoadNewLevel();
+                        if (transitionType == TransitionType.ProgressToNextLocation && Level.Loaded.EndOutpost != null && Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
+                        {
+                            LoadNewLevel();
+                        }
+                        else if (transitionType == TransitionType.ReturnToPreviousLocation && Level.Loaded.StartOutpost != null && Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
+                        {
+                            LoadNewLevel();
+                        }
                     }
                 }
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
@@ -399,6 +405,7 @@ namespace Barotrauma
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
             msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
+            msg.Write(map.AllowDebugTeleport);
             msg.Write(reputation != null);
             if (reputation != null) { msg.Write(reputation.Value); }
 
@@ -592,12 +599,10 @@ namespace Barotrauma
                 }
             }
 
-#if DEBUG
-            if (currentLocIndex < Map.Locations.Count)
+            if (currentLocIndex < Map.Locations.Count && Map.AllowDebugTeleport)
             {
                 Map.SetLocation(currentLocIndex);
             }
-#endif
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
             if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }

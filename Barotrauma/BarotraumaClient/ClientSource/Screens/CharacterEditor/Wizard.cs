@@ -305,7 +305,7 @@ namespace Barotrauma.CharacterEditor
                                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), TextManager.Get("ContentPackage"));
                                 var rightContainer = new GUIFrame(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), style: null);
                                 contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
-                                foreach (ContentPackage cp in ContentPackage.List)
+                                foreach (ContentPackage cp in ContentPackage.AllPackages)
                                 {
 #if !DEBUG
                                 if (cp == GameMain.VanillaContent) { continue; }
@@ -334,15 +334,15 @@ namespace Barotrauma.CharacterEditor
                                             contentPackageNameElement.Flash();
                                             return false;
                                         }
-                                        if (ContentPackage.List.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
+                                        if (ContentPackage.AllPackages.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
                                         {
                                             new GUIMessageBox("", TextManager.Get("charactereditor.contentpackagenameinuse", fallBackTag: "leveleditorlevelobjnametaken"));
                                             return false;
                                         }
                                         string modName = ToolBox.RemoveInvalidFileNameChars(contentPackageNameElement.Text);
                                         ContentPackage = ContentPackage.CreatePackage(contentPackageNameElement.Text, Path.Combine("Mods", modName, Steam.SteamManager.MetadataFileName), false);
-                                        ContentPackage.List.Add(ContentPackage);
-                                        GameMain.Config.SelectContentPackage(ContentPackage);
+                                        ContentPackage.AddPackage(ContentPackage);
+                                        GameMain.Config.EnableRegularPackage(ContentPackage);
                                         contentPackageDropDown.AddItem(ContentPackage.Name, ContentPackage, ContentPackage.Path);
                                         contentPackageDropDown.SelectItem(ContentPackage);
                                         contentPackageNameElement.Text = "";

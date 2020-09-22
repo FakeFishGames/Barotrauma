@@ -167,7 +167,7 @@ namespace Barotrauma.Networking
         bool prevCaptured = true;
         int captureTimer;
 
-        void UpdateCapture()
+        private void UpdateCapture()
         {
             Array.Copy(uncompressedBuffer, 0, prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
             Array.Clear(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE);
@@ -273,6 +273,11 @@ namespace Barotrauma.Networking
                 if (allowEnqueue || captureTimer > 0)
                 {
                     LastEnqueueAudio = DateTime.Now;
+                    if (GameMain.Client?.Character != null)
+                    {
+                        var messageType = !ForceLocal && ChatMessage.CanUseRadio(GameMain.Client.Character, out _) ? ChatMessageType.Radio : ChatMessageType.Default;
+                        GameMain.Client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
+                    }
                     //encode audio and enqueue it
                     lock (buffers)
                     {

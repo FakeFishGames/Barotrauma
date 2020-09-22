@@ -18,7 +18,7 @@ namespace Barotrauma
 
         private Effect damageEffect;
         private Texture2D damageStencil;
-        private Texture2D distortTexture;
+        private Texture2D distortTexture;        
 
         private float fadeToBlackState;
 
@@ -171,6 +171,7 @@ namespace Barotrauma
             //These will be visible through the LOS effect.
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
             Submarine.DrawBack(spriteBatch, false, e => e is Structure s && (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null));
+            Submarine.DrawPaintedColors(spriteBatch, false);
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);

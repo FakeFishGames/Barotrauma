@@ -7,11 +7,18 @@ assignees: ''
 
 ---
 
+**QA**
+- [ ] Play through tutorials and verify that they are working.
+- [ ] Do a smoketest on all game modes
+- [ ] Smoketest server hosting (dedicated and client)
+- [ ] Install Trick or Trauma and check you can start a round with no obvious issues/errors (to make sure we didn't unintentionally break compatibility with older mods).
+- [ ] Play through one single player campaign round.
+- [ ] Do a smoketest in a language other than English.
+
 **Code:**
 - [ ] Build and upload dedicated server
 - [ ] Verify that Vanilla content package hashes match between Windows/Mac/Linux
 - [ ] Run "checkmissingloca" command to make sure localization files are up-to-date.
-- [ ] Install Trick or Trauma and check you can start a round with no obvious issues/errors (to make sure we didn't unintentionally break compatibility with older mods).
 - [ ] Prepare new main menu content (changelog)
 - [ ] Prepare public github repo for pushing the new changes
 

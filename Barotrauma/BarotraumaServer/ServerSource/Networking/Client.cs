@@ -48,8 +48,8 @@ namespace Barotrauma.Networking
         public readonly Dictionary<UInt16, double> EntityEventLastSent = new Dictionary<UInt16, double>();
         
         //when was a position update for a given entity last sent to the client
-        //  key = entity id, value = NetTime.Now when sending
-        public readonly Dictionary<UInt16, float> PositionUpdateLastSent = new Dictionary<UInt16, float>();
+        //  key = entity, value = NetTime.Now when sending
+        public readonly Dictionary<Entity, float> PositionUpdateLastSent = new Dictionary<Entity, float>();
         public readonly Queue<Entity> PendingPositionUpdates = new Queue<Entity>();
 
         public bool ReadyToStart;
@@ -145,19 +145,9 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public bool EndpointMatches(string endpoint)
+        public bool EndpointMatches(string endPoint)
         {
-            if (Connection is LidgrenConnection lidgrenConn)
-            {
-                if (lidgrenConn.IPEndPoint?.Address == null) { return false; }
-                if ((lidgrenConn.IPEndPoint?.Address.IsIPv4MappedToIPv6 ?? false) &&
-                    lidgrenConn.IPEndPoint?.Address.MapToIPv4NoThrow().ToString() == endpoint)
-                {
-                    return true;
-                }
-            }
-            
-            return Connection.EndPointString == endpoint;
+            return Connection.EndpointMatches(endPoint);
         }
 
         public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)

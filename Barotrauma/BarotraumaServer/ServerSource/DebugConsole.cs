@@ -1443,7 +1443,7 @@ namespace Barotrauma
                 if (GameMain.Server == null) return null;
                 return new string[][]
                 {
-                    GameMain.Server.ServerSettings.BanList.BannedIPs.Where(ip => !string.IsNullOrEmpty(ip)).ToArray()
+                    GameMain.Server.ServerSettings.BanList.BannedEndPoints.ToArray()
                 };
             }));
 
@@ -1563,15 +1563,45 @@ namespace Barotrauma
                 }
             );
 
+            AssignOnClientRequestExecute("togglecampaignteleport",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    if (!(GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign))
+                    {
+                        GameMain.Server.SendConsoleMessage("No campaign active.", client);
+                        return;
+                    }
+                    mpCampaign.LastUpdateID++;
+                    GameMain.GameSession.Map.AllowDebugTeleport = !GameMain.GameSession.Map.AllowDebugTeleport;
+                    NewMessage(client.Name + (GameMain.GameSession.Map.AllowDebugTeleport ? " enabled" : " disabled") + " teleportation on the campaign map.", Color.White);
+                    GameMain.Server.SendConsoleMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", client);
+                }
+            );
+
             AssignOnClientRequestExecute(
                 "godmode",
+                (Client client, Vector2 cursorWorldPos, string[] args) =>
+                {
+                    Character targetCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args, false);
+
+                    if (targetCharacter == null) { return; }
+
+                    targetCharacter.GodMode = !targetCharacter.GodMode;
+
+                    NewMessage(targetCharacter.Name + (targetCharacter.GodMode ? "'s godmode turned on by \"" : "'s godmode turned off by \"") + client.Name + "\"", Color.White);
+                    GameMain.Server.SendConsoleMessage(targetCharacter.Name + (targetCharacter.GodMode ? "'s godmode on" : "'s godmode off"), client);
+                }
+            );
+
+            AssignOnClientRequestExecute(
+                "godmode_mainsub",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     if (Submarine.MainSub == null) return;
 
                     Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
-                    NewMessage((Submarine.MainSub.GodMode ? "Godmode turned on by \"" : "Godmode off by \"") + client.Name + "\"", Color.White);
-                    GameMain.Server.SendConsoleMessage(Submarine.MainSub.GodMode ? "Godmode on" : "Godmode off", client);
+                    NewMessage((Submarine.MainSub.GodMode ? "Mainsub godmode turned on by \"" : "Mainsub godmode turned off by \"") + client.Name + "\"", Color.White);
+                    GameMain.Server.SendConsoleMessage(Submarine.MainSub.GodMode ? "Mainsub godmode on" : "Mainsub godmode off", client);
                 }
             );
 
@@ -1581,7 +1611,9 @@ namespace Barotrauma
                 {
                     if (args.Length < 2) return;
 
-                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
+                        a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
+                        a.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
                     if (afflictionPrefab == null)
                     {
                         GameMain.Server.SendConsoleMessage("Affliction \"" + args[0] + "\" not found.", client);

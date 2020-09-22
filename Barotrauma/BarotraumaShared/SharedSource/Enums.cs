@@ -20,6 +20,7 @@
         OnEating,
         OnDeath = OnBroken,
         OnDamaged,
-        OnSevered
+        OnSevered,
+        OnProduceSpawned
     }
 }

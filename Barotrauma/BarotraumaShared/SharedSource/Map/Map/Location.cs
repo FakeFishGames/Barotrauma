@@ -115,7 +115,7 @@ namespace Barotrauma
         {
             get 
             {
-                availableMissions.RemoveAll(m => m.Completed);
+                availableMissions.RemoveAll(m => m.Completed || m.Failed);
                 return availableMissions; 
             }
         }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -34,11 +33,11 @@ namespace Barotrauma
                 if (!(target is Character chr)) { continue; }
                 if (chr.Inventory == null) { continue; }
 
-                if (itemTags.Any(tag => chr.Inventory.Items.Any(item => item != null && item.HasTag(tag)))) { return true; }
+                if (itemTags.Any(tag => chr.Inventory.FindItemByTag(tag, recursive: true) != null)) { return true; }
 
                 foreach (var identifier in itemIdentifierSplit)
                 {
-                    if (chr.Inventory.Items.Any(it => it != null && it.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase)))
+                    if (chr.Inventory.FindItemByIdentifier(identifier, recursive: true) != null)
                     {
                         return true;
                     }
@@ -50,15 +49,9 @@ namespace Barotrauma
 
         public override string ToDebugString()
         {
-            string subActionStr = "";
-            if (succeeded.HasValue)
-            {
-                subActionStr = $"\n            Sub action: {(succeeded.Value ? Success : Failure)?.CurrentSubAction.ColorizeObject()}";
-            }
-            return $"{ToolBox.GetDebugSymbol(DetermineFinished())} {nameof(CheckItemAction)} -> (TargetTag: {TargetTag.ColorizeObject()}, " +
+            return $"{ToolBox.GetDebugSymbol(HasBeenDetermined())} {nameof(CheckItemAction)} -> (TargetTag: {TargetTag.ColorizeObject()}, " +
                    $"ItemIdentifiers: {ItemIdentifiers.ColorizeObject()}" +
-                   $"Succeeded: {(succeeded.HasValue ? succeeded.Value.ToString() : "not determined").ColorizeObject()})" +
-                   subActionStr;
+                   $"Succeeded: {succeeded.ColorizeObject()})";
         }
     }
 }

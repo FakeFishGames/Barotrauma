@@ -1086,17 +1086,6 @@ namespace Barotrauma
             AssignRelayToServer("water|editwater", false);
             AssignRelayToServer("fire|editfire", false);
 
-            commands.Add(new Command("togglecampaignteleport", "togglecampaignteleport: Toggle on/off teleportation between campaign locations by double clicking on the campaign map.", (string[] args) =>
-            {
-                if (GameMain.GameSession?.Campaign == null) 
-                { 
-                    ThrowError("No campaign active.");
-                    return;
-                }
-                GameMain.GameSession.Map.AllowDebugTeleport = !GameMain.GameSession.Map.AllowDebugTeleport;
-                NewMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", Color.White);
-            }, isCheat: true));
-
             commands.Add(new Command("mute", "mute [name]: Prevent the client from speaking to anyone through the voice chat. Using this command requires a permission from the server host.",
             null,
             () =>
@@ -1136,7 +1125,7 @@ namespace Barotrauma
                     {
                         foreach (var ingredient in fabricationRecipe.RequiredItems)
                         {
-                            int? ingredientPrice = ingredient.ItemPrefab.GetMinPrice();
+                            int? ingredientPrice = ingredient.ItemPrefabs.Min(ip => ip.GetMinPrice());
                             if (ingredientPrice.HasValue)
                             {
                                 if (!fabricationCost.HasValue) { fabricationCost = 0; }
@@ -1163,14 +1152,14 @@ namespace Barotrauma
 
                         if (fabricationRecipe != null)
                         {
-                            var ingredient = fabricationRecipe.RequiredItems.Find(r => r.ItemPrefab == targetItem);
+                            var ingredient = fabricationRecipe.RequiredItems.Find(r => r.ItemPrefabs.Contains(targetItem));
                             if (ingredient == null)
                             {
                                 NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Red);
                             }
                             else if (ingredient.UseCondition && ingredient.MinCondition < deconstructItem.OutCondition)
                             {
-                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {ingredient.ItemPrefab.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(deconstructItem.OutCondition * 100)}%)", Color.Red);
+                                NewMessage($"Deconstructing \"{itemPrefab.Name}\" produces more \"{deconstructItem.ItemIdentifier}\", than what's required to fabricate the item (required: {targetItem.Name} {(int)(ingredient.MinCondition * 100)}%, output: {deconstructItem.ItemIdentifier} {(int)(deconstructItem.OutCondition * 100)}%)", Color.Red);
                             }
                         }
                     }
@@ -1389,6 +1378,39 @@ namespace Barotrauma
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
 #if DEBUG
+            commands.Add(new Command("setplanthealth", "setplanthealth [value]: Sets the health of the selected plant in sub editor.", (string[] args) =>
+            {
+                if (1 > args.Length || Screen.Selected != GameMain.SubEditorScreen) { return; }
+
+                string arg = args[0];
+
+                if (!float.TryParse(arg, out float value))
+                {
+                    ThrowError($"{arg} is not a valid value.");
+                    return;
+                }
+
+                foreach (MapEntity me in MapEntity.SelectedList)
+                {
+                    if (me is Item it)
+                    {
+                        if (it.GetComponent<Planter>() is { } planter)
+                        {
+                            foreach (Growable seed in planter.GrowableSeeds.Where(s => s != null))
+                            {
+                                NewMessage($"Set the health of {seed.Name} to {value} (from {seed.Health})");
+                                seed.Health = value;
+                            }
+                        } 
+                        else if (it.GetComponent<Growable>() is { } seed)
+                        {
+                            NewMessage($"Set the health of {seed.Name} to {value} (from {seed.Health})");
+                            seed.Health = value;
+                        }
+                    }
+                }
+            }));
+
             commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
             {
                 GameMain.Client.PrintReceiverTransters();
@@ -2012,7 +2034,7 @@ namespace Barotrauma
                     return;
                 }
 
-                GameMain.Config.SelectCorePackage(GameMain.Config.SelectedContentPackages.First(cp => cp.CorePackage), true);
+                GameMain.Config.SelectCorePackage(GameMain.Config.CurrentCorePackage, true);
             }));
 
             commands.Add(new Command("ingamemodswap", "", (string[] args) =>
@@ -2041,7 +2063,7 @@ namespace Barotrauma
                     }
                     ShowQuestionPrompt("Permission to grant to client " + args[0] + "?", (perm) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("giveperm " + args[0] + " " + perm);
+                        GameMain.Client?.SendConsoleCommand("giveperm \"" + args[0] + "\" " + perm);
                     }, args, 1);
                 }
             );
@@ -2060,7 +2082,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Permission to revoke from client " + args[0] + "?", (perm) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("revokeperm " + args[0] + " " + perm);
+                        GameMain.Client?.SendConsoleCommand("revokeperm \"" + args[0] + "\" " + perm);
                     }, args, 1);
                 }
             );
@@ -2078,7 +2100,7 @@ namespace Barotrauma
                     }
                     ShowQuestionPrompt("Rank to grant to client " + args[0] + "?", (rank) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("giverank " + args[0] + " " + rank);
+                        GameMain.Client?.SendConsoleCommand("giverank \"" + args[0] + "\" " + rank);
                     }, args, 1);
                 }
             );
@@ -2091,7 +2113,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Console command permissions to grant to client " + args[0] + "? You may enter multiple commands separated with a space or use \"all\" to give the permission to use all console commands.", (commandNames) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("givecommandperm " + args[0] + " " + commandNames);
+                        GameMain.Client?.SendConsoleCommand("givecommandperm \"" + args[0] + "\" " + commandNames);
                     }, args, 1);
                 }
             );
@@ -2104,7 +2126,7 @@ namespace Barotrauma
 
                     ShowQuestionPrompt("Console command permissions to revoke from client " + args[0] + "? You may enter multiple commands separated with a space or use \"all\" to revoke the permission to use any console commands.", (commandNames) =>
                     {
-                        GameMain.Client?.SendConsoleCommand("revokecommandperm " + args[0] + " " + commandNames);
+                        GameMain.Client?.SendConsoleCommand("revokecommandperm \"" + args[0] + "\" " + commandNames);
                     }, args, 1);
                 }
             );
@@ -2505,7 +2527,7 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("spawnsub", "spawnsub [subname]: Spawn a submarine at the position of the cursor", (string[] args) =>
+            commands.Add(new Command("spawnsub", "spawnsub [subname] [is thalamus]: Spawn a submarine at the position of the cursor", (string[] args) =>
             {
                 if (GameMain.NetworkMember != null)
                 {
@@ -2528,6 +2550,25 @@ namespace Barotrauma
                     {
                         Submarine spawnedSub = Submarine.Load(subInfo, false);
                         spawnedSub.SetPosition(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition));
+                        if (subInfo.Type == SubmarineType.Wreck)
+                        {
+                            spawnedSub.MakeWreck();
+                            if (args.Length > 1 && bool.TryParse(args[1], out bool isThalamus))
+                            {
+                                if (isThalamus)
+                                {
+                                    spawnedSub.CreateWreckAI();
+                                }
+                                else
+                                {
+                                    spawnedSub.DisableWreckAI();
+                                }
+                            }
+                            else
+                            {
+                                spawnedSub.DisableWreckAI();
+                            }
+                        }
                     }
                 }
                 catch (Exception e)

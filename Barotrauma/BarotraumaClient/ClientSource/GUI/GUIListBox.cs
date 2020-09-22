@@ -446,7 +446,7 @@ namespace Barotrauma
             //dragging
             if (CanDragElements && draggedElement != null)
             {
-                if (!PlayerInput.LeftButtonHeld())
+                if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     OnRearranged?.Invoke(this, draggedElement.UserData);
                     draggedElement = null;
@@ -533,7 +533,7 @@ namespace Barotrauma
                         }
                     }
 
-                    if (CanDragElements && PlayerInput.LeftButtonDown() && GUI.MouseOn == child)
+                    if (CanDragElements && PlayerInput.PrimaryMouseButtonDown() && GUI.MouseOn == child)
                     {
                         draggedElement = child;
                         draggedReferenceRectangle = child.Rect;
@@ -970,7 +970,6 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
-            var children = Content.Children;
             int lastVisible = 0;
 
             int i = 0;

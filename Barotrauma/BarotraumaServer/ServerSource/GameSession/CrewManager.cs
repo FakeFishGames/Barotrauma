@@ -32,7 +32,10 @@ namespace Barotrauma
             XElement saveElement = new XElement("bots", new XAttribute("hasbots", HasBots));
             foreach (CharacterInfo info in characterInfos)
             {
-                if (info?.Character == null || info.Character.IsDead) { continue; }
+                if (Level.Loaded != null)
+                {
+                    if (!info.IsNewHire && (info.Character == null || info.Character.IsDead)) { continue; }
+                }
 
                 XElement characterElement = info.Save(saveElement);
                 if (info.InventoryData != null) { characterElement.Add(info.InventoryData); }

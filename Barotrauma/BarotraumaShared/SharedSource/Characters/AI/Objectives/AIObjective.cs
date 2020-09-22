@@ -17,8 +17,7 @@ namespace Barotrauma
         public virtual bool AllowSubObjectiveSorting => false;
 
         /// <summary>
-        /// Can there be multiple objective instaces of the same type? Currently multiple instances allowed only for main objectives and the subobjectives of objetive loops.
-        /// In theory, there could be multiple subobjectives of same type for concurrent objectives, but that would make things more complex -> potential issues
+        /// Can there be multiple objective instaces of the same type?
         /// </summary>
         public virtual bool AllowMultipleInstances => false;
 
@@ -29,7 +28,10 @@ namespace Barotrauma
         public virtual bool ConcurrentObjectives => false;
 
         public virtual bool KeepDivingGearOn => false;
-        public virtual bool UnequipItems => false;
+        /// <summary>
+        /// There's a separate property for diving suit and mask: KeepDivingGearOn.
+        /// </summary>
+        public virtual bool AllowAutomaticItemUnequipping => false;
         public virtual bool AllowOutsideSubmarine => false;
         public virtual bool AllowInFriendlySubs => false;
 
@@ -173,6 +175,7 @@ namespace Barotrauma
         {
             if (!AllowSubObjectiveSorting) { return; }
             if (subObjectives.None()) { return; }
+            var previousSubObjective = subObjectives.First();
             subObjectives.ForEach(so => so.GetPriority());
             subObjectives.Sort((x, y) => y.Priority.CompareTo(x.Priority));
             if (ConcurrentObjectives)
@@ -181,7 +184,13 @@ namespace Barotrauma
             }
             else
             {
-                subObjectives.First().SortSubObjectives();
+                var currentSubObjective = subObjectives.First();
+                if (previousSubObjective != currentSubObjective)
+                {
+                    previousSubObjective.OnDeselected();
+                    currentSubObjective.OnSelected();
+                }
+                currentSubObjective.SortSubObjectives();
             }
         }
 
@@ -222,7 +231,7 @@ namespace Barotrauma
         private void UpdateDevotion(float deltaTime)
         {
             var currentObjective = objectiveManager.CurrentObjective;
-            if (currentObjective != null && (currentObjective == this || currentObjective.subObjectives.Any(so => so == this)))
+            if (currentObjective != null && (currentObjective == this || currentObjective.subObjectives.FirstOrDefault() == this))
             {
                 CumulatedDevotion += Devotion * deltaTime;
             }
@@ -327,6 +336,7 @@ namespace Barotrauma
 
         public virtual void Reset()
         {
+            subObjectives.Clear();
             isCompleted = false;
             hasBeenChecked = false;
             _abandon = false;
@@ -369,8 +379,7 @@ namespace Barotrauma
             {
                 if (Check())
                 {
-                    isCompleted = true;
-                    OnCompleted();
+                    IsCompleted = true;
                 }
             }
             return isCompleted;

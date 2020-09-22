@@ -42,9 +42,15 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
             if (doc == null) { return; }
 
-            originalName = doc.Root.GetAttributeString("name", "");
-            identifier = doc.Root.GetAttributeString("identifier", null) ?? originalName.ToLowerInvariant().Replace(" ", "");
-            configElement = doc.Root;
+            XElement element = doc.Root;
+            if (element.IsOverride())
+            {
+                element = element.Elements().First();
+            }
+
+            originalName = element.GetAttributeString("name", "");
+            identifier = element.GetAttributeString("identifier", null) ?? originalName.ToLowerInvariant().Replace(" ", "");
+            configElement = element;
 
             Category = MapEntityCategory.ItemAssembly;
 
@@ -54,7 +60,7 @@ namespace Barotrauma
             Description = TextManager.Get("EntityDescription." + identifier, returnNull: true) ?? Description;
 
             List<ushort> containedItemIDs = new List<ushort>();
-            foreach (XElement entityElement in doc.Root.Elements())
+            foreach (XElement entityElement in element.Elements())
             {
                 var containerElement = entityElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("itemcontainer", StringComparison.OrdinalIgnoreCase));
                 if (containerElement == null) { continue; }
@@ -66,7 +72,7 @@ namespace Barotrauma
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
             DisplayEntities = new List<Pair<MapEntityPrefab, Rectangle>>();
-            foreach (XElement entityElement in doc.Root.Elements())
+            foreach (XElement entityElement in element.Elements())
             {
                 ushort id = (ushort)entityElement.GetAttributeInt("ID", 0);
                 if (id > 0 && containedItemIDs.Contains(id)) { continue; }
@@ -94,7 +100,7 @@ namespace Barotrauma
                 new Rectangle(0, 0, 1, 1) :
                 new Rectangle(minX, minY, maxX - minX, maxY - minY);
 
-            Prefabs.Add(this, false);
+            Prefabs.Add(this, doc.Root.IsOverride());
         }
 
         public static void Remove(string filePath)
@@ -110,17 +116,17 @@ namespace Barotrauma
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectPrefabs = false)
         {
             List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath);
-            if (entities.Count == 0) return entities;
+            if (entities.Count == 0) { return entities; }
 
             Vector2 offset = sub == null ? Vector2.Zero : sub.HiddenSubPosition;
 
             foreach (MapEntity me in entities)
             {
                 me.Move(position);
-                Item item = me as Item;
-                if (item == null) continue;
+                me.Submarine = sub;
+                if (!(me is Item item)) { continue; }
                 Wire wire = item.GetComponent<Wire>();
-                if (wire != null) wire.MoveNodes(position - offset);
+                if (wire != null) { wire.MoveNodes(position - offset); }
             }
 
             MapEntity.MapLoaded(entities, true);
@@ -171,7 +177,7 @@ namespace Barotrauma
             }
 
             //find assembly files in selected content packages
-            foreach (ContentPackage cp in GameMain.Config.SelectedContentPackages)
+            foreach (ContentPackage cp in GameMain.Config.AllEnabledPackages)
             {
                 foreach (string filePath in cp.GetFilesOfType(ContentType.ItemAssembly))
                 {

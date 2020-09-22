@@ -29,6 +29,7 @@ namespace Barotrauma.Items.Components
         private List<Pair<RelatedItem, ParticleEmitter>> particleEmitterHitItem = new List<Pair<RelatedItem, ParticleEmitter>>();
 
         private float prevProgressBarState;
+        private Item prevProgressBarTarget = null;
 
         partial void InitProjSpecific(XElement element)
         {
@@ -65,7 +66,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (ParticleEmitter particleEmitter in particleEmitters)
             {
-                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 particleEmitter.Emit(
                     deltaTime, ConvertUnits.ToDisplayUnits(raystart),
                     item.CurrentHull, particleAngle, particleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0);
@@ -92,7 +93,7 @@ namespace Barotrauma.Items.Components
             if (targetStructure.Submarine != null) particlePos += targetStructure.Submarine.DrawPosition;
             foreach (var emitter in particleEmitterHitStructure)
             {
-                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
             }
         }
@@ -103,7 +104,7 @@ namespace Barotrauma.Items.Components
             if (targetCharacter.Submarine != null) particlePos += targetCharacter.Submarine.DrawPosition;
             foreach (var emitter in particleEmitterHitCharacter)
             {
-                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
             }
         }
@@ -111,7 +112,7 @@ namespace Barotrauma.Items.Components
         partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem)
         {
             float progressBarState = targetItem.ConditionPercentage / 100.0f;
-            if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState))
+            if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState) || prevProgressBarTarget != targetItem)
             {
                 var door = targetItem.GetComponent<Door>();
                 if (door == null || door.Stuck <= 0)
@@ -121,18 +122,20 @@ namespace Barotrauma.Items.Components
                         targetItem,
                         progressBarPos,
                         progressBarState,
-                        GUI.Style.Red, GUI.Style.Green);
+                        GUI.Style.Red, GUI.Style.Green,
+                        progressBarState < prevProgressBarState ? "progressbar.cutting" : "");
                     if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                 }
                 prevProgressBarState = progressBarState;
+                prevProgressBarTarget = targetItem;
             }
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
             if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;
             foreach (var emitter in particleEmitterHitItem)
             {
-                if (!emitter.First.MatchesItem(targetItem)) continue;
-                float particleAngle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                if (!emitter.First.MatchesItem(targetItem)) { continue; }
+                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                 emitter.Second.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
             }            
         }

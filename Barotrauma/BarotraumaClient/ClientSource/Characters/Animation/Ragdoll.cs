@@ -409,11 +409,6 @@ namespace Barotrauma
 
                     emitter.Emit(1.0f, limb.WorldPosition, character.CurrentHull, amountMultiplier: gibParticleAmount);
                 }
-
-                if (!string.IsNullOrEmpty(character.BloodDecalName))
-                {
-                    character.CurrentHull?.AddDecal(character.BloodDecalName, limb.WorldPosition, MathHelper.Clamp(limb.Mass, 0.5f, 2.0f));
-                }
             }
 
             if (playSound)

@@ -1,16 +1,16 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     class AIObjectiveChargeBatteries : AIObjectiveLoop<PowerContainer>
     {
         public override string DebugTag => "charge batteries";
-        public override bool UnequipItems => true;
+        public override bool AllowAutomaticItemUnequipping => true;
         private IEnumerable<PowerContainer> batteryList;
 
         public AIObjectiveChargeBatteries(Character character, AIObjectiveManager objectiveManager, string option, float priorityModifier) 
@@ -26,8 +26,7 @@ namespace Barotrauma
             if (item.Submarine.TeamID != character.TeamID) { return false; }
             if (character.Submarine != null)
             {
-                if (item.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
-                if (!character.Submarine.IsEntityFoundOnThisSub(item, true)) { return false; }
+                if (!character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
             }
             if (item.ConditionPercentage <= 0) { return false; }
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
@@ -37,6 +36,7 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
+            if (Targets.None()) { return 0; }
             if (Option == "charge")
             {
                 return Targets.Max(t => MathHelper.Lerp(100, 0, Math.Abs(PowerContainer.aiRechargeTargetRatio - t.RechargeRatio)));

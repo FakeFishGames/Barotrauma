@@ -19,7 +19,7 @@ namespace Barotrauma
         public Rectangle rect;
         public float damage;
         public Gap gap;
-        
+
         public WallSection(Rectangle rect)
         {
             System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
@@ -58,7 +58,7 @@ namespace Barotrauma
         {
             get;
             private set;
-        }        
+        }
 
         public override Sprite Sprite
         {
@@ -215,6 +215,7 @@ namespace Barotrauma
             set { textureOffset = value; }
         }
 
+
         private Rectangle defaultRect;
         /// <summary>
         /// Unscaled rect
@@ -309,6 +310,12 @@ namespace Barotrauma
 
         public override void Move(Vector2 amount)
         {
+            if (!MathUtils.IsValid(amount))
+            {
+                DebugConsole.ThrowError($"Attempted to move a structure by an invalid amount ({amount})\n{Environment.StackTrace}");
+                return;
+            }
+
             base.Move(amount);
 
             for (int i = 0; i < Sections.Length; i++)
@@ -397,7 +404,7 @@ namespace Barotrauma
                     if (StairDirection != Direction.None)
                     {
                         CreateStairBodies();
-                    }
+                    }                    
                 }
             }
 
@@ -473,7 +480,7 @@ namespace Barotrauma
         {
             int xsections = 1, ysections = 1;
             int width = rect.Width, height = rect.Height;
-
+            
             if (!HasBody)
             {          
                 if (FlippedX && IsHorizontal)
@@ -623,11 +630,11 @@ namespace Barotrauma
 
                 if (StairDirection == Direction.Left)
                 {
-                    return MathUtils.LineToPointDistance(new Vector2(WorldRect.X, WorldRect.Y), new Vector2(WorldRect.Right, WorldRect.Y - WorldRect.Height), position) < 40.0f;
+                    return MathUtils.LineToPointDistanceSquared(new Vector2(WorldRect.X, WorldRect.Y), new Vector2(WorldRect.Right, WorldRect.Y - WorldRect.Height), position) < 1600.0f;
                 }
                 else
                 {
-                    return MathUtils.LineToPointDistance(new Vector2(WorldRect.X, WorldRect.Y - rect.Height), new Vector2(WorldRect.Right, WorldRect.Y), position) < 40.0f;
+                    return MathUtils.LineToPointDistanceSquared(new Vector2(WorldRect.X, WorldRect.Y - rect.Height), new Vector2(WorldRect.Right, WorldRect.Y), position) < 1600.0f;
                 }
             }
         }
@@ -726,7 +733,7 @@ namespace Barotrauma
             return Sections[sectionIndex];
 
         }
-        
+
         public bool SectionBodyDisabled(int sectionIndex)
         {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;

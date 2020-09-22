@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -15,7 +16,17 @@ namespace Barotrauma
         [Serialize(1, true)]
         public int Amount { get; set; }
 
-        public RemoveItemAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public RemoveItemAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        { 
+            if (string.IsNullOrWhiteSpace(ItemIdentifier))
+            {
+                ItemIdentifier = element.GetAttributeString("itemidentifiers", "");
+            }
+            if (string.IsNullOrWhiteSpace(ItemIdentifier))
+            {
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\" - RemoveItemAction without an item identifier.");
+            }
+        }
 
         private bool isFinished = false;
 
@@ -32,25 +43,33 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
-            var targets = ParentEvent.GetTargets(TargetTag)
-                .Where(t => t is Character chr && chr.Inventory != null)
-                .Select(t => t as Character).ToList();
-            if (targets.Count <= 0) { return; }
-
-            int count = Amount;
-            while (count > 0 && targets.Count > 0)
+            var targets = ParentEvent.GetTargets(TargetTag);
+            bool hasValidTargets = false;
+            foreach (Entity target in targets)
             {
-                var items = targets[0].Inventory.Items;
-                for (int i = 0; i < items.Length; i++)
+                if (target is Character character && character.Inventory != null) 
                 {
-                    if (items[i] != null && items[i].Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        Entity.Spawner.AddToRemoveQueue(items[i]);
-                        count--;
-                        if (count <= 0) { break; }
-                    }
+                    hasValidTargets = true;
+                    break;
                 }
-                targets.RemoveAt(0);
+            }
+            if (!hasValidTargets) { return; }
+
+            List<Item> usedItems = new List<Item>();
+            foreach (Entity target in targets)
+            {
+                Inventory inventory = (target as Character)?.Inventory;
+                if (inventory == null) { continue; }
+                while (usedItems.Count < Amount)
+                {
+                    var item = inventory.FindItem(it => 
+                        it != null && 
+                        !usedItems.Contains(it) &&
+                        it.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase), recursive: true);
+                    if (item == null) { break; }
+                    Entity.Spawner.AddToRemoveQueue(item);
+                    usedItems.Add(item);
+                }
             }
             isFinished = true;
         }

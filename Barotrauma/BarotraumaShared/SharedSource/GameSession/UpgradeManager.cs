@@ -627,6 +627,7 @@ namespace Barotrauma
                 pendingUpgrades.Add(new PurchasedUpgrade(prefab, category, level));
             }
 
+#if CLIENT
             if (isSingleplayer)
             {
                 SetPendingUpgrades(pendingUpgrades);
@@ -635,6 +636,9 @@ namespace Barotrauma
             {
                 loadedUpgrades = pendingUpgrades;
             }
+#else
+            SetPendingUpgrades(pendingUpgrades);
+#endif
         }
 
         public static void LogError(string text, Dictionary<string, object?> data, Exception e = null)
@@ -667,54 +671,6 @@ namespace Barotrauma
             }
 
             return values;
-        }
-
-        /// <summary>
-        /// Verifies that the client and the server are agreeing on the upgrade levels, if not something has gone wrong.
-        /// </summary>
-        /// <param name="clientUpgrades"></param>
-        /// <param name="serverUpgrades"></param>
-        public static void CompareUpgrades(Dictionary<string, int> clientUpgrades, Dictionary<string, int> serverUpgrades)
-        {
-            int mismatches = 0;
-            DebugLog("Comparing client upgrades to server upgrades...", Color.Orange);
-            foreach (var (key, value) in clientUpgrades)
-            {
-                if (!serverUpgrades.ContainsKey(key))
-                {
-                    DebugLog($"Client has an upgrade the server doesn't! {key} lvl. {value}.", Color.Red);
-                    mismatches++;
-                    continue;
-                }
-
-                if (value != serverUpgrades[key])
-                {
-                    DebugLog($"Client's upgrade level doesn't match the server's! Client: {key} {value}, Server: {key} {serverUpgrades[key]}.", Color.Red);
-                    mismatches++;
-                }
-            }
-
-            DebugLog("...comparing server upgrades to client upgrades...", Color.Orange);
-            foreach (var (key, value) in serverUpgrades)
-            {
-                if (!clientUpgrades.ContainsKey(key))
-                {
-                    DebugLog($"Server has an upgrade the client doesn't! {key} lvl. {value}.", Color.Red);
-                    mismatches++;
-                }
-            }
-
-            if (mismatches == 0)
-            {
-                DebugLog("Everything ok!");
-            }
-            else
-            {
-                DebugLog($"{mismatches} mismatches found! This means that the client and the server are disagreeing on upgrade levels and might cause desync.\n", Color.Red);
-#if CLIENT
-                DebugConsole.IsOpen = true;
-#endif
-            }
         }
 
         /// <summary>

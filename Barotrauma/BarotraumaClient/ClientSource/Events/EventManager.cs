@@ -17,9 +17,10 @@ namespace Barotrauma
         private float intensityGraphUpdateInterval;
         private float lastIntensityUpdate;
 
-        private Event? pinnedEvent;
         private Vector2 pinnedPosition = new Vector2(256, 128);
         private bool isDragging;
+
+        public Event? PinnedEvent { get; set; }
 
         public void DebugDraw(SpriteBatch spriteBatch)
         {
@@ -104,12 +105,21 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
                 y += 12;
 
-                if ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) &&
-                    roundDuration < eventSet.MinMissionTime)
+                if (eventSet.PerWreck)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "    submarine near the wreck", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    y += 12;
+                }
+                if (eventSet.PerRuin)
+                {
+                    GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y), "    submarine near the ruins", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                    y += 12;
+                }
+                if (roundDuration < eventSet.MinMissionTime)
                 {
                     GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
                         "    " + (int) (eventSet.MinDistanceTraveled * 100.0f) + "% travelled (current: " + (int) (distanceTraveled * 100.0f) + " %)",
-                        Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                        ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) ? Color.Lerp(GUI.Style.Yellow, GUI.Style.Red, eventSet.MinDistanceTraveled - distanceTraveled) : GUI.Style.Green) * 0.8f, null, 0, GUI.SmallFont);
                     y += 12;
                 }
 
@@ -125,7 +135,7 @@ namespace Barotrauma
                 {
                     GUI.DrawString(spriteBatch, new Vector2(graphRect.X, y),
                         "    " + (int) (eventSet.MinMissionTime - roundDuration) + " s",
-                        Color.Orange * 0.8f, null, 0, GUI.SmallFont);
+                        Color.Lerp(GUI.Style.Yellow, GUI.Style.Red, (eventSet.MinMissionTime - roundDuration)), null, 0, GUI.SmallFont);
                 }
 
                 y += 15;
@@ -143,25 +153,25 @@ namespace Barotrauma
                 Rectangle outlineRect = new Rectangle(rect.Location, rect.Size);
                 outlineRect.Inflate(4, 4);
 
-                if (pinnedEvent == ev) { GUI.DrawRectangle(spriteBatch, outlineRect, Color.White); }
+                if (PinnedEvent == ev) { GUI.DrawRectangle(spriteBatch, outlineRect, Color.White); }
 
                 if (rect.Contains(PlayerInput.MousePosition))
                 {
                     GUI.MouseCursor = CursorState.Hand;
                     GUI.DrawRectangle(spriteBatch, outlineRect, Color.White);
 
-                    if (ev != pinnedEvent)
+                    if (ev != PinnedEvent)
                     {
                         DrawEvent(spriteBatch, ev, rect);
                     }
                     else if (PlayerInput.SecondaryMouseButtonHeld() || PlayerInput.SecondaryMouseButtonDown())
                     {
-                        pinnedEvent = null;
+                        PinnedEvent = null;
                     }
 
                     if (PlayerInput.PrimaryMouseButtonHeld() || PlayerInput.PrimaryMouseButtonDown())
                     {
-                        pinnedEvent = ev;
+                        PinnedEvent = ev;
                     }
                 }
 
@@ -171,9 +181,9 @@ namespace Barotrauma
 
         public void DrawPinnedEvent(SpriteBatch spriteBatch) 
         {
-            if (pinnedEvent != null)
+            if (PinnedEvent != null)
             {
-                Rectangle rect = DrawEvent(spriteBatch, pinnedEvent, null);
+                Rectangle rect = DrawEvent(spriteBatch, PinnedEvent, null);
 
                 if (rect != Rectangle.Empty)
                 {
@@ -187,7 +197,7 @@ namespace Barotrauma
 
                         if (PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.SecondaryMouseButtonHeld())
                         {
-                            pinnedEvent = null;
+                            PinnedEvent = null;
                             isDragging = false;
                         }
                     }

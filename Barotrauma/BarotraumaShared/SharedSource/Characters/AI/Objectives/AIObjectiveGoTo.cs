@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -31,7 +30,7 @@ namespace Barotrauma
         public bool mimic;
 
         private float _closeEnough = 50;
-        private readonly float minDistance = 25;
+        private readonly float minDistance = 50;
         /// <summary>
         /// Display units
         /// </summary>
@@ -43,6 +42,8 @@ namespace Barotrauma
                 _closeEnough = Math.Max(minDistance, value);
             }
         }
+
+        public bool CheckVisibility { get; set; }
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
 
@@ -103,7 +104,7 @@ namespace Barotrauma
             else if (Target is Character)
             {
                 //if closeEnough value is given, allow setting CloseEnough as low as 50, otherwise above AIObjectiveGetItem.DefaultReach
-                CloseEnough = Math.Max(closeEnough, MathUtils.NearlyEqual(closeEnough, 0.0f) ? AIObjectiveGetItem.DefaultReach : 50);
+                CloseEnough = Math.Max(closeEnough, MathUtils.NearlyEqual(closeEnough, 0.0f) ? AIObjectiveGetItem.DefaultReach : minDistance);
             }
             else
             {
@@ -138,7 +139,7 @@ namespace Barotrauma
                 }
                 Target = Character.Controlled;
             }
-            if (Target == character)
+            if (Target == character || character.SelectedBy != null && HumanAIController.IsFriendly(character.SelectedBy))
             {
                 // Wait
                 character.AIController.SteeringManager.Reset();
@@ -207,7 +208,7 @@ namespace Barotrauma
                 {
                     Character followTarget = Target as Character;
                     bool needsDivingSuit = targetIsOutside;
-                    bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(character, targetHull, out needsDivingSuit);
+                    bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
                     if (!needsDivingGear && mimic)
                     {
                         if (HumanAIController.HasDivingSuit(followTarget))
@@ -223,17 +224,25 @@ namespace Barotrauma
                     bool needsEquipment = false;
                     if (needsDivingSuit)
                     {
-                        needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
+                        needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
                     }
                     else if (needsDivingGear)
                     {
-                        needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.lowOxygenThreshold);
+                        needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
                     }
                     if (needsEquipment)
                     {
-                        TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
-                            onAbandon: () => Abandon = true,
-                            onCompleted: () => RemoveSubObjective(ref findDivingGear));
+                        if (findDivingGear != null && !findDivingGear.CanBeCompleted)
+                        {
+                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
+                                onAbandon: () => Abandon = true,
+                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
+                        }
+                        else
+                        {
+                            TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
+                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
+                        }
                         return;
                     }
                 }
@@ -262,11 +271,14 @@ namespace Barotrauma
                     {
                         if (n.Waypoint.isObstructed) { return false; }
                         return (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null);
-                    }, endNodeFilter, nodeFilter);
+                    }, endNodeFilter, nodeFilter, CheckVisibility);
                     if (!isInside && PathSteering.CurrentPath == null || PathSteering.IsPathDirty || PathSteering.CurrentPath.Unreachable)
                     {
                         SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(Target.WorldPosition - character.WorldPosition));
-                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
+                        if (character.AnimController.InWater)
+                        {
+                            SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
+                        }
                     }
                 }
                 else
@@ -391,6 +403,12 @@ namespace Barotrauma
             StopMovement();
             HumanAIController.FaceTarget(Target);
             base.OnCompleted();
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            findDivingGear = null;
         }
     }
 }

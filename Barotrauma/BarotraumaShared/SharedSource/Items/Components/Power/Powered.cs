@@ -131,7 +131,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, item.CurrentHull);                    
+                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull);                    
                     powerOnSoundPlayed = true;
                 }
             }
@@ -250,7 +250,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (powered is PowerContainer pc)
                 {
-                    if (pc.CurrPowerOutput <= 0.0f) { continue; }
+                    if (pc.CurrPowerOutput <= 0.0f || pc.item.Condition <= 0.0f) { continue; }
                     //providing power
                     lastPowerProbeRecipients.Clear();
                     powered.powerOut?.SendPowerProbeSignal(powered.item, pc.CurrPowerOutput);
@@ -282,7 +282,7 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
                     var pc = powerSource.Item.GetComponent<PowerContainer>();
-                    if (pc != null)
+                    if (pc != null && pc.item.Condition > 0.0f)
                     {
                         float voltage = pc.CurrPowerOutput / Math.Max(powered.CurrPowerConsumption, 1.0f);
                         powered.voltage += voltage;

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -21,10 +22,12 @@ namespace Barotrauma
         private readonly Character targetCharacter;
 
         private AIObjectiveGoTo goToObjective;
+        private AIObjectiveContainItem replaceOxygenObjective;
         private AIObjectiveGetItem getItemObjective;
         private float treatmentTimer;
         private Hull safeHull;
         private float findHullTimer;
+        private bool ignoreOxygen;
         private readonly float findHullInterval = 1.0f;
 
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
@@ -69,65 +72,130 @@ namespace Barotrauma
             }
             if (targetCharacter != character)
             {
-                // Incapacitated target is not in a safe place -> Move to a safe place first
-                if (targetCharacter.IsIncapacitated && HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
+                if (targetCharacter.IsIncapacitated)
                 {
-                    if (character.SelectedCharacter != targetCharacter)
+                    // Check if the character needs more oxygen
+                    if (!ignoreOxygen && character.SelectedCharacter == targetCharacter || character.CanInteractWith(targetCharacter))
                     {
-                        if (targetCharacter.CurrentHull.DisplayName != null)
+                        // Replace empty oxygen tank
+                        // First remove empty tanks
+                        if (HumanAIController.HasItem(targetCharacter, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out IEnumerable<Item> suits, requireEquipped: true))
                         {
-                            character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
-                                new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                                null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
-                        }
-
-                        // Go to the target and select it
-                        if (!character.CanInteractWith(targetCharacter))
-                        {
-                            RemoveSubObjective(ref goToObjective);
-                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager)
+                            Item suit = suits.FirstOrDefault();
+                            if (suit != null)
                             {
-                                CloseEnough = CloseEnoughToTreat,
-                                DialogueIdentifier = "dialogcannotreachpatient",
-                                TargetName = targetCharacter.DisplayName
-                            },
+                                AIObjectiveFindDivingGear.DropEmptyTanks(character, suit, out _);
+                            }
+                        }
+                        else if (HumanAIController.HasItem(targetCharacter, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out IEnumerable<Item> masks, requireEquipped: true))
+                        {
+                            Item mask = masks.FirstOrDefault();
+                            if (mask != null)
+                            {
+                                AIObjectiveFindDivingGear.DropEmptyTanks(character, mask, out _);
+                            }
+                        }
+                        bool ShouldRemoveDivingSuit() => targetCharacter.OxygenAvailable < CharacterHealth.InsufficientOxygenThreshold && targetCharacter.CurrentHull?.LethalPressure <= 0;
+                        if (ShouldRemoveDivingSuit())
+                        {
+                            suits.ForEach(suit => suit.Drop(character));
+                        }
+                        else if (suits.Any() && suits.None(s => s.OwnInventory?.Items != null && s.OwnInventory.Items.Any(it => it != null && it.HasTag(AIObjectiveFindDivingGear.OXYGEN_SOURCE) && it.ConditionPercentage > 0)))
+                        {
+                            // The target has a suit equipped with an empty oxygen tank.
+                            // Can't remove the suit, because the target needs it.
+                            // If we happen to have an extra oxygen tank in the inventory, let's swap it.
+                            Item spareOxygenTank = FindOxygenTank(targetCharacter) ?? FindOxygenTank(character);
+                            if (spareOxygenTank != null)
+                            {
+                                Item suit = suits.FirstOrDefault();
+                                if (suit != null)
+                                {
+                                    // Insert the new oxygen tank
+                                    TryAddSubObjective(ref replaceOxygenObjective, () => new AIObjectiveContainItem(character, spareOxygenTank, suit.GetComponent<ItemContainer>(), objectiveManager),
+                                        onCompleted: () => RemoveSubObjective(ref replaceOxygenObjective),
+                                        onAbandon: () =>
+                                        {
+                                            RemoveSubObjective(ref replaceOxygenObjective);
+                                            ignoreOxygen = true;
+                                            if (ShouldRemoveDivingSuit())
+                                            {
+                                                suits.ForEach(suit => suit.Drop(character));
+                                            }
+                                        });
+                                    return;
+                                }
+                            }
+
+                            Item FindOxygenTank(Character c) =>
+                                c.Inventory.FindItem(i =>
+                                i.HasTag(AIObjectiveFindDivingGear.OXYGEN_SOURCE) &&
+                                i.ConditionPercentage > 1 &&
+                                i.FindParentInventory(inv => inv.Owner is Item otherItem && otherItem.HasTag("diving")) == null,
+                                recursive: true);
+                        }
+                    }
+                    if (HumanAIController.GetHullSafety(targetCharacter.CurrentHull, targetCharacter) < HumanAIController.HULL_SAFETY_THRESHOLD)
+                    {
+                        // Incapacitated target is not in a safe place -> Move to a safe place first
+                        if (character.SelectedCharacter != targetCharacter)
+                        {
+                            if (targetCharacter.CurrentHull != null && HumanAIController.VisibleHulls.Contains(targetCharacter.CurrentHull) && targetCharacter.CurrentHull.DisplayName != null)
+                            {
+                                character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
+                                    new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
+                                    null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                            }
+                            // Go to the target and select it
+                            if (!character.CanInteractWith(targetCharacter))
+                            {
+                                RemoveSubObjective(ref replaceOxygenObjective);
+                                RemoveSubObjective(ref goToObjective);
+                                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager)
+                                {
+                                    CloseEnough = CloseEnoughToTreat,
+                                    DialogueIdentifier = "dialogcannotreachpatient",
+                                    TargetName = targetCharacter.DisplayName
+                                },
                                 onCompleted: () => RemoveSubObjective(ref goToObjective),
                                 onAbandon: () =>
                                 {
                                     RemoveSubObjective(ref goToObjective);
                                     Abandon = true;
                                 });
-                        }
-                        else
-                        {
-                            character.SelectCharacter(targetCharacter);
-                        }
-                    }
-                    else
-                    {
-                        // Drag the character into safety
-                        if (safeHull == null)
-                        {
-                            if (findHullTimer > 0)
-                            {
-                                findHullTimer -= deltaTime;
                             }
                             else
                             {
-                                safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
-                                findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
+                                character.SelectCharacter(targetCharacter);
                             }
                         }
-                        if (safeHull != null && character.CurrentHull != safeHull)
+                        else
                         {
-                            RemoveSubObjective(ref goToObjective);
-                            TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager),
-                                onCompleted: () => RemoveSubObjective(ref goToObjective),
-                                onAbandon: () =>
+                            // Drag the character into safety
+                            if (safeHull == null)
+                            {
+                                if (findHullTimer > 0)
                                 {
-                                    RemoveSubObjective(ref goToObjective);
-                                    safeHull = character.CurrentHull;
-                                });
+                                    findHullTimer -= deltaTime;
+                                }
+                                else
+                                {
+                                    safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
+                                    findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
+                                }
+                            }
+                            if (safeHull != null && character.CurrentHull != safeHull)
+                            {
+                                RemoveSubObjective(ref replaceOxygenObjective);
+                                RemoveSubObjective(ref goToObjective);
+                                TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(safeHull, character, objectiveManager),
+                                    onCompleted: () => RemoveSubObjective(ref goToObjective),
+                                    onAbandon: () =>
+                                    {
+                                        RemoveSubObjective(ref goToObjective);
+                                        safeHull = character.CurrentHull;
+                                    });
+                            }
                         }
                     }
                 }
@@ -137,6 +205,7 @@ namespace Barotrauma
 
             if (targetCharacter != character && !character.CanInteractWith(targetCharacter))
             {
+                RemoveSubObjective(ref replaceOxygenObjective);
                 RemoveSubObjective(ref goToObjective);
                 // Go to the target and select it
                 TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager)
@@ -325,7 +394,7 @@ namespace Barotrauma
                 Priority = 0;
                 return Priority;
             }
-            if (targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
+            if (character.LockHands || targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
                 Priority = 0;
             }
@@ -346,5 +415,15 @@ namespace Barotrauma
         }
 
         public static IEnumerable<Affliction> GetSortedAfflictions(Character character) => CharacterHealth.SortAfflictionsBySeverity(character.CharacterHealth.GetAllAfflictions());
+
+        public override void Reset()
+        {
+            base.Reset();
+            goToObjective = null;
+            getItemObjective = null;
+            replaceOxygenObjective = null;
+            safeHull = null;
+            ignoreOxygen = false;
+        }
     }
 }

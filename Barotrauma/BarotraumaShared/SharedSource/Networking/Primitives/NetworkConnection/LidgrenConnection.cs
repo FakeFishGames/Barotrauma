@@ -33,5 +33,16 @@ namespace Barotrauma.Networking
             SteamID = steamId;
             EndPointString = IPString;
         }
+
+        public override bool EndpointMatches(string endPoint)
+        {
+            if (IPEndPoint?.Address == null) { return false; }
+            if (!IPAddress.TryParse(endPoint, out IPAddress addr)) { return false; }
+
+            IPAddress ip1 = IPEndPoint.Address.IsIPv4MappedToIPv6 ? IPEndPoint.Address.MapToIPv4() : IPEndPoint.Address;
+            IPAddress ip2 = addr.IsIPv4MappedToIPv6 ? addr.MapToIPv4() : addr;
+
+            return ip1.ToString() == ip2.ToString();
+        }
     }
 }

@@ -15,20 +15,20 @@ namespace Barotrauma
         private readonly List<Sprite> characterSprites = new List<Sprite>();
         //private readonly List<Sprite> jobPreferenceSprites = new List<Sprite>();
 
-        private GUIFrame infoFrame, modeFrame;
-        private GUILayoutGroup infoFrameContent;
-        private GUIFrame myCharacterFrame;
+        private readonly GUIFrame infoFrame, modeFrame;
+        private readonly GUILayoutGroup infoFrameContent;
+        private readonly GUIFrame myCharacterFrame;
 
-        private GUIListBox subList, modeList;
+        private readonly GUIListBox subList, modeList;
 
-        private GUIListBox chatBox, playerList;
-        private GUIButton serverLogReverseButton;
-        private GUIListBox serverLogBox, serverLogFilterTicks;
+        private readonly GUIListBox chatBox, playerList;
+        private readonly GUIButton serverLogReverseButton;
+        private readonly GUIListBox serverLogBox, serverLogFilterTicks;
 
         private GUIComponent jobVariantTooltip;
 
-        private GUITextBox chatInput;
-        private GUITextBox serverLogFilter;
+        private readonly GUITextBox chatInput;
+        private readonly GUITextBox serverLogFilter;
         public GUITextBox ChatInput
         {
             get
@@ -82,10 +82,10 @@ namespace Barotrauma
         private readonly GUITickBox autoRestartBox;
         private readonly GUITextBlock autoRestartText;
 
-        private GUIDropDown shuttleList;
-        private GUITickBox shuttleTickBox;
+        private readonly GUIDropDown shuttleList;
+        private readonly GUITickBox shuttleTickBox;
 
-        private GUIComponent settingsBlocker;
+        private readonly GUIComponent settingsBlocker;
 
         private Sprite backgroundSprite;
 
@@ -123,15 +123,6 @@ namespace Barotrauma
         public GUIProgressBar FileTransferProgressBar { get; private set; }
         public GUITextBlock FileTransferProgressText { get; private set; }
 
-        private bool AllowSubSelection
-        {
-            get
-            {
-                return GameMain.NetworkMember.ServerSettings.Voting.AllowSubVoting ||
-                    (GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.SelectSub));
-            }
-        }
-
         public GUITextBox ServerName
         {
             get;
@@ -150,8 +141,8 @@ namespace Barotrauma
             private set;
         }
 
-        private GUIButton showChatButton;
-        private GUIButton showLogButton;
+        private readonly GUIButton showChatButton;
+        private readonly GUIButton showLogButton;
 
         public GUIListBox SubList
         {
@@ -268,9 +259,7 @@ namespace Barotrauma
                 foreach (MissionType type in Enum.GetValues(typeof(MissionType)))
                 {
                     if (type == MissionType.None || type == MissionType.All) { continue; }
-
-                    missionTypeTickBoxes[index].Selected = (((int)type & (int)value) != 0);
-
+                    missionTypeTickBoxes[index].Selected = ((int)type & (int)value) != 0;
                     index++;
                 }
             }
@@ -290,8 +279,7 @@ namespace Barotrauma
                 List<Pair<JobPrefab, int>> jobPreferences = new List<Pair<JobPrefab, int>>();
                 foreach (GUIComponent child in JobList.Content.Children)
                 {
-                    var jobPrefab = child.UserData as Pair<JobPrefab, int>;
-                    if (jobPrefab == null) { continue; }
+                    if (!(child.UserData is Pair<JobPrefab, int> jobPrefab)) { continue; }
                     jobPreferences.Add(jobPrefab);
                 }
                 return jobPreferences;
@@ -743,7 +731,7 @@ namespace Barotrauma
                 foreach (GUIComponent child in subList.Content.Children)
                 {
                     if (!(child.UserData is SubmarineInfo sub)) { continue; }
-                    child.Visible = string.IsNullOrEmpty(text) ? true : sub.DisplayName.ToLower().Contains(text.ToLower());
+                    child.Visible = string.IsNullOrEmpty(text) || sub.DisplayName.ToLower().Contains(text.ToLower());
                 }
                 return true;
             };
@@ -887,7 +875,12 @@ namespace Barotrauma
             ContinueCampaignButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.3f), campaignContent.RectTransform),
                 TextManager.Get("campaigncontinue"), textAlignment: Alignment.Center)
             {
-                OnClicked = (_, __) => { GameMain.Client?.RequestStartRound(true); return true; }
+                OnClicked = (_, __) =>
+                {
+                    CoroutineManager.StartCoroutine(WaitForStartRound(ContinueCampaignButton), "WaitForStartRound");
+                    GameMain.Client?.RequestStartRound(true); 
+                    return true; 
+                }
             };
             QuitCampaignButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.3f), campaignContent.RectTransform),
                 TextManager.Get("pausemenusavequit"), textAlignment: Alignment.Center)
@@ -1356,6 +1349,7 @@ namespace Barotrauma
                 if (GameMain.Client == null) { return; }
                 string newName = Client.SanitizeName(tb.Text);
                 newName = newName.Replace(":", "").Replace(";", "");
+                if (newName == GameMain.Client.Name) return;
                 if (string.IsNullOrWhiteSpace(newName))
                 {
                     tb.Text = GameMain.Client.Name;
@@ -1365,6 +1359,8 @@ namespace Barotrauma
                     if (isGameRunning)
                     {
                         GameMain.Client.PendingName = tb.Text;
+                        TabMenu.PendingChanges = true;
+                        CreateChangesPendingText();
                     }
                     else
                     {
@@ -1603,13 +1599,13 @@ namespace Barotrauma
 
         private void AddSubmarine(GUIComponent subList, SubmarineInfo sub)
         {
-            if (subList is GUIListBox)
+            if (subList is GUIListBox listBox)
             {
-                subList = ((GUIListBox)subList).Content;
+                subList = listBox.Content;
             }
-            else if (subList is GUIDropDown)
+            else if (subList is GUIDropDown dropDown)
             {
-                subList = ((GUIDropDown)subList).ListBox.Content;
+                subList = dropDown.ListBox.Content;
             }
 
             var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), subList.RectTransform) { MinSize = new Point(0, 20) },
@@ -1655,7 +1651,7 @@ namespace Barotrauma
 
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight),
+                var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) },
                     TextManager.Get("Shuttle", fallBackTag: "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,
@@ -1665,16 +1661,16 @@ namespace Barotrauma
                 //make shuttles more dim in the sub list (selecting a shuttle as the main sub is allowed but not recommended)
                 if (subList == this.subList.Content)
                 {
-                    subTextBlock.TextColor *= 0.5f;
+                    subTextBlock.TextColor *= 0.8f;
                     foreach (GUIComponent child in frame.Children)
                     {
-                        child.Color *= 0.5f;
+                        child.Color *= 0.8f;
                     }
                 }
             }
             else
             {
-                var classText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight),
+                var classText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) },
                 TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
                     UserData = "classtext",
@@ -1816,20 +1812,20 @@ namespace Barotrauma
 
         public void SetPlayerNameAndJobPreference(Client client)
         {
-            var PlayerFrame = (GUITextBlock)PlayerList.Content.FindChild(client);
-            if (PlayerFrame == null) { return; }
-            PlayerFrame.Text = client.Name;
+            var playerFrame = (GUITextBlock)PlayerList.Content.FindChild(client);
+            if (playerFrame == null) { return; }
+            playerFrame.Text = client.Name;
             
             Color color = Color.White;
             if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
             {
                 color = JobPrefab.Prefabs[client.PreferredJob].UIColor;
             }
-            PlayerFrame.Color = color * 0.4f;
-            PlayerFrame.HoverColor = color * 0.6f;
-            PlayerFrame.SelectedColor = color * 0.8f;
-            PlayerFrame.OutlineColor = color * 0.5f;
-            PlayerFrame.TextColor = color;
+            playerFrame.Color = color * 0.4f;
+            playerFrame.HoverColor = color * 0.6f;
+            playerFrame.SelectedColor = color * 0.8f;
+            playerFrame.OutlineColor = color * 0.5f;
+            playerFrame.TextColor = color;
         }
 
         public void SetPlayerVoiceIconState(Client client, bool muted, bool mutedLocally)
@@ -2671,7 +2667,7 @@ namespace Barotrauma
             return false;
         }
 
-        private bool SwitchJob(GUIButton button, object obj)
+        private bool SwitchJob(GUIButton _, object obj)
         {
             if (JobList == null) { return false; }
 
@@ -2724,7 +2720,7 @@ namespace Barotrauma
             return false;
         }
 
-        private bool OpenJobSelection(GUIComponent child, object userData)
+        private bool OpenJobSelection(GUIComponent _, object __)
         {
             if (JobSelectionFrame != null)
             {
@@ -2870,7 +2866,9 @@ namespace Barotrauma
             {
                 Color = Color.Black,
                 HoverColor = Color.Black,
-                SelectedColor = Color.Black
+                PressedColor = Color.Black,
+                SelectedColor = Color.Black,
+                CanBeFocused = false
             };
 
             var textBlock = new GUITextBlock(
@@ -2883,6 +2881,7 @@ namespace Barotrauma
                 HoverColor = Color.Transparent,
                 SelectedColor = Color.Transparent,
                 TextColor = jobPrefab.UIColor,
+                HoverTextColor = Color.Lerp(jobPrefab.UIColor, Color.White, 0.5f),
                 CanBeFocused = false,
                 AutoScaleHorizontal = true
             };
@@ -2938,7 +2937,7 @@ namespace Barotrauma
                     info.Head = new CharacterInfo.HeadInfo(info.HeadSpriteId, info.Gender, info.Race, info.HairIndex, info.BeardIndex, index, info.FaceAttachmentIndex);
                     break;
                 default:
-                    DebugConsole.ThrowError($"Wearable type not implemented: {type.ToString()}");
+                    DebugConsole.ThrowError($"Wearable type not implemented: {type}");
                     return false;
             }
             info.ReloadHeadAttachments();

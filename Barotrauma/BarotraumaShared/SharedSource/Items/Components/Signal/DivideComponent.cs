@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -13,6 +11,7 @@ namespace Barotrauma.Items.Components
 
         protected override float Calculate(float signal1, float signal2)
         {
+            if (MathUtils.NearlyEqual(signal2, 0)) { return float.NaN; }
             return signal1 / signal2;
         }
     }

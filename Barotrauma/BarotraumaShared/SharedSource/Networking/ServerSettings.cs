@@ -461,13 +461,6 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
-        public bool EndRoundAtLevelEnd
-        {
-            get;
-            private set;
-        }
-
-        [Serialize(true, true)]
         public bool SaveServerLogs
         {
             get;

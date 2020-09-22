@@ -12,11 +12,11 @@ namespace Barotrauma.Items.Components
 {
     partial class RangedWeapon : ItemComponent
     {
-        private Sprite crosshairSprite, crosshairPointerSprite;
+        protected Sprite crosshairSprite, crosshairPointerSprite;
 
-        private Vector2 crosshairPos, crosshairPointerPos;
+        protected Vector2 crosshairPos, crosshairPointerPos;
 
-        private float currentCrossHairScale, currentCrossHairPointerScale;
+        protected float currentCrossHairScale, currentCrossHairPointerScale;
 
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
@@ -86,7 +86,6 @@ namespace Barotrauma.Items.Components
 
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
-            if (crosshairSprite == null) { return; }
             if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
 
             //camera focused on some other item/device, don't draw the crosshair

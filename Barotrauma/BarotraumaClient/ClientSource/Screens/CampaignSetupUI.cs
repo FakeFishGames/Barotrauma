@@ -26,6 +26,9 @@ namespace Barotrauma
         public Action<SubmarineInfo, string, string> StartNewGame;
         public Action<string> LoadGame;
 
+        private enum CategoryFilter { All = 0, Vanilla = 1, Custom = 2 };            
+        private CategoryFilter subFilter = CategoryFilter.All;
+
         public GUIButton StartButton
         {
             get;
@@ -74,6 +77,12 @@ namespace Barotrauma
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"), font: GUI.SubHeadingFont);
 
+                var moddedDropdown = new GUIDropDown(new RectTransform(new Vector2(1f, 0.02f), leftColumn.RectTransform), "", 3);
+                moddedDropdown.AddItem(TextManager.Get("clientpermission.all"), CategoryFilter.All);
+                moddedDropdown.AddItem(TextManager.Get("servertag.modded.false"), CategoryFilter.Vanilla);
+                moddedDropdown.AddItem(TextManager.Get("customrank"), CategoryFilter.Custom);
+                moddedDropdown.Select(0);
+
                 var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform), isHorizontal: true)
                 {
                     Stretch = true
@@ -87,6 +96,14 @@ namespace Barotrauma
                 searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
                 searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
                 searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
+
+                moddedDropdown.OnSelected = (component, data) =>
+                {
+                    searchBox.Text = string.Empty;
+                    subFilter = (CategoryFilter)data;
+                    UpdateSubList(SubmarineInfo.SavedSubmarines);
+                    return true;
+                };
 
                 subList.OnSelected = OnSubSelected;
             }
@@ -234,7 +251,7 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Language == "English" ? "Purchasable submarines" : TextManager.Get("workshoplabelsubmarines"), font: GUI.SubHeadingFont);
+            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("purchasablesubmarines", fallBackTag: "workshoplabelsubmarines"), font: GUI.SubHeadingFont);
 
             var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), subHolder.RectTransform), isHorizontal: true)
             {
@@ -395,7 +412,16 @@ namespace Barotrauma
 
         public void UpdateSubList(IEnumerable<SubmarineInfo> submarines)
         {
-            var subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass).ToList();
+            List<SubmarineInfo> subsToShow;
+            if (!isMultiplayer && subFilter != CategoryFilter.All)
+            {
+                subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass && s.IsVanillaSubmarine() == (subFilter == CategoryFilter.Vanilla)).ToList();
+            }
+            else
+            {
+                subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass).ToList();
+            }
+
             subsToShow.Sort((s1, s2) => 
             {
                 int p1 = s1.Price > CampaignMode.MaxInitialSubmarinePrice ? 10 : 0;
@@ -428,18 +454,22 @@ namespace Barotrauma
                     ToolTip = textBlock.ToolTip
                 };
 #if !DEBUG
-                if (sub.Price > CampaignMode.MaxInitialSubmarinePrice && !GameMain.DebugDraw)
+                if (!GameMain.DebugDraw)
                 {
-                    textBlock.CanBeFocused = false;
+                    if (sub.Price > CampaignMode.MaxInitialSubmarinePrice || !sub.IsCampaignCompatible)
+                    {
+                        textBlock.CanBeFocused = false;
+                        textBlock.TextColor *= 0.5f;
+                    }
                 }
 #endif
             }
             if (SubmarineInfo.SavedSubmarines.Any())
             {
-                var nonShuttles = subsToShow.Where(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.Shuttle) && s.Price <= CampaignMode.MaxInitialSubmarinePrice).ToList();
-                if (nonShuttles.Count > 0)
+                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CampaignMode.MaxInitialSubmarinePrice).ToList();
+                if (validSubs.Count > 0)
                 {
-                    subList.Select(nonShuttles[Rand.Int(nonShuttles.Count)]);
+                    subList.Select(validSubs[Rand.Int(validSubs.Count)]);
                 }
             }
         }
@@ -448,6 +478,7 @@ namespace Barotrauma
         public void UpdateLoadMenu(IEnumerable<string> saveFiles = null)
         {
             prevSaveFiles?.Clear();
+            prevSaveFiles = null;
             loadGameContainer.ClearChildren();
 
             if (saveFiles == null)
@@ -504,6 +535,7 @@ namespace Barotrauma
                 };
 
                 bool isCompatible = true;
+                prevSaveFiles ??= new List<string>();
                 if (!isMultiplayer)
                 {
                     nameText.Text = Path.GetFileNameWithoutExtension(saveFile);
@@ -529,10 +561,10 @@ namespace Barotrauma
                 }
                 else
                 {
+                    prevSaveFiles?.Add(saveFile);
                     string[] splitSaveFile = saveFile.Split(';');
                     saveFrame.UserData = splitSaveFile[0];
                     fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
-                    prevSaveFiles?.Add(fileName);
                     if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
                     if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
                     if (splitSaveFile.Length > 3) { contentPackageStr = splitSaveFile[3]; }
@@ -545,7 +577,7 @@ namespace Barotrauma
                 if (!string.IsNullOrEmpty(contentPackageStr))
                 {
                     List<string> contentPackagePaths = contentPackageStr.Split('|').ToList();
-                    if (!GameSession.IsCompatibleWithSelectedContentPackages(contentPackagePaths, out string errorMsg))
+                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out string errorMsg))
                     {
                         nameText.TextColor = GUI.Style.Red;
                         saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
@@ -696,9 +728,16 @@ namespace Barotrauma
             string saveFile = obj as string;
             if (obj == null) { return false; }
 
-            SaveUtil.DeleteSave(saveFile);
-            prevSaveFiles?.Remove(saveFile);
-            UpdateLoadMenu(prevSaveFiles);
+            string header = TextManager.Get("deletedialoglabel");
+            string body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
+
+            EventEditorScreen.AskForConfirmation(header, body, () =>
+            {
+                SaveUtil.DeleteSave(saveFile);
+                prevSaveFiles?.RemoveAll(s => s.StartsWith(saveFile));
+                UpdateLoadMenu(prevSaveFiles.ToList());
+                return true;
+            });
 
             return true;
         }

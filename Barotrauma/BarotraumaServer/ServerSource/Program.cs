@@ -43,6 +43,8 @@ namespace Barotrauma
             Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
                 " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
 
+            string executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            Directory.SetCurrentDirectory(executableDir);
             Game = new GameMain(args);
 
             Game.Run();
@@ -102,9 +104,9 @@ namespace Barotrauma
             {
                 sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
             }
-            if (GameMain.SelectedPackages != null)
+            if (GameMain.Config.AllEnabledPackages != null)
             {
-                sb.AppendLine("Selected content packages: " + (!GameMain.SelectedPackages.Any() ? "None" : string.Join(", ", GameMain.SelectedPackages.Select(c => c.Name))));
+                sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));

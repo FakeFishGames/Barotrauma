@@ -1,10 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class ItemLabel : ItemComponent, IDrawableComponent
     {
+        private CoroutineHandle sendStateCoroutine;
+        private string lastSentText;
+        private float sendStateTimer;
+
         [Serialize("", true, description: "The text to display on the label.", alwaysUseInstanceValues: true), Editable(100)]
         public string Text
         {
@@ -34,6 +40,39 @@ namespace Barotrauma.Items.Components
         public ItemLabel(Item item, XElement element)
             : base(item, element)
         {
+        }
+
+        partial void OnStateChanged()
+        {
+            sendStateTimer = 0.1f;
+            if (sendStateCoroutine == null)
+            {
+                sendStateCoroutine = CoroutineManager.StartCoroutine(SendStateAfterDelay());
+            }
+        }
+
+        private IEnumerable<object> SendStateAfterDelay()
+        {
+            while (sendStateTimer > 0.0f)
+            {
+                sendStateTimer -= CoroutineManager.DeltaTime;
+                yield return CoroutineStatus.Running;
+            }
+
+            if (item.Removed || GameMain.NetworkMember == null)
+            {
+                yield return CoroutineStatus.Success;
+            }
+
+            sendStateCoroutine = null;
+            if (lastSentText != Text) { item.CreateServerEvent(this); }
+            yield return CoroutineStatus.Success;
+        }
+
+        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        {
+            msg.Write(Text);
+            lastSentText = Text;
         }
     }
 }

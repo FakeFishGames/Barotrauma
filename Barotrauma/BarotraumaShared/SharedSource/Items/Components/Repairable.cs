@@ -206,9 +206,12 @@ namespace Barotrauma.Items.Components
                 {
                     if (!CheckCharacterSuccess(character))
                     {
+                        GameServer.Log($"{GameServer.CharacterLogName(character)} failed to {(action == FixActions.Sabotage ? "sabotage" : "repair")} {item.Name}", ServerLog.MessageType.ItemInteraction);
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, character.ID });
                         return false;
                     }
+
+                    GameServer.Log($"{GameServer.CharacterLogName(character)} started {(action == FixActions.Sabotage ? "sabotaging" : "repairing")} {item.Name}", ServerLog.MessageType.ItemInteraction);
                     item.CreateServerEvent(this);
                 }
 #else

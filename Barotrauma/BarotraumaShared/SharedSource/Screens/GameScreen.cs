@@ -200,7 +200,7 @@ namespace Barotrauma
                     {
                         screenTargetPos.X = GameMain.GraphicsWidth * (CharacterHealth.OpenHealthWindow.Alignment == Alignment.Left ? 0.75f : 0.25f);
                     }
-                    else if (ConversationAction.IsDialogOpen != null)
+                    else if (ConversationAction.IsDialogOpen)
                     {
                         screenTargetPos.Y = GameMain.GraphicsHeight * 0.4f;
                     }

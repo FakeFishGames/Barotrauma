@@ -20,17 +20,17 @@ namespace Barotrauma
 
     abstract class GroundedMovementParams : AnimationParams
     {
-        [Serialize("1.0, 1.0", true, description: "How big steps the character takes."), Editable(DecimalCount = 2)]
+        [Serialize("1.0, 1.0", true, description: "How big steps the character takes."), Editable(DecimalCount = 2, ValueStep = 0.01f)]
         public Vector2 StepSize
         {
             get;
             set;
         }
 
-        [Serialize(0f, true, description: "How high above the ground the character's head is positioned."), Editable(DecimalCount = 2)]
+        [Serialize(0f, true, description: "How high above the ground the character's head is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float HeadPosition { get; set; }
 
-        [Serialize(0f, true, description: "How high above the ground the character's torso is positioned."), Editable(DecimalCount = 2)]
+        [Serialize(0f, true, description: "How high above the ground the character's torso is positioned."), Editable(DecimalCount = 2, ValueStep = 0.1f)]
         public float TorsoPosition { get; set; }
 
         [Serialize(1f, true, description: "Separate multiplier for the head lift"), Editable(MinValueFloat = 0, MaxValueFloat = 2, ValueStep = 0.1f)]
@@ -39,7 +39,10 @@ namespace Barotrauma
         [Serialize(0f, true, description: "How much the body raises when taking a step."), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 0.1f)]
         public float StepLiftAmount { get; set; }
 
-        [Serialize(-0.5f, true, description: "When does the body raise when taking a step. The default (0.5) is in the middle of the step."), Editable(MinValueFloat = -1, MaxValueFloat = 1, DecimalCount = 2, ValueStep = 0.1f)]
+        [Serialize(true, true), Editable]
+        public bool MultiplyByDir { get; set; }
+
+        [Serialize(0.5f, true, description: "When does the body raise when taking a step. The default (0.5) is in the middle of the step."), Editable(MinValueFloat = -1, MaxValueFloat = 1, DecimalCount = 2, ValueStep = 0.1f)]
         public float StepLiftOffset { get; set; }
 
         [Serialize(2f, true, description: "How frequently the body raises when taking a step. The default is 2 (after every step)."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f)]
@@ -51,7 +54,7 @@ namespace Barotrauma
 
     abstract class SwimParams : AnimationParams
     {
-        [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
+        [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 500, ValueStep = 1)]
         public float SteerTorque { get; set; }
     }
 
@@ -63,11 +66,11 @@ namespace Barotrauma
 
         protected static Dictionary<string, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<string, Dictionary<string, AnimationParams>>();
 
-        [Serialize(1.0f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED)]
+        [Serialize(1.0f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED, ValueStep = 0.1f)]
         public float MovementSpeed { get; set; }
 
         [Serialize(1.0f, true, description: "The speed of the \"animation cycle\", i.e. how fast the character takes steps or moves the tail/legs/arms (the outcome depends what the clip is about)"),
-            Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
+            Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2, ValueStep = 0.01f)]
         public float CycleSpeed { get; set; }
 
         /// <summary>

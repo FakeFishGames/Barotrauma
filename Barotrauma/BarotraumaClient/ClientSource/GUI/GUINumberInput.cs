@@ -380,16 +380,18 @@ namespace Barotrauma
 
         private void ClampIntValue()
         {
-            if (MinValueInt != null)
+            if (MinValueInt != null && intValue < MinValueInt.Value)
             {
                 intValue = Math.Max(intValue, MinValueInt.Value);
-                minusButton.Enabled = intValue > MinValueInt;
+                UpdateText();
             }
-            if (MaxValueInt != null)
+            if (MaxValueInt != null && intValue > MaxValueInt.Value)
             {
                 intValue = Math.Min(intValue, MaxValueInt.Value);
-                plusButton.Enabled = intValue < MaxValueInt;
+                UpdateText();
             }
+            plusButton.Enabled = intValue < MaxValueInt;
+            minusButton.Enabled = intValue > MinValueInt;
         }
 
         private void UpdateText()

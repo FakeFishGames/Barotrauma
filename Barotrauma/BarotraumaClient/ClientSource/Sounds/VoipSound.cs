@@ -75,7 +75,7 @@ namespace Barotrauma.Sounds
 
             soundChannel = null;
 
-            SoundChannel chn = new SoundChannel(this, 1.0f, null, 0.4f, 1.0f, "voip", false);
+            SoundChannel chn = new SoundChannel(this, 1.0f, null, 1.0f, 0.4f, 1.0f, "voip", false);
             soundChannel = chn;
             Gain = 1.0f;
         }
@@ -130,7 +130,7 @@ namespace Barotrauma.Sounds
             throw new InvalidOperationException();
         }
 
-        public override SoundChannel Play(Vector3? position, float gain, bool muffle = false)
+        public override SoundChannel Play(Vector3? position, float gain, float freqMult = 1.0f, bool muffle = false)
         {
             throw new InvalidOperationException();
         }

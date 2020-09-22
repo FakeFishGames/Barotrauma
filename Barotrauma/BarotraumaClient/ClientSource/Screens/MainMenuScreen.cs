@@ -41,7 +41,6 @@ namespace Barotrauma
         private Tab selectedTab;
 
         private Sprite backgroundSprite;
-        private Sprite backgroundVignette;
 
         private readonly GUIComponent titleText;
 
@@ -64,8 +63,6 @@ namespace Barotrauma
                 CreateHostServerFields();
                 CreateCampaignSetupUI();
             };
-
-            backgroundVignette = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
 
             new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
             { RelativeOffset = new Vector2(0.08f, 0.05f), AbsoluteOffset = new Point(-8, -8) },
@@ -863,7 +860,7 @@ namespace Barotrauma
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
             {
-                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.ServerExecutable)?.FirstOrDefault()?.Path;
+                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.ServerExecutable)?.FirstOrDefault()?.Path;
                 if (string.IsNullOrEmpty(exeName))
                 {
                     DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");
@@ -947,14 +944,11 @@ namespace Barotrauma
 #if USE_STEAM
             if (GameMain.Config.UseSteamMatchmaking)
             {
-                joinServerButton.Enabled = Steam.SteamManager.IsInitialized;
-                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled =  Steam.SteamManager.IsInitialized;
             }
-            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;            
+            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
 #endif
 #else
-            joinServerButton.Enabled = true;
-            hostServerButton.Enabled = true;
 #if USE_STEAM
             steamWorkshopButton.Enabled = true;
 #endif
@@ -976,10 +970,14 @@ namespace Barotrauma
                     aberrationStrength: 0.0f);
             }
 
-            spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
-            backgroundVignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, 
-                new Vector2(GameMain.GraphicsWidth / backgroundVignette.size.X, GameMain.GraphicsHeight / backgroundVignette.size.Y));
-            spriteBatch.End();
+            var vignette = GUI.Style.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
+            if (vignette != null)
+            {
+                spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
+                vignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, 
+                    new Vector2(GameMain.GraphicsWidth / vignette.size.X, GameMain.GraphicsHeight / vignette.size.Y));
+                spriteBatch.End();
+            }
         }
 
         readonly string[] legalCrap = new string[]

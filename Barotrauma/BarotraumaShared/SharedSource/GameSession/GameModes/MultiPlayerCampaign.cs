@@ -178,11 +178,18 @@ namespace Barotrauma
 
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();
-            var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
-            if (characterDataDoc?.Root == null) return;
-            foreach (XElement subElement in characterDataDoc.Root.Elements())
+            if (!File.Exists(characterDataPath))
             {
-                characterData.Add(new CharacterCampaignData(subElement));
+                DebugConsole.ThrowError($"Failed to load the character data for the campaign. Could not find the file \"{characterDataPath}\".");
+            }
+            else
+            {
+                var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
+                if (characterDataDoc?.Root == null) { return; }
+                foreach (XElement subElement in characterDataDoc.Root.Elements())
+                {
+                    characterData.Add(new CharacterCampaignData(subElement));
+                }
             }
 #endif
         }

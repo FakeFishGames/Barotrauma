@@ -8,7 +8,9 @@ using Voronoi2;
 namespace Barotrauma
 {
     partial class Map
-    {        
+    {
+        public bool AllowDebugTeleport;
+
         private readonly MapGenerationParams generationParams;
 
         private Location furthestDiscoveredLocation;
@@ -112,7 +114,15 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Error while loading the map (start location index out of bounds).");
+                DebugConsole.AddWarning($"Error while loading the map. Start location index out of bounds (index: {startLocationindex}, location count: {Locations.Count}).");
+                foreach (Location location in Locations)
+                {
+                    if (!location.Type.HasOutpost) { continue; }
+                    if (StartLocation == null || location.MapPosition.X < StartLocation.MapPosition.X)
+                    {
+                        StartLocation = location;
+                    }
+                }
             }
             int endLocationindex = element.GetAttributeInt("endlocation", -1);
             if (endLocationindex > 0 && endLocationindex < Locations.Count)
@@ -121,7 +131,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError("Error while loading the map (end location index out of bounds).");
+                DebugConsole.AddWarning($"Error while loading the map. End location index out of bounds (index: {endLocationindex}, location count: {Locations.Count}).");
                 foreach (Location location in Locations)
                 {
                     if (EndLocation == null || location.MapPosition.X > EndLocation.MapPosition.X)
@@ -166,6 +176,7 @@ namespace Barotrauma
                     CurrentLocation = StartLocation = furthestDiscoveredLocation = location;
                 }
             }
+            System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
             CurrentLocation.CreateStore();
             CurrentLocation.Discovered = true;
@@ -640,7 +651,24 @@ namespace Barotrauma
             }
         }
 
-        public void ProgressWorld()
+        public void ProgressWorld(CampaignMode.TransitionType transitionType, float roundDuration)
+        {
+            //one step per 10 minutes of play time
+            int steps = (int)Math.Floor(roundDuration / (60.0f * 10.0f));
+            if (transitionType == CampaignMode.TransitionType.ProgressToNextLocation || 
+                transitionType == CampaignMode.TransitionType.ProgressToNextEmptyLocation)
+            {
+                //at least one step when progressing to the next location, regardless of how long the round took
+                steps = Math.Max(1, steps);
+            }
+            steps = Math.Min(steps, 5);
+            for (int i = 0; i < steps; i++)
+            {
+                ProgressWorld();
+            }
+        }
+
+        private void ProgressWorld()
         {
             foreach (Location location in Locations)
             {
@@ -650,6 +678,8 @@ namespace Barotrauma
                 {
                     furthestDiscoveredLocation = location;
                 }
+
+                if (location == CurrentLocation || location == SelectedLocation) { continue; }
 
                 //find which types of locations this one can change to
                 List<LocationTypeChange> allowedTypeChanges = new List<LocationTypeChange>();
@@ -843,6 +873,15 @@ namespace Barotrauma
             if (currentLocationConnection >= 0)
             {
                 SelectLocation(Connections[currentLocationConnection].OtherLocation(CurrentLocation));
+            }
+            else
+            {
+                //this should not be possible, you can't enter non-outpost locations (= natural formations)
+                if (CurrentLocation != null && !CurrentLocation.Type.HasOutpost && SelectedConnection == null)
+                {
+                    DebugConsole.AddWarning($"Error while loading campaign map state. Submarine in a location with no outpost ({CurrentLocation.Name}). Loading the first adjacent connection...");
+                    SelectLocation(CurrentLocation.Connections[0].OtherLocation(CurrentLocation));
+                }
             }
         }
 

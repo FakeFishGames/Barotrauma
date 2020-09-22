@@ -462,7 +462,7 @@ namespace Barotrauma
 
         protected List<Tuple<Vector2, int>> GetAllPositions()
         {
-            float halfHeight = Font.MeasureString("T").Y * 0.5f;
+            float halfHeight = Font.MeasureString("T").Y * 0.5f * textScale;
             string textDrawn = Censor ? CensoredText : WrappedText;
             var positions = new List<Tuple<Vector2, int>>();
             if (textDrawn.Contains("\n"))
@@ -474,10 +474,10 @@ namespace Barotrauma
                 {
                     string line = lines[i];
                     totalIndex += line.Length;
-                    float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y;
+                    float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y * textScale;
                     for (int j = 0; j <= line.Length; j++)
                     {
-                        Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j));
+                        Vector2 lineTextSize = Font.MeasureString(line.Substring(0, j)) * textScale;
                         Vector2 indexPos = new Vector2(lineTextSize.X + Padding.X, totalTextHeight + Padding.Y - halfHeight);
                         //DebugConsole.NewMessage($"index: {index}, pos: {indexPos}", Color.AliceBlue);
                         positions.Add(new Tuple<Vector2, int>(indexPos, index + j));
@@ -490,8 +490,8 @@ namespace Barotrauma
                 textDrawn = Censor ? CensoredText : Text;
                 for (int i = 0; i <= Text.Length; i++)
                 {
-                    Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i));
-                    Vector2 indexPos = new Vector2(textSize.X + Padding.X, textSize.Y + Padding.Y - halfHeight) + TextPos - Origin;
+                    Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, i)) * textScale;
+                    Vector2 indexPos = new Vector2(textSize.X + Padding.X, textSize.Y + Padding.Y - halfHeight) + TextPos - Origin * textScale;
                     //DebugConsole.NewMessage($"index: {i}, pos: {indexPos}", Color.WhiteSmoke);
                     positions.Add(new Tuple<Vector2, int>(indexPos, i));
                 }
@@ -508,7 +508,7 @@ namespace Barotrauma
         {
             var positions = GetAllPositions();
             if (positions.Count == 0) { return 0; }
-            float halfHeight = Font.MeasureString("T").Y * 0.5f;
+            float halfHeight = Font.MeasureString("T").Y * 0.5f * textScale;
 
             var currPosition = positions[0];
 
@@ -522,7 +522,8 @@ namespace Barotrauma
                 float diffY = Math.Abs(p1.Item1.Y - pos.Y) - Math.Abs(p2.Item1.Y - pos.Y);
                 if (diffY < -3.0f)
                 {
-                    currPosition = p1; continue;
+                    currPosition = p1; 
+                    continue;
                 }
                 else if (diffY > 3.0f)
                 {

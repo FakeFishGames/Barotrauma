@@ -34,8 +34,8 @@ namespace Barotrauma
         public const int DefaultBufferSize = 2000;
         public const int DefaultIndoorsBufferSize = 3000;
 
-        public static Vector2 DistortionScale = new Vector2(2f, 2f);
-        public static Vector2 DistortionStrength = new Vector2(0.25f, 0.25f);
+        public static Vector2 DistortionScale = new Vector2(2f, 1.5f);
+        public static Vector2 DistortionStrength = new Vector2(0.01f, 0.33f);
         public static float BlurAmount = 0.0f;
 
         public Vector2 WavePos

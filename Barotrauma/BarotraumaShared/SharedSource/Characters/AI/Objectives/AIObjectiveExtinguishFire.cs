@@ -60,7 +60,7 @@ namespace Barotrauma
         private float sinTime;
         protected override void Act(float deltaTime)
         {
-            var extinguisherItem = character.Inventory.FindItemByIdentifier("fireextinguisher") ?? character.Inventory.FindItemByTag("fireextinguisher");
+            var extinguisherItem = character.Inventory.FindItemByTag("fireextinguisher");
             if (extinguisherItem == null || extinguisherItem.Condition <= 0.0f || !character.HasEquippedItem(extinguisherItem))
             {
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
@@ -146,6 +146,15 @@ namespace Barotrauma
                     break;
                 }
             }
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            getExtinguisherObjective = null;
+            gotoObjective = null;
+            useExtinquisherTimer = 0;
+            sinTime = 0;
         }
     }
 }

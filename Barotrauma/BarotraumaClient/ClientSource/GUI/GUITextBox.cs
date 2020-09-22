@@ -325,7 +325,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    while (ClampText && textBlock.Text.Length>0 && Font.MeasureString(textBlock.Text).X > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
+                    while (ClampText && textBlock.Text.Length > 0 && Font.MeasureString(textBlock.Text).X * TextBlock.TextScale > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
                     {
                         textBlock.Text = textBlock.Text.Substring(0, textBlock.Text.Length - 1);
                     }
@@ -354,10 +354,10 @@ namespace Barotrauma
                     {
                         int diff = totalIndex - CaretIndex;
                         int index = currentLineLength - diff;
-                        Vector2 lineTextSize = Font.MeasureString(lines[i].Substring(0, index));
-                        Vector2 lastLineSize = Font.MeasureString(lines[i]);
-                        float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y;
-                        caretPos = new Vector2(lineTextSize.X, totalTextHeight - lastLineSize.Y) + textBlock.TextPos - textBlock.Origin;
+                        Vector2 lineTextSize = Font.MeasureString(lines[i].Substring(0, index)) * TextBlock.TextScale;
+                        Vector2 lastLineSize = Font.MeasureString(lines[i]) * TextBlock.TextScale;
+                        float totalTextHeight = Font.MeasureString(textDrawn.Substring(0, totalIndex)).Y * TextBlock.TextScale;
+                        caretPos = new Vector2(lineTextSize.X, totalTextHeight - lastLineSize.Y) + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
                         break;
                     }
                 }
@@ -366,8 +366,8 @@ namespace Barotrauma
             {
                 CaretIndex = Math.Min(CaretIndex, textDrawn.Length);
                 textDrawn = Censor ? textBlock.CensoredText : textBlock.Text;
-                Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, CaretIndex));
-                caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin;
+                Vector2 textSize = Font.MeasureString(textDrawn.Substring(0, CaretIndex)) * TextBlock.TextScale;
+                caretPos = new Vector2(textSize.X, 0) + textBlock.TextPos - textBlock.Origin * TextBlock.TextScale;
             }
             caretPosDirty = false;
         }
@@ -506,7 +506,7 @@ namespace Barotrauma
                 {
                     GUI.DrawLine(spriteBatch,
                         new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + 3),
-                        new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + Font.MeasureString("I").Y - 3),
+                        new Vector2(Rect.X + (int)caretPos.X + 2, Rect.Y + caretPos.Y + Font.MeasureString("I").Y * textBlock.TextScale - 3),
                         CaretColor ?? textBlock.TextColor * (textBlock.TextColor.A / 255.0f));
                 }
                 if (selectedCharacters > 0)
@@ -544,7 +544,7 @@ namespace Barotrauma
                         : selectionEndIndex < totalIndex && selectionStartIndex > previousCharacters;
                     if (containsSelection)
                     {
-                        Vector2 currentLineSize = Font.MeasureString(currentLine);
+                        Vector2 currentLineSize = Font.MeasureString(currentLine) * TextBlock.TextScale;
                         if ((IsLeftToRight && selectionStartIndex < previousCharacters && selectionEndIndex > totalIndex)
                             || !IsLeftToRight && selectionEndIndex < previousCharacters && selectionStartIndex > totalIndex)
                         {
@@ -560,7 +560,7 @@ namespace Barotrauma
                                 int startIndex = selectFromTheBeginning ? 0 : Math.Abs(selectionStartIndex - previousCharacters);
                                 int endIndex = Math.Abs(selectionEndIndex - previousCharacters);
                                 int characters = Math.Min(endIndex - startIndex, currentLineLength - startIndex);
-                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(startIndex, characters));
+                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(startIndex, characters)) * TextBlock.TextScale;
                                 Vector2 topLeft = selectFromTheBeginning
                                     ? new Vector2(offset.X, offset.Y + currentLineSize.Y * i)
                                     : new Vector2(selectionStartPos.X, offset.Y + currentLineSize.Y * i);
@@ -573,7 +573,7 @@ namespace Barotrauma
                                 int startIndex = selectFromTheBeginning ? currentLineLength : Math.Abs(selectionStartIndex - previousCharacters);
                                 int endIndex = selectFromTheStart ? 0 : Math.Abs(selectionEndIndex - previousCharacters);
                                 int characters = Math.Min(Math.Abs(endIndex - startIndex), currentLineLength);
-                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(endIndex, characters));
+                                Vector2 selectedTextSize = Font.MeasureString(currentLine.Substring(endIndex, characters)) * TextBlock.TextScale;
                                 Vector2 topLeft = selectFromTheBeginning
                                     ? new Vector2(offset.X + currentLineSize.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i)
                                     : new Vector2(selectionStartPos.X - selectedTextSize.X, offset.Y + currentLineSize.Y * i);
@@ -612,7 +612,7 @@ namespace Barotrauma
                 OnTextChanged?.Invoke(this, Text);
                 if (textBlock.OverflowClipActive && wasOverflowClipActive && !MathUtils.NearlyEqual(textBlock.TextPos, textPos))
                 {
-                    textBlock.TextPos = textPos + Vector2.UnitX * Font.MeasureString(input).X;
+                    textBlock.TextPos = textPos + Vector2.UnitX * Font.MeasureString(input).X * TextBlock.TextScale;
                 }
             }
         }
@@ -714,8 +714,8 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    float lineHeight = Font.MeasureString("T").Y;
-                    int newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y-lineHeight));
+                    float lineHeight = Font.MeasureString("T").Y * TextBlock.TextScale;
+                    int newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y - lineHeight));
                     CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
@@ -725,8 +725,8 @@ namespace Barotrauma
                     {
                         InitSelectionStart();
                     }
-                    lineHeight = Font.MeasureString("T").Y;
-                    newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y+lineHeight));
+                    lineHeight = Font.MeasureString("T").Y * TextBlock.TextScale;
+                    newIndex = textBlock.GetCaretIndexFromLocalPos(new Vector2(caretPos.X, caretPos.Y + lineHeight));
                     CaretIndex = newIndex;
                     caretTimer = 0;
                     HandleSelection();
@@ -865,18 +865,18 @@ namespace Barotrauma
         {
             string textDrawn = Censor ? textBlock.CensoredText : textBlock.WrappedText;
             InitSelectionStart();
-            selectionEndIndex = CaretIndex;
+            selectionEndIndex = Math.Min(CaretIndex, textDrawn.Length);
             selectionEndPos = caretPos;
             selectedCharacters = Math.Abs(selectionStartIndex - selectionEndIndex);
             if (IsLeftToRight)
             {
                 selectedText = Text.Substring(selectionStartIndex, selectedCharacters);
-                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, selectedCharacters));
+                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, selectedCharacters)) * TextBlock.TextScale;
             }
             else
             {
-                selectedText = Text.Substring(selectionEndIndex, selectedCharacters);
-                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, selectedCharacters));
+                selectedText = Text.Substring(selectionEndIndex, Math.Min(selectedCharacters, textDrawn.Length - selectionEndIndex));
+                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, selectedCharacters)) * TextBlock.TextScale;
             }
         }
     }

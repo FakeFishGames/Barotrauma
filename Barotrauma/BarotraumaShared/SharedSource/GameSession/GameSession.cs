@@ -149,9 +149,9 @@ namespace Barotrauma
                         GameMode = mpCampaign;
                         if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) 
                         { 
+                            mpCampaign.LoadNewLevel(); 
                             //save to ensure the campaign ID in the save file matches the one that got assigned to this campaign instance
                             SaveUtil.SaveGame(saveFile);
-                            mpCampaign.LoadNewLevel(); 
                         }
                         break;
                 }
@@ -350,6 +350,7 @@ namespace Barotrauma
             }
 #endif
         }
+
         private void InitializeLevel(Level level)
         {
             //make sure no status effects have been carried on from the next round
@@ -436,6 +437,9 @@ namespace Barotrauma
                 Submarine.MainSub.SetPosition(Vector2.Zero);
                 return;
             }
+
+            var originalSubPos = Submarine.WorldPosition;
+
             if (level.StartOutpost != null)
             {
                 //start by placing the sub below the outpost
@@ -504,6 +508,18 @@ namespace Barotrauma
                 Submarine.NeutralizeBallast();
                 Submarine.EnableMaintainPosition();
             }
+
+            // Make sure that linked subs which are NOT docked to the main sub
+            // (but still close enough to NOT be considered as 'left behind')
+            // are also moved to keep their relative position to the main sub
+            var linkedSubs = MapEntity.mapEntityList.FindAll(me => me is LinkedSubmarine);
+            foreach (LinkedSubmarine ls in linkedSubs)
+            {
+                if (ls.Sub == null || ls.Submarine != Submarine) { continue; }
+                if (!ls.LoadSub || ls.Sub.DockedTo.Contains(Submarine)) { continue; }
+                if (Submarine.Info.LeftBehindDockingPortIDs.Contains(ls.OriginalLinkedToID)) { continue; }
+                ls.Sub.SetPosition(ls.Sub.WorldPosition + (Submarine.WorldPosition - originalSubPos));
+            }
         }
 
         public void Update(float deltaTime)
@@ -562,7 +578,7 @@ namespace Barotrauma
 #endif
         }
 
-        public static bool IsCompatibleWithSelectedContentPackages(IList<string> contentPackagePaths, out string errorMsg)
+        public static bool IsCompatibleWithEnabledContentPackages(IList<string> contentPackagePaths, out string errorMsg)
         {
             errorMsg = "";
             //no known content packages, must be an older save file
@@ -571,13 +587,13 @@ namespace Barotrauma
             List<string> missingPackages = new List<string>();
             foreach (string packagePath in contentPackagePaths)
             {
-                if (!GameMain.Config.SelectedContentPackages.Any(cp => cp.Path == packagePath))
+                if (!GameMain.Config.AllEnabledPackages.Any(cp => cp.Path == packagePath))
                 {
                     missingPackages.Add(packagePath);
                 }
             }
             List<string> excessPackages = new List<string>();
-            foreach (ContentPackage cp in GameMain.Config.SelectedContentPackages)
+            foreach (ContentPackage cp in GameMain.Config.AllEnabledPackages)
             {
                 if (!cp.HasMultiplayerIncompatibleContent) { continue; }
                 if (!contentPackagePaths.Any(p => p == cp.Path))
@@ -589,10 +605,10 @@ namespace Barotrauma
             bool orderMismatch = false;
             if (missingPackages.Count == 0 && missingPackages.Count == 0)
             {
-                var selectedPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
-                for (int i = 0; i < contentPackagePaths.Count && i < selectedPackages.Count; i++)
+                var enabledPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
+                for (int i = 0; i < contentPackagePaths.Count && i < enabledPackages.Count; i++)
                 {
-                    if (contentPackagePaths[i] != selectedPackages[i].Path)
+                    if (contentPackagePaths[i] != enabledPackages[i].Path)
                     {
                         orderMismatch = true;
                         break;
@@ -653,7 +669,7 @@ namespace Barotrauma
             }
             doc.Root.Add(new XAttribute("mapseed", Map.Seed));
             doc.Root.Add(new XAttribute("selectedcontentpackages",
-                string.Join("|", GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).Select(cp => cp.Path))));
+                string.Join("|", GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).Select(cp => cp.Path))));
 
             ((CampaignMode)GameMode).Save(doc.Root);
 

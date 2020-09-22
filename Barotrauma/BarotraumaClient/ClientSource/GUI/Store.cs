@@ -68,6 +68,10 @@ namespace Barotrauma
             CreateUI();
 
             campaignUI.Campaign.Map.OnLocationChanged += UpdateLocation;
+            if (CurrentLocation?.Reputation != null)
+            {
+                CurrentLocation.Reputation.OnReputationValueChanged += Refresh;
+            }
             campaignUI.Campaign.CargoManager.OnItemsInBuyCrateChanged += RefreshBuying;
             campaignUI.Campaign.CargoManager.OnPurchasedItemsChanged += RefreshBuying;
             campaignUI.Campaign.CargoManager.OnItemsInSellCrateChanged += RefreshSelling;
@@ -378,9 +382,13 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), totalContainer.RectTransform), TextManager.Get("campaignstore.total"), font: GUI.Font);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), totalContainer.RectTransform), TextManager.Get("campaignstore.total"), font: GUI.Font)
+            {
+                CanBeFocused = false
+            };
             shoppingCrateTotal = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), totalContainer.RectTransform), "", font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
             {
+                CanBeFocused = false,
                 TextScale = 1.1f
             };
 
@@ -412,11 +420,20 @@ namespace Barotrauma
         {
             if (prevLocation == newLocation) { return; }
 
+            if (prevLocation?.Reputation != null)
+            {
+                prevLocation.Reputation.OnReputationValueChanged -= Refresh;
+            }
+
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
                 if (itemPrefab.CanBeBoughtAtLocation(CurrentLocation, out PriceInfo _))
                 {
                     ChangeStoreTab(StoreTab.Buy);
+                    if (newLocation?.Reputation != null)
+                    {
+                        newLocation.Reputation.OnReputationValueChanged += Refresh;
+                    }
                     return;
                 }
             }
@@ -717,9 +734,15 @@ namespace Barotrauma
 
         private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, bool forceDisable = false)
         {
+            var tooltip = pi.ItemPrefab.Name;
+            if (!string.IsNullOrWhiteSpace(pi.ItemPrefab.Description))
+            {
+                tooltip += "\n" + pi.ItemPrefab.Description;
+            }
+
             GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.yScale * 60)), parent: listBox.Content.RectTransform), style: "ListBoxElement")
             {
-                ToolTip = pi.ItemPrefab.Description,
+                ToolTip = tooltip,
                 UserData = pi
             };
 
@@ -740,6 +763,7 @@ namespace Barotrauma
                 iconRelativeWidth = (0.9f * mainGroup.Rect.Height) / mainGroup.Rect.Width;
                 GUIImage img = new GUIImage(new RectTransform(new Vector2(iconRelativeWidth, 0.9f), mainGroup.RectTransform), itemIcon, scaleToFit: true)
                 {
+                    CanBeFocused = false,
                     Color = (itemIcon == pi.ItemPrefab.InventoryIcon ? pi.ItemPrefab.InventoryIconColor : pi.ItemPrefab.SpriteColor) * (forceDisable ? 0.5f : 1.0f),
                     UserData = "icon"
                 };
@@ -748,8 +772,8 @@ namespace Barotrauma
 
             GUILayoutGroup nameAndQuantityGroup = new GUILayoutGroup(new RectTransform(new Vector2(nameAndIconRelativeWidth - iconRelativeWidth, 1.0f), mainGroup.RectTransform))
             {
-                Stretch = true,
-                ToolTip = pi.ItemPrefab.Description
+                CanBeFocused = false,
+                Stretch = true
             };
             GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), nameAndQuantityGroup.RectTransform),
                 pi.ItemPrefab.Name, font: GUI.SubHeadingFont, textAlignment: Alignment.BottomLeft)
@@ -801,8 +825,8 @@ namespace Barotrauma
 
             var priceBlock = new GUITextBlock(new RectTransform(new Vector2(priceAndButtonRelativeWidth - buttonRelativeWidth, 1.0f), mainGroup.RectTransform), "", font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
             {
+                CanBeFocused = false,
                 TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
-                ToolTip = pi.ItemPrefab.Description,
                 UserData = "price"
             };
             if(listBox == storeSellList || listBox == shoppingCrateSellList)

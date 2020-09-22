@@ -159,6 +159,31 @@ namespace Barotrauma
 
                 if (PlayerInput.IsCtrlDown())
                 {
+#if DEBUG
+                    if (PlayerInput.KeyHit(Keys.D))
+                    {
+                        bool terminate = false;
+                        foreach (MapEntity entity in selectedList)
+                        {
+                            if (entity is Item item && item.GetComponent<Planter>() is { } planter)
+                            {
+                                planter.Update(1.0f, cam);
+                                for (var i = 0; i < planter.GrowableSeeds.Length; i++)
+                                {
+                                    Growable seed = planter.GrowableSeeds[i];
+                                    PlantSlot slot = planter.PlantSlots.ContainsKey(i) ? planter.PlantSlots[i] : Planter.NullSlot;
+                                    if (seed == null) { continue; }
+
+                                    seed.CreateDebugHUD(planter, slot);
+                                    terminate = true;
+                                    break;
+                                }
+                            }
+
+                            if (terminate) { break; }
+                        }
+                    }
+#endif
                     if (PlayerInput.KeyHit(Keys.C))
                     {
                         Copy(selectedList);
@@ -897,8 +922,9 @@ namespace Barotrauma
             Clone(copiedList);
 
             var clones = mapEntityList.Except(prevEntities).ToList();
-
             var nonWireClones = clones.Where(c => !(c is Item item) || item.GetComponent<Wire>() == null);
+            if (!nonWireClones.Any()) { nonWireClones = clones; }
+
             Vector2 center = Vector2.Zero;
             nonWireClones.ForEach(c => center += c.WorldPosition);
             center = Submarine.VectorToWorldGrid(center / nonWireClones.Count());

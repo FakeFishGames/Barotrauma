@@ -40,36 +40,40 @@ namespace Barotrauma
 
             if (GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
-                object currentValue = campaign.CampaignMetadata.GetValue(Identifier);
-                object xmlValue = ConvertXMLValue();
-
-                float? originalValue = ConvertValueToFloat(currentValue ?? 0);
-                float? newValue = ConvertValueToFloat(xmlValue);
-
-                if ((originalValue == null || newValue == null) && Operation != OperationType.Set)
-                {
-                    DebugConsole.ThrowError($"Tried to perform numeric operations to a non number via SetDataAction (Existing: {currentValue?.GetType()}, New: {xmlValue.GetType()})");
-                    return;
-                }
-
-                if (Identifier != null)
-                {
-                    switch (Operation)
-                    {
-                        case OperationType.Set:
-                            campaign.CampaignMetadata.SetValue(Identifier, xmlValue);
-                            break;
-                        case OperationType.Add:
-                            campaign.CampaignMetadata.SetValue(Identifier, originalValue + newValue ?? 0);
-                            break;
-                        case OperationType.Multiply:
-                            campaign.CampaignMetadata.SetValue(Identifier, originalValue * newValue ?? 0);
-                            break;
-                    }
-                }
+                object xmlValue = ConvertXMLValue(Value);
+                PerformOperation(campaign.CampaignMetadata, Identifier, xmlValue, Operation);
             }
 
             isFinished = true;
+        }
+
+        public static void PerformOperation(CampaignMetadata metadata, string identifier, object value, OperationType operation)
+        {
+            if (metadata == null) { return; }
+
+            object currentValue = metadata.GetValue(identifier);
+
+            float? originalValue = ConvertValueToFloat(currentValue ?? 0);
+            float? newValue = ConvertValueToFloat(value);
+
+            if ((originalValue == null || newValue == null) && operation != OperationType.Set)
+            {
+                DebugConsole.ThrowError($"Tried to perform numeric operations to a non number via SetDataAction (Existing: {currentValue?.GetType()}, New: {value.GetType()})");
+                return;
+            }
+
+            switch (operation)
+            {
+                case OperationType.Set:
+                    metadata.SetValue(identifier, value);
+                    break;
+                case OperationType.Add:
+                    metadata.SetValue(identifier, originalValue + newValue ?? 0);
+                    break;
+                case OperationType.Multiply:
+                    metadata.SetValue(identifier, originalValue * newValue ?? 0);
+                    break;
+            }
         }
 
         private static float? ConvertValueToFloat(object value)
@@ -82,24 +86,24 @@ namespace Barotrauma
             return null;
         }
 
-        private object ConvertXMLValue()
+        public static object ConvertXMLValue(string value)
         {
-            if (bool.TryParse(Value, out bool b))
+            if (bool.TryParse(value, out bool b))
             {
                 return b;
             }
             
-            if (float.TryParse(Value, out float f))
+            if (float.TryParse(value, out float f))
             {
                 return f;
             }
 
-            return Value;
+            return value;
         }
 
         public override string ToDebugString()
         {
-            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(SetDataAction)} -> (Identifier: {Identifier.ColorizeObject()}, Value: {ConvertXMLValue().ColorizeObject()}, Operation: {Operation.ColorizeObject()})";
+            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(SetDataAction)} -> (Identifier: {Identifier.ColorizeObject()}, Value: {ConvertXMLValue(Value).ColorizeObject()}, Operation: {Operation.ColorizeObject()})";
         }
     }
 }

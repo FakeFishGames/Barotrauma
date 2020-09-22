@@ -497,7 +497,7 @@ namespace Barotrauma
             };
 
             if (Level.Loaded != null &&
-                connection.LevelData == Level.Loaded.LevelData &&
+                connection?.LevelData == Level.Loaded.LevelData &&
                 currentDisplayLocation == Campaign.Map?.CurrentLocation)
             {
                 StartButton.Visible = false;

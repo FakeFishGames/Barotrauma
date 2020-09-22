@@ -756,9 +756,9 @@ namespace Barotrauma
             flashColor = (color == null) ? GUI.Style.Red : (Color)color;
         }
 
-        public void FadeOut(float duration, bool removeAfter)
+        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f)
         {
-            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter));
+            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait));
         }
 
         public void FadeIn(float wait, float duration)

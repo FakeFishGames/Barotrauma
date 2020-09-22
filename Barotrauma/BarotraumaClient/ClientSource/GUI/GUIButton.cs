@@ -104,6 +104,12 @@ namespace Barotrauma
             set { textBlock.HoverTextColor = value; }
         }
 
+        public Color SelectedTextColor
+        {
+            get { return textBlock.SelectedTextColor; }
+            set { textBlock.SelectedTextColor = value; }
+        }
+
         public override float FlashTimer
         {
             get { return Frame.FlashTimer; }

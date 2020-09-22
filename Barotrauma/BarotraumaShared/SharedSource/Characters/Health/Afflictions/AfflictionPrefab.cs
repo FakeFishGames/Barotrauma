@@ -68,13 +68,13 @@ namespace Barotrauma
             HuskedSpeciesName = element.GetAttributeString("huskedspeciesname", null).ToLowerInvariant();
             if (HuskedSpeciesName == null)
             {
-                DebugConsole.NewMessage($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element.ToString()}", Color.Orange);
+                DebugConsole.NewMessage($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element}", Color.Orange);
                 HuskedSpeciesName = "[speciesname]husk";
             }
             TargetSpecies = element.GetAttributeStringArray("targets", new string[0] { }, trim: true, convertToLowerInvariant: true);
             if (TargetSpecies.Length == 0)
             {
-                DebugConsole.NewMessage($"No 'targets' defined for the husk affliction ({Identifier}) in {element.ToString()}", Color.Orange);
+                DebugConsole.NewMessage($"No 'targets' defined for the husk affliction ({Identifier}) in {element}", Color.Orange);
                 TargetSpecies = new string[] { "human" };
             }
             var attachElement = element.GetChildElement("attachlimb");
@@ -188,6 +188,30 @@ namespace Barotrauma
             }
         }
 
+        public class PeriodicEffect
+        {
+            public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
+            public readonly float MinInterval, MaxInterval;
+
+            public PeriodicEffect(XElement element, string parentDebugName)
+            {
+                foreach (XElement subElement in element.Elements())
+                {
+                    StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
+                }
+
+                if (element.Attribute("interval") != null)
+                {
+                    MinInterval = MaxInterval = Math.Max(element.GetAttributeFloat("interval", 1.0f), 1.0f);
+                }
+                else
+                {
+                    MinInterval = Math.Max(element.GetAttributeFloat("mininterval", 1.0f), 1.0f);
+                    MaxInterval = Math.Max(element.GetAttributeFloat("maxinterval", 1.0f), MinInterval);
+                }
+            }
+        }
+
         public static AfflictionPrefab InternalDamage;
         public static AfflictionPrefab ImpactDamage;
         public static AfflictionPrefab Bleeding;
@@ -267,7 +291,11 @@ namespace Barotrauma
         public readonly Color[] IconColors;
 
         private readonly List<Effect> effects = new List<Effect>();
+        private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
+
         public IEnumerable<Effect> Effects => effects;
+
+        public IList<PeriodicEffect> PeriodicEffects => periodicEffects;
 
         private readonly string typeName;
 
@@ -304,10 +332,10 @@ namespace Barotrauma
             CharacterHealth.DamageOverlay = null;
             CharacterHealth.DamageOverlayFile = string.Empty;
 #endif
-            var prevPrefabs = Prefabs.ToList();
+            var prevPrefabs = Prefabs.AllPrefabs.SelectMany(kvp => kvp.Value).ToList();
             foreach (var prefab in prevPrefabs)
             {
-                prefab.Dispose();
+                prefab?.Dispose();
             }
             System.Diagnostics.Debug.Assert(Prefabs.Count() == 0, "All previous AfflictionPrefabs were not removed in AfflictionPrefab.LoadAll");
 
@@ -551,6 +579,9 @@ namespace Barotrauma
                         break;
                     case "effect":
                         effects.Add(new Effect(subElement, Name));
+                        break;
+                    case "periodiceffect":
+                        periodicEffects.Add(new PeriodicEffect(subElement, Name));
                         break;
                 }
             }

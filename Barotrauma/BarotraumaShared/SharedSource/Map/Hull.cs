@@ -4,11 +4,100 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
+    partial class BackgroundSection
+    {
+        public Rectangle Rect;
+        public int Index;
+        public int RowIndex;
+
+        private Vector4 colorVector4;
+        private Color color;
+
+        public readonly Vector2 Noise;
+        public readonly Color DirtColor;
+
+        public float ColorStrength
+        {
+            get;
+            protected set;
+        }
+
+        public Color Color
+        {
+            get { return color; }
+            protected set
+            {
+                color = value;
+                colorVector4 = new Vector4(value.R / 255.0f, value.G / 255.0f, value.B / 255.0f, value.A / 255.0f);
+            }
+        }
+
+        public BackgroundSection(Rectangle rect, int index, int rowIndex)
+        {
+            Rect = rect;
+            Index = index;
+            ColorStrength = 0.0f;
+            RowIndex = rowIndex;
+
+            Noise = new Vector2(
+                PerlinNoise.GetPerlin(Rect.X / 1000.0f, Rect.Y / 1000.0f),
+                PerlinNoise.GetPerlin(Rect.Y / 1000.0f + 0.5f, Rect.X / 1000.0f + 0.5f));
+
+            Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
+        }
+
+        public BackgroundSection(Rectangle rect, int index, float colorStrength, Color color, int rowIndex)
+        {
+            System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
+
+            Rect = rect;
+            Index = index;
+            ColorStrength = colorStrength;
+            Color = color;
+            RowIndex = rowIndex;
+
+            Noise = new Vector2(
+                PerlinNoise.GetPerlin(Rect.X / 1000.0f, Rect.Y / 1000.0f),
+                PerlinNoise.GetPerlin(Rect.Y / 1000.0f + 0.5f, Rect.X / 1000.0f + 0.5f));
+
+            Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
+        }
+
+        public bool SetColor(Color color)
+        {
+            if (Color == color) { return false; }
+            Color = color;
+            return true;
+        }
+
+        public float SetColorStrength(float colorStrength)
+        {
+            if (ColorStrength == colorStrength) { return -1f; }
+            float previous = ColorStrength;
+            ColorStrength = colorStrength;
+            return previous;
+        }
+
+        public bool LerpColor(Color to, float amount)
+        {
+            if (Color == to) { return false; }
+            colorVector4 = Vector4.Lerp(colorVector4, to.ToVector4(), amount);
+            color = new Color(colorVector4);
+            return true;
+        }
+
+        public Color GetStrengthAdjustedColor()
+        {
+            return Color * ColorStrength;
+        }
+    }
+
     partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
         public static List<Hull> hullList = new List<Hull>();
@@ -29,7 +118,11 @@ namespace Barotrauma
         //how much excess water the room can contain, relative to the volume of the room.
         //needed to make it possible for pressure to "push" water up through U-shaped hull configurations
         public const float MaxCompress = 1.05f;
-        
+
+        public const int BackgroundSectionSize = 16;
+
+        public const int BackgroundSectionsPerNetworkEvent = 16;
+
         public readonly Dictionary<string, SerializableProperty> properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
         {
@@ -53,6 +146,11 @@ namespace Barotrauma
 
         private float[] leftDelta;
         private float[] rightDelta;
+
+        public const int MaxDecalsPerHull = 10;
+
+        private readonly List<Decal> decals = new List<Decal>();
+
 
         public readonly List<Gap> ConnectedGaps = new List<Gap>();
 
@@ -140,6 +238,8 @@ namespace Barotrauma
                 OxygenPercentage = prevOxygenPercentage;
                 surface = drawSurface = rect.Y - rect.Height + WaterVolume / rect.Width;
                 Pressure = surface;
+
+                CreateBackgroundSections();
             }
         }
         
@@ -186,6 +286,8 @@ namespace Barotrauma
             get { return Submarine == null ? surface : surface + Submarine.Position.Y; }
         }
 
+        private float dirtiedVolume = 0.0f;
+
         public float WaterVolume
         {
             get { return waterVolume; }
@@ -193,8 +295,25 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) return;
                 waterVolume = MathHelper.Clamp(value, 0.0f, Volume * MaxCompress);
-                if (waterVolume < Volume) Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
-                if (waterVolume > 0.0f) update = true;
+                if (waterVolume < Volume) { Pressure = rect.Y - rect.Height + waterVolume / rect.Width; }
+                if (waterVolume > 0.0f)
+                {
+                    update = true;
+                    if (BackgroundSections != null)
+                    {
+                        float volumeMultiplier = Math.Clamp(waterVolume / Volume, 0f, 1f);
+                        if (Math.Abs(volumeMultiplier - dirtiedVolume) > 0.075f)
+                        {
+                            RefreshSubmergedSections(new Rectangle(new Point(0, -rect.Height), new Point(rect.Width, (int)(rect.Height * volumeMultiplier))));
+                            dirtiedVolume = volumeMultiplier;
+                        }
+                    }
+                }
+                else
+                {
+                    submergedSections.Clear();
+                    dirtiedVolume = 0.0f;
+                }
             }
         }
 
@@ -238,6 +357,36 @@ namespace Barotrauma
             get { return waveVel; }
         }
 
+        // sections of a decorative background that can be painted
+        public List<BackgroundSection> BackgroundSections
+        {
+            get;
+            private set;
+        }
+
+        private readonly HashSet<int> pendingSectionUpdates = new HashSet<int>();
+
+        private readonly List<BackgroundSection> submergedSections = new List<BackgroundSection>();
+
+        public int xBackgroundMax, yBackgroundMax;
+
+        public bool SupportsPaintedColors
+        {
+            get
+            {
+                return BackgroundSections != null;
+            }
+        }
+
+        private const int sectorWidth = 4;
+        private const int sectorHeight = 4;
+
+        private const float minColorStrength = 0.0f;
+        private const float maxColorStrength = 0.7f;
+
+        private bool networkUpdatePending;
+        private float networkUpdateTimer;
+
         public List<FireSource> FireSources { get; private set; }
 
         public Hull(MapEntityPrefab prefab, Rectangle rectangle)
@@ -250,6 +399,8 @@ namespace Barotrauma
             : base (prefab, submarine)
         {
             rect = rectangle;
+
+            if (BackgroundSections == null) { CreateBackgroundSections(); }
             
             OxygenPercentage = 100.0f;
 
@@ -283,6 +434,8 @@ namespace Barotrauma
                 Item.UpdateHulls();
                 Gap.UpdateHulls();
             }
+
+            CreateBackgroundSections();
 
             WaterVolume = 0.0f;
 
@@ -399,6 +552,12 @@ namespace Barotrauma
 
         public override void Move(Vector2 amount)
         {
+            if (!MathUtils.IsValid(amount))
+            {
+                DebugConsole.ThrowError($"Attempted to move a hull by an invalid amount ({amount})\n{Environment.StackTrace}");
+                return;
+            }
+
             rect.X += (int)amount.X;
             rect.Y += (int)amount.Y;
 
@@ -471,6 +630,48 @@ namespace Barotrauma
             FireSources.Add(fireSource);
         }
 
+        public Decal AddDecal(UInt32 decalId, Vector2 worldPosition, float scale, bool isNetworkEvent)
+        {
+            //clients are only allowed to create decals when the server says so
+            if (!isNetworkEvent && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                return null;
+            }
+
+            var decal = GameMain.DecalManager.Prefabs.Find(p => p.UIntIdentifier == decalId);
+            if (decal == null)
+            {
+                DebugConsole.ThrowError($"Could not find a decal prefab with the UInt identifier {decalId}!");
+                return null;
+            }
+            return AddDecal(decal.Name, worldPosition, scale, isNetworkEvent);
+        }
+
+
+        public Decal AddDecal(string decalName, Vector2 worldPosition, float scale, bool isNetworkEvent)
+        {
+            //clients are only allowed to create decals when the server says so
+            if (!isNetworkEvent && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                return null;
+            }
+
+            if (decals.Count >= MaxDecalsPerHull) { return null; }
+
+            var decal = GameMain.DecalManager.CreateDecal(decalName, scale, worldPosition, this);
+            if (decal != null)
+            {
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(this, new object[] { false });
+                }
+                decals.Add(decal);
+            }
+
+            return decal;
+        }
+
+
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
@@ -479,6 +680,13 @@ namespace Barotrauma
             Oxygen -= OxygenDeteriorationSpeed * deltaTime;
 
             FireSource.UpdateAll(FireSources, deltaTime);
+
+            foreach (Decal decal in decals)
+            {
+                decal.Update(deltaTime);
+            }
+            decals.RemoveAll(d => d.FadeTimer >= d.LifeTime || d.BaseAlpha <= 0.001f);
+
 
             if (aiTarget != null)
             {
@@ -594,6 +802,12 @@ namespace Barotrauma
                     waveY[i - 1] += leftDelta[i];
                     waveY[i + 1] += rightDelta[i];
                 }
+            }
+
+            //0.01 increase every ~1000 frames = reaches full dirtiness in ~27 minutes
+            if (submergedSections.Count > 0 && Submarine != null && Submarine.Info.Type == SubmarineType.Player && Rand.Int(1000) == 1)
+            {
+                DirtySections(submergedSections, 0.01f);
             }
 
             if (waterVolume < Volume)
@@ -906,9 +1120,180 @@ namespace Barotrauma
             return "RoomName.Sub" + roomPos.ToString();
         }
 
+#region BackgroundSections
+        private void CreateBackgroundSections()
+        {
+            int sectionWidth, sectionHeight;
+
+            sectionWidth = sectionHeight = BackgroundSectionSize;
+
+            xBackgroundMax = rect.Width / sectionWidth;
+            yBackgroundMax = rect.Height / sectionHeight;
+
+            BackgroundSections = new List<BackgroundSection>(xBackgroundMax * yBackgroundMax);
+
+            int sections = xBackgroundMax * yBackgroundMax;
+            float xSectors = xBackgroundMax / (float)sectorWidth;
+
+            for (int y = 0; y < yBackgroundMax; y++)
+            {
+                for (int x = 0; x < xBackgroundMax; x++)
+                {
+                    int index = BackgroundSections.Count;
+                    int sector = (int)Math.Floor(index / (float)sectorWidth - xSectors * y) + y / sectorHeight * (int)Math.Ceiling(xSectors);
+                    BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, y));
+                }
+            }
+
+#if CLIENT
+            minimumPaintAmountToDraw = maxColorStrength / BackgroundSections.Count;
+#endif
+        }
+        
+        public static Hull GetCleanTarget(Vector2 worldPosition)
+        {
+            foreach (Hull hull in hullList)
+            {
+                Rectangle worldRect = hull.WorldRect;
+                if (worldPosition.X < worldRect.X || worldPosition.X > worldRect.Right) { continue; }
+                if (worldPosition.Y > worldRect.Y || worldPosition.Y < worldRect.Y - worldRect.Height) { continue; }
+                return hull;
+            }
+            return null;
+        }
+
+        public BackgroundSection GetBackgroundSection(Vector2 worldPosition)
+        {
+            if (!SupportsPaintedColors) { return null; }
+
+            Vector2 subOffset = Submarine == null ? Vector2.Zero : Submarine.Position;
+            Vector2 relativePosition = new Vector2(worldPosition.X - subOffset.X - rect.X, worldPosition.Y - subOffset.Y - rect.Y);
+
+            int xIndex = (int)Math.Floor(relativePosition.X / BackgroundSectionSize);
+            if (xIndex < 0 || xIndex >= xBackgroundMax) { return null; }
+            int yIndex = (int)Math.Floor(-relativePosition.Y / BackgroundSectionSize);
+            if (yIndex < 0 || yIndex >= yBackgroundMax) { return null; }
+
+            return BackgroundSections[xIndex + yIndex * xBackgroundMax];
+        }
+
+        public IEnumerable<BackgroundSection> GetBackgroundSectionsViaContaining(Rectangle rectArea)
+        {
+            if (BackgroundSections == null || BackgroundSections.Count == 0) 
+            {
+                yield break;
+            }
+            else
+            {
+                int xMin = Math.Max(rectArea.X / BackgroundSectionSize, 0);
+                if (xMin >= xBackgroundMax) { yield break; }
+                int xMax = Math.Min(rectArea.Right / BackgroundSectionSize, xBackgroundMax - 1);
+                if (xMax < 0) { yield break; }
+
+                int yMin = Math.Max(-rectArea.Bottom / BackgroundSectionSize, 0);
+                if (yMin >= yBackgroundMax) { yield break; }
+                int yMax = Math.Min(-rectArea.Y / BackgroundSectionSize, yBackgroundMax - 1);
+                if (yMax < 0) { yield break; }
+
+                for (int x = xMin; x <= xMax; x++)
+                {
+                    for (int y = yMin; y <= yMax; y++)
+                    {
+                        yield return BackgroundSections[x + y * xBackgroundMax];
+                    }
+                }
+            }
+        }
+
+        public void RefreshSubmergedSections(Rectangle waterArea)
+        {
+            if (BackgroundSections == null) { return; }
+
+            submergedSections.Clear();
+            foreach (var section in GetBackgroundSectionsViaContaining(waterArea))
+            {
+                submergedSections.Add(section);
+            }
+        }
+
+        public bool DoesSectionMatch(int index, int row)
+        {
+            return index >= 0 && row >= 0 && BackgroundSections.Count > index && BackgroundSections[index] != null && BackgroundSections[index].RowIndex == row;
+        }
+        
+        public void SetSectionColorOrStrength(BackgroundSection section, Color? color, float? strength, bool requiresUpdate, bool isCleaning)
+        {
+            bool sectionUpdated = isCleaning;
+            if (color != null)
+            {
+                if (section.Color != color.Value && strength.HasValue)
+                {
+                    //already painted with a different color -> interpolate towards the new one
+
+                    //an ad-hoc formula that makes the color changes faster when the current strength is low
+                    //(-> a barely dirty wall gets recolored almost immediately, while a more heavily colored one takes a while)
+                    float changeSpeed = strength.Value / Math.Max(section.ColorStrength * section.ColorStrength, 0.001f) * 0.1f;
+                    if (section.LerpColor(color.Value, changeSpeed)) { sectionUpdated = true; }
+                }
+                else
+                {
+                    if (section.SetColor(color.Value)) { sectionUpdated = true; }
+                }
+            }
+
+            if (strength != null)
+            {
+                float previous = section.SetColorStrength(Math.Max(minColorStrength, Math.Min(maxColorStrength, section.ColorStrength + strength.Value)));
+                if (previous != -1f)
+                {
+#if CLIENT
+                    paintAmount = Math.Max(0, paintAmount + (section.ColorStrength - previous) / BackgroundSections.Count);
+#endif
+                    sectionUpdated = true;
+                }
+            }
+
+            if (sectionUpdated && GameMain.NetworkMember != null && requiresUpdate)
+            {
+                networkUpdatePending = true;
+                pendingSectionUpdates.Add((int)Math.Floor(section.Index / (float)BackgroundSectionsPerNetworkEvent));
+#if CLIENT
+                serverUpdateDelay = 0.5f;
+#endif
+            }
+        }
+
+        public void DirtySections(List<BackgroundSection> sections, float dirtyVal)
+        {
+            if (sections == null) { return; }
+            for (int i = 0; i < sections.Count; i++)
+            {
+                float sectionDirtyVal = dirtyVal;
+                SetSectionColorOrStrength(sections[i], sections[i].DirtColor, sectionDirtyVal, false, false);
+            }
+        }
+
+        public void CleanSection(BackgroundSection section, float cleanVal, bool updateRequired)
+        {
+            bool decalsCleaned = false;
+            for (int i = 0; i < decals.Count; i++)
+            {
+                Decal decal = decals[i];
+                if (decal.AffectsSection(section))
+                {
+                    decal.Clean(cleanVal);
+                    decalsCleaned = true;
+                }
+            }
+
+            if (section.ColorStrength == 0 && !decalsCleaned) { return; }
+            SetSectionColorOrStrength(section, null, cleanVal, updateRequired, true);
+        }
+#endregion
+
         public static Hull Load(XElement element, Submarine submarine)
         {
-            Rectangle rect = Rectangle.Empty;
+            Rectangle rect;
             if (element.Attribute("rect") != null)
             {
                 rect = element.GetAttributeRect("rect", Rectangle.Empty);
@@ -947,6 +1332,41 @@ namespace Barotrauma
                 hull.OriginalAmbientLight = XMLExtensions.ParseColor(originalAmbientLight, false);
             }
 
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "decal":
+                        string id = subElement.GetAttributeString("id", "");
+                        Vector2 pos = subElement.GetAttributeVector2("pos", Vector2.Zero);
+                        float scale = subElement.GetAttributeFloat("scale", 1.0f);
+                        float timer = subElement.GetAttributeFloat("timer", 1.0f);
+                        var decal = hull.AddDecal(id, pos + hull.WorldRect.Location.ToVector2(), scale, true);
+                        if (decal != null)
+                        {
+                            decal.FadeTimer = timer;
+                        }
+                        break;
+                }
+            }
+                
+            string backgroundSectionStr = element.GetAttributeString("backgroundsections", "");
+            if (!string.IsNullOrEmpty(backgroundSectionStr))
+            {
+                string[] backgroundSectionStrSplit = backgroundSectionStr.Split(';');
+                foreach (string str in backgroundSectionStrSplit)
+                {
+                    string[] backgroundSectionData = str.Split(':');
+                    if (backgroundSectionData.Length != 3) { continue; }
+                    Color color = XMLExtensions.ParseColor(backgroundSectionData[1]);
+                    if (int.TryParse(backgroundSectionData[0], out int index) && 
+                        float.TryParse(backgroundSectionData[2], NumberStyles.Any, CultureInfo.InvariantCulture, out float strength))
+                    {
+                        hull.SetSectionColorOrStrength(hull.BackgroundSections[index], color, strength, false, false);
+                    }
+                }
+            }
+
             SerializableProperty.DeserializeProperties(hull, element);
             if (element.Attribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
 
@@ -976,13 +1396,32 @@ namespace Barotrauma
 
             if (linkedTo != null && linkedTo.Count > 0)
             {
-                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved && !l.Removed).ToList();
+                var saveableLinked = linkedTo.Where(l => l.ShouldBeSaved && (l.Removed == Removed)).ToList();
                 element.Add(new XAttribute("linked", string.Join(",", saveableLinked.Select(l => l.ID.ToString()))));
             }
 
             if (OriginalAmbientLight != null)
             {
                 element.Add(new XAttribute("originalambientlight", XMLExtensions.ColorToString(OriginalAmbientLight.Value)));
+            }
+
+            if (BackgroundSections != null && BackgroundSections.Count > 0)
+            {
+                element.Add(
+                    new XAttribute(
+                        "backgroundsections",
+                        string.Join(';', BackgroundSections.Where(b => b.ColorStrength > 0.01f).Select(b => b.Index + ":" + XMLExtensions.ColorToString(b.Color) + ":" + b.ColorStrength.ToString("G", CultureInfo.InvariantCulture)))));
+            }
+
+            foreach (Decal decal in decals)
+            {
+                element.Add(
+                    new XElement("decal", 
+                        new XAttribute("id", decal.Prefab.Identifier),
+                        new XAttribute("pos", XMLExtensions.Vector2ToString(decal.NonClampedPosition)),
+                        new XAttribute("scale", decal.Scale.ToString("G", CultureInfo.InvariantCulture)),
+                        new XAttribute("timer", decal.FadeTimer.ToString("G", CultureInfo.InvariantCulture))
+                    ));
             }
 
             SerializableProperty.SerializeProperties(this, element);

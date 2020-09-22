@@ -11,21 +11,18 @@ namespace Barotrauma
 
         public RNGAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
 
+        private bool isFinished;
+
         protected override bool? DetermineSuccess()
         {
+            isFinished = true;
             return Rand.Range(0.0, 1.0) <= Chance;
         }
 
         public override string ToDebugString()
         {
-            string subActionStr = "";
-            if (succeeded.HasValue)
-            {
-                subActionStr = $"\n            Sub action: {(succeeded.Value ? Success : Failure)?.CurrentSubAction.ColorizeObject()}";
-            }
-            return $"{ToolBox.GetDebugSymbol(DetermineFinished())} {nameof(RNGAction)} -> (Chance: {Chance.ColorizeObject()}, "+
-                   $"Succeeded: {(succeeded.HasValue ? succeeded.Value.ToString() : "not determined").ColorizeObject()})" +
-                   subActionStr;
+            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(RNGAction)} -> (Chance: {Chance.ColorizeObject()}, "+
+                   $"Succeeded: {succeeded.ColorizeObject()})";
         }
     }
 }

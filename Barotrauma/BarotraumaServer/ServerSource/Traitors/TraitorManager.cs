@@ -137,6 +137,10 @@ namespace Barotrauma
                         startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                         return;
                     }
+                    if (Character.CharacterList.Count(c => !c.IsDead && c.TeamID == Character.TeamType.Team1 || c.TeamID == Character.TeamType.Team2) <= 1)
+                    {
+                        return;
+                    }
                     if (GameMain.GameSession.Mission is CombatMission)
                     {
                         var teamIds = new[] { Character.TeamType.Team1, Character.TeamType.Team2 };

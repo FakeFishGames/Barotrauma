@@ -31,9 +31,22 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private ulong serverEventId = 0;
+        public override void ServerAppendExtraData(ref object[] extraData)
+        {
+            //ensuring the uniqueness of this event is
+            //required for the fabricator to sync correctly;
+            //otherwise, the event manager would incorrectly
+            //assume that the client actually has the latest state
+            Array.Resize(ref extraData, 4);
+            extraData[2] = serverEventId;
+            extraData[3] = State;
+        }
+
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            msg.Write((byte)State);
+            FabricatorState stateAtEvent = (FabricatorState)extraData[3];
+            msg.Write((byte)stateAtEvent);
             msg.Write(timeUntilReady);
             int itemIndex = fabricatedItem == null ? -1 : fabricationRecipes.IndexOf(fabricatedItem);
             msg.WriteRangedInteger(itemIndex, -1, fabricationRecipes.Count - 1);

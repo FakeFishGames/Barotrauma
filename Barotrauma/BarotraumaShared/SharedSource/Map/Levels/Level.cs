@@ -445,8 +445,11 @@ namespace Barotrauma
                 if (mainPathCellCount > tunnel.Count / 2) continue;
 
                 var newPathCells = CaveGenerator.GeneratePath(tunnel, cells, cellGrid, GridCellSize, pathBorders);
-                PositionsOfInterest.Add(new InterestingPosition(tunnel.Last(), PositionType.Cave));
-                if (tunnel.Count > 4) PositionsOfInterest.Add(new InterestingPosition(tunnel[tunnel.Count / 2], PositionType.Cave));
+                if (newPathCells.Any())
+                {
+                    PositionsOfInterest.Add(new InterestingPosition(newPathCells.Last().Center.ToPoint(), PositionType.Cave));
+                    if (newPathCells.Count > 4) { PositionsOfInterest.Add(new InterestingPosition(newPathCells[newPathCells.Count / 2].Center.ToPoint(), PositionType.Cave)); }
+                }
                 validTunnels.Add(tunnel);
                 pathCells.AddRange(newPathCells);
             }
@@ -574,7 +577,7 @@ namespace Barotrauma
             Ruins = new List<Ruin>();
             for (int i = 0; i < GenerationParams.RuinCount; i++)
             {
-                GenerateRuin(mainPath, this, mirror);
+                GenerateRuin(mainPath, mirror);
             }
 
             EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.Server));
@@ -1054,7 +1057,7 @@ namespace Barotrauma
             return tunnelNodes;
         }
 
-        private void GenerateRuin(List<VoronoiCell> mainPath, Level level, bool mirror)
+        private void GenerateRuin(List<VoronoiCell> mainPath, bool mirror)
         {
             var ruinGenerationParams = RuinGenerationParams.GetRandom();
 
@@ -1075,14 +1078,19 @@ namespace Barotrauma
             ruinPos.Y = Math.Min(ruinPos.Y, borders.Y + borders.Height - ruinSize.Y / 2);
             ruinPos.Y = Math.Max(ruinPos.Y, SeaFloorTopPos + ruinSize.Y / 2);
 
-            double minDist = ruinRadius * 2;
-            double minDistSqr = minDist * minDist;
+            double minMainPathDist = ruinRadius * 2;
+            double minMainPathDistSqr = minMainPathDist * minMainPathDist;
+
+            double minOutpostDist = Math.Min(Math.Min(10000.0f, Size.X / 3), Size.Y / 3);
+            double minOutpostDistSqr = minOutpostDist * minOutpostDist;
 
             int iter = 0;
-            while (mainPath.Any(p => MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, p.Site.Coord.X, p.Site.Coord.Y) < minDistSqr) ||
+            while (mainPath.Any(p => MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, p.Site.Coord.X, p.Site.Coord.Y) < minMainPathDistSqr) ||
                 Ruins.Any(r => r.Area.Intersects(new Rectangle(ruinPos - new Point(ruinSize.X / 2, ruinSize.Y / 2), ruinSize)) ||
-                MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, StartPosition.X, StartPosition.Y) < minDistSqr ||
-                MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, EndPosition.X, EndPosition.Y) < minDistSqr))
+                MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, StartPosition.X, StartPosition.Y) < minOutpostDistSqr ||
+                MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, StartPosition.X, Size.Y) < minOutpostDistSqr ||
+                MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, EndPosition.X, EndPosition.Y) < minOutpostDistSqr) ||
+                MathUtils.DistanceSquared(ruinPos.X, ruinPos.Y, EndPosition.X, Size.Y) < minOutpostDistSqr)
             {
                 double weighedPathPosX = ruinPos.X;
                 double weighedPathPosY = ruinPos.Y;
@@ -1094,11 +1102,11 @@ namespace Barotrauma
                     double diffY = i == 0 ? ruinPos.Y - StartPosition.Y : ruinPos.Y - StartPosition.Y;
 
                     double distSqr = diffX * diffX + diffY * diffY;
-                    if (distSqr < minDistSqr)
+                    if (distSqr < minMainPathDistSqr)
                     {
                         double dist = Math.Sqrt(distSqr);
-                        double moveAmountX = minDist * diffX / dist;
-                        double moveAmountY = minDist * diffY / dist;
+                        double moveAmountX = minMainPathDist * diffX / dist;
+                        double moveAmountY = minMainPathDist * diffY / dist;
                         weighedPathPosX += moveAmountX;
                         weighedPathPosY += moveAmountY;
                         weighedPathPosY = Math.Min(borders.Y + borders.Height - ruinSize.Y / 2, weighedPathPosY);
@@ -1315,7 +1323,7 @@ namespace Barotrauma
                 {
                     holdable.AttachToWall();
 #if CLIENT
-                    item.SpriteRotation = -MathUtils.VectorToAngle(edgeNormal) + MathHelper.PiOver2;
+                    item.Rotation = MathHelper.ToDegrees(-MathUtils.VectorToAngle(edgeNormal) + MathHelper.PiOver2);
 #endif
                 }
             }
@@ -1337,7 +1345,11 @@ namespace Barotrauma
             {
                 Loaded.TryGetInterestingPosition(true, spawnPosType, minDistFromSubs, out Vector2 startPos);
 
-                startPos += Rand.Vector(Rand.Range(0.0f, randomSpread, Rand.RandSync.Server), Rand.RandSync.Server);
+                Vector2 offset = Rand.Vector(Rand.Range(0.0f, randomSpread, Rand.RandSync.Server), Rand.RandSync.Server);
+                if (!cells.Any(c => c.IsPointInside(startPos + offset)))
+                {
+                    startPos += offset;
+                }
 
                 Vector2 endPos = startPos - Vector2.UnitY * Size.Y;
 
@@ -1533,7 +1545,7 @@ namespace Barotrauma
             var totalSW = new Stopwatch();
             var tempSW = new Stopwatch();
             totalSW.Start();
-            var wreckFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Wreck).ToList();
+            var wreckFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Wreck).ToList();
             if (wreckFiles.None())
             {
                 DebugConsole.ThrowError("No wreck files found in the selected content packages!");
@@ -1827,7 +1839,7 @@ namespace Barotrauma
 
         private void CreateOutposts()
         {
-            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost).ToList();
+            var outpostFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Outpost).ToList();
             if (!outpostFiles.Any() && !OutpostGenerationParams.Params.Any() && LevelData.ForceOutpostGenerationParams == null)
             {
                 DebugConsole.ThrowError("No outpost files found in the selected content packages");
@@ -2080,7 +2092,7 @@ namespace Barotrauma
                     job ??= selectedPrefab.GetJobPrefab();
                     if (job == null) { continue; }
 
-                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job);
+                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, randSync: Rand.RandSync.Server);
                     var corpse = Character.Create(CharacterPrefab.HumanConfigFile, worldPos, ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
                     corpse.AnimController.FindHull(worldPos, true);
                     corpse.TeamID = Character.TeamType.None;
@@ -2126,6 +2138,11 @@ namespace Barotrauma
         public void DebugSetStartLocation(Location newStartLocation)
         {
             StartLocation = newStartLocation;
+        }
+
+        public void DebugSetEndLocation(Location newEndLocation)
+        {
+            EndLocation = newEndLocation;
         }
 
         public override void Remove()

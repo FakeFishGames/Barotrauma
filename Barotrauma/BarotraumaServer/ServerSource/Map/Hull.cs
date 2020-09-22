@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace Barotrauma
     {
         private float lastSentVolume, lastSentOxygen, lastSentFireCount;
         private float sendUpdateTimer;
+
+        private bool decalsChanged;
 
         public override bool IsMouseOn(Vector2 position)
         {
@@ -29,18 +32,40 @@ namespace Barotrauma
                 return;
             }
 
+            if (decalsChanged)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { false });
+                lastSentVolume = waterVolume;
+                lastSentOxygen = OxygenPercentage;
+                lastSentFireCount = FireSources.Count;
+                sendUpdateTimer = NetConfig.HullUpdateInterval;
+                decalsChanged = false;
+                return;
+            }
+
             sendUpdateTimer -= deltaTime;
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
-            if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f ||
-                Math.Abs(lastSentOxygen - OxygenPercentage) > 5f ||
-                lastSentFireCount != FireSources.Count ||
-                FireSources.Count > 0 ||
+            if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f || Math.Abs(lastSentOxygen - OxygenPercentage) > 5f ||
+                lastSentFireCount != FireSources.Count || FireSources.Count > 0 || 
+                pendingSectionUpdates.Count > 0 ||
                 sendUpdateTimer < -NetConfig.SparseHullUpdateInterval)
             {
                 if (sendUpdateTimer < 0.0f)
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(this);
+                    if (pendingSectionUpdates.Count > 0)
+                    {
+                        foreach (int pendingSectionUpdate in pendingSectionUpdates)
+                        {
+                            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { true, pendingSectionUpdate } );
+                        }
+                        pendingSectionUpdates.Clear();
+                    }
+                    else
+                    {
+                        GameMain.NetworkMember.CreateEntityEvent(this);
+                    }
+
                     lastSentVolume = waterVolume;
                     lastSentOxygen = OxygenPercentage;
                     lastSentFireCount = FireSources.Count;
@@ -70,65 +95,122 @@ namespace Barotrauma
                     message.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
                 }
             }
+
+            message.Write(extraData != null);
+            if (extraData != null)
+            {
+                message.Write((bool)extraData[0]);
+
+                // Section update
+                if ((bool)extraData[0])
+                {
+                    int sectorToUpdate = (int)extraData[1];
+                    int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
+                    int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+                    message.WriteRangedInteger(sectorToUpdate, 0, BackgroundSections.Count - 1);
+                    for (int i = start; i < end; i++)
+                    {
+                        message.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
+                        message.Write(BackgroundSections[i].Color.PackedValue);
+                    }
+                }
+                else // Decal update
+                {
+                    message.WriteRangedInteger(decals.Count, 0, MaxDecalsPerHull);
+                    foreach (Decal decal in decals)
+                    {
+                        message.Write(decal.Prefab.UIntIdentifier);
+                        float normalizedXPos = MathHelper.Clamp(MathUtils.InverseLerp(rect.X, rect.Right, decal.Position.X), 0.0f, 1.0f);
+                        float normalizedYPos = MathHelper.Clamp(MathUtils.InverseLerp(rect.Y - rect.Height, rect.Y, decal.Position.Y), 0.0f, 1.0f);
+                        message.WriteRangedSingle(normalizedXPos, 0.0f, 1.0f, 8);
+                        message.WriteRangedSingle(normalizedYPos, 0.0f, 1.0f, 8);
+                        message.WriteRangedSingle(decal.Scale, 0f, 2f, 12);
+                    }
+                }
+            }
         }
 
-        //used when clients use the water/fire console commands
+        //used when clients use the water/fire console commands or section / decal updates are received
         public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
         {
-            float newWaterVolume  = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
-
-            bool hasFireSources = msg.ReadBoolean();
-            int fireSourceCount = 0;
-            List<Vector3> newFireSources = new List<Vector3>();
-            if (hasFireSources)
+            bool hasExtraData = msg.ReadBoolean();
+            if (hasExtraData)
             {
-                fireSourceCount = msg.ReadRangedInteger(0, 16);
+                int sectorToUpdate = msg.ReadRangedInteger(0, BackgroundSections.Count - 1);
+                int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
+                int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+                for (int i = start; i < end; i++)
+                {
+                    float colorStrength = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                    Color color = new Color(msg.ReadUInt32());
+
+                    //TODO: verify the client is close enough to this hull to paint it, that the sprayer is functional and that the color matches
+                    if (c.Character != null && c.Character.AllowInput && c.Character.SelectedItems.Any(it => it?.GetComponent<Sprayer>() != null))
+                    {
+                        BackgroundSections[i].SetColorStrength(colorStrength);
+                        BackgroundSections[i].SetColor(color);
+                    }
+                }
+                //add to pending updates to notify other clients as well
+                pendingSectionUpdates.Add(sectorToUpdate);
+            }
+            else
+            {
+                float newWaterVolume = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+
+                bool hasFireSources = msg.ReadBoolean();
+                int fireSourceCount = 0;
+                List<Vector3> newFireSources = new List<Vector3>();
+                if (hasFireSources)
+                {
+                    fireSourceCount = msg.ReadRangedInteger(0, 16);
+                    for (int i = 0; i < fireSourceCount; i++)
+                    {
+                        newFireSources.Add(new Vector3(
+                            MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
+                            MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
+                            msg.ReadRangedSingle(0.0f, 1.0f, 8)));
+                    }
+                }
+
+                if (!c.HasPermission(ClientPermissions.ConsoleCommands) ||
+                    !c.PermittedConsoleCommands.Any(command => command.names.Contains("fire") || command.names.Contains("editfire")))
+                {
+                    return;
+                }
+
+                WaterVolume = newWaterVolume;
+
                 for (int i = 0; i < fireSourceCount; i++)
                 {
-                    newFireSources.Add(new Vector3(
-                        MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
-                        MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
-                        msg.ReadRangedSingle(0.0f, 1.0f, 8)));                    
+                    Vector2 pos = new Vector2(
+                        rect.X + rect.Width * newFireSources[i].X,
+                        rect.Y - rect.Height + (rect.Height * newFireSources[i].Y));
+                    float size = newFireSources[i].Z * rect.Width;
+
+                    var newFire = i < FireSources.Count ?
+                        FireSources[i] :
+                        new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
+                    newFire.Position = pos;
+                    newFire.Size = new Vector2(size, newFire.Size.Y);
+
+                    //ignore if the fire wasn't added to this room (invalid position)?
+                    if (!FireSources.Contains(newFire))
+                    {
+                        newFire.Remove();
+                        continue;
+                    }
                 }
-            }
 
-            if (!c.HasPermission(ClientPermissions.ConsoleCommands) || 
-                !c.PermittedConsoleCommands.Any(command => command.names.Contains("fire") || command.names.Contains("editfire")))
-            {
-                return;
-            }
-
-            WaterVolume = newWaterVolume;
-
-            for (int i = 0; i < fireSourceCount; i++)
-            {
-                Vector2 pos = new Vector2(
-                    rect.X + rect.Width * newFireSources[i].X,
-                    rect.Y - rect.Height + (rect.Height * newFireSources[i].Y));
-                float size = newFireSources[i].Z * rect.Width;
-
-                var newFire = i < FireSources.Count ?
-                    FireSources[i] :
-                    new FireSource(Submarine == null ? pos : pos + Submarine.Position, null, true);
-                newFire.Position = pos;
-                newFire.Size = new Vector2(size, newFire.Size.Y);
-
-                //ignore if the fire wasn't added to this room (invalid position)?
-                if (!FireSources.Contains(newFire))
+                for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
                 {
-                    newFire.Remove();
-                    continue;
+                    FireSources[i].Remove();
+                    if (i < FireSources.Count)
+                    {
+                        FireSources.RemoveAt(i);
+                    }
                 }
-            }
-
-            for (int i = FireSources.Count - 1; i >= fireSourceCount; i--)
-            {
-                FireSources[i].Remove();
-                if (i < FireSources.Count)
-                {
-                    FireSources.RemoveAt(i);
-                }
-            }
+            }            
         }
     }
 }

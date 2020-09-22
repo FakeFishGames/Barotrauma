@@ -77,14 +77,13 @@ namespace Steamworks
 
 			System.Environment.SetEnvironmentVariable( "SteamAppId", appid.ToString() );
 			System.Environment.SetEnvironmentVariable( "SteamGameId", appid.ToString() );
-			var secure = (int)(init.Secure ? 3 : 2);
 
 			//
 			// Get other interfaces
 			//
-			if ( !SteamInternal.GameServer_Init( ipaddress, init.SteamPort, init.GamePort, init.QueryPort, secure, init.VersionString ) )
+			if ( !SteamInternal.GameServer_Init( ipaddress, init.SteamPort, init.GamePort, init.QueryPort, (int)init.Mode, init.VersionString ) )
 			{
-				throw new System.Exception( $"InitGameServer returned false ({ipaddress},{init.SteamPort},{init.GamePort},{init.QueryPort},{secure},\"{init.VersionString}\")" );
+				throw new System.Exception( $"InitGameServer returned false ({ipaddress},{init.SteamPort},{init.GamePort},{init.QueryPort},{init.Mode},\"{init.VersionString}\")" );
 			}
 
 			//

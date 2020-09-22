@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -373,15 +374,6 @@ namespace Barotrauma
                 }
             }
 
-            if (!(gameSession.GameMode is CampaignMode))
-            {
-                var shadow = new GUIFrame(new RectTransform(new Point((int)(totalWidth * 1.2f), GameMain.GraphicsHeight * 2), background.RectTransform, Anchor.Center), style: "OuterGlow")
-                {
-                    Color = Color.Black
-                };
-                shadow.RectTransform.SetAsFirstChild();
-            }
-
             Frame = background;
             return background;
         }
@@ -511,7 +503,7 @@ namespace Barotrauma
             Character character = characterInfo.Character;
             if (character == null || character.IsDead)
             {
-                if (characterInfo.IsNewHire)
+                if (character == null && characterInfo.IsNewHire)
                 {
                     statusText = TextManager.Get("CampaignCrew.NewHire");
                     statusColor = GUI.Style.Blue;
@@ -616,21 +608,8 @@ namespace Barotrauma
             sliderHolder.RectTransform.MaxSize = new Point(int.MaxValue, GUI.IntScale(25.0f));
             factionTextContent.Recalculate();
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform), onDraw: (sb, customComponent) =>
-            {
-                GUI.DrawRectangle(sb, customComponent.Rect, GUI.Style.ColorInventoryBackground, isFilled: true);
-                if (normalizedReputation < 0.5f)
-                {
-                    int barWidth = (int)((0.5f - normalizedReputation) * customComponent.Rect.Width);
-                    GUI.DrawRectangle(sb, new Rectangle(customComponent.Rect.Center.X - barWidth, customComponent.Rect.Y, barWidth, customComponent.Rect.Height), GUI.Style.Red, isFilled: true);
-                }
-                else if (normalizedReputation > 0.5f)
-                {
-                    int barWidth = (int)((normalizedReputation - 0.5f) * customComponent.Rect.Width);
-                    GUI.DrawRectangle(sb, new Rectangle(customComponent.Rect.Center.X, customComponent.Rect.Y, barWidth, customComponent.Rect.Height), GUI.Style.Green, isFilled: true);
-                }
-                GUI.DrawLine(sb, new Vector2(customComponent.Rect.Center.X, customComponent.Rect.Y - 2), new Vector2(customComponent.Rect.Center.X, customComponent.Rect.Bottom + 2), factionDescription.TextColor, width: 1);
-            });
+            new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform),
+                onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, normalizedReputation));
 
             string reputationText = ((int)Math.Round(reputation)).ToString();
             int reputationChange = (int)Math.Round( reputation - initialReputation);
@@ -649,6 +628,22 @@ namespace Barotrauma
                     reputationText,
                     textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont);
             }
+        }
+
+        public static void DrawReputationBar(SpriteBatch sb, Rectangle rect, float normalizedReputation)
+        {
+            GUI.DrawRectangle(sb, rect, GUI.Style.ColorInventoryBackground, isFilled: true);
+            if (normalizedReputation < 0.5f)
+            {
+                int barWidth = (int)((0.5f - normalizedReputation) * rect.Width);
+                GUI.DrawRectangle(sb, new Rectangle(rect.Center.X - barWidth, rect.Y, barWidth, rect.Height), GUI.Style.Red, isFilled: true);
+            }
+            else if (normalizedReputation > 0.5f)
+            {
+                int barWidth = (int)((normalizedReputation - 0.5f) * rect.Width);
+                GUI.DrawRectangle(sb, new Rectangle(rect.Center.X, rect.Y, barWidth, rect.Height), GUI.Style.Green, isFilled: true);
+            }
+            GUI.DrawLine(sb, new Vector2(rect.Center.X, rect.Y - 2), new Vector2(rect.Center.X, rect.Bottom + 2), GUI.Style.TextColor);
         }
     }
 }

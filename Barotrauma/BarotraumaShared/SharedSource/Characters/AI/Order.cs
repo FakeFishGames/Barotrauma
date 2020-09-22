@@ -36,6 +36,9 @@ namespace Barotrauma
             Order = orderInfo.Order;
             OrderOption = orderInfo.OrderOption;
         }
+
+        public bool MatchesOrder(Order order, string option) =>
+            order.Identifier == Order.Identifier && option == OrderOption && order.TargetEntity == Order.TargetEntity;
     }
 
     class Order
@@ -100,8 +103,7 @@ namespace Barotrauma
 
         public Character OrderGiver;
 
-        private readonly OrderCategory? category;
-        public OrderCategory? Category => category;
+        public OrderCategory? Category { get; private set; }
 
         //legacy support
         public readonly string[] AppropriateJobs;
@@ -225,7 +227,7 @@ namespace Barotrauma
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
             var category = orderElement.GetAttributeString("category", null);
-            if (!string.IsNullOrWhiteSpace(category)) { this.category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
+            if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             Weight = orderElement.GetAttributeFloat(0.0f, "weight");
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
             AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
@@ -299,7 +301,7 @@ namespace Barotrauma
             Weight              = prefab.Weight;
             MustSetTarget       = prefab.MustSetTarget;
             AppropriateSkill    = prefab.AppropriateSkill;
-            category            = prefab.Category;
+            Category            = prefab.Category;
             MustManuallyAssign  = prefab.MustManuallyAssign;
 
             OrderGiver = orderGiver;

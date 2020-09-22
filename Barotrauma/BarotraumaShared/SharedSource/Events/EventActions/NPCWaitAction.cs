@@ -19,6 +19,8 @@ namespace Barotrauma
 
         private List<Character> affectedNpcs = null;
 
+        private AIObjectiveGoTo gotoObjective;
+
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
@@ -31,21 +33,18 @@ namespace Barotrauma
 
                 if (Wait)
                 {
-                    var newObjective = new AIObjectiveGoTo(npc, npc, humanAiController.ObjectiveManager, repeat: true)
+                    gotoObjective = new AIObjectiveGoTo(npc, npc, humanAiController.ObjectiveManager, repeat: true)
                     {
                         OverridePriority = 100.0f
                     };
-                    humanAiController.ObjectiveManager.AddObjective(newObjective);
+                    humanAiController.ObjectiveManager.AddObjective(gotoObjective);
                     humanAiController.ObjectiveManager.WaitTimer = 0.0f;
                 }
                 else
                 {
-                    foreach (var goToObjective in humanAiController.ObjectiveManager.GetActiveObjectives<AIObjectiveGoTo>())
+                    if (gotoObjective != null)
                     {
-                        if (goToObjective.Target == npc)
-                        {
-                            goToObjective.Abandon = true;
-                        }
+                        gotoObjective.Abandon = true;
                     }
                 }
             }
@@ -64,13 +63,10 @@ namespace Barotrauma
                 foreach (var npc in affectedNpcs)
                 {
                     if (npc.Removed || !(npc.AIController is HumanAIController humanAiController)) { continue; }
-                    foreach (var goToObjective in humanAiController.ObjectiveManager.GetActiveObjectives<AIObjectiveGoTo>())
+                    if (gotoObjective != null)
                     {
-                        if (goToObjective.Target == npc)
-                        {
-                            goToObjective.Abandon = true;
-                        }
-                    }
+                        gotoObjective.Abandon = true;
+                    }                    
                 }
                 affectedNpcs = null;
             }

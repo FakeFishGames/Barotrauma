@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Networking;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
@@ -6,13 +7,10 @@ using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -21,7 +19,7 @@ namespace Barotrauma
     class ServerListScreen : Screen
     {
         //how often the client is allowed to refresh servers
-        private TimeSpan AllowedRefreshInterval = new TimeSpan(0, 0, 3);
+        private readonly TimeSpan AllowedRefreshInterval = new TimeSpan(0, 0, 3);
 
         private GUIFrame menu;
 
@@ -31,11 +29,19 @@ namespace Barotrauma
         private GUIButton joinButton;
         private ServerInfo selectedServer;
 
+        private GUIButton scanServersButton;
+
         //friends list
         private GUILayoutGroup friendsButtonHolder;
 
         private GUIButton friendsDropdownButton;
         private GUIListBox friendsDropdown;
+
+        //Workshop downloads
+        private GUIFrame workshopDownloadsFrame = null;
+        private Steamworks.Ugc.Item? currentlyDownloadingWorkshopItem = null;
+        private Dictionary<ulong, Steamworks.Ugc.Item?> pendingWorkshopDownloads = null;
+        private string autoConnectName; private string autoConnectEndpoint;
 
         private class FriendInfo
         {
@@ -558,7 +564,7 @@ namespace Barotrauma
                 OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu
             };
 
-            new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
+            scanServersButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.9f), buttonContainer.RectTransform),
                 TextManager.Get("ServerListRefresh"))
             {
 				OnClicked = (btn, userdata) => { RefreshServers(); return true; }
@@ -761,7 +767,7 @@ namespace Barotrauma
             info.GameStarted = Screen.Selected != GameMain.NetLobbyScreen;
             info.GameVersion = GameMain.Version.ToString();
             info.MaxPlayers = serverSettings.MaxPlayers;
-            info.PlayStyle = PlayStyle.SomethingDifferent;
+            info.PlayStyle = serverSettings.PlayStyle;
             info.RespondedToSteamQuery = true;
             info.UsingWhiteList = serverSettings.Whitelist.Enabled;
             info.TraitorsEnabled = serverSettings.TraitorsEnabled;
@@ -892,11 +898,11 @@ namespace Barotrauma
                     case "ServerListCompatible":                        
                         bool? s1Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s1.GameVersion);
                         if (!s1.ContentPackageHashes.Any()) { s1Compatible = null; }
-                        if (s1Compatible.HasValue) { s1Compatible = s1Compatible.Value && s1.ContentPackagesMatch(GameMain.SelectedPackages); };
+                        if (s1Compatible.HasValue) { s1Compatible = s1Compatible.Value && s1.ContentPackagesMatch(); };
 
                         bool? s2Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s2.GameVersion);
                         if (!s2.ContentPackageHashes.Any()) { s2Compatible = null; }
-                        if (s2Compatible.HasValue) { s2Compatible = s2Compatible.Value && s2.ContentPackagesMatch(GameMain.SelectedPackages); };
+                        if (s2Compatible.HasValue) { s2Compatible = s2Compatible.Value && s2.ContentPackagesMatch(); };
 
                         //convert to int to make sorting easier
                         //1 Compatible
@@ -946,6 +952,9 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+
+            pendingWorkshopDownloads?.Clear();
+            workshopDownloadsFrame = null;
         }
 
         public override void Update(double deltaTime)
@@ -963,6 +972,43 @@ namespace Barotrauma
                     !friendsDropdownButton.Rect.Contains(PlayerInput.MousePosition))
                 {
                     friendsDropdown.Visible = false;
+                }
+            }
+
+            if (currentlyDownloadingWorkshopItem?.IsInstalled ?? true)
+            {
+                if (pendingWorkshopDownloads?.Any() ?? false)
+                {
+                    Steamworks.Ugc.Item? item = pendingWorkshopDownloads.Values.FirstOrDefault(it => it != null);
+                    if (item != null)
+                    {
+                        ulong itemId = item.Value.Id;
+                        currentlyDownloadingWorkshopItem = item;
+                        SteamManager.SubscribeToWorkshopItem(itemId, () =>
+                        {
+                            pendingWorkshopDownloads.Remove(itemId);
+
+                            if (SteamManager.CheckWorkshopItemInstalled(item))
+                            {
+                                SteamManager.UninstallWorkshopItem(item, false, out _);
+                            }
+
+                            if (SteamManager.InstallWorkshopItem(item, out string errorMsg, enableContentPackage: false, suppressInstallNotif: true))
+                            {
+                                workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Green);
+                            }
+                            else
+                            {
+                                workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Red);
+                                DebugConsole.ThrowError(errorMsg);
+                            }
+                        });
+                    }
+                }
+                else if (!string.IsNullOrEmpty(autoConnectEndpoint))
+                {
+                    JoinServer(autoConnectEndpoint, autoConnectName);
+                    autoConnectEndpoint = null;
                 }
             }
         }
@@ -992,7 +1038,7 @@ namespace Barotrauma
                 else
                 {
                     bool incompatible =
-                        (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch(GameMain.Config.SelectedContentPackages)) ||
+                        (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch()) ||
                         (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
 
                     child.Visible =
@@ -1018,7 +1064,7 @@ namespace Barotrauma
                 {
                     var playStyle = (PlayStyle)tickBox.UserData;
 
-                    if (!tickBox.Selected && serverInfo.PlayStyle == playStyle)
+                    if (!tickBox.Selected && (serverInfo.PlayStyle == playStyle || !serverInfo.PlayStyle.HasValue))
                     {
                         child.Visible = false;
                         break;
@@ -1136,7 +1182,7 @@ namespace Barotrauma
                     Port = port.ToString(),
                     QueryPort = NetConfig.DefaultQueryPort.ToString(),
                     GameVersion = GameMain.Version.ToString(),
-                    PlayStyle = PlayStyle.Serious
+                    PlayStyle = null
                 };
 
                 var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
@@ -1546,6 +1592,7 @@ namespace Barotrauma
                     {
                         CanBeFocused = false
                     };
+                    scanServersButton.Enabled = false;
                 }
                 else
                 {
@@ -1555,6 +1602,7 @@ namespace Barotrauma
                         AddToServerList(info);
                         QueueInfoQuery(info);
                     }
+                    scanServersButton.Enabled = true;
                 }
             }
             else
@@ -1712,7 +1760,7 @@ namespace Barotrauma
                 CanBeFocused = false,
                 Selected =
                     (NetworkMember.IsCompatible(GameMain.Version.ToString(), serverInfo.GameVersion) ?? true) &&
-                    serverInfo.ContentPackagesMatch(GameMain.SelectedPackages),
+                    serverInfo.ContentPackagesMatch(),
                 UserData = "compatible"
             };
             
@@ -1818,18 +1866,42 @@ namespace Barotrauma
 
                 for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
-                    if (!GameMain.SelectedPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]))
+                    bool listAsIncompatible = false;
+                    if (serverInfo.ContentPackageWorkshopIds[i] == 0)
+                    {
+                        listAsIncompatible = !GameMain.Config.AllEnabledPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]);
+                    }
+                    else
+                    {
+                        listAsIncompatible = GameMain.Config.AllEnabledPackages.Any(cp => cp.MD5hash.Hash != serverInfo.ContentPackageHashes[i] &&
+                                                                                          cp.SteamWorkshopId == serverInfo.ContentPackageWorkshopIds[i]);
+                    }
+                    if (listAsIncompatible)
                     {
                         if (toolTip != "") toolTip += "\n";
                         toolTip += TextManager.GetWithVariables("ServerListIncompatibleContentPackage", new string[2] { "[contentpackage]", "[hash]" },
                             new string[2] { serverInfo.ContentPackageNames[i], Md5Hash.GetShortHash(serverInfo.ContentPackageHashes[i]) });
                     }
                 }
-                
+
                 serverContent.Children.ForEach(c => c.ToolTip = toolTip);
 
                 serverName.TextColor *= 0.5f;
                 serverPlayers.TextColor *= 0.5f;
+            }
+            else
+            {
+                string toolTip = "";
+                for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
+                {
+                    if (!GameMain.Config.AllEnabledPackages.Any(cp => cp.MD5hash.Hash == serverInfo.ContentPackageHashes[i]))
+                    {
+                        if (toolTip != "") toolTip += "\n";
+                        toolTip += TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", serverInfo.ContentPackageNames[i]);
+                        break;
+                    }
+                }
+                serverContent.Children.ForEach(c => c.ToolTip = toolTip);
             }
 
             serverContent.Recalculate();
@@ -1921,17 +1993,17 @@ namespace Barotrauma
                 serverList.ClearChildren();
                 new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), TextManager.GetWithVariable("MasterServerErrorException", "[error]", masterServerResponse.ErrorException.ToString()));
             }
-            else if (masterServerResponse.StatusCode != System.Net.HttpStatusCode.OK)
+            else if (masterServerResponse.StatusCode != HttpStatusCode.OK)
             {
                 serverList.ClearChildren();
                 
                 switch (masterServerResponse.StatusCode)
                 {
-                    case System.Net.HttpStatusCode.NotFound:
+                    case HttpStatusCode.NotFound:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"),
                            TextManager.GetWithVariable("MasterServerError404", "[masterserverurl]", NetConfig.MasterServerUrl));
                         break;
-                    case System.Net.HttpStatusCode.ServiceUnavailable:
+                    case HttpStatusCode.ServiceUnavailable:
                         new GUIMessageBox(TextManager.Get("MasterServerErrorLabel"), 
                             TextManager.Get("MasterServerErrorUnavailable"));
                         break;
@@ -1956,6 +2028,79 @@ namespace Barotrauma
         {
             masterServerResponse = response;
             masterServerResponded = true;
+        }
+
+        public void DownloadWorkshopItems(IEnumerable<ulong> ids, string serverName, string endPointString)
+        {
+            if (workshopDownloadsFrame != null) { return; }
+            int rowCount = ids.Count() + 2;
+
+            autoConnectName = serverName; autoConnectEndpoint = endPointString;
+
+            workshopDownloadsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), null, Color.Black * 0.5f);
+            pendingWorkshopDownloads = new Dictionary<ulong, Steamworks.Ugc.Item?>();
+
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f + 0.03f * rowCount), workshopDownloadsFrame.RectTransform, Anchor.Center, Pivot.Center));
+            var innerLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, (float)rowCount / (float)(rowCount + 3)), innerFrame.RectTransform, Anchor.Center, Pivot.Center));
+
+            foreach (ulong id in ids)
+            {
+                pendingWorkshopDownloads.Add(id, null);
+
+                var itemLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f / rowCount), innerLayout.RectTransform), true, Anchor.CenterLeft)
+                {
+                    UserData = id
+                };
+                TaskPool.Add("RetrieveWorkshopItemData", Steamworks.SteamUGC.QueryFileAsync(id), (t) =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        TaskPool.PrintTaskExceptions(t, $"Failed to retrieve Workshop item info (ID {id})");
+                        return;
+                    }
+                    Steamworks.Ugc.Item? item = ((Task<Steamworks.Ugc.Item?>)t).Result;
+
+                    if (!item.HasValue)
+                    {
+                        DebugConsole.ThrowError($"Failed to find a Steam Workshop item with the ID {id}.");
+                        return;
+                    }
+
+                    if (pendingWorkshopDownloads.ContainsKey(id))
+                    {
+                        pendingWorkshopDownloads[id] = item;
+
+                        new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.67f), itemLayout.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), item.Value.Title);
+
+                        new GUIProgressBar(new RectTransform(new Vector2(0.6f, 0.67f), itemLayout.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), 0f, Color.Lime)
+                        {
+                            ProgressGetter = () =>
+                            {
+                                if (item.Value.IsInstalled) { return 1.0f; }
+                                else if (!item.Value.IsDownloading) { return 0.0f; }
+                                return item.Value.DownloadAmount;
+                            }
+                        };
+                    }
+                });
+            }
+
+            var buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 2.0f / rowCount), innerLayout.RectTransform), true, Anchor.CenterLeft)
+            {
+                UserData = "buttons"
+            };
+
+            new GUIButton(new RectTransform(new Vector2(0.3f, 0.67f), buttonLayout.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft), TextManager.Get("Cancel"))
+            {
+                OnClicked = (btn, obj) =>
+                {
+                    autoConnectEndpoint = null;
+                    autoConnectName = null;
+                    pendingWorkshopDownloads.Clear();
+                    workshopDownloadsFrame = null;
+                    return true;
+                }
+            };
         }
 
         private bool JoinServer(string endpoint, string serverName)
@@ -2113,6 +2258,8 @@ namespace Barotrauma
             friendPopup?.AddToGUIUpdateList();
 
             friendsDropdown?.AddToGUIUpdateList();
+
+            workshopDownloadsFrame?.AddToGUIUpdateList();
         }
         
     }

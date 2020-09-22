@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Barotrauma.Steam;
+using System;
 
 namespace Barotrauma.Networking
 {
@@ -9,7 +10,7 @@ namespace Barotrauma.Networking
         public SteamP2PConnection(string name, UInt64 steamId)
         {
             SteamID = steamId;
-            EndPointString = SteamID.ToString();
+            EndPointString = SteamManager.SteamIDUInt64ToString(SteamID);
             Name = name;
             Heartbeat();
         }
@@ -22,6 +23,11 @@ namespace Barotrauma.Networking
         public void Heartbeat()
         {
             Timeout = TimeoutThreshold;
+        }
+
+        public override bool EndpointMatches(string endPoint)
+        {
+            return SteamManager.SteamIDStringToUInt64(endPoint) == SteamID;
         }
     }
 }

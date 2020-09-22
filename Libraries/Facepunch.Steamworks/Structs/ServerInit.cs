@@ -7,6 +7,14 @@ using System.Text;
 
 namespace Steamworks
 {
+    public enum InitServerMode
+    {
+        Invalid = 0,
+        NoAuthentication = 1,
+        Authentication = 2,
+        AuthenticationSecure = 3
+    };
+
     /// <summary>
     /// Used to set up the server. 
     /// The variables in here are all required to be set, and can't be changed once the server is created.
@@ -17,7 +25,7 @@ namespace Steamworks
         public ushort SteamPort;
         public ushort GamePort;
         public ushort QueryPort;
-        public bool Secure;
+        public InitServerMode Mode;
 
         /// <summary>
         /// The version string is usually in the form x.x.x.x, and is used by the master server to detect when the server is out of date.
@@ -49,7 +57,7 @@ namespace Steamworks
             GameDescription = gameDesc;
 			GamePort = 27015;
 			QueryPort = 27016;
-			Secure = true;
+            Mode = InitServerMode.Authentication;
 			VersionString = "1.0.0.0";
 			IpAddress = null;
 			SteamPort = 0;

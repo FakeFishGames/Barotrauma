@@ -237,7 +237,7 @@ namespace Barotrauma
 #endif
             if (this is CharacterInventory)
             {
-                if (prevInventory != this)
+                if (prevInventory != this && prevOwnerInventory != this)
                 {
                     HumanAIController.ItemTaken(item, user);
                 }
@@ -405,7 +405,7 @@ namespace Barotrauma
                     if (item == null) { continue; }
                     if (item.OwnInventory != null)
                     {
-                        match = item.OwnInventory.FindItem(predicate, true);
+                        match = item.OwnInventory.FindItem(predicate, recursive: true);
                         if (match != null)
                         {
                             return match;
@@ -414,6 +414,27 @@ namespace Barotrauma
                 }
             }
             return match;
+        }
+
+        public List<Item> FindAllItems(Func<Item, bool> predicate, bool recursive = false, List<Item> list = null)
+        {
+            list ??= new List<Item>();
+            foreach (var item in Items)
+            {
+                if (item == null) { continue; }
+                if (predicate(item))
+                {
+                    list.Add(item);
+                }
+                if (recursive)
+                {
+                    if (item.OwnInventory != null)
+                    {
+                        item.OwnInventory.FindAllItems(predicate, recursive: true, list);
+                    }
+                }
+            }
+            return list;
         }
 
         public Item FindItemByTag(string tag, bool recursive = false)

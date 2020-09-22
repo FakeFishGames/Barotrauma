@@ -78,11 +78,10 @@ namespace Barotrauma
                 }
             }
 
-            if (!aiController.Enabled) { return; }
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
             if (Controlled == this) { return; }
-            
-            if (!IsRemotelyControlled)
+
+            if (!IsRemotelyControlled && aiController != null && aiController.Enabled)
             {
                 aiController.Update(deltaTime);
             }

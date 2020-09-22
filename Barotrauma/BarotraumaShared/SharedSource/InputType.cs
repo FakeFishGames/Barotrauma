@@ -18,5 +18,10 @@ namespace Barotrauma
         Shoot,
         Command,
         ToggleInventory
+#if DEBUG
+        , 
+        NextFireMode,
+        PreviousFireMode
+#endif
     }
 }

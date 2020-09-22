@@ -1,22 +1,18 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.IO;
+using Barotrauma.Networking;
 using RestSharp;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using RestSharp.Contrib;
 using System.Xml.Linq;
 using Color = Microsoft.Xna.Framework.Color;
-using System.Runtime.InteropServices;
-using NLog.Fluent;
 
 namespace Barotrauma.Steam
 {
     static partial class SteamManager
     {
-        private static Dictionary<Steamworks.Data.PublishedFileId, Task> modCopiesInProgress = new Dictionary<Steamworks.Data.PublishedFileId, Task>();
+        private static readonly Dictionary<Steamworks.Data.PublishedFileId, Task> modCopiesInProgress = new Dictionary<Steamworks.Data.PublishedFileId, Task>();
 
         private static void InitializeProjectSpecific()
         {
@@ -49,6 +45,9 @@ namespace Barotrauma.Steam
             }
             catch (Exception e)
             {
+#if !DEBUG
+                DebugConsole.ThrowError("SteamManager initialization threw an exception", e);
+#endif
                 isInitialized = false;
                 initializationErrors.Add("SteamClientInitFailed");
             }
@@ -82,28 +81,6 @@ namespace Barotrauma.Steam
             else
             {
                 Steamworks.SteamNetworkingUtils.DebugLevel = Steamworks.NetDebugOutput.None;
-            }
-        }
-
-
-        private static void UpdateProjectSpecific(float deltaTime)
-        {
-            if (ugcSubscriptionTasks != null)
-            {
-                var ugcSubscriptionKeys = ugcSubscriptionTasks.Keys.ToList();
-                foreach (var key in ugcSubscriptionKeys)
-                {
-                    var task = ugcSubscriptionTasks[key];
-
-                    if (task.IsCompleted)
-                    {
-                        if (!task.IsCompletedSuccessfully)
-                        {
-                            DebugConsole.ThrowError("Failed to subscribe to a Steam Workshop item with id " + key.ToString() + ": TaskStatus = " + task.Status.ToString());
-                        }
-                        ugcSubscriptionTasks.Remove(key);
-                    }
-                }
             }
         }
 
@@ -209,13 +186,13 @@ namespace Barotrauma.Steam
                 return;
             }
             
-            var contentPackages = GameMain.Config.SelectedContentPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
+            var contentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent);
             
             currentLobby?.SetData("name", serverSettings.ServerName);
             currentLobby?.SetData("playercount", (GameMain.Client?.ConnectedClients?.Count ?? 0).ToString());
             currentLobby?.SetData("maxplayernum", serverSettings.MaxPlayers.ToString());
             //currentLobby?.SetData("hostipaddress", lobbyIP);
-            string pingLocation = Steamworks.SteamNetworkingUtils.LocalPingLocation.ToString();
+            string pingLocation = Steamworks.SteamNetworkingUtils.LocalPingLocation?.ToString();
             currentLobby?.SetData("pinglocation", pingLocation ?? "");
             currentLobby?.SetData("lobbyowner", SteamIDUInt64ToString(GetSteamID()));
             currentLobby?.SetData("haspassword", serverSettings.HasPassword.ToString());
@@ -225,7 +202,7 @@ namespace Barotrauma.Steam
 
             currentLobby?.SetData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             currentLobby?.SetData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.MD5hash.Hash)));
-            currentLobby?.SetData("contentpackageurl", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopUrl ?? "")));
+            currentLobby?.SetData("contentpackageid", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopId)));
             currentLobby?.SetData("usingwhitelist", (serverSettings.Whitelist != null && serverSettings.Whitelist.Enabled).ToString());
             currentLobby?.SetData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
             currentLobby?.SetData("subselectionmode", serverSettings.SubSelectionMode.ToString());
@@ -280,9 +257,8 @@ namespace Barotrauma.Steam
         {
             if (!isInitialized) { return false; }
 
-
             int doneTasks = 0;
-            Action taskDone = () =>
+            void taskDone()
             {
                 doneTasks++;
                 if (doneTasks >= 2)
@@ -290,52 +266,64 @@ namespace Barotrauma.Steam
                     serverQueryFinished?.Invoke();
                     serverQueryFinished = null;
                 }
-            };
+            }
 
             //TODO: find a better strategy to fetch all lobbies, this is gonna take forever if we actually have 10000 lobbies
             Steamworks.Data.LobbyQuery lobbyQuery = Steamworks.SteamMatchmaking.CreateLobbyQuery().FilterDistanceWorldwide().WithMaxResults(10000);
 
+            Steamworks.Dispatch.OnDebugCallback = (callbackType, contents, isServer) =>
+            {
+                DebugConsole.NewMessage($"{callbackType}: " + contents, Color.Yellow);
+            };
             TaskPool.Add("LobbyQueryRequest", lobbyQuery.RequestAsync(),
             (t) =>
             {
-                var lobbies = ((Task<Steamworks.Data.Lobby[]>)t).Result;
-                foreach (var lobby in lobbies)
-                {
-                    if (string.IsNullOrEmpty(lobby.GetData("name"))) { continue; }
-
-                    ServerInfo serverInfo = new ServerInfo();
-                    serverInfo.ServerName = lobby.GetData("name");
-                    serverInfo.OwnerID = SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
-                    serverInfo.LobbyID = lobby.Id;
-                    bool.TryParse(lobby.GetData("haspassword"), out serverInfo.HasPassword);
-                    serverInfo.PlayerCount = int.TryParse(lobby.GetData("playercount"), out int playerCount) ? playerCount : 0;
-                    serverInfo.MaxPlayers = int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers) ? maxPlayers : 1;
-                    serverInfo.RespondedToSteamQuery = true;
-
-                    AssignLobbyDataToServerInfo(lobby, serverInfo);
-
-                    addToServerList(serverInfo);
-                }
-                taskDone();
+                Steamworks.Dispatch.OnDebugCallback = null;
                 if (t.Status == TaskStatus.Faulted)
                 {
                     TaskPool.PrintTaskExceptions(t, "Failed to retrieve SteamP2P lobbies");
+                    taskDone();
                     return;
                 }
+                var lobbies = ((Task<Steamworks.Data.Lobby[]>)t).Result;
+                if (lobbies != null)
+                {
+                    foreach (var lobby in lobbies)
+                    {
+                        if (string.IsNullOrEmpty(lobby.GetData("name"))) { continue; }
+
+                        ServerInfo serverInfo = new ServerInfo();
+                        serverInfo.ServerName = lobby.GetData("name");
+                        serverInfo.OwnerID = SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
+                        serverInfo.LobbyID = lobby.Id;
+                        bool.TryParse(lobby.GetData("haspassword"), out serverInfo.HasPassword);
+                        serverInfo.PlayerCount = int.TryParse(lobby.GetData("playercount"), out int playerCount) ? playerCount : 0;
+                        serverInfo.MaxPlayers = int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers) ? maxPlayers : 1;
+                        serverInfo.RespondedToSteamQuery = true;
+
+                        AssignLobbyDataToServerInfo(lobby, serverInfo);
+
+                        addToServerList(serverInfo);
+                    }
+                }
+                taskDone();
             });
 
             Steamworks.ServerList.Internet serverQuery = new Steamworks.ServerList.Internet();
-            Action<Steamworks.Data.ServerInfo, bool> onServer = (Steamworks.Data.ServerInfo info, bool responsive) =>
+            void onServer(Steamworks.Data.ServerInfo info, bool responsive)
             {
                 if (string.IsNullOrEmpty(info.Name)) { return; }
 
-                ServerInfo serverInfo = new ServerInfo();
-                serverInfo.ServerName = info.Name;
-                serverInfo.IP = info.Address.ToString();
-                serverInfo.Port = info.ConnectionPort.ToString();
-                serverInfo.PlayerCount = info.Players;
-                serverInfo.MaxPlayers = info.MaxPlayers;
-                serverInfo.RespondedToSteamQuery = responsive;
+                ServerInfo serverInfo = new ServerInfo
+                {
+                    ServerName = info.Name,
+                    HasPassword = info.Passworded,
+                    IP = info.Address.ToString(),
+                    Port = info.ConnectionPort.ToString(),
+                    PlayerCount = info.Players,
+                    MaxPlayers = info.MaxPlayers,
+                    RespondedToSteamQuery = responsive
+                };
 
                 if (responsive)
                 {
@@ -344,11 +332,11 @@ namespace Barotrauma.Steam
                         {
                             if (t.Status == TaskStatus.Faulted)
                             {
-                                TaskPool.PrintTaskExceptions(t, "Failed to retrieve rules for "+info.Name);
+                                TaskPool.PrintTaskExceptions(t, "Failed to retrieve rules for " + info.Name);
                                 return;
                             }
 
-                            var rules = ((Task<Dictionary<string,string>>)t).Result;
+                            var rules = ((Task<Dictionary<string, string>>)t).Result;
                             AssignServerRulesToServerInfo(rules, serverInfo);
 
                             CrossThread.RequestExecutionOnMainThread(() =>
@@ -365,7 +353,7 @@ namespace Barotrauma.Steam
                     });
                 }
 
-            };
+            }
             serverQuery.OnResponsiveServer += (info) => onServer(info, true);
             serverQuery.OnUnresponsiveServer += (info) => onServer(info, false);
 
@@ -393,11 +381,20 @@ namespace Barotrauma.Steam
 
             serverInfo.ContentPackageNames.AddRange(lobby.GetData("contentpackage").Split(','));
             serverInfo.ContentPackageHashes.AddRange(lobby.GetData("contentpackagehash").Split(','));
-            serverInfo.ContentPackageWorkshopUrls.AddRange(lobby.GetData("contentpackageurl").Split(','));
+
+            string workshopIdData = lobby.GetData("contentpackageid");
+            if (!string.IsNullOrEmpty(workshopIdData))
+            {
+                serverInfo.ContentPackageWorkshopIds.AddRange(ParseWorkshopIds(workshopIdData));
+            }
+            else
+            {
+                string[] workshopUrls = lobby.GetData("contentpackageurl").Split(',');
+                serverInfo.ContentPackageWorkshopIds.AddRange(WorkshopUrlsToIds(workshopUrls));
+            }
 
             serverInfo.UsingWhiteList = getLobbyBool("usingwhitelist");
-            SelectionMode selectionMode;
-            if (Enum.TryParse(lobby.GetData("modeselectionmode"), out selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
+            if (Enum.TryParse(lobby.GetData("modeselectionmode"), out SelectionMode selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
             if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
 
             serverInfo.AllowSpectating = getLobbyBool("allowspectating");
@@ -412,11 +409,12 @@ namespace Barotrauma.Steam
             if (Enum.TryParse(lobby.GetData("playstyle"), out PlayStyle playStyle)) serverInfo.PlayStyle = playStyle;
 
             if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
-                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopIds.Count)
             {
                 //invalid contentpackage info
                 serverInfo.ContentPackageNames.Clear();
                 serverInfo.ContentPackageHashes.Clear();
+                serverInfo.ContentPackageWorkshopIds.Clear();
             }
 
             string pingLocation = lobby.GetData("pinglocation");
@@ -449,10 +447,18 @@ namespace Barotrauma.Steam
 
             serverInfo.ContentPackageNames.Clear();
             serverInfo.ContentPackageHashes.Clear();
-            serverInfo.ContentPackageWorkshopUrls.Clear();
+            serverInfo.ContentPackageWorkshopIds.Clear();
             if (rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(rules["contentpackage"].Split(','));
             if (rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(rules["contentpackagehash"].Split(','));
-            if (rules.ContainsKey("contentpackageurl")) serverInfo.ContentPackageWorkshopUrls.AddRange(rules["contentpackageurl"].Split(','));
+            if (rules.ContainsKey("contentpackageid"))
+            {
+                serverInfo.ContentPackageWorkshopIds.AddRange(ParseWorkshopIds(rules["contentpackageid"]));
+            }
+            else if (rules.ContainsKey("contentpackageurl"))
+            {
+                string[] workshopUrls = rules["contentpackageurl"].Split(',');
+                serverInfo.ContentPackageWorkshopIds.AddRange(WorkshopUrlsToIds(workshopUrls));
+            }
 
             if (rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = rules["usingwhitelist"] == "True";
             if (rules.ContainsKey("modeselectionmode"))
@@ -479,37 +485,16 @@ namespace Barotrauma.Steam
             }
 
             if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
-                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopUrls.Count)
+                serverInfo.ContentPackageHashes.Count != serverInfo.ContentPackageWorkshopIds.Count)
             {
                 //invalid contentpackage info
                 serverInfo.ContentPackageNames.Clear();
                 serverInfo.ContentPackageHashes.Clear();
+                serverInfo.ContentPackageWorkshopIds.Clear();
             }
         }
 
-        public static ulong GetWorkshopItemIDFromUrl(string url)
-        {
-            try
-            {
-                Uri uri = new Uri(url);
-                string idStr = HttpUtility.ParseQueryString(uri.Query).Get("id");
-                if (ulong.TryParse(idStr, out ulong id))
-                {
-                    return id;
-                }
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to get Workshop item ID from the url \"" + url + "\"!", e);
-            }
-
-            return 0;
-        }
-
-        #region Connecting to servers
-
-        //TODO: reimplement server list queries
-
+#region Connecting to servers
         private static Steamworks.AuthTicket currentTicket = null;
         public static Steamworks.AuthTicket GetAuthSessionTicket()
         {
@@ -545,9 +530,9 @@ namespace Barotrauma.Steam
             Steamworks.SteamUser.EndAuthSession(clientSteamID);
         }
 
-        #endregion
+#endregion
 
-        #region Workshop
+#region Workshop
         
         public const string WorkshopItemPreviewImageFolder = "Workshop";
         public const string PreviewImageName = "PreviewImage.png";
@@ -620,7 +605,8 @@ namespace Barotrauma.Steam
                 .WithLongDescription();
             if (requireTags != null) query.WithTags(requireTags);
 
-            TaskPool.Add("GetPopularWorkshopItems", GetWorkshopItemsAsync(query, amount, (item) => !item.IsSubscribed), (task) => {
+            TaskPool.Add("GetPopularWorkshopItems", GetWorkshopItemsAsync(query, amount, (item) => !item.IsSubscribed), (task) => 
+            {
                 var entries = ((Task<List<Steamworks.Ugc.Item>>)task).Result;
 
                 //count the number of each unique tag
@@ -669,47 +655,82 @@ namespace Barotrauma.Steam
             TaskPool.Add("GetPublishedWorkshopItems", GetWorkshopItemsAsync(query), (task) => { onItemsFound?.Invoke(((Task<List<Steamworks.Ugc.Item>>)task).Result); });
         }
 
-        private static Dictionary<ulong, Task> ugcSubscriptionTasks;
+        private static readonly HashSet<ulong> pendingWorkshopSubscriptions = new HashSet<ulong>();
 
-        public static void SubscribeToWorkshopItem(string itemUrl)
-        {
-            if (!isInitialized) return;
-
-            ulong id = GetWorkshopItemIDFromUrl(itemUrl);
-
-            SubscribeToWorkshopItem(id);
-        }
-
-        public static void SubscribeToWorkshopItem(ulong id)
+        public static void SubscribeToWorkshopItem(ulong id, Action onInstalled = null)
         {
             if (!isInitialized) return;
 
             if (id == 0) { return; }
 
-            if (ugcSubscriptionTasks?.ContainsKey(id) ?? false) { return; }
+            if (pendingWorkshopSubscriptions.Contains(id)) { return; }
 
-            ugcSubscriptionTasks ??= new Dictionary<ulong, Task>();
-            ugcSubscriptionTasks.Add(id, Task.Run(async () =>
-            {
-                Steamworks.Ugc.Item? item = await Steamworks.SteamUGC.QueryFileAsync(id);
+            pendingWorkshopSubscriptions.Add(id);
+            TaskPool.Add(
+                $"SubscribeToWorkshopItem({id})",
+                Task.Run(async () =>
+                {
+                    Steamworks.Ugc.Item? item = await Steamworks.SteamUGC.QueryFileAsync(id);
 
-                if (!item.HasValue)
-                {
-                    DebugConsole.ThrowError("Failed to find a Steam Workshop item with the ID " + id.ToString() + ".");
-                    return;
-                }
+                    if (!item.HasValue)
+                    {
+                        DebugConsole.ThrowError($"Failed to find a Steam Workshop item with the ID {id}.");
+                        return null;
+                    }
 
-                bool subscribed = await item?.Subscribe();
-                if (!subscribed)
+                    if (!(item?.IsSubscribed ?? false))
+                    {
+                        bool subscribed = await item?.Subscribe();
+                        if (!subscribed)
+                        {
+                            DebugConsole.ThrowError($"Failed to subscribe to Steam Workshop item with the ID {id}.");
+                            return null;
+                        }
+                    }
+
+                    return item;
+                }),
+                (t) =>
                 {
-                    DebugConsole.ThrowError("Failed to subscribe to Steam Workshop item with the ID " + id.ToString() + ".");
-                }
-                bool downloading = item?.Download() ?? false;
-                if (!downloading)
-                {
-                    DebugConsole.ThrowError("Failed to start downloading Steam Workshop item with the ID " + id.ToString() + ".");
-                }
-            }));
+                    bool shouldCleanup = true;
+                    if (t.IsFaulted)
+                    {
+                        TaskPool.PrintTaskExceptions(t, $"Workshop subscription task {id} faulted");
+                    }
+                    else
+                    {
+                        var item = ((Task<Steamworks.Ugc.Item?>)t).Result;
+                        if (item != null)
+                        {
+                            if (item?.IsInstalled ?? false)
+                            {
+                                onInstalled?.Invoke();
+                            }
+                            else
+                            {
+                                void _onInstalled()
+                                {
+                                    onInstalled?.Invoke();
+                                    pendingWorkshopSubscriptions.Remove(id);
+                                }
+                                bool downloading = item?.Download(_onInstalled) ?? false;
+                                if (!downloading)
+                                {
+                                    DebugConsole.ThrowError($"Failed to start downloading Steam Workshop item with the ID {id}.");
+                                }
+                                else
+                                {
+                                    shouldCleanup = false;
+                                }
+                            }
+                        }
+
+                        if (shouldCleanup)
+                        {
+                            pendingWorkshopSubscriptions.Remove(id);
+                        }
+                    }
+                });
         }
 
         public static void CreateWorkshopItemStaging(ContentPackage contentPackage, out Steamworks.Ugc.Editor? itemEditor)
@@ -790,9 +811,9 @@ namespace Barotrauma.Steam
                 itemEditor = itemEditor?.WithPrivateVisibility();
             }
 
-            if (!CheckWorkshopItemEnabled(existingItem))
+            if (!CheckWorkshopItemInstalled(existingItem))
             {
-                if (!EnableWorkShopItem(existingItem, out string errorMsg))
+                if (!InstallWorkshopItem(existingItem, out string errorMsg))
                 {
                     DebugConsole.NewMessage(errorMsg, Color.Red);
                     new GUIMessageBox(
@@ -804,9 +825,9 @@ namespace Barotrauma.Steam
                 }
             }
 
-            ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem?.Directory, MetadataFileName)) { SteamWorkshopUrl = existingItem.Value.Url };
+            ContentPackage tempContentPackage = new ContentPackage(Path.Combine(existingItem?.Directory, MetadataFileName)) { SteamWorkshopId = existingItem.Value.Id };
             string installedContentPackagePath = Path.GetFullPath(GetWorkshopItemContentPackagePath(tempContentPackage));
-            contentPackage = ContentPackage.List.Find(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
+            contentPackage = ContentPackage.AllPackages.FirstOrDefault(cp => Path.GetFullPath(cp.Path) == installedContentPackagePath);
 
             itemEditor = itemEditor?.WithContent(Path.GetDirectoryName(installedContentPackagePath));
 
@@ -923,7 +944,7 @@ namespace Barotrauma.Steam
                 workshopPublishStatus.Result = task.Result;
                 DebugConsole.NewMessage("Published workshop item " + item?.Title + " successfully.", Microsoft.Xna.Framework.Color.LightGreen);
 
-                contentPackage.SteamWorkshopUrl = $"http://steamcommunity.com/sharedfiles/filedetails/?source=Facepunch.Steamworks&id={task.Result.FileId.Value}";
+                contentPackage.SteamWorkshopId = task.Result.FileId.Value;
                 //NOTE: This sets InstallTime one hour into the future to guarantee
                 //that the published content package won't be autoupdated incorrectly.
                 //Change if it causes issues.
@@ -937,9 +958,9 @@ namespace Barotrauma.Steam
         }
 
         /// <summary>
-        /// Enables a workshop item by moving it to the game folder.
+        /// Installs a workshop item by moving it to the game folder.
         /// </summary>
-        public static bool EnableWorkShopItem(Steamworks.Ugc.Item? item, out string errorMsg, bool selectContentPackage = false, bool suppressInstallNotif = false)
+        public static bool InstallWorkshopItem(Steamworks.Ugc.Item? item, out string errorMsg, bool enableContentPackage = false, bool suppressInstallNotif = false)
         {
             if (!(item?.IsInstalled ?? false))
             {
@@ -959,11 +980,11 @@ namespace Barotrauma.Steam
 
             ContentPackage contentPackage = new ContentPackage(metaDataFilePath)
             {
-                SteamWorkshopUrl = item?.Url
+                SteamWorkshopId = item?.Id ?? 0
             };
             string newContentPackagePath = GetWorkshopItemContentPackagePath(contentPackage);
 
-            List<ContentPackage> existingPackages = ContentPackage.List.Where(cp => cp.Path.CleanUpPath() == newContentPackagePath.CleanUpPath()).ToList();
+            List<ContentPackage> existingPackages = ContentPackage.AllPackages.Where(cp => cp.Path.CleanUpPath() == newContentPackagePath.CleanUpPath()).ToList();
             if (existingPackages.Any())
             {
                 if (item?.Owner.Id != Steamworks.SteamClient.SteamId)
@@ -975,7 +996,7 @@ namespace Barotrauma.Steam
                 }
                 else
                 {
-                    RemoveMods(cp => !string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl,
+                    RemoveMods(cp => cp.SteamWorkshopId != 0 && cp.SteamWorkshopId == contentPackage.SteamWorkshopId,
                         false);
                 }
             }
@@ -1024,7 +1045,7 @@ namespace Barotrauma.Steam
 
                         var newPackage = new ContentPackage(cp.Path, newContentPackagePath)
                         {
-                            SteamWorkshopUrl = item?.Url,
+                            SteamWorkshopId = item?.Id ?? 0,
                             InstallTime = item?.Updated > item?.Created ? item?.Updated : item?.Created
                         };
 
@@ -1045,17 +1066,17 @@ namespace Barotrauma.Steam
                             Directory.CreateDirectory(Path.GetDirectoryName(newContentPackagePath));
                         }
                         newPackage.Save(newContentPackagePath);
-                        ContentPackage.List.Add(newPackage);
+                        ContentPackage.AddPackage(newPackage);
 
-                        if (selectContentPackage)
+                        if (enableContentPackage)
                         {
-                            if (newPackage.CorePackage)
+                            if (newPackage.IsCorePackage)
                             {
                                 GameMain.Config.SelectCorePackage(newPackage);
                             }
                             else
                             {
-                                GameMain.Config.SelectContentPackage(newPackage);
+                                GameMain.Config.EnableRegularPackage(newPackage);
                             }
                             GameMain.Config.SaveNewPlayerConfig();
 
@@ -1213,40 +1234,21 @@ namespace Barotrauma.Steam
             return "";
         }
 
-        private static bool CheckFileEquality(string filePath1, string filePath2)
-        {
-            if (filePath1 == filePath2)
-            {
-                return true;
-            }
-
-            using (FileStream fs1 = File.OpenRead(filePath1))
-            using (FileStream fs2 = File.OpenRead(filePath2))
-            {
-                Md5Hash hash1 = new Md5Hash(fs1);
-                Md5Hash hash2 = new Md5Hash(fs2);
-                return hash1.Hash == hash2.Hash;
-            }
-        }
-
         private static void RemoveMods(Func<ContentPackage, bool> predicate, bool delete = true)
         {
-            var toRemove = ContentPackage.List.Where(predicate).ToList();
-            var packagesToDeselect = GameMain.Config.SelectedContentPackages.Where(p => toRemove.Contains(p)).ToList();
+            var toRemoveCore = ContentPackage.CorePackages.Where(predicate).ToList();
+            if (toRemoveCore.Contains(GameMain.Config.CurrentCorePackage)) { GameMain.Config.AutoSelectCorePackage(toRemoveCore); }
+
+            var toRemoveRegular = ContentPackage.RegularPackages.Where(predicate).ToList();
+            var packagesToDeselect = GameMain.Config.EnabledRegularPackages.Where(p => toRemoveRegular.Contains(p)).ToList();
             foreach (var cp in packagesToDeselect)
             {
-                if (cp.CorePackage)
-                {
-                    GameMain.Config.AutoSelectCorePackage(toRemove);
-                }
-                else
-                {
-                    GameMain.Config.DeselectContentPackage(cp);
-                }
+                GameMain.Config.DisableRegularPackage(cp);
             }
 
             if (delete)
             {
+                var toRemove = toRemoveCore.Concat(toRemoveRegular);
                 foreach (var cp in toRemove)
                 {
                     try
@@ -1258,22 +1260,19 @@ namespace Barotrauma.Steam
                     {
                         DebugConsole.ThrowError($"An error occurred while attempting to delete {Path.GetDirectoryName(cp.Path)}", e);
                     }
+                    ContentPackage.RemovePackage(cp);
                 }
             }
 
-            ContentPackage.List.RemoveAll(cp => toRemove.Contains(cp));
-            GameMain.Config.SelectedContentPackages.RemoveAll(cp => !ContentPackage.List.Contains(cp));
-
-            ContentPackage.SortContentPackages();
             GameMain.Config.SaveNewPlayerConfig();
 
             GameMain.Config.WarnIfContentPackageSelectionDirty();
         }
 
         /// <summary>
-        /// Disables a workshop item by removing the files from the game folder.
+        /// Uninstalls a workshop item by removing the files from the game folder.
         /// </summary>
-        public static bool DisableWorkShopItem(Steamworks.Ugc.Item? item, bool noLog, out string errorMsg)
+        public static bool UninstallWorkshopItem(Steamworks.Ugc.Item? item, bool noLog, out string errorMsg)
         {
             errorMsg = null;
             if (!(item?.IsInstalled ?? false))
@@ -1288,13 +1287,13 @@ namespace Barotrauma.Steam
 
             ContentPackage contentPackage = new ContentPackage(Path.Combine(item?.Directory, MetadataFileName))
             {
-                SteamWorkshopUrl = item?.Url
+                SteamWorkshopId = item?.Id ?? 0
             };
 
             GameMain.Config.SuppressModFolderWatcher = true;
             try
             {
-                RemoveMods(cp => !string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl);
+                RemoveMods(cp => cp.SteamWorkshopId != 0 && cp.SteamWorkshopId == contentPackage.SteamWorkshopId);
             }
             catch (Exception e)
             {
@@ -1330,7 +1329,7 @@ namespace Barotrauma.Steam
             return contentPackage.IsCompatible();
         }
 
-        public static bool CheckWorkshopItemEnabled(Steamworks.Ugc.Item? item)
+        public static bool CheckWorkshopItemInstalled(Steamworks.Ugc.Item? item)
         {
             if (!(item?.IsInstalled ?? false)) { return false; }
 
@@ -1359,7 +1358,7 @@ namespace Barotrauma.Steam
                 string errorMessage = "Metadata file for the Workshop item \"" + item?.Title +
                     "\" not found. Could not combine path (" + (item?.Directory ?? "directory name empty") + ").";
                 DebugConsole.ThrowError(errorMessage);
-                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemEnabled:PathCombineException" + item?.Title,
+                GameAnalyticsManager.AddErrorEventOnce("SteamManager.CheckWorkshopItemInstalled:PathCombineException" + item?.Title,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                     errorMessage);
                 return false;
@@ -1373,12 +1372,12 @@ namespace Barotrauma.Steam
 
             ContentPackage contentPackage = new ContentPackage(metaDataPath)
             {
-                SteamWorkshopUrl = item?.Url
+                SteamWorkshopId = item?.Id ?? 0
             };
             //make sure the contentpackage file is present 
             if (!File.Exists(GetWorkshopItemContentPackagePath(contentPackage)) ||
-                !ContentPackage.List.Any(cp => cp.SteamWorkshopUrl == contentPackage.SteamWorkshopUrl ||
-                                               (string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && cp.Name == contentPackage.Name)))
+                !ContentPackage.AllPackages.Any(cp => cp.SteamWorkshopId == contentPackage.SteamWorkshopId ||
+                                               (cp.SteamWorkshopId == 0 && cp.Name == contentPackage.Name)))
             {
                 return false;
             }
@@ -1399,9 +1398,9 @@ namespace Barotrauma.Steam
 
             ContentPackage steamPackage = new ContentPackage(metaDataPath)
             {
-                SteamWorkshopUrl = item?.Url
+                SteamWorkshopId = item?.Id ?? 0
             };
-            ContentPackage myPackage = ContentPackage.List.Find(cp => cp.SteamWorkshopUrl == steamPackage.SteamWorkshopUrl);
+            ContentPackage myPackage = ContentPackage.AllPackages.FirstOrDefault(cp => cp.SteamWorkshopId == steamPackage.SteamWorkshopId);
 
             if (myPackage?.InstallTime == null)
             {
@@ -1427,7 +1426,7 @@ namespace Barotrauma.Steam
             GameMain.Config.SuppressModFolderWatcher = true;
 
             //remove mods that the player is no longer subscribed to
-            RemoveMods(cp => !string.IsNullOrWhiteSpace(cp.SteamWorkshopUrl) && !items.Any(it => it.Id == GetWorkshopItemIDFromUrl(cp.SteamWorkshopUrl)));
+            RemoveMods(cp => cp.SteamWorkshopId != 0 && !items.Any(it => it.Id == cp.SteamWorkshopId));
 
             GameMain.Config.SuppressModFolderWatcher = false;
 
@@ -1441,9 +1440,9 @@ namespace Barotrauma.Steam
 
                     bool installedSuccessfully = false;
                     string errorMsg;
-                    if (!CheckWorkshopItemEnabled(item))
+                    if (!CheckWorkshopItemInstalled(item))
                     {
-                        installedSuccessfully = EnableWorkShopItem(item, out errorMsg);
+                        installedSuccessfully = InstallWorkshopItem(item, out errorMsg);
                     }
                     else if (!CheckWorkshopItemUpToDate(item))
                     {
@@ -1529,12 +1528,12 @@ namespace Barotrauma.Steam
         {
             errorMsg = "";
             if (!(item?.IsInstalled ?? false)) { return false; }
-            bool reenable = GameMain.Config.SelectedContentPackages.Any(p => !string.IsNullOrEmpty(p.SteamWorkshopUrl) && GetWorkshopItemIDFromUrl(p.SteamWorkshopUrl) == item?.Id);
+            bool reenable = GameMain.Config.AllEnabledPackages.Any(p => p.SteamWorkshopId != 0 && p.SteamWorkshopId == item?.Id);
             if (item?.Owner.Id != Steamworks.SteamClient.SteamId)
             {
-                if (!DisableWorkShopItem(item, false, out errorMsg)) { return false; }
+                if (!UninstallWorkshopItem(item, false, out errorMsg)) { return false; }
             }
-            if (!EnableWorkShopItem(item, errorMsg: out errorMsg, selectContentPackage: reenable)) { return false; }
+            if (!InstallWorkshopItem(item, errorMsg: out errorMsg, enableContentPackage: reenable)) { return false; }
             return true;
         }
 
@@ -1543,7 +1542,7 @@ namespace Barotrauma.Steam
             string packageName = contentPackage.Name.Trim();
             packageName = ToolBox.RemoveInvalidFileNameChars(packageName);
             while (packageName.Last() == '.') { packageName = packageName.Substring(0, packageName.Length-1); }
-            //packageName = packageName + "_" + GetWorkshopItemIDFromUrl(contentPackage.SteamWorkshopUrl);
+            //packageName = packageName + "_" + contentPackage.SteamWorkshopId.ToString();
 
             return Path.Combine("Mods", packageName, MetadataFileName);
         }
@@ -1559,8 +1558,7 @@ namespace Barotrauma.Steam
                     attr.Name.ToString() == "characterfile") &&
                     attr.Value.CleanUpPath().Contains("/"))
                 {
-                    ContentType type = ContentType.None;
-                    Enum.TryParse(attr.Name.LocalName, true, out type);
+                    Enum.TryParse(attr.Name.LocalName, true, out ContentType type);
                     attr.Value = CorrectContentFilePath(attr.Value, type, package, true);
                 }
             }
@@ -1615,8 +1613,7 @@ namespace Barotrauma.Steam
             if (checkIfFileExists)
             {
                 bool exists = File.Exists(contentFilePath);
-                if (type == ContentType.Executable ||
-                    type == ContentType.ServerExecutable)
+                if (type == ContentType.ServerExecutable)
                 {
                     exists |= File.Exists(Path.GetFileNameWithoutExtension(contentFilePath) + ".dll");
                 }
@@ -1634,7 +1631,7 @@ namespace Barotrauma.Steam
                 {
                     if (checkIfFileExists)
                     {
-                        ContentPackage otherContentPackage = ContentPackage.List.Find(cp => cp.Name.Equals(splitPath[1], StringComparison.OrdinalIgnoreCase));
+                        ContentPackage otherContentPackage = ContentPackage.AllPackages.FirstOrDefault(cp => cp.Name.Equals(splitPath[1], StringComparison.OrdinalIgnoreCase));
                         if (otherContentPackage != null)
                         {
                             string otherPackageName = Path.GetDirectoryName(otherContentPackage.Path);

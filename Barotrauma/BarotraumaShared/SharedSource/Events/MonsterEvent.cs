@@ -202,16 +202,40 @@ namespace Barotrauma
                 foreach (var position in availablePositions)
                 {
                     Vector2 pos = position.Position.ToVector2();
-                    float dist = Vector2.DistanceSquared(pos, GetReferenceSub().WorldPosition);
+                    Submarine refSub = GetReferenceSub();
+                    float dist = Vector2.DistanceSquared(pos, refSub.WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
                         if (sub.Info.Type != SubmarineType.Player) { continue; }
+                        
                         float minDistToSub = GetMinDistanceToSub(sub);
-                        if (dist > minDistToSub * minDistToSub && dist < closestDist)
+                        if (dist < minDistToSub * minDistToSub) { continue; }
+
+                        if (closestDist == float.PositiveInfinity)
                         {
                             closestDist = dist;
                             chosenPosition = position;
+                            continue;
                         }
+
+                        //chosen position behind the sub -> override with anything that's closer or to the right
+                        if (chosenPosition.Position.X < refSub.WorldPosition.X)
+                        {
+                            if (dist < closestDist || pos.X > refSub.WorldPosition.X)
+                            {
+                                closestDist = dist;
+                                chosenPosition = position;
+                            }
+                        }
+                        //chosen position ahead of the sub -> only override with a position that's also ahead
+                        else if (chosenPosition.Position.X > refSub.WorldPosition.X)
+                        {
+                            if (dist < closestDist && pos.X > refSub.WorldPosition.X)
+                            {
+                                closestDist = dist;
+                                chosenPosition = position;
+                            }
+                        }                        
                     }
                 }
                 //only found a spawnpos that's very far from the sub, pick one that's closer

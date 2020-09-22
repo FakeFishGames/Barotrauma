@@ -63,6 +63,13 @@ namespace Barotrauma.Items.Components
             item.RequireAimToUse = true;
         }
 
+        public override void Equip(Character character)
+        {
+            base.Equip(character);
+            reloadTimer = Math.Min(reload, 1.0f);
+            IsActive = true;
+        }
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || reloadTimer > 0.0f) { return false; }
@@ -151,7 +158,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
 
-            if (item.body.Dir != picker.AnimController.Dir) { Flip(); }
+            if (item.body.Dir != picker.AnimController.Dir) { item.FlipX(relativeToSub: false); }
 
             AnimController ac = picker.AnimController;
 
@@ -366,13 +373,15 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
+            bool success = Rand.Range(0.0f, 0.5f) < DegreeOfSuccess(User);
+
 #if SERVER
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
                 GameMain.Server.CreateEntityEvent(item, new object[] 
                 {
                     Networking.NetEntityEvent.Type.ApplyStatusEffect,                    
-                    ActionType.OnUse,
+                    success ? ActionType.OnUse : ActionType.OnFailure,
                     null, //itemcomponent
                     targetCharacter.ID, targetLimb
                 });
@@ -389,7 +398,7 @@ namespace Barotrauma.Items.Components
 
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
             {
-                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: User);
+                ApplyStatusEffects(success ? ActionType.OnUse : ActionType.OnFailure, 1.0f, targetCharacter, targetLimb, user: User);
             }
 
             if (DeleteOnUse)

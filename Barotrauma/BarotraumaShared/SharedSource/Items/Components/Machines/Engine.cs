@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
 
         private float maxForce;
         
-        private Attack propellerDamage;
+        private readonly Attack propellerDamage;
 
         private float damageTimer;
 
@@ -23,6 +23,8 @@ namespace Barotrauma.Items.Components
         private float prevVoltage;
 
         private float controlLockTimer;
+
+        public Character User;
 
         [Editable(0.0f, 10000000.0f), 
         Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
@@ -106,6 +108,11 @@ namespace Barotrauma.Items.Components
             {
                 //arbitrary multiplier that was added to changes in submarine mass without having to readjust all engines
                 float forceMultiplier = 0.1f;
+                if (User != null)
+                {
+                    forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
+                }
+
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage / MinVoltage, 1.0f);
                 Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
                 //less effective when in a bad condition
@@ -193,6 +200,7 @@ namespace Barotrauma.Items.Components
                 {
                     controlLockTimer = 0.1f;
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
+                    User = sender;
                 }
             }  
         }

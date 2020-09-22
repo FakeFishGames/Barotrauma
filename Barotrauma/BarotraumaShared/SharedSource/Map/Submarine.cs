@@ -289,7 +289,6 @@ namespace Barotrauma
         public WreckAI WreckAI { get; private set; }
         public bool CreateWreckAI()
         {
-            MakeWreck();
             WreckAI = new WreckAI(this);
             return WreckAI != null;
         }
@@ -946,9 +945,29 @@ namespace Barotrauma
             {
                 if (item.Submarine != this) { continue; }
                 var steering = item.GetComponent<Steering>();
-                if (steering == null) { continue; }
+                if (steering == null || item.Connections == null) { continue; }
+
+                //find all the engines and pumps the nav terminal is connected to
+                List<Item> connectedItems = new List<Item>();
+                foreach (Connection c in item.Connections)
+                {
+                    if (c.IsPower) { continue; }
+                    connectedItems.AddRange(item.GetConnectedComponentsRecursive<Engine>(c).Select(engine => engine.Item));
+                    connectedItems.AddRange(item.GetConnectedComponentsRecursive<Pump>(c).Select(pump => pump.Item));
+                }
+
+                //if more than 50% of the connected engines/pumps are in another sub, 
+                //assume this terminal is used to remotely control something and don't automatically enable autopilot
+                if (connectedItems.Count(it => it.Submarine != item.Submarine) > connectedItems.Count / 2)
+                {
+                    continue;
+                }
+
                 steering.MaintainPos = true;
                 steering.AutoPilot = true;
+#if SERVER
+                steering.UnsentChanges = true;
+#endif
             }
         }
 
@@ -1369,8 +1388,17 @@ namespace Barotrauma
 
             foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))
             {
-                if (e.Submarine != this || !e.ShouldBeSaved) continue;
-                if (e is Item item && item.FindParentInventory(inv => inv is CharacterInventory) != null) continue;
+                if (!e.ShouldBeSaved) { continue; }
+                if (e is Item item)
+                {
+                    if (item.FindParentInventory(inv => inv is CharacterInventory) != null) { continue; }
+                    if (e.Submarine != this && item.GetRootContainer()?.Submarine != this) { continue; }
+                }
+                else
+                {
+                    if (e.Submarine != this) { continue; }
+                }
+
                 e.Save(element);
             }
 

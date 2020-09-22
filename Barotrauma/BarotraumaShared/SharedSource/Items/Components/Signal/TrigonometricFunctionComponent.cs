@@ -62,9 +62,15 @@ namespace Barotrauma.Items.Components
                     break;
                 case FunctionType.Tan:
                     if (!UseRadians) { value = MathHelper.ToRadians(value); }
-                    item.SendSignal(0, ((float)Math.Tan(value)).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    //tan is undefined if the value is (π / 2) + πk, where k is any integer
+                    if (!MathUtils.NearlyEqual(value % MathHelper.Pi, MathHelper.PiOver2))
+                    {
+                        item.SendSignal(0, ((float)Math.Tan(value)).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    }
                     break;
                 case FunctionType.Asin:
+                    //asin is only defined in the range [-1,1]
+                    if (value >= -1.0f && value <= 1.0f)
                     {
                         float angle = (float)Math.Asin(value);
                         if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
@@ -72,6 +78,8 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case FunctionType.Acos:
+                    //acos is only defined in the range [-1,1]
+                    if (value >= -1.0f && value <= 1.0f)
                     {
                         float angle = (float)Math.Acos(value);
                         if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }

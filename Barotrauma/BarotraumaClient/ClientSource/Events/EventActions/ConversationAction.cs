@@ -67,7 +67,7 @@ namespace Barotrauma
 
                 GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
                 Debug.Assert(conversationList != null);
-                
+
                 // gray out the last text block
                 if (conversationList.Content.Children.LastOrDefault() is GUILayoutGroup lastElement)
                 {
@@ -132,17 +132,19 @@ namespace Barotrauma
             };
             shadow.SetAsFirstChild();
 
-            void RecalculateLastMessage(GUIListBox conversationList, bool append)
+            static void RecalculateLastMessage(GUIListBox conversationList, bool append)
             {
                 if (conversationList.Content.Children.LastOrDefault() is GUILayoutGroup lastElement)
                 {
                     GUILayoutGroup textLayout = lastElement.GetChild<GUILayoutGroup>();
-                    if (lastElement.Rect.Size.Y < textLayout.Rect.Size.Y && !append)
-                    {
-                        lastElement.RectTransform.MinSize = textLayout.Rect.Size;
-                    }
+
                     if (textLayout != null)
                     {
+                        if (lastElement.Rect.Size.Y < textLayout.Rect.Size.Y && !append)
+                        {
+                            lastElement.RectTransform.MinSize = textLayout.Rect.Size;
+                        }
+                        
                         int textHeight = textLayout.Children.Sum(c => c.Rect.Height);
                         textLayout.RectTransform.MaxSize = new Point(lastElement.RectTransform.MaxSize.X, textHeight);
                         textLayout.Recalculate();
@@ -323,7 +325,10 @@ namespace Barotrauma
             }
 
             textContent.RectTransform.MinSize = new Point(0, textContent.Children.Sum(c => c.Rect.Height + textContent.AbsoluteSpacing) + GUI.IntScale(16));
-            // content.RectTransform.MinSize = new Point(0, textContent.Rect.Height);
+
+            // Recalculate the text size as it is scaled up and no longer matching the text height due to the textContent's minSize increasing
+            textBlock.CalculateHeightFromText();
+            //content.RectTransform.MinSize = new Point(0, textContent.Rect.Height);
 
             return buttons;
         }

@@ -65,6 +65,10 @@ namespace Barotrauma
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
             keyMapping[(int)InputType.LocalVoice] = new KeyOrMouse(Keys.B);
             keyMapping[(int)InputType.Command] = new KeyOrMouse(MouseButton.MiddleMouse);
+#if DEBUG
+            keyMapping[(int)InputType.PreviousFireMode] = new KeyOrMouse(MouseButton.MouseWheelDown);
+            keyMapping[(int)InputType.NextFireMode] = new KeyOrMouse(MouseButton.MouseWheelUp);
+#endif
 
             if (Language == "French")
             {
@@ -314,7 +318,7 @@ namespace Barotrauma
 
             var corePackageDropdown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform))
             {
-                ButtonEnabled = ContentPackage.List.Count(cp => cp.CorePackage) > 1
+                ButtonEnabled = ContentPackage.CorePackages.Count > 1
             };
 
             var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), leftPanel.RectTransform), isHorizontal: true)
@@ -342,7 +346,7 @@ namespace Barotrauma
                 ScrollBarVisible = true
             };
 
-            foreach (ContentPackage contentPackage in ContentPackage.List.Where(cp => cp.CorePackage))
+            foreach (ContentPackage contentPackage in ContentPackage.CorePackages)
             {
                 var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), corePackageDropdown.ListBox.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -358,7 +362,7 @@ namespace Barotrauma
                         TextManager.GetWithVariables(contentPackage.GameVersion <= new Version(0, 0, 0, 0) ? "IncompatibleContentPackageUnknownVersion" : "IncompatibleContentPackage",
                         new string[3] { "[packagename]", "[packageversion]", "[gameversion]" }, new string[3] { contentPackage.Name, contentPackage.GameVersion.ToString(), GameMain.Version.ToString() });
                 }
-                else if (contentPackage.CorePackage && !contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+                else if (!contentPackage.ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
                 {
                     frame.UserData = null;
                     text.TextColor = GUI.Style.Red * 0.6f;
@@ -374,7 +378,7 @@ namespace Barotrauma
                         "\n" + string.Join("\n", contentPackage.ErrorMessages);
                 }
 
-                if (SelectedContentPackages.Contains(contentPackage))
+                if (contentPackage == CurrentCorePackage)
                 {
                     corePackageDropdown.Select(corePackageDropdown.ListBox.Content.GetChildIndex(frame));
                 }
@@ -382,10 +386,7 @@ namespace Barotrauma
             corePackageDropdown.OnSelected = SelectCorePackage;
             corePackageDropdown.ListBox.CanBeFocused = CanHotswapPackages(true);
 
-            foreach (ContentPackage contentPackage in ContentPackage.List
-                .Where(cp => !cp.CorePackage)
-                .OrderBy(cp => !SelectedContentPackages.Contains(cp))
-                .ThenBy(cp => -SelectedContentPackages.IndexOf(cp)))
+            foreach (ContentPackage contentPackage in ContentPackage.RegularPackages)
             {
                 var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, tickBoxScale.Y), contentPackageList.Content.RectTransform), style: "ListBoxElement")
                 {
@@ -407,7 +408,7 @@ namespace Barotrauma
                     style: "GUITickBox")
                 {
                     UserData = contentPackage,
-                    Selected = SelectedContentPackages.Contains(contentPackage),
+                    Selected = EnabledRegularPackages.Contains(contentPackage),
                     OnSelected = SelectContentPackage,
                     Enabled = CanHotswapPackages(false)
                 };
@@ -1595,10 +1596,10 @@ namespace Barotrauma
 
             if (userData is ContentPackage contentPackage)
             {
-                if (!SelectedContentPackages.Contains(contentPackage)) { return; }
+                if (!EnabledRegularPackages.Contains(contentPackage)) { return; }
             }
 
-            ReorderSelectedContentPackages(cp => -listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)));
+            ContentPackage.SortContentPackages(cp => listBox.Content.GetChildIndex(listBox.Content.GetChildByUserData(cp)), true);
 
             UnsavedSettings = true;
         }
@@ -1609,18 +1610,13 @@ namespace Barotrauma
 
             var contentPackage = tickBox.UserData as ContentPackage;
 
-            ContentPackage.List = ContentPackage.List
-                                    .OrderByDescending(p => p.CorePackage)
-                                    .ThenBy(cp => -contentPackageList.Content.GetChildIndex(contentPackageList.Content.GetChildByUserData(cp)))
-                                    .ToList();
-
             if (tickBox.Selected)
             {
-                SelectContentPackage(contentPackage);
+                EnableRegularPackage(contentPackage);
             }
             else
             {
-                DeselectContentPackage(contentPackage);
+                DisableRegularPackage(contentPackage);
             }
             
             UnsavedSettings = true;

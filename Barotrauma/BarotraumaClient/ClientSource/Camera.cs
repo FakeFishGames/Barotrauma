@@ -261,7 +261,7 @@ namespace Barotrauma
             if (targetPos == Vector2.Zero)
             {
                 Vector2 moveInput = Vector2.Zero;
-                if (allowMove)
+                if (allowMove && !Freeze)
                 {
                     if (GUI.KeyboardDispatcher.Subscriber == null)
                     {

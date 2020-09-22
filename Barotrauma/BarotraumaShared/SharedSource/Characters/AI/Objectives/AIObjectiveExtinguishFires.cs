@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
-using System;
 
 namespace Barotrauma
 {
@@ -14,7 +13,7 @@ namespace Barotrauma
 
         protected override bool Filter(Hull hull) => IsValidTarget(hull, character);
 
-        protected override float TargetEvaluation() => objectiveManager.CurrentObjective == this ? 100 : Targets.Sum(t => GetFireSeverity(t));
+        protected override float TargetEvaluation() => Targets.Sum(t => GetFireSeverity(t));
 
         public static float GetFireSeverity(Hull hull) => hull.FireSources.Sum(fs => fs.Size.X);
 
@@ -31,11 +30,22 @@ namespace Barotrauma
             if (hull == null) { return false; }
             if (hull.FireSources.None()) { return false; }
             if (hull.Submarine == null) { return false; }
-            if (hull.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null)
+            if (character.Submarine == null) { return false; }
+            if (!character.Submarine.IsConnectedTo(hull.Submarine)) { return false; }
+            if (character.AIController is HumanAIController humanAI)
             {
-                if (hull.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
-                if (!character.Submarine.IsEntityFoundOnThisSub(hull, true)) { return false; }
+                if (hull.Submarine.TeamID != character.TeamID)
+                {
+                    if (humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>())
+                    {
+                        // For orders, allow targets in the current sub (for example if the bot is inside an outpost or a wreck)
+                        if (hull.Submarine != character.Submarine) { return false; }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
             }
             return true;
         }

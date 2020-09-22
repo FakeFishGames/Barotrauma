@@ -2,11 +2,9 @@
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -14,7 +12,7 @@ namespace Barotrauma
     {
         public const string RadioChatString = "r; ";
 
-        private GUIListBox chatBox;
+        private readonly GUIListBox chatBox;
         private Point screenResolution;
 
         public readonly ChatManager ChatManager = new ChatManager();
@@ -37,10 +35,17 @@ namespace Barotrauma
 
         private float prevUIScale;
 
+        private readonly GUIFrame channelSettingsFrame;
+        private readonly GUITextBox channelText;
+        private readonly GUILayoutGroup channelPickerContent;
+        private readonly GUIButton memButton;
+        private WifiComponent prevRadio;
+
+        private bool channelMemPending;
+
         //individual message texts that pop up when the chatbox is hidden
         const float PopupMessageDuration = 5.0f;
-        private float popupMessageTimer;
-        private Queue<GUIComponent> popupMessages = new Queue<GUIComponent>();
+        private readonly List<GUIComponent> popupMessages = new List<GUIComponent>();
 
         public GUITextBox.OnEnterHandler OnEnterMessage
         {
@@ -67,9 +72,9 @@ namespace Barotrauma
             }
         }
 
-        private GUIButton showNewMessagesButton;
+        private readonly GUIButton showNewMessagesButton;
 
-        private GUIFrame hideableElements;
+        private readonly GUIFrame hideableElements;
 
         public const int ToggleButtonWidthRaw = 30;
         private int popupMessageOffset;
@@ -87,6 +92,133 @@ namespace Barotrauma
 
             var chatBoxHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.875f), hideableElements.RectTransform), style: "ChatBox");
             chatBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.95f), chatBoxHolder.RectTransform, Anchor.CenterRight), style: null);
+
+            // channel settings -----------------------------------------------------------------------------
+
+            channelSettingsFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), chatBoxHolder.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { MinSize = new Point(0, 25) }, style: "GUIFrameBottom");
+            var channelSettingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), channelSettingsFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            var buttonLeft = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+                    {
+                        SetChannel(radio.Channel - 1, setText: true);
+                        GUI.PlayUISound(GUISoundType.PopupMenu);
+                    }
+                    return true;
+                }
+            };
+            var arrowIcon = new GUIImage(new RectTransform(new Vector2(0.4f), buttonLeft.RectTransform, Anchor.Center), style: "GUIButtonHorizontalArrow", scaleToFit: true)
+            {
+                Color = new Color(51, 59, 46),
+                SpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects.FlipHorizontally
+            };
+            arrowIcon.HoverColor = arrowIcon.PressedColor = arrowIcon.PressedColor = arrowIcon.Color;
+
+            channelText = new GUITextBox(new RectTransform(new Vector2(0.25f, 0.8f), channelSettingsContent.RectTransform), style: "DigitalFrameLight", textAlignment: Alignment.Center, font: GUI.DigitalFont)
+            {
+                textFilterFunction = text => 
+                {
+                    var str = new string(text.Where(c => char.IsNumber(c)).ToArray());
+                    if (str.Length > 4) { str = str.Substring(0, 4); }
+                    return str;
+                },
+                OnEnterPressed = (tb, text) =>
+                {
+                    tb.Deselect();
+                    return true;
+                }
+            };
+            Vector2 textSize = channelText.Font.MeasureString("0000");
+            channelText.TextBlock.ToolTip = TextManager.Get("currentradiochannel");
+            channelText.TextBlock.TextScale = Math.Min(channelText.Rect.Height / textSize.Y * 0.9f, 1.0f);
+            channelText.OnDeselected += (sender, key) =>
+            {
+                int.TryParse(channelText.Text, out int newChannel);
+                SetChannel(newChannel, setText: true);
+                GUI.PlayUISound(GUISoundType.PopupMenu);
+            };
+
+            var buttonRight = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+                    {
+                        SetChannel(radio.Channel + 1, setText: true);
+                        GUI.PlayUISound(GUISoundType.PopupMenu);
+                    }
+                    return true;
+                }
+            };
+            arrowIcon = new GUIImage(new RectTransform(new Vector2(0.4f), buttonRight.RectTransform, Anchor.Center), style: "GUIButtonHorizontalArrow", scaleToFit: true)
+            {
+                Color = new Color(51, 59, 46)
+            };
+            arrowIcon.HoverColor = arrowIcon.PressedColor = arrowIcon.PressedColor = arrowIcon.Color;
+
+            var channelPicker = new GUIFrame(new RectTransform(new Vector2(0.4f, 0.6f), channelSettingsContent.RectTransform), "InnerFrame");
+            channelPickerContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), channelPicker.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true
+            };
+            for (int i = 0; i < 10; i++)
+            {
+                new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), channelPickerContent.RectTransform), i.ToString(), style: "GUITextBlock")
+                {
+                    TextColor = new Color(51, 59, 46),
+                    SelectedTextColor = GUI.Style.Green,
+                    UserData = i,
+                    OnClicked = (btn, userdata) =>
+                    {
+                        if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+                        {
+                            int index = (int)userdata;                        
+                            if (channelMemPending)
+                            {
+                                int.TryParse(channelText.Text, out int newChannel);
+                                radio.SetChannelMemory(index, newChannel);
+                                btn.ToolTip = TextManager.GetWithVariables("radiochannelpreset",
+                                    new string[] { "[index]", "[channel]" },
+                                    new string[] { index.ToString(), radio.GetChannelMemory(index).ToString() });
+                                channelMemPending = false;
+                                channelPickerContent.Children.First().CanBeFocused = true;
+                                memButton.Enabled = true;
+                                channelPickerContent.Flash(GUI.Style.Green);
+                                channelText.Flash(GUI.Style.Green);
+                            }
+                            SetChannel(radio.GetChannelMemory(index), setText: true);
+                            GUI.PlayUISound(GUISoundType.PopupMenu);
+                        }
+                        return true;
+                    }
+                };
+            }
+
+            memButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.9f), channelSettingsContent.RectTransform), style: "DeviceButton", text: TextManager.Get("saveradiochannelbutton"))
+            {
+                ToolTip = TextManager.Get("saveradiochannelbuttontooltip"),
+                OnClicked = (btn, userdata) =>
+                {
+                    channelMemPending = true;
+                    //don't allow storing a value in the first preset
+                    channelPickerContent.Children.First().CanBeFocused = false;
+                    foreach (GUIComponent channelButton in channelPickerContent.Children)
+                    {
+                        channelButton.Selected = false;
+                    }
+                    btn.Enabled = false;
+                    return true;
+                }
+            };
+
+            // ---------------------------------------------------------------------------------------------
 
             InputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.125f), hideableElements.RectTransform, Anchor.BottomLeft),
                 style: "ChatTextBox")
@@ -148,7 +280,7 @@ namespace Barotrauma
                 }
             }
 
-            Color textColor = textBox.Color;
+            Color textColor;
             switch (command)
             {
                 case "r":
@@ -235,7 +367,7 @@ namespace Barotrauma
                     },
                     Text = senderName
                 };
-                
+
                 senderNameBlock.RectTransform.NonScaledSize = senderNameBlock.TextBlock.TextSize.ToPoint();
                 senderNameBlock.TextBlock.OverrideTextColor(senderColor);
                 if (senderNameBlock.UserData != null)
@@ -244,7 +376,7 @@ namespace Barotrauma
                 }
             }
 
-            var msgText =new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
+            var msgText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
             { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameTimestamp == null ? 0 : senderNameTimestamp.Rect.Height) },
                 displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
@@ -296,7 +428,7 @@ namespace Barotrauma
             {
                 var popupMsg = new GUIFrame(new RectTransform(Vector2.One, GUIFrame.RectTransform), style: "GUIToolTip")
                 {
-                    Visible = false,
+                    UserData = 0.0f,
                     CanBeFocused = false
                 };
                 var content = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), popupMsg.RectTransform, Anchor.Center));
@@ -322,10 +454,10 @@ namespace Barotrauma
                 popupMsg.RectTransform.Resize(new Point((int)(textWidth / content.RectTransform.RelativeSize.X) , (int)((senderTextSize.Y + msgSize.Y) / content.RectTransform.RelativeSize.Y)), resizeChildren: true);
                 popupMsg.RectTransform.IsFixedSize = true;
                 content.Recalculate();
-                popupMessages.Enqueue(popupMsg);
+                popupMessages.Add(popupMsg);
             }
 
-            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) chatBox.BarScroll = 1.0f;
+            if ((prevSize == 1.0f && chatBox.BarScroll == 0.0f) || (prevSize < 1.0f && chatBox.BarScroll == 1.0f)) { chatBox.BarScroll = 1.0f; }
 
             GUISoundType soundType = GUISoundType.ChatMessage;
             if (message.Type == ChatMessageType.Radio)
@@ -372,7 +504,7 @@ namespace Barotrauma
             GUIFrame.RectTransform.NonScaledSize -= new Point(toggleButtonWidth, 0);
             GUIFrame.RectTransform.AbsoluteOffset += new Point(toggleButtonWidth, 0);
 
-            popupMessageOffset = GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width + (int)(20 * GUI.Scale);
+            popupMessageOffset = GameMain.GameSession.CrewManager.ReportButtonFrame.Rect.Width + GUIFrame.Rect.Width + (int)(35 * GUI.Scale);
         }
 
         public void Update(float deltaTime)
@@ -394,22 +526,93 @@ namespace Barotrauma
                 ToggleButton.RectTransform.AbsoluteOffset = new Point(GUIFrame.Rect.Right, GUIFrame.Rect.Y + HUDLayoutSettings.ChatBoxArea.Height - ToggleButton.Rect.Height);
             }
 
+            if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+            {
+                if (prevRadio != radio)
+                {
+                    foreach (GUIComponent presetButton in channelPickerContent.Children)
+                    {
+                        int index = (int)presetButton.UserData;
+                        presetButton.ToolTip = TextManager.GetWithVariables("radiochannelpreset",
+                            new string[] { "[index]", "[channel]" },
+                            new string[] { index.ToString(), radio.GetChannelMemory(index).ToString() });
+                    }
+                    SetChannel(radio.Channel, setText: true);
+                    prevRadio = radio;
+                }
+                if (channelMemPending)
+                {
+                    if (channelPickerContent.FlashTimer <= 0)
+                    {
+                        channelPickerContent.Flash(GUI.Style.Green, flashRectInflate: new Vector2(GUI.Scale * 5.0f));
+                    }
+                    if (PlayerInput.PrimaryMouseButtonClicked() && !GUI.IsMouseOn(channelPickerContent))
+                    {
+                        channelPickerContent.Children.First().CanBeFocused = true;
+                        channelMemPending = false;
+                        memButton.Enabled = true;
+                        SetChannel(radio.Channel, setText: true);
+                    }
+                }
+                channelSettingsFrame.Visible = true;
+            }
+            else
+            {
+                channelSettingsFrame.Visible = false;
+                channelPickerContent.Children.First().CanBeFocused = true;
+                channelMemPending = false;
+                memButton.Enabled = true;
+            }
+
             if (ToggleOpen)
             {
                 openState += deltaTime * 5.0f;
                 //delete all popup messages when the chatbox is open
-                while (popupMessages.Count > 0)
+                foreach (var popupMsg in popupMessages)
                 {
-                    var popupMsg = popupMessages.Dequeue();
                     popupMsg.Parent.RemoveChild(popupMsg);
                 }
+                popupMessages.Clear();
             }
             else
             {
                 openState -= deltaTime * 5.0f;
 
+                int yOffset = 0;
+                foreach (var popupMsg in popupMessages)
+                {
+                    float msgTimer = (float)popupMsg.UserData;
+
+                    int targetYOffset = (int)MathHelper.Lerp(popupMsg.RectTransform.ScreenSpaceOffset.Y, yOffset, deltaTime * 10.0f);
+
+                    if (popupMsg == popupMessages.First())
+                    {
+                        popupMsg.UserData = msgTimer + deltaTime * Math.Max(popupMessages.Count / 2, 1);
+                        if (msgTimer > PopupMessageDuration)
+                        {
+                            //move the message out of the screen and delete it
+                            popupMsg.RectTransform.ScreenSpaceOffset =
+                                new Point((int)MathHelper.SmoothStep(popupMessageOffset, 10, (msgTimer - PopupMessageDuration) * 5.0f), targetYOffset);
+                            if (msgTimer > PopupMessageDuration + 0.2f)
+                            {
+                                popupMsg.Parent?.RemoveChild(popupMsg);
+                            }
+                        }
+                    }
+                    if (msgTimer < PopupMessageDuration)
+                    {
+                        if (popupMsg != popupMessages.First()) { popupMsg.UserData = Math.Min(msgTimer + deltaTime, 1.0f); }
+                        //move the message on the screen
+                        popupMsg.RectTransform.ScreenSpaceOffset = new Point(
+                            (int)MathHelper.SmoothStep(0, popupMessageOffset, msgTimer * 5.0f), targetYOffset);
+                    }
+                    yOffset += popupMsg.Rect.Height + GUI.IntScale(10);
+                }
+
+                popupMessages.RemoveAll(p => p.Parent == null);
+
                 //make the first popup message visible
-                var popupMsg = popupMessages.Count > 0 ? popupMessages.Peek() : null;
+                /*var popupMsg = popupMessages.Count > 0 ? popupMessages.Peek() : null;
                 if (popupMsg != null)
                 {
                     popupMsg.Visible = true;
@@ -433,13 +636,35 @@ namespace Barotrauma
                         popupMsg.RectTransform.ScreenSpaceOffset = new Point( 
                             (int)MathHelper.SmoothStep(0, popupMessageOffset, popupMessageTimer * 5.0f), 0);
                     }
-                }
+                }*/
             }
             openState = MathHelper.Clamp(openState, 0.0f, 1.0f);
             int hiddenBoxOffset = -(GUIFrame.Rect.Width);
             GUIFrame.RectTransform.AbsoluteOffset =
                 new Point((int)MathHelper.SmoothStep(hiddenBoxOffset, 0, openState), 0);
             hideableElements.Visible = openState > 0.0f;
+        }
+
+        private void SetChannel(int channel, bool setText)
+        {
+            if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
+            {
+                radio.Channel = channel;
+                if (setText)
+                {
+                    string text = radio.Channel.ToString().PadLeft(4, '0');
+                    if (channelText.Text != text) { channelText.Text = text; }
+
+                }
+                if (!channelMemPending)
+                {
+                    foreach (GUIComponent channelButton in channelPickerContent.Children)
+                    {
+                        int buttonIndex = (int)channelButton.UserData;
+                        channelButton.Selected = radio.GetChannelMemory(buttonIndex) == channel;
+                    }
+                }
+            }
         }
     }
 }

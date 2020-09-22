@@ -180,13 +180,13 @@ namespace Barotrauma
                     Icon = new GUIImage(new RectTransform(new Vector2(0.2f, 0.95f), horizontalLayoutGroup.RectTransform), iconStyle, scaleToFit: true);
                 }
 
-                Content = new GUILayoutGroup(new RectTransform(new Vector2(icon != null ? 0.65f : 0.85f, 1.0f), horizontalLayoutGroup.RectTransform));
+                Content = new GUILayoutGroup(new RectTransform(new Vector2(Icon != null ? 0.65f : 0.85f, 1.0f), horizontalLayoutGroup.RectTransform));
 
                 var buttonContainer = new GUIFrame(new RectTransform(new Vector2(0.15f, 1.0f), horizontalLayoutGroup.RectTransform), style: null);
                 Buttons = new List<GUIButton>(1)
                 {
-                    new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), buttonContainer.RectTransform, Anchor.Center), 
-                        style: "GUIButtonHorizontalArrow")
+                    new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), buttonContainer.RectTransform, Anchor.Center), 
+                        style: "UIToggleButton")
                     {
                         OnClicked = Close
                     }
@@ -221,7 +221,7 @@ namespace Barotrauma
                     Content.RectTransform.NonScaledSize =
                         new Point(Content.Rect.Width, height);
                 }
-                Buttons[0].RectTransform.MaxSize = new Point(Math.Min(Buttons[0].Rect.Width, Buttons[0].Rect.Height));
+                Buttons[0].RectTransform.MaxSize = new Point((int)(0.4f * Buttons[0].Rect.Y), Buttons[0].Rect.Y);
             }
             
             MessageBoxes.Add(this);
@@ -271,99 +271,92 @@ namespace Barotrauma
 
         protected override void Update(float deltaTime)
         {
-            if (type == Type.InGame)
+            if (type != Type.InGame) { return; }
+            
+            Vector2 initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
+            Vector2 defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
+            Vector2 endPos = new Vector2(GameMain.GraphicsWidth, defaultPos.Y);
+
+            if (!closing)
             {
-                Vector2 initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
-                Vector2 defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
-                Vector2 endPos = new Vector2(GameMain.GraphicsWidth, defaultPos.Y);
-
-                /*for (int i = MessageBoxes.IndexOf(this); i >= 0; i--)
+                Point step = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
+                InnerFrame.RectTransform.AbsoluteOffset = step;
+                if (BackgroundIcon != null)
                 {
-                    if (MessageBoxes[i] is GUIMessageBox otherMsgBox && otherMsgBox != this && otherMsgBox.type == type && !otherMsgBox.closing)
+                    BackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (BackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - BackgroundIcon.Rect.Size.Y / 2);
+                    if (!MathUtils.NearlyEqual(openState, 1.0f))
                     {
-                        defaultPos = new Vector2(
-                            Math.Max(otherMsgBox.InnerFrame.RectTransform.AbsoluteOffset.X + 10 * GUI.Scale, defaultPos.X),
-                            Math.Max(otherMsgBox.InnerFrame.RectTransform.AbsoluteOffset.Y + 10 * GUI.Scale, defaultPos.Y));
-                    }
-                }*/
-
-                if (!closing)
-                {
-                    Point step = Vector2.SmoothStep(initialPos, defaultPos, openState).ToPoint();
-                    InnerFrame.RectTransform.AbsoluteOffset = step;
-                    if (BackgroundIcon != null)
-                    {
-                        BackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (BackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - BackgroundIcon.Rect.Size.Y / 2);
-                        if (!MathUtils.NearlyEqual(openState, 1.0f))
-                        {
-                            BackgroundIcon.Color = ToolBox.GradientLerp(openState, Color.Transparent, Color.White);
-                        }
-                    }
-                    openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
-
-                    if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn) && AutoClose)
-                    {
-                        inGameCloseTimer += deltaTime;
-                    }
-
-                    if (inGameCloseTimer >= inGameCloseTime)
-                    {
-                        Close();
+                        BackgroundIcon.Color = ToolBox.GradientLerp(openState, Color.Transparent, Color.White);
                     }
                 }
-                else
+                if (!(Screen.Selected is RoundSummaryScreen) && !MessageBoxes.Any(mb => mb.UserData is RoundSummary))
                 {
-                    openState += deltaTime * 2.0f;
-                    Point step = Vector2.SmoothStep(defaultPos, endPos, openState - 1.0f).ToPoint();
-                    InnerFrame.RectTransform.AbsoluteOffset = step;
+                    openState = Math.Min(openState + deltaTime * 2.0f, 1.0f);
+                }
+
+                if (GUI.MouseOn != InnerFrame && !InnerFrame.IsParentOf(GUI.MouseOn) && AutoClose)
+                {
+                    inGameCloseTimer += deltaTime;
+                }
+
+                if (inGameCloseTimer >= inGameCloseTime)
+                {
+                    Close();
+                }
+            }
+            else
+            {
+                openState += deltaTime * 2.0f;
+                Point step = Vector2.SmoothStep(defaultPos, endPos, openState - 1.0f).ToPoint();
+                InnerFrame.RectTransform.AbsoluteOffset = step;
+                if (BackgroundIcon != null)
+                {
+                    BackgroundIcon.Color *= 0.9f;
+                }
+                if (openState >= 2.0f)
+                {
+                    if (Parent != null) { Parent.RemoveChild(this); }
+                    if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
+                }
+            }
+
+            if (newBackgroundIcon != null)
+            {
+                if (!iconSwitching)
+                {
                     if (BackgroundIcon != null)
                     {
                         BackgroundIcon.Color *= 0.9f;
-                    }
-                    if (openState >= 2.0f)
-                    {
-                        if (Parent != null) { Parent.RemoveChild(this); }
-                        if (MessageBoxes.Contains(this)) { MessageBoxes.Remove(this); }
-                    }
-                }
-
-                if (newBackgroundIcon != null)
-                {
-                    if (!iconSwitching)
-                    {
-                        if (BackgroundIcon != null)
+                        if (BackgroundIcon.Color.A == 0)
                         {
-                            BackgroundIcon.Color *= 0.9f;
-                            if (BackgroundIcon.Color.A == 0)
-                            {
-                                BackgroundIcon = null;
-                                iconSwitching = true;
-                                RemoveChild(BackgroundIcon);
-                            }
-                        }
-                        else
-                        {
+                            BackgroundIcon = null;
                             iconSwitching = true;
+                            RemoveChild(BackgroundIcon);
                         }
-                        iconState = 0;
                     }
                     else
                     {
-                        newBackgroundIcon.SetAsFirstChild();
-                        newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
-                        newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
-                        if (newBackgroundIcon.Color.A == 255)
-                        {
-                            BackgroundIcon = newBackgroundIcon;
-                            BackgroundIcon.SetAsFirstChild();
-                            newBackgroundIcon = null;
-                            iconSwitching = false;
-                        }
-
-                        iconState = Math.Min(iconState + deltaTime * 2.0f, 1.0f);
+                        iconSwitching = true;
                     }
+                    iconState = 0;
+                }
+                else
+                {
+                    newBackgroundIcon.SetAsFirstChild();
+                    newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int) (newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
+                    newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
+                    if (newBackgroundIcon.Color.A == 255)
+                    {
+                        BackgroundIcon = newBackgroundIcon;
+                        BackgroundIcon.SetAsFirstChild();
+                        newBackgroundIcon = null;
+                        iconSwitching = false;
+                    }
+
+                    iconState = Math.Min(iconState + deltaTime * 2.0f, 1.0f);
                 }
             }
+            
         }
 
 

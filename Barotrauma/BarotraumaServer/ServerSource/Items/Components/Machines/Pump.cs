@@ -23,6 +23,10 @@ namespace Barotrauma.Items.Components
                 {
                     GameServer.Log(GameServer.CharacterLogName(c.Character) + (newIsActive ? " turned on " : " turned off ") + item.Name, ServerLog.MessageType.ItemInteraction);
                 }
+                if (pumpSpeedLockTimer <= 0.0f)
+                {
+                    targetLevel = null;
+                }
 
                 FlowPercentage = newFlowPercentage;
                 IsActive = newIsActive;

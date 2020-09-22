@@ -239,7 +239,7 @@ namespace Barotrauma
                 {
                     activeTextureLoads.Add(Sprite.FullPath);
                 }
-                Sprite.EnsureLazyLoaded();
+                await Sprite.LazyLoadAsync();
             }
             finally
             {

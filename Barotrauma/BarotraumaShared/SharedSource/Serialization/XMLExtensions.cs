@@ -140,20 +140,20 @@ namespace Barotrauma
                 if (element.Attribute(name) == null) continue;
 
                 float val;
-
                 try
                 {
-                    if (!Single.TryParse(element.Attribute(name).Value, NumberStyles.Float, CultureInfo.InvariantCulture, out val))
+                    string strVal = element.Attribute(name).Value;
+                    if (strVal.LastOrDefault() == 'f')
                     {
-                        continue;
+                        strVal = strVal.Substring(0, strVal.Length - 1);
                     }
+                    val = float.Parse(strVal, CultureInfo.InvariantCulture);
                 }
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Error in " + element + "!", e);
                     continue;
                 }
-
                 return val;
             }
 
@@ -165,13 +165,14 @@ namespace Barotrauma
             if (element?.Attribute(name) == null) return defaultValue;
 
             float val = defaultValue;
-
             try
             {
-                if (!Single.TryParse(element.Attribute(name).Value, NumberStyles.Float, CultureInfo.InvariantCulture, out val))
+                string strVal = element.Attribute(name).Value;
+                if (strVal.LastOrDefault() == 'f')
                 {
-                    return defaultValue;
+                    strVal = strVal.Substring(0, strVal.Length - 1);
                 }
+                val = float.Parse(strVal, CultureInfo.InvariantCulture);
             }
             catch (Exception e)
             {
@@ -189,7 +190,12 @@ namespace Barotrauma
 
             try
             {
-                val = Single.Parse(attribute.Value, CultureInfo.InvariantCulture);
+                string strVal = attribute.Value;
+                if (strVal.LastOrDefault() == 'f')
+                {
+                    strVal = strVal.Substring(0, strVal.Length - 1);
+                }
+                val = float.Parse(strVal, CultureInfo.InvariantCulture);
             }
             catch (Exception e)
             {
@@ -212,8 +218,12 @@ namespace Barotrauma
             {
                 try
                 {
-                    float val = Single.Parse(splitValue[i], CultureInfo.InvariantCulture);
-                    floatValue[i] = val;
+                    string strVal = splitValue[i];
+                    if (strVal.LastOrDefault() == 'f')
+                    {
+                        strVal = strVal.Substring(0, strVal.Length - 1);
+                    }
+                    floatValue[i] = float.Parse(strVal, CultureInfo.InvariantCulture);
                 }
                 catch (Exception e)
                 {

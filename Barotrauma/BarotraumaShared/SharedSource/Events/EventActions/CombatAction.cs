@@ -10,6 +10,15 @@ namespace Barotrauma
         [Serialize(AIObjectiveCombat.CombatMode.Offensive, true)]
         public AIObjectiveCombat.CombatMode CombatMode { get; set; }
 
+        [Serialize(false, true, description: "Did this NPC start the fight (as an aggressor)?")]
+        public bool IsInstigator { get; set; }
+
+        [Serialize(AIObjectiveCombat.CombatMode.None, true)]
+        public AIObjectiveCombat.CombatMode GuardReaction { get; set; }
+
+        [Serialize(AIObjectiveCombat.CombatMode.None, true)]
+        public AIObjectiveCombat.CombatMode WitnessReaction { get; set; }
+
         [Serialize("", true)]
         public string NPCTag { get; set; }
 
@@ -50,7 +59,8 @@ namespace Barotrauma
                 }
                 if (enemy == null) { continue; }
 
-                npc.TurnedHostileByEvent = true;
+                npc.CombatAction = this;
+
                 var objectiveManager = humanAiController.ObjectiveManager;
                 foreach (var goToObjective in objectiveManager.GetActiveObjectives<AIObjectiveGoTo>())
                 {

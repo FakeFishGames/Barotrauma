@@ -50,6 +50,27 @@ namespace Barotrauma.Extensions
             }
         }
 
+        public static T RandomElementByWeight<T>(this IEnumerable<T> source, Func<T, float> weightSelector, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        {
+            float totalWeight = source.Sum(weightSelector);
+
+            float itemWeightIndex = Rand.Range(0f, 1f, randSync) * totalWeight;
+            float currentWeightIndex = 0;
+
+            foreach (T weightedItem in source)
+            {
+                float weight = weightSelector(weightedItem);
+                currentWeightIndex += weight;
+
+                if (currentWeightIndex >= itemWeightIndex)
+                {
+                    return weightedItem;
+                }
+            }
+
+            return default;
+        }
+
         /// <summary>
         /// Executes an action that modifies the collection on each element (such as removing items from the list).
         /// Creates a temporary list.

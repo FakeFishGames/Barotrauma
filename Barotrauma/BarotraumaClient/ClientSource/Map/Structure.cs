@@ -185,9 +185,20 @@ namespace Barotrauma
         public override bool IsVisible(Rectangle worldView)
         {
             Rectangle worldRect = WorldRect;
+            Vector2 worldPos = WorldPosition;
 
-            if (worldRect.X > worldView.Right || worldRect.Right < worldView.X) { return false; }
-            if (worldRect.Y < worldView.Y - worldView.Height || worldRect.Y - worldRect.Height > worldView.Y) { return false; }
+            Vector2 min = new Vector2(worldRect.X, worldRect.Y - worldRect.Height);
+            Vector2 max = new Vector2(worldRect.Right, worldRect.Y);
+            foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
+            {
+                min.X =  Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * decorativeSprite.Scale * Scale, min.X);
+                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * decorativeSprite.Scale * Scale, max.X);
+                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * decorativeSprite.Scale * Scale, min.Y);
+                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * decorativeSprite.Scale * Scale, max.Y);
+            }
+
+            if (min.X > worldView.Right || max.X < worldView.X) { return false; }
+            if ( min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }
 
             return true;
         }
@@ -455,8 +466,16 @@ namespace Barotrauma
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             byte sectionCount = msg.ReadByte();
-            if (sectionCount != Sections.Length)
+
+            bool invalidMessage = false;
+            if (type != ServerNetObject.ENTITY_EVENT && type != ServerNetObject.ENTITY_EVENT_INITIAL)
             {
+                DebugConsole.NewMessage($"Error while reading a network event for the structure \"{Name} ({ID})\". Invalid event type ({type}).", Color.Red);
+                return;
+            }
+            else if (sectionCount != Sections.Length)
+            {
+                invalidMessage = true;
                 string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
                 DebugConsole.NewMessage(errorMsg, Color.Red);
                 GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
@@ -465,7 +484,7 @@ namespace Barotrauma
             for (int i = 0; i < sectionCount; i++)
             {
                 float damage = msg.ReadRangedSingle(0.0f, 1.0f, 8) * MaxHealth;
-                if (i < Sections.Length)
+                if (!invalidMessage && i < Sections.Length)
                 {
                     SetDamage(i, damage);
                 }

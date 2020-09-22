@@ -1655,9 +1655,9 @@ namespace Barotrauma.CharacterEditor
             if (contentPackage == null)
             {
 #if DEBUG
-                contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault();
+                contentPackage = GameMain.Config.AllEnabledPackages.LastOrDefault();
 #else
-                contentPackage = GameMain.Config.SelectedContentPackages.LastOrDefault(cp => cp != vanilla);
+                contentPackage = GameMain.Config.AllEnabledPackages.LastOrDefault(cp => cp != vanilla);
 #endif
             }
             if (contentPackage == null)
@@ -1674,9 +1674,9 @@ namespace Barotrauma.CharacterEditor
             }
 #endif
             // Content package
-            if (!GameMain.Config.SelectedContentPackages.Contains(contentPackage))
+            if (!GameMain.Config.AllEnabledPackages.Contains(contentPackage))
             {
-                GameMain.Config.SelectContentPackage(contentPackage);
+                GameMain.Config.EnableRegularPackage(contentPackage);
             }
             GameMain.Config.SaveNewPlayerConfig();
 
@@ -1757,9 +1757,10 @@ namespace Barotrauma.CharacterEditor
 #endif
             // Add to the selected content package
             contentPackage.AddFile(configFilePath, ContentType.Character);
+            Barotrauma.IO.Validation.DevException = true;
             contentPackage.Save(contentPackage.Path);
-            DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));         
-            CharacterPrefab.LoadFromFile(configFilePath, contentPackage, forceOverride: true);
+            Barotrauma.IO.Validation.DevException = false;
+            DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));      
 
             // Ragdoll
             RagdollParams.ClearCache();
@@ -1783,7 +1784,11 @@ namespace Barotrauma.CharacterEditor
                     element.SetAttributeValue("type", name);
                     string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType, contentPackage);
                     element.Name = AnimationParams.GetDefaultFileName(name, animation.AnimationType);
+#if DEBUG
                     element.Save(fullPath);
+#else
+                    element.SaveSafe(fullPath);
+#endif
                 }
             }
             else

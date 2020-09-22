@@ -111,9 +111,9 @@ namespace Barotrauma
             IsPathDirty = true;
         }
 
-        public void SteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
+        public void SteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisiblity = true)
         {
-            steering += CalculateSteeringSeek(target, weight, startNodeFilter, endNodeFilter, nodeFilter);
+            steering += CalculateSteeringSeek(target, weight, startNodeFilter, endNodeFilter, nodeFilter, checkVisiblity);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace Barotrauma
             }
         }
 
-        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null)
+        private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
             Vector2 targetDiff = target - currentTarget;
             if (currentPath != null && currentPath.Nodes.Any())
@@ -172,40 +172,42 @@ namespace Barotrauma
                     targetDiff += subDiff;
                 }
             }
-            bool needsNewPath = character.Params.PathFinderPriority > 0.5f && (currentPath == null || currentPath.Unreachable || currentPath.Finished || targetDiff.LengthSquared() > 1);
+            bool needsNewPath = character.Params.PathFinderPriority > 0.5f && (currentPath == null || currentPath.Unreachable || targetDiff.LengthSquared() > 1);
             //find a new path if one hasn't been found yet or the target is different from the current target
             if (needsNewPath || findPathTimer < -1.0f)
             {
                 IsPathDirty = true;
-                if (findPathTimer > 0.0f) { return Vector2.Zero; }
-                currentTarget = target;
-                Vector2 currentPos = host.SimPosition;
-                if (character != null && character.Submarine == null)
+                if (findPathTimer < 0)
                 {
-                    var targetHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(target), null, false);
-                    if (targetHull != null && targetHull.Submarine != null)
+                    currentTarget = target;
+                    Vector2 currentPos = host.SimPosition;
+                    if (character != null && character.Submarine == null)
                     {
-                        currentPos -= targetHull.Submarine.SimPosition;
+                        var targetHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(target), null, false);
+                        if (targetHull != null && targetHull.Submarine != null)
+                        {
+                            currentPos -= targetHull.Submarine.SimPosition;
+                        }
                     }
+                    pathFinder.InsideSubmarine = character.Submarine != null;
+                    var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
+                    bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null;
+                    if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
+                    {
+                        // It's possible that the current path was calculated from a start point that is no longer valid.
+                        // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
+                        useNewPath = newPath.Cost < currentPath.Cost ||
+                            Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
+                    }
+                    if (useNewPath)
+                    {
+                        currentPath = newPath;
+                    }
+                    float priority = MathHelper.Lerp(3, 1, character.Params.PathFinderPriority);
+                    findPathTimer = priority * Rand.Range(1.0f, 1.2f);
+                    IsPathDirty = false;
+                    return DiffToCurrentNode();
                 }
-                pathFinder.InsideSubmarine = character.Submarine != null;
-                var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter);
-                bool useNewPath = currentPath == null || needsNewPath || currentPath.Finished;
-                if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
-                {
-                    // It's possible that the current path was calculated from a start point that is no longer valid.
-                    // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
-                    useNewPath = newPath.Cost < currentPath.Cost ||
-                        Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
-                }
-                if (useNewPath)
-                {
-                    currentPath = newPath;
-                }
-                float priority = MathHelper.Lerp(3, 1, character.Params.PathFinderPriority);
-                findPathTimer = priority * Rand.Range(1.0f, 1.2f);
-                IsPathDirty = false;
-                return DiffToCurrentNode();
             }
 
             Vector2 diff = DiffToCurrentNode();
@@ -221,7 +223,7 @@ namespace Barotrauma
             return Vector2.Normalize(diff) * weight;
         }
 
-        protected override Vector2 DoSteeringSeek(Vector2 target, float weight) => CalculateSteeringSeek(target, weight, null, null, null);
+        protected override Vector2 DoSteeringSeek(Vector2 target, float weight) => CalculateSteeringSeek(target, weight);
 
         private Vector2 DiffToCurrentNode()
         {
@@ -260,7 +262,7 @@ namespace Barotrauma
             }
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
             // Only humanoids can climb ladders
-            bool canClimb = character.AnimController is HumanoidAnimController;
+            bool canClimb = character.AnimController is HumanoidAnimController && !character.LockHands;
             var ladders = GetNextLadder();
             if (canClimb && !isDiving && ladders != null && character.SelectedConstruction != ladders.Item)
             {
@@ -588,7 +590,7 @@ namespace Barotrauma
             //non-humanoids can't climb up ladders
             if (!(character.AnimController is HumanoidAnimController))
             {
-                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && nextNode.Waypoint.Ladders.Item.NonInteractable ||
+                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (nextNode.Waypoint.Ladders.Item.NonInteractable || character.LockHands)||
                     (nextNode.Position.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
                     nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y)) //upper node not underwater
                 {
@@ -628,6 +630,7 @@ namespace Barotrauma
             return penalty;
         }
 
+        public static float smallRoomSize = 500;
         public void Wander(float deltaTime, float wallAvoidDistance = 150, bool stayStillInTightSpace = true)
         {
             //steer away from edges of the hull
@@ -637,7 +640,7 @@ namespace Barotrauma
             if (currentHull != null && !inWater)
             {
                 float roomWidth = currentHull.Rect.Width;
-                if (stayStillInTightSpace && roomWidth < wallAvoidDistance * 4)
+                if (stayStillInTightSpace && roomWidth < Math.Max(wallAvoidDistance * 3, smallRoomSize))
                 {
                     Reset();
                 }

@@ -14,7 +14,7 @@ namespace Barotrauma
                     Vector2.Zero, 0.0f, hull);
             }
 
-            hull = hull ?? Hull.FindHull(worldPosition, useWorldCoordinates: true);
+            hull ??= Hull.FindHull(worldPosition, useWorldCoordinates: true);
             bool underwater = hull == null || worldPosition.Y < hull.WorldSurface;
 
             if (underwater && underwaterBubble)
@@ -44,7 +44,7 @@ namespace Barotrauma
                     }
                     if (smoke)
                     {
-                        var smokeParticle = GameMain.ParticleManager.CreateParticle(Rand.Range(0.0f, 1.0f) < 0.5f ? "explosionsmoke" : "smoke",
+                        GameMain.ParticleManager.CreateParticle(Rand.Range(0.0f, 1.0f) < 0.5f ? "explosionsmoke" : "smoke",
                             ClampParticlePos(worldPosition + Rand.Vector((float)System.Math.Sqrt(Rand.Range(0.0f, attack.Range))), hull),
                             Rand.Vector(Rand.Range(0.0f, particleSpeed)), 0.0f, hull);
                     }
@@ -73,11 +73,6 @@ namespace Barotrauma
                     GameMain.ParticleManager.CreateParticle("spark", worldPosition,
                         Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
                 }
-            }
-
-            if (hull != null && !string.IsNullOrWhiteSpace(decal) && decalSize > 0.0f)
-            {
-                hull.AddDecal(decal, worldPosition, decalSize);
             }
 
             if (flash)

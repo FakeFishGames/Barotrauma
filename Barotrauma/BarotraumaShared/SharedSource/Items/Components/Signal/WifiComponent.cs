@@ -12,6 +12,8 @@ namespace Barotrauma.Items.Components
     {
         private static readonly List<WifiComponent> list = new List<WifiComponent>();
 
+        const int ChannelMemorySize = 10;
+
         private float range;
 
         private int channel;
@@ -19,6 +21,8 @@ namespace Barotrauma.Items.Components
         private float chatMsgCooldown;
 
         private string prevSignal;
+
+        private int[] channelMemory = new int[ChannelMemorySize];
 
         [Serialize(Character.TeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
         public Character.TeamType TeamID { get; set; }
@@ -36,7 +40,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize(1, true, description: "WiFi components can only communicate with components that use the same channel.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(0, true, description: "WiFi components can only communicate with components that use the same channel.", alwaysUseInstanceValues: true)]
         public int Channel
         {
             get { return channel; }
@@ -83,6 +87,18 @@ namespace Barotrauma.Items.Components
         {
             list.Add(this);
             IsActive = true;
+            channelMemory = element.GetAttributeIntArray("channelmemory", new int[ChannelMemorySize]);
+        }
+
+        public override void OnItemLoaded()
+        {
+            if (channelMemory.All(m => m == 0))
+            {
+                for (int i = 0; i < channelMemory.Length; i++)
+                {
+                    channelMemory[i] = i;
+                }
+            }
         }
 
         public bool CanTransmit()
@@ -116,6 +132,24 @@ namespace Barotrauma.Items.Components
             {
                 IsActive = false;
             }
+        }
+
+        public int GetChannelMemory(int index)
+        {
+            if (index < 0 || index >= ChannelMemorySize)
+            {
+                return 0;
+            }
+            return channelMemory[index];
+        }
+
+        public void SetChannelMemory(int index, int value)
+        {
+            if (index < 0 || index >= ChannelMemorySize)
+            {
+                return;
+            }
+            channelMemory[index] = MathHelper.Clamp(value, 0, 10000);
         }
 
         public void TransmitSignal(int stepsTaken, string signal, Item source, Character sender, bool sendToChat, float signalStrength = 1.0f)
@@ -219,6 +253,13 @@ namespace Barotrauma.Items.Components
         {
             base.RemoveComponentSpecific();
             list.Remove(this);
+        }
+
+        public override XElement Save(XElement parentElement)
+        {
+            var element = base.Save(parentElement);
+            element.Add(new XAttribute("channelmemory", string.Join(',', channelMemory)));
+            return element;
         }
     }
 }

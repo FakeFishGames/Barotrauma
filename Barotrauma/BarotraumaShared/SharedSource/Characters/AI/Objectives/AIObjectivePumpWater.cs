@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -10,7 +11,7 @@ namespace Barotrauma
     {
         public override string DebugTag => "pump water";
         public override bool KeepDivingGearOn => true;
-        public override bool UnequipItems => true;
+        public override bool AllowAutomaticItemUnequipping => true;
 
         private IEnumerable<Pump> pumpList;
 
@@ -35,8 +36,7 @@ namespace Barotrauma
             if (pump.Item.CurrentHull.FireSources.Count > 0) { return false; }
             if (character.Submarine != null)
             {
-                if (pump.Item.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
-                if (!character.Submarine.IsEntityFoundOnThisSub(pump.Item, true)) { return false; }
+                if (!character.Submarine.IsConnectedTo(pump.Item.Submarine)) { return false; }
             }
             if (Character.CharacterList.Any(c => c.CurrentHull == pump.Item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             if (IsReady(pump)) { return false; }
@@ -54,6 +54,7 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
+            if (Targets.None()) { return 0; }
             if (Option == "stoppumping")
             {
                 return Targets.Max(t => MathHelper.Lerp(0, 100, Math.Abs(t.FlowPercentage / 100)));

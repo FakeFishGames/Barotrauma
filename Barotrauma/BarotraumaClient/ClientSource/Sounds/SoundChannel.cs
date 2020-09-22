@@ -3,6 +3,7 @@ using OpenAL;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Threading;
+using System.Diagnostics;
 
 namespace Barotrauma.Sounds
 {
@@ -100,28 +101,34 @@ namespace Barotrauma.Sounds
                 {
                     if (float.IsNaN(position.Value.X))
                     {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.X is NaN");
+                        DebugConsole.ThrowError("Failed to set source's position: " + debugName + ", position.X is NaN", appendStackTrace: true);
+                        return;
                     }
                     if (float.IsNaN(position.Value.Y))
                     {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Y is NaN");
+                        DebugConsole.ThrowError("Failed to set source's position: " + debugName + ", position.Y is NaN", appendStackTrace: true);
+                        return;
                     }
                     if (float.IsNaN(position.Value.Z))
                     {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Z is NaN");
+                        DebugConsole.ThrowError("Failed to set source's position: " + debugName + ", position.Z is NaN", appendStackTrace: true);
+                        return;
                     }
 
                     if (float.IsInfinity(position.Value.X))
                     {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.X is Infinity");
+                        DebugConsole.ThrowError("Failed to set source's position: " + debugName + ", position.X is Infinity", appendStackTrace: true);
+                        return;
                     }
                     if (float.IsInfinity(position.Value.Y))
                     {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Y is Infinity");
+                        DebugConsole.ThrowError("Failed to set source's position: " + debugName + ", position.Y is Infinity", appendStackTrace: true);
+                        return;
                     }
                     if (float.IsInfinity(position.Value.Z))
                     {
-                        throw new Exception("Failed to set source's position: " + debugName + ", position.Z is Infinity");
+                        DebugConsole.ThrowError("Failed to set source's position: " + debugName + ", position.Z is Infinity", appendStackTrace: true);
+                        return;
                     }
 
                     uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
@@ -129,14 +136,16 @@ namespace Barotrauma.Sounds
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to enable source's relative flag: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to enable source's relative flag: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
 
                     Al.Source3f(alSource, Al.Position, position.Value.X, position.Value.Y, position.Value.Z);
                     alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to set source's position: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to set source's position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
                 }
                 else
@@ -146,14 +155,16 @@ namespace Barotrauma.Sounds
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to disable source's relative flag: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to disable source's relative flag: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
 
                     Al.Source3f(alSource, Al.Position, 0.0f, 0.0f, 0.0f);
                     alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to reset source's position: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to reset source's position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
                 }
             }
@@ -175,7 +186,8 @@ namespace Barotrauma.Sounds
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set source's reference distance: " + debugName + ", " + Al.GetErrorString(alError));
+                    DebugConsole.ThrowError("Failed to set source's reference distance: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
                 }
             }
         }
@@ -195,7 +207,8 @@ namespace Barotrauma.Sounds
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set source's max distance: " + debugName + ", " + Al.GetErrorString(alError));
+                    DebugConsole.ThrowError("Failed to set source's max distance: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
                 }
             }
         }
@@ -206,6 +219,8 @@ namespace Barotrauma.Sounds
             get { return gain; }
             set
             {
+                if (!MathUtils.IsValid(value)) { return; }
+
                 gain = Math.Clamp(value, 0.0f, 1.0f);
 
                 if (ALSourceIndex < 0) { return; }
@@ -219,7 +234,8 @@ namespace Barotrauma.Sounds
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set source's gain: " + debugName + ", " + Al.GetErrorString(alError));
+                    DebugConsole.ThrowError("Failed to set source's gain: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return;
                 }
             }
         }
@@ -241,8 +257,37 @@ namespace Barotrauma.Sounds
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to set source's looping state: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to set source's looping state: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
+                }
+            }
+        }
+
+        public float frequencyMultiplier;
+        public float FrequencyMultiplier
+        {
+            get
+            {
+                return frequencyMultiplier;
+            }
+            set
+            {
+                if (value < 0.25f || value > 4.0f)
+                {
+                    DebugConsole.ThrowError($"Frequency multiplier out of range: {value}" + Environment.StackTrace);
+                }
+                frequencyMultiplier = Math.Clamp(value, 0.25f, 4.0f);
+
+                if (ALSourceIndex < 0) { return; }
+
+                uint alSource = Sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex);
+
+                Al.Sourcef(alSource, Al.Pitch, frequencyMultiplier);
+                int alError = Al.GetError();
+                if (alError != Al.NoError)
+                {
+                    throw new Exception("Failed to set source's frequency multiplier: " + debugName + ", " + Al.GetErrorString(alError));
                 }
             }
         }
@@ -276,7 +321,8 @@ namespace Barotrauma.Sounds
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to get source's playback position: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to get source's playback position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
 
                     Al.SourceStop(alSource);
@@ -284,7 +330,8 @@ namespace Barotrauma.Sounds
                     alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to stop source: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to stop source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
 
                     Al.Sourcei(alSource, Al.Buffer, muffled ? (int)Sound.ALMuffledBuffer : (int)Sound.ALBuffer);
@@ -292,21 +339,24 @@ namespace Barotrauma.Sounds
                     alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to bind buffer to source: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to bind buffer to source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
 
                     Al.SourcePlay(alSource);
                     alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to replay source: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to replay source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
 
                     Al.Sourcei(alSource, Al.SampleOffset, playbackPos);
                     alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to reset playback position: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to reset playback position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return;
                     }
                 }
             }
@@ -329,7 +379,8 @@ namespace Barotrauma.Sounds
                     int alError = Al.GetError();
                     if (alError != Al.NoError)
                     {
-                        throw new Exception("Failed to get source's playback position: " + debugName + ", " + Al.GetErrorString(alError));
+                        DebugConsole.ThrowError("Failed to get source's playback position: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                        return 0.0f;
                     }
                     return Sound.GetAmplitudeAtPlaybackPos(playbackPos);
                 }
@@ -408,14 +459,15 @@ namespace Barotrauma.Sounds
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to determine playing state from source: " + debugName + ", " + Al.GetErrorString(alError));
+                    DebugConsole.ThrowError("Failed to determine playing state from source: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    return false;
                 }
                 bool playing = state == Al.Playing;
                 return playing;
             }
         }
 
-        public SoundChannel(Sound sound, float gain, Vector3? position, float near, float far, string category, bool muffle = false)
+        public SoundChannel(Sound sound, float gain, Vector3? position, float freqMult, float near, float far, string category, bool muffle = false)
         {
             Sound = sound;
 
@@ -517,6 +569,7 @@ namespace Barotrauma.Sounds
 
                 this.Position = position;
                 this.Gain = gain;
+                this.FrequencyMultiplier = freqMult;
                 this.Looping = false;
                 this.Near = near;
                 this.Far = far;
@@ -632,10 +685,10 @@ namespace Barotrauma.Sounds
 
         public void UpdateStream()
         {
-            if (!IsStream) { throw new Exception("Called UpdateStream on a non-streamed sound channel!"); }
-
             try
             {
+                if (!IsStream) { throw new Exception("Called UpdateStream on a non-streamed sound channel!"); }
+
                 Monitor.Enter(mutex);
                 if (!reachedEndSample)
                 {

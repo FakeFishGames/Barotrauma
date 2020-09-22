@@ -68,29 +68,52 @@ namespace Barotrauma.Items.Components
 
             if (Window.Height > 0 && Window.Width > 0)
             {
-                rect.Height = -(int)(Window.Y * item.Scale);
-
-                rect.Y += (int)(doorRect.Height * openState);
-                rect.Height = Math.Max(rect.Height - (rect.Y - doorRect.Y), 0);
-                rect.Y = Math.Min(doorRect.Y, rect.Y);
-                
-                if (convexHull2 != null)
+                if (IsHorizontal)
                 {
-                    Rectangle rect2 = doorRect;
-                    rect2.Y += (int)(Window.Y * item.Scale - Window.Height * item.Scale);
-
-                    rect2.Y += (int)(doorRect.Height * openState);
-                    rect2.Y = Math.Min(doorRect.Y, rect2.Y);
-                    rect2.Height = rect2.Y - (doorRect.Y - (int)(doorRect.Height * (1.0f - openState)));
-
-                    if (rect2.Height == 0)
+                    rect.Width = (int)(Window.X * item.Scale);
+                    rect.X -= (int)(doorRect.Width * openState);
+                    rect.Width = Math.Max(rect.Width - (doorRect.X - rect.X), 0);
+                    rect.X = Math.Max(doorRect.X, rect.X);
+                    if (convexHull2 != null)
                     {
-                        convexHull2.Enabled = false;
+                        Rectangle rect2 = doorRect;
+                        rect2.X += (int)(Window.Right * item.Scale);
+                        rect2.X -= (int)(doorRect.Width * openState);
+                        rect2.X = Math.Max(doorRect.X, rect2.X);
+                        rect2.Width = doorRect.Right - (int)(doorRect.Width * openState) - rect2.X;
+                        if (rect2.Width == 0)
+                        {
+                            convexHull2.Enabled = false;
+                        }
+                        else
+                        {
+                            convexHull2.Enabled = true;
+                            convexHull2.SetVertices(GetConvexHullCorners(rect2));
+                        }
                     }
-                    else
+                }
+                else
+                {
+                    rect.Height = -(int)(Window.Y * item.Scale);
+                    rect.Y += (int)(doorRect.Height * openState);
+                    rect.Height = Math.Max(rect.Height - (rect.Y - doorRect.Y), 0);
+                    rect.Y = Math.Min(doorRect.Y, rect.Y);                
+                    if (convexHull2 != null)
                     {
-                        convexHull2.Enabled = true;
-                        convexHull2.SetVertices(GetConvexHullCorners(rect2));
+                        Rectangle rect2 = doorRect;
+                        rect2.Y += (int)(Window.Y * item.Scale - Window.Height * item.Scale);
+                        rect2.Y += (int)(doorRect.Height * openState);
+                        rect2.Y = Math.Min(doorRect.Y, rect2.Y);
+                        rect2.Height = rect2.Y - (doorRect.Y - (int)(doorRect.Height * (1.0f - openState)));
+                        if (rect2.Height == 0)
+                        {
+                            convexHull2.Enabled = false;
+                        }
+                        else
+                        {
+                            convexHull2.Enabled = true;
+                            convexHull2.SetVertices(GetConvexHullCorners(rect2));
+                        }
                     }
                 }
             }
@@ -251,8 +274,9 @@ namespace Barotrauma.Items.Components
             bool open       = msg.ReadBoolean();
             bool broken     = msg.ReadBoolean();
             bool forcedOpen = msg.ReadBoolean();
+            bool isStuck    = msg.ReadBoolean();
             SetState(open, isNetworkMessage: true, sendNetworkMessage: false, forcedOpen: forcedOpen);
-            Stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+            stuck = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             UInt16 lastUserID = msg.ReadUInt16();
             Character user = lastUserID == 0 ? null : Entity.FindEntityByID(lastUserID) as Character;
             if (user != lastUser)
@@ -260,7 +284,7 @@ namespace Barotrauma.Items.Components
                 lastUser = user;
                 toggleCooldownTimer = ToggleCoolDown;
             }
-
+            this.isStuck = isStuck;
             if (isStuck) { OpenState = 0.0f; }
             IsBroken = broken;
             PredictedState = null;

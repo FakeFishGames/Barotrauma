@@ -54,7 +54,8 @@ namespace Barotrauma
 
         public readonly string AchievementIdentifier;
 
-        public readonly Dictionary<string, float> ReputationRewards = new Dictionary<string, float>(); 
+        public readonly Dictionary<string, float> ReputationRewards = new Dictionary<string, float>();
+        public readonly List<Tuple<string, object, SetDataAction.OperationType>> DataRewards = new List<Tuple<string, object, SetDataAction.OperationType>>();
 
         public readonly int Commonness;
 
@@ -176,6 +177,23 @@ namespace Barotrauma
                             {
                                 DebugConsole.ThrowError($"Error in mission prefab \"{Identifier}\". Could not find a faction with the identifier \"{factionIdentifier}\".");
                             }
+                        }
+                        break;
+                    case "metadata":
+                        string identifier = subElement.GetAttributeString("identifier", string.Empty);
+                        string stringValue = subElement.GetAttributeString("value", string.Empty);
+                        if (!string.IsNullOrWhiteSpace(stringValue) && !string.IsNullOrWhiteSpace(identifier))
+                        {
+                            object value = SetDataAction.ConvertXMLValue(stringValue);
+                            SetDataAction.OperationType operation = SetDataAction.OperationType.Set;
+
+                            string operatingString = subElement.GetAttributeString("operation", string.Empty);
+                            if (!string.IsNullOrWhiteSpace(operatingString))
+                            {
+                                operation = (SetDataAction.OperationType) Enum.Parse(typeof(SetDataAction.OperationType), operatingString);
+                            }
+
+                            DataRewards.Add(Tuple.Create(identifier, value, operation));
                         }
                         break;
                 }

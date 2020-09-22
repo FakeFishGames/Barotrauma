@@ -6,6 +6,7 @@ using System.Globalization;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -207,6 +208,16 @@ namespace Barotrauma
         {
             List.Clear();
             var locationTypeFiles = GameMain.Instance.GetFilesOfType(ContentType.LocationTypes);
+            if (!locationTypeFiles.Any())
+            {
+                DebugConsole.ThrowError("No location types configured in any of the selected content packages. Attempting to load from the vanilla content package...");
+                locationTypeFiles = ContentPackage.GetFilesOfType(GameMain.VanillaContent.ToEnumerable(), ContentType.LocationTypes);
+                if (!locationTypeFiles.Any())
+                {
+                    throw new Exception("No location types configured in any of the selected content packages. Please try uninstalling mods or reinstalling the game.");
+                }
+            }
+
             foreach (ContentFile file in locationTypeFiles)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file.Path);

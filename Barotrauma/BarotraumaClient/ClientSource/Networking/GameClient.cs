@@ -520,11 +520,13 @@ namespace Barotrauma.Networking
                     msgBox.Content.Parent.RectTransform.MinSize = new Point(0, (int)(msgBox.Content.RectTransform.MinSize.Y / msgBox.Content.RectTransform.RelativeSize.Y));
 
                     var okButton = msgBox.Buttons[0];
+                    okButton.OnClicked += msgBox.Close;
                     var cancelButton = msgBox.Buttons[1];
+                    cancelButton.OnClicked += msgBox.Close;
 
                     okButton.OnClicked += (GUIButton button, object obj) =>
                     {
-                        clientPeer.SendPassword(passwordBox.Text);
+                        clientPeer?.SendPassword(passwordBox.Text);
                         requiresPw = false;
                         return true;
                     };
@@ -855,22 +857,6 @@ namespace Barotrauma.Networking
                         traitorResults.Add(new TraitorMissionResult(inc));
                     }
 
-                    if (GameMain.GameSession?.GameMode is CampaignMode mpCampaign)
-                    {
-                        if (inc.ReadBoolean())
-                        {
-                            Dictionary<string, int> clientUpgrades = UpgradeManager.GetMetadataLevels(mpCampaign.CampaignMetadata);
-                            Dictionary<string, int> serverUpgrades = new Dictionary<string, int>();
-
-                            int length = inc.ReadUInt16();
-                            for (int i = 0; i < length; i++)
-                            {
-                                serverUpgrades.Add(inc.ReadString(), inc.ReadByte());
-                            }
-                            UpgradeManager.CompareUpgrades(clientUpgrades, serverUpgrades);
-                        }
-                    }
-
                     roundInitStatus = RoundInitStatus.Interrupted;
                     CoroutineManager.StartCoroutine(EndGame(endMessage, traitorResults, transitionType), "EndGame");
                     break;
@@ -934,7 +920,7 @@ namespace Barotrauma.Networking
 
         private void ReadStartGameFinalize(IReadMessage inc)
         {
-            TaskPool.ListTasks(null);
+            TaskPool.ListTasks();
             ushort contentToPreloadCount = inc.ReadUInt16();
             List<ContentFile> contentToPreload = new List<ContentFile>();
             for (int i = 0; i < contentToPreloadCount; i++)
@@ -1006,8 +992,19 @@ namespace Barotrauma.Networking
         }
 
 
-        private void OnDisconnect()
+        private void OnDisconnect(bool disableReconnect)
         {
+            CoroutineManager.StopCoroutines("WaitForStartingInfo");
+            reconnectBox?.Close();
+            reconnectBox = null;
+
+            GameMain.Config.RestoreBackupPackages();
+
+            GUI.ClearCursorWait();
+
+            if (disableReconnect) { allowReconnect = false; }
+            if (!this.allowReconnect) { CancelConnect(); }
+
             if (SteamManager.IsInitialized)
             {
                 Steamworks.SteamFriends.ClearRichPresence();
@@ -1107,8 +1104,9 @@ namespace Barotrauma.Networking
 
                 reconnectBox?.Close();
                 reconnectBox = new GUIMessageBox(
-                    TextManager.Get("ConnectionLost"),
-                    msg, new string[0]);
+                    TextManager.Get("ConnectionLost"), msg, 
+                    new string[] { TextManager.Get("Cancel") });
+                reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                 connected = false;
                 ConnectToServer(serverEndpoint, serverName);
             }
@@ -1385,6 +1383,7 @@ namespace Barotrauma.Networking
             if (gameMode == null)
             {
                 DebugConsole.ThrowError("Game mode \"" + modeIdentifier + "\" not found!");
+                roundInitStatus = RoundInitStatus.Interrupted;
                 yield return CoroutineStatus.Failure;
             }
 
@@ -1415,11 +1414,13 @@ namespace Barotrauma.Networking
                 int missionIndex = inc.ReadInt16();
                 if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
                 {
+                    roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Success;
                 }
 
                 if (!GameMain.NetLobbyScreen.TrySelectSub(shuttleName, shuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox))
                 {
+                    roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Success;
                 }
 
@@ -1448,6 +1449,7 @@ namespace Barotrauma.Networking
                     GameMain.NetLobbyScreen.Select();
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectSub" + subName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
                 if (GameMain.NetLobbyScreen.SelectedShuttle == null ||
@@ -1459,6 +1461,7 @@ namespace Barotrauma.Networking
                     string errorMsg = "Failed to select shuttle \"" + shuttleName + "\" (hash: " + shuttleHash + ").";
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:FailedToSelectShuttle" + shuttleName, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
 
@@ -1487,6 +1490,7 @@ namespace Barotrauma.Networking
                     gameStarted = true;
                     DebugConsole.ThrowError(errorMsg);
                     GameMain.NetLobbyScreen.Select();
+                    roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
                 else if (campaign.Map == null)
@@ -1495,6 +1499,7 @@ namespace Barotrauma.Networking
                     gameStarted = true;
                     DebugConsole.ThrowError(errorMsg);
                     GameMain.NetLobbyScreen.Select();
+                    roundInitStatus = RoundInitStatus.Interrupted;
                     yield return CoroutineStatus.Failure;
                 }
 
@@ -1513,6 +1518,11 @@ namespace Barotrauma.Networking
                 {
                     GameMain.GameSession.StartRound(levelData, mirrorLevel);
                 }
+            }
+
+            if (GameMain.Client?.ServerSettings?.Voting != null)
+            {
+                GameMain.Client.ServerSettings.Voting.ResetVotes(GameMain.Client.ConnectedClients);
             }
 
             if (loadTask != null)
@@ -1626,7 +1636,10 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (respawnAllowed) { respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle ? GameMain.NetLobbyScreen.SelectedShuttle : null); }
+            if (respawnAllowed) 
+            { 
+                respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle && gameMode != GameModePreset.MultiPlayerCampaign ? GameMain.NetLobbyScreen.SelectedShuttle : null);
+            }
 
             gameStarted = true;
             ServerSettings.ServerDetailsChanged = true;
@@ -1645,6 +1658,17 @@ namespace Barotrauma.Networking
 
         public IEnumerable<object> EndGame(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
+            //round starting up, wait for it to finish
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 60);
+            while (TaskPool.IsTaskRunning("AsyncCampaignStartRound"))
+            {
+                if (DateTime.Now > timeOut)
+                {
+                    throw new Exception("Failed to end a round (async campaign round start timed out).");
+                }
+                yield return new WaitForSeconds(1.0f);
+            }
+
             if (!gameStarted)
             {
                 GameMain.NetLobbyScreen.Select();
@@ -2086,7 +2110,6 @@ namespace Barotrauma.Networking
             {
                 while ((objHeader = (ServerNetObject)inc.ReadByte()) != ServerNetObject.END_OF_MESSAGE)
                 {
-                    bool eventReadFailed = false;
                     switch (objHeader)
                     {
                         case ServerNetObject.SYNC_IDS:
@@ -2110,7 +2133,13 @@ namespace Barotrauma.Networking
                             int msgEndPos = (int)(inc.BitPosition + msgLength * 8);
 
                             var entity = Entity.FindEntityByID(id) as IServerSerializable;
-                            if (entity != null)
+                            if (msgEndPos > inc.LengthBits)
+                            {
+                                DebugConsole.ThrowError($"Error while reading a position update for the entity \"({entity?.ToString() ?? "null"})\". Message length exceeds the size of the buffer.");
+                                return;
+                            }
+
+                            if (entity != null && (entity is Item || entity is Character || entity is Submarine))
                             {
                                 entity.ClientRead(objHeader.Value, inc, sendingTime);
                             }
@@ -2127,8 +2156,7 @@ namespace Barotrauma.Networking
                         case ServerNetObject.ENTITY_EVENT_INITIAL:
                             if (!entityEventManager.Read(objHeader.Value, inc, sendingTime, entities))
                             {
-                                eventReadFailed = true;
-                                break;
+                                return;
                             }
                             break;
                         case ServerNetObject.CHAT_MESSAGE:
@@ -2138,16 +2166,11 @@ namespace Barotrauma.Networking
                             throw new Exception($"Unknown object header \"{objHeader}\"!)");
                     }
                     prevBitLength = inc.BitPosition - prevBitPos;
-                    prevByteLength = inc.BytePosition - prevByteLength;
+                    prevByteLength = inc.BytePosition - prevBytePos;
 
                     prevObjHeader = objHeader;
                     prevBitPos = inc.BitPosition;
                     prevBytePos = inc.BytePosition;
-
-                    if (eventReadFailed)
-                    {
-                        break;
-                    }
                 }
             }
 
@@ -2618,7 +2641,7 @@ namespace Barotrauma.Networking
         public void VoteForKick(Client votedClient)
         {
             if (votedClient == null) { return; }
-            votedClient.AddKickVote(ConnectedClients.First(c => c.ID == ID));
+            votedClient.AddKickVote(ConnectedClients.FirstOrDefault(c => c.ID == myID));
             Vote(VoteType.Kick, votedClient);
         }
 

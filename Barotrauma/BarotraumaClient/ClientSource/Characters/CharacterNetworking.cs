@@ -14,7 +14,8 @@ namespace Barotrauma
             {
                 if (this != Controlled)
                 {
-                    if (GameMain.Client.EndCinematic != null) // Freezes the characters during the ending cinematic
+                    if (GameMain.Client.EndCinematic != null && 
+                        GameMain.Client.EndCinematic.Running) // Freezes the characters during the ending cinematic
                     {
                         AnimController.Frozen = true;
                         memState.Clear();

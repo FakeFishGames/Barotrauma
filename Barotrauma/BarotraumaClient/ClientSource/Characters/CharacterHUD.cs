@@ -52,7 +52,6 @@ namespace Barotrauma
             return 
                 character?.Inventory != null && 
                 character.AllowInput &&
-                !character.LockHands &&
                 (controller?.User != character || !controller.HideHUD) &&
                 !IsCampaignInterfaceOpen &&
                 !ConversationAction.FadeScreenToBlack;
@@ -227,7 +226,7 @@ namespace Barotrauma
                     Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);                
             }
 
-            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
+            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen && (!character.IsKeyDown(InputType.Aim) || character.SelectedItems.Any(it => it?.GetComponent<Sprayer>() == null)))
             {
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
@@ -307,6 +306,14 @@ namespace Barotrauma
                 {
                     progressBar.Draw(spriteBatch, cam);
                 }
+
+                foreach (Character npc in Character.CharacterList)
+                {
+                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
+
+                    var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
+                    GUI.DrawIndicator(spriteBatch, npc.WorldPosition, cam, 500.0f, iconStyle.GetDefaultSprite(), iconStyle.Color);
+                }
             }
 
             if (character.SelectedConstruction != null && 
@@ -355,7 +362,7 @@ namespace Barotrauma
                 }
                 if (ShouldDrawInventory(character))
                 {
-                    character.Inventory.Locked = LockInventory(character);
+                    character.Inventory.Locked = character == Character.Controlled && LockInventory(character);
                     character.Inventory.DrawOwn(spriteBatch);
                     character.Inventory.CurrentLayout = CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null ?
                         CharacterInventory.Layout.Default :
@@ -369,13 +376,9 @@ namespace Barotrauma
                 {
                     if (character.SelectedCharacter.CanInventoryBeAccessed)
                     {
-                        ///character.Inventory.CurrentLayout = Alignment.Left;
+                        character.SelectedCharacter.Inventory.Locked = false;
                         character.SelectedCharacter.Inventory.CurrentLayout = CharacterInventory.Layout.Left;
                         character.SelectedCharacter.Inventory.DrawOwn(spriteBatch);
-                    }
-                    else
-                    {
-                        //character.Inventory.CurrentLayout = (CharacterHealth.OpenHealthWindow == null) ? Alignment.Center : Alignment.Left;
                     }
                     if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
                     {
@@ -450,7 +453,6 @@ namespace Barotrauma
         private static bool LockInventory(Character character)
         {
             if (character?.Inventory == null || !character.AllowInput || character.LockHands || IsCampaignInterfaceOpen) { return true; }
-
             return character.ShouldLockHud();
         }
 

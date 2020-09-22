@@ -30,6 +30,14 @@ namespace Barotrauma
 
             healthUpdateTimer = 0.0f;
 
+            if (CauseOfDeath.Killer != null && CauseOfDeath.Killer.IsTraitor && CauseOfDeath.Killer != this)
+            {
+                var owner = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+                if (owner != null)
+                {
+                    GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("KilledByTraitorNotification"), owner, ChatMessageType.ServerMessageBoxInGame);
+                }
+            }
             foreach (Client client in GameMain.Server.ConnectedClients)
             {
                 if (client.InGame)

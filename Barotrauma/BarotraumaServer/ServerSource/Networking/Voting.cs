@@ -82,20 +82,18 @@ namespace Barotrauma
             switch (voteType)
             {
                 case VoteType.Sub:
-                    string subName = inc.ReadString();
-                    SubmarineInfo sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                    int equalityCheckVal = inc.ReadInt32();
+                    SubmarineInfo sub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.EqualityCheckVal == equalityCheckVal);
                     sender.SetVote(voteType, sub);
                     break;
-
                 case VoteType.Mode:
                     string modeIdentifier = inc.ReadString();
                     GameModePreset mode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
-                    if (!mode.Votable) break;
-
+                    if (!mode.Votable) { break; }
                     sender.SetVote(voteType, mode);
                     break;
                 case VoteType.EndRound:
-                    if (!sender.HasSpawned) return;
+                    if (!sender.HasSpawned) { return; }
                     sender.SetVote(voteType, inc.ReadBoolean());
 
                     GameMain.NetworkMember.EndVoteCount = GameMain.Server.ConnectedClients.Count(c => c.HasSpawned && c.GetVote<bool>(VoteType.EndRound));

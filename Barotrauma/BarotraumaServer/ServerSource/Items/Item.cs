@@ -139,7 +139,6 @@ namespace Barotrauma
                     }
                     break;
                 case NetEntityEvent.Type.Upgrade:
-                {
                     if (extraData.Length > 0 && extraData[1] is Upgrade upgrade)
                     {
                         var upgradeTargets = upgrade.TargetComponents;
@@ -163,7 +162,6 @@ namespace Barotrauma
                             : $"Failed to write a network event for the item \"{Name}\". No upgrade specified.";
                     }
                     break;
-                }
                 default:
                     errorMsg = "Failed to write a network event for the item \"" + Name + "\" - \"" + eventType + "\" is not a valid entity event type for items.";
                     break;
@@ -382,7 +380,10 @@ namespace Barotrauma
             int index = components.IndexOf(ic);
             if (index == -1) return;
 
-            GameMain.Server.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.ComponentState, index });
+            object[] extraData = new object[] { NetEntityEvent.Type.ComponentState, index };
+            ic.ServerAppendExtraData(ref extraData);
+
+            GameMain.Server.CreateEntityEvent(this, extraData);
         }
     }
 }

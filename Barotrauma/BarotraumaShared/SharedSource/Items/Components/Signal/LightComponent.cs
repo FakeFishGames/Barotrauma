@@ -208,7 +208,8 @@ namespace Barotrauma.Items.Components
             else
             {
 #if CLIENT
-                light.Rotation = -Rotation;
+                light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
+                light.LightSpriteEffect = item.SpriteEffects;
 #endif
             }
 
@@ -265,11 +266,14 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "toggle":
-                    if (!IgnoreContinuousToggle || lastToggleSignalTime < Timing.TotalTime - 0.1)
+                    if (signal != "0")
                     {
-                        IsOn = !IsOn;
+                        if (!IgnoreContinuousToggle || lastToggleSignalTime < Timing.TotalTime - 0.1)
+                        {
+                            IsOn = !IsOn;
+                        }
+                        lastToggleSignalTime = Timing.TotalTime;
                     }
-                    lastToggleSignalTime = Timing.TotalTime;
                     break;
                 case "set_state":
                     IsOn = signal != "0";

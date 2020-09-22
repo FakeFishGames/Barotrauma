@@ -55,6 +55,7 @@ namespace Barotrauma
         private Character speaker;
 
         private OrderInfo? prevSpeakerOrder;
+        private AIObjective prevIdleObjective, prevGotoObjective;
 
         public List<SubactionGroup> Options { get; private set; }
 
@@ -169,13 +170,19 @@ namespace Barotrauma
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
 #endif
-            if (prevSpeakerOrder != null)
+            var humanAI = speaker.AIController as HumanAIController;
+            if (humanAI != null)
             {
-                (speaker.AIController as HumanAIController)?.SetOrder(prevSpeakerOrder.Value.Order, prevSpeakerOrder.Value.OrderOption, orderGiver: null, speak: false);
-            }
-            else
-            {
-                (speaker.AIController as HumanAIController)?.SetOrder(null, string.Empty, orderGiver: null, speak: false);
+                if (prevSpeakerOrder != null)
+                {
+                    humanAI.SetOrder(prevSpeakerOrder.Value.Order, prevSpeakerOrder.Value.OrderOption, orderGiver: null, speak: false);
+                }
+                else
+                {
+                    humanAI.SetOrder(null, string.Empty, orderGiver: null, speak: false);
+                }
+                if (prevIdleObjective != null) { humanAI.ObjectiveManager.AddObjective(prevIdleObjective); }
+                if (prevGotoObjective != null) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
             }
         }
 
@@ -246,9 +253,12 @@ namespace Barotrauma
                     TryStartConversation(null);
                 }
             }
-            else if (Options.Any())
+            else
             {
-                Options[selectedOption].Update(deltaTime);
+                if (Options.Any())
+                {
+                    Options[selectedOption].Update(deltaTime);
+                }
             }
         }
 
@@ -300,6 +310,8 @@ namespace Barotrauma
                 {
                     prevSpeakerOrder = new OrderInfo(humanAI.CurrentOrder, humanAI.CurrentOrderOption);
                 }
+                prevIdleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
+                prevGotoObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveGoTo>();
                 humanAI.SetOrder(
                     Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)), 
                     option: string.Empty, orderGiver: null, speak: false);
@@ -334,25 +346,11 @@ namespace Barotrauma
         {
             if (!interrupt)
             {
-                SubactionGroup selOtion = null;
-                if (selectedOption >= 0 && Options.Count > selectedOption)
-                {
-                    selOtion = Options[selectedOption];
-                }
-
-                EventAction subAction = null;
-                if (selOtion != null)
-                {
-                    subAction = selOtion.CurrentSubAction;
-                }
-
-                return $"{ToolBox.GetDebugSymbol(selectedOption > -1)} {nameof(ConversationAction)} -> (Selected option: {selOtion?.Text.ColorizeObject()})\n" +
-                       $"            Sub action: {subAction.ColorizeObject()}";
+                return $"{ToolBox.GetDebugSymbol(selectedOption > -1, selectedOption < 0 && dialogOpened)} {nameof(ConversationAction)} -> (Selected option: {selectedOption.ColorizeObject()})";
             }
             else
             {
-                return $"{ToolBox.GetDebugSymbol(true)} {nameof(ConversationAction)} -> (Interrupted)\n" +
-                       $"            Sub action: {Interrupted?.CurrentSubAction.ColorizeObject()}";
+                return $"{ToolBox.GetDebugSymbol(true, selectedOption < 0 && dialogOpened)} {nameof(ConversationAction)} -> (Interrupted)";
             }
         }
     }

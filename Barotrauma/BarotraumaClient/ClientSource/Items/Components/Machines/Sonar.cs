@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -20,7 +19,7 @@ namespace Barotrauma.Items.Components
 
         private PathFinder pathFinder;
 
-        private bool dynamicDockingIndicator = true;
+        private readonly bool dynamicDockingIndicator = true;
 
         private bool unsentChanges;
         private float networkUpdateTimer;
@@ -378,7 +377,6 @@ namespace Barotrauma.Items.Components
                         float edgeDist = Rand.Range(0.0f, 1.0f);
                         Vector2 blipPos = trigger.WorldPosition + Rand.Vector(trigger.ColliderRadius * edgeDist);
                         Vector2 blipVel = flow;
-                        if (trigger.ForceFalloff) flow *= (1.0f - edgeDist);
 
                         //go through other triggers in range and add the flows of the ones that the blip is inside
                         foreach (KeyValuePair<LevelTrigger, Vector2> triggerFlow2 in levelTriggerFlows)
@@ -387,7 +385,7 @@ namespace Barotrauma.Items.Components
                             if (trigger2 != trigger && Vector2.DistanceSquared(blipPos, trigger2.WorldPosition) < trigger2.ColliderRadius * trigger2.ColliderRadius)
                             {
                                 Vector2 trigger2flow = triggerFlow2.Value;
-                                if (trigger2.ForceFalloff) trigger2flow *= (1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius);
+                                if (trigger2.ForceFalloff) trigger2flow *= 1.0f - Vector2.Distance(blipPos, trigger2.WorldPosition) / trigger2.ColliderRadius;
                                 blipVel += trigger2flow;
                             }
                         }
@@ -507,7 +505,7 @@ namespace Barotrauma.Items.Components
             float passivePingRadius = (float)(Timing.TotalTime % 1.0f);
             if (passivePingRadius > 0.0f)
             {
-                disruptedDirections.Clear();
+                if (activePingsCount == 0) { disruptedDirections.Clear(); }
                 foreach (AITarget t in AITarget.List)
                 {
                     if (t.Entity is Character c && c.Params.HideInSonar) { continue; }
@@ -581,14 +579,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (currentMode == Mode.Active && currentPingIndex != -1)
+            if (currentPingIndex != -1)
             {
                 var activePing = activePings[currentPingIndex];
                 if (activePing.IsDirectional && directionalPingCircle != null)
                 {
                     directionalPingCircle.Draw(spriteBatch, center, Color.White * (1.0f - activePing.State),
-                    rotate: MathUtils.VectorToAngle(activePing.Direction),
-                    scale: (DisplayRadius / directionalPingCircle.size.X) * activePing.State);
+                        rotate: MathUtils.VectorToAngle(activePing.Direction),
+                        scale: DisplayRadius / directionalPingCircle.size.X * activePing.State);
                 }
                 else
                 {
@@ -611,13 +609,13 @@ namespace Barotrauma.Items.Components
 
             if (sonarBlips.Count > 0)
             {
-                zoomSqrt = (float)Math.Sqrt(zoom);
+                float blipScale = 0.08f * (float)Math.Sqrt(zoom) * (rect.Width / 700.0f);
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive);
 
                 foreach (SonarBlip sonarBlip in sonarBlips)
                 {
-                    DrawBlip(spriteBatch, sonarBlip, transducerCenter, center, sonarBlip.FadeTimer / 2.0f * signalStrength);
+                    DrawBlip(spriteBatch, sonarBlip, transducerCenter, center, sonarBlip.FadeTimer / 2.0f * signalStrength, blipScale);
                 }
 
                 spriteBatch.End();
@@ -1297,7 +1295,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void DrawBlip(SpriteBatch spriteBatch, SonarBlip blip, Vector2 transducerPos, Vector2 center, float strength)
+        private void DrawBlip(SpriteBatch spriteBatch, SonarBlip blip, Vector2 transducerPos, Vector2 center, float strength, float blipScale)
         {
             strength = MathHelper.Clamp(strength, 0.0f, 1.0f);
             
@@ -1306,8 +1304,8 @@ namespace Barotrauma.Items.Components
             Vector2 pos = (blip.Position - transducerPos) * displayScale * zoom;
             pos.Y = -pos.Y;
 
-            if (Rand.Range(0.5f, 2.0f) < distort) pos.X = -pos.X;
-            if (Rand.Range(0.5f, 2.0f) < distort) pos.Y = -pos.Y;
+            if (Rand.Range(0.5f, 2.0f) < distort) { pos.X = -pos.X; }
+            if (Rand.Range(0.5f, 2.0f) < distort) { pos.Y = -pos.Y; }
 
             float posDistSqr = pos.LengthSquared();
             if (posDistSqr > DisplayRadius * DisplayRadius)
@@ -1324,15 +1322,15 @@ namespace Barotrauma.Items.Components
 
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
             Vector2 normal = new Vector2(dir.Y, -dir.X);
-            float scale = (strength + 3.0f) * blip.Scale * zoomSqrt;
+            float scale = (strength + 3.0f) * blip.Scale * blipScale;
             Color color = ToolBox.GradientLerp(strength, blipColorGradient[blip.BlipType]);
 
             sonarBlip.Draw(spriteBatch, center + pos, color, sonarBlip.Origin, blip.Rotation ?? MathUtils.VectorToAngle(pos),
-                blip.Size * scale * 0.04f, SpriteEffects.None, 0);
+                blip.Size * scale * 0.5f, SpriteEffects.None, 0);
 
             pos += Rand.Range(0.0f, 1.0f) * dir + Rand.Range(-scale, scale) * normal;
 
-            sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale * 0.08f, SpriteEffects.None, 0);
+            sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale, SpriteEffects.None, 0);
         }
 
         private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius)

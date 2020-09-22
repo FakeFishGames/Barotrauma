@@ -67,6 +67,7 @@
     <Command name="mute"/>
     <Command name="unmute"/>
     <Command name="godmode"/>
+    <Command name="godmode_mainsub"/>
     <Command name="lock"/>
     <Command name="lockx"/>
     <Command name="locky"/>
@@ -88,6 +89,7 @@
     <Command name="resetkarma"/>
     <Command name="showkarma"/>
     <Command name="togglekarmatestmode"/>
+    <Command name="togglecampaignteleport"/>
     <Command name="respawnnow"/>
     <Command name="traitorlist"/>
   </Preset>

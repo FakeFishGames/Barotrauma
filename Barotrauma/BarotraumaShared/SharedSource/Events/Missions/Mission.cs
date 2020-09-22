@@ -10,7 +10,7 @@ namespace Barotrauma
     abstract partial class Mission
     {
         public readonly MissionPrefab Prefab;
-        protected bool completed;
+        protected bool completed, failed;
         protected int state;
         public int State
         {
@@ -74,7 +74,12 @@ namespace Barotrauma
             get { return completed; }
             set { completed = value; }
         }
-        
+
+        public bool Failed
+        {
+            get { return failed; }
+        }
+
         public virtual bool AllowRespawn
         {
             get { return true; }
@@ -217,6 +222,14 @@ namespace Barotrauma
                 {
                     Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(reputationReward.Key, StringComparison.OrdinalIgnoreCase));
                     if (faction != null) { faction.Reputation.Value += reputationReward.Value; }
+                }
+            }
+
+            if (Prefab.DataRewards != null)
+            {
+                foreach (var (identifier, value, operation) in Prefab.DataRewards)
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, identifier, value, operation);
                 }
             }
         }

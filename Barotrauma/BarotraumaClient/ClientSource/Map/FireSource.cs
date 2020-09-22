@@ -12,35 +12,10 @@ namespace Barotrauma
         partial void UpdateProjSpecific(float growModifier)
         {
             EmitParticles(size, WorldPosition, hull, growModifier, OnChangeHull);
-            
+
             lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
             if (Math.Abs((lightSource.Range * 0.2f) - Math.Max(size.X, size.Y)) > 1.0f) lightSource.Range = Math.Max(size.X, size.Y) * 5.0f;
-            if (Vector2.DistanceSquared(lightSource.Position,position) > 5.0f) lightSource.Position = position + Vector2.UnitY * 30.0f;
-
-            if (size.X > 256.0f)
-            {
-                if (burnDecals.Count == 0)
-                {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition + size/2);
-                    if (newDecal != null) burnDecals.Add(newDecal);
-                }
-                else if (WorldPosition.X < burnDecals[0].WorldPosition.X - 256.0f)
-                {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition);
-                    if (newDecal != null) burnDecals.Insert(0, newDecal);
-                }
-                else if (WorldPosition.X + size.X > burnDecals[burnDecals.Count-1].WorldPosition.X + 256.0f)
-                {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition + Vector2.UnitX * size.X);
-                    if (newDecal != null) burnDecals.Add(newDecal);
-                }
-            }
-            
-            foreach (Decal d in burnDecals)
-            {
-                //prevent the decals from fading out as long as the firesource is alive
-                d.FadeTimer = Math.Min(d.FadeTimer, d.FadeInTime);
-            }
+            if (Vector2.DistanceSquared(lightSource.Position, position) > 5.0f) lightSource.Position = position + Vector2.UnitY * 30.0f;
         }
 
         public static void EmitParticles(Vector2 size, Vector2 worldPosition, Hull hull, float growModifier, Particle.OnChangeHullHandler onChangeHull = null)

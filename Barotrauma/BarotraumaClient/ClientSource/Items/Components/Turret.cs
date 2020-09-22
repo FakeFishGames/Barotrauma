@@ -17,6 +17,17 @@ namespace Barotrauma.Items.Components
 
         private GUIProgressBar powerIndicator;
 
+        public int UIElementHeight
+        {
+            get 
+            {
+                int height = 0;
+                if (ShowChargeIndicator) { height += powerIndicator.Rect.Height; }
+                if (ShowProjectileIndicator) { height += (int)(Inventory.SlotSpriteSmall.size.Y * Inventory.UIScale) + 5; }
+                return height;
+            }
+        }
+
         private float recoilTimer;
 
         private float RetractionTime => Math.Max(Reload * RetractionDurationMultiplier, RecoilTime);
@@ -235,12 +246,11 @@ namespace Barotrauma.Items.Components
         
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
-            Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
-            if (item.Submarine != null)
+            if (!MathUtils.NearlyEqual(item.Rotation, prevBaseRotation))
             {
-                drawPos += item.Submarine.DrawPosition;
+                UpdateTransformedBarrelPos();
             }
-            drawPos.Y = -drawPos.Y;
+            Vector2 drawPos = GetDrawPos();
 
             float recoilOffset = 0.0f;
             if (Math.Abs(RecoilDistance) > 0.0f && recoilTimer > 0.0f)
@@ -275,7 +285,7 @@ namespace Barotrauma.Items.Components
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
 
-            if (!editing) { return; }
+            if (!editing || GUI.DisableHUD) { return; }
 
             float widgetRadius = 60.0f;
 
@@ -310,7 +320,7 @@ namespace Barotrauma.Items.Components
                  };
                  widget.MouseHeld += (deltaTime) =>
                  {
-                     minRotation = GetRotationAngle(drawPos);
+                     minRotation = GetRotationAngle(GetDrawPos());
                      if (minRotation > maxRotation)
                      {
                          float temp = minRotation;
@@ -332,7 +342,7 @@ namespace Barotrauma.Items.Components
                  widget.PreDraw += (sprtBtch, deltaTime) =>
                  {
                      widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
-                     widget.DrawPos = drawPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius;
+                     widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius;
                      widget.Update(deltaTime);
                  };
              });
@@ -351,7 +361,7 @@ namespace Barotrauma.Items.Components
                 };
                 widget.MouseHeld += (deltaTime) =>
                 {
-                    maxRotation = GetRotationAngle(drawPos);
+                    maxRotation = GetRotationAngle(GetDrawPos());
                     if (minRotation > maxRotation)
                     {
                         float temp = minRotation;
@@ -373,12 +383,20 @@ namespace Barotrauma.Items.Components
                 widget.PreDraw += (sprtBtch, deltaTime) =>
                 {
                     widget.tooltip = "Max: " + (int)MathHelper.ToDegrees(maxRotation);
-                    widget.DrawPos = drawPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * widgetRadius;
+                    widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * widgetRadius;
                     widget.Update(deltaTime);
                 };
             });
             minRotationWidget.Draw(spriteBatch, (float)Timing.Step);
             maxRotationWidget.Draw(spriteBatch, (float)Timing.Step);
+
+            Vector2 GetDrawPos()
+            {
+                Vector2 drawPos = new Vector2(item.Rect.X + transformedBarrelPos.X, item.Rect.Y - transformedBarrelPos.Y);
+                if (item.Submarine != null) { drawPos += item.Submarine.DrawPosition; }
+                drawPos.Y = -drawPos.Y;
+                return drawPos;
+            }
         }
 
         private Widget GetWidget(string id, SpriteBatch spriteBatch, int size = 5, Action<Widget> initMethod = null)

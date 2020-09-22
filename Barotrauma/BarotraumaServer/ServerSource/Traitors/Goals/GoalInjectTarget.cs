@@ -34,6 +34,8 @@ namespace Barotrauma
 
             private bool WereAllTargetsInfected()
             {
+                if (targetWasInfected == null) { return false; }
+
                 for (int i = 0; i < targetWasInfected.Length; i++)
                 {
                     if (targetWasInfected[i]) continue;
@@ -52,8 +54,12 @@ namespace Barotrauma
                 poisonName = TextManager.FormatServerMessage(poisonId) ?? poisonId;
 
                 Targets = traitor.Mission.FindKillTarget(traitor.Character, Filter, targetCount, targetPercentage);
+                if (Targets == null)
+                {
+                    return false;
+                }
                 targetWasInfected = new bool[Targets.Count];
-                return Targets != null && !Targets.All(t => t.IsDead);
+                return !Targets.All(t => t.IsDead);
             }
 
             public GoalInjectTarget(TraitorMission.CharacterFilter filter, string poisonId, string afflictionId, int targetCount, float targetPercentage) : base()

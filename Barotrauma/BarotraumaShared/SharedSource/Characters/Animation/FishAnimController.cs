@@ -613,8 +613,13 @@ namespace Barotrauma
                 movementAngle -= MathHelper.TwoPi;
             }
 
+            float offset = MathHelper.Pi * CurrentGroundedParams.StepLiftOffset;
+            if (CurrentGroundedParams.MultiplyByDir)
+            {
+                offset *= Dir;
+            }
             float stepLift = TargetMovement.X == 0.0f ? 0 :
-                (float)Math.Sin(WalkPos * CurrentGroundedParams.StepLiftFrequency + MathHelper.Pi * CurrentGroundedParams.StepLiftOffset) * (CurrentGroundedParams.StepLiftAmount / 100);
+                (float)Math.Sin(WalkPos * Dir * CurrentGroundedParams.StepLiftFrequency + offset) * (CurrentGroundedParams.StepLiftAmount / 100);
 
             float limpAmount = character.GetLegPenalty();
             if (limpAmount > 0)
@@ -631,7 +636,7 @@ namespace Barotrauma
                 {
                     SmoothRotateWithoutWrapping(torso, movementAngle + TorsoAngle.Value * Dir, mainLimb, TorsoTorque);
                 }
-                if (TorsoPosition.HasValue)
+                if (TorsoPosition.HasValue && TorsoMoveForce > 0.0f)
                 {
                     Vector2 pos = colliderBottom + new Vector2(limpAmount, TorsoPosition.Value + stepLift);
 
@@ -649,11 +654,16 @@ namespace Barotrauma
             Limb head = GetLimb(LimbType.Head);
             if (head != null)
             {
+                bool headFacingBackwards = false;
                 if (HeadAngle.HasValue)
                 {
                     SmoothRotateWithoutWrapping(head, movementAngle + HeadAngle.Value * Dir, mainLimb, HeadTorque);
+                    if (Math.Sign(head.SimPosition.X - mainLimb.SimPosition.X) != Math.Sign(Dir))
+                    {
+                        headFacingBackwards = true;
+                    }
                 }
-                if (HeadPosition.HasValue)
+                if (HeadPosition.HasValue && HeadMoveForce > 0.0f && !headFacingBackwards)
                 {
                     Vector2 pos = colliderBottom + new Vector2(limpAmount, HeadPosition.Value + stepLift * CurrentGroundedParams.StepLiftHeadMultiplier);
 

@@ -62,7 +62,10 @@ namespace Barotrauma.Items.Components
                 timeSinceReceived[i] += deltaTime;
             }
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
-            item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);            
+            if (MathUtils.IsValid(output))
+            {
+                item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+            }           
         }
 
         protected abstract float Calculate(float signal1, float signal2);

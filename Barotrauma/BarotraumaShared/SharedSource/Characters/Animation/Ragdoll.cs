@@ -764,6 +764,13 @@ namespace Barotrauma
                 }
             }
 
+
+            if (!string.IsNullOrEmpty(character.BloodDecalName))
+            {
+                character.CurrentHull?.AddDecal(character.BloodDecalName, 
+                    (limbJoint.LimbA.WorldPosition + limbJoint.LimbB.WorldPosition) / 2, MathHelper.Clamp(Math.Min(limbJoint.LimbA.Mass, limbJoint.LimbB.Mass), 0.5f, 2.0f), true);
+            }
+
             SeverLimbJointProjSpecific(limbJoint, playSound: true);
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
@@ -1428,6 +1435,11 @@ namespace Barotrauma
                     limb.body.ApplyForce(flowForce, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                 }
             }
+        }
+
+        public void ForceRefreshFloorY()
+        {
+            lastFloorCheckPos = Vector2.Zero;
         }
 
         private void RefreshFloorY(Limb refLimb = null, bool ignoreStairs = false)

@@ -111,7 +111,7 @@ namespace Barotrauma
 
         public static void LoadAll()
         {
-            foreach (ContentFile file in ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Character))
+            foreach (ContentFile file in ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Character))
             {
                 LoadFromFile(file);
             }

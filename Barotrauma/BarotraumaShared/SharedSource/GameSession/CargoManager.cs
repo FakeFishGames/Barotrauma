@@ -51,7 +51,7 @@ namespace Barotrauma
 
         private readonly CampaignMode campaign;
 
-        private Location location => campaign.Map.CurrentLocation;
+        private Location Location => campaign?.Map?.CurrentLocation;
 
         public Action OnItemsInBuyCrateChanged;
         public Action OnItemsInSellCrateChanged;
@@ -120,7 +120,7 @@ namespace Barotrauma
                 // Exchange money
                 var itemValue = GetBuyValueAtCurrentLocation(item);
                 campaign.Money -= itemValue;
-                campaign.Map.CurrentLocation.StoreCurrentBalance += itemValue;
+                Location.StoreCurrentBalance += itemValue;
 
                 if (removeFromCrate)
                 {
@@ -136,11 +136,11 @@ namespace Barotrauma
             OnPurchasedItemsChanged?.Invoke();
         }
 
-        public int GetBuyValueAtCurrentLocation(PurchasedItem item) => item?.ItemPrefab != null && campaign?.Map?.CurrentLocation != null ?
-            item.Quantity* campaign.Map.CurrentLocation.GetAdjustedItemBuyPrice(item.ItemPrefab) : 0;
+        public int GetBuyValueAtCurrentLocation(PurchasedItem item) => item?.ItemPrefab != null && Location != null ?
+            item.Quantity * Location.GetAdjustedItemBuyPrice(item.ItemPrefab) : 0;
 
-        public int GetSellValueAtCurrentLocation(ItemPrefab itemPrefab, int quantity = 1) => itemPrefab != null && campaign?.Map?.CurrentLocation != null ?
-            quantity * campaign.Map.CurrentLocation.GetAdjustedItemSellPrice(itemPrefab) : 0;
+        public int GetSellValueAtCurrentLocation(ItemPrefab itemPrefab, int quantity = 1) => itemPrefab != null && Location != null ?
+            quantity * Location.GetAdjustedItemSellPrice(itemPrefab) : 0;
 
         public void CreatePurchasedItems()
         {
@@ -185,7 +185,7 @@ namespace Barotrauma
                 float floorPos = cargoRoom.Rect.Y - cargoRoom.Rect.Height;
 
                 Vector2 position = new Vector2(
-                    Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20),
+                    cargoRoom.Rect.Width > 40 ? Rand.Range(cargoRoom.Rect.X + 20, cargoRoom.Rect.Right - 20) : cargoRoom.Rect.Center.X,
                     floorPos);
 
                 //check where the actual floor structure is in case the bottom of the hull extends below it

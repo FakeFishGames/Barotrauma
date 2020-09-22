@@ -11,7 +11,8 @@ namespace Barotrauma
     {
         public string identifier;
         public string option;
-        public float priorityModifier;
+        public readonly float priorityModifier;
+        public readonly bool ignoreAtOutpost;
 
         public AutonomousObjective(XElement element)
         {
@@ -26,6 +27,7 @@ namespace Barotrauma
             option = element.GetAttributeString("option", null);
             priorityModifier = element.GetAttributeFloat("prioritymodifier", 1);
             priorityModifier = MathHelper.Max(priorityModifier, 0);
+            ignoreAtOutpost = element.GetAttributeBool("ignoreatoutpost", false);
         }
     }
 
@@ -64,7 +66,7 @@ namespace Barotrauma
         public readonly Dictionary<int, List<string>> ItemIdentifiers = new Dictionary<int, List<string>>();
         public readonly Dictionary<int, Dictionary<string, bool>> ShowItemPreview = new Dictionary<int, Dictionary<string, bool>>();
         public readonly List<SkillPrefab> Skills = new List<SkillPrefab>();
-        public readonly List<AutonomousObjective> AutonomousObjective = new List<AutonomousObjective>();
+        public readonly List<AutonomousObjective> AutonomousObjectives = new List<AutonomousObjective>();
         public readonly List<string> AppropriateOrders = new List<string>();
 
         [Serialize("1,1,1,1", false)]
@@ -209,7 +211,7 @@ namespace Barotrauma
                         }
                         break;
                     case "autonomousobjectives":
-                        subElement.Elements().ForEach(order => AutonomousObjective.Add(new AutonomousObjective(order)));
+                        subElement.Elements().ForEach(order => AutonomousObjectives.Add(new AutonomousObjective(order)));
                         break;
                     case "appropriateobjectives":
                     case "appropriateorders":

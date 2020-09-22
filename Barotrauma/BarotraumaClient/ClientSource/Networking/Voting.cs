@@ -91,13 +91,13 @@ namespace Barotrauma
             if (userData == null) return;
             foreach (GUIComponent comp in listBox.Content.Children)
             {
-                if (comp.UserData != userData) continue;
-                GUITextBlock voteText = comp.FindChild("votes") as GUITextBlock;
-                if (voteText == null)
+                if (comp.UserData != userData) { continue; }
+                if (!(comp.FindChild("votes") is GUITextBlock voteText))
                 {
                     voteText = new GUITextBlock(new RectTransform(new Point(30, comp.Rect.Height), comp.RectTransform, Anchor.CenterRight),
                         "", textAlignment: Alignment.CenterRight)
                     {
+                        Padding = Vector4.Zero,
                         UserData = "votes"
                     };
                 }

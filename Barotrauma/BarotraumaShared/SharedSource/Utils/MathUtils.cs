@@ -288,8 +288,13 @@ namespace Barotrauma
             return (r >= 0 && r <= 1) && (s >= 0 && s <= 1);
         }
 
-        // a1 is line1 start, a2 is line1 end, b1 is line2 start, b2 is line2 end
         public static bool GetLineIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, out Vector2 intersection)
+        {
+            return GetLineIntersection(a1, a2, b1, b2, false, out intersection);
+        }
+
+        // a1 is line1 start, a2 is line1 end, b1 is line2 start, b2 is line2 end
+        public static bool GetLineIntersection(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, bool ignoreSegments, out Vector2 intersection)
         {
             intersection = Vector2.Zero;
 
@@ -302,10 +307,10 @@ namespace Barotrauma
 
             Vector2 c = b1 - a1;
             float t = (c.X * d.Y - c.Y * d.X) / bDotDPerp;
-            if (t < 0 || t > 1) return false;
+            if ((t < 0 || t > 1) && !ignoreSegments) return false;
 
             float u = (c.X * b.Y - c.Y * b.X) / bDotDPerp;
-            if (u < 0 || u > 1) return false;
+            if ((u < 0 || u > 1) && !ignoreSegments) return false;
 
             intersection = a1 + t * b;
             return true;
@@ -530,6 +535,21 @@ namespace Barotrauma
 
             return (float)(Math.Abs(xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X)) /
                 Math.Sqrt(xDiff * xDiff + yDiff * yDiff));
+        }
+
+        public static float LineToPointDistanceSquared(Vector2 lineA, Vector2 lineB, Vector2 point)
+        {
+            float xDiff = lineB.X - lineA.X;
+            float yDiff = lineB.Y - lineA.Y;
+
+            if (xDiff == 0 && yDiff == 0)
+            {
+                return Vector2.DistanceSquared(lineA, point);
+            }
+
+            float numerator = xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X);
+            return (numerator*numerator) /
+                (xDiff * xDiff + yDiff * yDiff);
         }
 
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)

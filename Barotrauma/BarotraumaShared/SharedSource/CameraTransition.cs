@@ -90,6 +90,19 @@ namespace Barotrauma
                     yield return CoroutineStatus.Success;
                 }
 
+                //switched control to some other character during the transition -> remove control again
+                if (Character.Controlled != null)
+                {
+                    prevControlled = Character.Controlled;
+                    if (RemoveControlFromCharacter)
+                    {
+#if CLIENT
+                        GameMain.LightManager.LosEnabled = false;
+#endif
+                        Character.Controlled = null;
+                    }
+                }
+
                 if (prevControlled != null && prevControlled.Removed)
                 {
                     prevControlled = null;

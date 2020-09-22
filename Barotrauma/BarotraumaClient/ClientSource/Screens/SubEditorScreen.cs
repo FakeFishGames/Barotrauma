@@ -87,6 +87,9 @@ namespace Barotrauma
 
         private GUIDropDown linkedSubBox;
 
+        private static GUIComponent autoSaveLabel;
+        private static int maxAutoSaves = GameSettings.MaximumAutoSaves;
+
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
         
@@ -113,7 +116,8 @@ namespace Barotrauma
         private const string containerDeleteTag = "containerdelete";
 
         private GUIImage previewImage;
-        
+        private GUILayoutGroup previewImageButtonHolder;
+
         private GUIListBox contextMenu;
 
         private const int submarineNameLimit = 30;
@@ -132,6 +136,10 @@ namespace Barotrauma
         private static bool isAutoSaving;
 
         public override Camera Cam => cam;
+
+        public static XDocument AutoSaveInfo;
+        private static readonly string autoSavePath = Path.Combine(SubmarineInfo.SavePath, ".AutoSaves");
+        private static readonly string autoSaveInfoPath = Path.Combine(autoSavePath, "autosaves.xml");
 
         private static string GetSubDescription()
         {
@@ -429,6 +437,8 @@ namespace Barotrauma
                                 lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
                                     Color.Transparent :
                                     lightComponent.LightColor;
+                                lightComponent.Light.Rotation = (-lightComponent.Rotation - MathHelper.ToRadians(lightComponent.Item.Rotation));
+                                lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
                             }
                         }
                     }
@@ -875,6 +885,33 @@ namespace Barotrauma
         {
             base.Select();
 
+            if (!Directory.Exists(autoSavePath))
+            {
+                System.IO.DirectoryInfo e = Directory.CreateDirectory(autoSavePath);
+                e.Attributes = System.IO.FileAttributes.Directory | System.IO.FileAttributes.Hidden;
+                if (!e.Exists)
+                {
+                    DebugConsole.ThrowError("Failed to create auto save directory!");
+                }
+            }
+
+            if (!File.Exists(autoSaveInfoPath))
+            {
+                try
+                {
+                    AutoSaveInfo = new XDocument(new XElement("AutoSaves"));
+                    IO.SafeXML.SaveSafe(AutoSaveInfo, autoSaveInfoPath);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("Saving auto save info to \"" + autoSaveInfoPath + "\" failed!", e);
+                }
+            }
+            else
+            {
+                AutoSaveInfo = XMLExtensions.TryLoadXml(autoSaveInfoPath);
+            }
+            
             GameMain.LightManager.AmbientLight = 
                 Level.Loaded?.GenerationParams?.AmbientLightColor ??
                 LevelGenerationParams.LevelParams?.FirstOrDefault()?.AmbientLightColor ??
@@ -988,6 +1025,9 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
+
+            autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);
+            autoSaveLabel = null;
 
             TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
 #if USE_STEAM
@@ -1191,13 +1231,7 @@ namespace Barotrauma
                 if (Submarine.MainSub != null)
                 {
                     isAutoSaving = true;
-                    string filePath = Path.Combine(SubmarineInfo.SavePath, ".AutoSaves");
-                    if (!Directory.Exists(filePath))
-                    {
-                        var e = Directory.CreateDirectory(filePath);
-                        e.Attributes = System.IO.FileAttributes.Directory | System.IO.FileAttributes.Hidden;
-                        if (!e.Exists) { return; }
-                    }
+                    if (!Directory.Exists(autoSavePath)) { return; }
 
                     XDocument doc = new XDocument(new XElement("Submarine"));
                     Submarine.MainSub.SaveToXElement(doc.Root);
@@ -1205,18 +1239,81 @@ namespace Barotrauma
                     {
                         try
                         {
-                            SaveUtil.CompressStringToFile(Path.Combine(filePath, "AutoSave.sub"), doc.ToString());
-                            CrossThread.RequestExecutionOnMainThread(() => GUI.AddMessage(TextManager.Get("AutoSaved"), GUI.Style.Green, playSound: false));
+                            Barotrauma.IO.Validation.DevException = true;
+                            TimeSpan time = DateTime.UtcNow - DateTime.MinValue;
+                            string filePath = Path.Combine(autoSavePath, $"AutoSave_{(ulong)time.TotalMilliseconds}.sub");
+                            SaveUtil.CompressStringToFile(filePath, doc.ToString());
+
+                            CrossThread.RequestExecutionOnMainThread(() =>
+                            {
+                                if (AutoSaveInfo?.Root == null) { return; }
+
+                                int saveCount = AutoSaveInfo.Root.Elements().Count();
+                                while (AutoSaveInfo.Root.Elements().Count() > maxAutoSaves)
+                                {
+                                    XElement min = AutoSaveInfo.Root.Elements().OrderBy(element => element.GetAttributeUInt64("time", 0)).FirstOrDefault();
+                                    string path = min.GetAttributeString("file", "");
+                                    if (string.IsNullOrWhiteSpace(path)) { continue; }
+
+                                    if (IO.File.Exists(path)) { IO.File.Delete(path); }
+                                    min?.Remove();
+                                }
+
+                                XElement newElement = new XElement("AutoSave", 
+                                    new XAttribute("file", filePath), 
+                                    new XAttribute("name", Submarine.MainSub.Info.Name),
+                                    new XAttribute("time", (ulong)time.TotalSeconds));
+                                AutoSaveInfo.Root.Add(newElement);
+
+                                try
+                                {
+                                    IO.SafeXML.SaveSafe(AutoSaveInfo, autoSaveInfoPath);
+                                }
+                                catch (Exception e)
+                                {
+                                    DebugConsole.ThrowError("Saving auto save info to \"" + autoSaveInfoPath + "\" failed!", e);
+                                }
+                            });
+                            
+                            Barotrauma.IO.Validation.DevException = false;
+                            CrossThread.RequestExecutionOnMainThread(DisplayAutoSavePrompt);
                         }
                         catch (Exception e)
                         {
-                            CrossThread.RequestExecutionOnMainThread(() => DebugConsole.ThrowError("Saving submarine \"" + filePath + "\" failed!", e));
+                            CrossThread.RequestExecutionOnMainThread(() => DebugConsole.ThrowError("Auto saving submarine failed!", e));
                         }
                         isAutoSaving = false;
                     }) { Name = "Auto Save Thread" };
                     saveThread.Start();
                 }
             }
+        }
+
+        private static void DisplayAutoSavePrompt()
+        {
+            if (Selected != GameMain.SubEditorScreen) { return; }
+            autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);
+
+            string label = TextManager.Get("AutoSaved");
+            autoSaveLabel = new GUILayoutGroup(new RectTransform(new Point(GUI.IntScale(150), GUI.IntScale(32)), GameMain.SubEditorScreen.EntityMenu.RectTransform, Anchor.TopRight)
+            {
+                ScreenSpaceOffset = new Point(-GUI.IntScale(16), -GUI.IntScale(48))
+            }, isHorizontal: true)
+            {
+                CanBeFocused = false
+            };
+
+            GUIImage checkmark = new GUIImage(new RectTransform(new Vector2(0.25f, 1f), autoSaveLabel.RectTransform), style: "MissionCompletedIcon", scaleToFit: true);
+            GUITextBlock labelComponent = new GUITextBlock(new RectTransform(new Vector2(0.75f, 1f), autoSaveLabel.RectTransform), label, font: GUI.SubHeadingFont, color: GUI.Style.Green)
+            {
+                Padding = Vector4.Zero,
+                AutoScaleHorizontal = true,
+                AutoScaleVertical = true
+            };
+
+            labelComponent.FadeOut(0.5f, true, 1f);
+            checkmark.FadeOut(0.5f, true, 1f);
+            autoSaveLabel?.FadeOut(0.5f, true, 1f);
         }
 
         private bool SaveSub(GUIButton button, object obj)
@@ -1238,6 +1335,7 @@ namespace Barotrauma
                         if (Submarine.MainSub.Info?.OutpostModuleInfo != null)
                         {
                             contentType = ContentType.OutpostModule;
+                            Submarine.MainSub.Info.PreviewImage = null;
                         }
                         break;
                     case SubmarineType.Outpost:
@@ -1252,7 +1350,7 @@ namespace Barotrauma
 #if DEBUG
                     var existingFiles = ContentPackage.GetFilesOfType(GameMain.VanillaContent.ToEnumerable(), contentType);
 #else
-                    var existingFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages.Where(c => c != GameMain.VanillaContent), contentType);
+                    var existingFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages.Where(c => c != GameMain.VanillaContent), contentType);
 #endif
                     specialSavePath = existingFiles.FirstOrDefault(f => 
                         Path.GetFullPath(f.Path) != Path.GetFullPath(SubmarineInfo.SavePath) && ContentPackage.IsModFilePathAllowed(f.Path))?.Path;
@@ -1332,7 +1430,7 @@ namespace Barotrauma
             {
                 directoryName = specialSavePath;
                 savePath = Path.Combine(directoryName, savePath);
-                ContentPackage contentPackage = GameMain.Config.SelectedContentPackages.Find(cp => cp.Files.Any(f => Path.GetDirectoryName(f.Path) == directoryName));
+                ContentPackage contentPackage = GameMain.Config.AllEnabledPackages.FirstOrDefault(cp => cp.Files.Any(f => Path.GetDirectoryName(f.Path) == directoryName));
 
                 bool allowSavingToVanilla = false;
 #if DEBUG
@@ -1345,7 +1443,7 @@ namespace Barotrauma
                     msgBox.Buttons[0].OnClicked = (bt, userdata) =>
                     {
                         contentPackage.AddFile(savePath, ContentType.OutpostModule);
-                        contentPackage.Save(contentPackage.Path);
+                        contentPackage.Save(contentPackage.Path, reload: false);
                         msgBox.Close();
                         return true;
                     };
@@ -1367,10 +1465,10 @@ namespace Barotrauma
                 if (forceToSubFolder && subDirs.Length > 1 && subDirs[0].Equals("Mods", StringComparison.InvariantCultureIgnoreCase))
                 {
                     string modName = subDirs[1];
-                    ContentPackage contentPackage = ContentPackage.List.Find(p => p.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
+                    ContentPackage contentPackage = ContentPackage.AllPackages.FirstOrDefault(p => p.Name.Equals(modName, StringComparison.InvariantCultureIgnoreCase));
                     if (contentPackage != null)
                     {
-                        Steamworks.Data.PublishedFileId packageId = Steam.SteamManager.GetWorkshopItemIDFromUrl(contentPackage.SteamWorkshopUrl);
+                        Steamworks.Data.PublishedFileId packageId = contentPackage.SteamWorkshopId;
 
                         Task<Steamworks.Ugc.Item?> itemInfoTask = Steamworks.Ugc.Item.GetAsync(packageId);
                         Task<Steamworks.Ugc.Item?> itemUpdateTask = Task.Run(async () =>
@@ -1389,11 +1487,11 @@ namespace Barotrauma
                             forceToSubFolder = false;
                             string targetPath = Path.Combine(prevDir, savePath).CleanUpPath();
                             if (!contentPackage.Files.Any(f => f.Type == ContentType.Submarine &&
-                                    f.Path.CleanUpPath().Equals(targetPath, StringComparison.InvariantCultureIgnoreCase)))
+                                f.Path.CleanUpPath().Equals(targetPath, StringComparison.InvariantCultureIgnoreCase)))
                             {
-                                contentPackage.Files.Add(new ContentFile(targetPath, ContentType.Submarine));
+                                contentPackage.AddFile(new ContentFile(targetPath, ContentType.Submarine));
                             }
-                            contentPackage.Save(contentPackage.Path);
+                            contentPackage.Save(contentPackage.Path, reload: false);
                         }
                     }
                 }
@@ -1420,7 +1518,8 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
-                if (previewImage?.Sprite?.Texture != null)
+                Barotrauma.IO.Validation.DevException = true;
+                if (previewImage?.Sprite?.Texture != null && Submarine.MainSub.Info.Type != SubmarineType.OutpostModule)
                 {
                     bool savePreviewImage = true;
                     using System.IO.MemoryStream imgStream = new System.IO.MemoryStream();
@@ -1439,7 +1538,8 @@ namespace Barotrauma
                 {
                     Submarine.MainSub.SaveAs(savePath);
                 }
-                
+                Barotrauma.IO.Validation.DevException = false;
+
                 Submarine.MainSub.CheckForErrors();
                 
                 GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", savePath), GUI.Style.Green);
@@ -1918,6 +2018,7 @@ namespace Barotrauma
                 {
                     Submarine.MainSub.Info.OutpostModuleInfo ??= new OutpostModuleInfo(Submarine.MainSub.Info);
                 }
+                previewImageButtonHolder.Children.ForEach(c => c.Enabled = type != SubmarineType.OutpostModule);
                 outpostSettingsContainer.Visible = type == SubmarineType.OutpostModule;
                 outpostSettingsContainer.IgnoreLayoutGroups = !outpostSettingsContainer.Visible;
 
@@ -1925,7 +2026,6 @@ namespace Barotrauma
                 subSettingsContainer.IgnoreLayoutGroups = !subSettingsContainer.Visible;
                 return true;
             };
-            subTypeDropdown.SelectItem(Submarine.MainSub.Info.Type);
             subSettingsContainer.RectTransform.MinSize = new Point(0, subSettingsContainer.RectTransform.Children.Sum(c => c.Children.Any() ? c.Children.Max(c2 => c2.MinSize.Y) : 0));
 
             // right column ---------------------------------------------------
@@ -1935,7 +2035,7 @@ namespace Barotrauma
             var previewImageHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), rightColumn.RectTransform), style: null) { Color = Color.Black, CanBeFocused = false };
             previewImage = new GUIImage(new RectTransform(Vector2.One, previewImageHolder.RectTransform), Submarine.MainSub?.Info.PreviewImage, scaleToFit: true);
 
-            var previewImageButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
+            previewImageButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
 
             new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageCreate"), style: "GUIButtonSmall")
             {
@@ -2026,7 +2126,7 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null) {
                 List<string> contentPacks = Submarine.MainSub.Info.RequiredContentPackages.ToList();
-                foreach (ContentPackage contentPack in ContentPackage.List)
+                foreach (ContentPackage contentPack in ContentPackage.AllPackages)
                 {
                     //don't show content packages that only define submarine files
                     //(it doesn't make sense to require another sub to be installed to install this one)
@@ -2084,6 +2184,8 @@ namespace Barotrauma
 
             descriptionBox.Text = Submarine.MainSub == null ? "" : Submarine.MainSub.Info.Description;
             submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;
+
+            subTypeDropdown.SelectItem(Submarine.MainSub.Info.Type);
 
             if (quickSave) { SaveSub(saveButton, saveButton.UserData); }
         }
@@ -2252,7 +2354,7 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, loadFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.5f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.5f), loadFrame.RectTransform, Anchor.Center) { MinSize = new Point(350, 500) });
 
             var paddedLoadFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center)) { Stretch = true, RelativeSpacing = 0.02f };
 
@@ -2352,17 +2454,63 @@ namespace Barotrauma
                 return true;
             };
             
-            var loadAutoSave = new GUIButton(new RectTransform(Vector2.One,  deleteButtonHolder.RectTransform, Anchor.BottomCenter), TextManager.Get("LoadAutoSave"))
+
+            if (AutoSaveInfo?.Root != null)
             {
-                Enabled = File.Exists(Path.Combine(SubmarineInfo.SavePath, ".AutoSaves", "AutoSave.sub")),
-                ToolTip = TextManager.Get("LoadAutoSaveTooltip"),
-                UserData = "loadautosave",
-                OnClicked = (button, o) =>
+                int min = Math.Min(6, AutoSaveInfo.Root.Elements().Count());
+                var loadAutoSave = new GUIDropDown(new RectTransform(Vector2.One,  deleteButtonHolder.RectTransform, Anchor.BottomCenter), TextManager.Get("LoadAutoSave"), elementCount: min)
                 {
-                    LoadAutoSave();
-                    return true;
+                    Enabled = File.Exists(Path.Combine(SubmarineInfo.SavePath, ".AutoSaves", "AutoSave.sub")),
+                    ToolTip = TextManager.Get("LoadAutoSaveTooltip"),
+                    UserData = "loadautosave",
+                    OnSelected = (button, o) =>
+                    {
+                        LoadAutoSave(o);
+                        return true;
+                    }
+                };
+                foreach (XElement saveElement in AutoSaveInfo.Root.Elements().Reverse())
+                {
+                    DateTime time = DateTime.MinValue.AddSeconds(saveElement.GetAttributeUInt64("time", 0));
+                    TimeSpan difference = DateTime.UtcNow - time;
+
+                    string tooltip = TextManager.GetWithVariables("subeditor.autosaveage", 
+                        new[]
+                        {
+                            "[hours]", 
+                            "[minutes]", 
+                            "[seconds]"
+                        },
+                        new[]
+                        {
+                            ((int)Math.Floor(difference.TotalHours)).ToString(),
+                            difference.Minutes.ToString(),
+                            difference.Seconds.ToString()
+                        });
+
+                    string submarineName = saveElement.GetAttributeString("name", TextManager.Get("UnspecifiedSubFileName"));
+                    string timeFormat;
+
+                    double totalMinutes = difference.TotalMinutes;
+
+                    if (totalMinutes < 1)
+                    {
+                        timeFormat = TextManager.Get("subeditor.savedjustnow");
+                    } 
+                    else if (totalMinutes > 60)
+                    {
+                        timeFormat = TextManager.Get("subeditor.savedmorethanhour");
+                    }
+                    else
+                    {
+                        timeFormat = TextManager.GetWithVariable("subeditor.saveageminutes", "[minutes]", difference.Minutes.ToString());
+                    }
+                    
+                    string entryName = TextManager.GetWithVariables("subeditor.autosaveentry", new []{ "[submarine]", "[saveage]" }, new []{ submarineName, timeFormat });
+
+                    loadAutoSave.AddItem(entryName, saveElement, tooltip);
                 }
-            };
+            }
 
             var controlBtnHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), paddedLoadFrame.RectTransform), isHorizontal: true) { RelativeSpacing = 0.2f, Stretch = true };
 
@@ -2396,12 +2544,15 @@ namespace Barotrauma
         /// Recovers the auto saved submarine
         /// <see cref="AutoSave"/>
         /// </summary>
-        private void LoadAutoSave()
+        private void LoadAutoSave(object UserData)
         {
-            string filePath = Path.Combine(SubmarineInfo.SavePath, ".AutoSaves", "AutoSave.sub");
+            if (!(UserData is XElement element)) { return; }
+
+            string filePath = element.GetAttributeString("file", "");
+            if (string.IsNullOrWhiteSpace(filePath)) { return; }
 
             var loadedSub = Submarine.Load(new SubmarineInfo(filePath), true);
-            
+        
             // set the submarine file path to the "default" value
             loadedSub.Info.FilePath = Path.Combine(SubmarineInfo.SavePath, $"{TextManager.Get("UnspecifiedSubFileName")}.sub");
             loadedSub.Info.Name = TextManager.Get("UnspecifiedSubFileName");
@@ -2418,13 +2569,13 @@ namespace Barotrauma
             Submarine.MainSub.UpdateTransform();
             Submarine.MainSub.Info.Name = loadedSub.Info.Name;
             subNameLabel.Text = ToolBox.LimitString(loadedSub.Info.Name, subNameLabel.Font, subNameLabel.Rect.Width);
-            
+        
             CreateDummyCharacter();
-            
+        
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             loadFrame = null;
-            
+        
             //turn off lights that are inside an inventory (cabinet for example)
             foreach (Item item in Item.ItemList)
             {
@@ -2507,9 +2658,9 @@ namespace Barotrauma
             //if the sub is included in a content package that only defines that one sub,
             //delete the content package as well
             ContentPackage subPackage = null;
-            foreach (ContentPackage cp in ContentPackage.List)
+            foreach (ContentPackage cp in ContentPackage.RegularPackages)
             {
-                if (!cp.CorePackage && cp.Files.Count == 1 && Path.GetFullPath(cp.Files[0].Path) == Path.GetFullPath(sub.FilePath))
+                if (cp.Files.Count == 1 && Path.GetFullPath(cp.Files[0].Path) == Path.GetFullPath(sub.FilePath))
                 {
                     subPackage = cp;
                     break;
@@ -2602,7 +2753,7 @@ namespace Barotrauma
             {
                 var textBlock = child.GetChild<GUITextBlock>();
                 child.Visible =
-                    (!selectedCategory.HasValue || selectedCategory == ((MapEntityPrefab) child.UserData).Category) &&
+                    (!selectedCategory.HasValue || ((MapEntityPrefab) child.UserData).Category.HasFlag(selectedCategory)) &&
                     ((MapEntityPrefab) child.UserData).Name.ToLower().Contains(filter);
 
                 if (child.Visible && dummyCharacter?.SelectedConstruction?.OwnInventory != null)
@@ -2677,7 +2828,7 @@ namespace Barotrauma
             };
 
             Item target = null;
-            
+
             var single = targets.Count == 1 ? targets.Single() : null;
             if (single is Item item && item.Components.Any(ic => !(ic is ConnectionPanel) && !(ic is Repairable) && ic.GuiFrame != null))
             {
@@ -2690,9 +2841,16 @@ namespace Barotrauma
             if (PlayerInput.IsShiftDown())
             {
                 new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
-                                 TextManager.Get("CharacterEditor.EditBackgroundColor"), font: GUI.SmallFont)
+                    TextManager.Get("CharacterEditor.EditBackgroundColor"), font: GUI.SmallFont)
                 {
                     UserData = "bgcolor"
+                };
+
+                new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
+                    TextManager.Get("editor.selectsame"), font: GUI.SmallFont)
+                {
+                    UserData = "selectsame",
+                    Enabled = targets.Count > 0
                 };
             }
             else
@@ -2762,6 +2920,10 @@ namespace Barotrauma
                 {
                     case "bgcolor":
                         CreateBackgroundColorPicker();
+                        break;
+                    case "selectsame":
+                        IEnumerable<MapEntity> matching = MapEntity.mapEntityList.Where(e => targets.Any(t => t.prefab.Identifier == e.prefab.Identifier) && !MapEntity.SelectedList.Contains(e));
+                        MapEntity.SelectedList.AddRange(matching);
                         break;
                     case "copy":
                         MapEntity.Copy(targets);
@@ -2912,7 +3074,7 @@ namespace Barotrauma
         {
             if (dummyCharacter == null || itemContainer == null) { return; }
 
-            if ((itemContainer.GetComponent<Holdable>() != null || itemContainer.GetComponent<Wearable>() != null) && itemContainer.GetComponent<ItemContainer>() != null)
+            if (((itemContainer.GetComponent<Holdable>() is { } holdable && !holdable.Attached) || itemContainer.GetComponent<Wearable>() != null) && itemContainer.GetComponent<ItemContainer>() != null)
             {
                 // We teleport our dummy character to the item so it appears as the entity stays still when in reality the dummy is holding it
                 oldItemPosition = itemContainer.SimPosition;
@@ -3443,6 +3605,8 @@ namespace Barotrauma
         
         public override void AddToGUIUpdateList()
         {
+            if (GUI.DisableHUD) { return; }
+
             MapEntity.FilteredSelectedList.FirstOrDefault()?.AddToGUIUpdateList();
             EntityMenu.AddToGUIUpdateList();
             showEntitiesPanel.AddToGUIUpdateList();
@@ -4079,6 +4243,7 @@ namespace Barotrauma
                 e is Structure s && 
                 (ShowThalamus || !s.prefab.Category.HasFlag(MapEntityCategory.Thalamus)) && 
                 (e.SpriteDepth >= 0.9f || s.Prefab.BackgroundSprite != null));
+            Submarine.DrawPaintedColors(spriteBatch, true);
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
@@ -4121,7 +4286,7 @@ namespace Barotrauma
             }
 
             //-------------------- HUD -----------------------------
-            
+
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);
 
             if (Submarine.MainSub != null)

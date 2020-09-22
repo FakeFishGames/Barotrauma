@@ -31,6 +31,7 @@ namespace Barotrauma
         public readonly Point Size;
 
         public readonly List<EventPrefab> EventHistory = new List<EventPrefab>();
+        public readonly List<EventPrefab> NonRepeatableEvents = new List<EventPrefab>();
 
         public LevelData(string seed, float difficulty, float sizeFactor, LevelGenerationParams generationParams, Biome biome)
         {
@@ -77,6 +78,10 @@ namespace Barotrauma
 
             string[] prefabNames = element.GetAttributeStringArray("eventhistory", new string[] { });
             EventHistory.AddRange(EventSet.PrefabList.Where(p => prefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
+
+            string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
+            NonRepeatableEvents.AddRange(EventSet.PrefabList.Where(p => prefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
+
         }
 
 
@@ -153,11 +158,17 @@ namespace Barotrauma
                     new XAttribute("size", XMLExtensions.PointToString(Size)),
                     new XAttribute("generationparams", GenerationParams.Identifier));
 
-            if (Type == LevelType.Outpost && EventHistory.Any())
+            if (Type == LevelType.Outpost)
             {
-                newElement.Add(new XAttribute("eventhistory", string.Join(',', EventHistory.Select(p => p.Identifier))));
+                if (EventHistory.Any())
+                {
+                    newElement.Add(new XAttribute("eventhistory", string.Join(',', EventHistory.Select(p => p.Identifier))));
+                }
+                if (NonRepeatableEvents.Any())
+                {
+                    newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents.Select(p => p.Identifier))));
+                }
             }
-
             parentElement.Add(newElement);
         }
     }

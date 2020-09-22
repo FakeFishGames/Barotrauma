@@ -11,7 +11,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Reactor : Powered, IServerSerializable, IClientSerializable
     {
-        const float NetworkUpdateInterval = 0.5f;
+        const float NetworkUpdateIntervalHigh = 0.5f;
+        const float NetworkUpdateIntervalLow = 10.0f;
 
         //the rate at which the reactor is being run on (higher rate -> higher temperature)
         private float fissionRate;
@@ -64,17 +65,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private Character lastAIUser;
+        public Character LastAIUser { get; private set; }
 
         private Character lastUser;
-        private Character LastUser
+        public Character LastUser
         {
             get { return lastUser; }
-            set
+            private set
             {
-                if (lastUser == value) return;
+                if (lastUser == value) { return; }
                 lastUser = value;
                 degreeOfSuccess = lastUser == null ? 0.0f : DegreeOfSuccess(lastUser);
+                LastUserWasPlayer = lastUser.IsPlayer;
             }
         }
         
@@ -176,6 +178,8 @@ namespace Barotrauma.Items.Components
         [Serialize(0.0f, true)]
         public float AvailableFuel { get; set; }
 
+        public bool LastUserWasPlayer { get; private set; }
+
         public Reactor(Item item, XElement element)
             : base(item, element)
         {         
@@ -207,13 +211,13 @@ namespace Barotrauma.Items.Components
 
             //if an AI character was using the item on the previous frame but not anymore, turn autotemp on
             // (= bots turn autotemp back on when leaving the reactor)
-            if (lastAIUser != null)
+            if (LastAIUser != null)
             {
-                if (lastAIUser.SelectedConstruction != item && lastAIUser.CanInteractWith(item))
+                if (LastAIUser.SelectedConstruction != item && LastAIUser.CanInteractWith(item))
                 {
                     AutoTemp = true;
                     unsentChanges = true;
-                    lastAIUser = null;
+                    LastAIUser = null;
                 }
             }
 
@@ -309,10 +313,15 @@ namespace Barotrauma.Items.Components
 
             if (fissionRate > 0.0f)
             {
-                foreach (Item item in item.ContainedItems)
+                var containedItems = item.OwnInventory?.Items;
+                if (containedItems != null)
                 {
-                    if (!item.HasTag("reactorfuel")) continue;
-                    item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
+                    foreach (Item item in containedItems)
+                    {
+                        if (item == null) { continue; }
+                        if (!item.HasTag("reactorfuel")) { continue; }
+                        item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
+                    }
                 }
 
                 if (item.CurrentHull != null)
@@ -337,6 +346,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
             item.SendSignal(0, ((int)-CurrPowerConsumption).ToString(), "power_value_out", null);
             item.SendSignal(0, ((int)load).ToString(), "load_value_out", null);
+            item.SendSignal(0, ((int)AvailableFuel).ToString(), "fuel_out", null);
 
             UpdateFailures(deltaTime);
 #if CLIENT
@@ -344,9 +354,13 @@ namespace Barotrauma.Items.Components
 #endif
             AvailableFuel = 0.0f;
 
-            sendUpdateTimer = Math.Max(sendUpdateTimer - deltaTime, 0.0f);
 
+            sendUpdateTimer -= deltaTime;
+#if CLIENT
             if (unsentChanges && sendUpdateTimer <= 0.0f)
+#else
+            if (sendUpdateTimer < -NetworkUpdateIntervalLow || (unsentChanges && sendUpdateTimer <= 0.0f))
+#endif
             {
 #if SERVER
                 if (GameMain.Server != null)
@@ -360,7 +374,7 @@ namespace Barotrauma.Items.Components
                     item.CreateClientEvent(this);
                 }
 #endif
-                sendUpdateTimer = NetworkUpdateInterval;
+                sendUpdateTimer = NetworkUpdateIntervalHigh;
                 unsentChanges = false;
             }
         }
@@ -398,8 +412,8 @@ namespace Barotrauma.Items.Components
 
         private bool TooMuchFuel()
         {
-            var containedItems = item.ContainedItems;
-            if (containedItems != null && containedItems.Count() <= 1) { return false; }
+            var containedItems = item.OwnInventory?.Items;
+            if (containedItems != null && containedItems.Count(i => i != null) <= 1) { return false; }
 
             //get the amount of heat we'd generate if the fission rate was at the low end of the optimal range
             float minimumHeat = GetGeneratedHeat(optimalFissionRate.X);
@@ -516,12 +530,12 @@ namespace Barotrauma.Items.Components
             fireTimer = 0.0f;
             meltDownTimer = 0.0f;
 
-            var containedItems = item.ContainedItems;
+            var containedItems = item.OwnInventory?.Items;
             if (containedItems != null)
             {
                 foreach (Item containedItem in containedItems)
                 {
-                    if (containedItem == null) continue;
+                    if (containedItem == null) { continue; }
                     containedItem.Condition = 0.0f;
                 }
             }
@@ -583,15 +597,19 @@ namespace Barotrauma.Items.Components
                 else if (TooMuchFuel())
                 {
                     var container = item.GetComponent<ItemContainer>();
-                    foreach (Item item in item.ContainedItems)
+                    var containedItems = item.OwnInventory?.Items;
+                    if (containedItems != null)
                     {
-                        if (item != null && container.ContainableItems.Any(ri => ri.MatchesItem(item)))
+                        foreach (Item item in containedItems)
                         {
-                            if (!character.Inventory.TryPutItem(item, character, allowedSlots: item.AllowedSlots))
+                            if (item != null && container.ContainableItems.Any(ri => ri.MatchesItem(item)))
                             {
-                                item.Drop(character);
+                                if (!character.Inventory.TryPutItem(item, character, allowedSlots: item.AllowedSlots))
+                                {
+                                    item.Drop(character);
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
@@ -599,7 +617,7 @@ namespace Barotrauma.Items.Components
 
             if (objective.Override)
             {
-                if (lastUser != null && lastUser != character && lastUser != lastAIUser)
+                if (lastUser != null && lastUser != character && lastUser != LastAIUser)
                 {
                     if (lastUser.SelectedConstruction == item)
                     {
@@ -607,8 +625,12 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            else if (LastUserWasPlayer)
+            {
+                return true;
+            }
 
-            LastUser = lastAIUser = character;
+            LastUser = LastAIUser = character;
 
             bool prevAutoTemp = autoTemp;
             bool prevPowerOn = _powerOn;

@@ -29,8 +29,16 @@ namespace Barotrauma
         public float Value
         {
             get => Math.Min(MaxReputation, Metadata.GetFloat(metaDataIdentifier, InitialReputation));
-            set => Metadata.SetValue(metaDataIdentifier, Math.Clamp(value, MinReputation, MaxReputation));
+            set
+            {
+                Metadata.SetValue(metaDataIdentifier, Math.Clamp(value, MinReputation, MaxReputation));
+                OnReputationValueChanged?.Invoke();
+                OnAnyReputationValueChanged?.Invoke();
+            }
         }
+
+        public Action OnReputationValueChanged;
+        public static Action OnAnyReputationValueChanged;
 
         public Reputation(CampaignMetadata metadata, string identifier, int minReputation, int maxReputation, int initialReputation)
         {

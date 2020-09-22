@@ -630,10 +630,10 @@ namespace Barotrauma
         {
             var sound = GetSound(soundTag);
             if (sound == null) { return null; }
-            return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, hullGuess);
+            return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, 1.0f, hullGuess);
         }
 
-        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, Hull hullGuess = null)
+        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, float? freqMult = null, Hull hullGuess = null)
         {
             if (sound == null)
             {
@@ -649,7 +649,7 @@ namespace Barotrauma
                 return null;
             }
             bool muffle = !sound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
-            return sound.Play(volume ?? sound.BaseGain, far, position, muffle: muffle);            
+            return sound.Play(volume ?? sound.BaseGain, far, freqMult ?? 1.0f, position, muffle: muffle);            
         }
 
         private static void UpdateMusic(float deltaTime)

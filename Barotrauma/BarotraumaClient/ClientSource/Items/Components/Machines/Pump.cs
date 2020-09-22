@@ -81,7 +81,9 @@ namespace Barotrauma.Items.Components
             autoControlIndicator = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), rightArea.RectTransform, Anchor.TopLeft), 
                 TextManager.Get("PumpAutoControl", fallBackTag: "ReactorAutoControl"), font: GUI.SubHeadingFont, style: "IndicatorLightYellow")
             {
-                CanBeFocused = false
+                Selected = false,
+                Enabled = false,
+                ToolTip = TextManager.Get("AutoControlTip")
             };
             autoControlIndicator.TextBlock.AutoScaleHorizontal = true;
             autoControlIndicator.TextBlock.OverrideTextColor(GUI.Style.TextColor);

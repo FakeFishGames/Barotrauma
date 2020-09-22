@@ -212,15 +212,16 @@ namespace Barotrauma
 
             return inputType;
         }
-        
+
         /// <summary>
         /// Returns either a green [x] or a red [o]
         /// </summary>
         /// <param name="isFinished"></param>
+        /// <param name="isRunning"></param>
         /// <returns></returns>
-        public static string GetDebugSymbol(bool isFinished)
+        public static string GetDebugSymbol(bool isFinished, bool isRunning = false)
         {
-            return $"[‖color:{(isFinished ? "0,255,0‖x" : "255,0,0‖o")}‖color:end‖]";
+            return isRunning ? "[‖color:243,162,50‖x‖color:end‖]" : $"[‖color:{(isFinished ? "0,255,0‖x" : "255,0,0‖o")}‖color:end‖]";
         }
 
         /// <summary>

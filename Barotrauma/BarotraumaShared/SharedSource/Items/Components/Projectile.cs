@@ -407,6 +407,16 @@ namespace Barotrauma.Items.Components
             return hits;
         }
 
+        public override void Drop(Character dropper)
+        {
+            if (dropper != null)
+            {
+                Deactivate();
+                Unstick();
+            }
+            base.Drop(dropper);
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
@@ -422,9 +432,12 @@ namespace Barotrauma.Items.Components
                 if (item.body.LinearVelocity.LengthSquared() < ContinuousCollisionThreshold * ContinuousCollisionThreshold)
                 {
                     item.body.FarseerBody.IsBullet = false;
-                    //projectiles with a stickjoint don't become inactive until the stickjoint is detached
-                    if (stickJoint == null) { IsActive = false; }
                 }
+            }
+            //projectiles with a stickjoint don't become inactive until the stickjoint is detached
+            if (stickJoint == null && !item.body.FarseerBody.IsBullet) 
+            { 
+                IsActive = false; 
             }
 
             if (stickJoint == null) { return; }
@@ -511,9 +524,10 @@ namespace Barotrauma.Items.Components
 
             hits.Add(target.Body);
             impactQueue.Enqueue(new Impact(target, contact.Manifold.LocalNormal, item.body.LinearVelocity));
-            if (hits.Count() >= MaxTargetsToHit)
+            IsActive = true;
+            if (hits.Count() >= MaxTargetsToHit || target.Body.UserData is VoronoiCell)
             {
-                item.body.FarseerBody.OnCollision -= OnProjectileCollision;
+                Deactivate();
                 return true;
             }
             else
@@ -626,20 +640,9 @@ namespace Barotrauma.Items.Components
 
             target.Body.ApplyLinearImpulse(velocity * item.body.Mass);
 
-            if (hits.Count() >= MaxTargetsToHit)
+            if (hits.Count() >= MaxTargetsToHit || hits.LastOrDefault()?.UserData is VoronoiCell)
             {
-                item.body.FarseerBody.OnCollision -= OnProjectileCollision;
-                if ((item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons) && item.Condition > 0)
-                {
-                    item.body.CollisionCategories = Physics.CollisionCharacter;
-                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
-                }
-                else
-                {
-                    item.body.CollisionCategories = Physics.CollisionItem;
-                    item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
-                }
-                IgnoredBodies.Clear();
+                Deactivate();
             }
 
             if (attackResult.AppliedDamageModifiers != null &&
@@ -684,11 +687,12 @@ namespace Barotrauma.Items.Components
                 item.body.LinearVelocity *= 0.5f;
             }
 
-            var containedItems = item.ContainedItems;
+            var containedItems = item.OwnInventory?.Items;
             if (containedItems != null)
             {
                 foreach (Item contained in containedItems)
                 {
+                    if (contained == null) { continue; }
                     if (contained.body != null)
                     {
                         contained.SetTransform(item.SimPosition, contained.body.Rotation);
@@ -702,6 +706,22 @@ namespace Barotrauma.Items.Components
             }
 
             return true;
+        }
+
+        private void Deactivate()
+        {
+            item.body.FarseerBody.OnCollision -= OnProjectileCollision;
+            if ((item.Prefab.DamagedByProjectiles || item.Prefab.DamagedByMeleeWeapons) && item.Condition > 0)
+            {
+                item.body.CollisionCategories = Physics.CollisionCharacter;
+                item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+            }
+            else
+            {
+                item.body.CollisionCategories = Physics.CollisionItem;
+                item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
+            }
+            IgnoredBodies.Clear();
         }
 
         private void StickToTarget(Body targetBody, Vector2 axis)

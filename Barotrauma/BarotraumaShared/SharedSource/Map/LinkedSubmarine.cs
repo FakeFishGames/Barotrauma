@@ -40,6 +40,7 @@ namespace Barotrauma
         private string filePath;
 
         private bool loadSub;
+        public bool LoadSub => loadSub;
         private Submarine sub;
 
         private ushort originalMyPortID;
@@ -47,6 +48,7 @@ namespace Barotrauma
         //the ID of the docking port the sub was docked to in the original sub file
         //(needed when replacing a lost sub)
         private ushort originalLinkedToID;
+        public ushort OriginalLinkedToID => originalLinkedToID;
         private DockingPort originalLinkedPort;
 
         private bool purchasedLostShuttles;
@@ -160,6 +162,7 @@ namespace Barotrauma
             wallVertices = MathUtils.GiftWrap(points);
         }
 
+        // LinkedSubmarine.Load() is called from MapEntity.LoadAll()
         public static LinkedSubmarine Load(XElement element, Submarine submarine)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
@@ -172,17 +175,16 @@ namespace Barotrauma
             }
             else
             {
+                string levelSeed = element.GetAttributeString("location", "");
+                LevelData levelData = GameMain.GameSession.Campaign?.NextLevel ?? GameMain.GameSession.Level?.LevelData;
                 linkedSub = new LinkedSubmarine(submarine)
                 {
+                    purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,
                     saveElement = element
                 };
 
-                linkedSub.purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles;
-                string levelSeed = element.GetAttributeString("location", "");
-                if (!string.IsNullOrWhiteSpace(levelSeed) && 
-                    GameMain.GameSession.Level != null && 
-                    GameMain.GameSession.Level.Seed != levelSeed &&
-                    !linkedSub.purchasedLostShuttles)
+                if (!string.IsNullOrWhiteSpace(levelSeed) && levelData != null &&
+                    levelData.Seed != levelSeed && !linkedSub.purchasedLostShuttles)
                 {
                     linkedSub.loadSub = false;
                 }
@@ -217,12 +219,17 @@ namespace Barotrauma
             }            
         }
 
-
         public override void OnMapLoaded()
         {
             if (!loadSub) { return; }
 
             SubmarineInfo info = new SubmarineInfo(Submarine.Info.FilePath, "", saveElement);
+            if (!info.SubmarineElement.HasElements)
+            {
+                DebugConsole.ThrowError("Failed to load a linked submarine (empty XML element). The save file may be corrupted.");
+                return;
+            }
+
             sub = Submarine.Load(info, false);
             
             Vector2 worldPos = saveElement.GetAttributeVector2("worldpos", Vector2.Zero);
@@ -294,9 +301,9 @@ namespace Barotrauma
                 else
                 {
                     Vector2 portDiff = myPort.Item.WorldPosition - sub.WorldPosition;
-                    Vector2 offset = (myPort.IsHorizontal ?
-                        Vector2.UnitX * Math.Sign(linkedPort.Item.WorldPosition.X - myPort.Item.WorldPosition.X) :
-                        Vector2.UnitY * Math.Sign(linkedPort.Item.WorldPosition.Y - myPort.Item.WorldPosition.Y));
+                    Vector2 offset = myPort.IsHorizontal ?
+                        Vector2.UnitX * myPort.GetDir(linkedPort) :
+                        Vector2.UnitY * myPort.GetDir(linkedPort);
                     offset *= myPort.DockedDistance;
 
                     sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);

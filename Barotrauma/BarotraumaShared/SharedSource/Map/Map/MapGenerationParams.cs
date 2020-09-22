@@ -128,7 +128,7 @@ namespace Barotrauma
         public static void Init()
         {
 
-            var files = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.MapGenerationParameters);
+            var files = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.MapGenerationParameters);
             if (!files.Any())
             {
                 DebugConsole.ThrowError("No map generation parameters found in the selected content packages!");

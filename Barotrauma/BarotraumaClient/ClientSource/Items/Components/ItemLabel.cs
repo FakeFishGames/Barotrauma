@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Text;
@@ -224,6 +225,11 @@ namespace Barotrauma.Items.Components
             textBlock.TextDepth = item.SpriteDepth - 0.0001f;
             textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2() + new Vector2(scrollAmount + scrollPadding, 0.0f);
             textBlock.DrawManually(spriteBatch);
+        }
+
+        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        {
+            Text = msg.ReadString();
         }
     }
 }

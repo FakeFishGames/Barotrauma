@@ -37,7 +37,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    yield return item.WorldPosition;
+                    yield return item.GetRootInventoryOwner()?.WorldPosition ?? item.WorldPosition;
                 }
             }
         }
@@ -241,7 +241,8 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (item.CurrentHull?.Submarine == null || (!item.CurrentHull.Submarine.AtEndPosition && !item.CurrentHull.Submarine.AtStartPosition) || item.Removed) 
+            var root = item.GetRootContainer() ?? item;
+            if (root.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndPosition && !root.CurrentHull.Submarine.AtStartPosition) || item.Removed) 
             { 
                 return; 
             }
@@ -250,6 +251,7 @@ namespace Barotrauma
             item = null;
             GiveReward();
             completed = true;
+            failed = !completed && state > 0;
         }
     }
 }

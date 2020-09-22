@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -23,7 +24,6 @@ namespace Barotrauma
         NPCSets,
         Factions,
         Text,
-        Executable,
         ServerExecutable,
         LocationTypes,
         MapGenerationParameters,
@@ -54,7 +54,22 @@ namespace Barotrauma
     {
         public static string Folder = "Data/ContentPackages/";
 
-        public static List<ContentPackage> List = new List<ContentPackage>();
+        private static List<ContentPackage> regularPackages = new List<ContentPackage>();
+        public static IReadOnlyList<ContentPackage> RegularPackages
+        {
+            get { return regularPackages; }
+        }
+
+        private static List<ContentPackage> corePackages = new List<ContentPackage>();
+        public static IReadOnlyList<ContentPackage> CorePackages
+        {
+            get { return corePackages; }
+        }
+
+        public static IEnumerable<ContentPackage> AllPackages
+        {
+            get { return corePackages.Concat(regularPackages); }
+        }
         
         //these types of files are included in the MD5 hash calculation,
         //meaning that the players must have the exact same files to play together
@@ -97,7 +112,6 @@ namespace Barotrauma
             ContentType.Wreck,
             ContentType.WreckAIConfig,
             ContentType.Text,
-            ContentType.Executable,
             ContentType.ServerExecutable,
             ContentType.LocationTypes,
             ContentType.MapGenerationParameters,
@@ -128,7 +142,7 @@ namespace Barotrauma
             set;
         }
 
-        public string SteamWorkshopUrl;
+        public ulong SteamWorkshopId;
         public DateTime? InstallTime;
 
         public bool HideInWorkshopMenu
@@ -160,10 +174,24 @@ namespace Barotrauma
         //core packages are content packages that are required for the game to work
         //e.g. they include the executable, some location types, level generation params and other files the game won't work without
         //one (and only one) core package must always be selected
-        public bool CorePackage
+        private bool isCorePackage;
+        public bool IsCorePackage
         {
-            get;
-            set;
+            get { return isCorePackage; }
+            set
+            {
+                isCorePackage = value;
+                if (isCorePackage && regularPackages.Contains(this))
+                {
+                    corePackages.Add(this);
+                    regularPackages.Remove(this);
+                }
+                else if (!isCorePackage && corePackages.Contains(this))
+                {
+                    regularPackages.Add(this);
+                    corePackages.Remove(this);
+                }
+            }
         }
 
         public Version GameVersion
@@ -171,7 +199,31 @@ namespace Barotrauma
             get; set;
         }
 
-        public List<ContentFile> Files;
+
+        private List<ContentFile> files;
+        private List<ContentFile> filesToAdd;
+        private List<ContentFile> filesToRemove;
+
+
+        public IReadOnlyList<ContentFile> Files
+        {
+            get { return files; }
+        }
+
+        public IEnumerable<ContentFile> FilesUnsaved
+        {
+            get { return files.Where(f => !filesToRemove.Contains(f)).Concat(filesToAdd); }
+        }
+
+        public IReadOnlyList<ContentFile> FilesToAdd
+        {
+            get { return filesToAdd; }
+        }
+        
+        public IReadOnlyList<ContentFile> FilesToRemove
+        {
+            get { return filesToRemove; }
+        }
 
         public bool HasMultiplayerIncompatibleContent
         {
@@ -180,7 +232,9 @@ namespace Barotrauma
 
         private ContentPackage()
         {
-            Files = new List<ContentFile>();
+            files = new List<ContentFile>();
+            filesToAdd = new List<ContentFile>();
+            filesToRemove = new List<ContentFile>();
         }
 
         public ContentPackage(string filePath, string setPath = "")
@@ -200,8 +254,13 @@ namespace Barotrauma
 
             Name = doc.Root.GetAttributeString("name", "");
             HideInWorkshopMenu = doc.Root.GetAttributeBool("hideinworkshopmenu", false);
-            CorePackage = doc.Root.GetAttributeBool("corepackage", false);
-            SteamWorkshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
+            isCorePackage = doc.Root.GetAttributeBool("corepackage", false);
+            SteamWorkshopId = doc.Root.GetAttributeUInt64("steamworkshopid", 0);
+            string workshopUrl = doc.Root.GetAttributeString("steamworkshopurl", "");
+            if (!string.IsNullOrEmpty(workshopUrl))
+            {
+                SteamWorkshopId = SteamManager.GetWorkshopItemIDFromUrl(workshopUrl);
+            }
             GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
             if (doc.Root.Attribute("installtime") != null)
             {
@@ -211,12 +270,13 @@ namespace Barotrauma
             List<string> errorMsgs = new List<string>();
             foreach (XElement subElement in doc.Root.Elements())
             {
+                if (subElement.Name.ToString().Equals("executable", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (!Enum.TryParse(subElement.Name.ToString(), true, out ContentType type))
                 {
                     errorMsgs.Add("Error in content package \"" + Name + "\" - \"" + subElement.Name.ToString() + "\" is not a valid content type.");
                     type = ContentType.None;
                 }
-                Files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type, this));
+                files.Add(new ContentFile(subElement.GetAttributeString("file", ""), type, this));
             }
 
             if (Files.Count == 0)
@@ -227,7 +287,7 @@ namespace Barotrauma
                 string folder = System.IO.Path.GetDirectoryName(filePath);
                 if (File.Exists(System.IO.Path.Combine(folder, Name+".sub")))
                 {
-                    Files.Add(new ContentFile(System.IO.Path.Combine(folder, Name + ".sub"), ContentType.Submarine, this));
+                    files.Add(new ContentFile(System.IO.Path.Combine(folder, Name + ".sub"), ContentType.Submarine, this));
                 }
                 else
                 {
@@ -318,7 +378,6 @@ namespace Barotrauma
             {
                 switch (file.Type)
                 {
-                    case ContentType.Executable:
                     case ContentType.ServerExecutable:
                     case ContentType.None:
                     case ContentType.Outpost:
@@ -351,7 +410,7 @@ namespace Barotrauma
                 }
             }
 
-            if (CorePackage && !ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
+            if (IsCorePackage && !ContainsRequiredCorePackageFiles(out List<ContentType> missingContentTypes))
             {
                 errorMessages.Add(TextManager.GetWithVariables("ContentPackageCantMakeCorePackage", 
                     new string[2] { "[packagename]", "[missingfiletypes]" },
@@ -375,7 +434,6 @@ namespace Barotrauma
             foreach (ContentFile file in Files)
             {
                 //TODO: determine executable extension on platform and check for the presence of the executables
-                if (file.Type == ContentType.Executable) { continue; }
                 if (file.Type == ContentType.ServerExecutable) { continue; }
 
                 if (!File.Exists(file.Path))
@@ -394,7 +452,7 @@ namespace Barotrauma
             {
                 Name = name,
                 Path = path,
-                CorePackage = corePackage,
+                isCorePackage = corePackage,
                 GameVersion = GameMain.Version
             };
 
@@ -403,35 +461,91 @@ namespace Barotrauma
 
         public ContentFile AddFile(string path, ContentType type)
         {
-            if (Files.Find(file => file.Path == path && file.Type == type) != null) return null;
+            if (Files.Concat(FilesToAdd).Any(file => file.Path == path && file.Type == type)) return null;
 
             ContentFile cf = new ContentFile(path, type)
             {
                 ContentPackage = this
             };
-            Files.Add(cf);
+            filesToAdd.Add(cf);
 
             return cf;
         }
 
-        public void RemoveFile(ContentFile file)
+        public void AddFile(ContentFile file)
         {
-            Files.Remove(file);
+            if (filesToRemove.Contains(file)) { filesToRemove.Remove(file); }
+            if (Files.Concat(FilesToAdd).Any(f => f.Path == file.Path && f.Type == file.Type)) return;
+
+            filesToAdd.Add(file);
         }
 
-        public void Save(string filePath)
+        public void RemoveFile(ContentFile file)
         {
+            if (filesToAdd.Contains(file)) { filesToAdd.Remove(file); }
+            if (files.Contains(file) && !filesToRemove.Contains(file)) { filesToRemove.Add(file); }
+        }
+
+        public void Save(string filePath, bool reload = true)
+        {
+            var packagesToDeselect = corePackages.Concat(regularPackages).Where(p => p.Path.CleanUpPath() == Path.CleanUpPath()).ToList();
+            bool refreshFiles = false;
+
+            if (packagesToDeselect.Any())
+            {
+                foreach (var p in packagesToDeselect)
+                {
+                    if (p.IsCorePackage)
+                    {
+                        if (GameMain.Config.CurrentCorePackage == p)
+                        {
+                            refreshFiles = true;
+                        }
+                        corePackages.Remove(p);
+                    }
+                    else
+                    {
+                        if (GameMain.Config.EnabledRegularPackages.Contains(p))
+                        {
+                            refreshFiles = true;
+                        }
+                        regularPackages.Remove(p);
+                    }
+                }
+                if (IsCorePackage)
+                {
+                    corePackages.Add(this);
+                }
+                else
+                {
+                    regularPackages.Add(this);
+                }
+
+                if (refreshFiles)
+                {
+                    GameMain.Config.DisableContentPackageItems(filesToRemove);
+                    GameMain.Config.EnableContentPackageItems(filesToAdd);
+                    GameMain.Config.RefreshContentPackageItems(filesToRemove.Concat(filesToAdd).Distinct());
+                }
+            }
+            files.RemoveAll(f => filesToRemove.Contains(f));
+            files.AddRange(filesToAdd);
+            filesToRemove.Clear(); filesToAdd.Clear();
+
             XDocument doc = new XDocument();
             doc.Add(new XElement("contentpackage",
                 new XAttribute("name", Name),
                 new XAttribute("path", Path.CleanUpPathCrossPlatform(correctFilenameCase: false)),
-                new XAttribute("corepackage", CorePackage)));
+                new XAttribute("corepackage", IsCorePackage)));
 
             doc.Root.Add(new XAttribute("gameversion", GameVersion.ToString()));
 
-            if (!string.IsNullOrEmpty(SteamWorkshopUrl))
+            if (SteamWorkshopId != 0)
             {
-                doc.Root.Add(new XAttribute("steamworkshopurl", SteamWorkshopUrl));
+                doc.Root.Add(new XAttribute("steamworkshopid", SteamWorkshopId.ToString()));
+#if UNSTABLE
+                doc.Root.Add(new XAttribute("steamworkshopurl", $"http://steamcommunity.com/sharedfiles/filedetails/?source=Facepunch.Steamworks&id={SteamWorkshopId}"));
+#endif
             }
 
             if (InstallTime != null)
@@ -445,41 +559,6 @@ namespace Barotrauma
             }
 
             doc.SaveSafe(filePath);
-
-            var packagesToDeselect = List.Where(p => p.Path.CleanUpPath() == Path.CleanUpPath()).ToList();
-            bool reselectPackage = false;
-
-            if (packagesToDeselect.Any())
-            {
-                foreach (var p in packagesToDeselect)
-                {
-                    if (GameMain.Config.SelectedContentPackages.Contains(p))
-                    {
-                        reselectPackage = true;
-                        if (p.CorePackage)
-                        {
-                            GameMain.Config.AutoSelectCorePackage(packagesToDeselect);
-                        }
-                        else
-                        {
-                            GameMain.Config.DeselectContentPackage(p);
-                        }
-                    }
-                    List.Remove(p);
-                }
-                List.Add(this);
-                if (reselectPackage)
-                {
-                    if (CorePackage)
-                    {
-                        GameMain.Config.SelectCorePackage(this);
-                    }
-                    else
-                    {
-                        GameMain.Config.SelectContentPackage(this);
-                    }
-                }
-            }
         }
 
         public void CalculateHash(bool logging = false)
@@ -633,9 +712,31 @@ namespace Barotrauma
             return Files.Where(f => f.Type == type).Select(f => f.Path);
         }
         
+        public static void AddPackage(ContentPackage newPackage)
+        {
+            if (corePackages.Concat(regularPackages).Any(p => p.Name.Equals(newPackage.Name, StringComparison.OrdinalIgnoreCase))) 
+            {
+                DebugConsole.ThrowError($"Attempted to add \"{newPackage.Name}\" more than once!\n{Environment.StackTrace}");
+            }
+            if (newPackage.IsCorePackage) 
+            { 
+                corePackages.Add(newPackage); 
+            }
+            else 
+            { 
+                regularPackages.Add(newPackage); 
+            }
+        }
+
+        public static void RemovePackage(ContentPackage package)
+        {
+            if (package.IsCorePackage) { corePackages.Remove(package); }
+            else { regularPackages.Remove(package); }
+        }
+
         public static void LoadAll()
         {
-            string folder = ContentPackage.Folder;
+            string folder = Folder;
             if (!Directory.Exists(folder))
             {
                 try
@@ -651,11 +752,13 @@ namespace Barotrauma
 
             IEnumerable<string> files = Directory.GetFiles(folder, "*.xml");
 
-            List.Clear();
+            corePackages.Clear();
+            var prevRegularPackages = regularPackages.Select(p => p.Name.ToLowerInvariant()).ToList();
+            regularPackages.Clear();
 
             foreach (string filePath in files)
             {
-                List.Add(new ContentPackage(filePath));
+                AddPackage(new ContentPackage(filePath));
             }
 
             IEnumerable<string> modDirectories = Directory.GetDirectories("Mods");
@@ -671,54 +774,39 @@ namespace Barotrauma
                 }
                 else if (File.Exists(modFilePath))
                 {
-                    List.Add(new ContentPackage(modFilePath));
+                    AddPackage(new ContentPackage(modFilePath));
                 }
             }
-
-            List = List
-                .OrderByDescending(p => p.CorePackage)
-                .ThenByDescending(p => GameMain.Config?.SelectedContentPackages.Contains(p))
-                .ThenBy(p => GameMain.Config?.SelectedContentPackages.IndexOf(p))
-                .ToList();
+            SortContentPackages(p => prevRegularPackages.IndexOf(p.Name.ToLowerInvariant()));
+            GameMain.Config?.SortContentPackages();
         }
 
-        public static void SortContentPackages()
+        public static void SortContentPackages<T>(Func<ContentPackage, T> order, bool refreshAll = false)
         {
-            if (GameMain.Config != null)
-            {
-                List = List
-                    .OrderByDescending(p => p.CorePackage)
-                    .ThenBy(p => GameMain.Config.SelectedContentPackages.IndexOf(p))
-                    .ThenBy(p => List.IndexOf(p))
-                    .ToList();
-
-                var sortedSelected = GameMain.Config.SelectedContentPackages
-                    .OrderByDescending(p => p.CorePackage)
-                    .ThenBy(p => GameMain.Config.SelectedContentPackages.IndexOf(p))
-                    .ToList();
-                GameMain.Config.SelectedContentPackages.Clear(); GameMain.Config.SelectedContentPackages.AddRange(sortedSelected);
-
-                var reportList = GameMain.Config.SelectedContentPackages;
-                DebugConsole.NewMessage($"Content package load order: { string.Join("  |  ", reportList.Select(cp => cp.Name)) }");
-            }
-            else
-            {
-                List = List
-                    .OrderByDescending(p => p.CorePackage)
-                    .ThenBy(p => List.IndexOf(p))
-                    .ToList();
-            }
+            var ordered = regularPackages
+                .OrderBy(p => order(p))
+                .ThenBy(p => regularPackages.IndexOf(p))
+                .ToList();
+            regularPackages.Clear(); regularPackages.AddRange(ordered);
+            GameMain.Config?.SortContentPackages(refreshAll);
         }
 
         public void Delete()
         {
             try
             {
-                GameMain.Config.DeselectContentPackage(this);
+                if (IsCorePackage)
+                {
+                    corePackages.Remove(this);
+                    if (GameMain.Config.CurrentCorePackage == this) { GameMain.Config.AutoSelectCorePackage(null); }
+                }
+                else
+                {
+                    regularPackages.Remove(this);
+                    if (GameMain.Config.EnabledRegularPackages.Contains(this)) { GameMain.Config.DisableRegularPackage(this); }
+                }
                 GameMain.Config.SaveNewPlayerConfig();
-                List.Remove(this);
                 File.Delete(Path);
-                SortContentPackages();
             }
             catch (Exception e)
             {

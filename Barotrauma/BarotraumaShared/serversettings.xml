@@ -23,7 +23,6 @@
   startwhenclientsready="False"
   startwhenclientsreadyratio="0.8"
   allowspectating="True"
-  endroundatlevelend="True"
   saveserverlogs="True"
   allowragdollbutton="True"
   allowfiletransfers="True"

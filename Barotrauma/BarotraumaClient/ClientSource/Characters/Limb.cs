@@ -446,7 +446,7 @@ namespace Barotrauma
                 {
                     if (affliction is AfflictionBleeding)
                     {
-                        bleedingDamage += affliction.GetVitalityDecrease(character.CharacterHealth);
+                        bleedingDamage += affliction.GetVitalityDecrease(null);
                     }
                 }
             }
@@ -455,7 +455,7 @@ namespace Barotrauma
             {
                 if (affliction.Prefab.AfflictionType == "damage")
                 {
-                    damage += affliction.GetVitalityDecrease(character.CharacterHealth);
+                    damage += affliction.GetVitalityDecrease(null);
                 }
             }
             float damageMultiplier = 1;
@@ -488,7 +488,7 @@ namespace Barotrauma
             }
 
             // spawn damage particles
-            float damageParticleAmount = Math.Min(damage / 10, 1.0f) * damageMultiplier;
+            float damageParticleAmount = Math.Min(damage / 5, 1.0f) * damageMultiplier;
             if (damageParticleAmount > 0.001f)
             {
                 foreach (ParticleEmitter emitter in character.DamageEmitters)
@@ -509,11 +509,6 @@ namespace Barotrauma
                     if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
                     if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
                     emitter.Emit(1.0f, WorldPosition, character.CurrentHull, sizeMultiplier: bloodParticleSize, amountMultiplier: bloodParticleAmount);
-                }
-
-                if (bloodParticleAmount > 0 && character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
-                {
-                    character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodParticleSize, 0.5f, 1.0f));
                 }
             }   
         }

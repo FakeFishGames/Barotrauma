@@ -100,7 +100,7 @@ namespace Barotrauma.Items.Components
                             OnSelected = (component, userdata) =>
                             {
                                 selectedItem = userdata as FabricationRecipe;
-                                if (selectedItem != null) SelectItem(Character.Controlled, selectedItem);
+                                if (selectedItem != null) { SelectItem(Character.Controlled, selectedItem); }
                                 return true;
                             }
                         };
@@ -292,7 +292,7 @@ namespace Barotrauma.Items.Components
                 foreach (Item item in inputContainer.Inventory.Items)
                 {
                     if (item == null) { continue; }
-                    missingItems.Remove(missingItems.FirstOrDefault(mi => mi.ItemPrefab == item.prefab));
+                    missingItems.Remove(missingItems.FirstOrDefault(mi => mi.ItemPrefabs.Contains(item.prefab)));
                 }
 
                 var availableIngredients = GetAvailableIngredients();
@@ -328,12 +328,12 @@ namespace Barotrauma.Items.Components
 
                     if (slotIndex >= inputContainer.Capacity) { break; }
                     
-                    var itemIcon = requiredItem.ItemPrefab.InventoryIcon ?? requiredItem.ItemPrefab.sprite;
+                    var itemIcon = requiredItem.ItemPrefabs.First().InventoryIcon ?? requiredItem.ItemPrefabs.First().sprite;
                     Rectangle slotRect = inputContainer.Inventory.slots[slotIndex].Rect;
                     itemIcon.Draw(
                         spriteBatch,
                         slotRect.Center.ToVector2(),
-                        color: requiredItem.ItemPrefab.InventoryIconColor * 0.3f,
+                        color: requiredItem.ItemPrefabs.First().InventoryIconColor * 0.3f,
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
 
                     if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
@@ -346,14 +346,16 @@ namespace Barotrauma.Items.Components
 
                     if (slotRect.Contains(PlayerInput.MousePosition))
                     {
-                        string toolTipText = requiredItem.ItemPrefab.Name;
+                        var suitableIngredients = requiredItem.ItemPrefabs.Select(ip => ip.Name);
+                        string toolTipText = string.Join(", ", suitableIngredients.Count() > 3 ? suitableIngredients.SkipLast(suitableIngredients.Count() - 3) : suitableIngredients);
+                        if (suitableIngredients.Count() > 3) { toolTipText += "..."; }
                         if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
                         {
                             toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
                         }
-                        if (!string.IsNullOrEmpty(requiredItem.ItemPrefab.Description))
+                        if (!string.IsNullOrEmpty(requiredItem.ItemPrefabs.First().Description))
                         {
-                            toolTipText += '\n' + requiredItem.ItemPrefab.Description;
+                            toolTipText += '\n' + requiredItem.ItemPrefabs.First().Description;
                         }
                         tooltip = new Pair<Rectangle, string>(slotRect, toolTipText);
                     }
@@ -378,10 +380,11 @@ namespace Barotrauma.Items.Components
 
                 if (fabricatedItem != null)
                 {
+                    float clampedProgressState = Math.Clamp(progressState, 0f, 1f);
                     GUI.DrawRectangle(spriteBatch,
                         new Rectangle(
-                            slotRect.X, slotRect.Y + (int)(slotRect.Height * (1.0f - progressState)),
-                            slotRect.Width, (int)(slotRect.Height * progressState)),
+                            slotRect.X, slotRect.Y + (int)(slotRect.Height * (1.0f - clampedProgressState)),
+                            slotRect.Width, (int)(slotRect.Height * clampedProgressState)),
                         GUI.Style.Green * 0.5f, isFilled: true);
                 }
 
@@ -429,8 +432,10 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private bool SelectItem(Character user, FabricationRecipe selectedItem)
+        private bool SelectItem(Character user, FabricationRecipe selectedItem, float? overrideRequiredTime = null)
         {
+            this.selectedItem = selectedItem;
+
             selectedItemFrame.ClearChildren();
             selectedItemReqsFrame.ClearChildren();
             
@@ -496,7 +501,8 @@ namespace Barotrauma.Items.Components
             float degreeOfSuccess = user == null ? 0.0f : FabricationDegreeOfSuccess(user, selectedItem.RequiredSkills);
             if (degreeOfSuccess > 0.5f) { degreeOfSuccess = 1.0f; }
 
-            float requiredTime = user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user);
+            float requiredTime = overrideRequiredTime ??
+                (user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user));
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
                 TextManager.Get("FabricatorRequiredTime") , textColor: ToolBox.GradientLerp(degreeOfSuccess, GUI.Style.Red, Color.Yellow, GUI.Style.Green), font: GUI.SubHeadingFont)
@@ -605,7 +611,7 @@ namespace Barotrauma.Items.Components
             State = newState;
             timeUntilReady = newTimeUntilReady;
 
-            if (newState == FabricatorState.Stopped || itemIndex == -1 || user == null)
+            if (newState == FabricatorState.Stopped || itemIndex == -1)
             {
                 CancelFabricating();
             }

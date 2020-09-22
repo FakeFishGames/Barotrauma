@@ -18,9 +18,9 @@ namespace Barotrauma.Networking
             Returning
         }
 
-        private NetworkMember networkMember;
-        private Steering shuttleSteering;
-        private List<Door> shuttleDoors;
+        private readonly NetworkMember networkMember;
+        private readonly Steering shuttleSteering;
+        private readonly List<Door> shuttleDoors;
 
         //items created during respawn
         //any respawn items left in the shuttle are removed when the shuttle despawns
@@ -54,8 +54,6 @@ namespace Barotrauma.Networking
         }
 
         public State CurrentState { get; private set; }
-
-        private DateTime despawnTime;
 
         private float maxTransportTime;
 
@@ -187,8 +185,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        partial void DispatchShuttle();
-
         partial void UpdateReturningProjSpecific();
         
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
@@ -217,7 +213,10 @@ namespace Barotrauma.Networking
         private void ResetShuttle()
         {
             ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
+
+#if SERVER
             despawnTime = ReturnTime + new TimeSpan(0, 0, seconds: 30);
+#endif
 
             if (RespawnShuttle == null) return;
 
@@ -244,29 +243,23 @@ namespace Barotrauma.Networking
 
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != RespawnShuttle) continue;
-
+                if (wall.Submarine != RespawnShuttle) { continue; }
                 for (int i = 0; i < wall.SectionCount; i++)
                 {
                     wall.AddDamage(i, -100000.0f);
                 }            
             }
 
-            var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == RespawnShuttle && g.ConnectedWall != null);
-            shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
-
             foreach (Hull hull in Hull.hullList)
             {
-                if (hull.Submarine != RespawnShuttle) continue;
-
+                if (hull.Submarine != RespawnShuttle) { continue; }
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
             }
 
             foreach (Character c in Character.CharacterList)
             {
-                if (c.Submarine != RespawnShuttle) continue;
-
+                if (c.Submarine != RespawnShuttle) { continue; }
 #if CLIENT
                 if (Character.Controlled == c) Character.Controlled = null;
 #endif

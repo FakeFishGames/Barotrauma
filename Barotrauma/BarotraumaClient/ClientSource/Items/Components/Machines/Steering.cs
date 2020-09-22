@@ -22,6 +22,7 @@ namespace Barotrauma.Items.Components
             LevelEnd,
             LevelStart
         };
+
         private GUITickBox maintainPosTickBox, levelEndTickBox, levelStartTickBox;
 
         private GUIComponent statusContainer, dockingContainer, controlContainer;
@@ -349,20 +350,34 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, userdata) =>
                 {
-
-                    if (GameMain.GameSession?.Campaign != null)
+                    if (GameMain.GameSession?.Campaign is CampaignMode campaign)
                     {
                         if (Level.IsLoadedOutpost &&
                             DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
                         {
-                            GameMain.GameSession.Campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
-                            GameMain.GameSession.Campaign.ShowCampaignUI = true;
+                            // Undocking from an outpost
+                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
+                            campaign.ShowCampaignUI = true;
                             return false;
                         }
                         else if (!Level.IsLoadedOutpost && DockingModeEnabled && ActiveDockingSource != null &&
-                                !ActiveDockingSource.Docked && (DockingTarget?.Item?.Submarine?.Info.IsOutpost ?? false))
+                                !ActiveDockingSource.Docked && DockingTarget?.Item?.Submarine == Level.Loaded.StartOutpost && (DockingTarget?.Item?.Submarine?.Info.IsOutpost ?? false))
                         {
-                            enterOutpostPrompt = new GUIMessageBox("", TextManager.GetWithVariable("campaignenteroutpostprompt", "[locationname]", DockingTarget.Item.Submarine.Info.Name), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                            // Docking to an outpost
+                            var subsToLeaveBehind = campaign.GetSubsToLeaveBehind(Item.Submarine);
+                            if (subsToLeaveBehind.Any())
+                            {
+                                enterOutpostPrompt = new GUIMessageBox(
+                                    TextManager.GetWithVariable("enterlocation", "[locationname]", DockingTarget.Item.Submarine.Info.Name),
+                                    TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind"),
+                                    new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                            }
+                            else
+                            {
+                                enterOutpostPrompt = new GUIMessageBox("",
+                                    TextManager.GetWithVariable("campaignenteroutpostprompt", "[locationname]", DockingTarget.Item.Submarine.Info.Name),
+                                    new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                            }
                             enterOutpostPrompt.Buttons[0].OnClicked += (btn, userdata) =>
                             {
                                 SendDockingSignal();
@@ -780,10 +795,16 @@ namespace Barotrauma.Items.Components
                 }
                 checkConnectedPortsTimer = CheckConnectedPortsInterval;
             }
+            else
+            {
+                checkConnectedPortsTimer -= deltaTime;
+            }
             
-            float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             DockingModeEnabled = false;
-            
+
+            if (connectedPorts.None()) { return; }
+
+            float closestDist = DockingAssistThreshold * DockingAssistThreshold;
             foreach (DockingPort sourcePort in connectedPorts)
             {
                 if (sourcePort.Docked || sourcePort.Item.Submarine == null) { continue; }
@@ -795,15 +816,14 @@ namespace Barotrauma.Items.Components
                 {
                     if (targetPort.Docked || targetPort.Item.Submarine == null) { continue; }
                     if (targetPort.Item.Submarine == controlledSub || targetPort.IsHorizontal != sourcePort.IsHorizontal) { continue; }
+                    if (targetPort.Item.Submarine.DockedTo?.Contains(sourcePort.Item.Submarine) ?? false) { continue; }
                     if (Level.Loaded != null && targetPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
-
-                    int targetDir = targetPort.GetDir();
-
-                    if (sourceDir == targetDir) { continue; }
+                    if (sourceDir == targetPort.GetDir()) { continue; }
 
                     float dist = Vector2.DistanceSquared(sourcePort.Item.WorldPosition, targetPort.Item.WorldPosition);
                     if (dist < closestDist)
                     {
+                        closestDist = dist;
                         DockingModeEnabled = true;
                         ActiveDockingSource = sourcePort;
                         DockingTarget = targetPort;

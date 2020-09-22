@@ -29,9 +29,7 @@ namespace Barotrauma
 
         protected bool removed;
 
-#if CLIENT
-        private List<Decal> burnDecals = new List<Decal>();
-#endif
+        private readonly List<Decal> burnDecals = new List<Decal>();
 
         public Vector2 Position
         {
@@ -136,10 +134,8 @@ namespace Barotrauma
                         - leftEdge;
 
                     fireSources[j].position.X = leftEdge;
-#if CLIENT
                     fireSources[j].burnDecals.AddRange(fireSources[i].burnDecals);
                     fireSources[j].burnDecals.Sort((d1, d2) => { return Math.Sign(d1.WorldPosition.X - d2.WorldPosition.X); });
-#endif
                     fireSources[i].Remove();
                 }
             }
@@ -179,7 +175,33 @@ namespace Barotrauma
 
             LimitSize();
 
+            if (size.X > 256.0f)
+            {
+                if (burnDecals.Count == 0)
+                {
+                    var newDecal = hull.AddDecal("burnt", WorldPosition + size / 2, 1f, true);
+                    if (newDecal != null) { burnDecals.Add(newDecal); }
+                }
+                else if (WorldPosition.X < burnDecals[0].WorldPosition.X - 256.0f)
+                {
+                    var newDecal = hull.AddDecal("burnt", WorldPosition, 1f, true);
+                    if (newDecal != null) { burnDecals.Insert(0, newDecal); }
+                }
+                else if (WorldPosition.X + size.X > burnDecals[burnDecals.Count - 1].WorldPosition.X + 256.0f)
+                {
+                    var newDecal = hull.AddDecal("burnt", WorldPosition + Vector2.UnitX * size.X, 1f, true);
+                    if (newDecal != null) { burnDecals.Add(newDecal); }
+                }
+            }
+
+            foreach (Decal d in burnDecals)
+            {
+                //prevent the decals from fading out as long as the firesource is alive
+                d.ForceRefreshFadeTimer(Math.Min(d.FadeTimer, d.FadeInTime));
+            }
+
             UpdateProjSpecific(growModifier);
+
             
             if (size.X < 1.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
@@ -366,12 +388,11 @@ namespace Barotrauma
 #if CLIENT
             lightSource?.Remove();
             lightSource = null;
-            
+#endif            
             foreach (Decal d in burnDecals)
             {
                 d.StopFadeIn();
             }
-#endif
             hull?.RemoveFire(this);
             removed = true;
         }

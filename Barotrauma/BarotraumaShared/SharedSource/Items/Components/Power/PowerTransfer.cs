@@ -113,6 +113,19 @@ namespace Barotrauma.Items.Components
                 powerLoad = 0.0f;
                 currPowerConsumption = 0.0f;
                 SetAllConnectionsDirty();
+                foreach (HashSet<Connection> recipientList in connectedRecipients.Values.ToList())
+                {
+                    foreach (Connection c in recipientList)
+                    {
+                        if (c.Item == item) { continue; }
+                        var recipientPowerTransfer = c.Item.GetComponent<PowerTransfer>();
+                        if (recipientPowerTransfer != null)
+                        {
+                            recipientPowerTransfer.SetAllConnectionsDirty();
+                            recipientPowerTransfer.RefreshConnections();
+                        }
+                    }
+                }
                 RefreshConnections();
                 isBroken = true;
             }
@@ -185,29 +198,32 @@ namespace Barotrauma.Items.Components
                 else if (!connectionDirty[c])
                 {
                     continue;
-                }
-
-                HashSet<Connection> connected = new HashSet<Connection>();
-                if (!connectedRecipients.ContainsKey(c))
-                {
-                    connectedRecipients.Add(c, connected);
-                }
-                else
-                {
-                    //mark all previous recipients as dirty
-                    foreach (Connection recipient in connectedRecipients[c])
-                    {
-                        var pt = recipient.Item.GetComponent<PowerTransfer>();
-                        if (pt != null) pt.connectionDirty[recipient] = true;
-                    }
-                }
+                }               
 
                 //find all connections that are connected to this one (directly or via another PowerTransfer)
-                connected.Add(c);
-                GetConnected(c, connected);
+                HashSet<Connection> connected = new HashSet<Connection>();
+                if (item.Condition > 0.0f)
+                {
+                    if (!connectedRecipients.ContainsKey(c))
+                    {
+                        connectedRecipients.Add(c, connected);
+                    }
+                    else
+                    {
+                        //mark all previous recipients as dirty
+                        foreach (Connection recipient in connectedRecipients[c])
+                        {
+                            var pt = recipient.Item.GetComponent<PowerTransfer>();
+                            if (pt != null) pt.connectionDirty[recipient] = true;
+                        }
+                    }
+
+                    connected.Add(c);
+                    GetConnected(c, connected);
+                }
                 connectedRecipients[c] = connected;
 
-                //go through all the PowerTransfers and we're connected to and set their connections to match the ones we just calculated
+                //go through all the PowerTransfers that we're connected to and set their connections to match the ones we just calculated
                 //(no need to go through the recursive GetConnected method again)
                 foreach (Connection recipient in connected)
                 {
@@ -232,10 +248,10 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection recipient in recipients)
             {
-                if (recipient == null || connected.Contains(recipient)) continue;
+                if (recipient == null || connected.Contains(recipient)) { continue; }
 
                 Item it = recipient.Item;
-                if (it == null || it.Condition <= 0.0f) continue;
+                if (it == null || it.Condition <= 0.0f) { continue; }
 
                 connected.Add(recipient);
 

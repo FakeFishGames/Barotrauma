@@ -274,9 +274,9 @@ namespace Barotrauma
                     }
 
                     //TODO: hacky workaround to check for wrecks and outposts, refactor SubmarineInfo and ContentType at some point
-                    var nonPlayerFiles = ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Wreck).ToList();
-                    nonPlayerFiles.AddRange(ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.Outpost));
-                    nonPlayerFiles.AddRange(ContentPackage.GetFilesOfType(GameMain.Config.SelectedContentPackages, ContentType.OutpostModule));
+                    var nonPlayerFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Wreck).ToList();
+                    nonPlayerFiles.AddRange(ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Outpost));
+                    nonPlayerFiles.AddRange(ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.OutpostModule));
                     SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.Equals(GameMain.Config.QuickStartSubmarineName, StringComparison.InvariantCultureIgnoreCase));
                     subInfo ??= SubmarineInfo.SavedSubmarines.GetRandom(s =>
                         s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&

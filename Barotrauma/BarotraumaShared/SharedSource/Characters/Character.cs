@@ -121,7 +121,8 @@ namespace Barotrauma
             }
         }
 
-        public bool TurnedHostileByEvent;
+        public bool IsInstigator => CombatAction != null && CombatAction.IsInstigator;
+        public CombatAction CombatAction;
 
         public AnimController AnimController;
 
@@ -142,6 +143,8 @@ namespace Barotrauma
         public string SpeciesName => Params.SpeciesName;
         public bool IsHumanoid => Params.Humanoid;
         public bool IsHusk => Params.Husk;
+
+        public string BloodDecalName => Params.BloodDecal;
 
         public bool CanSpeak
         {
@@ -636,6 +639,8 @@ namespace Barotrauma
                 return SelectedConstruction == null || SelectedConstruction.GetComponent<Ladder>() != null || (SelectedConstruction.GetComponent<Controller>()?.AllowAiming ?? false);
             }
         }
+
+        public bool GodMode = false;
 
         public CampaignMode.InteractionType CampaignInteractionType;
 
@@ -1668,14 +1673,14 @@ namespace Barotrauma
             return false;
         }
 
-        public bool HasEquippedItem(string itemIdentifier, bool allowBroken = true)
+        public bool HasEquippedItem(string tagOrIdentifier, bool allowBroken = true)
         {
             if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
                 if (Inventory.SlotTypes[i] == InvSlotType.Any || Inventory.Items[i] == null) { continue; }
                 if (!allowBroken && Inventory.Items[i].Condition <= 0.0f) { continue; }
-                if (Inventory.Items[i].Prefab.Identifier == itemIdentifier || Inventory.Items[i].HasTag(itemIdentifier)) { return true; }
+                if (Inventory.Items[i].Prefab.Identifier == tagOrIdentifier || Inventory.Items[i].HasTag(tagOrIdentifier)) { return true; }
             }
 
             return false;
@@ -1738,7 +1743,7 @@ namespace Barotrauma
             if (inventory.Owner is Item)
             {
                 var owner = (Item)inventory.Owner;
-                if (!CanInteractWith(owner)) { return false; }
+                if (!CanInteractWith(owner) && !owner.linkedTo.Any(lt => lt is Item item && item.DisplaySideBySideWhenLinked && CanInteractWith(item))) { return false; }
                 ItemContainer container = owner.GetComponents<ItemContainer>().FirstOrDefault(ic => ic.Inventory == inventory);
                 if (container != null && !container.HasRequiredItems(this, addMessage: false)) { return false; }
             }
@@ -1833,7 +1838,7 @@ namespace Barotrauma
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen) { hidden = false; }
 #endif  
-            if (!CanInteract || hidden || item.NonInteractable) return false;
+            if (!CanInteract || hidden || item.NonInteractable) { return false; }
 
             if (item.ParentInventory != null)
             {
@@ -1845,6 +1850,7 @@ namespace Barotrauma
             {
                 //locked wires are never interactable
                 if (wire.Locked) { return false; }
+                if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { return false; }
 
                 //wires are interactable if the character has selected an item the wire is connected to,
                 //and it's disconnected from the other end
@@ -2314,7 +2320,7 @@ namespace Barotrauma
                         if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                         {
                             Implode();
-                            return;
+                            if (IsDead) { return; }                           
                         }
                     }
                 }
@@ -2329,7 +2335,7 @@ namespace Barotrauma
                 if (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f)
                 {
                     Implode();
-                    return;
+                    if (IsDead) { return; }
                 }
             }
 
@@ -2507,6 +2513,12 @@ namespace Barotrauma
             {
                 subCorpseCount = CharacterList.Count(c => c.IsDead && c.Submarine == Submarine);
                 if (subCorpseCount < GameMain.Config.CorpsesPerSubDespawnThreshold) { return; }
+            }
+
+            if (SelectedBy != null)
+            {
+                despawnTimer = 0.0f;
+                return;
             }
 
             float distToClosestPlayer = GetDistanceToClosestPlayer();
@@ -2866,20 +2878,18 @@ namespace Barotrauma
                     wasSevered = severed;
                 }
                 if (severed)
-                {
+                {       
                     Limb otherLimb = joint.LimbA == targetLimb ? joint.LimbB : joint.LimbA;
-                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass);
+                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass);             
+                    ApplyStatusEffects(ActionType.OnSevered, 1.0f);
+                    targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
+                    otherLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
                 }
             }
-            if (wasSevered)
+            if (wasSevered && targetLimb.character.AIController is EnemyAIController enemyAI)
             {
-                if (targetLimb.character.AIController is EnemyAIController enemyAI)
-                {
-                    enemyAI.ReevaluateAttacks();
-                }
-                ApplyStatusEffects(ActionType.OnSevered, 1.0f);
-                targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
-            }
+                enemyAI.ReevaluateAttacks();
+            }            
         }
 
         public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse = 0.0f, Character attacker = null)
@@ -3075,7 +3085,7 @@ namespace Barotrauma
 
         private void Implode(bool isNetworkMessage = false)
         {
-            if (CharacterHealth.Unkillable || IsDead) { return; }
+            if (CharacterHealth.Unkillable || GodMode || IsDead) { return; }
 
             if (!isNetworkMessage)
             {
@@ -3127,7 +3137,7 @@ namespace Barotrauma
 
         public void Kill(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool isNetworkMessage = false, bool log = true)
         {
-            if (IsDead || CharacterHealth.Unkillable) { return; }
+            if (IsDead || CharacterHealth.Unkillable || GodMode) { return; }
 
             HealthUpdateInterval = 0.0f;
 
@@ -3447,7 +3457,7 @@ namespace Barotrauma
         public bool IsMechanic => HasJob("mechanic");
         public bool IsMedic => HasJob("medicaldoctor");
         public bool IsSecurity => HasJob("securityofficer");
-        public bool IsAsssitant => HasJob("assistant");
+        public bool IsAssistant => HasJob("assistant");
         public bool IsWatchman => HasJob("watchman");
 
         public bool HasJob(string identifier) => Info?.Job?.Prefab.Identifier == identifier;

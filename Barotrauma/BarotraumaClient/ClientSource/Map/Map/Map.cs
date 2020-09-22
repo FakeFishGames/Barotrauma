@@ -9,8 +9,6 @@ namespace Barotrauma
 {
     partial class Map
     {
-        public bool AllowDebugTeleport;
-
         class MapAnim
         {
             public Location StartLocation;
@@ -380,6 +378,7 @@ namespace Barotrauma
                         Location prevLocation = CurrentDisplayLocation;
                         CurrentLocation = HighlightedLocation;
                         Level.Loaded.DebugSetStartLocation(CurrentLocation);
+                        Level.Loaded.DebugSetEndLocation(null);
 
                         CurrentLocation.Discovered = true;
                         CurrentLocation.CreateStore();
@@ -573,7 +572,7 @@ namespace Barotrauma
                         }
                     }
 
-                    if (GameMain.DebugDraw && location == HighlightedLocation)
+                    if (GameMain.DebugDraw && location == HighlightedLocation && (!location.Discovered || !location.Type.HasOutpost))
                     {
                         if (location.Reputation != null)
                         {
@@ -589,7 +588,7 @@ namespace Barotrauma
                             Color barColor = ToolBox.GradientLerp(location.Reputation.NormalizedValue, Color.Red, Color.Yellow, Color.LightGreen);
                             GUI.DrawRectangle(spriteBatch, bgRect, Color.Black * 0.8f, isFilled: true);
                             GUI.DrawRectangle(spriteBatch, new Rectangle((int)dPos.X, (int)dPos.Y, (int)(location.Reputation.NormalizedValue * 255), 32), barColor, isFilled: true);
-                            string reputationValue = location.Reputation.Value.ToString(CultureInfo.InvariantCulture);
+                            string reputationValue = ((int)location.Reputation.Value).ToString();
                             Vector2 repValueSize = GUI.SubHeadingFont.MeasureString(reputationValue);
                             GUI.DrawString(spriteBatch, dPos + (new Vector2(256, 32) / 2) - (repValueSize / 2), reputationValue, Color.White, Color.Black, font: GUI.SubHeadingFont);
                             GUI.DrawRectangle(spriteBatch, new Rectangle((int)dPos.X, (int)dPos.Y, 256, 32), Color.White);
@@ -607,12 +606,34 @@ namespace Barotrauma
                 Vector2 nameSize = GUI.LargeFont.MeasureString(HighlightedLocation.Name);
                 Vector2 typeSize = GUI.Font.MeasureString(HighlightedLocation.Type.Name);
                 Vector2 size = new Vector2(Math.Max(nameSize.X, typeSize.X), nameSize.Y + typeSize.Y);
+                bool showReputation = HighlightedLocation.Discovered && HighlightedLocation.Type.HasOutpost && HighlightedLocation.Reputation != null;
+                string repLabelText = null, repValueText = null;
+                Vector2 repLabelSize = Vector2.Zero, repBarSize = Vector2.Zero;
+                if (showReputation)
+                {
+                    repLabelText = TextManager.Get("reputation");
+                    repLabelSize = GUI.Font.MeasureString(repLabelText);           
+                    size.X = Math.Max(size.X, repLabelSize.X);
+                    repBarSize = new Vector2(Math.Max(0.75f * size.X, 100), repLabelSize.Y);
+                    size.X = Math.Max(size.X, (4.0f / 3.0f) * repBarSize.X);
+                    size.Y += 2 * repLabelSize.Y + 4 + repBarSize.Y;
+                    repValueText = ((int)HighlightedLocation.Reputation.Value).ToString();
+                }
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                    spriteBatch, new Rectangle((int)(pos.X - 60 * GUI.Scale), (int)(pos.Y - size.Y), (int)(size.X + 120 * GUI.Scale), (int)(size.Y * 2.2f)), Color.Black * hudVisibility);
-                GUI.DrawString(spriteBatch, pos - new Vector2(0.0f, size.Y / 2),
-                    HighlightedLocation.Name, GUI.Style.TextColor * hudVisibility * 1.5f, font: GUI.LargeFont);
-                GUI.DrawString(spriteBatch, pos + new Vector2(0.0f, size.Y / 2 - GUI.Font.MeasureString(HighlightedLocation.Type.Name).Y),
-                    HighlightedLocation.Type.Name, GUI.Style.TextColor * hudVisibility * 1.5f);
+                    spriteBatch, new Rectangle((int)(pos.X - 60 * GUI.Scale), (int)(pos.Y - size.Y), (int)(size.X + 120 * GUI.Scale), (int)(size.Y * 2.2f)), Color.Black * hudVisibility);                
+                var topLeftPos = pos - new Vector2(0.0f, size.Y / 2);
+                GUI.DrawString(spriteBatch, topLeftPos, HighlightedLocation.Name, GUI.Style.TextColor * hudVisibility * 1.5f, font: GUI.LargeFont);
+                topLeftPos += new Vector2(0.0f, nameSize.Y);
+                GUI.DrawString(spriteBatch, topLeftPos, HighlightedLocation.Type.Name, GUI.Style.TextColor * hudVisibility * 1.5f);
+                if (showReputation)
+                {
+                    topLeftPos += new Vector2(0.0f, typeSize.Y + repLabelSize.Y);
+                    GUI.DrawString(spriteBatch, topLeftPos, repLabelText, GUI.Style.TextColor * hudVisibility * 1.5f);
+                    topLeftPos += new Vector2(0.0f, repLabelSize.Y + 4);
+                    Rectangle repBarRect = new Rectangle(new Point((int)topLeftPos.X, (int)topLeftPos.Y), new Point((int)repBarSize.X, (int)repBarSize.Y));
+                    RoundSummary.DrawReputationBar(spriteBatch, repBarRect, HighlightedLocation.Reputation.NormalizedValue);
+                    GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + 4, repBarRect.Top), repValueText, GUI.Style.TextColor);
+                }
             }
             if (tooltip != null)
             {

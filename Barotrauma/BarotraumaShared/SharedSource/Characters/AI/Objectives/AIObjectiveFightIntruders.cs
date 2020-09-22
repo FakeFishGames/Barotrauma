@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -8,7 +9,6 @@ namespace Barotrauma
         public override string DebugTag => "fight intruders";
         protected override float IgnoreListClearInterval => 30;
         public override bool IgnoreUnsafeHulls => true;
-
 
         public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
@@ -20,7 +20,7 @@ namespace Barotrauma
         protected override float TargetEvaluation()
         {
             // TODO: sorting criteria
-            return 100;
+            return Targets.None() ? 0 : 100;
         }
 
         protected override AIObjective ObjectiveConstructor(Character target)
@@ -56,8 +56,7 @@ namespace Barotrauma
             if (target.CurrentHull == null) { return false; }
             if (character.Submarine != null)
             {
-                if (target.Submarine.Info.Type != character.Submarine.Info.Type) { return false; }
-                if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, true)) { return false; }
+                if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
             }
             return true;
         }

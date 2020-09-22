@@ -717,7 +717,7 @@ namespace Barotrauma
             {
                 slot.QuickUseButtonToolTip = quickUseAction == QuickUseAction.None ?
                 "" : TextManager.GetWithVariable("QuickUseAction." + quickUseAction.ToString(), "[equippeditem]", character.SelectedItems.FirstOrDefault(i => i != null)?.Name);
-                if (PlayerInput.PrimaryMouseButtonDown()) slot.EquipButtonState = GUIComponent.ComponentState.Pressed;
+                if (PlayerInput.PrimaryMouseButtonDown()) { slot.EquipButtonState = GUIComponent.ComponentState.Pressed; }
                 if (PlayerInput.PrimaryMouseButtonClicked())
                 {
                     QuickUseItem(item, allowEquip: true, allowInventorySwap: false, allowApplyTreatment: false);
@@ -937,27 +937,51 @@ namespace Barotrauma
             switch (quickUseAction)
             {
                 case QuickUseAction.Equip:
-                    //attempt to put in a free slot first
-                    for (int i = capacity - 1; i >= 0; i--)
+                    if (string.IsNullOrEmpty(item.Prefab.EquipConfirmationText) || character != Character.Controlled)
                     {
-                        if (Items[i] != null) { continue; }
-                        if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
-                        success = TryPutItem(item, i, true, false, Character.Controlled, true);
-                        if (success) { break; }
+                        Equip();
+                    }
+                    else
+                    {
+                        if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "equipconfirmation")) { return; }
+                        var equipConfirmation = new GUIMessageBox(string.Empty, TextManager.Get(item.Prefab.EquipConfirmationText),
+                            new string[] { TextManager.Get("yes"), TextManager.Get("no") })
+                        {
+                            UserData = "equipconfirmation"
+                        };
+                        equipConfirmation.Buttons[0].OnClicked = (btn, userdata) =>
+                        {
+                            Equip();
+                            equipConfirmation.Close();
+                            return true;
+                        };
+                        equipConfirmation.Buttons[1].OnClicked = equipConfirmation.Close;
                     }
 
-                    if (!success)
+                    void Equip()
                     {
+                        //attempt to put in a free slot first
                         for (int i = capacity - 1; i >= 0; i--)
                         {
+                            if (Items[i] != null) { continue; }
                             if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
-                            // something else already equipped in a hand slot, attempt to unequip it so items aren't unnecessarily swapped to it
-                            if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any) && (SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand))
-                            {
-                                TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
-                            }
                             success = TryPutItem(item, i, true, false, Character.Controlled, true);
                             if (success) { break; }
+                        }
+
+                        if (!success)
+                        {
+                            for (int i = capacity - 1; i >= 0; i--)
+                            {
+                                if (SlotTypes[i] == InvSlotType.Any || !item.AllowedSlots.Any(a => a.HasFlag(SlotTypes[i]))) { continue; }
+                                // something else already equipped in a hand slot, attempt to unequip it so items aren't unnecessarily swapped to it
+                                if (Items[i] != null && Items[i].AllowedSlots.Contains(InvSlotType.Any) && (SlotTypes[i] == InvSlotType.LeftHand || SlotTypes[i] == InvSlotType.RightHand))
+                                {
+                                    TryPutItem(Items[i], Character.Controlled, new List<InvSlotType>() { InvSlotType.Any }, true);
+                                }
+                                success = TryPutItem(item, i, true, false, Character.Controlled, true);
+                                if (success) { break; }
+                            }
                         }
                     }
                     break;
@@ -1046,8 +1070,8 @@ namespace Barotrauma
         
         public void DrawOwn(SpriteBatch spriteBatch)
         {
-            if (!AccessibleWhenAlive && !character.IsDead) return;
-            if (slots == null) CreateSlots();
+            if (!AccessibleWhenAlive && !character.IsDead) { return; }
+            if (slots == null) { CreateSlots(); }
             if (GameMain.GraphicsWidth != screenResolution.X ||
                 GameMain.GraphicsHeight != screenResolution.Y ||
                 prevUIScale != UIScale ||
@@ -1070,7 +1094,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (HideSlot(i)) continue;
+                if (HideSlot(i)) { continue; }
 
                 Rectangle interactRect = slots[i].InteractRect;
                 interactRect.Location += slots[i].DrawOffset.ToPoint();
@@ -1086,9 +1110,13 @@ namespace Barotrauma
             }
             
             InventorySlot highlightedQuickUseSlot = null;
+            Rectangle inventoryArea = Rectangle.Empty;
+
             for (int i = 0; i < capacity; i++)
             {
-                if (HideSlot(i)) continue;
+                if (HideSlot(i)) { continue; }
+
+                inventoryArea = inventoryArea == Rectangle.Empty ? slots[i].InteractRect : Rectangle.Union(inventoryArea, slots[i].InteractRect);
 
                 if (Items[i] == null || 
                     (draggingItem == Items[i] && !slots[i].InteractRect.Contains(PlayerInput.MousePosition)) || 
@@ -1102,7 +1130,7 @@ namespace Barotrauma
                     }
                     continue;
                 }
-                if (draggingItem == Items[i] && !slots[i].IsHighlighted) continue;
+                if (draggingItem == Items[i] && !slots[i].IsHighlighted) { continue; }
                 
                 //draw hand icons if the item is equipped in a hand slot
                 if (IsInLimbSlot(Items[i], InvSlotType.LeftHand))
@@ -1169,7 +1197,17 @@ namespace Barotrauma
                 }
             }
 
-            if (highlightedQuickUseSlot != null && !string.IsNullOrEmpty(highlightedQuickUseSlot.QuickUseButtonToolTip))
+            if (Locked)
+            {
+                GUI.DrawRectangle(spriteBatch, inventoryArea, new Color(30,30,30,100), isFilled: true);
+                var lockIcon = GUI.Style.GetComponentStyle("LockIcon")?.GetDefaultSprite();
+                lockIcon?.Draw(spriteBatch, inventoryArea.Center.ToVector2(), scale: Math.Min(inventoryArea.Height / lockIcon.size.Y * 0.7f, 1.0f));
+                if (inventoryArea.Contains(PlayerInput.MousePosition))
+                {
+                    GUIComponent.DrawToolTip(spriteBatch, TextManager.Get("handcuffed"), new Rectangle(inventoryArea.Center - new Point(inventoryArea.Height / 2), new Point(inventoryArea.Height)));
+                }
+            }
+            else if (highlightedQuickUseSlot != null && !string.IsNullOrEmpty(highlightedQuickUseSlot.QuickUseButtonToolTip))
             {
                 GUIComponent.DrawToolTip(spriteBatch, highlightedQuickUseSlot.QuickUseButtonToolTip, highlightedQuickUseSlot.EquipButtonRect);
             }

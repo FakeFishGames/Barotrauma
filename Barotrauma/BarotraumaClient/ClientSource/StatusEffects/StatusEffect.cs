@@ -6,6 +6,7 @@ using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -52,11 +53,11 @@ namespace Barotrauma
             }
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull hull, Vector2 worldPosition)
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
         {
             if (entity == null) { return; }
 
-            if (sounds.Count > 0)
+            if (sounds.Count > 0 && playSound)
             {
                 if (soundChannel == null || !soundChannel.IsPlaying)
                 {
@@ -70,7 +71,7 @@ namespace Barotrauma
                                 GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                                 return;
                             }
-                            soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hull);
+                            soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull);
                             if (soundChannel != null) { soundChannel.Looping = loopSound; }
                         }
                     }
@@ -96,7 +97,7 @@ namespace Barotrauma
                             GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                             return;
                         }
-                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hull);
+                        soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull);
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
                 }
@@ -115,11 +116,26 @@ namespace Barotrauma
                 float particleRotation = 0.0f;
                 if (emitter.Prefab.CopyEntityAngle)
                 {
+                    Limb targetLimb = null;
                     if (entity is Item item && item.body != null)
                     {
                         angle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                         particleRotation = -item.body.Rotation;
                         if (item.body.Dir < 0.0f) { particleRotation += MathHelper.Pi; }
+                    }
+                    else if (entity is Character c && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
+                    {
+                        targetLimb = c.AnimController.GetLimb(l);
+                    }
+                    else
+                    {
+                        targetLimb = targets.FirstOrDefault(t => t is Limb) as Limb;
+                    }
+                    if (targetLimb != null && !targetLimb.Removed)
+                    {
+                        angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                        particleRotation = -targetLimb.body.Rotation;
+                        if (targetLimb.body.Dir < 0.0f) { particleRotation += MathHelper.Pi; }
                     }
                 }
 
@@ -137,7 +153,7 @@ namespace Barotrauma
 
                 //stop looping sounds if the statuseffect hasn't been applied in 0.1
                 //= keeping the sound looping requires continuously applying the statuseffect
-                if (Timing.TotalTime > statusEffect.loopStartTime + 0.1)
+                if (Timing.TotalTime > statusEffect.loopStartTime + 0.1 && !DurationList.Any(e => e.Parent == statusEffect))
                 {
                     statusEffect.soundChannel.FadeOutAndDispose();
                     statusEffect.soundChannel = null;

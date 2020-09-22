@@ -72,6 +72,12 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
+        public override void Equip(Character character)
+        {
+            reloadTimer = Math.Min(reload, 1.0f);
+            IsActive = true;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             reloadTimer -= deltaTime;
@@ -180,22 +186,25 @@ namespace Barotrauma.Items.Components
 
         public Projectile FindProjectile(bool triggerOnUseOnContainers = false)
         {
-            var containedItems = item.ContainedItems;
+            var containedItems = item.OwnInventory?.Items;
             if (containedItems == null) { return null; }
 
             foreach (Item item in containedItems)
             {
+                if (item == null) { continue; }
                 Projectile projectile = item.GetComponent<Projectile>();
                 if (projectile != null) { return projectile; }
             }
 
             //projectile not found, see if one of the contained items contains projectiles
-            foreach (Item item in containedItems)
+            foreach (Item it in containedItems)
             {
-                var containedSubItems = item.ContainedItems;
+                if (it == null) { continue; }
+                var containedSubItems = it.OwnInventory?.Items;
                 if (containedSubItems == null) { continue; }
                 foreach (Item subItem in containedSubItems)
                 {
+                    if (subItem == null) { continue; }
                     Projectile projectile = subItem.GetComponent<Projectile>();
                     //apply OnUse statuseffects to the container in case it has to react to it somehow
                     //(play a sound, spawn more projectiles, reduce condition...)

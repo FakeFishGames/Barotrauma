@@ -27,6 +27,13 @@ namespace Barotrauma.Networking
             protected set;
         }
 
+        public string Language
+        {
+            get; set;
+        }
+
+        public abstract bool EndpointMatches(string endPoint);
+
         public NetworkConnectionStatus Status = NetworkConnectionStatus.Disconnected;
     }
 }

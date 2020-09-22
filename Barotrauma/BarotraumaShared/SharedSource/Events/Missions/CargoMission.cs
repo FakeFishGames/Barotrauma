@@ -131,11 +131,9 @@ namespace Barotrauma
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndPosition)
             {
                 int deliveredItemCount = items.Count(i => i.CurrentHull != null && !i.Removed && i.Condition > 0.0f);
-
                 if (deliveredItemCount >= requiredDeliveryAmount)
                 {
                     GiveReward();
-
                     completed = true;
                 }
             }
@@ -145,6 +143,7 @@ namespace Barotrauma
                 if (!item.Removed) { item.Remove(); }
             }
             items.Clear();
+            failed = !completed;
         }
     }
 }

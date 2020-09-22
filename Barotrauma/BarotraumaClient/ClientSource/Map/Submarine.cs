@@ -11,6 +11,7 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -19,6 +20,7 @@ namespace Barotrauma
         public Sound Sound;
         public readonly float Volume;
         public readonly float Range;
+        public readonly Vector2 FrequencyMultiplierRange;
         public readonly bool Stream;
 
         public string Filename
@@ -32,7 +34,33 @@ namespace Barotrauma
             Stream = sound.Stream;
             Range = element.GetAttributeFloat("range", 1000.0f);
             Volume = element.GetAttributeFloat("volume", 1.0f);
+            FrequencyMultiplierRange = new Vector2(1.0f);
+            string freqMultAttr = element.GetAttributeString("frequencymultiplier", element.GetAttributeString("frequency", "1.0"));
+            if (!freqMultAttr.Contains(','))
+            {
+                if (float.TryParse(freqMultAttr, NumberStyles.Any, CultureInfo.InvariantCulture, out float freqMult))
+                {
+                    FrequencyMultiplierRange = new Vector2(freqMult);
+                }
+            }
+            else
+            {
+                var freqMult = XMLExtensions.ParseVector2(freqMultAttr, false);
+                if (freqMult.Y >= 0.25f)
+                {
+                    FrequencyMultiplierRange = freqMult;
+                }
+            }
+            if (FrequencyMultiplierRange.Y > 4.0f)
+            {
+                DebugConsole.ThrowError($"Loaded frequency range exceeds max value: {FrequencyMultiplierRange} (original string was \"{freqMultAttr}\")");
+            }
             sound.IgnoreMuffling = element.GetAttributeBool("dontmuffle", false);
+        }
+
+        public float GetRandomFrequencyMultiplier()
+        {
+            return Rand.Range(FrequencyMultiplierRange.X, FrequencyMultiplierRange.Y);
         }
     }
 
@@ -288,6 +316,27 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawPaintedColors(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
+        {
+            var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
+
+            foreach (MapEntity e in entitiesToRender)
+            {
+                if (e is Hull hull)
+                {
+                    if (hull.SupportsPaintedColors)
+                    {
+                        if (predicate != null)
+                        {
+                            if (!predicate(e)) continue;
+                        }
+
+                        hull.DrawSectionColors(spriteBatch);
+                    }
+                }
+            }
+        }
+
         public static void DrawBack(SpriteBatch spriteBatch, bool editing = false, Predicate<MapEntity> predicate = null)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;
@@ -511,6 +560,11 @@ namespace Barotrauma
         
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            if (type != ServerNetObject.ENTITY_POSITION)
+            {
+                DebugConsole.NewMessage($"Error while reading a network event for the submarine \"{Info.Name} ({ID})\". Invalid event type ({type}).", Color.Red);
+            }
+
             var posInfo = PhysicsBody.ClientRead(type, msg, sendingTime, parentDebugName: Info.Name);
             msg.ReadPadBits();
 

@@ -258,7 +258,7 @@ namespace Barotrauma
             {
                 HumanAIController.DisableCrewAI = true;
                 NewMessage("Crew AI disabled", Color.Red);
-            }));
+            }, isCheat: true));
 
             commands.Add(new Command("enablecrewai", "enablecrewai: Enable the AI of the NPCs in the crew.", (string[] args) =>
             {
@@ -509,12 +509,37 @@ namespace Barotrauma
                 return new string[][] { ListCharacterNames() };
             }, isCheat: true));
 
-            commands.Add(new Command("godmode", "godmode: Toggle submarine godmode. Makes the main submarine invulnerable to damage.", (string[] args) =>
+            commands.Add(new Command("godmode", "godmode [character name]: Toggle character godmode. Makes the targeted character invulnerable to damage. If the name parameter is omitted, the controlled character will receive godmode.",
+            (string[] args) =>
+            {
+                Character targetCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, false);
+
+                if (targetCharacter == null) { return; }
+
+                targetCharacter.GodMode = !targetCharacter.GodMode;
+            },
+            () =>
+            {
+                return new string[][] { ListCharacterNames() };
+            }, isCheat: true));
+
+            commands.Add(new Command("godmode_mainsub", "godmode_mainsub: Toggle submarine godmode. Makes the main submarine invulnerable to damage.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) return;
 
                 Submarine.MainSub.GodMode = !Submarine.MainSub.GodMode;
                 NewMessage(Submarine.MainSub.GodMode ? "Godmode on" : "Godmode off", Color.White);
+            }, isCheat: true));
+
+            commands.Add(new Command("growthdelay", "growthdelay: Sets how long it takes for planters to attempt to advance a plant's growth.", (string[] args) =>
+            {
+                if (args.Length > 0 && float.TryParse(args[0], out float value))
+                {
+                    Planter.GrowthTickDelay = value;
+                    NewMessage($"Growth delay set to {value}.", Color.Green);
+                    return;
+                }
+                NewMessage("Invalid value.", Color.Red);
             }, isCheat: true));
 
             commands.Add(new Command("lock", "lock: Lock movement of the main submarine.", (string[] args) =>
@@ -1208,6 +1233,17 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("togglecampaignteleport", "Toggle on/off teleportation between campaign locations by double clicking on the campaign map.", args =>
+            {
+                if (GameMain.GameSession?.Campaign == null)
+                {
+                    ThrowError("No campaign active.");
+                    return;
+                }
+                GameMain.GameSession.Map.AllowDebugTeleport = !GameMain.GameSession.Map.AllowDebugTeleport;
+                NewMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", Color.White);
+            }, isCheat: true));
+
             commands.Add(new Command("money", "", args =>
             {
                 if (args.Length == 0) { return; }
@@ -1238,14 +1274,14 @@ namespace Barotrauma
                 NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, isCheat: false));
 
-            commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", TaskPool.ListTasks));
+            commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", (string[] args) => { TaskPool.ListTasks(); }));
 
             commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
             {
                 if (args.Length > 0)
                 {
                     string packageName = string.Join(" ", args).ToLower();
-                    var package = GameMain.Config.SelectedContentPackages.FirstOrDefault(p => p.Name.ToLower() == packageName);
+                    var package = GameMain.Config.AllEnabledPackages.FirstOrDefault(p => p.Name.ToLower() == packageName);
                     if (package == null)
                     {
                         ThrowError("Content package \"" + packageName + "\" not found.");
@@ -1257,14 +1293,14 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GameMain.Config.SelectedContentPackages.First().CalculateHash(logging: true);
+                    GameMain.Config.AllEnabledPackages.First().CalculateHash(logging: true);
                 }
             },
             () =>
             {
                 return new string[][]
                 {
-                    GameMain.Config.SelectedContentPackages.Select(cp => cp.Name).ToArray()
+                    GameMain.Config.AllEnabledPackages.Select(cp => cp.Name).ToArray()
                 };
             }));
 
@@ -1859,7 +1895,7 @@ namespace Barotrauma
             if (GameSettings.VerboseLogging) NewMessage(message, Color.Gray);
         }
 
-        public static void ThrowError(string error, Exception e = null, bool createMessageBox = false)
+        public static void ThrowError(string error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
         {
             if (e != null)
             {
@@ -1868,6 +1904,10 @@ namespace Barotrauma
                 {
                     error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
                 }
+            }
+            else if (appendStackTrace)
+            {
+                error += "\n" + Environment.StackTrace;
             }
             System.Diagnostics.Debug.WriteLine(error);
 
@@ -1888,27 +1928,7 @@ namespace Barotrauma
         public static void AddWarning(string warning)
         {
             System.Diagnostics.Debug.WriteLine(warning);
-#if CLIENT
-            if (listBox == null) { NewMessage($"WARNING: {warning}", Color.Yellow); return; }
-
-            var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
-            {
-                CanBeFocused = false
-            };
-            var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
-                warning, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
-            {
-                CanBeFocused = false,
-                TextColor = Color.Yellow
-            };
-            textContainer.RectTransform.NonScaledSize = new Point(textContainer.RectTransform.NonScaledSize.X, textBlock.RectTransform.NonScaledSize.Y + 5);
-            textBlock.SetTextPos();
-
-            listBox.UpdateScrollBarSize();
-            listBox.BarScroll = 1.0f;
-#else
             NewMessage($"WARNING: {warning}", Color.Yellow);
-#endif
         }
 
 #if CLIENT

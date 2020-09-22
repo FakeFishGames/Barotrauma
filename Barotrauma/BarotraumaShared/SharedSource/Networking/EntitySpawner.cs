@@ -3,6 +3,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -10,13 +11,13 @@ namespace Barotrauma
     {
         private enum SpawnableType { Item, Character };
         
-        interface IEntitySpawnInfo
+        public interface IEntitySpawnInfo
         {
             Entity Spawn();
             void OnSpawned(Entity entity);
         }
 
-        class ItemSpawnInfo : IEntitySpawnInfo
+        public class ItemSpawnInfo : IEntitySpawnInfo
         {
             public readonly ItemPrefab Prefab;
 
@@ -241,7 +242,7 @@ namespace Barotrauma
         public void AddToRemoveQueue(Entity entity)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (removeQueue.Contains(entity) || entity.Removed || entity == null) { return; }
+            if (removeQueue.Contains(entity) || entity.Removed || entity == null || entity.IdFreed) { return; }
             if (entity is Character)
             {
                 Character character = entity as Character;
@@ -263,11 +264,31 @@ namespace Barotrauma
             if (removeQueue.Contains(item) || item.Removed) { return; }
 
             removeQueue.Enqueue(item);
-            if (item.ContainedItems == null) return;
-            foreach (Item containedItem in item.ContainedItems)
+            var containedItems = item.OwnInventory?.Items;
+            if (containedItems == null) { return; }
+            foreach (Item containedItem in containedItems)
             {
-                if (containedItem != null) AddToRemoveQueue(containedItem);
+                if (containedItem != null)
+                {
+                    AddToRemoveQueue(containedItem);
+                }
             }
+        }
+
+        /// <summary>
+        /// Are there any entities in the spawn queue that match the given predicate
+        /// </summary>
+        public bool IsInSpawnQueue(Predicate<IEntitySpawnInfo> predicate)
+        {
+            return spawnQueue.Any(s => predicate(s));
+        }
+
+        /// <summary>
+        /// How many entities in the spawn queue match the given predicate
+        /// </summary>
+        public int CountSpawnQueue(Predicate<IEntitySpawnInfo> predicate)
+        {
+            return spawnQueue.Count(s => predicate(s));
         }
 
         public void Update()

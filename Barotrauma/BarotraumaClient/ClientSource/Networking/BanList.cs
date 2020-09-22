@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Steam;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +8,13 @@ namespace Barotrauma.Networking
 {
     partial class BannedPlayer
     {
-        public BannedPlayer(string name, UInt16 uniqueIdentifier, bool isRangeBan, string ip, ulong steamID)
+        public BannedPlayer(string name, UInt16 uniqueIdentifier, bool isRangeBan, string endPoint, ulong steamID)
         {
             this.Name = name;
+            this.EndPoint = endPoint;
             this.SteamID = steamID;
+            ParseEndPointAsSteamId();
             this.IsRangeBan = isRangeBan;
-            this.IP = ip;
             this.UniqueIdentifier = uniqueIdentifier;
         }
     }
@@ -66,13 +68,13 @@ namespace Barotrauma.Networking
                     RelativeSpacing = 0.02f
                 };
 
-                string ip = bannedPlayer.IP;
-                if (localRangeBans.Contains(bannedPlayer.UniqueIdentifier)) ip = ToRange(ip);
+                string endPoint = bannedPlayer.EndPoint;
+                if (localRangeBans.Contains(bannedPlayer.UniqueIdentifier)) endPoint = ToRange(endPoint);
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), topArea.RectTransform),
-                    bannedPlayer.Name + " (" + ip + ")");
+                    bannedPlayer.Name + " (" + endPoint + ")");
                 textBlock.RectTransform.MinSize = new Point(textBlock.Rect.Width, 0);
 
-                if (bannedPlayer.IP.IndexOf(".x") <= -1)
+                if (bannedPlayer.EndPoint.IndexOf(".x") <= -1)
                 {
                     var rangeBanButton = new GUIButton(new RectTransform(new Vector2(0.25f, 0.4f), topArea.RectTransform), 
                         TextManager.Get("BanRange"), style: "GUIButtonSmall")
@@ -156,19 +158,19 @@ namespace Barotrauma.Networking
                 UInt16 uniqueIdentifier = incMsg.ReadUInt16();
                 bool isRangeBan = incMsg.ReadBoolean(); incMsg.ReadPadBits();
                 
-                string ip = "";
+                string endPoint = "";
                 UInt64 steamID = 0;
                 if (isOwner)
                 {
-                    ip = incMsg.ReadString();
+                    endPoint = incMsg.ReadString();
                     steamID = incMsg.ReadUInt64();
                 }
                 else
                 {
-                    ip = "IP concealed by host";
+                    endPoint = "Endpoint concealed by host";
                     steamID = 0;
                 }
-                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, isRangeBan, ip, steamID));
+                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, isRangeBan, endPoint, steamID));
             }
 
             if (banFrame != null)
