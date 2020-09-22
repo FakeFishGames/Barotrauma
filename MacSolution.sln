@@ -34,7 +34,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MacClient", "Barotrauma\Bar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Framework.MacOS.NetStandard", "Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.MacOS.NetStandard.csproj", "{35DDDA7D-328D-4A5D-BCBB-2E60C830A899}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Facepunch.Steamworks.Posix64", "Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix64.csproj", "{F10CE3BB-26B8-446E-84D2-86D25E850F61}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Facepunch.Steamworks.Posix", "Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj", "{F10CE3BB-26B8-446E-84D2-86D25E850F61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
