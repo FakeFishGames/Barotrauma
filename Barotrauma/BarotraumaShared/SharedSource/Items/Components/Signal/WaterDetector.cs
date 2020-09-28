@@ -60,10 +60,13 @@ namespace Barotrauma.Items.Components
                 item.SendSignal(0, signalOut, "signal_out", null);
             }
             
-            string waterPercentage = MathHelper.Clamp((float)Math.Round(item.CurrentHull.WaterPercentage), 0.0f, 100.0f).ToString();
-            if (item.CurrentHull != null && waterPercentage != null)
+            if(item.CurrentHull != null)
             {
-                item.SendSignal(0, waterPercentage, "water_%", null);
+                string waterPercentage = MathHelper.Clamp((float)Math.Round(item.CurrentHull.WaterPercentage), 0.0f, 100.0f).ToString();
+                if (waterPercentage != null)
+                {
+                    item.SendSignal(0, waterPercentage, "water_%", null);
+                }
             }
         }
     }
