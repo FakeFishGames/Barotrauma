@@ -5,7 +5,7 @@ namespace Barotrauma.Items.Components
 {
     partial class MemoryComponent : ItemComponent, IServerSerializable
     {
-        const int MaxValueLength = 256;
+        const int MaxValueLength = ChatMessage.MaxLength;
 
 
         private string value;

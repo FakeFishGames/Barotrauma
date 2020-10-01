@@ -354,7 +354,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce(
                         "MapEntity.Clone:" + e.Name,
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace);
+                        "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace.CleanupStackTrace());
                     return clones;
                 }
                 Debug.Assert(clones.Last() != null);

@@ -38,7 +38,8 @@ namespace Barotrauma
         }
 
         public bool MatchesOrder(Order order, string option) =>
-            order.Identifier == Order.Identifier && option == OrderOption && order.TargetEntity == Order.TargetEntity;
+            order.Identifier == Order.Identifier &&
+            option == OrderOption;
     }
 
     class Order
@@ -54,7 +55,7 @@ namespace Barotrauma
             }
             return order;
         }
-        
+
         public Order Prefab { get; private set; }
 
         public readonly string Name;
@@ -62,7 +63,8 @@ namespace Barotrauma
         public readonly Sprite SymbolSprite;
 
         public readonly Type ItemComponentType;
-        public readonly string[] ItemIdentifiers;
+        public readonly bool CanTypeBeSubclass;
+        public readonly string[] TargetItems;
 
         public readonly string Identifier;
 
@@ -89,14 +91,14 @@ namespace Barotrauma
                 color = value;
             }
         }
-        
+
 
         //if true, the order is issued to all available characters
         public bool TargetAllCharacters;
 
         public readonly float FadeOutTime;
 
-        public Entity TargetEntity; 
+        public Entity TargetEntity;
         public ItemComponent TargetItemComponent;
         public readonly bool UseController;
         public Controller ConnectedController;
@@ -122,6 +124,18 @@ namespace Barotrauma
         public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
         public readonly bool MustManuallyAssign;
+
+        public readonly OrderTarget TargetPosition;
+
+        private ISpatialEntity targetSpatialEntity;
+        public ISpatialEntity TargetSpatialEntity
+        {
+            get
+            {
+                if (targetSpatialEntity == null) { targetSpatialEntity = TargetEntity ?? TargetPosition as ISpatialEntity; }
+                return targetSpatialEntity;
+            }
+        }
 
         public static void Init()
         {
@@ -218,8 +232,9 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Error in the order definitions: item component type " + targetItemType + " not found", e);
                 }
             }
+            CanTypeBeSubclass = orderElement.GetAttributeBool("cantypebesubclass", false);
 
-            ItemIdentifiers = orderElement.GetAttributeStringArray("targetitemidentifiers", new string[0], trim: true, convertToLowerInvariant: true);
+            TargetItems = orderElement.GetAttributeStringArray("targetitems", new string[0], trim: true, convertToLowerInvariant: true);
             color = orderElement.GetAttributeColor("color");
             FadeOutTime = orderElement.GetAttributeFloat("fadeouttime", 0.0f);
             UseController = orderElement.GetAttributeBool("usecontroller", false);
@@ -228,7 +243,6 @@ namespace Barotrauma
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
             var category = orderElement.GetAttributeString("category", null);
             if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
-            Weight = orderElement.GetAttributeFloat(0.0f, "weight");
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
             AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
 
@@ -279,7 +293,7 @@ namespace Barotrauma
             IsPrefab = true;
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
         }
-        
+
         /// <summary>
         /// Constructor for order instances
         /// </summary>
@@ -290,7 +304,8 @@ namespace Barotrauma
             Name                = prefab.Name;
             Identifier          = prefab.Identifier;
             ItemComponentType   = prefab.ItemComponentType;
-            ItemIdentifiers     = prefab.ItemIdentifiers;
+            CanTypeBeSubclass   = prefab.CanTypeBeSubclass;
+            TargetItems         = prefab.TargetItems;
             Options             = prefab.Options;
             SymbolSprite        = prefab.SymbolSprite;
             Color               = prefab.Color;
@@ -298,7 +313,6 @@ namespace Barotrauma
             TargetAllCharacters = prefab.TargetAllCharacters;
             AppropriateJobs     = prefab.AppropriateJobs;
             FadeOutTime         = prefab.FadeOutTime;
-            Weight              = prefab.Weight;
             MustSetTarget       = prefab.MustSetTarget;
             AppropriateSkill    = prefab.AppropriateSkill;
             Category            = prefab.Category;
@@ -324,6 +338,11 @@ namespace Barotrauma
             }
 
             IsPrefab = false;
+        }
+
+        public Order(Order prefab, OrderTarget target, Character orderGiver = null) : this(prefab, targetEntity: null, targetItem: null, orderGiver)
+        {
+            TargetPosition = target;
         }
         
         public bool HasAppropriateJob(Character character)
@@ -358,15 +377,38 @@ namespace Barotrauma
             return msg;
         }
 
+        /// <summary>
+        /// Get the target item component based on the target item type
+        /// </summary>
+        public ItemComponent GetTargetItemComponent(Item item)
+        {
+            if (item?.Components == null || ItemComponentType == null) { return null; }
+            foreach (ItemComponent component in item.Components)
+            {
+                if (component?.GetType() is Type componentType)
+                {
+                    if (componentType == ItemComponentType) { return component; }
+                    if (CanTypeBeSubclass && componentType.IsSubclassOf(ItemComponentType)) { return component; }
+                }
+            }
+            return null;
+        }
+
+        public bool TryGetTargetItemComponent(Item item, out ItemComponent firstMatchingComponent)
+        {
+            firstMatchingComponent = GetTargetItemComponent(item);
+            return firstMatchingComponent != null;
+        }
+
         public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, Character.TeamType? requiredTeam = null)
         {
             List<Item> matchingItems = new List<Item>();
             if (submarine == null) { return matchingItems; }
-            if (ItemComponentType != null || ItemIdentifiers.Length > 0)
+            if (ItemComponentType != null || TargetItems.Length > 0)
             {
-                matchingItems = ItemIdentifiers.Length > 0 ?
-                    Item.ItemList.FindAll(it => ItemIdentifiers.Contains(it.Prefab.Identifier) || it.HasTag(ItemIdentifiers)) :
-                    Item.ItemList.FindAll(it => it.Components.Any(ic => ic.GetType() == ItemComponentType));
+                matchingItems = TargetItems.Length > 0 ?
+                    Item.ItemList.FindAll(it => TargetItems.Contains(it.Prefab.Identifier) || it.HasTag(TargetItems)) :
+                    Item.ItemList.FindAll(it => TryGetTargetItemComponent(it, out _));
                 if (mustBelongToPlayerSub)
                 {
                     matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineType.Player);

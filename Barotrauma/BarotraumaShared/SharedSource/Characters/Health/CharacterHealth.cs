@@ -725,10 +725,10 @@ namespace Barotrauma
                 OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (Character.OxygenAvailable < InsufficientOxygenThreshold ? -5.0f : 10.0f), -100.0f, 100.0f);
             }
 
-            UpdateOxygenProjSpecific(prevOxygen);
+            UpdateOxygenProjSpecific(prevOxygen, deltaTime);
         }
         
-        partial void UpdateOxygenProjSpecific(float prevOxygen);
+        partial void UpdateOxygenProjSpecific(float prevOxygen, float deltaTime);
 
         partial void UpdateBleedingProjSpecific(AfflictionBleeding affliction, Limb targetLimb, float deltaTime);
 

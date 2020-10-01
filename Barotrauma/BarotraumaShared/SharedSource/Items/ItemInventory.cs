@@ -93,7 +93,7 @@ namespace Barotrauma
         {
             if (!Item.ItemList.Contains(container.Item))
             {
-                string errorMsg = "Attempted to create a network event for an item (" + container.Item.Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to create a network event for an item (" + container.Item.Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "ItemInventory.CreateServerEvent:EventForUninitializedItem" + container.Item.Name + container.Item.ID,

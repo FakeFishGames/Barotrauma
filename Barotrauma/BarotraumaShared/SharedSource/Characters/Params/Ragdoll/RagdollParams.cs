@@ -464,7 +464,7 @@ namespace Barotrauma
             /// <summary>
             /// Should be converted to sim units.
             /// </summary>
-            [Serialize("1.0, 1.0", true, description: "Local position of the join in the Limb2."), Editable()]
+            [Serialize("1.0, 1.0", true, description: "Local position of the joint in the Limb2."), Editable()]
             public Vector2 Limb2Anchor { get; set; }
 
             [Serialize(true, true), Editable]
@@ -499,6 +499,9 @@ namespace Barotrauma
 
             [Serialize(false, false), Editable(ReadOnly = true)]
             public bool WeldJoint { get; set; }
+
+            [Serialize(false, true), Editable]
+            public bool ClockWiseRotation { get; set; }
 
             public JointParams(XElement element, RagdollParams ragdoll) : base(element, ragdoll) { }
         }
@@ -616,6 +619,10 @@ namespace Barotrauma
 
             [Serialize(1f, true, description:"How much damage must be done by the attack in order to be able to cut off the limb. Note that it's evaluated after the damage modifiers."), Editable(DecimalCount = 0, MinValueFloat = 0, MaxValueFloat = 1000)]
             public float MinSeveranceDamage { get; set; }
+
+            //how long it takes for severed limbs to fade out
+            [Serialize(10f, true, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
+            public float SeveredFadeOutTime { get; set; } = 10.0f;
 
             // Non-editable ->
             // TODO: make read-only

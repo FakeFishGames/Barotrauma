@@ -13,6 +13,8 @@ namespace Barotrauma
         public override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
 
+        public override bool AllowInAnySub => true;
+
         private readonly Hull targetHull;
 
         private AIObjectiveGetItem getExtinguisherObjective;
@@ -30,12 +32,15 @@ namespace Barotrauma
             if (!IsAllowed)
             {
                 Priority = 0;
+                Abandon = true;
                 return Priority;
             }
-            if (!objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>() 
-                && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
+            bool isOrder = objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>();
+            if (!isOrder && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
             {
+                // Don't go into rooms with any enemies, unless it's an order
                 Priority = 0;
+                Abandon = true;
             }
             else
             {
@@ -43,14 +48,22 @@ namespace Barotrauma
                 yDist = yDist > 100 ? yDist * 3 : 0;
                 float dist = Math.Abs(character.WorldPosition.X - targetHull.WorldPosition.X) + yDist;
                 float distanceFactor = MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 5000, dist));
-                if (targetHull == character.CurrentHull)
+                if (targetHull == character.CurrentHull || HumanAIController.VisibleHulls.Contains(targetHull))
                 {
                     distanceFactor = 1;
                 }
                 float severity = AIObjectiveExtinguishFires.GetFireSeverity(targetHull);
-                float severityFactor = MathHelper.Lerp(0, 1, severity / 100);
-                float devotion = CumulatedDevotion / 100;
-                Priority = MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + (severityFactor * distanceFactor * PriorityModifier), 0, 1));
+                if (severity > 0.5f && !isOrder)
+                {
+                    // Ignore severe fires unless ordered. (Let the fire drain all the oxygen instead).
+                    Priority = 0;
+                    Abandon = true;
+                }
+                else
+                {
+                    float devotion = CumulatedDevotion / 100;
+                    Priority = MathHelper.Lerp(0, 100, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                }
             }
             return Priority;
         }
@@ -131,13 +144,16 @@ namespace Barotrauma
                     if (move)
                     {
                         //go to the first firesource
-                        TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: extinguisher.Range / 2)
+                        if (TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: extinguisher.Range / 2)
+                            {
+                                DialogueIdentifier = "dialogcannotreachfire",
+                                TargetName = fs.Hull.DisplayName
+                            }, 
+                                onAbandon: () =>  Abandon = true, 
+                                onCompleted: () => RemoveSubObjective(ref gotoObjective)))
                         {
-                            DialogueIdentifier = "dialogcannotreachfire",
-                            TargetName = fs.Hull.DisplayName
-                        }, 
-                            onAbandon: () =>  Abandon = true, 
-                            onCompleted: () => RemoveSubObjective(ref gotoObjective));
+                            gotoObjective.requiredCondition = () => HumanAIController.VisibleHulls.Contains(fs.Hull);
+                        }
                     }
                     else
                     {

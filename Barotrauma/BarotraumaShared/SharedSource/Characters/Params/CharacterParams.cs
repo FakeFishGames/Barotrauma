@@ -571,11 +571,14 @@ namespace Barotrauma
             [Serialize(0f, true, description: "What base priority is given to the target?"), Editable(minValue: 0f, maxValue: 1000f, ValueStep = 1, DecimalCount = 0)]
             public float Priority { get; set; }
 
-            [Serialize(0f, true, description: "Generic distance that can be used for different purposes depending on the state. Eg. in Avoid state this defines the distance that the character tries to keep to the target. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
+            [Serialize(0f, true, description: "Generic distance that can be used for different purposes depending on the state. E.g. in Avoid state this defines the distance that the character tries to keep to the target. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
             public float ReactDistance { get; set; }
 
             [Serialize(0f, true, description: "Used for defining the attack distance for PassiveAggressive and Aggressive states. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
             public float AttackDistance { get; set; }
+
+            [Serialize(0f, true, description: "Generic timer that can be used for different purposes depending on the state. E.g. in Observe state this defines how long the character in general keeps staring the targets (Some random is always applied)."), Editable]
+            public float Timer { get; set; }
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 

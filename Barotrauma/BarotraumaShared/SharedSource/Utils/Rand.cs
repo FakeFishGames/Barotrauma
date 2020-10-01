@@ -44,7 +44,7 @@ namespace Barotrauma
 #if DEBUG
                     throw new Exception("Unauthorized multithreaded access to RandSync.Server");
 #else
-                    DebugConsole.ThrowError("Unauthorized multithreaded access to RandSync.Server\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Unauthorized multithreaded access to RandSync.Server\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                 }
             }

@@ -70,7 +70,7 @@ namespace Barotrauma
             if (objective == null)
             {
 #if DEBUG
-                DebugConsole.ThrowError("Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                 return;
             }
@@ -128,8 +128,7 @@ namespace Barotrauma
                 var orderPrefab = Order.GetPrefab(autonomousObjective.identifier);
                 if (orderPrefab == null) { throw new Exception($"Could not find a matching prefab by the identifier: '{autonomousObjective.identifier}'"); }
                 var item = orderPrefab.MustSetTarget ? orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID)?.GetRandom() : null;
-                var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity,
-                    item?.Components.FirstOrDefault(ic => ic.GetType() == orderPrefab.ItemComponentType), orderGiver: character);
+                var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                 if (order == null) { continue; }
                 if (autonomousObjective.ignoreAtOutpost && Level.IsLoadedOutpost && character.TeamID != Character.TeamType.FriendlyNPC) { continue; }
                 var objective = CreateObjective(order, autonomousObjective.option, character, isAutonomous: true, autonomousObjective.priorityModifier);
@@ -147,7 +146,7 @@ namespace Barotrauma
             if (objective == null)
             {
 #if DEBUG
-                DebugConsole.ThrowError($"{character.Name}: Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace);
+                DebugConsole.ThrowError($"{character.Name}: Attempted to add a null objective to AIObjectiveManager\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                 return;
             }
@@ -314,9 +313,10 @@ namespace Barotrauma
                     };
                     break;
                 case "wait":
-                    newObjective = new AIObjectiveGoTo(order.TargetEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
+                    newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = character.CurrentHull == null
+                        AllowGoingOutside = order.TargetSpatialEntity == null ? character.CurrentHull == null :
+                            character.Submarine == null || character.Submarine != order.TargetSpatialEntity.Submarine
                     };
                     break;
                 case "fixleaks":
@@ -373,6 +373,32 @@ namespace Barotrauma
                         // Don't override unless it's an order by a player
                         Override = orderGiver != null && orderGiver.IsPlayer
                     };
+                    break;
+                case "setchargepct":
+                    newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option, false, priorityModifier: priorityModifier)
+                    {
+                        IsLoop = false,
+                        Override = character.CurrentOrder != null,
+                        completionCondition = () =>
+                        {
+                            if (float.TryParse(option, out float pct))
+                            {
+                                var targetRatio = Math.Clamp(pct, 0f, 1f);
+                                var currentRatio = (order.TargetItemComponent as PowerContainer).RechargeRatio;
+                                return Math.Abs(targetRatio - currentRatio) < 0.05f;
+                            }
+                            return true;
+                        }
+                    };
+                    break;
+                case "getitem":
+                    newObjective = new AIObjectiveGetItem(character, order.TargetEntity as Item ?? order.TargetItemComponent?.Item, this, false, priorityModifier: priorityModifier)
+                    {
+                        MustBeSpecificItem = true
+                    };
+                    break;
+                case "cleanupitems":
+                    newObjective = new AIObjectiveCleanupItems(character, this, priorityModifier, order.TargetEntity as Item);
                     break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }

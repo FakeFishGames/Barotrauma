@@ -15,6 +15,7 @@ namespace Barotrauma
         public virtual bool IgnoreUnsafeHulls => false;
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
         public virtual bool AllowSubObjectiveSorting => false;
+        public virtual bool ForceOrderPriority => true;
 
         /// <summary>
         /// Can there be multiple objective instaces of the same type?
@@ -34,6 +35,7 @@ namespace Barotrauma
         public virtual bool AllowAutomaticItemUnequipping => false;
         public virtual bool AllowOutsideSubmarine => false;
         public virtual bool AllowInFriendlySubs => false;
+        public virtual bool AllowInAnySub => false;
 
         protected readonly List<AIObjective> subObjectives = new List<AIObjective>();
         private float _cumulatedDevotion;
@@ -198,12 +200,10 @@ namespace Barotrauma
         {
             get 
             { 
-                if (AllowOutsideSubmarine) { return true; }
-                if (character.Submarine == null) { return false; }
-                return 
-                    character.Submarine.TeamID == character.TeamID || 
-                    (AllowInFriendlySubs && character.Submarine.TeamID == Character.TeamType.FriendlyNPC) || 
-                    character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
+                if (!AllowOutsideSubmarine && character.Submarine == null) { return false; }
+                if (AllowInAnySub) { return true; }
+                if (AllowInFriendlySubs && character.Submarine.TeamID == Character.TeamType.FriendlyNPC) { return true; }
+                return character.Submarine.TeamID == character.TeamID || character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
             }
         }
 
@@ -212,12 +212,14 @@ namespace Barotrauma
         /// </summary>
         public virtual float GetPriority()
         {
+            bool isOrder = objectiveManager.CurrentOrder == this;
             if (!IsAllowed)
             {
                 Priority = 0;
+                Abandon = !isOrder;
                 return Priority;
             }
-            if (objectiveManager.CurrentOrder == this)
+            if (isOrder)
             {
                 Priority = AIObjectiveManager.OrderPriority;
             }
@@ -306,7 +308,7 @@ namespace Barotrauma
                     return true;
                 }
 #if DEBUG
-                DebugConsole.ThrowError("Attempted to add a duplicate subobjective!\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempted to add a duplicate subobjective!\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                 return false;
             }

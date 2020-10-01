@@ -406,7 +406,7 @@ namespace Barotrauma
 
             if (objects.Count != weights.Count)
             {
-                DebugConsole.ThrowError("Error in SelectWeightedRandom, number of objects does not match the number of weights.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Error in SelectWeightedRandom, number of objects does not match the number of weights.\n" + Environment.StackTrace.CleanupStackTrace());
                 return objects[0];
             }
 

@@ -198,7 +198,21 @@ namespace Barotrauma.Items.Components
                 int newNodeIndex = 0;
                 if (nodes.Count > 1)
                 {
-                    if (Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
+                    if (connections[0] != null && connections[0] != newConnection)
+                    {
+                        if (Vector2.DistanceSquared(nodes[0], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos))
+                        {
+                            newNodeIndex = nodes.Count;
+                        }
+                    }
+                    else if (connections[1] != null && connections[1] != newConnection)
+                    {
+                        if (Vector2.DistanceSquared(nodes[0], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos))
+                        {
+                            newNodeIndex = nodes.Count;
+                        }
+                    }
+                    else if (Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
                     {
                         newNodeIndex = nodes.Count;
                     }

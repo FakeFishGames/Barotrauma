@@ -559,6 +559,18 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
+            if (InvisibleTimer > 0.0f)
+            {
+                if (Controlled == null || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+                {
+                    InvisibleTimer = 0.0f;
+                }
+                else
+                {
+                    InvisibleTimer -= deltaTime;
+                }
+            }
+
             if (!enabled) { return; }
 
             if (!IsDead && !IsIncapacitated)
@@ -653,7 +665,7 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) { return; }
+            if (!Enabled || InvisibleTimer > 0.0f) { return; }
             AnimController.Draw(spriteBatch, cam);
         }
 
@@ -665,7 +677,7 @@ namespace Barotrauma
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) { return; }
+            if (!Enabled || InvisibleTimer > 0.0f) { return; }
 
             if (GameMain.DebugDraw)
             {

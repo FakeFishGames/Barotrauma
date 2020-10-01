@@ -1,5 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using Microsoft.Xna.Framework;
+using System;
 
 namespace Barotrauma.Networking
 {
@@ -49,45 +49,53 @@ namespace Barotrauma.Networking
                     Character targetCharacter = Entity.FindEntityByID(targetCharacterID) as Character;
                     Entity targetEntity = Entity.FindEntityByID(msg.ReadUInt16());
                     int optionIndex = msg.ReadByte();
+                    OrderTarget orderTargetPosition = null;
+                    if (msg.ReadBoolean())
+                    {
+                        var x = msg.ReadSingle();
+                        var y = msg.ReadSingle();
+                        var hull = Entity.FindEntityByID(msg.ReadUInt16()) as Hull;
+                        orderTargetPosition = new OrderTarget(new Vector2(x, y), hull, creatingFromExistingData: true);
+                    }
 
-                    Order order = null;
+                    Order orderPrefab;
                     if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                     {
                         DebugConsole.ThrowError("Invalid order message - order index out of bounds.");
-                        if (NetIdUtils.IdMoreRecent(ID, LastID)) LastID = ID;
+                        if (NetIdUtils.IdMoreRecent(ID, LastID)) { LastID = ID; }
                         return;
                     }
                     else
                     {
-                        order = Order.PrefabList[orderIndex];
+                        orderPrefab = Order.PrefabList[orderIndex];
                     }
                     string orderOption = "";
-                    if (optionIndex >= 0 && optionIndex < order.Options.Length)
+                    if (optionIndex >= 0 && optionIndex < orderPrefab.Options.Length)
                     {
-                        orderOption = order.Options[optionIndex];
+                        orderOption = orderPrefab.Options[optionIndex];
                     }
-                    txt = order.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == senderCharacter, orderOption: orderOption);
+                    txt = orderPrefab.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == senderCharacter, orderOption: orderOption);
 
                     if (GameMain.Client.GameStarted && Screen.Selected == GameMain.GameScreen)
                     {
+                        var order = orderTargetPosition == null ?
+                            new Order(orderPrefab, targetEntity, orderPrefab.GetTargetItemComponent(targetEntity as Item), orderGiver: senderCharacter) :
+                            new Order(orderPrefab, orderTargetPosition, orderGiver: senderCharacter);
+
                         if (order.TargetAllCharacters)
                         {
-                            GameMain.GameSession?.CrewManager?.AddOrder(
-                                new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter),
-                                order.Prefab.FadeOutTime);
+                            GameMain.GameSession?.CrewManager?.AddOrder(order, orderPrefab.FadeOutTime);
                         }
                         else if (targetCharacter != null)
                         {
-                            targetCharacter.SetOrder(
-                                new Order(order.Prefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: senderCharacter),
-                                    orderOption, senderCharacter);
+                            targetCharacter.SetOrder(order, orderOption, senderCharacter);
                         }
                     }
 
                     if (NetIdUtils.IdMoreRecent(ID, LastID))
                     {
                         GameMain.Client.AddChatMessage(
-                            new OrderChatMessage(order, orderOption, txt, targetEntity, targetCharacter, senderCharacter));
+                            new OrderChatMessage(orderPrefab, orderOption, txt, orderTargetPosition ?? targetEntity as ISpatialEntity, targetCharacter, senderCharacter));
                         LastID = ID;
                     }
                     return;

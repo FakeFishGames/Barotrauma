@@ -68,6 +68,8 @@ namespace Barotrauma
             public readonly SpawnPositionType SpawnPosition;
             public readonly float Speed;
             public readonly float Rotation;
+            public readonly int Count;
+            public readonly float Spread;
 
             public ItemSpawnInfo(XElement element, string parentDebugName)
             {
@@ -99,7 +101,9 @@ namespace Barotrauma
                 }
 
                 Speed = element.GetAttributeFloat("speed", 0.0f);
-                Rotation = MathHelper.ToRadians(element.GetAttributeFloat("rotation", 0.0f));
+                Rotation = element.GetAttributeFloat("rotation", 0.0f);
+                Count = element.GetAttributeInt("count", 1);
+                Spread = element.GetAttributeFloat("spread", 0f);
 
                 string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
                 if (!Enum.TryParse(spawnTypeStr, out SpawnPosition))
@@ -416,8 +420,9 @@ namespace Barotrauma
                             }
                         }
 
-                        float afflictionStrength = subElement.GetAttributeFloat(1.0f, "amount", "strength");
-                        Afflictions.Add(afflictionPrefab.Instantiate(afflictionStrength));
+                        Affliction afflictionInstance = afflictionPrefab.Instantiate(subElement.GetAttributeFloat(1.0f, "amount", "strength"));
+                        afflictionInstance.Probability = subElement.GetAttributeFloat(1.0f, "probability");
+                        Afflictions.Add(afflictionInstance);
 
                         break;
                     case "reduceaffliction":
@@ -480,20 +485,16 @@ namespace Barotrauma
 
         public virtual bool HasRequiredItems(Entity entity)
         {
-            if (requiredItems == null) return true;
+            if (entity == null) { return true; }
             foreach (RelatedItem requiredItem in requiredItems)
             {
-                if (entity == null)
+                if (entity is Item item)
                 {
-                    return false;
-                }
-                else if (entity is Item item)
-                {
-                    if (!requiredItem.CheckRequirements(null, item)) return false;
+                    if (!requiredItem.CheckRequirements(null, item)) { return false; }
                 }
                 else if (entity is Character character)
                 {
-                    if (!requiredItem.CheckRequirements(character, null)) return false;
+                    if (!requiredItem.CheckRequirements(character, null)) { return false; }
                 }
             }
             return true;
@@ -507,12 +508,10 @@ namespace Barotrauma
                 foreach (Character c in Character.CharacterList)
                 {
                     if (!c.Enabled || c.Removed || !IsValidTarget(c)) { continue; }
-                    float xDiff = Math.Abs(c.WorldPosition.X - worldPosition.X);
-                    if (xDiff > Range) { continue; }
-                    float yDiff = Math.Abs(c.WorldPosition.Y - worldPosition.Y);
-                    if (yDiff > Range) { continue; }
-
-                    if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(c); }
+                    if (CheckDistance(c))
+                    {
+                        targets.Add(c);
+                    }
                 }
             }
             if (HasTargetType(TargetType.NearbyItems))
@@ -520,13 +519,24 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Removed || !IsValidTarget(item)) { continue; }
-                    float xDiff = Math.Abs(item.WorldPosition.X - worldPosition.X);
-                    if (xDiff > Range) { continue; }
-                    float yDiff = Math.Abs(item.WorldPosition.Y - worldPosition.Y);
-                    if (yDiff > Range) { continue; }
-
-                    if (xDiff * xDiff + yDiff * yDiff < Range * Range) { targets.Add(item); }
+                    if (CheckDistance(item))
+                    {
+                        targets.Add(item);
+                    }
                 }
+            }
+
+            bool CheckDistance(ISpatialEntity e)
+            {
+                float xDiff = Math.Abs(e.WorldPosition.X - worldPosition.X);
+                if (xDiff > Range) { return false; }
+                float yDiff = Math.Abs(e.WorldPosition.Y - worldPosition.Y);
+                if (yDiff > Range) { return false; }
+                if (xDiff * xDiff + yDiff * yDiff < Range * Range)
+                {
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -677,8 +687,16 @@ namespace Barotrauma
             }
 
             if (targetIdentifiers != null && currentTargets.Count == 0) { return; }
-
-            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) { return; }
+            
+            if (!HasRequiredItems(entity)) { return; }
+            // If "This" is defined as the target, let's target the conditions only to this entity, because when you use "NearbyTargets", this entity is also taken into account.
+            // If we want to target both, leaving "This" out and using only "NearbyTargets" should work.
+            // Currently we don't have means for targeting only the nearby characters, though.
+            if (HasTargetType(TargetType.This))
+            {
+                if (!HasRequiredConditions(((ISerializableEntity)entity).ToEnumerable())) { return; }
+            }
+            else if (!HasRequiredConditions(currentTargets)) { return; }
 
             if (duration > 0.0f && !Stackable)
             {
@@ -710,7 +728,7 @@ namespace Barotrauma
 
         private Vector2 GetPosition(Entity entity, IEnumerable<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
-            Vector2 position = worldPosition ?? (entity.Removed ? Vector2.Zero : entity.WorldPosition);
+            Vector2 position = worldPosition ?? (entity == null || entity.Removed ? Vector2.Zero : entity.WorldPosition);
             if (worldPosition == null)
             {
                 if (entity is Character c && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
@@ -723,10 +741,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    var targetLimb = targets.FirstOrDefault(t => t is Limb) as Limb;
-                    if (targetLimb != null && !targetLimb.Removed)
+                    if (targets.FirstOrDefault(t => t is MapEntity) is MapEntity targetEntity && !targetEntity.Removed)
                     {
-                        position = targetLimb.WorldPosition;
+                        position = targetEntity.WorldPosition;
                     }
                 }
             }
@@ -753,12 +770,15 @@ namespace Barotrauma
                 {
                     foreach (var target in targets)
                     {
-                        if (target is Limb limb && limb.character != null && !limb.character.Removed) targetCharacter = ((Limb)target).character;
+                        if (target is Limb limb && limb.character != null && !limb.character.Removed)
+                        {
+                            targetCharacter = ((Limb)target).character;
+                        }
                     }
                 }
                 for (int i = 0; i < useItemCount; i++)
                 {
-                    if (item.Removed) continue;
+                    if (item.Removed) { continue; }
                     item.Use(deltaTime, targetCharacter, targets.FirstOrDefault(t => t is Limb) as Limb);
                 }
             }
@@ -786,6 +806,8 @@ namespace Barotrauma
             {
                 foreach (ISerializableEntity target in targets)
                 {
+                    if (target == null) { continue; }
+
                     if (target is Entity targetEntity)
                     {
                         if (targetEntity.Removed) { continue; }
@@ -807,18 +829,17 @@ namespace Barotrauma
                 }
             }
 
-            if (entity != null)
+            foreach (Explosion explosion in explosions)
             {
-                foreach (Explosion explosion in explosions)
-                {
-                    explosion.Explode(position, damageSource: entity, attacker: user);
-                }
+                explosion.Explode(position, damageSource: entity, attacker: user);
             }
 
             foreach (ISerializableEntity target in targets)
             {
+                if (target == null) { continue; }
                 foreach (Affliction affliction in Afflictions)
                 {
+                    if (Rand.Value(Rand.RandSync.Unsynced) > affliction.Probability) { continue; }
                     Affliction multipliedAffliction = affliction;
                     if (!disableDeltaTime)
                     {
@@ -908,59 +929,66 @@ namespace Barotrauma
                 }
                 foreach (ItemSpawnInfo itemSpawnInfo in spawnItems)
                 {
-                    switch (itemSpawnInfo.SpawnPosition)
+                    for (int i = 0; i < itemSpawnInfo.Count; i++)
                     {
-                        case ItemSpawnInfo.SpawnPositionType.This:
-                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, position);
-                            break;
-                        case ItemSpawnInfo.SpawnPositionType.ThisInventory:
-                            {
-                                if (entity is Character character && character.Inventory != null)
+                        switch (itemSpawnInfo.SpawnPosition)
+                        {
+                            case ItemSpawnInfo.SpawnPositionType.This:
+                                Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, position + Rand.Vector(itemSpawnInfo.Spread, Rand.RandSync.Server), onSpawned: newItem =>
                                 {
-                                    int emptyCount = character.Inventory.Items.Count(it => it == null);
-                                    if (emptyCount - Entity.Spawner.CountSpawnQueue(spawnInfo => spawnInfo is EntitySpawner.ItemSpawnInfo itemSpawnInfo && itemSpawnInfo.Inventory == character.Inventory) > 0)
-                                    {
-                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, character.Inventory);
-                                    }
-                                }
-                                else if (entity is Item item)
+                                    newItem.body?.ApplyLinearImpulse(Rand.Vector(1) * itemSpawnInfo.Speed);
+                                    newItem.Rotation = itemSpawnInfo.Rotation;
+                                });
+                                break;
+                            case ItemSpawnInfo.SpawnPositionType.ThisInventory:
                                 {
-                                    var inventory = item?.GetComponent<ItemContainer>()?.Inventory;
-                                    if (inventory != null)
+                                    if (entity is Character character && character.Inventory != null)
                                     {
-                                        int emptyCount = inventory.Items.Count(it => it == null);
-                                        if (emptyCount - Entity.Spawner.CountSpawnQueue(spawnInfo => spawnInfo is EntitySpawner.ItemSpawnInfo itemSpawnInfo && itemSpawnInfo.Inventory == inventory) > 0)
+                                        int emptyCount = character.Inventory.Items.Count(it => it == null);
+                                        if (emptyCount - Entity.Spawner.CountSpawnQueue(spawnInfo => spawnInfo is EntitySpawner.ItemSpawnInfo itemSpawnInfo && itemSpawnInfo.Inventory == character.Inventory) > 0)
                                         {
-                                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
+                                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, character.Inventory);
+                                        }
+                                    }
+                                    else if (entity is Item item)
+                                    {
+                                        var inventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                        if (inventory != null)
+                                        {
+                                            int emptyCount = inventory.Items.Count(it => it == null);
+                                            if (emptyCount - Entity.Spawner.CountSpawnQueue(spawnInfo => spawnInfo is EntitySpawner.ItemSpawnInfo itemSpawnInfo && itemSpawnInfo.Inventory == inventory) > 0)
+                                            {
+                                                Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            break;
-                        case ItemSpawnInfo.SpawnPositionType.ContainedInventory:
-                            {
-                                Inventory thisInventory = null;
-                                if (entity is Character character)
+                                break;
+                            case ItemSpawnInfo.SpawnPositionType.ContainedInventory:
                                 {
-                                    thisInventory = character.Inventory;
-                                }
-                                else if (entity is Item item)
-                                {
-                                    thisInventory = item?.GetComponent<ItemContainer>()?.Inventory;
-                                }
-                                if (thisInventory != null)
-                                {
-                                    foreach (Item item in thisInventory.Items)
+                                    Inventory thisInventory = null;
+                                    if (entity is Character character)
                                     {
-                                        if (item == null) continue;
-                                        Inventory containedInventory = item.GetComponent<ItemContainer>()?.Inventory;
-                                        if (containedInventory == null || !containedInventory.Items.Any(i => i == null)) continue;
-                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory);
-                                        break;
+                                        thisInventory = character.Inventory;
+                                    }
+                                    else if (entity is Item item)
+                                    {
+                                        thisInventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                    }
+                                    if (thisInventory != null)
+                                    {
+                                        foreach (Item item in thisInventory.Items)
+                                        {
+                                            if (item == null) continue;
+                                            Inventory containedInventory = item.GetComponent<ItemContainer>()?.Inventory;
+                                            if (containedInventory == null || !containedInventory.Items.Any(i => i == null)) continue;
+                                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory);
+                                            break;
+                                        }
                                     }
                                 }
-                            }
-                            break;
+                                break;
+                        }
                     }
                 }
             }

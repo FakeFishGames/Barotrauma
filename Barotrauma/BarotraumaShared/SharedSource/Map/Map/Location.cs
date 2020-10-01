@@ -424,12 +424,12 @@ namespace Barotrauma
         {
             if (!Type.HasHireableCharacters)
             {
-                DebugConsole.ThrowError("Cannot hire a character from location \"" + Name + "\" - the location has no hireable characters.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Cannot hire a character from location \"" + Name + "\" - the location has no hireable characters.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (HireManager == null)
             {
-                DebugConsole.ThrowError("Cannot hire a character from location \"" + Name + "\" - hire manager has not been instantiated.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Cannot hire a character from location \"" + Name + "\" - hire manager has not been instantiated.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 

@@ -966,19 +966,16 @@ namespace Barotrauma.Networking
             for (int i = 0; i < count; i++)
             {
                 string prefabIdentifier = msg.ReadString();
-                string prefabName = msg.ReadString();
                 byte amount = msg.ReadByte();
 
-                var itemPrefab = string.IsNullOrEmpty(prefabIdentifier) ?
-                    MapEntityPrefab.Find(prefabName, null, showErrorMessages: false) as ItemPrefab :
-                    MapEntityPrefab.Find(prefabName, prefabIdentifier, showErrorMessages: false) as ItemPrefab;
+                var itemPrefab = MapEntityPrefab.Find(null, prefabIdentifier, showErrorMessages: false) as ItemPrefab;
                 if (itemPrefab != null && amount > 0)
                 {
-                    if (changed || !ExtraCargo.ContainsKey(itemPrefab) || ExtraCargo[itemPrefab] != amount) changed = true;
+                    if (changed || !ExtraCargo.ContainsKey(itemPrefab) || ExtraCargo[itemPrefab] != amount) { changed = true; }
                     extraCargo.Add(itemPrefab, amount);
                 }
             }
-            if (changed) ExtraCargo = extraCargo;
+            if (changed) { ExtraCargo = extraCargo; }
             return changed;
         }
 
@@ -994,7 +991,6 @@ namespace Barotrauma.Networking
             foreach (KeyValuePair<ItemPrefab, int> kvp in ExtraCargo)
             {
                 msg.Write(kvp.Key.Identifier ?? "");
-                msg.Write(kvp.Key.OriginalName ?? "");
                 msg.Write((byte)kvp.Value);
             }
         }

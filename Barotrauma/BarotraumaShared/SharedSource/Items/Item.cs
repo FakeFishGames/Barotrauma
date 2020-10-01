@@ -1016,7 +1016,7 @@ namespace Barotrauma
             {
                 string errorMsg =
                     "Attempted to move the item " + Name +
-                    " to an invalid position (" + simPosition + ")\n" + Environment.StackTrace;
+                    " to an invalid position (" + simPosition + ")\n" + Environment.StackTrace.CleanupStackTrace();
 
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
@@ -1073,7 +1073,7 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(amount))
             {
-                DebugConsole.ThrowError($"Attempted to move an item by an invalid amount ({amount})\n{Environment.StackTrace}");
+                DebugConsole.ThrowError($"Attempted to move an item by an invalid amount ({amount})\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
 
@@ -1360,12 +1360,15 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
-            if (Indestructible) return new AttackResult();
+            if (Indestructible) { return new AttackResult(); }
 
             float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
 
-            ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+            if (damageAmount > 0)
+            {
+                ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+            }
 
             return new AttackResult(damageAmount, null);
         }
@@ -1629,7 +1632,7 @@ namespace Barotrauma
             OnCollisionProjSpecific(impact);
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (ImpactTolerance > 0.0f && condition > 0.0f && impact > ImpactTolerance)
+                if (ImpactTolerance > 0.0f && condition > 0.0f && Math.Abs(impact) > ImpactTolerance)
                 {
                     ApplyStatusEffects(ActionType.OnImpact, 1.0f);
 #if SERVER
@@ -1980,17 +1983,14 @@ namespace Barotrauma
             {
                 if (picker.SelectedConstruction == this)
                 {
-                    if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
+                    if (picker.IsKeyHit(InputType.Select) || forceSelectKey)
+                    {
+                        picker.SelectedConstruction = null;
+                    }
                 }
                 else if (selected)
                 {
                     picker.SelectedConstruction = this;
-#if CLIENT
-                    if (GameMain.GameSession?.CrewManager != null && picker == Character.Controlled && GetComponent<Ladder>() == null)
-                    {
-                        GameMain.GameSession.CrewManager.ToggleCrewListOpen = false;
-                    }
-#endif
                 }
             }
 
@@ -2215,7 +2215,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError($"Tried to equip a removed item ({Name}).\n{Environment.StackTrace}");
+                DebugConsole.ThrowError($"Tried to equip a removed item ({Name}).\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
 
@@ -2712,7 +2712,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError("Attempting to remove an already removed item (" + Name + ")\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempting to remove an already removed item (" + Name + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");

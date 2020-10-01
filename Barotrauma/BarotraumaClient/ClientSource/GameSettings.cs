@@ -1149,7 +1149,7 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Failed to set voice capture mode.", e);
-                    GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace);
+                    GameAnalyticsManager.AddErrorEventOnce("SetVoiceCaptureMode", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, "Failed to set voice capture mode. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                     VoiceSetting = VoiceMode.Disabled;
                 }
 

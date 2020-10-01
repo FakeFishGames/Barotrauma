@@ -284,6 +284,7 @@ namespace Barotrauma.Items.Components
             {
                 Enabled = false,
                 Selected = AutoTemp,
+                ClickSound = GUISoundType.UISwitch,
                 OnClicked = (button, data) =>
                 {
                     AutoTemp = !AutoTemp;

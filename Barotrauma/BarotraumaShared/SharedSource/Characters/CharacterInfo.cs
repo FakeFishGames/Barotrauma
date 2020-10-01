@@ -300,6 +300,7 @@ namespace Barotrauma
 
         public Order CurrentOrder { get; set; }
         public string CurrentOrderOption { get; set; }
+        public bool IsDismissed => CurrentOrder == null || CurrentOrder.Identifier.Equals("dismissed", StringComparison.OrdinalIgnoreCase);
 
         //unique ID given to character infos in MP
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary

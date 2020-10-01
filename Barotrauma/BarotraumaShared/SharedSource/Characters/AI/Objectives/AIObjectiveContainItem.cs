@@ -142,6 +142,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    // TODO: should we just use GetItem?
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
@@ -153,27 +154,34 @@ namespace Barotrauma
             }
             else
             {
-                // No matching items in the inventory, try to get an item
-                TryAddSubObjective(ref getItemObjective, () =>
-                    new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: Equip, checkInventory: checkInventory, spawnItemIfNotFound: spawnItemIfNotFound)
-                    {
-                        GetItemPriority = GetItemPriority,
-                        ignoredContainerIdentifiers = ignoredContainerIdentifiers,
-                        ignoredItems = containedItems,
-                        AllowToFindDivingGear = AllowToFindDivingGear,
-                        AllowDangerousPressure = AllowDangerousPressure,
-                        TargetCondition = ConditionLevel
-                    }, onAbandon: () =>
-                    {
-                        Abandon = true;
-                    }, onCompleted: () =>
-                    {
-                        if (getItemObjective?.TargetItem != null)
+                if (character.Submarine == null)
+                {
+                    Abandon = true;
+                }
+                else
+                {
+                    // No matching items in the inventory, try to get an item
+                    TryAddSubObjective(ref getItemObjective, () =>
+                        new AIObjectiveGetItem(character, itemIdentifiers, objectiveManager, equip: Equip, checkInventory: checkInventory, spawnItemIfNotFound: spawnItemIfNotFound)
                         {
-                            containedItems.Add(getItemObjective.TargetItem);
-                        }
-                        RemoveSubObjective(ref getItemObjective);
-                    });
+                            GetItemPriority = GetItemPriority,
+                            ignoredContainerIdentifiers = ignoredContainerIdentifiers,
+                            ignoredItems = containedItems,
+                            AllowToFindDivingGear = AllowToFindDivingGear,
+                            AllowDangerousPressure = AllowDangerousPressure,
+                            TargetCondition = ConditionLevel
+                        }, onAbandon: () =>
+                        {
+                            Abandon = true;
+                        }, onCompleted: () =>
+                        {
+                            if (getItemObjective?.TargetItem != null)
+                            {
+                                containedItems.Add(getItemObjective.TargetItem);
+                            }
+                            RemoveSubObjective(ref getItemObjective);
+                        });
+                }
             }
         }
 

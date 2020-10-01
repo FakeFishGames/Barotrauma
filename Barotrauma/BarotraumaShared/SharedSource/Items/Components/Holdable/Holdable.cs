@@ -312,7 +312,7 @@ namespace Barotrauma.Items.Components
 
             if (item.Removed)
             {
-                DebugConsole.ThrowError($"Attempted to equip a removed item ({item.Name})\n" + Environment.StackTrace);
+                DebugConsole.ThrowError($"Attempted to equip a removed item ({item.Name})\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -416,7 +416,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Removed)
             {
-                DebugConsole.ThrowError($"Attempted to pick up a removed item ({item.Name})\n" + Environment.StackTrace);
+                DebugConsole.ThrowError($"Attempted to pick up a removed item ({item.Name})\n" + Environment.StackTrace.CleanupStackTrace());
                 return false;
             }
 

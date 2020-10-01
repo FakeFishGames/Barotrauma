@@ -123,6 +123,7 @@ namespace Barotrauma.Items.Components
             {
                 Selected = autoPilot,
                 Enabled = true,
+                ClickSound = GUISoundType.UISwitch,
                 OnClicked = (button, data) =>
                 {
                     button.Selected = !button.Selected;

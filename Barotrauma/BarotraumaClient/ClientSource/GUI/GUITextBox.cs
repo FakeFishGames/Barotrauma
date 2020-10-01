@@ -664,7 +664,7 @@ namespace Barotrauma
                 case (char)0x1: // ctrl-a
                     SelectAll();
                     break;
-                case (char)0x1A when !Readonly: // ctrl-z
+                case (char)0x1A when !Readonly && !SubEditorScreen.IsSubEditor(): // ctrl-z
                     text = memento.Undo();
                     if (text != Text)
                     {
@@ -674,7 +674,7 @@ namespace Barotrauma
                         OnTextChanged?.Invoke(this, Text);
                     }
                     break;
-                case (char)0x12 when !Readonly: // ctrl-r
+                case (char)0x12 when !Readonly && !SubEditorScreen.IsSubEditor(): // ctrl-r
                     text = memento.Redo();
                     if (text != Text)
                     {

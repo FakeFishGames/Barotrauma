@@ -11,6 +11,7 @@ namespace Barotrauma
         public override bool ForceRun => true;
         public override bool InverseTargetEvaluation => true;
         public override bool AllowOutsideSubmarine => true;
+        public override bool AllowInAnySub => true;
 
         private const float vitalityThreshold = 75;
         private const float vitalityThresholdForOrders = 85;

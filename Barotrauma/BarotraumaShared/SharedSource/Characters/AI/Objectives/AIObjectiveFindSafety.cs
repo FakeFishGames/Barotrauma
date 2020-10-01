@@ -14,8 +14,9 @@ namespace Barotrauma
         public override bool IgnoreUnsafeHulls => true;
         public override bool ConcurrentObjectives => true;
         public override bool AllowOutsideSubmarine => true;
+        public override bool AllowInAnySub => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
-        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace); }
+        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
 
         // TODO: expose?
         const float priorityIncrease = 100;

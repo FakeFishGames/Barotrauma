@@ -1407,11 +1407,16 @@ namespace Barotrauma
                     if (item != null) { item.SpawnedInOutpost = true; }
                 }
                 npc.GiveIdCardTags(gotoTarget as WayPoint);
-                var humanAI = npc.AIController as HumanAIController;
-                if (humanAI != null) 
+                if (npc.AIController is HumanAIController humanAI) 
                 {
                     var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
-                    if (idleObjective != null)
+                    if (humanPrefab.CampaignInteractionType != CampaignMode.InteractionType.None)
+                    {
+                        idleObjective.Behavior = AIObjectiveIdle.BehaviorType.StayInHull;
+                        idleObjective.TargetHull = AIObjectiveGoTo.GetTargetHull(gotoTarget);
+                        (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, humanPrefab.CampaignInteractionType);
+                    }
+                    else
                     {
                         idleObjective.Behavior = humanPrefab.BehaviorType;
                         foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
@@ -1419,21 +1424,6 @@ namespace Barotrauma
                             idleObjective.PreferredOutpostModuleTypes.Add(moduleType);
                         }
                     }
-                }
-                if (humanPrefab.CampaignInteractionType != CampaignMode.InteractionType.None)
-                {
-                    if (humanAI != null)
-                    {
-                        Hull goToHull = gotoTarget as Hull ?? (gotoTarget as WayPoint)?.CurrentHull ?? (gotoTarget as Item)?.CurrentHull;
-                        var goToObjective = new AIObjectiveGoTo(gotoTarget, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200);
-                        if (goToHull != null)
-                        {
-                            goToObjective.priorityGetter = () => npc.CurrentHull == goToHull ? 0.0f : AIObjectiveManager.OrderPriority;
-                        }
-                        humanAI.ObjectiveManager.SetOrder(goToObjective);
-                        humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>().Behavior = AIObjectiveIdle.BehaviorType.StayInHull;
-                    }
-                    (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, humanPrefab.CampaignInteractionType);
                 }
             }
         }

@@ -11,6 +11,7 @@ namespace Barotrauma.Items.Components
         private string previousReceivedSignal;
 
         private bool previousResult;
+        private GroupCollection previousGroups;
 
         private Regex regex;
 
@@ -18,6 +19,9 @@ namespace Barotrauma.Items.Components
 
         [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the regular expression.", alwaysUseInstanceValues: true)]
         public string Output { get; set; }
+
+        [InGameEditable, Serialize(false, true, description: "Should the component output a value of a capture group instead of a constant signal.", alwaysUseInstanceValues: true)]
+        public bool UseCaptureGroup { get; set; }
 
         [Serialize("0", true, description: "The signal this item outputs when the received signal does not match the regular expression.", alwaysUseInstanceValues: true)]
         public string FalseOutput { get; set; }
@@ -64,6 +68,7 @@ namespace Barotrauma.Items.Components
                 {
                     Match match = regex.Match(receivedSignal);
                     previousResult =  match.Success;
+                    previousGroups = UseCaptureGroup && previousResult ? match.Groups : null;
                     previousReceivedSignal = receivedSignal;
 
                 }
@@ -75,7 +80,30 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            string signalOut = previousResult ? Output : FalseOutput;
+            string signalOut;
+            if (previousResult)
+            {
+                if (UseCaptureGroup)
+                {
+                    if (previousGroups != null && previousGroups.TryGetValue(Output, out Group group))
+                    {
+                        signalOut = group.Value;
+                    }
+                    else
+                    {
+                        signalOut = FalseOutput;
+                    }
+                }
+                else
+                {
+                    signalOut = Output;
+                }
+            }
+            else
+            {
+                signalOut = FalseOutput;
+            }
+
             if (ContinuousOutput)
             {
                 if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }

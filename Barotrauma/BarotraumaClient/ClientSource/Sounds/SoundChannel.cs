@@ -275,7 +275,7 @@ namespace Barotrauma.Sounds
             {
                 if (value < 0.25f || value > 4.0f)
                 {
-                    DebugConsole.ThrowError($"Frequency multiplier out of range: {value}" + Environment.StackTrace);
+                    DebugConsole.ThrowError($"Frequency multiplier out of range: {value}" + Environment.StackTrace.CleanupStackTrace());
                 }
                 frequencyMultiplier = Math.Clamp(value, 0.25f, 4.0f);
 

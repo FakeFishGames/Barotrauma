@@ -306,7 +306,7 @@ namespace Barotrauma.CharacterEditor
                     var lastJoint = selectedJoints.LastOrDefault();
                     if (lastJoint != null)
                     {
-                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbB : lastJoint.LimbA;
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbA : lastJoint.LimbB;
                     }
                 }
                 if (lastLimb != null)
@@ -374,6 +374,14 @@ namespace Barotrauma.CharacterEditor
             if (Wizard.instance != null) { return; }
             spriteSheetRect = CalculateSpritesheetRectangle();
             // Handle shortcut keys
+            if (PlayerInput.KeyHit(Keys.F1))
+            {
+                SetToggle(paramsToggle, !paramsToggle.Selected);
+            }
+            if (PlayerInput.KeyHit(Keys.F5))
+            {
+                RecreateRagdoll();
+            }
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
                 if (PlayerInput.KeyHit(Keys.D1))
@@ -445,10 +453,6 @@ namespace Barotrauma.CharacterEditor
                     {
                         SetToggle(showCollidersToggle, !showCollidersToggle.Selected);
                     }
-                    if (PlayerInput.KeyHit(Keys.Tab))
-                    {
-                        SetToggle(paramsToggle, !paramsToggle.Selected);
-                    }
                     if (PlayerInput.KeyHit(Keys.L))
                     {
                         SetToggle(lightsToggle, !lightsToggle.Selected);
@@ -468,10 +472,6 @@ namespace Barotrauma.CharacterEditor
                     if (PlayerInput.KeyHit(Keys.I))
                     {
                         SetToggle(ikToggle, !ikToggle.Selected);
-                    }
-                    if (PlayerInput.KeyHit(Keys.F5))
-                    {
-                        RecreateRagdoll();
                     }
                 }
                 if (PlayerInput.KeyDown(InputType.Left) || PlayerInput.KeyDown(InputType.Right) || PlayerInput.KeyDown(InputType.Up) || PlayerInput.KeyDown(InputType.Down))
@@ -809,7 +809,13 @@ namespace Barotrauma.CharacterEditor
             else if (showColliders)
             {
                 character.AnimController.Collider.DebugDraw(spriteBatch, Color.White, forceColor: true);
-                character.AnimController.Limbs.ForEach(l => l.body.DebugDraw(spriteBatch, GUI.Style.Green, forceColor: true));
+                foreach (var limb in character.AnimController.Limbs)
+                {
+                    if (!limb.Hide)
+                    {
+                        limb.body.DebugDraw(spriteBatch, GUI.Style.Green, forceColor: true);
+                    }
+                }
             }
             spriteBatch.End();
 
@@ -935,7 +941,7 @@ namespace Barotrauma.CharacterEditor
                     var lastJoint = selectedJoints.LastOrDefault();
                     if (lastJoint != null)
                     {
-                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbB : lastJoint.LimbA;
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbA : lastJoint.LimbB;
                     }
                 }
                 if (lastLimb != null)
@@ -953,14 +959,14 @@ namespace Barotrauma.CharacterEditor
                             {
                                 UpdateOtherLimbs(lastLimb, l => TryUpdateSubParam(l.Params, "spriteorientation", angle));
                             }
-                        }, circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false, rounding: 10);
+                        }, circleRadius: 40, widgetSize: 15, rotationOffset: 0, autoFreeze: false, rounding: 10);
                 }
                 else
                 {
                     var topLeft = spriteSheetControls.RectTransform.TopLeft;
                     GUI.DrawString(spriteBatch, new Vector2(topLeft.X + 350 * GUI.xScale, GameMain.GraphicsHeight - 95 * GUI.yScale), GetCharacterEditorTranslation("SpriteSheetOrientation") + ":", Color.White, Color.Gray * 0.5f, 10, GUI.Font);
                     DrawRadialWidget(spriteBatch, new Vector2(topLeft.X + 610 * GUI.xScale, GameMain.GraphicsHeight - 75 * GUI.yScale), RagdollParams.SpritesheetOrientation, string.Empty, Color.White,
-                        angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: MathHelper.Pi, autoFreeze: false, rounding: 10);
+                        angle => TryUpdateRagdollParam("spritesheetorientation", angle), circleRadius: 40, widgetSize: 15, rotationOffset: 0, autoFreeze: false, rounding: 10);
                 }
             }
             // Debug
@@ -2383,7 +2389,7 @@ namespace Barotrauma.CharacterEditor
                     IEnumerable<Limb> limbs = selectedLimbs;
                     if (limbs.None())
                     {
-                        limbs = selectedJoints.Select(j => PlayerInput.KeyDown(Keys.LeftAlt) ? j.LimbB : j.LimbA);
+                        limbs = selectedJoints.Select(j => PlayerInput.KeyDown(Keys.LeftAlt) ? j.LimbA : j.LimbB);
                     }
                     foreach (var limb in limbs)
                     {
@@ -3499,12 +3505,8 @@ namespace Barotrauma.CharacterEditor
                     limbJoint.UpperLimit += MathHelper.TwoPi;
                 }
             }
-
-            if (limbJoint.UpperLimit - limbJoint.LowerLimit > MathHelper.TwoPi)
-            {
-                limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
-                limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
-            }
+            limbJoint.LowerLimit = MathUtils.WrapAnglePi(limbJoint.LowerLimit);
+            limbJoint.UpperLimit = MathUtils.WrapAnglePi(limbJoint.UpperLimit);
         }
 
         private Limb GetClosestLimbOnRagdoll(Vector2 targetPos, Func<Limb, bool> filter = null)
@@ -4392,7 +4394,7 @@ namespace Barotrauma.CharacterEditor
 
             if (!altDown && editJoints && selectedJoints.Any() && jointCreationMode == JointCreationMode.None)
             {
-                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 180, 250), GetCharacterEditorTranslation("HoldLeftAltToManipulateJoint"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
+                GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2 - 180, 100), GetCharacterEditorTranslation("HoldLeftAltToManipulateJoint"), Color.White, Color.Black * 0.5f, 10, GUI.Font);
             }
 
             foreach (Limb limb in character.AnimController.Limbs)
@@ -4450,11 +4452,11 @@ namespace Barotrauma.CharacterEditor
                     }
                     if (editJoints)
                     {
-                        if (altDown && joint.BodyA == limb.body.FarseerBody)
+                        if (!altDown && joint.BodyA == limb.body.FarseerBody)
                         {
                             continue;
                         }
-                        if (!altDown && joint.BodyB == limb.body.FarseerBody)
+                        if (altDown && joint.BodyB == limb.body.FarseerBody)
                         {
                             continue;
                         }
@@ -4465,7 +4467,13 @@ namespace Barotrauma.CharacterEditor
                         {
                             if (joint.LimitEnabled && jointCreationMode == JointCreationMode.None)
                             {
-                                DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: limb.Rotation, holdPosition: true);
+                                var otherBody = limb == joint.LimbA ? joint.LimbB : joint.LimbA;
+                                float rotation = -otherBody.Rotation + limb.Params.GetSpriteOrientation();
+                                if (character.AnimController.Dir < 0)
+                                {
+                                    rotation -= MathHelper.Pi;
+                                }
+                                DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: true, allowPairEditing: true, rotationOffset: rotation, holdPosition: true);
                             }
                             // Is the direction inversed incorrectly?
                             Vector2 to = tformedJointPos + VectorExtensions.ForwardFlipped(joint.LimbB.Rotation - joint.LimbB.Params.GetSpriteOrientation(), 20);
@@ -4898,7 +4906,7 @@ namespace Barotrauma.CharacterEditor
                                         void RecalculateCollider(Limb l)
                                         {
                                             // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
-                                            float multiplier = 0.85f;
+                                            float multiplier = 0.9f;
                                             l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * l.Scale * RagdollParams.TextureScale * multiplier);
                                             TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
                                             TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
@@ -5010,7 +5018,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     if (joint.LimitEnabled && jointCreationMode == JointCreationMode.None)
                     {
-                        DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true, holdPosition: false);
+                        DrawJointLimitWidgets(spriteBatch, limb, joint, tformedJointPos, autoFreeze: false, allowPairEditing: true, holdPosition: false, rotationOffset: joint.LimbB.Params.GetSpriteOrientation());
                     }
                     if (jointSelectionWidget.IsControlled)
                     {
@@ -5071,7 +5079,7 @@ namespace Barotrauma.CharacterEditor
 
         private void DrawJointLimitWidgets(SpriteBatch spriteBatch, Limb limb, LimbJoint joint, Vector2 drawPos, bool autoFreeze, bool allowPairEditing, bool holdPosition, float rotationOffset = 0)
         {
-            rotationOffset -= limb.Params.GetSpriteOrientation();
+            bool clockWise = joint.Params.ClockWiseRotation;
             Color angleColor = joint.UpperLimit - joint.LowerLimit > 0 ? GUI.Style.Green * 0.5f : GUI.Style.Red;
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.UpperLimit), $"{joint.Params.Name}: {GetCharacterEditorTranslation("UpperLimit")}", Color.Cyan, angle =>
             {
@@ -5111,7 +5119,7 @@ namespace Barotrauma.CharacterEditor
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(40, Color.Cyan);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Cyan, font: GUI.SmallFont);
-            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: false, holdPosition: holdPosition);
+            }, circleRadius: 40, rotationOffset: rotationOffset, displayAngle: false, clockWise: clockWise, holdPosition: holdPosition);
             DrawRadialWidget(spriteBatch, drawPos, MathHelper.ToDegrees(joint.LowerLimit), $"{joint.Params.Name}: {GetCharacterEditorTranslation("LowerLimit")}", Color.Yellow, angle =>
             {
                 joint.LowerLimit = MathHelper.ToRadians(angle);
@@ -5150,12 +5158,12 @@ namespace Barotrauma.CharacterEditor
                 DrawAngle(20, angleColor, 4);
                 DrawAngle(25, Color.Yellow);
                 GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: Color.Yellow, font: GUI.SmallFont);
-            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false, clockWise: false, holdPosition: holdPosition);
+            }, circleRadius: 25, rotationOffset: rotationOffset, displayAngle: false, clockWise: clockWise, holdPosition: holdPosition);
             void DrawAngle(float radius, Color color, float thickness = 5)
             {
                 float angle = joint.UpperLimit - joint.LowerLimit;
-                ShapeExtensions.DrawSector(spriteBatch, drawPos, radius, angle, 40, color, 
-                    offset: -rotationOffset - joint.UpperLimit + MathHelper.PiOver2, thickness: thickness);
+                float offset = clockWise ? rotationOffset + joint.LowerLimit - MathHelper.PiOver2 : rotationOffset - joint.UpperLimit - MathHelper.PiOver2;
+                ShapeExtensions.DrawSector(spriteBatch, drawPos, radius, angle, 40, color, offset: offset, thickness: thickness);
             }
         }
 
@@ -5244,8 +5252,8 @@ namespace Barotrauma.CharacterEditor
             {
                 angle = 0;
             }
-            float drawAngle = clockWise ? -angle : angle;
-            var widgetDrawPos = drawPos + VectorExtensions.ForwardFlipped(MathHelper.ToRadians(drawAngle) + rotationOffset, circleRadius);
+            float drawAngle = clockWise ? angle : -angle;
+            var widgetDrawPos = drawPos + VectorExtensions.Forward(MathHelper.ToRadians(drawAngle) + rotationOffset - MathHelper.PiOver2, circleRadius);
             GUI.DrawLine(spriteBatch, drawPos, widgetDrawPos, color);
             DrawWidget(spriteBatch, widgetDrawPos, WidgetType.Rectangle, widgetSize, color, toolTip, () =>
             {
@@ -5253,8 +5261,8 @@ namespace Barotrauma.CharacterEditor
                 ShapeExtensions.DrawCircle(spriteBatch, drawPos, circleRadius, 40, color, thickness: 1);
                 Vector2 d = PlayerInput.MousePosition - drawPos;
                 float newAngle = clockWise
-                    ? MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset
-                    : -MathUtils.VectorToAngle(d) + MathHelper.PiOver2 - rotationOffset;
+                    ? MathUtils.VectorToAngle(d) + MathHelper.PiOver2 - rotationOffset
+                    : -MathUtils.VectorToAngle(d) - MathHelper.PiOver2 + rotationOffset;
                 angle = MathHelper.ToDegrees(wrapAnglePi ? MathUtils.WrapAnglePi(newAngle) : MathUtils.WrapAngleTwoPi(newAngle));
                 angle = (float)Math.Round(angle / rounding) * rounding;
                 if (angle >= 360 || angle <= -360) { angle = 0; }
@@ -5263,7 +5271,7 @@ namespace Barotrauma.CharacterEditor
                     GUI.DrawString(spriteBatch, drawPos, angle.FormatZeroDecimal(), Color.Black, backgroundColor: color, font: GUI.SmallFont);
                 }
                 onClick(angle);
-                var zeroPos = drawPos + VectorExtensions.ForwardFlipped(rotationOffset, circleRadius);
+                var zeroPos = drawPos + VectorExtensions.Forward(rotationOffset - MathHelper.PiOver2, circleRadius);
                 GUI.DrawLine(spriteBatch, drawPos, zeroPos, GUI.Style.Red, width: 3);
             }, autoFreeze, holdPosition, onHovered: () =>
             {

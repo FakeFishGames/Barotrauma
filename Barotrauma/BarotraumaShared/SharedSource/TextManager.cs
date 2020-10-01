@@ -317,7 +317,7 @@ namespace Barotrauma
                 if (variableValues[i] == null) 
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Error in TextManager.GetWithVariables (variable " + i + " was null).\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Error in TextManager.GetWithVariables (variable " + i + " was null).\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     continue; 
                 }

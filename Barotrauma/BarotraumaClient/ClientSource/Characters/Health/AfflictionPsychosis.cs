@@ -1,38 +1,26 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Barotrauma
 {
     partial class AfflictionPsychosis : Affliction
     {
-        class FakeFireSource
-        {
-            public Vector2 Size;
-            public Vector2 Position;
-            public Hull Hull;
-
-            public float LifeTime;
-        }
-
         const int MaxFakeFireSources = 10;
         const float MinFakeFireSourceInterval = 30.0f, MaxFakeFireSourceInterval = 240.0f;
         private float createFireSourceTimer;
-        private readonly List<FakeFireSource> fakeFireSources = new List<FakeFireSource>();
+        private readonly List<DummyFireSource> fakeFireSources = new List<DummyFireSource>();
 
-        enum FloodType
+        public enum FloodType
         {
+            None,
             Minor,
             Major,
             HideFlooding
         }
 
-        const float MinSoundInterval = 10.0f, MaxSoundInterval = 180.0f;
+        const float MinSoundInterval = 60.0f, MaxSoundInterval = 240.0f;
         private FloodType currentFloodType;
         private float soundTimer;
 
@@ -44,12 +32,21 @@ namespace Barotrauma
         private float fakeBrokenInterval = 30.0f;
         private float fakeBrokenTimer = 0.0f;
 
+        private float invisibleCharacterInterval = 30.0f;
+        private float invisibleCharacterTimer = 0.0f;
+
+        public FloodType CurrentFloodType
+        {
+            get { return currentFloodType; }
+        }
+
         partial void UpdateProjSpecific(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             if (Character.Controlled != characterHealth.Character) return;
             UpdateFloods(deltaTime);
             UpdateSounds(characterHealth.Character, deltaTime);
             UpdateFires(characterHealth.Character, deltaTime);
+            UpdateInvisibleCharacters(deltaTime);
             UpdateFakeBroken(deltaTime);
         }
 
@@ -77,10 +74,14 @@ namespace Barotrauma
                 {
                     case FloodType.Minor:
                         currentFloodState += deltaTime;
-                        //lerp the water surface in all hulls 50 units above the floor within 10 seconds
+                        //lerp the water surface in all hulls 15 units above the floor within 10 seconds
                         foreach (Hull hull in Hull.hullList)
                         {
-                            hull.DrawSurface = hull.Rect.Y - hull.Rect.Height + MathHelper.Lerp(0.0f, 50.0f, currentFloodState / 10.0f);
+                            for (int i = hull.FakeFireSources.Count - 1; i >= 0; i--)
+                            {
+                                hull.FakeFireSources[i].Extinguish(deltaTime, 50.0f);
+                            }
+                            hull.DrawSurface = hull.Rect.Y - hull.Rect.Height + MathHelper.Lerp(0.0f, 15.0f, currentFloodState / 10.0f);
                         }
                         break;
                     case FloodType.Major:
@@ -88,6 +89,10 @@ namespace Barotrauma
                         //create a full flood in 10 seconds
                         foreach (Hull hull in Hull.hullList)
                         {
+                            for (int i = hull.FakeFireSources.Count - 1; i >= 0; i--)
+                            {
+                                hull.FakeFireSources[i].Extinguish(deltaTime, 200.0f);
+                            }
                             hull.DrawSurface = hull.Rect.Y - MathHelper.Lerp(hull.Rect.Height, 0.0f, currentFloodState / 10.0f);
                         }
                         break;
@@ -104,6 +109,7 @@ namespace Barotrauma
 
             if (createFloodTimer < MathHelper.Lerp(MaxFloodInterval, MinFloodInterval, Strength / 100.0f))
             {
+                currentFloodType = FloodType.None;
                 createFloodTimer += deltaTime;
                 return;
             }
@@ -114,10 +120,12 @@ namespace Barotrauma
                 if (Rand.Range(0.0f, 1.0f) < 0.5f)
                 {
                     currentFloodType = FloodType.HideFlooding;
+                    currentFloodType = FloodType.Minor;
                 }
                 else
                 {
-                    currentFloodType = Strength < 50.0f ? FloodType.Minor : FloodType.Major;
+                    //disabled Major flooding because it's too easy to tell it's fake
+                    currentFloodType = FloodType.Minor;// Strength < 50.0f ? FloodType.Minor : FloodType.Major;
                 }
                 currentFloodDuration = Rand.Range(20.0f, 100.0f);
             }
@@ -127,46 +135,45 @@ namespace Barotrauma
         private void UpdateFires(Character character, float deltaTime)
         {
             createFireSourceTimer += deltaTime;
+            fakeFireSources.RemoveAll(fs => fs.Removed);
             if (fakeFireSources.Count < MaxFakeFireSources &&
                 character.Submarine != null &&
                 createFireSourceTimer > MathHelper.Lerp(MaxFakeFireSourceInterval, MinFakeFireSourceInterval, Strength / 100.0f))
             {
                 Hull fireHull = Hull.hullList.GetRandom(h => h.Submarine == character.Submarine);
-
-                fakeFireSources.Add(new FakeFireSource()
+                if (fireHull != null)
                 {
-                    Size = Vector2.One * 20.0f,
-                    Hull = fireHull,
-                    Position = new Vector2(Rand.Range(0.0f, fireHull.Rect.Width), 30.0f),
-                    LifeTime = MathHelper.Lerp(10.0f, 100.0f, Strength / 100.0f)
-                });
-                createFireSourceTimer = 0.0f;
-            }
-
-            foreach (FakeFireSource fakeFireSource in fakeFireSources)
-            {
-                if (fakeFireSource.Hull.DrawSurface > fakeFireSource.Hull.Rect.Y - fakeFireSource.Hull.Rect.Height + fakeFireSource.Position.Y)
-                {
-                    fakeFireSource.LifeTime -= deltaTime * 100.0f;
+                    var fakeFire = new DummyFireSource(Vector2.One * 500.0f, new Vector2(Rand.Range(fireHull.WorldRect.X, fireHull.WorldRect.Right), fireHull.WorldPosition.Y), fireHull, isNetworkMessage: true)
+                    {
+                        CausedByPsychosis = true,
+                        DamagesItems = false,
+                        DamagesCharacters = false
+                    };
+                    fakeFireSources.Add(fakeFire);
+                    createFireSourceTimer = 0.0f;
                 }
+            }
+        }
 
-                fakeFireSource.LifeTime -= deltaTime;
-                float growAmount = deltaTime * 5.0f;
-                fakeFireSource.Size.X += growAmount;
-                fakeFireSource.Position.X = MathHelper.Clamp(fakeFireSource.Position.X - growAmount / 2.0f, 0.0f, fakeFireSource.Hull.Rect.Width);
-                fakeFireSource.Position.Y = MathHelper.Clamp(fakeFireSource.Position.Y, 0.0f, fakeFireSource.Hull.Rect.Height);
-                fakeFireSource.Size.X = Math.Min(fakeFireSource.Hull.Rect.Width - fakeFireSource.Position.X, fakeFireSource.Size.X);
-                fakeFireSource.Size.Y = Math.Min(fakeFireSource.Hull.Rect.Height - fakeFireSource.Position.Y, fakeFireSource.Size.Y);
+        private void UpdateInvisibleCharacters(float deltaTime)
+        {
+            invisibleCharacterTimer -= deltaTime;
+            if (invisibleCharacterTimer > 0.0f) { return; }
 
-                FireSource.EmitParticles(
-                    fakeFireSource.Size,
-                    fakeFireSource.Hull.WorldRect.Location.ToVector2() + fakeFireSource.Position - Vector2.UnitY * fakeFireSource.Hull.Rect.Height,
-                    fakeFireSource.Hull,
-                    0.5f);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.IsDead || c == Character.Controlled) { continue; }
+                if (c.WorldPosition.X < GameMain.GameScreen.Cam.WorldView.X || c.WorldPosition.X > GameMain.GameScreen.Cam.WorldView.Right) { continue; }
+                if (c.WorldPosition.Y < GameMain.GameScreen.Cam.WorldView.Y - GameMain.GameScreen.Cam.WorldView.Height || c.WorldPosition.Y > GameMain.GameScreen.Cam.WorldView.Y) { continue; }
+                if (Rand.Range(0.0f, 500.0f) < Strength)
+                {
+                    c.InvisibleTimer = 60.0f;
+                }
             }
 
-            fakeFireSources.RemoveAll(fs => fs.LifeTime <= 0.0f);
+            invisibleCharacterTimer = invisibleCharacterInterval;
         }
+
 
         private void UpdateFakeBroken(float deltaTime)
         {

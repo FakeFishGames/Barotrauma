@@ -248,6 +248,7 @@ namespace Barotrauma.Items.Components
 
         partial void UseProjSpecific(float deltaTime, Vector2 raystart);
 
+        private static readonly List<Body> hitBodies = new List<Body>();
         private readonly HashSet<Character> hitCharacters = new HashSet<Character>();
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
@@ -291,10 +292,14 @@ namespace Barotrauma.Items.Components
                         return true;
                     },
                     allowInsideFixture: true);
+
+                hitBodies.Clear();
+                hitBodies.AddRange(bodies);
+
                 lastPickedFraction = Submarine.LastPickedFraction;
                 Type lastHitType = null;
                 hitCharacters.Clear();
-                foreach (Body body in bodies)
+                foreach (Body body in hitBodies)
                 {
                     Type bodyType = body.UserData?.GetType();
                     if (!RepairThroughWalls && bodyType != null && bodyType != lastHitType)
@@ -372,13 +377,23 @@ namespace Barotrauma.Items.Components
                             fireSourcesInRange.Add(fs);
                         }
                     }
+                    foreach (FireSource fs in hull.FakeFireSources)
+                    {
+                        if (fs.IsInDamageRange(displayPos, 100.0f) && !fireSourcesInRange.Contains(fs))
+                        {
+                            fireSourcesInRange.Add(fs);
+                        }
+                    }
                 }
 
                 foreach (FireSource fs in fireSourcesInRange)
                 {
                     fs.Extinguish(deltaTime, ExtinguishAmount);
 #if SERVER
-                    GameMain.Server.KarmaManager.OnExtinguishingFire(user, deltaTime);                    
+                    if (!(fs is DummyFireSource))
+                    {
+                        GameMain.Server.KarmaManager.OnExtinguishingFire(user, deltaTime);     
+                    }               
 #endif
                 }
             }
@@ -562,13 +577,22 @@ namespace Barotrauma.Items.Components
         partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem);
 
         private float sinTime;
+        private float repairTimer;
+        private Gap previousGap;
+        private readonly float repairTimeOut = 5;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (!(objective.OperateTarget is Gap leak)) { return true; }
             if (leak.Submarine == null) { return true; }
+            if (leak != previousGap)
+            {
+                sinTime = 0;
+                repairTimer = 0;
+                previousGap = leak;
+            }
             Vector2 fromCharacterToLeak = leak.WorldPosition - character.WorldPosition;
             float dist = fromCharacterToLeak.Length();
-            float reach = Range + ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
+            float reach = AIObjectiveFixLeak.CalculateReach(this, character);
 
             //too far away -> consider this done and hope the AI is smart enough to move closer
             if (dist > reach * 2) { return true; }
@@ -626,7 +650,11 @@ namespace Barotrauma.Items.Components
             else if (dist < reach * 2)
             {
                 // In or almost in range
-                character.CursorPosition = leak.Position;
+                character.CursorPosition = leak.WorldPosition;
+                if (character.Submarine != null)
+                {
+                    character.CursorPosition -= character.Submarine.Position;
+                }
                 character.CursorPosition += VectorExtensions.Forward(Item.body.TransformedRotation + (float)Math.Sin(sinTime) / 2, dist / 2);
                 if (character.AnimController.InWater)
                 {
@@ -656,6 +684,12 @@ namespace Barotrauma.Items.Components
             var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
             if (angle < MathHelper.PiOver4)
             {
+                if (Submarine.PickBody(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionWall, allowInsideFixture: true)?.UserData is Item i)
+                {
+                    var door = i.GetComponent<Door>();
+                    // Hit a door, abandon so that we don't weld it shut.
+                    return door != null && !door.IsOpen && !door.IsBroken;
+                }
                 // Check that we don't hit any friendlies
                 if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
                 {
@@ -669,6 +703,14 @@ namespace Barotrauma.Items.Components
                 {
                     character.SetInput(InputType.Shoot, false, true);
                     Use(deltaTime, character);
+                    repairTimer += deltaTime;
+                    if (repairTimer > repairTimeOut)
+                    {
+#if DEBUG
+                        DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
+#endif
+                        return true;
+                    }
                 }
             }
 

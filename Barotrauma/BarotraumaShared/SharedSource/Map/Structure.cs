@@ -312,7 +312,7 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(amount))
             {
-                DebugConsole.ThrowError($"Attempted to move a structure by an invalid amount ({amount})\n{Environment.StackTrace}");
+                DebugConsole.ThrowError($"Attempted to move a structure by an invalid amount ({amount})\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
 
@@ -986,12 +986,20 @@ namespace Barotrauma
                     {
                         diffFromCenter = (gapRect.Center.X - this.rect.Center.X) / (float)this.rect.Width * BodyWidth;
                         if (BodyWidth > 0.0f) { gapRect.Width = (int)(BodyWidth * (gapRect.Width / (float)this.rect.Width)); }
-                        if (BodyHeight > 0.0f) { gapRect.Height = (int)BodyHeight; }
+                        if (BodyHeight > 0.0f) 
+                        { 
+                            gapRect.Y = (gapRect.Y - gapRect.Height / 2) + (int)(BodyHeight / 2 + BodyOffset.Y * scale);
+                            gapRect.Height = (int)BodyHeight; 
+                        }
                     }
                     else
                     {
                         diffFromCenter = ((gapRect.Y - gapRect.Height / 2) - (this.rect.Y - this.rect.Height / 2)) / (float)this.rect.Height * BodyHeight;
-                        if (BodyWidth > 0.0f) { gapRect.Width = (int)BodyWidth; }
+                        if (BodyWidth > 0.0f)
+                        {
+                            gapRect.X = gapRect.Center.X + (int)(-BodyWidth / 2 + BodyOffset.X * scale);
+                            gapRect.Width = (int)BodyWidth; 
+                        }
                         if (BodyHeight > 0.0f) { gapRect.Height = (int)(BodyHeight * (gapRect.Height / (float)this.rect.Height)); }
                     }
                     if (FlippedX) { diffFromCenter = -diffFromCenter; }
@@ -1001,7 +1009,7 @@ namespace Barotrauma
                         Vector2 structureCenter = Position;
                         Vector2 gapPos = structureCenter + new Vector2(
                             (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
-                            (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;
+                            (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter + BodyOffset * scale;
                         gapRect = new Rectangle((int)(gapPos.X - gapRect.Width / 2), (int)(gapPos.Y + gapRect.Height / 2), gapRect.Width, gapRect.Height);
                     }
 

@@ -181,6 +181,7 @@ namespace Barotrauma.Items.Components
             {
                 Selected = false,
                 Enabled = true,
+                ClickSound = GUISoundType.UISwitch,
                 OnClicked = (button, data) =>
                 {
                     button.Selected = !button.Selected;

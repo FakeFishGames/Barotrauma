@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>0.10.5.1</Version>
+    <Version>0.10.600.0</Version>
     <Copyright>Copyright © FakeFish 2018-2020</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
@@ -139,6 +139,10 @@
       <AssemblyAttributes Include="AssemblyMetadata">
         <_Parameter1>GitBranch</_Parameter1>
         <_Parameter2>$(BuildBranch)</_Parameter2>
+      </AssemblyAttributes>
+      <AssemblyAttributes Include="AssemblyMetadata">
+        <_Parameter1>ProjectDir</_Parameter1>
+        <_Parameter2>$(ProjectDir)</_Parameter2>
       </AssemblyAttributes>
     </ItemGroup>
     <!-- writes the attribute to the customAssemblyInfo file -->

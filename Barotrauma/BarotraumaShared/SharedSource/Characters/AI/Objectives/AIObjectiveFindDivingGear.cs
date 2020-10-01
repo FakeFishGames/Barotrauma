@@ -17,7 +17,7 @@ namespace Barotrauma
         private Item targetItem;
 
         public static float MIN_OXYGEN = 10;
-        public static string HEAVY_DIVING_GEAR = "heavydiving";
+        public static string HEAVY_DIVING_GEAR = "deepdiving";
         public static string LIGHT_DIVING_GEAR = "lightdiving";
         public static string OXYGEN_SOURCE = "oxygensource";
 

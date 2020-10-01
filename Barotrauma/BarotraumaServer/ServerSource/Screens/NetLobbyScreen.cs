@@ -261,7 +261,7 @@ namespace Barotrauma
 
             if (GameMain.Server.ServerSettings.SubSelectionMode == SelectionMode.Random)
             {
-                var nonShuttles = SubmarineInfo.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus)).ToList();
+                var nonShuttles = SubmarineInfo.SavedSubmarines.Where(c => !c.HasTag(SubmarineTag.Shuttle) && !c.HasTag(SubmarineTag.HideInMenus) && c.IsPlayer).ToList();
                 SelectedSub = nonShuttles[Rand.Range(0, nonShuttles.Count)];
             }
             if (GameMain.Server.ServerSettings.ModeSelectionMode == SelectionMode.Random)

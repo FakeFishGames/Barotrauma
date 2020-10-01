@@ -328,10 +328,10 @@ namespace Barotrauma.Items.Components
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
+                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                         GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Name,
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
+                            "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                     }
                     contained.body.Submarine = item.Submarine;
                 }
@@ -388,9 +388,9 @@ namespace Barotrauma.Items.Components
             inventoryBottomSprite?.Remove();
             ContainedStateIndicator?.Remove();
 
-            if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
+            if (SubEditorScreen.IsSubEditor())
             {
-                GameMain.SubEditorScreen.HandleContainerContentsDeletion(Item, Inventory);
+                Inventory.DeleteAllItems();
                 return;
             }
 #endif

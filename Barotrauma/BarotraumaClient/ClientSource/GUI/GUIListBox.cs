@@ -404,7 +404,7 @@ namespace Barotrauma
         /// <param name="component"></param>
         public void ScrollToElement(GUIComponent component)
         {
-            GUI.PlayUISound(GUISoundType.Click);
+            SoundPlayer.PlayUISound(GUISoundType.Click);
             List<GUIComponent> children = Content.Children.ToList();
             int index = children.IndexOf(component);
             if (index < 0) { return; }

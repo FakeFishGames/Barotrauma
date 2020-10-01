@@ -1,46 +1,48 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 
 public static class AssemblyInfo
 {
-    /// <summary> Gets the git hash value from the assembly
-    /// or null if it cannot be found. </summary>
-    public static string GetGitRevision()
+    public static readonly string GitRevision;
+    public static readonly string GitBranch;
+    public static readonly string ProjectDir;
+    public static readonly string BuildString;
+
+    static AssemblyInfo()
     {
         var asm = typeof(AssemblyInfo).Assembly;
         var attrs = asm.GetCustomAttributes<AssemblyMetadataAttribute>();
-        return attrs.FirstOrDefault(a => a.Key == "GitRevision")?.Value;
-    }
 
-    /// <summary> Gets the git branch name from the assembly
-    /// or null if it cannot be found. </summary>
-    public static string GetGitBranch()
-    {
-        var asm = typeof(AssemblyInfo).Assembly;
-        var attrs = asm.GetCustomAttributes<AssemblyMetadataAttribute>();
-        return attrs.FirstOrDefault(a => a.Key == "GitBranch")?.Value;
-    }
+        GitRevision = attrs.FirstOrDefault(a => a.Key == "GitRevision")?.Value;
 
-    /// <summary> Gets the build platform and configuration </summary>
-    public static string GetBuildString()
-    {
-        string retVal = "Unknown";
+        GitBranch = attrs.FirstOrDefault(a => a.Key == "GitBranch")?.Value;
+
+        ProjectDir = attrs.FirstOrDefault(a => a.Key == "ProjectDir")?.Value;
+        if (ProjectDir.Last() == '/' || ProjectDir.Last() == '\\') { ProjectDir = ProjectDir.Substring(0, ProjectDir.Length - 1); }
+        string[] dirSplit = ProjectDir.Split('/', '\\');
+        ProjectDir = string.Join(ProjectDir.Contains('/') ? '/' : '\\', dirSplit.Take(dirSplit.Length - 2));
+
+        BuildString = "Unknown";
 #if WINDOWS
-        retVal = "Windows";
+        BuildString = "Windows";
 #elif OSX
-        retVal = "Mac";
+        BuildString = "Mac";
 #elif LINUX
-        retVal = "Linux";
+        BuildString = "Linux";
 #endif
 
 #if DEBUG
-        retVal = "Debug" + retVal;
+        BuildString = "Debug" + BuildString;
 #elif UNSTABLE
-        retVal = "Unstable" + retVal;
+        BuildString = "Unstable" + BuildString;
 #else
-        retVal = "Release" + retVal;
+        BuildString = "Release" + BuildString;
 #endif
+    }
 
-        return retVal;
+    public static string CleanupStackTrace(this string stackTrace)
+    {
+        return stackTrace.Replace(ProjectDir, "<DEV>");
     }
 }

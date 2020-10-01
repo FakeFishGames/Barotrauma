@@ -1,4 +1,121 @@
 ---------------------------------------------------------------------------------------------------------
+v0.10.600.0 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Reworked Watcher.
+- Added a new monster behavior: observe.
+- Added toolbelt (a wearable container with a capacity of 12 and it's own dedicated slot) as a replacement for the toolbox.
+- Improvements to the effects caused by psychosis: the affliction icon is not visible to the psychotic character, the fake fires and floods are a bit more convincing, the affliction plays random sounds and can cause other characters to become invisible.
+- Added capture group support to RegEx component.
+- Added black and white paint.
+- Added optional "forbidden word filter" to the server browser. The filter is off by default. The list of forbidden words can be modified by editing the file "Data/forbiddenwordlist.txt" in the game folder.
+- Increased the damage of 40mm grenades.
+- Misc improvements to the tutorials.
+- Added undo and redo functionality to the submarine editor.
+- Added animations and lights to pump, fabricator, deconstructor and engines.
+- All explosions now inflict explosion damage instead or in addition to lacerations.
+- Nerfed the mudraptor slightly: the head and the tail armor should now break more easily; increased the cooldown of some attacks.
+- Mudraptor's armor now explodes when destroyed.
+- Added an unarmored variation of mudraptor.
+- Bonethresher's head is now vulnerable to gunshotwounds and lacerations.
+- Adjusted the appropriate jobs for bots.
+- Changed the automatic crew selection logic for orders.
+- Only show either electrical or mechanical repair order for the contextual selection, depending on which skills the item requires.
+- Previous order icons of the same type are no more created, no matter if the target was different than the current.
+- Tigerthreshers can now attack inner walls of the submarine. They still need help to get inside.
+- Changes to the Tigertherthresher's main collider that should improve the overall movement.
+- Option to make particle emitters modify the color of the particles.
+- Set a limit to how many bots you can hire in the campaign (currently 16).
+- Explosions caused by sodium, potassium, magnesium and lithium being exposed to water don't trigger additional explosions (e.g. oxygen tanks don't explode if they happen to be next to a sodium explosion).
+- Pumps and relays placed in the sub editor are on by default.
+- Added sounds for the nausea affliction.
+- Nausea now inflicts a minor stun and internal damage when the character throws up.
+- Monsters now stop fleeing after a while, if they are not being chased and can't perceive the target anymore.
+- A minor change to the status effect condition targeting logic: If "This" and "NearbyCharacters" are both defined as the targets of a status effect, the conditions only apply to "this" entity, even though the effects are applied on all the targets.
+- Implement spread, speed, and rotation for the spawn item status effects.
+- Minor damage (less than 1 hp) doesn't spawn particles anymore.
+
+Character Editor:
+- Fixed a number of issues with the joint limit widgets. Also allowed to set a joint to rotate clockwise, which inverses the widget direction. Useful for heads or other limbs that extrude right from the main body.
+- Inversed the default joint ends, because it's more usual case to edit the second limb of the joint than the first.
+- The colliders of the hidden limbs are now hidden in the game view.
+- Changed the hotkey for toggling the parameter editor from "Tab" to "F1" and fix the inability to toggle the editor when a text field is selected.
+
+Sounds:
+- Added 2 new background music tracks
+- Added a new, separate sounds for opening and closing the alien doors
+- Added a new sound for medium-sized fires
+- Added new heartbeat sound for suffering from low oxygen
+- Added new sounds for the hull creaking
+- Added a new sound for a broken pump
+- Added a new sound for tinnitus after an explosion
+- Added a new sound for alien artifacts
+- Added a new sound for electrocution
+- Added a new sound for husk footsteps
+- Added new misc. UI sounds
+- Added a new variations for some existing sounds
+- Improved some existing sounds
+- Exposed GUI sound definitions in the sounds.xml file
+
+AI improvements and fixes:
+- Added a new AI behavior and order: cleanup items.
+- Fixed severe performance hit when damaging outpost NPCs with a weapon that does continuous damage (for example a flamer).
+- Reworked the contextual "Wait" order: the order now targets a position instead of an entity.
+- Bots are now allowed to more things even they are not inside the player sub. For example they can be told to extinguish fires in the outpost or rescue crew members inside a wreck (when they are at the same place). WIP.
+- Bots now try to put oxygen tanks to oxygen tank containers, before the oxygen generator or supplycab.
+- Bots now re-equip hats, helmets, and other clothing that they have unequipped for being able to wear diving gear.
+- Bots now use the underwater scooter when they have one in the inventory.
+- Bots should now be slightly smarter when putting off fires.
+- Bots don't anymore retaliate if they are being shot while there is an enemy around. Fixes #3840.
+- Fixed a number of cases where bots would get stuck or fail to fix a leak.
+- Fixed bots with steering order targeting the shuttle nav terminal instead of the main nav terminal.
+- Fixed NPCs getting aggroed by certain drugs (e.g. anaparalyzant).
+- Fixed bots not prioritizing the wall mounts for containing the extinguishers.
+- Fixed monsters targeting inner doors when they shouldn't (#3891).
+- Fixed outpost guards attacking the player for defending themselves against the aggressors on the event "mediator".
+- Fixed NPCs not reacting when the player is attacked.
+- Fixed AI considering characters on the opposing combat mission team as friendly.
+
+Misc fixes:
+- Fixed clients always getting the generic "could not connect" error message when connecting to a server fails, even if there's a specific reason to the connection failing (e.g. disallowed symbols in the player's name, mismatching content packages or game version).
+- Fixed planters dropping removed seeds after a save is reloaded.
+- Fixed plants not updating the health after being fully grown in multiplayer.
+- Fixed decal syncing working unreliably in multiplayer.
+- Fixed "level doesn't match" errors after leaving a shuttle/drone behind in the multiplayer campaign.
+- Fixed painted/dirty walls going to full opacity when transitioning to a new level in the campaign.
+- Fixed crashing when trying to render a light whose range is less than 1 pixel.
+- Fixed crashing when using a repair tool causes an explosion (e.g. when killing a terminal cell with a plasma cutter).
+- Mudraptor: Adjusted and fixed the animations.
+- Fixed irrelevant damage modifiers (like bleeding) affecting the damageemitter's particles. In practice, this caused damagemodifiers with bleeding modifier 0 not spawn any particle effects when the limb was hit.
+- Fixed extinguish fires not working with extinguish fire orders if the room has not enough oxygen.
+- Fixed the user set state of the crew list not being respected; autohiding/showing shouldn't change the state set by the player.
+- Fixed significant lag spikes at outposts with many NPCs. Caused by too frequent pathfinding calls, when an NPC can't find a path to the target.
+- Fixed AIState.Protect throwing exceptions when an attacker has been removed.
+- Fixed status effects targeting nearby characters/items failing to launch, unless they used the "Active" effect type.
+- Fixed crashing when trying to crouch while swimming in the character editor.
+- Fixed pause menu being togglable during level transitions, causing errors if quitting the game during a transition.
+- Fixed wire disappearing from the character's inventory and from the walls when getting shocked from attaching the 2nd end of a wire in multiplayer.
+- Fixed airlock warning light in Kastrull not turning off when the airlock door is closed.
+- Made plants non-combineable.
+- Fixed random submarine selection setting for servers occasionally selecting non-submarines.
+- Fixed dedicated servers still showing up as "playstyle-less" in the server browser.
+- Fixed sounds defined in affliction status effects not working.
+- Require at least 1 kick vote before kicking someone, no matter how low KickVoteRequiredRatio is set to.
+- Fixed gaps being misplaced on certain wall structures, preventing certain walls from leaking in some subs (for example the wall above Typhon's junction compartment).
+- Fixed "Select Matching Items" crashing in the editor when used with submarines with a linked submarine.
+- Fixed hull above Kastrull's drone not being connected to the rest of the hulls, preventing oxygen from flowing between the drone and the sub when docked.
+- Fixed junction boxes' signal connections passing power/load information.
+- Fixed crash when trying to clone a linked sub that you don't have the submarine file for in the sub editor.
+- Fixed incorrectly scaled items in the diving gear cabinet/locker assemblies.
+- Fixed inability to sell faraday artifacts when the condition of the artifact is 0.
+- Fixed monsters not fleeing if the attacker is a bot.
+- Fixed OnImpact statuseffects not launching if the impact was negative (e.g. when a moving sub hits an item that's below the sub).
+- OnDamaged status effects now launch only when there's any damage. Not when the damage is zero.
+- Fixed health bar pulsating even when no damage is done by an attack/status effect.
+- Fixed affliction probability not having any effect when used in status effects.
+
+---------------------------------------------------------------------------------------------------------
 v0.10.5.1
 ---------------------------------------------------------------------------------------------------------
 

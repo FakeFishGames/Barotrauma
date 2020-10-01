@@ -44,7 +44,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
-                DebugConsole.ThrowError("Clients are not allowed to use AutoItemPlacer.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Clients are not allowed to use AutoItemPlacer.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -135,7 +135,7 @@ namespace Barotrauma
             {
                 if (itemPrefab == null)
                 {
-                    string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n"+Environment.StackTrace;
+                    string errorMsg = "Error in AutoItemPlacer.SpawnItems - itemPrefab was null.\n"+Environment.StackTrace.CleanupStackTrace();
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("AutoItemPlacer.SpawnItems:ItemNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return false;

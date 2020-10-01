@@ -105,7 +105,7 @@ namespace Barotrauma
 
             if (hull != null && !string.IsNullOrWhiteSpace(decal) && decalSize > 0.0f)
             {
-                hull.AddDecal(decal, worldPosition, decalSize, true);
+                hull.AddDecal(decal, worldPosition, decalSize, isNetworkEvent: false);
             }
 
             float displayRange = attack.Range;
@@ -340,6 +340,15 @@ namespace Barotrauma
                     }
                 }
 
+                if (c == Character.Controlled && !c.IsDead)
+                {
+                    Limb head = c.AnimController.GetLimb(LimbType.Head);
+                    if (damages.TryGetValue(head, out float headDamage) && headDamage > 0.0f && distFactors.TryGetValue(head, out float headFactor))
+                    {
+                        PlayTinnitusProjSpecific(headFactor);
+                    }
+                }
+
                 //sever joints 
                 if (attack.SeverLimbsProbability > 0.0f)
                 {
@@ -402,5 +411,7 @@ namespace Barotrauma
 
             return damagedStructures;
         }
+
+        static partial void PlayTinnitusProjSpecific(float volume);
     }
 }

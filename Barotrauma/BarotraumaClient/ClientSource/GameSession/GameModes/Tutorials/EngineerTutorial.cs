@@ -87,9 +87,9 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             engineer = Character.Controlled;
 
-            var toolbox = FindOrGiveItem(engineer, "toolbox");
-            toolbox.Unequip(engineer);
-            engineer.Inventory.RemoveItem(toolbox);
+            var toolbelt = FindOrGiveItem(engineer, "toolbelt");
+            toolbelt.Unequip(engineer);
+            engineer.Inventory.RemoveItem(toolbelt);
 
             var repairOrder = Order.GetPrefab("repairsystems");
             engineer_repairIcon = repairOrder.SymbolSprite;

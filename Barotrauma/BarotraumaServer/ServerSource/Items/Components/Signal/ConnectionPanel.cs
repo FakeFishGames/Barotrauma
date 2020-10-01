@@ -67,8 +67,26 @@ namespace Barotrauma.Items.Components
             if (!CheckCharacterSuccess(c.Character))
             {
                 item.CreateServerEvent(this);
-                c.Character.SelectedItems[0]?.GetComponent<Wire>()?.CreateNetworkEvent(); 
-                c.Character.SelectedItems[1]?.GetComponent<Wire>()?.CreateNetworkEvent();
+                c.Character.Inventory?.CreateNetworkEvent();
+                for (int i = 0; i < 2; i++)
+                {
+                    var selectedWire = c.Character.SelectedItems[i]?.GetComponent<Wire>();
+                    if (selectedWire == null) { continue; }
+
+                    selectedWire.CreateNetworkEvent();
+                    var panel1 = selectedWire.Connections[0]?.ConnectionPanel;
+                    if (panel1 != null && panel1 != this) { panel1.item.CreateServerEvent(panel1); }
+                    var panel2 = selectedWire.Connections[1]?.ConnectionPanel;
+                    if (panel2 != null && panel2 != this) { panel2.item.CreateServerEvent(panel2); }
+
+                    CoroutineManager.InvokeAfter(() =>
+                    {
+                        item.CreateServerEvent(this);
+                        if (panel1 != null && panel1 != this) { panel1.item.CreateServerEvent(panel1); }
+                        if (panel2 != null && panel2 != this) { panel2.item.CreateServerEvent(panel2); }
+                        if (!selectedWire.Item.Removed) { selectedWire.CreateNetworkEvent(); }
+                    }, 1.0f);
+                }
                 GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, c.Character.ID });
                 return;
             }

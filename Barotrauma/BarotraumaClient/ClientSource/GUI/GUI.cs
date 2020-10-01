@@ -27,7 +27,11 @@ namespace Barotrauma
         PickItem,
         PickItemFail,
         DropItem,
-        PopupMenu
+        PopupMenu,
+        DecreaseQuantity,
+        IncreaseQuantity,
+        HireRepairClick,
+        UISwitch
     }
 
     public enum CursorState
@@ -135,7 +139,7 @@ namespace Barotrauma
         public static GraphicsDevice GraphicsDevice { get; private set; }
 
         private static List<GUIMessage> messages = new List<GUIMessage>();
-        private static Sound[] sounds;
+        private static readonly Dictionary<GUISoundType, string> soundIdentifiers = new Dictionary<GUISoundType, string>();
         private static bool pauseMenuOpen, settingsMenuOpen;
         public static GUIFrame PauseMenu { get; private set; }
         private static Sprite arrow;
@@ -256,23 +260,13 @@ namespace Barotrauma
             }
         }
 
-        public static void LoadContent(bool loadSounds = true)
+        public static void LoadContent()
         {
-            if (loadSounds)
+            foreach (GUISoundType soundType in Enum.GetValues(typeof(GUISoundType)))
             {
-                sounds = new Sound[Enum.GetValues(typeof(GUISoundType)).Length];
-
-                sounds[(int)GUISoundType.UIMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/UImsg.ogg", false);
-                sounds[(int)GUISoundType.ChatMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/ChatMsg.ogg", false);
-                sounds[(int)GUISoundType.RadioMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/RadioMsg.ogg", false);
-                sounds[(int)GUISoundType.DeadMessage] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/DeadMsg.ogg", false);
-                sounds[(int)GUISoundType.Click] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/Click.ogg", false);
-                sounds[(int)GUISoundType.PopupMenu] = GameMain.SoundManager.LoadSound("Content/Sounds/UI/PopupMenu.ogg", false);
-
-                sounds[(int)GUISoundType.PickItem] = GameMain.SoundManager.LoadSound("Content/Sounds/PickItem.ogg", false);
-                sounds[(int)GUISoundType.PickItemFail] = GameMain.SoundManager.LoadSound("Content/Sounds/PickItemFail.ogg", false);
-                sounds[(int)GUISoundType.DropItem] = GameMain.SoundManager.LoadSound("Content/Sounds/DropItem.ogg", false);
+                soundIdentifiers.Add(soundType, soundType.ToString().ToLowerInvariant());
             }
+
             // create 1x1 texture for line drawing
             CrossThread.RequestExecutionOnMainThread(() =>
             {
@@ -314,7 +308,7 @@ namespace Barotrauma
 
 #if UNSTABLE
             string line1 = "Barotrauma Unstable v" + GameMain.Version;
-            string line2 = "(" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")";
+            string line2 = "(" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")";
 
             Rectangle watermarkRect = new Rectangle(-50, GameMain.GraphicsHeight - 80, 50 + (int)(Math.Max(LargeFont.MeasureString(line1).X, Font.MeasureString(line2).X) * 1.2f), 100);
             float alpha = 1.0f;
@@ -2282,28 +2276,18 @@ namespace Barotrauma
         {
             if (messages.Any(msg => msg.Text == message)) { return; }
             messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? LargeFont));
-            if (playSound) PlayUISound(GUISoundType.UIMessage);
+            if (playSound) SoundPlayer.PlayUISound(GUISoundType.UIMessage);
         }
 
-        public static void AddMessage(string message, Color color, Vector2 worldPos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true)
+        public static void AddMessage(string message, Color color, Vector2 worldPos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage)
         {
             messages.Add(new GUIMessage(message, color, worldPos, velocity, lifeTime, Alignment.Center, LargeFont));
-            if (playSound) PlayUISound(GUISoundType.UIMessage);
+            if (playSound) SoundPlayer.PlayUISound(soundType);
         }
 
         public static void ClearMessages()
         {
             messages.Clear();
-        }
-
-        public static void PlayUISound(GUISoundType soundType)
-        {
-            if (sounds == null) { return; }
-
-            int soundIndex = (int)soundType;
-            if (soundIndex < 0 || soundIndex >= sounds.Length) { return; }
-
-            sounds[soundIndex]?.Play(null, "ui");
         }
 
         public static bool IsFourByThree()

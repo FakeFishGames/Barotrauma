@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Barotrauma.Networking
+﻿namespace Barotrauma.Networking
 {
     partial class OrderChatMessage : ChatMessage
     {
@@ -12,19 +8,20 @@ namespace Barotrauma.Networking
         public readonly Character TargetCharacter;
 
         //which entity is this order referring to (hull, reactor, railgun controller, etc)
-        public readonly Entity TargetEntity;
+        public readonly ISpatialEntity TargetEntity;
 
         //additional instructions (power up, fire at will, etc)
         public readonly string OrderOption;
 
-        public OrderChatMessage(Order order, string orderOption, Entity targetEntity, Character targetCharacter, Character sender)
+        public OrderChatMessage(Order order, string orderOption, ISpatialEntity targetEntity, Character targetCharacter, Character sender)
             : this(order, orderOption,
-                  order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption),
-                  targetEntity, targetCharacter, sender)
+                   order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption),
+                   targetEntity, targetCharacter, sender)
         {
+
         }
 
-        public OrderChatMessage(Order order, string orderOption, string text, Entity targetEntity, Character targetCharacter, Character sender)
+        public OrderChatMessage(Order order, string orderOption, string text, ISpatialEntity targetEntity, Character targetCharacter, Character sender)
             : base(sender?.Name, text, ChatMessageType.Order, sender, GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == sender))
         {
             Order = order;

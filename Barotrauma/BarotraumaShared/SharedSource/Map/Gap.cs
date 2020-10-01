@@ -162,7 +162,7 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(amount))
             {
-                DebugConsole.ThrowError($"Attempted to move a gap by an invalid amount ({amount})\n{Environment.StackTrace}");
+                DebugConsole.ThrowError($"Attempted to move a gap by an invalid amount ({amount})\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
 

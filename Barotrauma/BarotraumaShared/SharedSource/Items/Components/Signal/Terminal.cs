@@ -21,7 +21,7 @@ namespace Barotrauma.Items.Components
             {
                 if (welcomeMessage == value) { return; }
                 welcomeMessage = value;
-                DisplayedWelcomeMessage = TextManager.Get(welcomeMessage, returnNull: true) ?? welcomeMessage;
+                DisplayedWelcomeMessage = TextManager.Get(welcomeMessage, returnNull: true) ?? welcomeMessage.Replace("\\n", "\n");
             }
         }
 
@@ -45,7 +45,9 @@ namespace Barotrauma.Items.Components
             {
                 signal = signal.Substring(0, MaxMessageLength);
             }
-            ShowOnDisplay(signal);
+
+            string inputSignal = signal.Replace("\\n", "\n");
+            ShowOnDisplay(inputSignal);
         }
     }
 }

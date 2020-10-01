@@ -151,7 +151,7 @@ namespace Barotrauma
         {
             if (i < 0 || i >= Items.Length)
             {
-                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace;
+                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return false;
             }
@@ -192,7 +192,7 @@ namespace Barotrauma
         {
             if (i < 0 || i >= Items.Length)
             {
-                string errorMsg = "Inventory.PutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace;
+                string errorMsg = "Inventory.PutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
@@ -486,6 +486,22 @@ namespace Barotrauma
                 }
                 Items[i].Remove();
             }
-        }        
+        }
+
+        public List<Item> GetAllItems()
+        {
+            List<Item> deletedItems = new List<Item>();
+            for (int i = 0; i < capacity; i++)
+            {
+                if (Items[i] == null) continue;
+                foreach (ItemContainer itemContainer in Items[i].GetComponents<ItemContainer>())
+                {
+                    deletedItems.AddRange(itemContainer.Inventory.GetAllItems());
+                }
+                deletedItems.Add(Items[i]);
+            }
+
+            return deletedItems;
+        }   
     }
 }

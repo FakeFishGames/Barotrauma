@@ -51,6 +51,7 @@ namespace Barotrauma
                     limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
                     limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));
                     limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    limbSlotIcons.Add(InvSlotType.Bag, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
                 }
                 return limbSlotIcons;
             }
@@ -922,12 +923,14 @@ namespace Barotrauma
                         if (slotItem == item)
                         {
                             slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
-                            GUI.PlayUISound(GUISoundType.PickItem);
+                            SoundPlayer.PlayUISound(GUISoundType.PickItem);
                             break;
                         }
                     }
                 }
                 
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { item }, true));
+
                 item.Remove();
                 return;
             }
@@ -1065,7 +1068,7 @@ namespace Barotrauma
             }
 
             draggingItem = null;
-            GUI.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
+            SoundPlayer.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
         }
         
         public void DrawOwn(SpriteBatch spriteBatch)

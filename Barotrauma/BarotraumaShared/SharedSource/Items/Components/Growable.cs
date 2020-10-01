@@ -377,6 +377,8 @@ namespace Barotrauma.Items.Components
         private int flowerVariants;
         private int leafVariants;
         private int[] flowerTiles;
+        private const int serverHealthUpdateDelay = 10;
+        private int serverHealthUpdateTimer;
 
         public float Health
         {
@@ -469,6 +471,20 @@ namespace Barotrauma.Items.Components
                 {
                     Health -= FloodTolerance;
                 }
+#if SERVER
+                if (FullyGrown)
+                {
+                    if (serverHealthUpdateTimer > serverHealthUpdateDelay)
+                    {
+                        item.CreateServerEvent(this);
+                        serverHealthUpdateTimer = 0;
+                    }
+                    else
+                    {
+                        serverHealthUpdateTimer++;
+                    }
+                }
+#endif
             }
 
             CheckPlantState();

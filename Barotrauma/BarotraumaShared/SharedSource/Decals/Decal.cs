@@ -34,11 +34,11 @@ namespace Barotrauma
             get { return Prefab.LifeTime; }
         }
 
-        private float baseAlpha = 1.0f;
         public float BaseAlpha
         {
-            get { return baseAlpha; }
-        }
+            get;
+            set;
+        } = 1.0f;
 
         public Color Color
         {
@@ -58,12 +58,19 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 Position
+        public Vector2 CenterPosition
         {
-            get { return position; }
+            get;
+            private set;
         }
 
         public Vector2 NonClampedPosition
+        {
+            get;
+            private set;
+        }
+
+        public int SpriteIndex
         {
             get;
             private set;
@@ -79,7 +86,7 @@ namespace Barotrauma
 
         private bool cleaned = false;
 
-        public Decal(DecalPrefab prefab, float scale, Vector2 worldPosition, Hull hull)
+        public Decal(DecalPrefab prefab, float scale, Vector2 worldPosition, Hull hull, int? spriteIndex = null)
         {
             Prefab = prefab;
 
@@ -90,7 +97,8 @@ namespace Barotrauma
 
             Vector2 drawPos = position + hull.Rect.Location.ToVector2();
 
-            Sprite = prefab.Sprites[Rand.Range(0, prefab.Sprites.Count, Rand.RandSync.Unsynced)];
+            SpriteIndex = spriteIndex ?? Rand.Range(0, prefab.Sprites.Count, Rand.RandSync.Unsynced);
+            Sprite = prefab.Sprites[SpriteIndex];
             Color = prefab.Color;
 
             Rectangle drawRect = new Rectangle(
@@ -110,6 +118,8 @@ namespace Barotrauma
                 Sprite.SourceRect.Y + (int)(overFlowAmount.Y / scale),
                 Sprite.SourceRect.Width - (int)((overFlowAmount.X + overFlowAmount.Width) / scale),
                 Sprite.SourceRect.Height - (int)((overFlowAmount.Y + overFlowAmount.Height) / scale));
+
+            CenterPosition = position;
 
             position -= new Vector2(Sprite.size.X / 2 * scale - overFlowAmount.X, -Sprite.size.Y / 2 * scale + overFlowAmount.Y);
 
@@ -148,20 +158,20 @@ namespace Barotrauma
         {
             cleaned = true;
             float sizeModifier = MathHelper.Clamp(Sprite.size.X * Sprite.size.Y * Scale / 10000, 1.0f, 25.0f);
-            baseAlpha -= val * -1 / sizeModifier;
+            BaseAlpha -= val * -1 / sizeModifier;
         }
 
         private float GetAlpha()
         {
             if (fadeTimer < Prefab.FadeInTime && !cleaned)
             {
-                return baseAlpha * fadeTimer / Prefab.FadeInTime;
+                return BaseAlpha * fadeTimer / Prefab.FadeInTime;
             }
             else if (cleaned || fadeTimer > Prefab.LifeTime - Prefab.FadeOutTime)
             {
-                return baseAlpha * Math.Min((Prefab.LifeTime - fadeTimer) / Prefab.FadeOutTime, 1.0f);
+                return BaseAlpha * Math.Min((Prefab.LifeTime - fadeTimer) / Prefab.FadeOutTime, 1.0f);
             }
-            return baseAlpha;
+            return BaseAlpha;
         }
     }
 }

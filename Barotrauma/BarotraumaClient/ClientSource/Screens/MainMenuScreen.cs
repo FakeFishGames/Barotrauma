@@ -424,6 +424,8 @@ namespace Barotrauma
         #region Selection
         public override void Select()
         {
+            GUI.PreventPauseMenuToggle = false;
+
             base.Select();
 
             if (GameMain.Client != null)
@@ -806,19 +808,6 @@ namespace Barotrauma
             return true;
         }
         
-        private bool JoinServerClicked(GUIButton button, object obj)
-        {
-            GameMain.ServerListScreen.Select();
-            return true;
-        }
-
-        private bool SteamWorkshopClicked(GUIButton button, object obj)
-        {
-            if (!Steam.SteamManager.IsInitialized) { return false; }
-            GameMain.SteamWorkshopScreen.Select();
-            return true;
-        }
-
         private bool ChangeMaxPlayers(GUIButton button, object obj)
         {
             int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
@@ -829,33 +818,10 @@ namespace Barotrauma
             return true;
         }
 
-        private bool HostServerClicked(GUIButton button, object obj)
+        private void StartServer()
         {
             string name = serverNameBox.Text;
-            if (string.IsNullOrEmpty(name))
-            {
-                serverNameBox.Flash();
-                return false;
-            }
 
-            /*if (!int.TryParse(portBox.Text, out int port) || port < 0 || port > 65535)
-            {
-                portBox.Text = NetConfig.DefaultPort.ToString();
-                portBox.Flash();
-
-                return false;
-            }
-
-            int queryPort = 0;
-#if USE_STEAM
-            if (!int.TryParse(queryPortBox.Text, out queryPort) || queryPort < 0 || queryPort > 65535)
-            {
-                portBox.Text = NetConfig.DefaultQueryPort.ToString();
-                portBox.Flash();
-                return false;
-            }
-#endif
-            */
             GameMain.NetLobbyScreen?.Release();
             GameMain.NetLobbyScreen = new NetLobbyScreen();
             try
@@ -919,8 +885,6 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Failed to start server", e);
             }
-
-            return true;
         }
 
         private bool QuitClicked(GUIButton button, object obj)
@@ -996,7 +960,7 @@ namespace Barotrauma
             GUI.Draw(Cam, spriteBatch);
 
 #if !UNSTABLE
-            string versionString = "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")";
+            string versionString = "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")";
             GUI.SmallFont.DrawString(spriteBatch, versionString, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUI.SmallFont.MeasureString(versionString).Y - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
 #endif
             if (selectedTab != Tab.Credits)
@@ -1062,7 +1026,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce(
                     "MainMenuScreen.StartGame:IOException" + selectedSub.Name,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Copying the file \"" + selectedSub.FilePath + "\" failed.\n" + e.Message + "\n" + Environment.StackTrace);
+                    "Copying the file \"" + selectedSub.FilePath + "\" failed.\n" + e.Message + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -1334,7 +1298,35 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.07f), content.RectTransform), TextManager.Get("StartServerButton"), style: "GUIButtonLarge")
             {
-                OnClicked = HostServerClicked
+                OnClicked = (btn, userdata) =>
+                {
+                    string name = serverNameBox.Text;
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        serverNameBox.Flash();
+                        return false;
+                    }
+
+                    if (ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
+                    {
+                        var msgBox = new GUIMessageBox("", 
+                            TextManager.GetWithVariables("forbiddenservernameverification", new string[] { "[forbiddenword]", "[servername]" }, new string[] { forbiddenWord, name }), 
+                            new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                        msgBox.Buttons[0].OnClicked += (_, __) =>
+                        {
+                            StartServer();
+                            msgBox.Close();
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                    }
+                    else
+                    {
+                        StartServer();
+                    }
+
+                    return true;
+                }
             };
         }
 

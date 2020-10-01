@@ -219,7 +219,7 @@ namespace Barotrauma.Lights
             {
                 if (!light.IsBackground) { continue; }
                 light.DrawSprite(spriteBatch, cam);
-                if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
+                light.DrawLightVolume(spriteBatch, lightEffect, transform);
             }
             GameMain.ParticleManager.Draw(spriteBatch, true, null, Particles.ParticleBlendState.Additive);
             spriteBatch.End();
@@ -328,7 +328,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in activeLights)
             {
                 if (light.IsBackground) { continue; }
-                if (light.Color.A > 0 && light.Range > 0.0f) { light.DrawLightVolume(spriteBatch, lightEffect, transform); }
+                light.DrawLightVolume(spriteBatch, lightEffect, transform);
             }
 
             lightEffect.World = transform;

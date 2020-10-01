@@ -3,7 +3,6 @@ using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -163,6 +162,8 @@ namespace Barotrauma
        
         public static Inventory DraggingInventory;
 
+        public Inventory ReplacedBy;
+
         public Rectangle BackgroundFrame { get; protected set; }
 
         private ushort[] receivedItemIDs;
@@ -317,6 +318,11 @@ namespace Barotrauma
             }
         }
 
+        public Inventory GetReplacementOrThiS()
+        {
+            return ReplacedBy?.GetReplacementOrThiS() ?? this;
+        }
+
         public virtual void CreateSlots()
         {
             slots = new InventorySlot[capacity];
@@ -465,12 +471,15 @@ namespace Barotrauma
                 {
                     if (item != null)
                     {
-                        if (mouseDrag) { item.OwnInventory?.DeleteAllItems(); }
                         slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
                         if (!mouseDrag)
                         {
-                            GUI.PlayUISound(GUISoundType.PickItem);
+                            SoundPlayer.PlayUISound(GUISoundType.PickItem);
                         }
+
+                        SubEditorScreen.BulkItemBufferInUse = true;
+                        SubEditorScreen.BulkItemBuffer.Add(new AddOrDeleteCommand(new List<MapEntity> { item }, true));
+                        item.OwnInventory?.DeleteAllItems();
                         item.Remove();
                     }
                 }
@@ -996,10 +1005,19 @@ namespace Barotrauma
                         Character.Controlled.FocusedItem.OwnInventory.CanBePut(draggingItem) &&
                         Character.Controlled.FocusedItem.OwnInventory.TryPutItem(draggingItem, Character.Controlled))
                     {
-                        GUI.PlayUISound(GUISoundType.PickItem);
+                        SoundPlayer.PlayUISound(GUISoundType.PickItem);
                     }
                     else
                     {
+                        if (Screen.Selected is SubEditorScreen)
+                        {
+                            if (draggingItem?.ParentInventory != null)
+                            {
+                                SubEditorScreen.StoreCommand(new InventoryPlaceCommand(draggingItem.ParentInventory, new List<Item> { draggingItem }, true));
+                            }
+                        }
+                        
+                        SoundPlayer.PlayUISound(GUISoundType.DropItem);
                         bool removed = false;
                         if (Screen.Selected is SubEditorScreen editor)
                         {
@@ -1025,14 +1043,16 @@ namespace Barotrauma
                         {
                             draggingItem.Drop(Character.Controlled);
                         }
-                        
-                        GUI.PlayUISound(removed ? GUISoundType.PickItem : GUISoundType.DropItem);
+
+                        SoundPlayer.PlayUISound(removed ? GUISoundType.PickItem : GUISoundType.DropItem);
                     }
                 }
                 else if (selectedSlot.ParentInventory.Items[selectedSlot.SlotIndex] != draggingItem)
                 {
+                    Inventory oldInventory = draggingItem.ParentInventory;
                     Inventory selectedInventory = selectedSlot.ParentInventory;
                     int slotIndex = selectedSlot.SlotIndex;
+                    int oldSlot = oldInventory == null ? 0 : Array.IndexOf(oldInventory.Items, draggingItem);
 
                     //if attempting to drop into an invalid slot in the same inventory, try to move to the correct slot
                     if (selectedInventory.Items[slotIndex] == null &&
@@ -1051,17 +1071,21 @@ namespace Barotrauma
                             }
                             selectedInventory.slots[slotIndex].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f);
                         }
-                        GUI.PlayUISound(GUISoundType.PickItem);
+                        SoundPlayer.PlayUISound(GUISoundType.PickItem);
                     }
                     else if (selectedInventory.TryPutItem(draggingItem, slotIndex, true, true, Character.Controlled))
                     {
+                        if (SubEditorScreen.IsSubEditor())
+                        {
+                            SubEditorScreen.StoreCommand(new InventoryMoveCommand(oldInventory, selectedInventory, draggingItem, oldSlot, slotIndex));
+                        }
                         if (selectedInventory.slots != null) { selectedInventory.slots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f); }
-                        GUI.PlayUISound(GUISoundType.PickItem);
+                        SoundPlayer.PlayUISound(GUISoundType.PickItem);
                     }
                     else
                     {
                         if (selectedInventory.slots != null){ selectedInventory.slots[slotIndex].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f); }
-                        GUI.PlayUISound(GUISoundType.PickItemFail);
+                        SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
                     }
                     selectedInventory.HideTimer = 2.0f;
                     if (selectedSlot.ParentInventory?.Owner is Item parentItem && parentItem.ParentInventory != null)

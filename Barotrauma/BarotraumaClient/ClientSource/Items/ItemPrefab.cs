@@ -97,9 +97,11 @@ namespace Barotrauma
                     {
                         if (potentialContainer?.OwnInventory?.TryPutItem(item, Character.Controlled) ?? false)
                         {
-                            GUI.PlayUISound(GUISoundType.PickItem);
+                            SoundPlayer.PlayUISound(GUISoundType.PickItem);
                         }
                     }
+
+                    SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> {item}, false));
 
                     placePosition = Vector2.Zero;
                     return;

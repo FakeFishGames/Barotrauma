@@ -14,6 +14,8 @@ namespace Barotrauma
         private float conversationTimer, conversationLineTimer;
         private readonly List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
 
+        public const int MaxCrewSize = 16;
+
         private readonly List<CharacterInfo> characterInfos = new List<CharacterInfo>();
         private readonly List<Character> characters = new List<Character>();
 
@@ -40,7 +42,7 @@ namespace Barotrauma
         {
             if (order.TargetEntity == null)
             {
-                DebugConsole.ThrowError("Attempted to add an order with no target entity to CrewManager!\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempted to add an order with no target entity to CrewManager!\n" + Environment.StackTrace.CleanupStackTrace());
                 return false;
             }
 
@@ -95,12 +97,12 @@ namespace Barotrauma
         {
             if (character.Removed)
             {
-                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Tried to add a removed character to CrewManager!\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (character.IsDead)
             {
-                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Tried to add a dead character to CrewManager!\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -122,7 +124,7 @@ namespace Barotrauma
         {
             if (characterInfos.Contains(characterInfo))
             {
-                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Tried to add the same character info to CrewManager twice.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 

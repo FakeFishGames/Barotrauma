@@ -335,6 +335,7 @@ namespace Barotrauma
         {
             base.Select();
 
+            GUI.PreventPauseMenuToggle = false;
             pointerLightSource = new LightSource(Vector2.Zero, 1000.0f, Color.White, submarine: null);
             GameMain.LightManager.AddLight(pointerLightSource);
             topPanel.ClearChildren();

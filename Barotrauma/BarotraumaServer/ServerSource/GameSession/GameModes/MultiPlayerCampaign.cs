@@ -694,6 +694,10 @@ namespace Barotrauma
                             }
 
                             pendingHireInfos.Add(match);
+                            if (pendingHireInfos.Count + CrewManager.CharacterInfos.Count() >= CrewManager.MaxCrewSize)
+                            {
+                                break;
+                            }
                         }
                         location.HireManager.PendingHires = pendingHireInfos;
                     }

@@ -271,7 +271,7 @@ namespace Barotrauma.Items.Components
                 if (wires[i] == null) { continue; }
 
                 Connection recipient = wires[i].OtherConnection(this);
-                if (recipient == null) { continue; }
+                if (recipient == null || !recipient.IsPower) { continue; }
 
                 recipient.item.GetComponent<Powered>()?.ReceivePowerProbeSignal(recipient, source, power);
             }

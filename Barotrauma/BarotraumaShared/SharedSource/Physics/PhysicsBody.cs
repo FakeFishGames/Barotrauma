@@ -532,7 +532,7 @@ namespace Barotrauma
                 {
                     errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
                 }
-                errorMsg += "\n" + Environment.StackTrace;
+                errorMsg += "\n" + Environment.StackTrace.CleanupStackTrace();
 
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
@@ -559,7 +559,7 @@ namespace Barotrauma
                 {
                     errorMsg += GameMain.NetworkMember.IsClient ? " Playing as a client." : " Hosting a server.";
                 }
-                errorMsg += "\n" + Environment.StackTrace;
+                errorMsg += "\n" + Environment.StackTrace.CleanupStackTrace();
 
                 if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(

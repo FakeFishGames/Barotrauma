@@ -542,7 +542,7 @@ namespace Barotrauma
                 Spacing = (int)(25 * GUI.Scale)
             };
 
-            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont);
+            var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont) { UserData = this };
             itemEditor.Children.First().Color = Color.Black * 0.7f;
             if (!inGame)
             {
@@ -663,7 +663,7 @@ namespace Barotrauma
 
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.02f), listBox.Content.RectTransform), style: "HorizontalLine");
 
-                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame, titleFont: GUI.SubHeadingFont);
+                var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame, titleFont: GUI.SubHeadingFont) { UserData = ic };
                 componentEditor.Children.First().Color = Color.Black * 0.7f;
 
                 if (inGame)

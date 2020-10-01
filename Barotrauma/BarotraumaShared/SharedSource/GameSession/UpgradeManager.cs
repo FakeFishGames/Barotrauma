@@ -262,7 +262,7 @@ namespace Barotrauma
                 lastErrorSpeak = DateTime.Now;
             }
 #if CLIENT
-            GUI.PlayUISound(GUISoundType.PickItemFail);
+            SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
 #endif
         }
 

@@ -188,7 +188,7 @@ namespace Barotrauma
 
             if (CoroutineManager.IsCoroutineRunning("LevelTransition"))
             {
-                DebugConsole.ThrowError("Level transition already running.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Level transition already running.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace Barotrauma
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
                     "at start: " + (leavingSub?.AtStartPosition.ToString() ?? "null") + ", " +
                     "at end: " + (leavingSub?.AtEndPosition.ToString() ?? "null") + ")\n" +
-                    Environment.StackTrace);
+                    Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (nextLevel == null)
@@ -220,7 +220,7 @@ namespace Barotrauma
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
                     "at start: " + (leavingSub?.AtStartPosition.ToString() ?? "null") + ", " +
                     "at end: " + (leavingSub?.AtEndPosition.ToString() ?? "null") + ")\n" +
-                    Environment.StackTrace);
+                    Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 #if CLIENT

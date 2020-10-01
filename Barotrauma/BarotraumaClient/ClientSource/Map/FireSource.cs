@@ -11,11 +11,18 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float growModifier)
         {
-            EmitParticles(size, WorldPosition, hull, growModifier, OnChangeHull);
+            if (this is DummyFireSource)
+            {
+                EmitParticles(size, WorldPosition, hull, growModifier, null);
+            }
+            else
+            {
+                EmitParticles(size, WorldPosition, hull, growModifier, OnChangeHull);
+            }
 
             lightSource.Color = new Color(1.0f, 0.45f, 0.3f) * Rand.Range(0.8f, 1.0f);
-            if (Math.Abs((lightSource.Range * 0.2f) - Math.Max(size.X, size.Y)) > 1.0f) lightSource.Range = Math.Max(size.X, size.Y) * 5.0f;
-            if (Vector2.DistanceSquared(lightSource.Position, position) > 5.0f) lightSource.Position = position + Vector2.UnitY * 30.0f;
+            if (Math.Abs((lightSource.Range * 0.2f) - Math.Max(size.X, size.Y)) > 1.0f) { lightSource.Range = Math.Max(size.X, size.Y) * 5.0f; }
+            if (Vector2.DistanceSquared(lightSource.Position, position) > 5.0f) { lightSource.Position = position + Vector2.UnitY * 30.0f; }
         }
 
         public static void EmitParticles(Vector2 size, Vector2 worldPosition, Hull hull, float growModifier, Particle.OnChangeHullHandler onChangeHull = null)
@@ -31,6 +38,8 @@ namespace Barotrauma
                 Vector2 particleVel = new Vector2(
                     (particlePos.X - (worldPosition.X + size.X / 2.0f)),
                     (float)Math.Sqrt(size.X) * Rand.Range(0.0f, 15.0f) * growModifier);
+
+                particleVel.X = MathHelper.Clamp(particleVel.X, -200.0f, 200.0f);
 
                 var particle = GameMain.ParticleManager.CreateParticle("flame",
                     particlePos, particleVel, 0.0f, hull);

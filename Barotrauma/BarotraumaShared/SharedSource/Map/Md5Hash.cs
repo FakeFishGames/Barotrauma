@@ -44,7 +44,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.NewMessage($"Failed to load hash cache: {e.Message}\n{e.StackTrace}", Microsoft.Xna.Framework.Color.Orange);
+                DebugConsole.NewMessage($"Failed to load hash cache: {e.Message}\n{e.StackTrace.CleanupStackTrace()}", Microsoft.Xna.Framework.Color.Orange);
                 cache.Clear();
             }
         }

@@ -615,14 +615,14 @@ namespace Barotrauma.Networking
                             DebugConsole.ThrowError("Failed to write a network message for the client \"" + c.Name + "\"!", e);
 
                             string errorMsg = "Failed to write a network message for the client \"" + c.Name + "\"! (MidRoundSyncing: " + c.NeedsMidRoundSync + ")\n"
-                                + e.Message + "\n" + e.StackTrace;
+                                + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
                             if (e.InnerException != null)
                             {
-                                errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                                errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace.CleanupStackTrace();
                             }
 
                             GameAnalyticsManager.AddErrorEventOnce(
-                                "GameServer.Update:ClientWriteFailed" + e.StackTrace,
+                                "GameServer.Update:ClientWriteFailed" + e.StackTrace.CleanupStackTrace(),
                                 GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                                 errorMsg);
                         }
@@ -1796,7 +1796,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedShuttle.MD5Hash.ToString());
 
-                string campaignSubmarineIndexes = string.Empty;
+                List<int> campaignSubIndices = new List<int>();
                 if (GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
                 {
                     List<SubmarineInfo> subList = GameMain.NetLobbyScreen.GetSubList();
@@ -1804,17 +1804,15 @@ namespace Barotrauma.Networking
                     {
                         if (GameMain.NetLobbyScreen.CampaignSubmarines.Contains(subList[i]))
                         {
-                            campaignSubmarineIndexes += i.ToString();
-                            campaignSubmarineIndexes += ";";
+                            campaignSubIndices.Add(i);
                         }
                     }
-
-                    if (campaignSubmarineIndexes.Length > 0)
-                    {
-                        campaignSubmarineIndexes.Trim(';');
-                    }
                 }
-                outmsg.Write(campaignSubmarineIndexes);
+                outmsg.Write((UInt16)campaignSubIndices.Count);
+                foreach (int campaignSubIndex in campaignSubIndices)
+                {
+                    outmsg.Write((UInt16)campaignSubIndex);
+                }
 
                 outmsg.Write(serverSettings.Voting.AllowSubVoting);
                 outmsg.Write(serverSettings.Voting.AllowModeVoting);
@@ -2437,7 +2435,7 @@ namespace Barotrauma.Networking
 
             if (GameSettings.VerboseLogging)
             {
-                Log("Ending the round...\n" + Environment.StackTrace, ServerLog.MessageType.ServerMessage);
+                Log("Ending the round...\n" + Environment.StackTrace.CleanupStackTrace(), ServerLog.MessageType.ServerMessage);
 
             }
             else
@@ -2772,7 +2770,7 @@ namespace Barotrauma.Networking
         {
             if (recipient == null)
             {
-                string errorMsg = "Attempted to send a chat message to a null client.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to send a chat message to a null client.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("GameServer.SendDirectChatMessage:ClientNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
@@ -3069,12 +3067,13 @@ namespace Barotrauma.Networking
 
             Client.UpdateKickVotes(connectedClients);
 
+            int minimumKickVotes = Math.Max(1, (int)(connectedClients.Count * serverSettings.KickVoteRequiredRatio));
             var clientsToKick = connectedClients.FindAll(c =>
                 c.Connection != OwnerConnection &&
                 !c.HasPermission(ClientPermissions.Kick) &&
                 !c.HasPermission(ClientPermissions.Ban) &&
                 !c.HasPermission(ClientPermissions.Unban) &&
-                c.KickVoteCount >= connectedClients.Count * serverSettings.KickVoteRequiredRatio);
+                c.KickVoteCount >= minimumKickVotes);
             foreach (Client c in clientsToKick)
             {
                 var previousPlayer = previousPlayers.Find(p => p.MatchesClient(c));

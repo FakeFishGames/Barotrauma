@@ -661,7 +661,7 @@ namespace Barotrauma
                 catch (System.IO.FileNotFoundException e)
                 {
                     exception = e;
-                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (File not found) " + Environment.StackTrace, e);
+                    DebugConsole.ThrowError("Loading submarine \"" + file + "\" failed! (File not found) " + Environment.StackTrace.CleanupStackTrace(), e);
                     return null;
                 }
                 catch (Exception e)

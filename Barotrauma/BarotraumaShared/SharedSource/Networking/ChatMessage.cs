@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
 
     partial class ChatMessage
     {
-        public const int MaxLength = 150;
+        public const int MaxLength = 200;
 
         public const int MaxMessagesPerPacket = 10;
 

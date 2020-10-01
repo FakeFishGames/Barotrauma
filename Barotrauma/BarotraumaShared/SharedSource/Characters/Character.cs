@@ -137,6 +137,8 @@ namespace Barotrauma
         public Character LastAttacker;
         public Entity LastDamageSource;
 
+        public float InvisibleTimer;
+
         private CharacterPrefab prefab;
 
         public readonly CharacterParams Params;
@@ -181,6 +183,8 @@ namespace Barotrauma
         public bool IsTraitor;
         public string TraitorCurrentObjective = "";
         public bool IsHuman => SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
+        public bool IsMale => Info != null && Info.HasGenders && Info.Gender == Gender.Male;
+        public bool IsFemale => Info != null && Info.HasGenders && Info.Gender == Gender.Female;
 
         private float attackCoolDown;
 
@@ -195,6 +199,7 @@ namespace Barotrauma
                 if (Info != null) { Info.CurrentOrder = value; }
             }
         }
+
         public string CurrentOrderOption
         {
             get
@@ -206,6 +211,8 @@ namespace Barotrauma
                 if (Info != null) { Info.CurrentOrderOption = value; }
             }
         }
+
+        public bool IsDismissed => Info != null && Info.IsDismissed;
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
         private readonly List<float> speedMultipliers = new List<float>();
@@ -563,7 +570,28 @@ namespace Barotrauma
             get { return selectedItems; }
         }
 
-        public Item SelectedConstruction { get; set; }
+        private Item _selectedConstruction;
+        public Item SelectedConstruction
+        {
+            get => _selectedConstruction;
+            set
+            {
+                _selectedConstruction = value;
+#if CLIENT
+                if (Controlled == this)
+                {
+                    if (_selectedConstruction == null)
+                    {
+                        GameMain.GameSession?.CrewManager?.ResetCrewList();
+                    }
+                    else if (_selectedConstruction.GetComponent<Ladder>() == null)
+                    {
+                        GameMain.GameSession?.CrewManager?.AutoHideCrewList();
+                    }
+                }
+#endif
+            }
+        }
 
         public Item FocusedItem
         {
@@ -583,6 +611,8 @@ namespace Barotrauma
         }
 
         public bool IsDead { get; private set; }
+
+        public bool IsObserving => AIController is EnemyAIController enemyAI && enemyAI.Enabled && enemyAI.State == AIState.Observe;
 
         public bool EnableDespawn { get; set; } = true;
 
@@ -662,12 +692,12 @@ namespace Barotrauma
                         {
                             errorMsg += " AnimController.Collider == null";
                         }
-                        errorMsg += '\n' + Environment.StackTrace;
+                        errorMsg += '\n' + Environment.StackTrace.CleanupStackTrace();
                         DebugConsole.NewMessage(errorMsg, Color.Red);
                         GameAnalyticsManager.AddErrorEventOnce(
                             "Character.SimPosition:AccessRemoved",
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            errorMsg + "\n" + Environment.StackTrace);
+                            errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                         accessRemovedCharacterErrorShown = true;
                     }
                     return Vector2.Zero;
@@ -1780,7 +1810,6 @@ namespace Barotrauma
                 if (ignoreBroken && item.Condition <= 0) { continue; }
                 if (Submarine != null)
                 {
-                    if (item.Submarine.Info.Type != Submarine.Info.Type) { continue; }
                     if (!Submarine.IsEntityFoundOnThisSub(item, true)) { continue; }
                 }
                 if (customPredicate != null && !customPredicate(item)) { continue; }
@@ -1813,7 +1842,7 @@ namespace Barotrauma
 
         public bool CanInteractWith(Character c, float maxDist = 200.0f, bool checkVisibility = true, bool skipDistanceCheck = false)
         {
-            if (c == this || Removed || !c.Enabled || !c.CanBeSelected) { return false; }
+            if (c == this || Removed || !c.Enabled || !c.CanBeSelected || c.InvisibleTimer > 0.0f) { return false; }
             if (!c.CharacterHealth.UseHealthWindow && !c.CanBeDragged && (c.onCustomInteract == null || !c.AllowCustomInteract)) { return false; }
 
             if (!skipDistanceCheck)
@@ -2654,7 +2683,7 @@ namespace Barotrauma
             if (orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
 
             // If there's another character operating the same device, make them dismiss themself
-            if (order != null && order.Category == OrderCategory.Operate)
+            if (order != null && order.Category == OrderCategory.Operate && order.TargetEntity != null)
             {
                 CharacterList.FindAll(c => c != this && c.TeamID == TeamID && c.CurrentOrder is Order characterOrder && characterOrder.Category == OrderCategory.Operate &&
                                            characterOrder.Identifier.Equals(order.Identifier) && characterOrder.TargetEntity == order.TargetEntity)?
@@ -2794,7 +2823,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                string errorMsg = "Tried to apply an attack to a removed character (" + Name + ").\n" + Environment.StackTrace;
+                string errorMsg = "Tried to apply an attack to a removed character (" + Name + ").\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Character.ApplyAttack:RemovedCharacter", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return new AttackResult();
@@ -2937,7 +2966,7 @@ namespace Barotrauma
 //                string errorMsg = $"Character {Name} received damage from outside the sub while inside (attacker: {attacker.Name})";
 //                GameAnalyticsManager.AddErrorEventOnce("Character.DamageLimb:DamageFromOutside" + Name + attacker.Name,
 //                    GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
-//                    errorMsg + "\n" + Environment.StackTrace);
+//                    errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
 //#if DEBUG
 //                DebugConsole.ThrowError(errorMsg);
 //#endif
@@ -2968,11 +2997,6 @@ namespace Barotrauma
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
-            ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
-            if (attackResult.Damage > 0)
-            {
-                hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
-            }
             if (attacker != this)
             {
                 OnAttacked?.Invoke(attacker, attackResult);
@@ -2982,12 +3006,15 @@ namespace Barotrauma
                     TryAdjustAttackerSkill(attacker, -attackResult.Damage);
                 }
             };
-
-            if (attacker != null && attackResult.Damage > 0.0f)
+            if (attackResult.Damage > 0)
             {
-                LastAttacker = attacker;
+                ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+                hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+                if (attacker != null)
+                {
+                    LastAttacker = attacker;
+                }
             }
-
             return attackResult;
         }
 
@@ -3045,7 +3072,7 @@ namespace Barotrauma
                 {
                     targets.Clear();
                     statusEffect.GetNearbyTargets(WorldPosition, targets);
-                    statusEffect.Apply(ActionType.OnActive, deltaTime, this, targets);
+                    statusEffect.Apply(actionType, deltaTime, this, targets);
                 }
                 else
                 {
@@ -3215,7 +3242,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError("Attempting to revive an already removed character\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempting to revive an already removed character\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -3260,7 +3287,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempting to remove an already removed character\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             DebugConsole.Log("Removing character " + Name + " (ID: " + ID + ")");

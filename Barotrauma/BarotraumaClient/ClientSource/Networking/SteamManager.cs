@@ -478,10 +478,13 @@ namespace Barotrauma.Steam
             }
 
             if (rules.ContainsKey("gamestarted")) serverInfo.GameStarted = rules["gamestarted"] == "True";
-
             if (rules.ContainsKey("gamemode"))
             {
                 serverInfo.GameMode = rules["gamemode"];
+            }
+            if (rules.ContainsKey("playstyle") && Enum.TryParse(rules["playstyle"], out PlayStyle playStyle)) 
+            { 
+                serverInfo.PlayStyle = playStyle; 
             }
 
             if (serverInfo.ContentPackageNames.Count != serverInfo.ContentPackageHashes.Count ||
@@ -1297,7 +1300,7 @@ namespace Barotrauma.Steam
             }
             catch (Exception e)
             {
-                errorMsg = "Disabling the workshop item \"" + item?.Title + "\" failed. " + e.Message + "\n" + e.StackTrace;
+                errorMsg = "Disabling the workshop item \"" + item?.Title + "\" failed. " + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
                 if (!noLog)
                 {
                     DebugConsole.NewMessage(errorMsg, Microsoft.Xna.Framework.Color.Red);
@@ -1492,7 +1495,7 @@ namespace Barotrauma.Steam
                         GameAnalyticsManager.AddErrorEventOnce(
                             "SteamManager.AutoUpdateWorkshopItems:" + e.Message,
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace);
+                            "Failed to autoupdate workshop item \"" + item.Title + "\". " + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                     });
                 }
             }

@@ -8,5 +8,12 @@
             get;
             private set;
         }
+
+        [Serialize("", false), Editable]
+        public string DamageParticle
+        {
+            get;
+            private set;
+        }
     }
 }

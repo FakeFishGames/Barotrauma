@@ -60,12 +60,12 @@ namespace Barotrauma
                     if (!accessRemovedCharacterErrorShown)
                     {
                         string errorMsg = "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this);
-                        errorMsg += '\n' + Environment.StackTrace;
+                        errorMsg += '\n' + Environment.StackTrace.CleanupStackTrace();
                         DebugConsole.ThrowError(errorMsg);
                         GameAnalyticsManager.AddErrorEventOnce(
                             "Ragdoll.Limbs:AccessRemoved",
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace);
+                            "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
                         accessRemovedCharacterErrorShown = true;
                     }
                     return new Limb[0];
@@ -768,7 +768,7 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(character.BloodDecalName))
             {
                 character.CurrentHull?.AddDecal(character.BloodDecalName, 
-                    (limbJoint.LimbA.WorldPosition + limbJoint.LimbB.WorldPosition) / 2, MathHelper.Clamp(Math.Min(limbJoint.LimbA.Mass, limbJoint.LimbB.Mass), 0.5f, 2.0f), true);
+                    (limbJoint.LimbA.WorldPosition + limbJoint.LimbB.WorldPosition) / 2, MathHelper.Clamp(Math.Min(limbJoint.LimbA.Mass, limbJoint.LimbB.Mass), 0.5f, 2.0f), isNetworkEvent: false);
             }
 
             SeverLimbJointProjSpecific(limbJoint, playSound: true);
@@ -905,7 +905,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Ragdoll.FindHull:InvalidPosition",
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Attempted to find a hull at an invalid position (" + findPos + ")\n" + Environment.StackTrace);
+                    "Attempted to find a hull at an invalid position (" + findPos + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -1557,11 +1557,11 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(simPosition))
             {
-                DebugConsole.ThrowError("Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Ragdoll.SetPosition:InvalidPosition",
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace);
+                    "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (MainLimb == null) { return; }

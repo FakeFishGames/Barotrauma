@@ -247,7 +247,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 string errorMsg = "Failed to write input to command line (window width: " + Console.WindowWidth + ", window height: " + Console.WindowHeight + ")\n"
-                    + e.Message + "\n" + e.StackTrace;
+                    + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
         }
@@ -1352,7 +1352,7 @@ namespace Barotrauma
                 ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(args[0])];
                 if (ev != null)
                 {
-                    NewMessage(ev.StackTrace, Color.Lime);
+                    NewMessage(ev.StackTrace.CleanupStackTrace(), Color.Lime);
                 }
             }));
 

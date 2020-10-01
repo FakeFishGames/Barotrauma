@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -444,14 +445,25 @@ namespace Barotrauma
                     Entity targetEntity = FindEntityByID(inc.ReadUInt16());
                     Character orderGiver = inc.ReadBoolean() ? FindEntityByID(inc.ReadUInt16()) as Character : null;
                     int orderOptionIndex = inc.ReadByte();
+                    OrderTarget targetPosition = null;
+                    if (inc.ReadBoolean())
+                    {
+                        var x = inc.ReadSingle();
+                        var y = inc.ReadSingle();
+                        var hull = FindEntityByID(inc.ReadUInt16()) as Hull;
+                        targetPosition = new OrderTarget(new Vector2(x, y), hull, true);
+                    }
 
                     if (orderPrefabIndex >= 0 && orderPrefabIndex < Order.PrefabList.Count)
                     {
                         var orderPrefab = Order.PrefabList[orderPrefabIndex];
-                        if (!orderPrefab.MustSetTarget || (targetEntity != null && (targetEntity as Item).Components.Any(c => c?.GetType() == orderPrefab.ItemComponentType)))
+                        var component = orderPrefab.GetTargetItemComponent(targetEntity as Item);
+                        if (!orderPrefab.MustSetTarget || (targetEntity != null && component != null) || targetPosition != null)
                         {
-                            character.SetOrder(
-                                new Order(orderPrefab, targetEntity, (targetEntity as Item)?.Components.FirstOrDefault(c => c?.GetType() == orderPrefab.ItemComponentType), orderGiver: orderGiver),
+                            var order = targetPosition == null ?
+                                new Order(orderPrefab, targetEntity, component, orderGiver: orderGiver) :
+                                new Order(orderPrefab, targetPosition, orderGiver: orderGiver);
+                            character.SetOrder(order,
                                 orderOptionIndex >= 0 && orderOptionIndex < orderPrefab.Options.Length ? orderPrefab.Options[orderOptionIndex] : null,
                                 orderGiver, speak: false);
                         }

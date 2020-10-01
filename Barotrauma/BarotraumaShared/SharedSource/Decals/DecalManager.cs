@@ -108,7 +108,7 @@ namespace Barotrauma
             }
         }
 
-        public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull)
+        public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull, int? spriteIndex = null)
         {
             if (!Prefabs.ContainsKey(decalName.ToLowerInvariant()))
             {
@@ -118,7 +118,7 @@ namespace Barotrauma
 
             DecalPrefab prefab = Prefabs[decalName];
 
-            return new Decal(prefab, scale, worldPosition, hull);
+            return new Decal(prefab, scale, worldPosition, hull, spriteIndex);
         }
     }
 }

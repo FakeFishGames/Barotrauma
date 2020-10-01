@@ -413,8 +413,6 @@ namespace Barotrauma
 
             //--------------------------------------
 
-            bool save = false;
-
             if (success)
             {
                 if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))

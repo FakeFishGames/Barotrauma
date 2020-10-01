@@ -12,7 +12,7 @@ namespace Barotrauma
         private float lastSentVolume, lastSentOxygen, lastSentFireCount;
         private float sendUpdateTimer;
 
-        private bool decalsChanged;
+        private bool decalUpdatePending;
 
         public override bool IsMouseOn(Vector2 position)
         {
@@ -32,27 +32,21 @@ namespace Barotrauma
                 return;
             }
 
-            if (decalsChanged)
-            {
-                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { false });
-                lastSentVolume = waterVolume;
-                lastSentOxygen = OxygenPercentage;
-                lastSentFireCount = FireSources.Count;
-                sendUpdateTimer = NetConfig.HullUpdateInterval;
-                decalsChanged = false;
-                return;
-            }
-
             sendUpdateTimer -= deltaTime;
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
             if (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f || Math.Abs(lastSentOxygen - OxygenPercentage) > 5f ||
                 lastSentFireCount != FireSources.Count || FireSources.Count > 0 || 
                 pendingSectionUpdates.Count > 0 ||
-                sendUpdateTimer < -NetConfig.SparseHullUpdateInterval)
+                sendUpdateTimer < -NetConfig.SparseHullUpdateInterval || 
+                decalUpdatePending)
             {
                 if (sendUpdateTimer < 0.0f)
                 {
+                    if (decalUpdatePending)
+                    {
+                        GameMain.NetworkMember.CreateEntityEvent(this, new object[] { false });
+                    }
                     if (pendingSectionUpdates.Count > 0)
                     {
                         foreach (int pendingSectionUpdate in pendingSectionUpdates)
@@ -120,8 +114,9 @@ namespace Barotrauma
                     foreach (Decal decal in decals)
                     {
                         message.Write(decal.Prefab.UIntIdentifier);
-                        float normalizedXPos = MathHelper.Clamp(MathUtils.InverseLerp(rect.X, rect.Right, decal.Position.X), 0.0f, 1.0f);
-                        float normalizedYPos = MathHelper.Clamp(MathUtils.InverseLerp(rect.Y - rect.Height, rect.Y, decal.Position.Y), 0.0f, 1.0f);
+                        message.Write((byte)decal.SpriteIndex);
+                        float normalizedXPos = MathHelper.Clamp(MathUtils.InverseLerp(0.0f, rect.Width, decal.CenterPosition.X), 0.0f, 1.0f);
+                        float normalizedYPos = MathHelper.Clamp(MathUtils.InverseLerp(-rect.Height, 0.0f, decal.CenterPosition.Y), 0.0f, 1.0f);
                         message.WriteRangedSingle(normalizedXPos, 0.0f, 1.0f, 8);
                         message.WriteRangedSingle(normalizedYPos, 0.0f, 1.0f, 8);
                         message.WriteRangedSingle(decal.Scale, 0f, 2f, 12);

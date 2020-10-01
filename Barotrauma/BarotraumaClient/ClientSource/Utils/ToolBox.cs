@@ -142,10 +142,10 @@ namespace Barotrauma
             if (gradient.Length == 0)
             {
 #if DEBUG
-                DebugConsole.ThrowError("Empty color array passed to the GradientLerp method.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Empty color array passed to the GradientLerp method.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                 GameAnalyticsManager.AddErrorEventOnce("ToolBox.GradientLerp:EmptyColorArray", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Empty color array passed to the GradientLerp method.\n" + Environment.StackTrace);
+                    "Empty color array passed to the GradientLerp method.\n" + Environment.StackTrace.CleanupStackTrace());
                 return Color.Black;
             }
 

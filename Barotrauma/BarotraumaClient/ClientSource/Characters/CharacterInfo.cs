@@ -154,7 +154,7 @@ namespace Barotrauma
                     GUI.Style.Green,
                     textPopupPos,
                     Vector2.UnitY * 10.0f,
-                    playSound: Character.Controlled?.Info == this);
+                    playSound: false);
             }
             else if (prevLevel % 0.1f > 0.05f && newLevel % 0.1f < 0.05f)
             {
@@ -163,7 +163,7 @@ namespace Barotrauma
                     GUI.Style.Green,
                     textPopupPos,
                     Vector2.UnitY * 10.0f,
-                    playSound: Character.Controlled?.Info == this);
+                    playSound: false);
             }
 
             if ((int)newLevel > (int)prevLevel)

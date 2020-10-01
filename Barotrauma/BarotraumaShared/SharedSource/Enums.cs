@@ -21,6 +21,7 @@
         OnDeath = OnBroken,
         OnDamaged,
         OnSevered,
-        OnProduceSpawned
+        OnProduceSpawned,
+        OnOpen, OnClose,
     }
 }

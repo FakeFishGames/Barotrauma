@@ -493,7 +493,7 @@ namespace Barotrauma.Lights
             {
                 return null;
             }
-            if (Range < 1.0f || Color.A < 0.01f) return null;
+            if (Range < 1.0f || Color.A < 1) { return null; }
 
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
@@ -1134,6 +1134,8 @@ namespace Barotrauma.Lights
 
         public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
         {
+            if (Range < 1.0f || Color.A < 1) { return; }
+
             if (CastShadows)
             {
                 CheckHullsInRange();
@@ -1158,7 +1160,6 @@ namespace Barotrauma.Lights
                 return;
             }
 
-
             if (NeedsRecalculation)
             {
                 var verts = FindRaycastHits();
@@ -1167,7 +1168,6 @@ namespace Barotrauma.Lights
                 lastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
-
 
             Vector2 offset = ParentSub == null ? Vector2.Zero : ParentSub.DrawPosition;
             lightEffect.World =

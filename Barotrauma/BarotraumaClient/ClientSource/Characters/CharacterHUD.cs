@@ -11,7 +11,7 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
-        private static Dictionary<Entity, int> orderIndicatorCount = new Dictionary<Entity, int>();
+        private static Dictionary<ISpatialEntity, int> orderIndicatorCount = new Dictionary<ISpatialEntity, int>();
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
         private static float focusedItemOverlayTimer;
@@ -458,6 +458,8 @@ namespace Barotrauma
 
         private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
         {
+            if (order?.SymbolSprite == null) { return; }
+
             if (order.TargetAllCharacters)
             {
                 if (order.OrderGiver != character && !order.HasAppropriateJob(character))
@@ -466,7 +468,7 @@ namespace Barotrauma
                 }
             }
 
-            Entity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetEntity;
+            ISpatialEntity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetSpatialEntity;
             if (target == null) { return; }
 
             //don't show the indicator if far away and not inside the same sub
@@ -479,7 +481,9 @@ namespace Barotrauma
 
             if (!orderIndicatorCount.ContainsKey(target)) { orderIndicatorCount.Add(target, 0); }
 
-            Vector2 drawPos = target.DrawPosition + Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
+            Vector2 drawPos = target is Entity ? (target as Entity).DrawPosition :
+                target.Submarine == null ? target.Position : target.Position + target.Submarine.DrawPosition;
+            drawPos += Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
 
             orderIndicatorCount[target] = orderIndicatorCount[target] + 1;

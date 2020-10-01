@@ -261,6 +261,13 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUI.Style.Orange, false, 0, 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
+                foreach (FireSource fs in FakeFireSources)
+                {
+                    Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
+                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUI.Style.Red, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUI.Style.Orange, false, 0, 5);
+                    //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
+                }
 
 
                 /*GUI.DrawLine(spriteBatch, new Vector2(drawRect.X, -WorldSurface), new Vector2(drawRect.Right, -WorldSurface), Color.Cyan * 0.5f);
@@ -623,12 +630,18 @@ namespace Barotrauma
                     for (int i = 0; i < decalCount; i++)
                     {
                         UInt32 decalId = message.ReadUInt32();
+                        int spriteIndex = message.ReadByte();
                         float normalizedXPos = message.ReadRangedSingle(0.0f, 1.0f, 8);
                         float normalizedYPos = message.ReadRangedSingle(0.0f, 1.0f, 8);
                         float decalPosX = MathHelper.Lerp(rect.X, rect.Right, normalizedXPos);
                         float decalPosY = MathHelper.Lerp(rect.Y - rect.Height, rect.Y, normalizedYPos);
                         float decalScale = message.ReadRangedSingle(0.0f, 2.0f, 12);
-                        AddDecal(decalId, new Vector2(decalPosX, decalPosY), decalScale, isNetworkEvent: true);
+                        if (Submarine != null)
+                        {
+                            decalPosX += Submarine.Position.X;
+                            decalPosY += Submarine.Position.Y;
+                        }
+                        AddDecal(decalId, new Vector2(decalPosX, decalPosY), decalScale, isNetworkEvent: true, spriteIndex: spriteIndex);
                     }
                 }
             }

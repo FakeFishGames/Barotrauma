@@ -32,7 +32,7 @@ namespace Barotrauma.Networking
             createTime = Timing.TotalTime;
 
 #if DEBUG
-            StackTrace = Environment.StackTrace.ToString();
+            StackTrace = Environment.StackTrace.CleanupStackTrace();
 #endif
         }
 
@@ -121,12 +121,12 @@ namespace Barotrauma.Networking
 
             if (((Entity)entity).Removed && !(entity is Level))
             {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n"+Environment.StackTrace);
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n"+Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (((Entity)entity).IdFreed)
             {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n"+Environment.StackTrace);
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n"+Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -197,12 +197,12 @@ namespace Barotrauma.Networking
                     if (GameSettings.VerboseLogging)
                     {
                         string errorMsg = "Failed to read server event for entity \"" + entityName + "\"!";
-                        GameServer.Log(errorMsg + "\n" + e.StackTrace, ServerLog.MessageType.Error);
+                        GameServer.Log(errorMsg + "\n" + e.StackTrace.CleanupStackTrace(), ServerLog.MessageType.Error);
                         DebugConsole.ThrowError(errorMsg, e);
                     }
                     GameAnalyticsManager.AddErrorEventOnce("ServerEntityEventManager.Read:ReadFailed" + entityName,
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Failed to read server event for entity \"" + entityName + "\"!\n" + e.StackTrace);
+                        "Failed to read server event for entity \"" + entityName + "\"!\n" + e.StackTrace.CleanupStackTrace());
                 }
 
                 bufferedEvent.IsProcessed = true;

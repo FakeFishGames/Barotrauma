@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    public enum AIState { Idle, Attack, Escape, Eat, Flee, Avoid, Aggressive, PassiveAggressive, Protect }
+    public enum AIState { Idle, Attack, Escape, Eat, Flee, Avoid, Aggressive, PassiveAggressive, Protect, Observe }
 
     abstract partial class AIController : ISteerable
     {
@@ -146,6 +146,8 @@ namespace Barotrauma
             _lastAiTarget = null;
             _selectedAiTarget = null;
         }
+
+        public void FaceTarget(ISpatialEntity target) => Character.AnimController.TargetDir = target.WorldPosition.X > Character.WorldPosition.X ? Direction.Right : Direction.Left;
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
         protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }

@@ -167,7 +167,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? CurrentGroundedParams.CrouchingTorsoPos * RagdollParams.JointScale : base.TorsoPosition;
+                return Crouching && !swimming ? CurrentGroundedParams.CrouchingTorsoPos * RagdollParams.JointScale : base.TorsoPosition;
             }
         }
 
@@ -175,7 +175,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? CurrentGroundedParams.CrouchingHeadPos * RagdollParams.JointScale : base.HeadPosition;
+                return Crouching && !swimming ? CurrentGroundedParams.CrouchingHeadPos * RagdollParams.JointScale : base.HeadPosition;
             }
         }
 
@@ -183,7 +183,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingTorsoAngle) : base.TorsoAngle;
+                return Crouching && !swimming ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingTorsoAngle) : base.TorsoAngle;
             }
         }
 
@@ -191,7 +191,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingHeadAngle) : base.HeadAngle;
+                return Crouching && !swimming ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingHeadAngle) : base.HeadAngle;
             }
         }
 
@@ -322,11 +322,12 @@ namespace Barotrauma
             if (MainLimb == null) { return; }
 
             levitatingCollider = true;
-            ColliderIndex = Crouching ? 1 : 0;
-
-            if (character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false)
+            ColliderIndex = Crouching && !swimming ? 1 : 0;
+            if (character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false ||
+                (ForceSelectAnimationType != AnimationType.Walk && ForceSelectAnimationType != AnimationType.NotDefined))
             {
                 Crouching = false;
+                ColliderIndex = 0;
             }
             else if (!Crouching && ColliderIndex == 1) 
             { 
@@ -1903,7 +1904,7 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(pos))
             {
-                string errorMsg = "Invalid foot position in FootIK (" + pos + ")\n" + Environment.StackTrace;
+                string errorMsg = "Invalid foot position in FootIK (" + pos + ")\n" + Environment.StackTrace.CleanupStackTrace();
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif
@@ -1937,7 +1938,7 @@ namespace Barotrauma
             float legAngle = MathUtils.VectorToAngle(pos - waistPos) + MathHelper.PiOver2;
             if (!MathUtils.IsValid(legAngle))
             {
-                string errorMsg = "Invalid leg angle (" + legAngle + ") in FootIK. Waist pos: " + waistPos + ", target pos: " + pos + "\n" + Environment.StackTrace;
+                string errorMsg = "Invalid leg angle (" + legAngle + ") in FootIK. Waist pos: " + waistPos + ", target pos: " + pos + "\n" + Environment.StackTrace.CleanupStackTrace();
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif

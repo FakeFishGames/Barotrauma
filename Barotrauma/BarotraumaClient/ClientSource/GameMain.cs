@@ -79,7 +79,7 @@ namespace Barotrauma
                 if (gameSession == value) { return; }
                 if (value == null && Screen.Selected == GameScreen && gameSession.GameMode is CampaignMode)
                 {
-                    DebugConsole.AddWarning("GameSession set to null while in the game screen\n" + Environment.StackTrace);
+                    DebugConsole.AddWarning("GameSession set to null while in the game screen\n" + Environment.StackTrace.CleanupStackTrace());
                 }
                 if (gameSession?.GameMode != null && gameSession.GameMode != value?.GameMode)
                 {
@@ -669,7 +669,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError($"Failed to parse a Steam friend's connect invitation command ({connectCommand})", e);
 #else
-                DebugConsole.Log($"Failed to parse a Steam friend's connect invitation command ({connectCommand})\n" + e.StackTrace);
+                DebugConsole.Log($"Failed to parse a Steam friend's connect invitation command ({connectCommand})\n" + e.StackTrace.CleanupStackTrace());
 #endif
                 ConnectName = null;
                 ConnectEndpoint = null;

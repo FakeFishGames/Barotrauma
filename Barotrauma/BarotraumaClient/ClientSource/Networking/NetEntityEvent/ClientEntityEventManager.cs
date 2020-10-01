@@ -53,12 +53,12 @@ namespace Barotrauma.Networking
 
             if (((Entity)entity).Removed)
             {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the entity has been removed.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (((Entity)entity).IdFreed)
             {
-                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Can't create an entity event for " + entity + " - the ID of the entity has been freed.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -254,7 +254,7 @@ namespace Barotrauma.Networking
 
                     catch (Exception e)
                     {
-                        string errorMsg = "Failed to read event for entity \"" + entity.ToString() + "\" (" + e.Message + ")! (MidRoundSyncing: " + thisClient.MidRoundSyncing + ")\n" + e.StackTrace;
+                        string errorMsg = "Failed to read event for entity \"" + entity.ToString() + "\" (" + e.Message + ")! (MidRoundSyncing: " + thisClient.MidRoundSyncing + ")\n" + e.StackTrace.CleanupStackTrace();
                         errorMsg += "\nPrevious entities:";
                         for (int j = entities.Count - 2; j >= 0; j--)
                         {
