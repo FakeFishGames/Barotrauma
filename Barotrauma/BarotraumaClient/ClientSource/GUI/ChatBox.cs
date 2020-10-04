@@ -1,4 +1,5 @@
-﻿using Barotrauma.Extensions;
+﻿using Barotrauma.ClientSource.Screens.PopUpDialogs;
+using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -356,7 +357,7 @@ namespace Barotrauma
                     OnClicked = (_, o) =>
                     {
                         if (!(o is Client client)) { return false; }
-                        GameMain.NetLobbyScreen?.SelectPlayer(client);
+                        PlayerDetailsDialog.CreateDialog(client);
                         return true;
                     },
                     OnSecondaryClicked = (_, o) =>

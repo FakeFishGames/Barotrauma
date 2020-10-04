@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Barotrauma.ClientSource.Screens.PopUpDialogs;
 
 namespace Barotrauma.Networking
 {
@@ -3011,7 +3012,7 @@ namespace Barotrauma.Networking
             serverSettings.AddToGUIUpdateList();
             if (serverSettings.ServerLog.LogFrame != null) serverSettings.ServerLog.LogFrame.AddToGUIUpdateList();
 
-            GameMain.NetLobbyScreen?.PlayerFrame?.AddToGUIUpdateList();
+            PopUpDialog.AddActiveDialogsToGUIUpdateList();
         }
 
         public void UpdateHUD(float deltaTime)
@@ -3290,7 +3291,7 @@ namespace Barotrauma.Networking
                     TextManager.Get("Ban"), style: "GUIButtonSmall")
                 {
                     UserData = client,
-                    OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.BanPlayer(client); return false; }
+                    OnClicked = (btn, userdata) => { CrewManager.BanPlayer(client); return false; }
                 };
             }
             if (HasPermission(ClientPermissions.Kick) && client.AllowKicking)
@@ -3299,7 +3300,7 @@ namespace Barotrauma.Networking
                     TextManager.Get("Kick"), style: "GUIButtonSmall")
                 {
                     UserData = client,
-                    OnClicked = (btn, userdata) => { GameMain.NetLobbyScreen.KickPlayer(client); return false; }
+                    OnClicked = (btn, userdata) => { CrewManager.KickPlayer(client); return false; }
                 };
             }
             else if (serverSettings.Voting.AllowVoteKick && client.AllowKicking)

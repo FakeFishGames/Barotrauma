@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Steam;
+using Barotrauma.ClientSource.Screens.PopUpDialogs;
 
 namespace Barotrauma
 {
@@ -1053,7 +1054,7 @@ namespace Barotrauma
                             GameMain.Client?.CreateKickReasonPrompt(client.Name, true);
                             break;
                         case "user":
-                            GameMain.NetLobbyScreen?.SelectPlayer(client);
+                            PlayerDetailsDialog.CreateDialog(client);
                             break;
                     }
                     contextMenu = null;
@@ -3122,6 +3123,24 @@ namespace Barotrauma
                 if (ci.LastControlled) { infoElement.Add(new XAttribute("lastcontrolled", true)); }
             }
             parentElement.Add(element);
+        }
+
+        public static void BanPlayerRange(Client client)
+        {
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: true);
+        }
+
+        public static void BanPlayer(Client client)
+        {
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: false);
+        }
+
+        public static void KickPlayer(Client client)
+        {
+            if (GameMain.NetworkMember == null || client == null) { return; }
+            GameMain.Client.CreateKickReasonPrompt(client.Name, false);
         }
     }
 }

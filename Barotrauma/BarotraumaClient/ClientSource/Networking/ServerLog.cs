@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Extensions;
+using Barotrauma.ClientSource.Screens.PopUpDialogs;
 
 namespace Barotrauma.Networking
 {
@@ -248,7 +249,7 @@ namespace Barotrauma.Networking
                             Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id);
                             client ??= GameMain.Client.ConnectedClients.Find(c => c.ID == id);
                             if (client == null) { return; }
-                            GameMain.NetLobbyScreen.SelectPlayer(client);
+                            PlayerDetailsDialog.CreateDialog(client);
                         }
                     });
                 }
