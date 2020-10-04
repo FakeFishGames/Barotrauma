@@ -913,7 +913,7 @@ namespace Barotrauma
                 ChildServerRelay.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(name, System.Net.IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
+                GameMain.Client = new GameClient(GameMain.Config.PlayerName, IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }
             catch (Exception e)
             {
