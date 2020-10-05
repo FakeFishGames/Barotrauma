@@ -1247,20 +1247,50 @@ namespace Barotrauma
 
             if (info.InServer)
             {
+                int framePadding = 5;
+
                 friendPopup = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas));
-                var serverNameText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), friendPopup.RectTransform), info.ConnectName ?? "[Unnamed]");
-                var joinButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), friendPopup.RectTransform, Anchor.TopRight), TextManager.Get("ServerListJoin"))
+
+                var serverNameText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), friendPopup.RectTransform, Anchor.CenterLeft), info.ConnectName ?? "[Unnamed]");
+                serverNameText.RectTransform.AbsoluteOffset = new Point(framePadding, 0);
+
+                var joinButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), friendPopup.RectTransform, Anchor.CenterRight), TextManager.Get("ServerListJoin"))
                 {
                     UserData = info
                 };
                 joinButton.OnClicked = JoinFriend;
+                joinButton.RectTransform.AbsoluteOffset = new Point(framePadding, 0);
 
-                Vector2 frameDims = joinButton.Font.MeasureString(info.ConnectName ?? "[Unnamed]");
-                frameDims.X /= 0.6f;
-                frameDims.Y *= 1.5f;
-                friendPopup.RectTransform.NonScaledSize = frameDims.ToPoint();
+                Point joinButtonTextSize = joinButton.Font.MeasureString(joinButton.Text).ToPoint();
+                int joinButtonHeight = joinButton.RectTransform.NonScaledSize.Y;
+                int totalAdditionalTextPadding = (joinButtonHeight - joinButtonTextSize.Y);
+
+                // Make the final button sized so that the space between the text and the edges in the X direction is the same as the Y direction.
+                Point finalButtonSize = new Point(joinButtonTextSize.X + totalAdditionalTextPadding, joinButtonHeight);
+
+                // Add padding to the server name to match the padding on the button text.
+                serverNameText.Padding = new Vector4(totalAdditionalTextPadding / 2);
+
+                // Get the dimensions of the text we want to show, plus the extra padding we added.
+                Point serverNameSize = serverNameText.Font.MeasureString(serverNameText.Text).ToPoint() + new Point(totalAdditionalTextPadding, totalAdditionalTextPadding);
+
+                // Now determine how large the parent frame has to be to exactly fit our two controls.
+                Point frameDims = new Point(serverNameSize.X + finalButtonSize.X + framePadding*2, Math.Max(serverNameSize.Y, finalButtonSize.Y) + framePadding * 2);
+
+                var popupPos = PlayerInput.MousePosition.ToPoint();
+                if(popupPos.X+frameDims.X > GUI.Canvas.NonScaledSize.X)
+                {
+                    // Prevent the Join button from going off the end of the screen if the server name is long or we click a user towards the edge.
+                    popupPos.X = GUI.Canvas.NonScaledSize.X - frameDims.X;
+                }
+
+                // Apply the size and position changes.
+                friendPopup.RectTransform.NonScaledSize = frameDims;
                 friendPopup.RectTransform.RelativeOffset = Vector2.Zero;
-                friendPopup.RectTransform.AbsoluteOffset = PlayerInput.MousePosition.ToPoint();
+                friendPopup.RectTransform.AbsoluteOffset = popupPos;
+
+                joinButton.RectTransform.NonScaledSize = finalButtonSize;
+
                 friendPopup.RectTransform.RecalculateChildren(true);
                 friendPopup.RectTransform.SetPosition(Anchor.TopLeft);
             }
