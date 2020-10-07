@@ -119,6 +119,8 @@ namespace Barotrauma
             }
         }
 
+        public bool EditableWhenEquipped { get; set; } = false;
+
         //the inventory in which the item is contained in
         public Inventory ParentInventory
         {
@@ -2257,7 +2259,7 @@ namespace Barotrauma
                 var propertyOwner = allProperties.Find(p => p.Second == property);
                 if (allProperties.Count > 1)
                 {
-                    msg.WriteRangedInteger(allProperties.FindIndex(p => p.Second == property), 0, allProperties.Count - 1);
+                    msg.Write((byte)allProperties.FindIndex(p => p.Second == property));
                 }
 
                 object value = property.GetValue(propertyOwner.First);
@@ -2339,7 +2341,7 @@ namespace Barotrauma
             int propertyIndex = 0;
             if (allProperties.Count > 1)
             {
-                propertyIndex = msg.ReadRangedInteger(0, allProperties.Count - 1);
+                propertyIndex = msg.ReadByte();
             }
 
             bool allowEditing = true;
@@ -2360,6 +2362,7 @@ namespace Barotrauma
             if (type == typeof(string))
             {
                 string val = msg.ReadString();
+                logValue = val;
                 if (allowEditing) 
                 { 
                     property.TrySetValue(parentObject, val);

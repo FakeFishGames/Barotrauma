@@ -52,6 +52,8 @@
   <Item file="Content/Items/Legacy/legacypump.xml" />
   <Item file="Content/Items/Legacy/legacyrailgun.xml" />
   <Item file="Content/Items/Legacy/legacysearchlight.xml" />
+  <Item file="Content/Items/Pets/PetEggs.xml" />
+  <Item file="Content/Items/Pets/PetItems.xml" />
   <Item file="Content/Items/Shipwrecks/wreckeditems.xml" />
   <Item file="Content/Map/Thalamus/thalamusitems.xml" />
   <Item file="Content/Items/Gardening/growableplants.xml" />
@@ -88,11 +90,14 @@
   <Character file="Content/Characters/Moloch_m/Moloch_m.xml" />
   <Character file="Content/Characters/Molochblack/Molochblack.xml" />
   <Character file="Content/Characters/Molochbaby/Molochbaby.xml" />
+  <Character file="Content/Characters/Peanut/Peanut.xml" />
+  <Character file="Content/Characters/Psilotoad/Psilotoad.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />
   <Character file="Content/Characters/Leucocyte/Leucocyte.xml" />
   <Character file="Content/Characters/Terminalcell/Terminalcell.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
+  <Character file="Content/Characters/Smallcrawler/Smallcrawler.xml" />
   <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
   <Wreck file="Content/Map/Wrecks/Kastrull_Wrecked.sub" />
   <Wreck file="Content/Map/Wrecks/Berilia_Wrecked.sub" />

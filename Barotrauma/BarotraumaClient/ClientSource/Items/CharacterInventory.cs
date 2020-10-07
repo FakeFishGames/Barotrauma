@@ -51,13 +51,13 @@ namespace Barotrauma
                     limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
                     limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));
                     limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
-                    limbSlotIcons.Add(InvSlotType.Bag, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    limbSlotIcons.Add(InvSlotType.Bag, new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(639, 926, 128,80)));
                 }
                 return limbSlotIcons;
             }
         }
 
-        public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
+        public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Bag | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
 
         private Point screenResolution;
 
@@ -730,6 +730,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < indicators.Length; i++)
             {
+                if (indicatorIndexes[i] < 0) { continue; }
                 Item item = Items[indicatorIndexes[i]];
                 if (item != null)
                 {

@@ -321,6 +321,17 @@ namespace Barotrauma
             {
                 character.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
             }
+            if (Character.Controlled.Inventory != null)
+            {
+                foreach (Item item in Character.Controlled.Inventory.Items)
+                {
+                    if (item == null) { continue; }
+                    if (Character.Controlled.HasEquippedItem(item))
+                    {
+                        item.DrawHUD(spriteBatch, cam, Character.Controlled);
+                    }
+                }
+            }
 
             if (IsCampaignInterfaceOpen) { return; }
 
@@ -431,6 +442,14 @@ namespace Barotrauma
             GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUI.SubHeadingFont);
             textPos.X += 10.0f * GUI.Scale;
             textPos.Y += GUI.SubHeadingFont.MeasureString(focusName).Y;
+
+            if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet)
+            {
+                GUI.DrawString(spriteBatch, textPos, GetCachedHudText("PlayHint", GameMain.Config.KeyBindText(InputType.Use)),
+                    GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
+                textPos.Y += largeTextSize.Y;
+            }
+
             if (character.FocusedCharacter.CanBeDragged)
             {
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBindText(InputType.Grab)),

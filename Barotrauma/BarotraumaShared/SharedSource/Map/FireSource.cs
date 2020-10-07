@@ -73,13 +73,13 @@ namespace Barotrauma
         {
             get;
             set;
-        }
+        } = true;
 
         public bool DamagesCharacters
         {
             get;
             set;
-        }
+        } = true;
 
         public bool Removed
         {

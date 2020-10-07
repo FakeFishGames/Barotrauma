@@ -99,6 +99,7 @@ namespace Barotrauma
         {
             Sprite = new Sprite(element, path, file, lazyLoad: lazyLoad);
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            // TODO: what's the purpose of this?
             foreach (XElement subElement in element.Elements())
             {
                 List<PropertyConditional> conditionalList = null;

@@ -2409,7 +2409,6 @@ namespace Barotrauma
                 int min = Math.Min(6, AutoSaveInfo.Root.Elements().Count());
                 var loadAutoSave = new GUIDropDown(new RectTransform(Vector2.One,  deleteButtonHolder.RectTransform, Anchor.BottomCenter), TextManager.Get("LoadAutoSave"), elementCount: min)
                 {
-                    Enabled = File.Exists(Path.Combine(SubmarineInfo.SavePath, ".AutoSaves", "AutoSave.sub")),
                     ToolTip = TextManager.Get("LoadAutoSaveTooltip"),
                     UserData = "loadautosave",
                     OnSelected = (button, o) =>

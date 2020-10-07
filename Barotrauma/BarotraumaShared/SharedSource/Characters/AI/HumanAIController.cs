@@ -715,6 +715,17 @@ namespace Barotrauma
             }
         }
 
+        public static void ReportProblem(Character reporter, Order order)
+        {
+            if (reporter == null || order == null) { return; }
+            var visibleHulls = new List<Hull>(reporter.GetVisibleHulls());
+            foreach (var hull in visibleHulls)
+            {
+                PropagateHullSafety(reporter, hull);
+                RefreshTargets(reporter, order, hull);
+            }
+        }
+
         private void UpdateSpeaking()
         {
             if (Character.Oxygen < 20.0f)

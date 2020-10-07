@@ -99,6 +99,7 @@ namespace Barotrauma
 
         public LatchOntoAI LatchOntoAI { get; private set; }
         public SwarmBehavior SwarmBehavior { get; private set; }
+        public PetBehavior PetBehavior { get; private set; }
 
         public CharacterParams.TargetParams SelectedTargetingParams { get { return selectedTargetingParams; } }
 
@@ -151,7 +152,10 @@ namespace Barotrauma
             private set
             {
                 reverse = value;
-                FishAnimController.reverse = reverse;
+                if (FishAnimController != null)
+                {
+                    FishAnimController.reverse = reverse;
+                }
             }
         }
 
@@ -204,6 +208,9 @@ namespace Barotrauma
                     case "swarmbehavior":
                         SwarmBehavior = new SwarmBehavior(subElement, this);
                         break;
+                    case "petbehavior":
+                        PetBehavior = new PetBehavior(subElement, this);
+                        break;
                 }
             }
 
@@ -221,7 +228,7 @@ namespace Barotrauma
             avoidLookAheadDistance = Math.Max(colliderWidth * 3, 1.5f);
         }
 
-        private CharacterParams.AIParams AIParams => Character.Params.AI;
+        public CharacterParams.AIParams AIParams => Character.Params.AI;
         private CharacterParams.TargetParams GetTargetParams(string targetTag) => AIParams.GetTarget(targetTag, false);
         private CharacterParams.TargetParams GetTargetParams(AITarget aiTarget) => GetTargetParams(GetTargetingTag(aiTarget));
         private string GetTargetingTag(AITarget aiTarget)
@@ -423,6 +430,9 @@ namespace Barotrauma
             bool run = false;
             switch (State)
             {
+                case AIState.Freeze:
+                    SteeringManager.Reset();
+                    break;
                 case AIState.Idle:
                     UpdateIdle(deltaTime);
                     break;
@@ -582,6 +592,7 @@ namespace Barotrauma
             if (!Character.AnimController.SimplePhysicsEnabled)
             {
                 LatchOntoAI?.Update(this, deltaTime);
+                PetBehavior?.Update(deltaTime);
             }
             IsSteeringThroughGap = false;
             if (SwarmBehavior != null)
@@ -1619,7 +1630,7 @@ namespace Barotrauma
                 State = AIState.Idle;
                 return;
             }
-            if (SelectedAiTarget.Entity is Character target)
+            if (SelectedAiTarget.Entity is Character || SelectedAiTarget.Entity is Item)
             {
                 Limb mouthLimb = Character.AnimController.GetLimb(LimbType.Head);
                 if (mouthLimb == null)
@@ -1629,12 +1640,34 @@ namespace Barotrauma
                     return;
                 }
                 Vector2 mouthPos = Character.AnimController.SimplePhysicsEnabled ? SimPosition : Character.AnimController.GetMouthPosition().Value;
-                Vector2 attackSimPosition = Character.GetRelativeSimPosition(target);
+                Vector2 attackSimPosition = Character.GetRelativeSimPosition(SelectedAiTarget.Entity);
                 Vector2 limbDiff = attackSimPosition - mouthPos;
                 float extent = Math.Max(mouthLimb.body.GetMaxExtent(), 2);
                 if (limbDiff.LengthSquared() < extent * extent)
                 {
-                    Character.SelectCharacter(target);
+                    if (SelectedAiTarget.Entity is Character targetCharacter)
+                    {
+                        Character.SelectCharacter(targetCharacter);
+                    }
+                    else if (SelectedAiTarget.Entity is Item item)
+                    {
+                        if (!item.Removed && item.body != null)
+                        {
+                            float itemBodyExtent = item.body.GetMaxExtent() * 2;
+                            if (limbDiff.LengthSquared() < itemBodyExtent * itemBodyExtent)
+                            {
+                                item.AddDamage(Character, item.WorldPosition, new Attack(0.0f, 0.0f, 0.0f, 0.0f, 0.1f), deltaTime);
+                                item.body.ApplyForce(-limbDiff * item.body.Mass);
+
+                                if (item.Condition <= 0.0f)
+                                {
+                                    Entity.Spawner.AddToRemoveQueue(item);
+                                }
+
+                                PetBehavior?.OnEat(item.GetTags(), 0.1f / item.MaxCondition);
+                            }
+                        }
+                    }
                     steeringManager.SteeringManual(deltaTime, Vector2.Normalize(limbDiff) * 3);
                     Character.AnimController.Collider.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f, mouthPos);
                 }

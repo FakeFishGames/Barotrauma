@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
         public bool DrawHudWhenEquipped
         {
             get;
-            private set;
+            protected set;
         }
 
         [Serialize(false, false, description: "Can the item be selected by interacting with it.")]

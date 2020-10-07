@@ -278,17 +278,7 @@ namespace Barotrauma
                         DamagedSprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.damagedSpriteParams));
                         break;
                     case "conditionalsprite":
-                        ISerializableEntity targetEntity;
-                        string target = subElement.GetAttributeString("target", null);
-                        if (string.Equals(target, "character", StringComparison.OrdinalIgnoreCase))
-                        {
-                            targetEntity = character;
-                        }
-                        else
-                        {
-                            targetEntity = this;
-                        }
-                        var conditionalSprite = new ConditionalSprite(subElement, targetEntity, file: GetSpritePath(subElement, null));
+                        var conditionalSprite = new ConditionalSprite(subElement, GetConditionalTarget(), file: GetSpritePath(subElement, null));
                         ConditionalSprites.Add(conditionalSprite);
                         if (conditionalSprite.DeformableSprite != null)
                         {
@@ -300,7 +290,7 @@ namespace Barotrauma
                         CreateDeformations(subElement);
                         break;
                     case "lightsource":
-                        LightSource = new LightSource(subElement)
+                        LightSource = new LightSource(subElement, GetConditionalTarget())
                         {
                             ParentBody = body,
                             SpriteScale = Vector2.One * Scale * TextureScale
@@ -308,6 +298,21 @@ namespace Barotrauma
                         InitialLightSourceColor = LightSource.Color;
                         InitialLightSpriteAlpha = LightSource.OverrideLightSpriteAlpha;
                         break;
+                }
+
+                ISerializableEntity GetConditionalTarget()
+                {
+                    ISerializableEntity targetEntity;
+                    string target = subElement.GetAttributeString("target", null);
+                    if (string.Equals(target, "character", StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetEntity = character;
+                    }
+                    else
+                    {
+                        targetEntity = this;
+                    }
+                    return targetEntity;
                 }
 
                 void CreateDeformations(XElement e)
@@ -341,6 +346,7 @@ namespace Barotrauma
                     }
                 }
             }
+            LightSource?.CheckConditionals();
         }
 
         public void RecreateSprites()
@@ -561,6 +567,11 @@ namespace Barotrauma
                 }
             }
 
+            foreach (var conditionalSprite in ConditionalSprites)
+            {
+                conditionalSprite.CheckConditionals();
+            }
+
             if (LightSource != null)
             {
                 LightSource.ParentSub = body.Submarine;
@@ -573,6 +584,7 @@ namespace Barotrauma
                 {
                     LightSource.DeformableLightSprite.Sprite.Depth = ActiveSprite.Depth;
                 }
+                LightSource.CheckConditionals();
             }
 
             UpdateSpriteStates(deltaTime);

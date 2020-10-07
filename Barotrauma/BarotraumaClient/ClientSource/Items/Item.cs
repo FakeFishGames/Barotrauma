@@ -62,7 +62,7 @@ namespace Barotrauma
             }
         }
 
-        public override bool DrawBelowWater => (!(Screen.Selected is SubEditorScreen editor) || !editor.WiringMode || !isWire) && base.DrawBelowWater;
+        public override bool DrawBelowWater => (!(Screen.Selected is SubEditorScreen editor) || !editor.WiringMode || !isWire) && (base.DrawBelowWater || ParentInventory is CharacterInventory);
 
         public override bool DrawOverWater => base.DrawOverWater || (IsSelected || Screen.Selected is SubEditorScreen editor && editor.WiringMode) && isWire;
 
@@ -332,6 +332,7 @@ namespace Barotrauma
                     var holdable = GetComponent<Holdable>();
                     if (holdable != null && holdable.Picker?.AnimController != null)
                     {
+                        if (!back) { return; }
                         float depthStep = 0.000001f;
                         if (holdable.Picker.SelectedItems[0] == this)
                         {
@@ -855,7 +856,7 @@ namespace Barotrauma
         public void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             bool editingHUDCreated = false;
-            if ((HasInGameEditableProperties && character.SelectedConstruction == this) ||
+            if ((HasInGameEditableProperties && (character.SelectedConstruction == this || EditableWhenEquipped)) ||
                 Screen.Selected == GameMain.SubEditorScreen)
             {
                 GUIComponent prevEditingHUD = editingHUD;
@@ -956,7 +957,7 @@ namespace Barotrauma
         
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            if (HasInGameEditableProperties)
+            if (HasInGameEditableProperties && (character.SelectedConstruction == this || EditableWhenEquipped))
             {
                 DrawEditing(spriteBatch, cam);
             }
@@ -1028,13 +1029,13 @@ namespace Barotrauma
             }
             else
             {
-                if (HasInGameEditableProperties)
+                if (HasInGameEditableProperties && Character.Controlled != null && (Character.Controlled.SelectedConstruction == this || EditableWhenEquipped))
                 {
                     if (editingHUD != null && editingHUD.UserData == this) { editingHUD.AddToGUIUpdateList(); }
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled?.SelectedConstruction != this) { return; }
+            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this) { return; }
 
             bool needsLayoutUpdate = false;
             foreach (ItemComponent ic in activeHUDs)

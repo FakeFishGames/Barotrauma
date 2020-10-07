@@ -65,8 +65,8 @@ namespace Barotrauma
             Noise = new Vector2(
                 PerlinNoise.GetPerlin(Rect.X / 1000.0f, Rect.Y / 1000.0f),
                 PerlinNoise.GetPerlin(Rect.Y / 1000.0f + 0.5f, Rect.X / 1000.0f + 0.5f));
-
-            Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
+            
+            DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
         }
 
         public bool SetColor(Color color)

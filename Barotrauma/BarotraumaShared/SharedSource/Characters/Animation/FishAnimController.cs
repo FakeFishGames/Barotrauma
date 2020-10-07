@@ -381,6 +381,12 @@ namespace Barotrauma
                     {
                         //only one limb left, the character is now full eaten
                         Entity.Spawner?.AddToRemoveQueue(target);
+
+                        if (Character.AIController is EnemyAIController enemyAi)
+                        {
+                            enemyAi.PetBehavior?.OnEat("dead", 1.0f);
+                        }
+
                         character.SelectedCharacter = null;
                     }
                     else //sever a random joint

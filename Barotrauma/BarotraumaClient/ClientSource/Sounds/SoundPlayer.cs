@@ -418,7 +418,7 @@ namespace Barotrauma
 
         private static void UpdateWaterAmbience(float ambienceVolume, float deltaTime)
         {
-            if (GameMain.SoundManager.Disabled) { return; }
+            if (GameMain.SoundManager.Disabled || GameMain.GameScreen?.Cam == null) { return; }
 
             //how fast the sub is moving, scaled to 0.0 -> 1.0
             float movementSoundVolume = 0.0f;
@@ -426,6 +426,7 @@ namespace Barotrauma
             float insideSubFactor = 0.0f;
             foreach (Submarine sub in Submarine.Loaded)
             {
+                if (sub == null || sub.Removed) { continue; }
                 float movementFactor = (sub.Velocity == Vector2.Zero) ? 0.0f : sub.Velocity.Length() / 10.0f;
                 movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
 

@@ -105,6 +105,10 @@ namespace Barotrauma
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
                 }
+                else
+                {
+                    soundChannel.Position = new Vector3(worldPosition, 0.0f);
+                }
 
                 if (soundChannel != null && soundChannel.Looping)
                 {

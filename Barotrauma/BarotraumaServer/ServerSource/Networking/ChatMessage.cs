@@ -119,7 +119,11 @@ namespace Barotrauma.Networking
             if (type == ChatMessageType.Order)
             {
                 if (c.Character == null || c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) { return; }
-                if (!orderMsg.Order.TargetAllCharacters && orderTargetCharacter != null)
+                if (orderMsg.Order.TargetAllCharacters)
+                {
+                    HumanAIController.ReportProblem(orderMsg.Sender, orderMsg.Order);
+                }
+                else if (orderTargetCharacter != null)
                 {
                     var order = orderTargetPosition == null ?
                         new Order(orderMsg.Order.Prefab, orderTargetEntity, orderMsg.Order.Prefab?.GetTargetItemComponent(orderTargetEntity as Item), orderMsg.Sender) :

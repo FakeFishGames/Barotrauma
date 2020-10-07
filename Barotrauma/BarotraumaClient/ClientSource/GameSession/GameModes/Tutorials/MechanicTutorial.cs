@@ -141,7 +141,7 @@ namespace Barotrauma.Tutorials
             mechanic_brokenWall_1.SpriteColor = Color.White;
             for (int i = 0; i < mechanic_brokenWall_1.SectionCount; i++)
             {
-                mechanic_brokenWall_1.AddDamage(i, 165);
+                mechanic_brokenWall_1.AddDamage(i, 85);
             }
             mechanic_brokenhull_1 = mechanic_brokenWall_1.Sections[0].gap.FlowTargetHull;
 
@@ -199,7 +199,7 @@ namespace Barotrauma.Tutorials
             mechanic_brokenWall_2.SpriteColor = Color.White;
             for (int i = 0; i < mechanic_brokenWall_2.SectionCount; i++)
             {
-                mechanic_brokenWall_2.AddDamage(i, 165);
+                mechanic_brokenWall_2.AddDamage(i, 85);
             }
             mechanic_brokenhull_2 = mechanic_brokenWall_2.Sections[0].gap.FlowTargetHull;
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);

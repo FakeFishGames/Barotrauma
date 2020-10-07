@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -5,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+
 
 namespace Barotrauma.Lights
 {
@@ -331,15 +333,41 @@ namespace Barotrauma.Lights
 
         public bool Enabled = true;
 
-        public LightSource (XElement element)
+        private ISerializableEntity conditionalTarget;
+        private readonly PropertyConditional.Comparison comparison;
+        private readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
+
+        public LightSource (XElement element, ISerializableEntity conditionalTarget = null)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
             lightSourceParams = new LightSourceParams(element);
             CastShadows = element.GetAttributeBool("castshadows", true);
+            string comparison = element.GetAttributeString("comparison", null);
+            if (comparison != null)
+            {
+                Enum.TryParse(comparison, ignoreCase: true, out this.comparison);
+            }
 
             if (lightSourceParams.DeformableLightSpriteElement != null)
             {
                 DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement, invert: true);
+            }
+
+            this.conditionalTarget = conditionalTarget;
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "conditional":
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                conditionals.Add(new PropertyConditional(attribute));
+                            }
+                        }
+                        break;
+                }
             }
         }
 
@@ -363,7 +391,8 @@ namespace Barotrauma.Lights
             CastShadows = true;            
             texture = LightTexture;
             diffToSub = new Dictionary<Submarine, Vector2>();
-            if (addLight) GameMain.LightManager.AddLight(this);
+            if (addLight) { GameMain.LightManager.AddLight(this); }
+
         }
         
         /// <summary>
@@ -1128,8 +1157,21 @@ namespace Barotrauma.Lights
                     GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
                     GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);
                 }
+            }   
+        }
+
+        public void CheckConditionals()
+        {
+            if (conditionals.None()) { return; }
+            if (conditionalTarget == null) { return; }
+            if (comparison == PropertyConditional.Comparison.And)
+            {
+                Enabled = conditionals.All(c => c.Matches(conditionalTarget));
             }
-            
+            else
+            {
+                Enabled = conditionals.Any(c => c.Matches(conditionalTarget));
+            }
         }
 
         public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)

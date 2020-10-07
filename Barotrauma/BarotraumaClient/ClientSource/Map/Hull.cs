@@ -94,20 +94,21 @@ namespace Barotrauma
             {
                 if (entity == this || !entity.IsHighlighted) { continue; }
                 if (!entity.IsMouseOn(position)) { continue; }
-                if (entity.linkedTo != null && entity.linkedTo.Contains(this))
+                if (entity.linkedTo == null || !entity.Linkable) { continue; }
+                if (entity.linkedTo.Contains(this) || linkedTo.Contains(entity) || rClick)
                 {
-                    if (entity == this || !entity.IsHighlighted) continue;
-                    if (!entity.IsMouseOn(position)) continue;
-                    if (entity.Linkable && entity.linkedTo != null && !entity.linkedTo.Contains(this))
+                    if (entity == this || !entity.IsHighlighted) { continue; }
+                    if (!entity.IsMouseOn(position)) { continue; }
+                    if (entity.linkedTo.Contains(this))
                     {
-                        entity.linkedTo.Add(this);
-                        linkedTo.Add(entity);
+                        entity.linkedTo.Remove(this);
+                        linkedTo.Remove(entity);
                     }
                 }
-                else if (entity.Linkable && entity.linkedTo != null)
+                else
                 {
-                    entity.linkedTo.Add(this);
-                    linkedTo.Add(entity);
+                    if (!entity.linkedTo.Contains(this)) { entity.linkedTo.Add(this); }
+                    if (!linkedTo.Contains(this)) { linkedTo.Add(entity); }                       
                 }
             }
         }
@@ -605,11 +606,6 @@ namespace Barotrauma
                     {
                         float colorStrength = message.ReadRangedSingle(0.0f, 1.0f, 8);
                         Color color = new Color(message.ReadUInt32());
-                        float prevColorStrength = BackgroundSections[i].ColorStrength;
-                        BackgroundSections[i].SetColorStrength(colorStrength);
-                        BackgroundSections[i].SetColor(color);
-                        paintAmount = Math.Max(0, paintAmount + (BackgroundSections[i].ColorStrength - prevColorStrength) / BackgroundSections.Count);
-
                         var remoteBackgroundSection = remoteBackgroundSections.Find(s => s.Index == i);
                         if (remoteBackgroundSection != null)
                         {
@@ -655,8 +651,10 @@ namespace Barotrauma
         {
             foreach (BackgroundSection remoteBackgroundSection in remoteBackgroundSections)
             {
+                float prevColorStrength = BackgroundSections[remoteBackgroundSection.Index].ColorStrength;
                 BackgroundSections[remoteBackgroundSection.Index].SetColor(remoteBackgroundSection.Color);
                 BackgroundSections[remoteBackgroundSection.Index].SetColorStrength(remoteBackgroundSection.ColorStrength);
+                paintAmount = Math.Max(0, paintAmount + (BackgroundSections[remoteBackgroundSection.Index].ColorStrength - prevColorStrength) / BackgroundSections.Count);
             }
             remoteBackgroundSections.Clear();
 

@@ -753,6 +753,7 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 if (connectedLimbs.Contains(limb)) { continue; }
+                if (!character.IsDead && !limb.CanBeSeveredAlive) { continue; }
                 limb.IsSevered = true;
                 if (limb.type == LimbType.RightHand)
                 {

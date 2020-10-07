@@ -304,12 +304,15 @@ namespace Barotrauma
 
             for (int j = 0; j < otherInventory.capacity; j++)
             {
-                if (otherInventory.Items[j] == item) otherInventory.Items[j] = null;
+                if (otherInventory.Items[j] == item) { otherInventory.Items[j] = null; }
             }
             for (int j = 0; j < capacity; j++)
             {
-                if (Items[j] == existingItem) Items[j] = null;
+                if (Items[j] == existingItem) { Items[j] = null; }
             }
+
+            (otherInventory.Owner as Character)?.DeselectItem(item);
+            (otherInventory.Owner as Character)?.DeselectItem(existingItem);
 
             bool swapSuccessful = false;
             if (otherIsEquipped)

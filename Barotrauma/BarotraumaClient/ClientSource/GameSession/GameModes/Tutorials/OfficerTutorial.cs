@@ -362,10 +362,10 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_rangedWeaponHolder.Item, false);
             do
             {
-                HighlightInventorySlot(officer.Inventory, "harpoongun", highlightColor, 0.5f, 0.5f, 0f);
+                HighlightInventorySlot(officer.Inventory, "shotgun", highlightColor, 0.5f, 0.5f, 0f);
                 yield return null;
-            } while (!officer.HasEquippedItem("harpoongun")); // Wait until equipped
-            ItemContainer harpoonGunChamber = officer.Inventory.FindItemByIdentifier("harpoongun").GetComponent<ItemContainer>();
+            } while (!officer.HasEquippedItem("shotgun")); // Wait until equipped
+            ItemContainer shotGunChamber = officer.Inventory.FindItemByIdentifier("shotgun").GetComponent<ItemContainer>();
             SetHighlight(officer_rangedWeaponCabinet.Item, true);
             do
             {
@@ -376,7 +376,7 @@ namespace Barotrauma.Tutorials
                         for (int i = 0; i < officer_rangedWeaponCabinet.Inventory.Items.Length; i++)
                         {
                             if (officer_rangedWeaponCabinet.Inventory.Items[i] == null) continue;
-                            if (officer_rangedWeaponCabinet.Inventory.Items[i].Prefab.Identifier == "spear")
+                            if (officer_rangedWeaponCabinet.Inventory.Items[i].Prefab.Identifier == "shotgunshell")
                             {
                                 HighlightInventorySlot(officer_rangedWeaponCabinet.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
                             }
@@ -387,18 +387,18 @@ namespace Barotrauma.Tutorials
                 for (int i = 0; i < officer.Inventory.Items.Length; i++)
                 {
                     if (officer.Inventory.Items[i] == null) continue;
-                    if (officer.Inventory.Items[i].Prefab.Identifier == "spear")
+                    if (officer.Inventory.Items[i].Prefab.Identifier == "shotgunshell")
                     {
                         HighlightInventorySlot(officer.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
                     }
                 }
 
-                if (officer.Inventory.FindItemByIdentifier("spear") != null || (IsSelectedItem(officer_rangedWeaponCabinet.Item) && officer_rangedWeaponCabinet.Inventory.FindItemByIdentifier("spear") != null))
+                if (officer.Inventory.FindItemByIdentifier("shotgunshell") != null || (IsSelectedItem(officer_rangedWeaponCabinet.Item) && officer_rangedWeaponCabinet.Inventory.FindItemByIdentifier("shotgunshell") != null))
                 {
-                    HighlightInventorySlot(officer.Inventory, "harpoongun", highlightColor, 0.5f, 0.5f, 0f);
+                    HighlightInventorySlot(officer.Inventory, "shotgun", highlightColor, 0.5f, 0.5f, 0f);
                 }
                 yield return null;
-            } while (!harpoonGunChamber.Inventory.IsFull()); // Wait until all six harpoons loaded
+            } while (!shotGunChamber.Inventory.IsFull()); // Wait until all six harpoons loaded
             RemoveCompletedObjective(segments[5]);
             SetHighlight(officer_rangedWeaponCabinet.Item, false);
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, true);

@@ -687,16 +687,8 @@ namespace Barotrauma
             }
 
             if (targetIdentifiers != null && currentTargets.Count == 0) { return; }
-            
-            if (!HasRequiredItems(entity)) { return; }
-            // If "This" is defined as the target, let's target the conditions only to this entity, because when you use "NearbyTargets", this entity is also taken into account.
-            // If we want to target both, leaving "This" out and using only "NearbyTargets" should work.
-            // Currently we don't have means for targeting only the nearby characters, though.
-            if (HasTargetType(TargetType.This))
-            {
-                if (!HasRequiredConditions(((ISerializableEntity)entity).ToEnumerable())) { return; }
-            }
-            else if (!HasRequiredConditions(currentTargets)) { return; }
+
+            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) { return; }
 
             if (duration > 0.0f && !Stackable)
             {
@@ -919,6 +911,13 @@ namespace Barotrauma
                         Entity.Spawner.AddToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Server) + characterSpawnInfo.Offset, 
                             onSpawn: newCharacter =>
                             {
+                                if (newCharacter.AIController is EnemyAIController enemyAi &&
+                                    enemyAi.PetBehavior != null &&
+                                    entity is Item item &&
+                                    item.ParentInventory is CharacterInventory inv)
+                                {
+                                    enemyAi.PetBehavior.Owner = inv.Owner as Character;
+                                }
                                 characters.Add(newCharacter);
                                 if (characters.Count == characterSpawnInfo.Count)
                                 {

@@ -1,10 +1,11 @@
-﻿using System.Xml.Linq;
+﻿using Barotrauma.Networking;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Terminal : ItemComponent
     {
-        private const int MaxMessageLength = 150;
+        private const int MaxMessageLength = ChatMessage.MaxLength;
 
         public string DisplayedWelcomeMessage
         {

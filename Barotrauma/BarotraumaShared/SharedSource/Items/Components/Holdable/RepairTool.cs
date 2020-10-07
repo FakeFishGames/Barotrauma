@@ -717,11 +717,10 @@ namespace Barotrauma.Items.Components
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
                 (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Average(s => s.damage) < 1);
 
-            if (leakFixed && leak.FlowTargetHull != null)
+            if (leakFixed && leak.FlowTargetHull?.DisplayName != null)
             {
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
-                {
-                    
+                {                    
                     character.Speak(TextManager.GetWithVariable("DialogLeaksFixed", "[roomname]", leak.FlowTargetHull.DisplayName, true), null, 0.0f, "leaksfixed", 10.0f);
                 }
                 else

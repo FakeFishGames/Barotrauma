@@ -1,4 +1,35 @@
 ---------------------------------------------------------------------------------------------------------
+v0.10.601.0 (Unstable)
+---------------------------------------------------------------------------------------------------------
+
+- Added 2 pets: Peanut and Psilotoad. Currently only obtainable via console commands ("spawnitem peanutegg", "spawnitem psilotoadegg", "spawn peanut" or "spawn psilotoad").
+- Improvements to the Watcher.
+- Fixed 2 equipped storage containers from one hand to another causing one of them to get stuck mid-air.
+- Fixed a crash caused by humanoid enemies (e.g. husks).
+- Moved toolbelt slot to the right side of the generic slots, added inventory icon for the slot.
+- Fixed EventManager crashing if there are no event sets configured for the current location type (only affected mods that add new location types without adding any events for them).
+- Use player name instead of server name for the server owner when hosting a server.
+- Fixed diving suit's low oxygen warning beep not following the player wearing the diving suit.
+- Made large monsters immune to paralyzant (mudraptor is the largest affected monster).
+- Fixed bots not reacting to player reports in multiplayer.
+- Added more copper to chalcopyrite and bornite deconstruct recipe.
+- More calcium for aragonite, adjusted prices.
+- Fixed fires not damaging characters.
+- Set terminal's maximum message length to match maximum chat message length (otherwise chat-linked terminals work differently in multiplayer).
+- Fixed inability to unlink hulls in the sub editor.
+- Fixed bots "cleaning up" components attached to walls.
+- Fixed yet another cause for "missing entity" errors. Occasionally happened in monster missions when a monster happened to get assigned the same ID as an item in a player's inventory.
+- Fixed items held in the left hand being drawn in front of the characters.
+- Allow closing the splash screens with esc.
+- Fixed "inventory sizes don't match" error when a human becomes a husk.
+- Fixed ability to drag and drop items into outpost reactors.
+- Fixed torso getting hidden when wearing a toolbelt.
+- Fixed coilgun ammo only using 90% of the fabrication materials.
+- Fixed paints reverting to the dirt color client-side after spraying.
+- Added missing dialog for the new "Cleanup Items" order.
+- Rebalanced upgrade parameters, allowing for more noticable benefits.
+
+---------------------------------------------------------------------------------------------------------
 v0.10.600.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 

@@ -120,6 +120,7 @@ namespace Barotrauma
                 AddChildEvents(initialEventSet);                
                 void AddChildEvents(EventSet eventSet)
                 {
+                    if (eventSet == null) { return; }
                     foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.First))
                     {
                         if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 

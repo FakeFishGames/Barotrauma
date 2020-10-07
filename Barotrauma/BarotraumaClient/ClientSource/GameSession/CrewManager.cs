@@ -261,12 +261,7 @@ namespace Barotrauma
                         var sub = Character.Controlled.Submarine;
                         if (sub == null || sub.TeamID != Character.Controlled.TeamID || sub.Info.IsWreck) { return false; }
                         SetCharacterOrder(null, order, null, Character.Controlled);
-                        var visibleHulls = new List<Hull>(Character.Controlled.GetVisibleHulls());
-                        foreach (var hull in visibleHulls)
-                        {
-                            HumanAIController.PropagateHullSafety(Character.Controlled, hull);
-                            HumanAIController.RefreshTargets(Character.Controlled, order, hull);
-                        }
+                        if (IsSinglePlayer) { HumanAIController.ReportProblem(Character.Controlled, order); }
                         return true;
                     },
                     UserData = order,
@@ -2221,8 +2216,8 @@ namespace Barotrauma
                     var operateWeaponsPrefab = Order.GetPrefab(orderIdentifier);
                     if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)) && itemContext.Components.Any(c => c is Controller))
                     {
-                        var turret = itemContext.GetConnectedComponents<Turret>().FirstOrDefault(c => operateWeaponsPrefab.TargetItems.Contains(c.Item.Prefab.Identifier)) ??
-                            itemContext.GetConnectedComponents<Turret>(recursive: true).FirstOrDefault(c => operateWeaponsPrefab.TargetItems.Contains(c.Item.Prefab.Identifier));
+                        var turret = itemContext.GetConnectedComponents<Turret>().FirstOrDefault(c => c.Item.HasTag(operateWeaponsPrefab.TargetItems)) ??
+                            itemContext.GetConnectedComponents<Turret>(recursive: true).FirstOrDefault(c => c.Item.HasTag(operateWeaponsPrefab.TargetItems));
                         if (turret != null) { contextualOrders.Add(new Order(operateWeaponsPrefab, turret.Item, turret, Character.Controlled)); }
                     }
 
@@ -2316,8 +2311,8 @@ namespace Barotrauma
             if (item.Repairables.Any(r => item.ConditionPercentage < r.RepairThreshold)) { return true; }
             var operateWeaponsPrefab = Order.GetPrefab("operateweapons");
             return item.Components.Any(c => c is Controller) &&
-                (item.GetConnectedComponents<Turret>().Any(c => operateWeaponsPrefab.TargetItems.Contains(c.Item.Prefab.Identifier)) ||
-                 item.GetConnectedComponents<Turret>(recursive: true).Any(c => operateWeaponsPrefab.TargetItems.Contains(c.Item.Prefab.Identifier))); 
+                (item.GetConnectedComponents<Turret>().Any(c => c.Item.HasTag(operateWeaponsPrefab.TargetItems)) ||
+                 item.GetConnectedComponents<Turret>(recursive: true).Any(c => c.Item.HasTag(operateWeaponsPrefab.TargetItems))); 
         }
 
         private GUIButton CreateOrderNode(Point size, RectTransform parent, Point offset, Order order, int hotkey, bool disableNode = false, bool checkIfOrderCanBeHeard = true)

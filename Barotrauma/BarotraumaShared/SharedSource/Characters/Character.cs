@@ -215,9 +215,6 @@ namespace Barotrauma
         public bool IsDismissed => Info != null && Info.IsDismissed;
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
-        private readonly List<float> speedMultipliers = new List<float>();
-        private float greatestNegativeSpeedMultiplier = 1f;
-        private float greatestPositiveSpeedMultiplier = 1f;
 
         public Entity ViewTarget
         {
@@ -274,6 +271,11 @@ namespace Barotrauma
         {
             get
             {
+                if (IsPet)
+                {
+                    return (AIController as EnemyAIController).PetBehavior.GetName();
+                }
+
                 if (info != null && !string.IsNullOrWhiteSpace(info.Name)) { return info.Name; }
                 var displayName = Params.DisplayName;
                 if (string.IsNullOrWhiteSpace(displayName))
@@ -473,6 +475,11 @@ namespace Barotrauma
             get { return CharacterHealth.IsUnconscious; }
         }
 
+        public bool IsPet
+        {
+            get { return AIController is EnemyAIController enemyController && enemyController.PetBehavior != null; }
+        }
+
         public float Oxygen
         {
             get { return CharacterHealth.OxygenAmount; }
@@ -488,7 +495,7 @@ namespace Barotrauma
             get { return oxygenAvailable; }
             set { oxygenAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
-                
+        
         public float Stun
         {
             get { return IsRagdolled ? 1.0f : CharacterHealth.StunTimer; }
@@ -638,7 +645,7 @@ namespace Barotrauma
             {
                 if (!canBeDragged) { return false; }
                 if (Removed || !AnimController.Draggable) { return false; }
-                return IsDead || Stun > 0.0f || LockHands || IsIncapacitated;
+                return IsDead || Stun > 0.0f || LockHands || IsIncapacitated || IsPet;
             }
             set { canBeDragged = value; }
         }
@@ -1218,10 +1225,13 @@ namespace Barotrauma
             return targetMovement;
         }
 
+        private float greatestNegativeSpeedMultiplier = 1f;
+        private float greatestPositiveSpeedMultiplier = 1f;
+
         /// <summary>
         /// Can be used to modify the character's speed via StatusEffects
         /// </summary>
-        public float SpeedMultiplier { get; private set; }
+        public float SpeedMultiplier { get; private set; } = 1;
 
         public void StackSpeedMultiplier(float val)
         {
@@ -1245,6 +1255,40 @@ namespace Barotrauma
         {
             greatestPositiveSpeedMultiplier = 1f;
             greatestNegativeSpeedMultiplier = 1f;
+        }
+
+        private float greatestNegativeHealthMultiplier = 1f;
+        private float greatestPositiveHealthMultiplier = 1f;
+
+        /// <summary>
+        /// Can be used to modify the character's health via StatusEffects
+        /// </summary>
+        public float HealthMultiplier { get; private set; } = 1;
+
+        public void StackHealthMultiplier(float val)
+        {
+            if (val < 1f)
+            {
+                if (val < greatestNegativeHealthMultiplier)
+                {
+                    greatestNegativeHealthMultiplier = val;
+                }
+            }
+            else
+            {
+                if (val > greatestPositiveHealthMultiplier)
+                {
+                    greatestPositiveHealthMultiplier = val;
+                }
+            }
+        }
+
+        private void CalculateHealthMultiplier()
+        {
+            HealthMultiplier = greatestPositiveHealthMultiplier - (1f - greatestNegativeHealthMultiplier);
+            // Reset, status effects should set the values again, if the conditions match
+            greatestPositiveHealthMultiplier = 1f;
+            greatestNegativeHealthMultiplier = 1f;
         }
 
         /// <summary>
@@ -2132,6 +2176,10 @@ namespace Barotrauma
             {
                 SelectCharacter(FocusedCharacter);
             }
+            else if (FocusedCharacter != null && !FocusedCharacter.IsIncapacitated && IsKeyHit(InputType.Use) && FocusedCharacter.IsPet && CanInteract)
+            {
+                (FocusedCharacter.AIController as EnemyAIController).PetBehavior.Play();
+            }
             else if (FocusedCharacter != null && IsKeyHit(InputType.Health) && FocusedCharacter.CharacterHealth.UseHealthWindow && CanInteract && CanInteractWith(FocusedCharacter, 160f, false))
             {
                 if (FocusedCharacter == SelectedCharacter)
@@ -2369,6 +2417,7 @@ namespace Barotrauma
             }
 
             ApplyStatusEffects(AnimController.InWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
             UpdateControlled(deltaTime, cam);
 
@@ -2377,6 +2426,8 @@ namespace Barotrauma
             {
                 UpdateOxygen(deltaTime);
             }
+
+            CalculateHealthMultiplier();
             CharacterHealth.Update(deltaTime);
 
             if (IsIncapacitated)

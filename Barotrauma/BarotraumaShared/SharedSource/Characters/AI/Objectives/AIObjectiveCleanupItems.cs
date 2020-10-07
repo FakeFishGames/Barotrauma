@@ -66,6 +66,7 @@ namespace Barotrauma
             //if (rootContainer != null) { return false; }
             var pickable = item.GetComponent<Pickable>();
             if (pickable == null) { return false; }
+            if (pickable is Holdable h && h.Attachable && h.Attached) { return false; }
             var wire = item.GetComponent<Wire>();
             if (wire != null)
             {

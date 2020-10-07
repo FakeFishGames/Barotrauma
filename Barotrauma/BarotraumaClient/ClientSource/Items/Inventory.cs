@@ -1002,6 +1002,7 @@ namespace Barotrauma
                 {
                     if (DraggingItemToWorld &&
                         Character.Controlled.FocusedItem?.OwnInventory != null &&
+                        (Character.Controlled.FocusedItem.GetComponent<ItemContainer>()?.HasRequiredItems(Character.Controlled, addMessage: false) ?? false) &&
                         Character.Controlled.FocusedItem.OwnInventory.CanBePut(draggingItem) &&
                         Character.Controlled.FocusedItem.OwnInventory.TryPutItem(draggingItem, Character.Controlled))
                     {
