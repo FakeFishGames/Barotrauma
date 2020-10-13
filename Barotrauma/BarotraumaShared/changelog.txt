@@ -1,40 +1,10 @@
 ---------------------------------------------------------------------------------------------------------
-v0.10.601.0 (Unstable)
----------------------------------------------------------------------------------------------------------
-
-- Added 2 pets: Peanut and Psilotoad. Currently only obtainable via console commands ("spawnitem peanutegg", "spawnitem psilotoadegg", "spawn peanut" or "spawn psilotoad").
-- Improvements to the Watcher.
-- Fixed 2 equipped storage containers from one hand to another causing one of them to get stuck mid-air.
-- Fixed a crash caused by humanoid enemies (e.g. husks).
-- Moved toolbelt slot to the right side of the generic slots, added inventory icon for the slot.
-- Fixed EventManager crashing if there are no event sets configured for the current location type (only affected mods that add new location types without adding any events for them).
-- Use player name instead of server name for the server owner when hosting a server.
-- Fixed diving suit's low oxygen warning beep not following the player wearing the diving suit.
-- Made large monsters immune to paralyzant (mudraptor is the largest affected monster).
-- Fixed bots not reacting to player reports in multiplayer.
-- Added more copper to chalcopyrite and bornite deconstruct recipe.
-- More calcium for aragonite, adjusted prices.
-- Fixed fires not damaging characters.
-- Set terminal's maximum message length to match maximum chat message length (otherwise chat-linked terminals work differently in multiplayer).
-- Fixed inability to unlink hulls in the sub editor.
-- Fixed bots "cleaning up" components attached to walls.
-- Fixed yet another cause for "missing entity" errors. Occasionally happened in monster missions when a monster happened to get assigned the same ID as an item in a player's inventory.
-- Fixed items held in the left hand being drawn in front of the characters.
-- Allow closing the splash screens with esc.
-- Fixed "inventory sizes don't match" error when a human becomes a husk.
-- Fixed ability to drag and drop items into outpost reactors.
-- Fixed torso getting hidden when wearing a toolbelt.
-- Fixed coilgun ammo only using 90% of the fabrication materials.
-- Fixed paints reverting to the dirt color client-side after spraying.
-- Added missing dialog for the new "Cleanup Items" order.
-- Rebalanced upgrade parameters, allowing for more noticable benefits.
-
----------------------------------------------------------------------------------------------------------
-v0.10.600.0 (Unstable)
+v0.10.6.0 (Unstable)
 ---------------------------------------------------------------------------------------------------------
 
 Changes and additions:
 - Reworked Watcher.
+- Added pets (can be obtained by buying eggs from outposts). The pets produce items that can be used for crafting if they're kept happy and well-fed.
 - Added a new monster behavior: observe.
 - Added toolbelt (a wearable container with a capacity of 12 and it's own dedicated slot) as a replacement for the toolbox.
 - Improvements to the effects caused by psychosis: the affliction icon is not visible to the psychotic character, the fake fires and floods are a bit more convincing, the affliction plays random sounds and can cause other characters to become invisible.
@@ -66,12 +36,20 @@ Changes and additions:
 - A minor change to the status effect condition targeting logic: If "This" and "NearbyCharacters" are both defined as the targets of a status effect, the conditions only apply to "this" entity, even though the effects are applied on all the targets.
 - Implement spread, speed, and rotation for the spawn item status effects.
 - Minor damage (less than 1 hp) doesn't spawn particles anymore.
+- Rebalanced upgrade parameters, allowing for more noticable benefits.
+- Allow closing the splash screens with esc.
+- Added more copper to chalcopyrite and bornite deconstruct recipe.
+- More calcium for aragonite, adjusted prices.
+- Made large monsters immune to paralyzant (mudraptor is the largest affected monster).
+- Use player name instead of server name for the server owner when hosting a server.
+- Don't draw turret range indicators in the sub editor when the turret isn't selected.
 
 Character Editor:
 - Fixed a number of issues with the joint limit widgets. Also allowed to set a joint to rotate clockwise, which inverses the widget direction. Useful for heads or other limbs that extrude right from the main body.
 - Inversed the default joint ends, because it's more usual case to edit the second limb of the joint than the first.
 - The colliders of the hidden limbs are now hidden in the game view.
 - Changed the hotkey for toggling the parameter editor from "Tab" to "F1" and fix the inability to toggle the editor when a text field is selected.
+- Fixed load and save interfaces being broken on lower resolutions.
 
 Sounds:
 - Added 2 new background music tracks
@@ -110,6 +88,8 @@ AI improvements and fixes:
 
 Misc fixes:
 - Fixed clients always getting the generic "could not connect" error message when connecting to a server fails, even if there's a specific reason to the connection failing (e.g. disallowed symbols in the player's name, mismatching content packages or game version).
+- Fixed yet another cause for "missing entity" errors. Occasionally happened in monster missions when a monster happened to get assigned the same ID as an item in a player's inventory.
+- Fixed clients spawning a respawn shuttle in non-campaign missions even if the server has disabled respawning, leading to "missing entity" errors.
 - Fixed planters dropping removed seeds after a save is reloaded.
 - Fixed plants not updating the health after being fully grown in multiplayer.
 - Fixed decal syncing working unreliably in multiplayer.
@@ -145,6 +125,26 @@ Misc fixes:
 - OnDamaged status effects now launch only when there's any damage. Not when the damage is zero.
 - Fixed health bar pulsating even when no damage is done by an attack/status effect.
 - Fixed affliction probability not having any effect when used in status effects.
+- Fixed EventManager crashing if there are no event sets configured for the current location type (only affected mods that add new location types without adding any events for them).
+- Fixed items held in the left hand being drawn in front of the characters.
+- Fixed ability to drag and drop items into outpost reactors.
+- Set terminal's maximum message length to match maximum chat message length (otherwise chat-linked terminals work differently in multiplayer).
+- Fixed diving suit's low oxygen warning beep not following the player wearing the suit.
+- Fixed "propaganda" and "clown outbreak" outpost events never triggering.
+- Fixed "clown brutality" event getting stuck after the NPCs have been spawned.
+- Fixed "impromptu engineering" event giving only one coilgun ammo box despite the text saying 2.
+- Fixed "black market" event always giving the player the alien pistol.
+- Fixed incendium bars exploding when pressing the Use key while holding one.
+- Fixed outpost security not reacting to players throwing items that explode on impact (e.g. flash powder or nitroglycerin).
+- Fixed outpost security reacting to raptor bane extract injections with lethal force.
+- Fixed mantis' animation.
+- Fixed multiple wire nodes occasionally getting placed with one click when rewiring.
+- Fixed fire and water flow sounds staying active when returning from a multiplayer session to the main menu.
+- Fixed previously discovered map tiles becoming undiscovered when saving and loading a campaign.
+- Fixed 1st shot from SMG magazines spawned with console commands doing nothing.
+- Fixed calyxanide not damaging huskified humans or crawlers.
+- Fixed explosives exploding when combining them results in one being removed.
+- Fixed items that don't flip horizontally being positioned incorrectly in mirrored subs.
 
 ---------------------------------------------------------------------------------------------------------
 v0.10.5.1

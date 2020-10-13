@@ -415,7 +415,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
+                DebugConsole.ThrowError("Error in SerializableProperty.GetValue", e);
                 return false;
             }
         }

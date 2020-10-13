@@ -768,6 +768,18 @@ namespace Barotrauma
             {
                 attack.UpdateCoolDown(deltaTime);
             }
+
+            if (Params.BlinkFrequency > 0)
+            {
+                if (blinkTimer > -TotalBlinkDurationOut)
+                {
+                    blinkTimer -= deltaTime;
+                }
+                else
+                {
+                    blinkTimer = Params.BlinkFrequency;
+                }
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime);
@@ -1036,6 +1048,45 @@ namespace Barotrauma
                     }
                     statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
                 }
+            }
+        }
+
+        private float blinkTimer;
+        private float blinkPhase;
+
+        private float TotalBlinkDurationOut => Params.BlinkDurationOut + Params.BlinkHoldTime;
+
+        public void Blink(float deltaTime, float referenceRotation)
+        {
+            if (blinkTimer > -TotalBlinkDurationOut)
+            {
+                blinkPhase -= deltaTime;
+                if (blinkPhase > 0)
+                {
+                    // in
+                    float t = ToolBox.GetEasing(Params.BlinkTransitionIn, MathUtils.InverseLerp(1, 0, blinkPhase / Params.BlinkDurationIn));
+                    body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                }
+                else
+                {
+                    if (Math.Abs(blinkPhase) < Params.BlinkHoldTime)
+                    {
+                        // hold
+                        body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
+                    }
+                    else
+                    {
+                        // out
+                        float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, -blinkPhase / TotalBlinkDurationOut));
+                        body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                    }
+                }
+            }
+            else
+            {
+                // out
+                blinkPhase = Params.BlinkDurationIn;
+                body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
             }
         }
 

@@ -131,7 +131,7 @@ namespace Barotrauma
         protected float oxygenAvailable;
 
         //seed used to generate this character
-        private readonly string seed;
+        public readonly string Seed;
         protected Item focusedItem;
         private Character selectedCharacter, selectedBy;
         public Character LastAttacker;
@@ -273,7 +273,8 @@ namespace Barotrauma
             {
                 if (IsPet)
                 {
-                    return (AIController as EnemyAIController).PetBehavior.GetName();
+                    string petName = (AIController as EnemyAIController).PetBehavior.GetTagName();
+                    if (!string.IsNullOrEmpty(petName)) { return petName; }
                 }
 
                 if (info != null && !string.IsNullOrWhiteSpace(info.Name)) { return info.Name; }
@@ -827,7 +828,7 @@ namespace Barotrauma
         {
             prefab = CharacterPrefab.FindBySpeciesName(speciesName);
 
-            this.seed = seed;
+            this.Seed = seed;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
 
             selectedItems = new Item[2];
@@ -2178,7 +2179,7 @@ namespace Barotrauma
             }
             else if (FocusedCharacter != null && !FocusedCharacter.IsIncapacitated && IsKeyHit(InputType.Use) && FocusedCharacter.IsPet && CanInteract)
             {
-                (FocusedCharacter.AIController as EnemyAIController).PetBehavior.Play();
+                (FocusedCharacter.AIController as EnemyAIController).PetBehavior.Play(this);
             }
             else if (FocusedCharacter != null && IsKeyHit(InputType.Health) && FocusedCharacter.CharacterHealth.UseHealthWindow && CanInteract && CanInteractWith(FocusedCharacter, 160f, false))
             {
@@ -2918,7 +2919,7 @@ namespace Barotrauma
             }
 #endif
             // Don't allow beheading for monster attacks, because it happens too frequently (crawlers/tigerthreshers etc attacking each other -> they will most often target to the head)
-            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: AIController == null || AIController is HumanAIController);
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: attacker.IsHuman || attacker.IsPlayer);
 
             return attackResult;
         }
@@ -2944,7 +2945,8 @@ namespace Barotrauma
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
                 if (!joint.CanBeSevered) { continue; }
-                if (joint.LimbA != targetLimb && joint.LimbB != targetLimb) { continue; }
+                // Limb A is where we usually create the joints from. Let's not allow severing when the "parent" limb is hit, or the head can pop off when we hit the torso, for example.
+                if (joint.LimbB != targetLimb) { continue; }
                 float probability = severLimbsProbability;
                 if (!IsDead)
                 {
@@ -3223,6 +3225,11 @@ namespace Barotrauma
             if (!isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
                 return;
+            }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
 
             IsDead = true;

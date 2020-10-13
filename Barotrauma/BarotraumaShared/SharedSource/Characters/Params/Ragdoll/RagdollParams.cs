@@ -77,7 +77,7 @@ namespace Barotrauma
         [Serialize(LimbType.Torso, true), Editable]
         public LimbType MainLimb { get; set; }
 
-        private static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
+        private readonly static Dictionary<string, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<string, Dictionary<string, RagdollParams>>();
 
         public List<ColliderParams> Colliders { get; private set; } = new List<ColliderParams>();
         public List<LimbParams> Limbs { get; private set; } = new List<LimbParams>();
@@ -546,13 +546,16 @@ namespace Barotrauma
             [Serialize(LimbType.None, true, description: "The limb type affects many things, like the animations. Torso or Head are considered as the main limbs. Every character should have at least one Torso or Head."), Editable()]
             public LimbType Type { get; set; }
 
-            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360)]
-            public float SpriteOrientation { get; set; }
-
             /// <summary>
             /// The orientation of the sprite as drawn on the sprite sheet (in radians).
             /// </summary>
             public float GetSpriteOrientation() => MathHelper.ToRadians(float.IsNaN(SpriteOrientation) ? Ragdoll.SpritesheetOrientation : SpriteOrientation);
+
+            [Serialize("", true), Editable]
+            public string Notes { get; set; }
+
+            [Serialize(1f, true), Editable]
+            public float Scale { get; set; }
 
             [Serialize(true, true, description: "Does the limb flip when the character flips?"), Editable()]
             public bool Flip { get; set; }
@@ -566,8 +569,8 @@ namespace Barotrauma
             [Serialize(false, true, description: "Disable drawing for this limb."), Editable()]
             public bool Hide { get; set; }
 
-            [Serialize(1f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10)]
-            public float AttackPriority { get; set; }
+            [Serialize(float.NaN, true, description: "The orientation of the sprite as drawn on the sprite sheet. Overrides the value defined in the Ragdoll settings. Used mainly for animations and widgets."), Editable(-360, 360, ValueStep = 90, DecimalCount = 0)]
+            public float SpriteOrientation { get; set; }
 
             [Serialize(0f, true), Editable(MinValueFloat = 0, MaxValueFloat = 500)]
             public float SteerForce { get; set; }
@@ -590,6 +593,9 @@ namespace Barotrauma
             [Serialize(7f, true, description: "Increasing the damping makes the limb stop rotating more quickly."), Editable]
             public float AngularDamping { get; set; }
 
+            [Serialize(1f, true, description: "Higher values make AI characters prefer attacking this limb."), Editable(MinValueFloat = 0.1f, MaxValueFloat = 10)]
+            public float AttackPriority { get; set; }
+
             [Serialize("0, 0", true, description: "The position which is used to lead the IK chain to the IK goal. Only applicable if the limb is hand or foot."), Editable()]
             public Vector2 PullPos { get; set; }
 
@@ -602,17 +608,11 @@ namespace Barotrauma
             [Serialize("0, 0", true, description: "Relative offset for the mouth position (starting from the center). Only applicable for LimbType.Head. Used for eating."), Editable(DecimalCount = 2, MinValueFloat = -10f, MaxValueFloat = 10f)]
             public Vector2 MouthPos { get; set; }
 
-            [Serialize("", true), Editable]
-            public string Notes { get; set; }
-
             [Serialize(0f, true), Editable]
             public float ConstantTorque { get; set; }
 
             [Serialize(0f, true), Editable]
             public float ConstantAngle { get; set; }
-
-            [Serialize(1f, true), Editable]
-            public float Scale { get; set; }
 
             [Serialize(1f, true), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = 10)]
             public float AttackForceMultiplier { get; set; }
@@ -623,6 +623,42 @@ namespace Barotrauma
             //how long it takes for severed limbs to fade out
             [Serialize(10f, true, "How long it takes for the severed limb to fade out"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1)]
             public float SeveredFadeOutTime { get; set; } = 10.0f;
+
+            [Serialize(false, true, description: "Only applied when the limb is of type Tail. If none of the tails have been defined to use the angle and an angle is defined in the animation parameters, the first tail limb is used."), Editable]
+            public bool ApplyTailAngle { get; set; }
+
+            [Serialize(1f, true), Editable(ValueStep = 0.1f, DecimalCount = 2)]
+            public float SineFrequencyMultiplier { get; set; }
+
+            [Serialize(1f, true), Editable(ValueStep = 0.1f, DecimalCount = 2)]
+            public float SineAmplitudeMultiplier { get; set; }
+
+            [Serialize(0f, true), Editable(0, 100, ValueStep = 1, DecimalCount = 1)]
+            public float BlinkFrequency { get; set; }
+
+            [Serialize(0.2f, true), Editable(0.01f, 10, ValueStep = 1, DecimalCount = 2)]
+            public float BlinkDurationIn { get; set; }
+
+            [Serialize(0.5f, true), Editable(0.01f, 10, ValueStep = 1, DecimalCount = 2)]
+            public float BlinkDurationOut { get; set; }
+
+            [Serialize(0f, true), Editable(0, 10, ValueStep = 1, DecimalCount = 2)]
+            public float BlinkHoldTime { get; set; }
+
+            [Serialize(0f, true), Editable(-360, 360, ValueStep = 1, DecimalCount = 0)]
+            public float BlinkRotationIn { get; set; }
+
+            [Serialize(45f, true), Editable(-360, 360, ValueStep = 1, DecimalCount = 0)]
+            public float BlinkRotationOut { get; set; }
+
+            [Serialize(50f, true), Editable]
+            public float BlinkForce { get; set; }
+
+            [Serialize(TransitionMode.Linear, true), Editable]
+            public TransitionMode BlinkTransitionIn { get; private set; }
+
+            [Serialize(TransitionMode.Linear, true), Editable]
+            public TransitionMode BlinkTransitionOut { get; private set; }
 
             // Non-editable ->
             // TODO: make read-only

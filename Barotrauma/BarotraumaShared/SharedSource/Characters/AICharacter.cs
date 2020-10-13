@@ -47,6 +47,10 @@ namespace Barotrauma
             base.Update(deltaTime, cam);
 
             if (!Enabled) { return; }
+            if (!IsRemotePlayer && AIController is EnemyAIController enemyAi)
+            {
+                enemyAi.PetBehavior?.Update(deltaTime);
+            }
             if (IsDead || Vitality <= 0.0f || Stun > 0.0f || IsIncapacitated)
             {
                 //don't enable simple physics on dead/incapacitated characters

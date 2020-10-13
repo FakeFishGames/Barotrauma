@@ -4375,8 +4375,17 @@ namespace Barotrauma
             Submarine.DrawFront(spriteBatch, editing: true, e => ShowThalamus || !(e.prefab?.Category.HasFlag(MapEntityCategory.Thalamus) ?? false));
             if (!WiringMode && !IsMouseOnEditorGUI())
             {
-                MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);                
+                MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);
                 MapEntity.DrawSelecting(spriteBatch, cam);
+            }
+            if (dummyCharacter != null && WiringMode)
+            {
+                for (int i = 0; i < dummyCharacter.SelectedItems.Length; i++)
+                {
+                    if (dummyCharacter.SelectedItems[i] == null) { continue; }
+                    if (i > 0 && dummyCharacter.SelectedItems[0] == dummyCharacter.SelectedItems[i]) { continue; }
+                    dummyCharacter.SelectedItems[i].Draw(spriteBatch, editing: false, back: true);
+                }
             }
             spriteBatch.End();
 

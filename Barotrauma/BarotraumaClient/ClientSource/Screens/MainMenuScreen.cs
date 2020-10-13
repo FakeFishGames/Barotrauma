@@ -1104,7 +1104,16 @@ namespace Barotrauma
                 {
                     port = settingsDoc.Root.GetAttributeInt("port", port);
                     queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);
-                    maxPlayers = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
+
+                    int maxPlayersElement = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
+                    if (maxPlayersElement > NetConfig.MaxPlayers)
+                    {
+                        DebugConsole.IsOpen = true;
+                        DebugConsole.NewMessage($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", Color.Red);
+                        maxPlayersElement = NetConfig.MaxPlayers;
+                    }
+
+                    maxPlayers = maxPlayersElement;
                     karmaEnabled = settingsDoc.Root.GetAttributeBool("karmaenabled", true);
                     selectedKarmaPreset = settingsDoc.Root.GetAttributeString("karmapreset", "default");
                     string playStyleStr = settingsDoc.Root.GetAttributeString("playstyle", "Casual");

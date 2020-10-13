@@ -306,7 +306,7 @@ namespace Barotrauma.CharacterEditor
                     var lastJoint = selectedJoints.LastOrDefault();
                     if (lastJoint != null)
                     {
-                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbA : lastJoint.LimbB;
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbB : lastJoint.LimbA;
                     }
                 }
                 if (lastLimb != null)
@@ -941,7 +941,7 @@ namespace Barotrauma.CharacterEditor
                     var lastJoint = selectedJoints.LastOrDefault();
                     if (lastJoint != null)
                     {
-                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbA : lastJoint.LimbB;
+                        lastLimb = PlayerInput.KeyDown(Keys.LeftAlt) ? lastJoint.LimbB : lastJoint.LimbA;
                     }
                 }
                 if (lastLimb != null)
@@ -2389,7 +2389,7 @@ namespace Barotrauma.CharacterEditor
                     IEnumerable<Limb> limbs = selectedLimbs;
                     if (limbs.None())
                     {
-                        limbs = selectedJoints.Select(j => PlayerInput.KeyDown(Keys.LeftAlt) ? j.LimbA : j.LimbB);
+                        limbs = selectedJoints.Select(j => PlayerInput.KeyDown(Keys.LeftAlt) ? j.LimbB : j.LimbA);
                     }
                     foreach (var limb in limbs)
                     {
@@ -4452,11 +4452,11 @@ namespace Barotrauma.CharacterEditor
                     }
                     if (editJoints)
                     {
-                        if (!altDown && joint.BodyA == limb.body.FarseerBody)
+                        if (altDown && joint.BodyA == limb.body.FarseerBody)
                         {
                             continue;
                         }
-                        if (altDown && joint.BodyB == limb.body.FarseerBody)
+                        if (!altDown && joint.BodyB == limb.body.FarseerBody)
                         {
                             continue;
                         }

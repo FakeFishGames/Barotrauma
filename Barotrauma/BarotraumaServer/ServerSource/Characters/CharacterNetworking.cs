@@ -478,7 +478,7 @@ namespace Barotrauma
             msg.Write(Info == null);
             msg.Write(entityId);
             msg.Write(SpeciesName);
-            msg.Write(seed);
+            msg.Write(Seed);
 
             if (Removed)
             {

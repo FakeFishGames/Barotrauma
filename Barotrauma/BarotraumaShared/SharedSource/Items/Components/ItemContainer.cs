@@ -349,6 +349,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            if (item.Submarine == null || !item.Submarine.Loading)
+            {
+                SpawnAlwaysContainedItems();
+            }
+        }
+
         public override void OnMapLoaded()
         {
             if (itemIds != null)            
@@ -361,7 +369,11 @@ namespace Barotrauma.Items.Components
                 }
                 itemIds = null;
             }
+            SpawnAlwaysContainedItems();
+        }
 
+        private void SpawnAlwaysContainedItems()
+        {
             if (SpawnWithId.Length > 0)
             {
                 ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);
@@ -374,6 +386,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
 
         protected override void ShallowRemoveComponentSpecific()
         {

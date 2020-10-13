@@ -70,6 +70,7 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, false, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
         public bool KeepOpenWhenEquipped { get; set; }
+
         [Serialize(false, false, description: "Can the inventory of this item be moved around on the screen by the player.")]
         public bool MovableFrame { get; set; }
 
@@ -160,6 +161,30 @@ namespace Barotrauma.Items.Components
             {
                 return item?.Name;
             }            
+        }
+
+        public bool KeepOpenWhenEquippedBy(Character character)
+        {
+            if (!character.CanAccessInventory(Inventory) ||
+                !KeepOpenWhenEquipped ||
+                !character.HasEquippedItem(Item))
+            {
+                return false;
+            }
+
+            //if holding 2 different "always open" items in different hands, don't force them to stay open
+            if (character.SelectedItems[0] != null &&
+                character.SelectedItems[1] != null &&
+                character.SelectedItems[0] != character.SelectedItems[1])
+            {
+                if ((character.SelectedItems[0].GetComponent<ItemContainer>()?.KeepOpenWhenEquipped ?? false) &&
+                    (character.SelectedItems[1].GetComponent<ItemContainer>()?.KeepOpenWhenEquipped ?? false))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)

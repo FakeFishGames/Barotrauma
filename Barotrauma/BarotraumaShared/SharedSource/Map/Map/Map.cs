@@ -833,7 +833,7 @@ namespace Barotrauma
                         if (location.Discovered)
                         {
 #if CLIENT
-                            RemoveFogOfWar(StartLocation);
+                            RemoveFogOfWar(location);
 #endif
                             if (furthestDiscoveredLocation == null || location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                             {

@@ -98,6 +98,9 @@ namespace Barotrauma
                     case "pendingupgrades":
                         UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: true);
                         break;
+                    case "pets":
+                        petsElement = subElement;
+                        break;
                 }
             }
 
@@ -213,6 +216,10 @@ namespace Barotrauma
             crewDead = false;
             endTimer = 5.0f;
             CrewManager.InitSinglePlayerRound();
+            if (petsElement != null)
+            {
+                PetBehavior.LoadPets(petsElement);
+            }
         }
 
         protected override void LoadInitialLevel()
@@ -704,6 +711,10 @@ namespace Barotrauma
                     c.Inventory?.DeleteAllItems();
                 }
             }
+
+            XElement petsElement = new XElement("pets");
+            PetBehavior.SavePets(petsElement);
+            modeElement.Add(petsElement);            
 
             CrewManager.Save(modeElement);
             CampaignMetadata.Save(modeElement);

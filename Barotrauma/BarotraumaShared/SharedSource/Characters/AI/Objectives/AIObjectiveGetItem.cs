@@ -257,6 +257,10 @@ namespace Barotrauma
                 // Don't allow going into another sub, unless it's connected and of the same team and type.
                 if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { continue; }
                 if (character.IsItemTakenBySomeoneElse(item)) { continue; }
+                if (item.ParentInventory is ItemInventory itemInventory)
+                {
+                    if (!itemInventory.Container.HasRequiredItems(character, addMessage: false)) { continue; }
+                }
                 float itemPriority = 1;
                 if (GetItemPriority != null)
                 {

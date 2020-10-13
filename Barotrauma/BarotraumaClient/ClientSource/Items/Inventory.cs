@@ -404,8 +404,8 @@ namespace Barotrauma
                 container = (this as ItemInventory).Container;
             }
 
-            if (container == null) return false;
-            return owner.SelectedCharacter != null || !container.KeepOpenWhenEquipped || (!(owner is Character)) || !owner.HasEquippedItem(container.Item);
+            if (container == null) { return false; }
+            return owner.SelectedCharacter != null|| (!(owner is Character character)) || !container.KeepOpenWhenEquippedBy(character)  || !owner.HasEquippedItem(container.Item);
         }
 
         protected virtual bool HideSlot(int i)

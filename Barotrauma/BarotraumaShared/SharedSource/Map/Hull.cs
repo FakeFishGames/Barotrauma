@@ -1340,6 +1340,9 @@ namespace Barotrauma
                     decalsCleaned = true;
 #if SERVER
                     decalUpdatePending = true;
+#elif CLIENT
+                    pendingDecalUpdates.Add(decal);
+                    networkUpdatePending = true;
 #endif
                 }
             }

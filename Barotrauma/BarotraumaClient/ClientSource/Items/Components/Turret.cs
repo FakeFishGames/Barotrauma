@@ -286,7 +286,7 @@ namespace Barotrauma.Items.Components
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
 
-            if (!editing || GUI.DisableHUD) { return; }
+            if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }
 
             float widgetRadius = 60.0f;
 
@@ -304,8 +304,6 @@ namespace Barotrauma.Items.Components
                 drawPos,
                 drawPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * widgetRadius,
                 Color.LightGreen);
-
-            if (!item.IsSelected) { return; }
 
             Widget minRotationWidget = GetWidget("minrotation", spriteBatch, size: 10, initMethod: (widget) =>
             {

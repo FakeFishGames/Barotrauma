@@ -74,7 +74,7 @@ namespace Barotrauma
 
         //ambience
         private static Sound waterAmbienceIn, waterAmbienceOut, waterAmbienceMoving;
-        private static SoundChannel[] waterAmbienceChannels = new SoundChannel[3];
+        private static readonly SoundChannel[] waterAmbienceChannels = new SoundChannel[3];
 
         private static float ambientSoundTimer;
         private static Vector2 ambientSoundInterval = new Vector2(20.0f, 40.0f); //x = min, y = max
@@ -85,6 +85,7 @@ namespace Barotrauma
         private static Vector2 hullSoundInterval = new Vector2(45.0f, 90.0f); //x = min, y = max
 
         //misc
+        private static float[] targetFlowLeft, targetFlowRight;
         public static List<Sound> FlowSounds = new List<Sound>();
         public static List<Sound> SplashSounds = new List<Sound>();
         private static SoundChannel[] flowSoundChannels;
@@ -108,6 +109,8 @@ namespace Barotrauma
         private static List<DamageSound> damageSounds;
 
         private static Dictionary<GUISoundType, List<Sound>> guiSounds;
+
+        private static bool firstTimeInMainMenu = true;
 
         private static Sound startUpSound;
 
@@ -335,11 +338,14 @@ namespace Barotrauma
                 else { miscSoundList.Add(new KeyValuePair<string, Sound>(g.Key, s)); }
             }));
 
-
+            flowSoundChannels?.ForEach(ch => ch?.Dispose());
             flowSoundChannels = new SoundChannel[FlowSounds.Count];
             flowVolumeLeft = new float[FlowSounds.Count];
             flowVolumeRight = new float[FlowSounds.Count];
+            targetFlowLeft = new float[FlowSounds.Count];
+            targetFlowRight = new float[FlowSounds.Count];
 
+            fireSoundChannels?.ForEach(ch => ch?.Dispose());
             fireSoundChannels = new SoundChannel[fireSizes];
             fireVolumeLeft = new float[fireSizes];
             fireVolumeRight = new float[fireSizes];
@@ -493,9 +499,6 @@ namespace Barotrauma
         private static void UpdateWaterFlowSounds(float deltaTime)
         {
             if (FlowSounds.Count == 0) { return; }
-
-            float[] targetFlowLeft = new float[FlowSounds.Count];
-            float[] targetFlowRight = new float[FlowSounds.Count];
 
             Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
             foreach (Gap gap in Gap.GapList)
@@ -931,7 +934,9 @@ namespace Barotrauma
                 return "editor";
             }
 
-            if (Screen.Selected != GameMain.GameScreen) { return "menu"; }
+            if (Screen.Selected != GameMain.GameScreen) { return firstTimeInMainMenu ? "menu" : "default"; }
+
+            firstTimeInMainMenu = false;
 
 
             if (Character.Controlled != null)
@@ -973,12 +978,12 @@ namespace Barotrauma
                 float totalArea = 0.0f;
                 foreach (Hull hull in Hull.hullList)
                 {
-                    if (hull.Submarine != targetSubmarine) continue;
+                    if (hull.Submarine != targetSubmarine) { continue; }
                     floodedArea += hull.WaterVolume;
                     totalArea += hull.Volume;
                 }
 
-                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) return "flooded";             
+                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded"; }        
             }
             
             float enemyDistThreshold = 5000.0f;
@@ -991,7 +996,7 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
+                if (!(character.AIController is EnemyAIController enemyAI) || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
 
                 if (targetSubmarine != null)
                 {

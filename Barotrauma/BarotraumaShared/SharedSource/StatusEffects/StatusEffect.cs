@@ -733,9 +733,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (targets.FirstOrDefault(t => t is MapEntity) is MapEntity targetEntity && !targetEntity.Removed)
+                    var targetLimb = targets.FirstOrDefault(t => t is Limb) as Limb;
+                    if (targetLimb != null && !targetLimb.Removed)
                     {
-                        position = targetEntity.WorldPosition;
+                        position = targetLimb.WorldPosition;
                     }
                 }
             }

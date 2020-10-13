@@ -48,13 +48,11 @@ namespace Barotrauma
         private float attackLimbResetTimer;
 
         private bool IsCoolDownRunning => AttackingLimb != null && AttackingLimb.attack.CoolDownTimer > 0;
-        public float CombatStrength => Character.Params.AI.CombatStrength;
-        private float Sight => Character.Params.AI.Sight;
-        private float Hearing => Character.Params.AI.Hearing;
-        private float FleeHealthThreshold => Character.Params.AI.FleeHealthThreshold;
-        private float AggressionGreed => Character.Params.AI.AggressionGreed;
-        private float AggressionHurt => Character.Params.AI.AggressionHurt;
-        private bool AggressiveBoarding => Character.Params.AI.AggressiveBoarding;
+        public float CombatStrength => AIParams.CombatStrength;
+        private float Sight => AIParams.Sight;
+        private float Hearing => AIParams.Hearing;
+        private float FleeHealthThreshold => AIParams.FleeHealthThreshold;
+        private bool AggressiveBoarding => AIParams.AggressiveBoarding;
 
         private FishAnimController FishAnimController => Character.AnimController as FishAnimController;
 
@@ -90,7 +88,6 @@ namespace Barotrauma
 
         private readonly float priorityFearIncreasement = 2;
         private readonly float memoryFadeTime = 0.5f;
-        private readonly float avoidTime = 3;
 
         private float avoidTimer;
         private float observeTimer;
@@ -241,6 +238,10 @@ namespace Barotrauma
                 {
                     targetingTag = "dead";
                 }
+                else if (PetBehavior != null && aiTarget.Entity == PetBehavior.Owner) 
+                { 
+                    targetingTag = "owner"; 
+                }
                 else if (AIParams.TryGetTarget(targetCharacter.SpeciesName, out CharacterParams.TargetParams tP))
                 {
                     targetingTag = tP.Tag;
@@ -384,7 +385,7 @@ namespace Barotrauma
                 {
                     updateTargetsTimer -= deltaTime;
                 }
-                else
+                else if (avoidTimer <= 0)
                 {
                     CharacterParams.TargetParams targetingParams = null;
                     UpdateTargets(Character, out targetingParams);
@@ -393,11 +394,7 @@ namespace Barotrauma
                         UpdateWallTarget();
                     }
                     updateTargetsTimer = updateTargetsInterval * Rand.Range(0.75f, 1.25f);
-                    if (avoidTimer > 0)
-                    {
-                        State = AIState.Escape;
-                    }
-                    else if (SelectedAiTarget == null)
+                    if (SelectedAiTarget == null)
                     {
                         State = AIState.Idle;
                     }
@@ -502,17 +499,21 @@ namespace Barotrauma
                     }
                     break;
                 case AIState.Protect:
+                case AIState.Follow:
                     if (SelectedAiTarget == null || SelectedAiTarget.Entity == null || SelectedAiTarget.Entity.Removed)
                     {
                         State = AIState.Idle;
                         return;
                     }
-                    if (SelectedAiTarget.Entity is Character targetCharacter && targetCharacter.LastAttacker is Character attacker && !attacker.Removed && !attacker.IsDead)
+                    if (State == AIState.Protect)
                     {
-                        // Attack the character that attacked the target we are protecting
-                        ChangeTargetState(attacker, AIState.Attack, selectedTargetingParams.Priority * 2);
-                        SelectTarget(attacker.AiTarget);
-                        return;
+                        if (SelectedAiTarget.Entity is Character targetCharacter && targetCharacter.LastAttacker is Character attacker && !attacker.Removed && !attacker.IsDead)
+                        {
+                            // Attack the character that attacked the target we are protecting
+                            ChangeTargetState(attacker, AIState.Attack, selectedTargetingParams.Priority * 2);
+                            SelectTarget(attacker.AiTarget);
+                            return;
+                        }
                     }
                     float sqrDist = Vector2.DistanceSquared(WorldPosition, SelectedAiTarget.WorldPosition);
                     float reactDist = selectedTargetingParams != null && selectedTargetingParams.ReactDistance > 0 ? selectedTargetingParams.ReactDistance : GetPerceivingRange(SelectedAiTarget);
@@ -568,6 +569,7 @@ namespace Barotrauma
                         }
                         else
                         {
+                            // TODO: doesn't work right here
                             FaceTarget(SelectedAiTarget.Entity);
                         }
                         observeTimer -= deltaTime;
@@ -592,7 +594,6 @@ namespace Barotrauma
             if (!Character.AnimController.SimplePhysicsEnabled)
             {
                 LatchOntoAI?.Update(this, deltaTime);
-                PetBehavior?.Update(deltaTime);
             }
             IsSteeringThroughGap = false;
             if (SwarmBehavior != null)
@@ -1454,7 +1455,8 @@ namespace Barotrauma
             bool isFriendly = IsFriendly(Character, attacker);
             if (wasLatched)
             {
-                avoidTimer = avoidTime * Rand.Range(0.75f, 1.25f);
+                State = AIState.Escape;
+                avoidTimer = AIParams.AvoidTime * Rand.Range(0.75f, 1.25f);
                 if (!isFriendly)
                 {
                     SelectTarget(attacker.AiTarget);
@@ -1527,7 +1529,7 @@ namespace Barotrauma
             }
 
             AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget, true);
-            targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AggressionHurt;
+            targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AIParams.AggressionHurt;
 
             // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
             bool retaliate = !isFriendly && SelectedAiTarget != attacker.AiTarget && attacker.Submarine == Character.Submarine;
@@ -1552,12 +1554,14 @@ namespace Barotrauma
             }
             else if (avoidGunFire)
             {
-                avoidTimer = avoidTime * Rand.Range(0.75f, 1.25f);
+                State = AIState.Escape;
+                avoidTimer = AIParams.AvoidTime * Rand.Range(0.75f, 1.25f);
                 SelectTarget(attacker.AiTarget);
             }
             if (Character.HealthPercentage <= FleeHealthThreshold)
             {
-                avoidTimer = Rand.Range(15, 30);
+                State = AIState.Flee;
+                avoidTimer = AIParams.MinFleeTime * Rand.Range(0.75f, 1.25f);
                 SelectTarget(attacker.AiTarget);
             }
         }
@@ -1587,7 +1591,7 @@ namespace Barotrauma
                     if (damageTarget.Health > 0)
                     {
                         // Managed to hit a living/non-destroyed target. Increase the priority more if the target is low in health -> dies easily/soon
-                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * AggressionGreed;
+                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * AIParams.AggressionGreed;
                     }
                     else
                     {
@@ -1654,10 +1658,13 @@ namespace Barotrauma
                         if (!item.Removed && item.body != null)
                         {
                             float itemBodyExtent = item.body.GetMaxExtent() * 2;
-                            if (limbDiff.LengthSquared() < itemBodyExtent * itemBodyExtent)
+                            if (Math.Abs(limbDiff.X) < itemBodyExtent &&
+                                Math.Abs(limbDiff.Y) < Character.AnimController.Collider.GetMaxExtent() + Character.AnimController.ColliderHeightFromFloor)
                             {
+                                item.body.LinearVelocity *= 0.9f;
+                                item.body.LinearVelocity -= limbDiff * 0.25f;
+
                                 item.AddDamage(Character, item.WorldPosition, new Attack(0.0f, 0.0f, 0.0f, 0.0f, 0.1f), deltaTime);
-                                item.body.ApplyForce(-limbDiff * item.body.Mass);
 
                                 if (item.Condition <= 0.0f)
                                 {
@@ -1697,15 +1704,40 @@ namespace Barotrauma
                 State = AIState.Idle;
                 return;
             }
-            Vector2 dir = Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition);
-            if (!MathUtils.IsValid(dir))
+            if (Character.CurrentHull != null && PathSteering != null)
             {
-                return;
+                // Inside
+                Character targetCharacter = SelectedAiTarget.Entity as Character;
+                if ((Character.AnimController.InWater || !Character.AnimController.CanWalk) &&
+                    (targetCharacter != null && VisibleHulls.Contains(targetCharacter.CurrentHull) || Character.CanSeeTarget(SelectedAiTarget.Entity)))
+                {
+                    // Steer towards the target if in the same room and swimming
+                    Vector2 dir = Vector2.Normalize(SelectedAiTarget.Entity.WorldPosition - Character.WorldPosition);
+                    if (MathUtils.IsValid(dir))
+                    {
+                        SteeringManager.SteeringManual(deltaTime, dir);
+                    }
+                }
+                else
+                {
+                    // Use path finding
+                    SteeringManager.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), 2);
+                    if (!PathSteering.IsPathDirty && PathSteering.CurrentPath.Unreachable)
+                    {
+                        // Can't reach
+                        State = AIState.Idle;
+                        return;
+                    }
+                }
             }
-            SteeringManager.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), 5);
-            if (Character.AnimController.InWater)
+            else
             {
-                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
+                // Outside
+                SteeringManager.SteeringSeek(Character.GetRelativeSimPosition(SelectedAiTarget.Entity), 5);
+                if (Character.AnimController.InWater)
+                {
+                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 15);
+                }
             }
         }
 
@@ -1747,6 +1779,10 @@ namespace Barotrauma
                     if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
+                    }
+                    else if (PetBehavior != null && aiTarget.Entity == PetBehavior.Owner)
+                    {
+                        targetingTag = "owner";
                     }
                     else if (AIParams.TryGetTarget(targetCharacter.SpeciesName, out CharacterParams.TargetParams tP))
                     {
@@ -1992,9 +2028,16 @@ namespace Barotrauma
                 if (targetingTag == null) { continue; }
                 var targetParams = GetTargetParams(targetingTag);
                 if (targetParams == null) { continue; }
-                if (targetCharacter != null && targetCharacter.Submarine != Character.Submarine && targetParams.State == AIState.Observe)
+                if (targetParams.State == AIState.Observe || targetParams.State == AIState.Eat)
                 {
-                    // Don't allow to observe characters that are inside a different submarine / outside when we are inside.
+                    if (targetCharacter != null && targetCharacter.Submarine != Character.Submarine)
+                    {
+                        // Don't allow to target characters that are inside a different submarine / outside when we are inside.
+                        continue;
+                    }
+                }
+                if (aiTarget.Entity is Item targetItem && targetParams.IgnoreContained && targetItem.ParentInventory != null)
+                {
                     continue;
                 }
                 valueModifier *= targetParams.Priority;
@@ -2066,6 +2109,17 @@ namespace Barotrauma
                     }
                     if (targetCharacter != null)
                     {
+                        if (Character.CurrentHull != null && targetCharacter.CurrentHull != Character.CurrentHull)
+                        {
+                            if (targetParams.State == AIState.Follow || targetParams.State == AIState.Protect || targetParams.State == AIState.Observe)
+                            {
+                                // Ignore targets that cannot see
+                                if (!VisibleHulls.Contains(targetCharacter.CurrentHull))
+                                {
+                                    continue;
+                                }
+                            }
+                        }
                         if (targetCharacter.Submarine != Character.Submarine)
                         {
                             if (targetCharacter.Submarine != null)

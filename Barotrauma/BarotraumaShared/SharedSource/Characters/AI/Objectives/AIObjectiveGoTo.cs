@@ -342,7 +342,7 @@ namespace Barotrauma
                             SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(Target.WorldPosition - character.WorldPosition));
                             if (character.AnimController.InWater)
                             {
-                                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
+                                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 2);
                             }
                         }
                     }
@@ -360,7 +360,10 @@ namespace Barotrauma
                     else
                     {
                         SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
-                        SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
+                        if (character.AnimController.InWater)
+                        {
+                            SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
+                        }
                     }
                 }
             }

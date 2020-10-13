@@ -59,6 +59,7 @@
   <Item file="Content/Items/Gardening/growableplants.xml" />
   <Item file="Content/Items/Gardening/gardeningtools.xml" />
   <Item file="Content/Items/Gardening/plantproducts.xml" />
+  <Character file="Content/Characters/Balloon/Balloon.xml" />
   <Character file="Content/Characters/Carrier/Carrier.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
@@ -92,6 +93,7 @@
   <Character file="Content/Characters/Molochbaby/Molochbaby.xml" />
   <Character file="Content/Characters/Peanut/Peanut.xml" />
   <Character file="Content/Characters/Psilotoad/Psilotoad.xml" />
+  <Character file="Content/Characters/Orangeboy/Orangeboy.xml" />
   <Character file="Content/Characters/Tigerthresher/Tigerthresher.xml" />
   <Character file="Content/Characters/Bonethresher/Bonethresher.xml" />
   <Character file="Content/Characters/Leucocyte/Leucocyte.xml" />

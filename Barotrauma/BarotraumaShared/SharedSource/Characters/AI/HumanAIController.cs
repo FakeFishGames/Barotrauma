@@ -1111,7 +1111,10 @@ namespace Barotrauma
         public bool TakeItem(Item item, Inventory targetInventory, bool equip, bool dropOtherIfCannotMove = true, bool allowSwapping = false, bool storeUnequipped = false)
         {
             var pickable = item.GetComponent<Pickable>();
-            if (pickable == null) { return false; }
+            if (item.ParentInventory is ItemInventory itemInventory)
+            {
+                if (!itemInventory.Container.HasRequiredItems(Character, addMessage: false)) { return false; }
+            }
             if (equip)
             {
                 int targetSlot = -1;

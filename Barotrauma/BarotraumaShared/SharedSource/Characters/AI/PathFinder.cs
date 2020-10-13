@@ -94,6 +94,7 @@ namespace Barotrauma
         private readonly List<PathNode> nodes;
 
         public bool InsideSubmarine { get; set; }
+        public bool ApplyPenaltyToOutsideNodes { get; set; }
 
         public PathFinder(List<WayPoint> wayPoints, bool indoorsSteering = false)
         {
@@ -178,7 +179,7 @@ namespace Barotrauma
                 node.TempDistance = xDiff + (InsideSubmarine ? yDiff * 10.0f : yDiff); //higher cost for vertical movement when inside the sub
 
                 //much higher cost to waypoints that are outside
-                if (node.Waypoint.CurrentHull == null && InsideSubmarine) { node.TempDistance *= 10.0f; }
+                if (node.Waypoint.CurrentHull == null && ApplyPenaltyToOutsideNodes) { node.TempDistance *= 10.0f; }
 
                 //prefer nodes that are closer to the end position
                 node.TempDistance += (Math.Abs(end.X - node.TempPosition.X) + Math.Abs(end.Y - node.TempPosition.Y)) / 100.0f;
@@ -231,8 +232,11 @@ namespace Barotrauma
                 node.TempDistance = Vector2.DistanceSquared(end, node.TempPosition);
                 if (InsideSubmarine)
                 {
-                    //much higher cost to waypoints that are outside
-                    if (node.Waypoint.CurrentHull == null) { node.TempDistance *= 10.0f; }
+                    if (ApplyPenaltyToOutsideNodes)
+                    {
+                        //much higher cost to waypoints that are outside
+                        if (node.Waypoint.CurrentHull == null) { node.TempDistance *= 10.0f; }
+                    }
                     //avoid stopping at a doorway
                     if (node.Waypoint.ConnectedDoor != null) { node.TempDistance *= 10.0f; }
                     //avoid stopping at a ladder

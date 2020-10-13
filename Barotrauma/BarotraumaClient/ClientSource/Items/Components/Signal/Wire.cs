@@ -342,7 +342,8 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        if (Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X || PlayerInput.IsShiftDown())
+                        if ((highlightedNodeIndex.HasValue && Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X) || 
+                            PlayerInput.IsShiftDown())
                         {
                             selectedNodeIndex = highlightedNodeIndex;
                         }

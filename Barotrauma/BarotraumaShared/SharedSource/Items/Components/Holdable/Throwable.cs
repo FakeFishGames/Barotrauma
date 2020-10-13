@@ -6,17 +6,19 @@ namespace Barotrauma.Items.Components
 {
     class Throwable : Holdable
     {
-        private float throwForce, throwPos;
+        private float throwPos;
         private bool throwing, throwDone;
 
         private bool midAir;
 
-        [Serialize(1.0f, false, description: "The impulse applied to the physics body of the item when thrown. Higher values make the item be thrown faster.")]
-        public float ThrowForce
+        public Character CurrentThrower
         {
-            get { return throwForce; }
-            set { throwForce = value; }
+            get;
+            private set;
         }
+
+        [Serialize(1.0f, false, description: "The impulse applied to the physics body of the item when thrown. Higher values make the item be thrown faster.")]
+        public float ThrowForce { get; set; }
 
         public Throwable(Item item, XElement element)
             : base(item, element)
@@ -60,6 +62,21 @@ namespace Barotrauma.Items.Components
             {
                 if (item.body.LinearVelocity.LengthSquared() < 0.01f)
                 {
+                    CurrentThrower = null;
+                    if (statusEffectLists.ContainsKey(ActionType.OnImpact))
+                    {
+                        foreach (var statusEffect in statusEffectLists[ActionType.OnImpact])
+                        {
+                            statusEffect.SetUser(null);
+                        }
+                    }
+                    if (statusEffectLists.ContainsKey(ActionType.OnBroken))
+                    {
+                        foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
+                        {
+                            statusEffect.SetUser(null);
+                        }
+                    }
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
                     midAir = false;
                 }
@@ -117,9 +134,24 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     GameServer.Log(GameServer.CharacterLogName(picker) + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
-                    Character thrower = picker;
-                    item.Drop(thrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
-                    item.body.ApplyLinearImpulse(throwVector * throwForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    CurrentThrower = picker;
+                    if (statusEffectLists.ContainsKey(ActionType.OnImpact))
+                    {
+                        foreach (var statusEffect in statusEffectLists[ActionType.OnImpact])
+                        {
+                            statusEffect.SetUser(CurrentThrower);
+                        }
+                    }
+                    if (statusEffectLists.ContainsKey(ActionType.OnBroken))
+                    {
+                        foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
+                        {
+                            statusEffect.SetUser(CurrentThrower);
+                        }
+                    }
+
+                    item.Drop(CurrentThrower, createNetworkEvent: GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer);
+                    item.body.ApplyLinearImpulse(throwVector * ThrowForce * item.body.Mass * 3.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
                     //disable platform collisions until the item comes back to rest again
                     item.body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
@@ -135,12 +167,12 @@ namespace Barotrauma.Items.Components
 
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnSecondaryUse, this, thrower.ID });
+                        GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnSecondaryUse, this, CurrentThrower.ID });
                     }
                     if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                     {
                         //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
-                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, thrower, user: thrower);
+                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, CurrentThrower, user: CurrentThrower);
                     }
                     throwing = false;
                 }

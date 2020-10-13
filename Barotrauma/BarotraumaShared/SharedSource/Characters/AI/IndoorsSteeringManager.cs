@@ -190,6 +190,7 @@ namespace Barotrauma
                         }
                     }
                     pathFinder.InsideSubmarine = character.Submarine != null;
+                    pathFinder.ApplyPenaltyToOutsideNodes = character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || findPathTimer < -1;
                     if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
@@ -343,7 +344,7 @@ namespace Barotrauma
                 }
                 return diff;
             }
-            else if (!canClimb || character.AnimController.InWater)
+            else if (character.AnimController.InWater)
             {
                 // If the character is underwater, we don't need the ladders anymore
                 if (character.IsClimbing && isDiving)
@@ -370,7 +371,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (!IsNextLadderSameAsCurrent)
+            else if (!canClimb || !IsNextLadderSameAsCurrent)
             {
                 // Walking horizontally
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
@@ -378,6 +379,8 @@ namespace Barotrauma
                 Vector2 velocity = collider.LinearVelocity;
                 // If the character is smaller than this, it would fail to use the waypoint nodes because they are always too high.
                 float minHeight = 1;
+                // If the character is very thin, without a min value, it would often fail to reach the waypoints, because the horizontal distance is too small.
+                float minWidth = 0.17f;
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
                 float characterHeight = Math.Max(colliderSize.Y + character.AnimController.ColliderHeightFromFloor, minHeight);
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
@@ -386,7 +389,7 @@ namespace Barotrauma
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 bool blockedByDoor = door != null && !door.IsOpen && !door.IsBroken;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
-                float targetDistance = collider.radius * margin;
+                float targetDistance = Math.Max(collider.radius * margin, minWidth);
                 if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && !blockedByDoor)
                 {
                     currentPath.SkipToNextNode();

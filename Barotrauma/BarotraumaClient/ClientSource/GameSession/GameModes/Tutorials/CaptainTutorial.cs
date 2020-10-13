@@ -186,8 +186,7 @@ namespace Barotrauma.Tutorials
                 // TODO: Rework order highlighting for new command UI
                 // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
                 //HighlightOrderOption("jobspecific");
-            }
-            while (!HasOrder(captain_mechanic, "repairsystems"));
+            } while (!HasOrder(captain_mechanic, "repairsystems") && !HasOrder(captain_mechanic, "repairmechanical") && !HasOrder(captain_mechanic, "repairelectrical"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Command));

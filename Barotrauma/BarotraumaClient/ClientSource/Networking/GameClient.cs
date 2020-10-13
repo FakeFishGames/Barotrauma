@@ -1023,7 +1023,10 @@ namespace Barotrauma.Networking
                 if (Enum.TryParse(splitMsg[0], out disconnectReason)) { disconnectReasonIncluded = true; }
             }
 
-            if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage)
+            if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage ||
+                disconnectReason == DisconnectReason.Banned ||
+                disconnectReason == DisconnectReason.Kicked ||
+                disconnectReason == DisconnectReason.TooManyFailedLogins)
             {
                 allowReconnect = false;
             }
@@ -2138,6 +2141,7 @@ namespace Barotrauma.Networking
                                 return;
                             }
 
+                            entities.Add(entity);
                             if (entity != null && (entity is Item || entity is Character || entity is Submarine))
                             {
                                 entity.ClientRead(objHeader.Value, inc, sendingTime);
@@ -2188,7 +2192,8 @@ namespace Barotrauma.Networking
                 errorLines.Add(ex.StackTrace.CleanupStackTrace());
                 errorLines.Add(" ");
                 if (prevObjHeader == ServerNetObject.ENTITY_EVENT || prevObjHeader == ServerNetObject.ENTITY_EVENT_INITIAL || 
-                    objHeader == ServerNetObject.ENTITY_EVENT || objHeader == ServerNetObject.ENTITY_EVENT_INITIAL)
+                    objHeader == ServerNetObject.ENTITY_EVENT || objHeader == ServerNetObject.ENTITY_EVENT_INITIAL ||
+                    objHeader == ServerNetObject.ENTITY_POSITION || prevObjHeader == ServerNetObject.ENTITY_POSITION)
                 {
                     foreach (IServerSerializable ent in entities)
                     {

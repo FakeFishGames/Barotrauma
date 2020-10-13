@@ -30,6 +30,8 @@ namespace Barotrauma
 
         public CampaignMetadata CampaignMetadata;
 
+        protected XElement petsElement;
+
         public enum TransitionType
         {
             None,

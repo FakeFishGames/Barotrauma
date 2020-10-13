@@ -282,6 +282,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine file corrupted.");
                 return;
             }
+            if (SubmarineInfo.SubmarineElement.Elements().Count() == 0)
+            {
+                DebugConsole.ThrowError("Couldn't start game session, saved submarine is empty. The submarine file may be corrupted.");
+                return;
+            }
 
             LevelData = levelData;
 

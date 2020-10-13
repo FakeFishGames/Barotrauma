@@ -144,17 +144,13 @@ namespace Barotrauma
         protected override ItemInventory GetActiveEquippedSubInventory(int slotIndex)
         {
             var item = Items[slotIndex];
-            if (item == null) return null;
+            if (item == null) { return null; }
 
             var container = item.GetComponent<ItemContainer>();
-            if (container == null || 
-                !character.CanAccessInventory(container.Inventory) ||
-                !container.KeepOpenWhenEquipped || 
-                !character.HasEquippedItem(container.Item))
+            if (container == null || !container.KeepOpenWhenEquippedBy(character))
             {
                 return null;
             }
-
             return container.Inventory;
         }
 
@@ -626,7 +622,7 @@ namespace Barotrauma
                         {
                             var itemContainer = item.GetComponent<ItemContainer>();
                             if (itemContainer != null && 
-                                itemContainer.KeepOpenWhenEquipped && 
+                                itemContainer.KeepOpenWhenEquippedBy(character) && 
                                 character.CanAccessInventory(itemContainer.Inventory) &&
                                 !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                             {

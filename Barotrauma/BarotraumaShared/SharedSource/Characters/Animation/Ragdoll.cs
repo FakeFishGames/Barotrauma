@@ -216,16 +216,18 @@ namespace Barotrauma
             get
             {
                 Limb mainLimb = GetLimb(RagdollParams.MainLimb);
-                if (mainLimb == null)
+                if (!IsValid(mainLimb))
                 {
                     Limb torso = GetLimb(LimbType.Torso);
                     Limb head = GetLimb(LimbType.Head);
                     mainLimb = torso ?? head;
-                    if (mainLimb == null)
+                    if (!IsValid(mainLimb))
                     {
-                        mainLimb = Limbs.FirstOrDefault(l => !l.IsSevered && !l.ignoreCollisions);
+                        mainLimb = Limbs.FirstOrDefault(l => IsValid(l));
                     }
                 }
+
+                bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.ignoreCollisions;
                 return mainLimb;
             }
         }
@@ -753,7 +755,6 @@ namespace Barotrauma
             foreach (Limb limb in Limbs)
             {
                 if (connectedLimbs.Contains(limb)) { continue; }
-                if (!character.IsDead && !limb.CanBeSeveredAlive) { continue; }
                 limb.IsSevered = true;
                 if (limb.type == LimbType.RightHand)
                 {
@@ -764,7 +765,6 @@ namespace Barotrauma
                     character.SelectedItems[1]?.Drop(character);
                 }
             }
-
 
             if (!string.IsNullOrEmpty(character.BloodDecalName))
             {

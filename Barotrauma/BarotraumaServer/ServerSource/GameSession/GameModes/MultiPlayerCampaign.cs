@@ -147,6 +147,14 @@ namespace Barotrauma
                     c.InGame && (IsOwner(c) || c.HasPermission(ClientPermissions.ManageCampaign)));
         }
 
+        public void LoadPets()
+        {
+            if (petsElement != null)
+            {
+                PetBehavior.LoadPets(petsElement);
+            }
+        }
+
         protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
         {
             lastUpdateID++;
@@ -228,6 +236,9 @@ namespace Barotrauma
                     
                     c.Inventory.DeleteAllItems();
                 }
+
+                petsElement = new XElement("pets");
+                PetBehavior.SavePets(petsElement);
 
                 yield return CoroutineStatus.Running;
 
@@ -767,6 +778,11 @@ namespace Barotrauma
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
             UpgradeManager?.SavePendingUpgrades(modeElement, UpgradeManager?.PendingUpgrades);
+
+            if (petsElement != null)
+            {
+                modeElement.Add(petsElement);
+            }
 
             // save bots
             CrewManager.SaveMultiplayer(modeElement);

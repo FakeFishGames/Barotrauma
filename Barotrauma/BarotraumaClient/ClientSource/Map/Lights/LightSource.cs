@@ -44,6 +44,12 @@ namespace Barotrauma.Lights
             }
         }
 
+        [Serialize(1f, true), Editable(minValue: 0.01f, maxValue: 100f, ValueStep = 0.1f, DecimalCount = 2)]
+        public float Scale { get; set; }
+
+        [Serialize("0, 0", true), Editable(ValueStep = 1, DecimalCount = 1, MinValueFloat = -1000f, MaxValueFloat = 1000f)]
+        public Vector2 Offset { get; set; }
+             
         public float TextureRange
         {
             get;
@@ -241,11 +247,13 @@ namespace Barotrauma.Lights
             }
         }
 
+        private Vector2 _spriteScale = Vector2.One;
+
         public Vector2 SpriteScale
         {
-            get;
-            set;
-        } = Vector2.One;
+            get { return _spriteScale * lightSourceParams.Scale; }
+            set { _spriteScale = value; }
+        }
 
         public float? OverrideLightSpriteAlpha
         {
@@ -280,7 +288,9 @@ namespace Barotrauma.Lights
         {
             get { return lightSourceParams.LightSprite; }
         }
-        
+
+        private Vector2 OverrideLightTextureOrigin => OverrideLightTexture.Origin + LightSourceParams.Offset;
+
         public Color Color
         {
             get { return lightSourceParams.Color; }
@@ -564,7 +574,7 @@ namespace Barotrauma.Lights
 
                 var overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
 
-                Vector2 origin = OverrideLightTexture.Origin;
+                Vector2 origin = OverrideLightTextureOrigin;
 
                 origin /= Math.Max(overrideTextureDims.X, overrideTextureDims.Y);
                 origin -= Vector2.One * 0.5f;
@@ -873,7 +883,7 @@ namespace Barotrauma.Lights
             {
                 overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
 
-                Vector2 origin = OverrideLightTexture.Origin;
+                Vector2 origin = OverrideLightTextureOrigin;
                 if (LightSpriteEffect == SpriteEffects.FlipHorizontally) { origin.X = OverrideLightTexture.SourceRect.Width - origin.X; }
                 if (LightSpriteEffect == SpriteEffects.FlipVertically) { origin.Y = OverrideLightTexture.SourceRect.Height - origin.Y; }
                 uvOffset = (origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
@@ -1060,7 +1070,7 @@ namespace Barotrauma.Lights
                 {
                     var overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
 
-                    Vector2 origin = OverrideLightTexture.Origin;
+                    Vector2 origin = OverrideLightTextureOrigin;
 
                     origin /= Math.Max(overrideTextureDims.X, overrideTextureDims.Y);
                     origin *= TextureRange;
@@ -1088,13 +1098,12 @@ namespace Barotrauma.Lights
 
             if (DeformableLightSprite != null)
             {
-                Vector2 origin = DeformableLightSprite.Origin;
+                Vector2 origin = DeformableLightSprite.Origin + LightSourceParams.Offset;
                 Vector2 drawPos = position;
                 if (ParentSub != null)
                 {
                     drawPos += ParentSub.DrawPosition;
                 }
-
                 if (LightSpriteEffect == SpriteEffects.FlipHorizontally)
                 {
                     origin.X = DeformableLightSprite.Sprite.SourceRect.Width - origin.X;
@@ -1113,7 +1122,7 @@ namespace Barotrauma.Lights
 
             if (LightSprite != null)
             {
-                Vector2 origin = LightSprite.Origin;
+                Vector2 origin = LightSprite.Origin + LightSourceParams.Offset;
                 if ((LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally)
                 {
                     origin.X = LightSprite.SourceRect.Width - origin.X;

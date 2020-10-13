@@ -1658,10 +1658,14 @@ namespace Barotrauma
 
         public override void FlipX(bool relativeToSub)
         {
-            if (!Prefab.CanFlipX) { return; }
-
+            //call the base method even if the item can't flip, to handle repositioning when flipping the whole sub
             base.FlipX(relativeToSub);
 
+            if (!Prefab.CanFlipX) 
+            {
+                flippedX = false;
+                return; 
+            }
 #if CLIENT
             if (Prefab.CanSpriteFlipX)
             {
@@ -1677,9 +1681,14 @@ namespace Barotrauma
 
         public override void FlipY(bool relativeToSub)
         {
-            if (!Prefab.CanFlipY) { return; }
-
+            //call the base method even if the item can't flip, to handle repositioning when flipping the whole sub
             base.FlipY(relativeToSub);
+
+            if (!Prefab.CanFlipY)
+            {
+                flippedY = false;
+                return;
+            }
 
 #if CLIENT
             if (Prefab.CanSpriteFlipY)

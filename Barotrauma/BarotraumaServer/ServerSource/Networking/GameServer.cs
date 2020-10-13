@@ -1574,8 +1574,9 @@ namespace Barotrauma.Networking
                 {
                     //if docked to a sub with a smaller ID, don't send an update
                     //  (= update is only sent for the docked sub that has the smallest ID, doesn't matter if it's the main sub or a shuttle)
-                    if (sub.Info.IsOutpost || sub.DockedTo.Any(s => s.ID < sub.ID)) continue;
-                    if (!c.PendingPositionUpdates.Contains(sub)) c.PendingPositionUpdates.Enqueue(sub);
+                    if (sub.Info.IsOutpost || sub.DockedTo.Any(s => s.ID < sub.ID)) { continue; }
+                    if (sub.PhysicsBody == null || sub.PhysicsBody.BodyType == FarseerPhysics.BodyType.Static) { continue; }
+                    if (!c.PendingPositionUpdates.Contains(sub)) { c.PendingPositionUpdates.Enqueue(sub); }
                 }
 
                 foreach (Item item in Item.ItemList)
@@ -2291,6 +2292,8 @@ namespace Barotrauma.Networking
                 crewManager?.InitRound();
             }
 
+            campaign?.LoadPets();
+
             foreach (Submarine sub in Submarine.MainSubs)
             {
                 if (sub == null) continue;
@@ -2359,7 +2362,7 @@ namespace Barotrauma.Networking
 
             bool missionAllowRespawn = campaign == null && (missionMode?.Mission == null || missionMode.Mission.AllowRespawn);
             bool outpostAllowRespawn = campaign != null && campaign.NextLevel?.Type == LevelData.LevelType.Outpost;
-            msg.Write(missionAllowRespawn || outpostAllowRespawn);
+            msg.Write(serverSettings.AllowRespawn && (missionAllowRespawn || outpostAllowRespawn));
             msg.Write(serverSettings.AllowDisguises);
             msg.Write(serverSettings.AllowRewiring);
             msg.Write(serverSettings.AllowRagdollButton);

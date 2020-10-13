@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -9,6 +10,14 @@ namespace Barotrauma
 {
     class PetBehavior
     {
+        public enum StatusIndicatorType
+        {
+            None,
+            Happy,
+            Sad,
+            Hungry
+        }
+
         public float Hunger { get; set; } = 50.0f;
         public float Happiness { get; set; } = 50.0f;
 
@@ -21,6 +30,7 @@ namespace Barotrauma
         public float PlayForce { get; set; }
 
         public float PlayTimer { get; set; }
+        private float? unstunY { get; set; }
 
         public EnemyAIController AiController { get; private set; } = null;
 
@@ -126,6 +136,7 @@ namespace Barotrauma
             public float Hunger;
             public float Happiness;
             public float Priority;
+            public bool IgnoreContained;
 
             public CharacterParams.TargetParams TargetParams = null;
         }
@@ -159,7 +170,11 @@ namespace Barotrauma
                     case "eat":
                         Food food = new Food
                         {
-                            Tag = subElement.GetAttributeString("tag", "")
+                            Tag = subElement.GetAttributeString("tag", ""),
+                            Hunger = subElement.GetAttributeFloat("hunger", -1),
+                            Happiness = subElement.GetAttributeFloat("happiness", 1),
+                            Priority = subElement.GetAttributeFloat("priority", 100),
+                            IgnoreContained = subElement.GetAttributeBool("ignorecontained", true)
                         };
                         string[] requiredHungerStr = subElement.GetAttributeString("requiredhunger", "0-100").Split('-');
                         food.HungerRange = new Vector2(0, 100);
@@ -168,13 +183,18 @@ namespace Barotrauma
                             if (float.TryParse(requiredHungerStr[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float tempF)) { food.HungerRange.X = tempF; }
                             if (float.TryParse(requiredHungerStr[1], NumberStyles.Any, CultureInfo.InvariantCulture, out tempF)) { food.HungerRange.Y = tempF; }
                         }
-                        food.Hunger = subElement.GetAttributeFloat("hunger", -1);
-                        food.Happiness = subElement.GetAttributeFloat("happiness", 1);
-                        food.Priority = subElement.GetAttributeFloat("priority", 100);
                         foods.Add(food);
                         break;
                 }
             }
+        }
+
+        public StatusIndicatorType GetCurrentStatusIndicatorType()
+        {
+            if (Hunger > MaxHunger * 0.5f) { return StatusIndicatorType.Hungry; }
+            if (Happiness > MaxHappiness * 0.75f) { return StatusIndicatorType.Happy; }
+            if (Happiness < MaxHappiness * 0.25f) { return StatusIndicatorType.Sad; }
+            return StatusIndicatorType.None;
         }
 
         public void OnEat(IEnumerable<string> tags, float amount)
@@ -203,17 +223,19 @@ namespace Barotrauma
             }
         }
 
-        public void Play()
+        public void Play(Character player)
         {
             if (PlayTimer > 0.0f) { return; }
+            if (Owner == null) { Owner = player; }
             PlayTimer = 5.0f;
-            AiController.Character.Stun = 1.0f;
+            AiController.Character.IsRagdolled = true;
             Happiness += 10.0f;
             if (Happiness > MaxHappiness) { Happiness = MaxHappiness; }
             AiController.Character.AnimController.MainLimb.body.LinearVelocity += new Vector2(0, PlayForce);
+            unstunY = AiController.Character.SimPosition.Y;
         }
 
-        public string GetName()
+        public string GetTagName()
         {
             if (AiController.Character.Inventory != null)
             {
@@ -230,14 +252,16 @@ namespace Barotrauma
                 }
             }
 
-            return AiController.Character.Name;
+            return string.Empty;
         }
 
         public void Update(float deltaTime)
         {
             var character = AiController.Character;
             if (character?.Removed ?? true || character.IsDead) { return; }
-            if (GameMain.NetworkMember?.IsClient ?? false) { return; } //TODO: syncing
+            if (GameMain.NetworkMember?.IsClient ?? false) { return; }
+
+            if (Owner != null && (Owner.Removed || Owner.IsDead)) { Owner = null; }
 
             Hunger += HungerIncreaseRate * deltaTime;
 
@@ -245,20 +269,45 @@ namespace Barotrauma
 
             PlayTimer -= deltaTime;
 
-            for (int i = 0; i < foods.Count; i++)
+            if (unstunY.HasValue)
             {
-                if (Hunger >= foods[i].HungerRange.X && Hunger <= foods[i].HungerRange.Y)
+                if (PlayTimer > 4.0f)
                 {
-                    if (foods[i].TargetParams == null &&
-                        AiController.AIParams.TryAddNewTarget(foods[i].Tag, AIState.Eat, foods[i].Priority, out CharacterParams.TargetParams targetParams))
+                    float extent = character.AnimController.MainLimb.body.GetMaxExtent();
+                    if (character.SimPosition.Y < (unstunY.Value + extent * 3.0f) &&
+                        character.AnimController.MainLimb.body.LinearVelocity.Y < 0.0f)
                     {
-                        foods[i].TargetParams = targetParams;
+                        character.IsRagdolled = false;
+                        unstunY = null;
+                    }
+                    else
+                    {
+                        character.IsRagdolled = true;
                     }
                 }
-                else if (foods[i].TargetParams != null)
+                else
                 {
-                    AiController.AIParams.RemoveTarget(foods[i].TargetParams);
-                    foods[i].TargetParams = null;
+                    character.IsRagdolled = false;
+                    unstunY = null;
+                }
+            }
+
+            for (int i = 0; i < foods.Count; i++)
+            {
+                Food food = foods[i];
+                if (Hunger >= food.HungerRange.X && Hunger <= food.HungerRange.Y)
+                {
+                    if (food.TargetParams == null &&
+                        AiController.AIParams.TryAddNewTarget(food.Tag, AIState.Eat, food.Priority, out CharacterParams.TargetParams targetParams))
+                    {
+                        targetParams.IgnoreContained = food.IgnoreContained;
+                        food.TargetParams = targetParams;
+                    }
+                }
+                else if (food.TargetParams != null)
+                {
+                    AiController.AIParams.RemoveTarget(food.TargetParams);
+                    food.TargetParams = null;
                 }
             }
 
@@ -279,12 +328,81 @@ namespace Barotrauma
 
             if (character.SelectedBy != null)
             {
-                character.Stun = 1.0f;
+                character.IsRagdolled = true;
+                unstunY = character.SimPosition.Y;
             }
 
             for (int i = 0; i < itemsToProduce.Count; i++)
             {
                 itemsToProduce[i].Update(this, deltaTime);
+            }
+        }
+
+        public static void SavePets(XElement petsElement)
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (!c.IsPet || c.IsDead) { continue; }
+                if (c.Submarine?.Info.Type != SubmarineType.Player) { continue; }
+
+                var petBehavior = (c.AIController as EnemyAIController)?.PetBehavior;
+                if (petBehavior == null) { continue; }
+
+                XElement petElement = new XElement("pet", 
+                    new XAttribute("speciesname", c.SpeciesName), 
+                    new XAttribute("ownerid", petBehavior.Owner?.ID ?? Entity.NullEntityID),
+                    new XAttribute("seed", c.Seed));
+
+                var petBehaviorElement = new XElement("petbehavior",
+                    new XAttribute("hunger", petBehavior.Hunger.ToString("G", CultureInfo.InvariantCulture)),
+                    new XAttribute("happiness", petBehavior.Happiness.ToString("G", CultureInfo.InvariantCulture)));
+                petElement.Add(petBehaviorElement);
+
+                var healthElement = new XElement("health");
+                c.CharacterHealth.Save(healthElement);
+                petElement.Add(healthElement);
+
+                if (c.Inventory != null)
+                {
+                    var inventoryElement = new XElement("inventory");
+                    c.SaveInventory(c.Inventory, inventoryElement);
+                    petElement.Add(inventoryElement);
+                }
+
+                petsElement.Add(petElement);
+            }
+        }
+
+        public static void LoadPets(XElement petsElement)
+        {
+            foreach (XElement subElement in petsElement.Elements())
+            {
+                string speciesName = subElement.GetAttributeString("speciesname", "");
+                string seed = subElement.GetAttributeString("seed", "123");
+                ushort ownerID = (ushort)subElement.GetAttributeInt("ownerid", 0);
+                Vector2 spawnPos = Vector2.Zero;
+                Character owner = Entity.FindEntityByID(ownerID) as Character;
+                if (owner != null)
+                {
+                    spawnPos = owner.WorldPosition;
+                }
+                else
+                {
+                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandom();
+                    spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
+                }
+                var pet = Character.Create(speciesName, spawnPos, seed);
+                var petBehavior = (pet.AIController as EnemyAIController)?.PetBehavior;
+                if (petBehavior != null)
+                {
+                    petBehavior.Owner = owner;
+                    var petBehaviorElement = subElement.Attribute("petbehavior");
+                    if (petBehaviorElement != null)
+                    {
+                        petBehavior.Hunger = petBehaviorElement.GetAttributeFloat(50.0f);
+                        petBehavior.Happiness = petBehaviorElement.GetAttributeFloat(50.0f);
+                    }
+                }
             }
         }
     }

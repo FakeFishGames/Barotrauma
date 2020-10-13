@@ -305,7 +305,7 @@ namespace Barotrauma
             instance.Load(fullPath, speciesName);
             anims.Add(fileName, instance);
             DebugConsole.NewMessage($"[AnimationParams] New animation file of type {animationType} created.", Color.GhostWhite);
-            return instance as T;
+            return instance;
         }
 
         public bool Serialize() => base.Serialize();

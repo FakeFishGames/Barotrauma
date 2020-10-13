@@ -204,11 +204,15 @@ namespace Barotrauma
                         {
                             // Don't ignore any hulls if outside, because apparently it happens that we can't find a path, in which case we just want to try again.
                             // If we ignore the hull, it might be the only airlock in the target sub, which ignores the whole sub.
-                            if (currentHull != null && goToObjective != null)
+                            // If the target hull is inside a submarine that is not our main sub, just ignore it normally when it cannot be reached. This happens with outposts.
+                            if (goToObjective != null)
                             {
                                 if (goToObjective.Target is Hull hull)
                                 {
-                                    HumanAIController.UnreachableHulls.Add(hull);
+                                    if (currentHull != null || !Submarine.MainSubs.Contains(hull.Submarine))
+                                    {
+                                        HumanAIController.UnreachableHulls.Add(hull);
+                                    }
                                 }
                             }
                             RemoveSubObjective(ref goToObjective);
