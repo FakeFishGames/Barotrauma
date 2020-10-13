@@ -11,11 +11,14 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
+using NLog;
 
 namespace Barotrauma
 {
     class GameMain
     {
+        private readonly static Logger Log = LogManager.GetCurrentClassLogger();
+
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
         public static World World;
@@ -78,18 +81,18 @@ namespace Barotrauma
             FarseerPhysics.Settings.VelocityIterations = 1;
             FarseerPhysics.Settings.PositionIterations = 1;
 
-            Console.WriteLine("Loading game settings");
+            Log.Info("Loading game settings");
             Config = new GameSettings();
 
-            Console.WriteLine("Loading MD5 hash cache");
+            Log.Info("Loading MD5 hash cache");
             Md5Hash.LoadCache();
 
-            Console.WriteLine("Initializing SteamManager");
+            Log.Info("Initializing SteamManager");
             SteamManager.Initialize();
-            Console.WriteLine("Initializing GameAnalytics");
+            Log.Info("Initializing GameAnalytics");
             if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();
 
-            Console.WriteLine("Initializing GameScreen");
+            Log.Info("Initializing GameScreen");
             GameScreen = new GameScreen();
         }
 
@@ -386,7 +389,6 @@ namespace Barotrauma
 
             SaveUtil.CleanUnnecessarySaveFiles();
 
-            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
             if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
         }
 

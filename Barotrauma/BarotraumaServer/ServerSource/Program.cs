@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Runtime.InteropServices;
+using NLog;
 
 #endregion
 
@@ -18,6 +19,8 @@ namespace Barotrauma
     /// </summary>
     public static class Program
     {
+        private readonly static Logger Log = LogManager.GetCurrentClassLogger();
+
 #if LINUX
         /// <summary>
         /// Sets the required environment variables for the game to initialize Steamworks correctly.
@@ -32,6 +35,12 @@ namespace Barotrauma
         [STAThread]
         static void Main(string[] args)
         {
+            LoggingUtils.InitializeLogging();
+
+            if(!LoggingUtils.IsNLogConfigLoaded())
+            {
+                Console.WriteLine("Failed to load NLog.config; logging for this session will be disabled. Check for syntax errors in the XML.");
+            }
 #if !DEBUG
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
@@ -40,7 +49,7 @@ namespace Barotrauma
 #if LINUX
             setLinuxEnv();
 #endif
-            Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
+            Log.Info("Barotrauma Dedicated Server " + GameMain.Version +
                 " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
 
             string executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
@@ -50,6 +59,8 @@ namespace Barotrauma
             Game.Run();
             if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
             SteamManager.ShutDown();
+
+            LoggingUtils.ShutdownLogging();
         }
 
         static GameMain Game;
@@ -58,14 +69,21 @@ namespace Barotrauma
         {
             try
             {
+                Log.Fatal(args.ExceptionObject as Exception, "Encountered unhandled exception!");
+
                 Game?.Exit();
                 CrashDump("servercrashreport.log", (Exception)args.ExceptionObject);
                 GameMain.Server?.NotifyCrash();
             }
-            catch
+            catch (Exception e)
             {
+                Log.Fatal(e, "Encountered an exception when handling the crash dump.");
                 //exception handler is broken, we have a serious problem here!!
                 return;
+            }
+            finally
+            {
+                LoggingUtils.ShutdownLogging();
             }
         }
 
@@ -145,11 +163,7 @@ namespace Barotrauma
             }
 
             sb.AppendLine("Last debug messages:");
-            DebugConsole.Clear();
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i-- )
-            {
-                sb.AppendLine("   "+DebugConsole.Messages[i].Time+" - "+DebugConsole.Messages[i].Text);
-            }
+            LoggingUtils.AppendLastLogMessages(sb);
 
             string crashReport = sb.ToString();
             Console.ForegroundColor = ConsoleColor.Red;

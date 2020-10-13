@@ -88,15 +88,6 @@ namespace Barotrauma
                     {
                         ColoredText msg = queuedMessages.Dequeue();
                         Messages.Add(msg);
-                        if (GameSettings.SaveDebugConsoleLogs)
-                        {
-                            unsavedMessages.Add(msg);
-                            if (unsavedMessages.Count >= messagesPerFile)
-                            {
-                                SaveLogs();
-                                unsavedMessages.Clear();
-                            }
-                        }
 
                         string msgTxt = msg.Text;
 
@@ -260,15 +251,6 @@ namespace Barotrauma
                 {
                     var msg = queuedMessages.Dequeue();
                     Messages.Add(msg);
-                    if (GameSettings.SaveDebugConsoleLogs)
-                    {
-                        unsavedMessages.Add(msg);
-                        if (unsavedMessages.Count >= messagesPerFile)
-                        {
-                            SaveLogs();
-                            unsavedMessages.Clear();
-                        }
-                    }
                 }
                 if (Messages.Count > MaxMessages)
                 {

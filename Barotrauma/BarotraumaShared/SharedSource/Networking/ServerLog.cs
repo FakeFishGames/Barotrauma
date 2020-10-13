@@ -45,7 +45,7 @@ namespace Barotrauma.Networking
             Error,
         }
 
-        private readonly Dictionary<MessageType, Color> messageColor = new Dictionary<MessageType, Color>
+        private static readonly Dictionary<MessageType, Color> messageColor = new Dictionary<MessageType, Color>
         {
             { MessageType.Chat, Color.LightBlue },
             { MessageType.ItemInteraction, new Color(205, 205, 180) },
@@ -59,7 +59,7 @@ namespace Barotrauma.Networking
             { MessageType.Error, Color.Red },
         };
 
-        private readonly Dictionary<MessageType, string> messageTypeName = new Dictionary<MessageType, string>
+        private static readonly Dictionary<MessageType, string> messageTypeName = new Dictionary<MessageType, string>
         {
             { MessageType.Chat, "ChatMessage" },
             { MessageType.ItemInteraction, "ItemInteraction" },
@@ -73,112 +73,12 @@ namespace Barotrauma.Networking
             { MessageType.Error, "Error" }
         };
 
-        private int linesPerFile = 800;
-
-        public const string SavePath = "ServerLogs";
-        
-        private readonly Queue<LogMessage> lines;
-
-        private int unsavedLineCount;
-
-        private readonly bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
-
-        public int LinesPerFile
+        public ServerLog()
         {
-            get { return linesPerFile; }
-            set { linesPerFile = Math.Max(value, 10); }
-        }
-
-        public string ServerName;
-
-        public ServerLog(string serverName)
-        {
-            ServerName = serverName;
-            lines = new Queue<LogMessage>();
-
             foreach (MessageType messageType in Enum.GetValues(typeof(MessageType)))
             {
                 System.Diagnostics.Debug.Assert(messageColor.ContainsKey(messageType));
                 System.Diagnostics.Debug.Assert(messageTypeName.ContainsKey(messageType));
-            }
-        }
-
-        public void WriteLine(string line, MessageType messageType)
-        {
-            //string logLine = "[" + DateTime.Now.ToLongTimeString() + "] " + line;
-
-            var newText = new LogMessage(line, messageType);
-
-#if SERVER
-            DebugConsole.NewMessage(newText.SanitizedText, messageColor[messageType]); //TODO: REMOVE
-#endif
-
-            lines.Enqueue(newText);
-
-#if CLIENT
-            if (listBox != null)
-            {
-                AddLine(newText);
-
-                listBox.UpdateScrollBarSize();
-            }
-#endif
-            
-            unsavedLineCount++;
-
-            if (unsavedLineCount >= LinesPerFile)
-            {
-                Save();
-                unsavedLineCount = 0;
-            }
-
-            while (lines.Count > LinesPerFile)
-            {
-                lines.Dequeue();
-            }
-
-#if CLIENT
-            while (listBox != null && listBox.Content.CountChildren > LinesPerFile)
-            {
-                listBox.RemoveChild(reverseOrder ? listBox.Content.Children.First() : listBox.Content.Children.Last());
-            }
-#endif
-        }
-
-        public void Save()
-        {
-            if (!Directory.Exists(SavePath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(SavePath);
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("Failed to create a folder for server logs", e);
-                    return;
-                }                
-            }
-
-            string fileName = ServerName + "_" + DateTime.Now.ToString("yyyy-MM-dd_HH:mm");
-            fileName = ToolBox.RemoveInvalidFileNameChars(fileName);
-
-            string filePath = Path.Combine(SavePath, fileName + ".txt");
-            int i = 2;
-            while (File.Exists(filePath))
-            {
-                filePath = Path.Combine(SavePath, fileName + " (" + i + ").txt");
-                i++;
-            }
-
-            try
-            {
-                File.WriteAllLines(filePath, lines.Select(l => l.SanitizedText));
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
-                return;
             }
         }
     }

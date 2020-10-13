@@ -4,18 +4,26 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Extensions;
+using NLog;
 
 namespace Barotrauma.Networking
 {
     public partial class ServerLog
     {
+        private static readonly Logger Log = LogManager.GetLogger("IncomingServerLogger");
+
         public GUIButton LogFrame;
         private GUIListBox listBox;
         private GUIButton reverseButton;
 
+        private readonly bool[] msgTypeHidden = new bool[Enum.GetValues(typeof(MessageType)).Length];
+
         private string msgFilter;
 
         private bool reverseOrder = false;
+
+        private readonly Queue<LogMessage> lines = new Queue<LogMessage>();
+        private readonly int maxLineHistory = 800;
 
         private bool OnReverseClicked(GUIButton btn, object obj)
         {
@@ -303,5 +311,35 @@ namespace Barotrauma.Networking
             return true;
         }
 
+        public void WriteLine(string line, MessageType messageType)
+        {
+            var newText = new LogMessage(line, messageType);
+
+            Log.Info("{message:l} ({messageType:l})", newText.SanitizedText, messageType.ToString());
+
+            lines.Enqueue(newText);
+
+            while (lines.Count > maxLineHistory)
+            {
+                lines.Dequeue();
+            }
+
+            if (listBox != null)
+            {
+                AddLine(newText);
+
+                listBox.UpdateScrollBarSize();
+            }
+
+            while (listBox != null && listBox.Content.CountChildren > maxLineHistory)
+            {
+                listBox.RemoveChild(reverseOrder ? listBox.Content.Children.First() : listBox.Content.Children.Last());
+            }
+        }
+
+        public void SetServerName(string serverName)
+        {
+            LoggingUtils.SetIncomingServerName(serverName);
+        }
     }
 }

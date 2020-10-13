@@ -624,6 +624,11 @@ namespace Barotrauma
             {
                 DebugConsole.NewMessage("LOADING COROUTINE FINISHED", Color.Lime);
             }
+
+            if(!LoggingUtils.IsNLogConfigLoaded())
+            {
+                ShowNLogConfigFailedToLoadMessage();
+            }
         yield return CoroutineStatus.Success;
 
         }
@@ -1209,7 +1214,6 @@ namespace Barotrauma
             }
 
             if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
-            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
 
             base.OnExiting(sender, args);
         }
@@ -1231,6 +1235,20 @@ namespace Barotrauma
                 return true;
             };
             msgBox.Buttons[1].OnClicked = msgBox.Close;
+        }
+
+        public void ShowNLogConfigFailedToLoadMessage()
+        {
+            if (GUIMessageBox.VisibleBox?.UserData as string == "nlogprompt") { return; }
+
+            var msgBox = new GUIMessageBox(
+                "", 
+                "Failed to load NLog.config; logging for this session will be disabled. Check for syntax errors in the XML.", 
+                new string[] { TextManager.Get("Close") })
+            {
+                UserData = "nlogprompt"
+            };
+            msgBox.Buttons[0].OnClicked = msgBox.Close;
         }
     }
 }

@@ -7,8 +7,8 @@ using System.Text;
 using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using NLog;
 
 #if WINDOWS
 using SharpDX;
@@ -24,6 +24,7 @@ namespace Barotrauma
     /// </summary>
     public static class Program
     {
+        private readonly static Logger Log = LogManager.GetCurrentClassLogger();
 
 #if LINUX
         /// <summary>
@@ -39,6 +40,8 @@ namespace Barotrauma
         [STAThread]
         static void Main(string[] args)
         {
+            LoggingUtils.InitializeLogging();
+
             string executableDir = "";
 
 #if !DEBUG
@@ -59,6 +62,8 @@ namespace Barotrauma
             Game.Dispose();
 
             CrossThread.ProcessTasks();
+
+            LoggingUtils.ShutdownLogging();
         }
 
         private static GameMain Game;
@@ -67,15 +72,22 @@ namespace Barotrauma
         {
             try
             {
+                Log.Fatal(args.ExceptionObject as Exception, "Encountered unhandled exception!");
+
                 Game?.Exit();
                 CrashDump(Game, "crashreport.log", (Exception)args.ExceptionObject);
                 Game?.Dispose();
             }
             catch (Exception e)
             {
+                Log.Fatal(e, "Encountered an exception when handling the crash dump.");
                 Debug.WriteLine(e.Message);
                 //exception handler is broken, we have a serious problem here!!
                 return;
+            }
+            finally
+            {
+                LoggingUtils.ShutdownLogging();
             }
         }
 
@@ -240,16 +252,11 @@ namespace Barotrauma
             }
 
             sb.AppendLine("Last debug messages:");
-            for (int i = DebugConsole.Messages.Count - 1; i >= 0; i--)
-            {
-                sb.AppendLine("[" + DebugConsole.Messages[i].Time + "] " + DebugConsole.Messages[i].Text);
-            }
+            LoggingUtils.AppendLastLogMessages(sb);
 
             string crashReport = sb.ToString();
 
             File.WriteAllText(filePath, crashReport);
-
-            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
 
             if (GameSettings.SendUserStatistics)
             {
@@ -265,4 +272,4 @@ namespace Barotrauma
         }
     }
 #endif
-        }
+}

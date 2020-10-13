@@ -132,16 +132,6 @@ namespace Barotrauma
                 {
                     var newMsg = queuedMessages.Dequeue();
                     AddMessage(newMsg);
-
-                    if (GameSettings.SaveDebugConsoleLogs)
-                    {
-                        unsavedMessages.Add(newMsg);
-                        if (unsavedMessages.Count >= messagesPerFile)
-                        {
-                            SaveLogs();
-                            unsavedMessages.Clear();
-                        }
-                    }
                 }
             }
 
@@ -247,8 +237,6 @@ namespace Barotrauma
                 {
                     AddMessage(newMsg);
                 }
-
-                if (GameSettings.SaveDebugConsoleLogs) unsavedMessages.Add(newMsg);
             }
         }
 
@@ -1963,16 +1951,7 @@ namespace Barotrauma
                     NewMessage("Deleted temp save folder", Color.Green);
                 }
 
-                if (Barotrauma.IO.Directory.Exists(ServerLog.SavePath))
-                {
-                    var logFiles = Barotrauma.IO.Directory.GetFiles(ServerLog.SavePath);
-
-                    foreach (string logFile in logFiles)
-                    {
-                        Barotrauma.IO.File.Delete(logFile);
-                        NewMessage("Deleted " + logFile, Color.Green);
-                    }
-                }
+                LoggingUtils.DeleteLogsDirectory();
 
                 if (Barotrauma.IO.File.Exists("filelist.xml"))
                 {

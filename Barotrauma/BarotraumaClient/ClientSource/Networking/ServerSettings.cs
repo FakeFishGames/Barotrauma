@@ -432,16 +432,16 @@ namespace Barotrauma.Networking
             var randomizeLevelBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsRandomizeSeed"));
             GetPropertyData("RandomizeSeed").AssignGUIComponent(randomizeLevelBox);
 
-            var saveLogsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSaveLogs"))
+            var sendLogsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), serverTab.RectTransform), TextManager.Get("ServerSettingsSendLogs"))
             {
                 OnSelected = (GUITickBox) =>
                 {
                     //TODO: fix?
-                    //showLogButton.Visible = SaveServerLogs;
+                    //showLogButton.Visible = SendServerLogsToClients;
                     return true;
                 }
             };
-            GetPropertyData("SaveServerLogs").AssignGUIComponent(saveLogsBox);
+            GetPropertyData("SendServerLogsToClients").AssignGUIComponent(sendLogsBox);
 
             //--------------------------------------------------------------------------------
             //                              game settings 

@@ -7,7 +7,6 @@
   musicvolume="0.5"
   soundvolume="0.5"
   verboselogging="false"
-  savedebugconsolelogs="false"
   enablesplashscreen="true"
   usesteammatchmaking="true"
   quickstartsub="Humpback"

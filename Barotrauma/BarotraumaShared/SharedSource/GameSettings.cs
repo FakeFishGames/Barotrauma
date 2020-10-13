@@ -704,7 +704,6 @@ namespace Barotrauma
         public List<string> CompletedTutorialNames { get; private set; }
 
         public static bool VerboseLogging { get; set; }
-        public static bool SaveDebugConsoleLogs { get; set; }
 
         public bool CampaignDisclaimerShown, EditorDisclaimerShown;
 
@@ -861,7 +860,6 @@ namespace Barotrauma
             RemoteContentUrl = doc.Root.GetAttributeString("remotecontenturl", RemoteContentUrl);
             WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", WasGameUpdated);
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", VerboseLogging);
-            SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", SaveDebugConsoleLogs);
             AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", AutoUpdateWorkshopItems);
 
             LoadGeneralSettings(doc, resetLanguage);
@@ -902,7 +900,6 @@ namespace Barotrauma
                 new XAttribute("voicechatvolume", voiceChatVolume),
                 new XAttribute("voicechatcutoffprevention", VoiceChatCutoffPrevention),
                 new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("submarineautosave", EnableSubmarineAutoSave),
                 new XAttribute("maxautosaves", MaximumAutoSaves),
                 new XAttribute("subeditorbackground", XMLExtensions.ColorToString(SubEditorBackgroundColor)),
@@ -1126,7 +1123,6 @@ namespace Barotrauma
                 new XAttribute("musicvolume", musicVolume),
                 new XAttribute("soundvolume", soundVolume),
                 new XAttribute("verboselogging", VerboseLogging),
-                new XAttribute("savedebugconsolelogs", SaveDebugConsoleLogs),
                 new XAttribute("submarineautosave", EnableSubmarineAutoSave),
                 new XAttribute("subeditorundobuffer", SubEditorMaxUndoBuffer),
                 new XAttribute("maxautosaves", MaximumAutoSaves),
@@ -1620,7 +1616,6 @@ namespace Barotrauma
             MasterServerUrl = "http://www.undertowgames.com/baromaster";
             WasGameUpdated = false;
             VerboseLogging = false;
-            SaveDebugConsoleLogs = false;
             AutoUpdateWorkshopItems = true;
         }
     }

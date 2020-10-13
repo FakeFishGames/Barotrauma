@@ -123,6 +123,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="NLog" Version="4.7.0" />
     <PackageReference Include="NVorbis" Version="0.8.6" />
     <PackageReference Include="RestSharp" Version="106.6.10" />
   </ItemGroup>

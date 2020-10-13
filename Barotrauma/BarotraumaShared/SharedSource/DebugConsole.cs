@@ -12,6 +12,7 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using Barotrauma.MapCreatures.Behavior;
+using NLog;
 
 namespace Barotrauma
 {
@@ -37,6 +38,9 @@ namespace Barotrauma
 
     static partial class DebugConsole
     {
+        private readonly static Logger NLog_Log = LogManager.GetCurrentClassLogger();
+        public readonly static string InternalLoggerName = NLog_Log.Name;
+
         public partial class Command
         {
             public readonly string[] names;
@@ -102,10 +106,6 @@ namespace Barotrauma
         private static int currentAutoCompletedIndex;
 
         public static bool CheatsEnabled;
-
-        private static readonly List<ColoredText> unsavedMessages = new List<ColoredText>();
-        private static readonly int messagesPerFile = 5000;
-        public const string SavePath = "ConsoleLogs";
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
         {
@@ -1884,9 +1884,21 @@ namespace Barotrauma
             NewMessage(msg, Color.White, isCommand);
         }
 
-        public static void NewMessage(string msg, Color color, bool isCommand = false, bool isError = false)
+        public static void NewMessage(string msg, Color color, bool isCommand = false, bool isError = false, bool logToNLog = true)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
+
+            if(logToNLog)
+            {
+                if (isError)
+                {
+                    NLog_Log.Error(msg);
+                }
+                else
+                {
+                    NLog_Log.Info(msg);
+                }
+            }
             
             lock (queuedMessages)
             {
@@ -1974,11 +1986,19 @@ namespace Barotrauma
 
         public static void Log(string message)
         {
-            if (GameSettings.VerboseLogging) NewMessage(message, Color.Gray);
+            if (GameSettings.VerboseLogging)
+            {
+                NewMessage(message, Color.Gray);
+            }
         }
 
-        public static void ThrowError(string error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
+        public static void ThrowError(string error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false, bool logToNLog = true)
         {
+            if(logToNLog)
+            {
+                NLog_Log.Error(e, error);
+            }
+
             if (e != null)
             {
                 error += " {" + e.Message + "}\n";
@@ -2012,13 +2032,14 @@ namespace Barotrauma
             }
 #endif
 
-            NewMessage(error, Color.Red, isError: true);
+            NewMessage(error, Color.Red, isError: true, logToNLog: false);
         }
         
         public static void AddWarning(string warning)
         {
+            NLog_Log.Warn(warning);
             System.Diagnostics.Debug.WriteLine(warning);
-            NewMessage($"WARNING: {warning}", Color.Yellow);
+            NewMessage($"WARNING: {warning}", Color.Yellow, logToNLog: false);
         }
 
 #if CLIENT
@@ -2033,57 +2054,5 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 #endif
-
-        public static void SaveLogs()
-        {
-            if (unsavedMessages.Count == 0) return;
-            if (!Directory.Exists(SavePath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(SavePath);
-                }
-                catch (Exception e)
-                {
-                    ThrowError("Failed to create a folder for debug console logs", e);
-                    return;
-                }
-            }
-
-            string fileName = "DebugConsoleLog_";
-#if SERVER
-            fileName += "Server_";
-#else
-            fileName += "Client_";
-#endif
-
-            fileName += DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
-            var invalidChars = Path.GetInvalidFileNameChars();
-            foreach (char invalidChar in invalidChars)
-            {
-                fileName = fileName.Replace(invalidChar.ToString(), "");
-            }
-
-            string filePath = Path.Combine(SavePath, fileName);
-            if (File.Exists(filePath + ".txt"))
-            {
-                int fileNum = 2;
-                while (File.Exists(filePath + " (" + fileNum + ")"))
-                {
-                    fileNum++;
-                }
-                filePath = filePath + " (" + fileNum + ")";
-            }
-
-            try
-            {
-                File.WriteAllLines(filePath + ".txt", unsavedMessages.Select(l => "[" + l.Time + "] " + l.Text));
-            }
-            catch (Exception e)
-            {
-                unsavedMessages.Clear();
-                ThrowError("Saving debug console log to " + filePath + " failed", e);
-            }
-        }
     }
 }

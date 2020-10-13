@@ -23,7 +23,7 @@
   startwhenclientsready="False"
   startwhenclientsreadyratio="0.8"
   allowspectating="True"
-  saveserverlogs="True"
+  sendserverlogstoclients="True"
   allowragdollbutton="True"
   allowfiletransfers="True"
   voicechatenabled="True"

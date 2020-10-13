@@ -275,7 +275,10 @@ namespace Barotrauma.Networking
 
         public ServerSettings(NetworkMember networkMember, string serverName, int port, int queryPort, int maxPlayers, bool isPublic, bool enableUPnP)
         {
-            ServerLog = new ServerLog(serverName);
+            ServerLog = new ServerLog();
+#if CLIENT
+            ServerLog.SetServerName(serverName);
+#endif
 
             Voting = new Voting();
 
@@ -461,7 +464,7 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(true, true)]
-        public bool SaveServerLogs
+        public bool SendServerLogsToClients
         {
             get;
             private set;
@@ -503,19 +506,6 @@ namespace Barotrauma.Networking
             {
                 playstyleSelection = value;
                 ServerDetailsChanged = true;
-            }
-        }
-
-        [Serialize(800, true)]
-        private int LinesPerLogFile
-        {
-            get
-            {
-                return ServerLog.LinesPerFile;
-            }
-            set
-            {
-                ServerLog.LinesPerFile = value;
             }
         }
 

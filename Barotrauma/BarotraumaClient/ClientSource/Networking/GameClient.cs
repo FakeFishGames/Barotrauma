@@ -262,8 +262,6 @@ namespace Barotrauma.Networking
             }
             ConnectToServer(serverEndpoint, serverName);
 
-            //ServerLog = new ServerLog("");
-
             ChatMessage.LastID = 0;
             GameMain.NetLobbyScreen?.Release();
             GameMain.NetLobbyScreen = new NetLobbyScreen();
@@ -2024,7 +2022,7 @@ namespace Barotrauma.Networking
 
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
 
-                                serverSettings.ServerLog.ServerName = serverSettings.ServerName;
+                                serverSettings.ServerLog.SetServerName(serverSettings.ServerName);
 
                                 if (!GameMain.NetLobbyScreen.ServerName.Selected) GameMain.NetLobbyScreen.ServerName.Text = serverSettings.ServerName;
                                 if (!GameMain.NetLobbyScreen.ServerMessage.Selected) GameMain.NetLobbyScreen.ServerMessage.Text = serverSettings.ServerMessageText;
@@ -2590,11 +2588,6 @@ namespace Barotrauma.Networking
             foreach (var fileTransfer in activeTransfers)
             {
                 FileReceiver.StopTransfer(fileTransfer, deleteFile: true);
-            }
-
-            if (HasPermission(ClientPermissions.ServerLog))
-            {
-                serverSettings.ServerLog?.Save();
             }
 
             if (ChildServerRelay.Process != null)
@@ -3438,74 +3431,64 @@ namespace Barotrauma.Networking
         private bool eventErrorWritten;
         private void WriteEventErrorData(ClientNetError error, UInt16 expectedID, UInt16 eventID, UInt16 entityID)
         {
-            List<string> errorLines = new List<string>
-            {
-                error.ToString(), ""
-            };
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(error.ToString());
+            sb.AppendLine("");
 
             if (IsServerOwner)
             {
-                errorLines.Add("SERVER OWNER");
+                sb.AppendLine("SERVER OWNER");
             }
 
             if (error == ClientNetError.MISSING_EVENT)
             {
-                errorLines.Add("Expected ID: " + expectedID + ", received " + eventID);
+                sb.AppendLine("Expected ID: " + expectedID + ", received " + eventID);
             }
             else if (error == ClientNetError.MISSING_ENTITY)
             {
-                errorLines.Add("Event ID: " + eventID + ", entity ID " + entityID);
+                sb.AppendLine("Event ID: " + eventID + ", entity ID " + entityID);
             }
 
             if (GameMain.GameSession?.GameMode != null)
             {
-                errorLines.Add("Game mode: " + GameMain.GameSession.GameMode.Name);
+                sb.AppendLine("Game mode: " + GameMain.GameSession.GameMode.Name);
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                 {
-                    errorLines.Add("Campaign ID: " + campaign.CampaignID);
-                    errorLines.Add("Campaign save ID: " + campaign.LastSaveID + "(pending: " + campaign.PendingSaveID + ")");
+                    sb.AppendLine("Campaign ID: " + campaign.CampaignID);
+                    sb.AppendLine("Campaign save ID: " + campaign.LastSaveID + "(pending: " + campaign.PendingSaveID + ")");
                 }
-                errorLines.Add("Mission: " + (GameMain.GameSession?.Mission?.Prefab.Identifier ?? "none"));                
+                sb.AppendLine("Mission: " + (GameMain.GameSession?.Mission?.Prefab.Identifier ?? "none"));                
             }
             if (GameMain.GameSession?.Submarine != null)
             {
-                errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Info.Name);
+                sb.AppendLine("Submarine: " + GameMain.GameSession.Submarine.Info.Name);
             }
             if (Level.Loaded != null)
             {
-                errorLines.Add("Level: " + Level.Loaded.Seed + ", " + string.Join(", ", Level.Loaded.EqualityCheckValues.Select(cv => cv.ToString("X"))));
-                errorLines.Add("Entity count before generating level: " + Level.Loaded.EntityCountBeforeGenerate);
-                errorLines.Add("Entities:");
+                sb.AppendLine("Level: " + Level.Loaded.Seed + ", " + string.Join(", ", Level.Loaded.EqualityCheckValues.Select(cv => cv.ToString("X"))));
+                sb.AppendLine("Entity count before generating level: " + Level.Loaded.EntityCountBeforeGenerate);
+                sb.AppendLine("Entities:");
                 foreach (Entity e in Level.Loaded.EntitiesBeforeGenerate)
                 {
-                    errorLines.Add("    " + e.ID + ": " + e.ToString());
+                    sb.AppendLine("    " + e.ID + ": " + e.ToString());
                 }
-                errorLines.Add("Entity count after generating level: " + Level.Loaded.EntityCountAfterGenerate);
+                sb.AppendLine("Entity count after generating level: " + Level.Loaded.EntityCountAfterGenerate);
             }
 
-            errorLines.Add("Entity IDs:");
+            sb.AppendLine("Entity IDs:");
             List<Entity> sortedEntities = Entity.GetEntities().ToList();
             sortedEntities.Sort((e1, e2) => e1.ID.CompareTo(e2.ID));
             foreach (Entity e in sortedEntities)
             {
-                errorLines.Add(e.ID + ": " + e.ToString());
+                sb.AppendLine(e.ID + ": " + e.ToString());
             }
 
-            errorLines.Add("");
-            errorLines.Add("Last debug messages:");
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i--)
-            {
-                errorLines.Add("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
-            }
+            sb.AppendLine("");
+            sb.AppendLine("Last debug messages:");
+            LoggingUtils.AppendLastLogMessages(sb);
 
-            string filePath = "event_error_log_client_" + Name + "_" + DateTime.UtcNow.ToShortTimeString() + ".log";
-            filePath = Path.Combine(ServerLog.SavePath, ToolBox.RemoveInvalidFileNameChars(filePath));
-
-            if (!Directory.Exists(ServerLog.SavePath))
-            {
-                Directory.CreateDirectory(ServerLog.SavePath);
-            }
-            File.WriteAllLines(filePath, errorLines);
+            string fileName = "event_error_log_client_" + Name + "_" + DateTime.UtcNow.ToShortTimeString() + ".log";
+            LoggingUtils.WriteEventErrorLog(fileName, sb);
         }
 
 #if DEBUG

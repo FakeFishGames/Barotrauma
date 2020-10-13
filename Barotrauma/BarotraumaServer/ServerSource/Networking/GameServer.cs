@@ -5,10 +5,12 @@ using Barotrauma.Items.Components;
 using Barotrauma.Steam;
 using Lidgren.Network;
 using Microsoft.Xna.Framework;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Xml.Linq;
 
@@ -890,62 +892,52 @@ namespace Barotrauma.Networking
 
         private void WriteEventErrorData(Client client, string errorStr)
         {
-            if (!Directory.Exists(ServerLog.SavePath))
-            {
-                Directory.CreateDirectory(ServerLog.SavePath);
-            }
-
-            string filePath = "event_error_log_server_" + client.Name + "_" + DateTime.UtcNow.ToShortTimeString() + ".log";
-            filePath = Path.Combine(ServerLog.SavePath, ToolBox.RemoveInvalidFileNameChars(filePath));
-            if (File.Exists(filePath)) { return; }
-
-            List<string> errorLines = new List<string>
-            {
-                errorStr, ""
-            };
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(errorStr);
+            sb.AppendLine("");
 
             if (GameMain.GameSession?.GameMode != null)
             {
-                errorLines.Add("Game mode: " + GameMain.GameSession.GameMode.Name);
+                sb.AppendLine("Game mode: " + GameMain.GameSession.GameMode.Name);
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                 {
-                    errorLines.Add("Campaign ID: " + campaign.CampaignID);
-                    errorLines.Add("Campaign save ID: " + campaign.LastSaveID);
+                    sb.AppendLine("Campaign ID: " + campaign.CampaignID);
+                    sb.AppendLine("Campaign save ID: " + campaign.LastSaveID);
                 }
-                errorLines.Add("Mission: " + (GameMain.GameSession?.Mission?.Prefab.Identifier ?? "none"));                
+                sb.AppendLine("Mission: " + (GameMain.GameSession?.Mission?.Prefab.Identifier ?? "none"));                
             }
             if (GameMain.GameSession?.Submarine != null)
             {
-                errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Info.Name);
+                sb.AppendLine("Submarine: " + GameMain.GameSession.Submarine.Info.Name);
             }
             if (Level.Loaded != null)
             {
-                errorLines.Add("Level: " + Level.Loaded.Seed + ", " + string.Join(", ", Level.Loaded.EqualityCheckValues.Select(cv => cv.ToString("X"))));
-                errorLines.Add("Entity count before generating level: " + Level.Loaded.EntityCountBeforeGenerate);
-                errorLines.Add("Entities:");
+                sb.AppendLine("Level: " + Level.Loaded.Seed + ", " + string.Join(", ", Level.Loaded.EqualityCheckValues.Select(cv => cv.ToString("X"))));
+                sb.AppendLine("Entity count before generating level: " + Level.Loaded.EntityCountBeforeGenerate);
+                sb.AppendLine("Entities:");
                 foreach (Entity e in Level.Loaded.EntitiesBeforeGenerate)
                 {
-                    errorLines.Add("    " + e.ID + ": " + e.ToString());
+                    sb.AppendLine("    " + e.ID + ": " + e.ToString());
                 }
-                errorLines.Add("Entity count after generating level: " + Level.Loaded.EntityCountAfterGenerate);
+                sb.AppendLine("Entity count after generating level: " + Level.Loaded.EntityCountAfterGenerate);
             }
 
-            errorLines.Add("Entity IDs:");
+            sb.AppendLine("Entity IDs:");
             List<Entity> sortedEntities = Entity.GetEntities().ToList();
             sortedEntities.Sort((e1, e2) => e1.ID.CompareTo(e2.ID));
             foreach (Entity e in sortedEntities)
             {
-                errorLines.Add(e.ID + ": " + e.ToString());
+                sb.AppendLine(e.ID + ": " + e.ToString());
             }
 
-            errorLines.Add("");
-            errorLines.Add("EntitySpawner events:");
+            sb.AppendLine("");
+            sb.AppendLine("EntitySpawner events:");
             foreach (var entityEvent in entityEventManager.UniqueEvents)
             {
                 if (entityEvent.Entity is EntitySpawner)
                 {
                     var spawnData = entityEvent.Data[0] as EntitySpawner.SpawnOrRemove;
-                    errorLines.Add(
+                    sb.AppendLine(
                         entityEvent.ID + ": " + 
                         (spawnData.Remove ? "Remove " : "Create ") + 
                         spawnData.Entity.ToString() + 
@@ -953,14 +945,12 @@ namespace Barotrauma.Networking
                 }
             }
 
-            errorLines.Add("");
-            errorLines.Add("Last debug messages:");
-            for (int i = DebugConsole.Messages.Count - 1; i > 0 && i > DebugConsole.Messages.Count - 15; i--)
-            {
-                errorLines.Add("   " + DebugConsole.Messages[i].Time + " - " + DebugConsole.Messages[i].Text);
-            }
+            sb.AppendLine("");
+            sb.AppendLine("Last debug messages:");
+            LoggingUtils.AppendLastLogMessages(sb);
 
-            File.WriteAllLines(filePath, errorLines);
+            string fileName = "event_error_log_server_" + client.Name + "_" + DateTime.UtcNow.ToShortTimeString() + ".log";
+            LoggingUtils.WriteEventErrorLog(fileName, sb);
         }
 
         public override void CreateEntityEvent(INetSerializable entity, object[] extraData = null)
@@ -2479,8 +2469,6 @@ namespace Barotrauma.Networking
                 GameMain.NetLobbyScreen.LastUpdateID++;
             }
 
-            if (serverSettings.SaveServerLogs) { serverSettings.ServerLog.Save(); }
-
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
 
             entityEventManager.Clear();
@@ -3677,9 +3665,9 @@ namespace Barotrauma.Networking
 
         public static void Log(string line, ServerLog.MessageType messageType)
         {
-            if (GameMain.Server == null || !GameMain.Server.ServerSettings.SaveServerLogs) { return; }
+            ServerLog.WriteLine(line, messageType);
 
-            GameMain.Server.ServerSettings.ServerLog.WriteLine(line, messageType);
+            if (GameMain.Server == null || !GameMain.Server.ServerSettings.SendServerLogsToClients) { return; }
 
             foreach (Client client in GameMain.Server.ConnectedClients)
             {
@@ -3724,11 +3712,7 @@ namespace Barotrauma.Networking
 
                 serverSettings.SaveSettings();
 
-                if (serverSettings.SaveServerLogs)
-                {
-                    Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
-                    serverSettings.ServerLog.Save();
-                }
+                Log("Shutting down the server...", ServerLog.MessageType.ServerMessage);
 
                 GameAnalyticsManager.AddDesignEvent("GameServer:ShutDown");
                 serverPeer?.Close(DisconnectReason.ServerShutdown.ToString());
