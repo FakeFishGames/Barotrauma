@@ -500,6 +500,12 @@ namespace Barotrauma
         {
             if (FlowSounds.Count == 0) { return; }
 
+            for(int i = 0; i < targetFlowLeft.Length; i++)
+            {
+                targetFlowLeft[i] = 0.0f;
+                targetFlowRight[i] = 0.0f;
+            }
+
             Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
             foreach (Gap gap in Gap.GapList)
             {
