@@ -730,6 +730,7 @@ namespace Barotrauma.Sounds
                                 else
                                 {
                                     playingChannels[i][j].Dispose();
+                                    playingChannels[i][j] = null;
                                 }
                             }
                             else if (playingChannels[i][j].FadingOutAndDisposing)
@@ -738,6 +739,7 @@ namespace Barotrauma.Sounds
                                 if (playingChannels[i][j].Gain <= 0.0f)
                                 {
                                     playingChannels[i][j].Dispose();
+                                    playingChannels[i][j] = null;
                                 }
                             }
                         }
@@ -767,7 +769,11 @@ namespace Barotrauma.Sounds
                 {
                     for (int j = 0; j < playingChannels[i].Length; j++)
                     {
-                        if (playingChannels[i][j] != null) playingChannels[i][j].Dispose();
+                        if (playingChannels[i][j] != null)
+                        {
+                            playingChannels[i][j].Dispose();
+                            playingChannels[i][j] = null;
+                        }
                     }
                 }
             }
