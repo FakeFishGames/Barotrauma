@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
 using System.Xml.Linq;
@@ -52,18 +52,18 @@ namespace Barotrauma.Items.Components
 
         sealed public override void Update(float deltaTime, Camera cam)
         {
+            bool deactivate = true;
+            bool earlyReturn = false;
             for (int i = 0; i < timeSinceReceived.Length; i++) 
-            { 
+            {  
+                deactivate &= timeSinceReceived[i] > timeFrame;
+                earlyReturn |= timeSinceReceived[i] > timeFrame;
                 timeSinceReceived[i] += deltaTime; 
             }
-            if (timeSinceReceived[0] > timeFrame && timeSinceReceived[1] > timeFrame)  // Only stop Update() if both signals timed-out
-                { 
-                    IsActive = false; 
-                }
-            if (timeSinceReceived[0] > timeFrame || timeSinceReceived[1] > timeFrame) // early return if either of the signal timed-out
-                { 
-                    return; 
-                }
+            // only stop Update() if both signals timed-out. if IsActive == false, then the component stops updating.
+            IsActive = !deactivate;
+            // early return if either of the signal timed-out
+            if (earlyReturn) { return; }
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
