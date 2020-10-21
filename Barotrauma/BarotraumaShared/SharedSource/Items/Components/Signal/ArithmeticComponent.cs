@@ -56,7 +56,6 @@ namespace Barotrauma.Items.Components
             if (timeSinceReceived[0] > timeFrame && timeSinceReceived[1] > timeFrame) 
             {
                 IsActive = false;
-                return;
             }
             if timeSinceReceived[0] > timeFrame || timeSinceReceived[1] > timeFrame) { return; }
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
