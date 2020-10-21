@@ -57,10 +57,10 @@ namespace Barotrauma.Items.Components
                 if (timeSinceReceived[i] > timeFrame) 
                 {
                     IsActive = false;
-                    return;
                 }
                 timeSinceReceived[i] += deltaTime;
             }
+            if (!IsActive) { return; }
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
