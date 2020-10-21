@@ -52,14 +52,15 @@ namespace Barotrauma.Items.Components
 
         sealed public override void Update(float deltaTime, Camera cam)
         {
-            for (int i = 0; i < timeSinceReceived.Length; i++) { timeSinceReceived[i] += deltaTime; }
-            // Only stop Update() if both signals timed-out
-            if (timeSinceReceived[0] > timeFrame && timeSinceReceived[1] > timeFrame)  
+            for (int i = 0; i < timeSinceReceived.Length; i++) 
+            { 
+                timeSinceReceived[i] += deltaTime; 
+            }
+            if (timeSinceReceived[0] > timeFrame && timeSinceReceived[1] > timeFrame)  // Only stop Update() if both signals timed-out
                 { 
                     IsActive = false; 
                 }
-            // early return if either of the signal timed-out
-            if (timeSinceReceived[0] > timeFrame || timeSinceReceived[1] > timeFrame) 
+            if (timeSinceReceived[0] > timeFrame || timeSinceReceived[1] > timeFrame) // early return if either of the signal timed-out
                 { 
                     return; 
                 }
