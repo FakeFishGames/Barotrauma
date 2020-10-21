@@ -52,15 +52,12 @@ namespace Barotrauma.Items.Components
 
         sealed public override void Update(float deltaTime, Camera cam)
         {
-            for (int i = 0; i < timeSinceReceived.Length; i++)
+            for (int i = 0; i < timeSinceReceived.Length; i++) { timeSinceReceived[i] += deltaTime; }
+            if (timeSinceReceived[0] > timeFrame && timeSinceReceived[1] > timeFrame) 
             {
-                if (timeSinceReceived[i] > timeFrame) 
-                {
-                    IsActive = false;
-                }
-                timeSinceReceived[i] += deltaTime;
+                IsActive = false;
+                return;
             }
-            if (!IsActive) { return; }
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
