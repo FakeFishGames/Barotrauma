@@ -58,6 +58,7 @@ namespace Barotrauma.Items.Components
                 IsActive = false;
                 return;
             }
+            if timeSinceReceived[0] > timeFrame || timeSinceReceived[1] > timeFrame) { return; }
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
