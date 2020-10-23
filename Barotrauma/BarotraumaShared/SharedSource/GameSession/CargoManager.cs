@@ -217,7 +217,7 @@ namespace Barotrauma
 
                         if (containerPrefab == null)
                         {
-                            DebugConsole.ThrowError("Cargo spawning failed - could not find the item prefab for container \"" + containerPrefab.Name + "\"!");
+                            DebugConsole.ThrowError("Cargo spawning failed - could not find the item prefab for container \"" + pi.ItemPrefab.CargoContainerIdentifier + "\"!");
                             continue;
                         }
 
