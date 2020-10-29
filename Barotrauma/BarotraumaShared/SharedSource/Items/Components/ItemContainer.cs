@@ -24,8 +24,6 @@ namespace Barotrauma.Items.Components
             set { capacity = Math.Max(value, 1); }
         }
 
-        private float fullPercentage = 0;
-
         private bool hideItems;
         [Serialize(true, false, description: "Should the items contained inside this item be hidden."
             + " If set to false, you should use the ItemPos and ItemInterval properties to determine where the items get rendered.")]
@@ -165,7 +163,10 @@ namespace Barotrauma.Items.Components
 
             if (item.GetComponent<ConnectionPanel>() != null)
             {
-                Console.WriteLine(containedItem.Name + " contained.");
+                //tag = coilgunammo
+                containedItem.HasTag("coilgunammo"); // Special case since ammo boxes use Condition instead of actually containing bolts.
+                float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
+                Console.WriteLine(containedItem.Name + " contained in " + item.Name + ": " + fullPercentage.ToString());
             }
         }
 
@@ -178,9 +179,9 @@ namespace Barotrauma.Items.Components
 
             if (item.GetComponent<ConnectionPanel>() != null)
             {
-                Console.WriteLine(containedItem.Name + " removed.");
-                this.fullPercentage = item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage(); // -1 means empty.
-                item.SendSignal(0, this.fullPercentage.ToString(), "full_%", null);
+                float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
+                Console.WriteLine(containedItem.Name + " removed from " + item.Name + ": " + fullPercentage.ToString());
+                item.SendSignal(0, fullPercentage.ToString(), "full_%", null);
             }
         }
 
@@ -199,9 +200,9 @@ namespace Barotrauma.Items.Components
         {
             if (item.GetComponent<ConnectionPanel>() != null)
             {
-                Console.WriteLine(item.Name + " updated.");
-                this.fullPercentage = item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage(); // -1 means empty.
-                item.SendSignal(0, this.fullPercentage.ToString(), "full_%", null);
+                float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
+                Console.WriteLine(item.Name + " updated: " + fullPercentage.ToString() + ", " + item.Condition.ToString() + ", " + item.ConditionPercentage.ToString() + ", " + Capacity.ToString());
+                item.SendSignal(0, fullPercentage.ToString(), "full_%", null);
             }
             if (item.ParentInventory is CharacterInventory)
             {
@@ -394,11 +395,10 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (item.GetComponent<ConnectionPanel>() != null)
-            {
-                Console.WriteLine(item.Name + " map load.");
-                item.SendSignal(0, "0", "full_%", null); // Initialize to empty.
-            }
+            //if (item.GetComponent<ConnectionPanel>() != null)
+            //{
+            //    item.SendSignal(0, "0", "full_%", null); // Initialize to empty. // doesn't work, likely signal sent before can be received
+            //}
         }
 
         protected override void ShallowRemoveComponentSpecific()
@@ -441,10 +441,10 @@ namespace Barotrauma.Items.Components
                 itemIds[i] = id;
             }
 
-            if (item.GetComponent<ConnectionPanel>() != null)
-            {
-                Console.WriteLine(item.Name + " load.");
-            }
+            //if (item.GetComponent<ConnectionPanel>() != null)
+            //{
+            //    item.SendSignal(0, "0", "full_%", null); // Initialize to empty. // doesn't work, likely signal sent before can be received
+            //}
         }
 
         public override XElement Save(XElement parentElement)

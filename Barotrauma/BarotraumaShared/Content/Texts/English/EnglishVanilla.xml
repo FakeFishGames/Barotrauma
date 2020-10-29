@@ -1,4 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <infotexts language="English" nowhitespace="false" translatedname="English">
+<entityname.coilgunloadertriple>Coilgun Triple Loader</entityname.coilgunloadertriple>
+<entitydescription.coilgunloadertriple>Feeds up to 3 coilgun ammunition boxes into a linked coilgun.</entitydescription.coilgunloadertriple>
 <connection.fullpercentage>full_%</connection.fullpercentage>
 </infotexts>
