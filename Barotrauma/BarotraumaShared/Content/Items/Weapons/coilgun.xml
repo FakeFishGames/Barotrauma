@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Items>
+  <Item name="" identifier="coilgunloader" tags="coilgunequipment,coilgunammosource" category="Machine" linkable="true" allowedlinks="coilgun" scale="0.5" damagedbyexplosions="true" explosiondamagemultiplier="0.2">
+    <ConnectionPanel selectkey="Action" canbeselected="true" msg="ItemMsgRewireScrewdriver" hudpriority="10">
+      <GuiFrame relativesize="0.2,0.32" minsize="400,350" maxsize="480,420" anchor="Center" style="ConnectionPanel" />
+      <RequiredItem items="screwdriver" type="Equipped" />
+      <output name="full_%" displayname="connection.fullpercentage" />
+    </ConnectionPanel>
+  </Item>
+</Items>

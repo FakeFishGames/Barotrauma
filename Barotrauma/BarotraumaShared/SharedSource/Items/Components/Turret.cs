@@ -299,7 +299,8 @@ namespace Barotrauma.Items.Components
                 if (resetUserTimer <= 0.0f) { user = null; }
             }
 
-            item.SendSignal(0, ((int)GetLoadedProjectiles().Count).ToString(), "ammo_out", null);
+            //GetLoadedProjectiles();
+            //item.SendSignal(0, this.ammoAvailable.Format(3), "ammo_out", null);
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
@@ -405,6 +406,8 @@ namespace Barotrauma.Items.Components
                     if (projectileContainer != null)
                     {
                         linkedItem.Use(deltaTime, null);
+                        // Update linked ammo loaders so they send full_% signals.
+                        linkedItem.GetComponent<ItemContainer>().Update(deltaTime, this.cam);
                         var repairable = linkedItem.GetComponent<Repairable>();
                         if (repairable != null && failedLaunchAttempts < 2)
                         {

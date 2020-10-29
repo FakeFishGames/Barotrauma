@@ -24,6 +24,8 @@ namespace Barotrauma.Items.Components
             set { capacity = Math.Max(value, 1); }
         }
 
+        private float fullPercentage = 0;
+
         private bool hideItems;
         [Serialize(true, false, description: "Should the items contained inside this item be hidden."
             + " If set to false, you should use the ItemPos and ItemInterval properties to determine where the items get rendered.")]
@@ -160,6 +162,11 @@ namespace Barotrauma.Items.Components
 
             //no need to Update() if this item has no statuseffects and no physics body
             IsActive = itemsWithStatusEffects.Count > 0 || Inventory.Items.Any(it => it?.body != null);
+
+            if (item.GetComponent<ConnectionPanel>() != null)
+            {
+                Console.WriteLine(containedItem.Name + " contained.");
+            }
         }
 
         public void OnItemRemoved(Item containedItem)
@@ -168,6 +175,13 @@ namespace Barotrauma.Items.Components
 
             //deactivate if the inventory is empty
             IsActive = itemsWithStatusEffects.Count > 0 || Inventory.Items.Any(it => it?.body != null);
+
+            if (item.GetComponent<ConnectionPanel>() != null)
+            {
+                Console.WriteLine(containedItem.Name + " removed.");
+                this.fullPercentage = item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage(); // -1 means empty.
+                item.SendSignal(0, this.fullPercentage.ToString(), "full_%", null);
+            }
         }
 
         public bool CanBeContained(Item item)
@@ -183,6 +197,12 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (item.GetComponent<ConnectionPanel>() != null)
+            {
+                Console.WriteLine(item.Name + " updated.");
+                this.fullPercentage = item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage(); // -1 means empty.
+                item.SendSignal(0, this.fullPercentage.ToString(), "full_%", null);
+            }
             if (item.ParentInventory is CharacterInventory)
             {
                 item.SetContainedItemPositions();
@@ -373,6 +393,12 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+
+            if (item.GetComponent<ConnectionPanel>() != null)
+            {
+                Console.WriteLine(item.Name + " map load.");
+                item.SendSignal(0, "0", "full_%", null); // Initialize to empty.
+            }
         }
 
         protected override void ShallowRemoveComponentSpecific()
@@ -413,6 +439,11 @@ namespace Barotrauma.Items.Components
             {
                 if (!ushort.TryParse(itemIdStrings[i], out ushort id)) { continue; }
                 itemIds[i] = id;
+            }
+
+            if (item.GetComponent<ConnectionPanel>() != null)
+            {
+                Console.WriteLine(item.Name + " load.");
             }
         }
 
