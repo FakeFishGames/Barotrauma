@@ -1156,7 +1156,7 @@ namespace Barotrauma
 
             if (itemContentPackage == null)
             {
-                string errorMsg = "Failed to edit workshop item (content package null)\n" + Environment.StackTrace;
+                string errorMsg = "Failed to edit workshop item (content package null)\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("SteamWorkshopScreen.ShowCreateItemFrame:ContentPackageNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;

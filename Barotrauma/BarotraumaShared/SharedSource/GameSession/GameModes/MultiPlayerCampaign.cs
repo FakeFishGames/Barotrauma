@@ -150,6 +150,9 @@ namespace Barotrauma
                     case "cargo":
                         CargoManager?.LoadPurchasedItems(subElement);
                         break;
+                    case "pets":
+                        petsElement = subElement;
+                        break;
 #if SERVER
                     case "availablesubs":
                         foreach (XElement availableSub in subElement.Elements())

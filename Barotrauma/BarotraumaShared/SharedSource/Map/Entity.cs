@@ -51,13 +51,13 @@ namespace Barotrauma
                 if (value == NullEntityID)
                 {
                     DebugConsole.ThrowError("Cannot set the ID of an entity to " + NullEntityID +
-                        "! The value is reserved for entity events referring to a non-existent (e.g. removed) entity.\n" + Environment.StackTrace);
+                        "! The value is reserved for entity events referring to a non-existent (e.g. removed) entity.\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
                 if (value == EntitySpawnerID)
                 {
                     DebugConsole.ThrowError("Cannot set the ID of an entity to " + EntitySpawnerID +
-                        "! The value is reserved for EntitySpawner.\n" + Environment.StackTrace);
+                        "! The value is reserved for EntitySpawner.\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
 
@@ -183,7 +183,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce(
                         "Entity.RemoveAll:Exception" + e.ToString(),
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Error while removing entity \"" + e.ToString() + " (" + exception.Message + ")\n" + exception.StackTrace);
+                        "Error while removing entity \"" + e.ToString() + " (" + exception.Message + ")\n" + exception.StackTrace.CleanupStackTrace());
                 }
             }
             StringBuilder errorMsg = new StringBuilder();
@@ -266,7 +266,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Entity.FreeID:EntityNotFound" + ID,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Entity " + ToString() + " (" + ID + ") not present in entity dictionary.\n" + Environment.StackTrace);
+                    "Entity " + ToString() + " (" + ID + ") not present in entity dictionary.\n" + Environment.StackTrace.CleanupStackTrace());
             }
             else if (existingEntity != this)
             {

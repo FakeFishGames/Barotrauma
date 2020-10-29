@@ -195,7 +195,9 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }    
+            }
+
+            characterUsable = element.GetAttributeBool("characterusable", true);
         }
 
         private bool OnPusherCollision(Fixture sender, Fixture other, Contact contact)
@@ -312,7 +314,7 @@ namespace Barotrauma.Items.Components
 
             if (item.Removed)
             {
-                DebugConsole.ThrowError($"Attempted to equip a removed item ({item.Name})\n" + Environment.StackTrace);
+                DebugConsole.ThrowError($"Attempted to equip a removed item ({item.Name})\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -416,7 +418,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Removed)
             {
-                DebugConsole.ThrowError($"Attempted to pick up a removed item ({item.Name})\n" + Environment.StackTrace);
+                DebugConsole.ThrowError($"Attempted to pick up a removed item ({item.Name})\n" + Environment.StackTrace.CleanupStackTrace());
                 return false;
             }
 
@@ -514,9 +516,10 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (!attachable || item.body == null) { return character == null || character.IsKeyDown(InputType.Aim); }
+            if (!attachable || item.body == null) { return character == null || (character.IsKeyDown(InputType.Aim) && characterUsable); }
             if (character != null)
             {
+                if (!characterUsable && !attachable) { return false; }
                 if (!character.IsKeyDown(InputType.Aim)) { return false; }
                 if (!CanBeAttached(character)) { return false; }
 

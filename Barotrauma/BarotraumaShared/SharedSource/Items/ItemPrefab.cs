@@ -320,6 +320,13 @@ namespace Barotrauma
         }
 
         [Serialize(false, false)]
+        public bool AllowSellingWhenBroken
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
         public bool Indestructible
         {
             get;

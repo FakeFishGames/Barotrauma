@@ -247,7 +247,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 string errorMsg = "Failed to write input to command line (window width: " + Console.WindowWidth + ", window height: " + Console.WindowHeight + ")\n"
-                    + e.Message + "\n" + e.StackTrace;
+                    + e.Message + "\n" + e.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("DebugConsole.RewriteInputToCommandLine", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
             }
         }
@@ -1119,6 +1119,12 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (maxPlayers > NetConfig.MaxPlayers)
+                    {
+                        NewMessage($"Setting the maximum amount of players to {maxPlayers} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.");
+                        maxPlayers = NetConfig.MaxPlayers;
+                    }
+
                     GameMain.Server.ServerSettings.MaxPlayers = maxPlayers;
                     NewMessage("Set the maximum player count to " + maxPlayers + ".");
                 }
@@ -1132,6 +1138,12 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (maxPlayers > NetConfig.MaxPlayers)
+                    {
+                        GameMain.Server.SendConsoleMessage($"Setting the maximum amount of players to {maxPlayers} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", client);
+                        maxPlayers = NetConfig.MaxPlayers;
+                    }
+
                     GameMain.Server.ServerSettings.MaxPlayers = maxPlayers;
                     NewMessage(client.Name + " set the maximum player count to " + maxPlayers + ".");
                     GameMain.Server.SendConsoleMessage("Set the maximum player count to " + maxPlayers + ".", client);
@@ -1352,7 +1364,7 @@ namespace Barotrauma
                 ServerEntityEvent ev = GameMain.Server.EntityEventManager.Events[Convert.ToUInt16(args[0])];
                 if (ev != null)
                 {
-                    NewMessage(ev.StackTrace, Color.Lime);
+                    NewMessage(ev.StackTrace.CleanupStackTrace(), Color.Lime);
                 }
             }));
 

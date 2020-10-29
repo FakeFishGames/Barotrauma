@@ -282,6 +282,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Couldn't start game session, submarine file corrupted.");
                 return;
             }
+            if (SubmarineInfo.SubmarineElement.Elements().Count() == 0)
+            {
+                DebugConsole.ThrowError("Couldn't start game session, saved submarine is empty. The submarine file may be corrupted.");
+                return;
+            }
 
             LevelData = levelData;
 
@@ -348,6 +353,8 @@ namespace Barotrauma
                     GUI.AddMessage(TextManager.AddPunctuation(':', TextManager.Get("Location"), StartLocation.Name), Color.CadetBlue, playSound: false);
                 }
             }
+
+            GUI.PreventPauseMenuToggle = false;
 #endif
         }
 
@@ -542,6 +549,12 @@ namespace Barotrauma
                 Mission == null ? "None" : Mission.GetType().ToString());
 
 #if CLIENT
+            if (GUI.PauseMenuOpen)
+            {
+                GUI.TogglePauseMenu();
+            }
+            GUI.PreventPauseMenuToggle = true;
+
             if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
             {
                 GUI.ClearMessages();

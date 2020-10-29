@@ -67,8 +67,8 @@ namespace Barotrauma
                         {
                             if (sound?.Sound == null)
                             {
-                                string errorMsg = $"Error in StatusEffect.ApplyProjSpecific1 (sound \"{sound?.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace;
-                                GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                                string errorMsg = $"Error in StatusEffect.ApplyProjSpecific1 (sound \"{sound?.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace.CleanupStackTrace();
+                                GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                                 return;
                             }
                             soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull);
@@ -93,13 +93,21 @@ namespace Barotrauma
                         var selectedSound = sounds[selectedSoundIndex];
                         if (selectedSound?.Sound == null)
                         {
-                            string errorMsg = $"Error in StatusEffect.ApplyProjSpecific2 (sound \"{selectedSound?.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace;
-                            GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            string errorMsg = $"Error in StatusEffect.ApplyProjSpecific2 (sound \"{selectedSound?.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace.CleanupStackTrace();
+                            GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                             return;
+                        }
+                        if (selectedSound.Sound.Disposed)
+                        {
+                            Submarine.ReloadRoundSound(selectedSound);
                         }
                         soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull);
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
+                }
+                else
+                {
+                    soundChannel.Position = new Vector3(worldPosition, 0.0f);
                 }
 
                 if (soundChannel != null && soundChannel.Looping)

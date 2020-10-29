@@ -26,27 +26,15 @@ namespace Barotrauma.Items.Components
             if (isHUDsHidden == value) { return; }
             if (value == true)
             {
-                ToggleCrewArea(false, storeOriginalState: true);
+                GameMain.GameSession?.CrewManager?.AutoHideCrewList();
                 ToggleChatBox(false, storeOriginalState: true);
             }
             else
             {
-                ToggleCrewArea(crewAreaOriginalState, storeOriginalState: false);
+                GameMain.GameSession?.CrewManager?.ResetCrewList();
                 ToggleChatBox(chatBoxOriginalState, storeOriginalState: false);
             }
             isHUDsHidden = value;
-        }
-
-        private void ToggleCrewArea(bool value, bool storeOriginalState)
-        {
-            var crewManager = GameMain.GameSession?.CrewManager;
-            if (crewManager == null) { return; }
-
-            if (storeOriginalState)
-            {
-                crewAreaOriginalState = crewManager.ToggleCrewListOpen;
-            }
-            crewManager.ToggleCrewListOpen = value;
         }
 
         private void ToggleChatBox(bool value, bool storeOriginalState)

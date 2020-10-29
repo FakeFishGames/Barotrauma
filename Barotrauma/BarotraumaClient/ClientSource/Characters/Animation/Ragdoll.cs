@@ -414,7 +414,8 @@ namespace Barotrauma
             if (playSound)
             {
                 var damageSound = character.GetSound(s => s.Type == CharacterSound.SoundType.Damage);
-                SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: damageSound != null ? damageSound.Range : 800);
+                float range = damageSound != null ? damageSound.Range * 2 : ConvertUnits.ToDisplayUnits(character.AnimController.Collider.GetSize().Length() * 10);
+                SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: range);
             }
         }
 
@@ -426,10 +427,10 @@ namespace Barotrauma
 
             if (Limbs == null)
             {
-                DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace.CleanupStackTrace());
                 GameAnalyticsManager.AddErrorEventOnce("Ragdoll.Draw:LimbsRemoved", 
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace);
+                    "Failed to draw a ragdoll, limbs have been removed. Character: \"" + character.Name + "\", removed: " + character.Removed + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 

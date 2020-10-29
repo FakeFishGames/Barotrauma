@@ -214,14 +214,15 @@ namespace Barotrauma.Items.Components
             }
             if (HasBeenTuned) { return true; }
 
-            if (string.IsNullOrEmpty(objective.Option) || objective.Option.Equals("charge", StringComparison.OrdinalIgnoreCase))
+            float targetRatio = string.IsNullOrEmpty(objective.Option) || objective.Option.Equals("charge", StringComparison.OrdinalIgnoreCase) ? aiRechargeTargetRatio : -1;
+            if (targetRatio > 0 || float.TryParse(objective.Option, out targetRatio))
             {
-                if (Math.Abs(rechargeSpeed - maxRechargeSpeed * aiRechargeTargetRatio) > 0.05f)
+                if (Math.Abs(rechargeSpeed - maxRechargeSpeed * targetRatio) > 0.05f)
                 {
 #if SERVER
                     item.CreateServerEvent(this);
 #endif
-                    RechargeSpeed = maxRechargeSpeed * aiRechargeTargetRatio;
+                    RechargeSpeed = maxRechargeSpeed * targetRatio;
 #if CLIENT
                     if (rechargeSpeedSlider != null)
                     {

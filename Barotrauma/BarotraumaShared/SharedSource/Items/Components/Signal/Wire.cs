@@ -63,7 +63,7 @@ namespace Barotrauma.Items.Components
 
         public bool Hidden;
 
-        private float removeNodeDelay;
+        private float editNodeDelay;
 
         private bool locked;
         public bool Locked
@@ -198,7 +198,21 @@ namespace Barotrauma.Items.Components
                 int newNodeIndex = 0;
                 if (nodes.Count > 1)
                 {
-                    if (Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
+                    if (connections[0] != null && connections[0] != newConnection)
+                    {
+                        if (Vector2.DistanceSquared(nodes[0], connections[0].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos))
+                        {
+                            newNodeIndex = nodes.Count;
+                        }
+                    }
+                    else if (connections[1] != null && connections[1] != newConnection)
+                    {
+                        if (Vector2.DistanceSquared(nodes[0], connections[1].Item.Position - (refSub?.HiddenSubPosition ?? Vector2.Zero)) < Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos))
+                        {
+                            newNodeIndex = nodes.Count;
+                        }
+                    }
+                    else if (Vector2.DistanceSquared(nodes[nodes.Count - 1], nodePos) < Vector2.DistanceSquared(nodes[0], nodePos))
                     {
                         newNodeIndex = nodes.Count;
                     }
@@ -276,7 +290,7 @@ namespace Barotrauma.Items.Components
             if (nodes.Count == 0) { return; }
 
             Character user = item.ParentInventory?.Owner as Character;
-            removeNodeDelay = (user?.SelectedConstruction == null) ? removeNodeDelay - deltaTime : 0.5f;
+            editNodeDelay = (user?.SelectedConstruction == null) ? editNodeDelay - deltaTime : 0.5f;
 
             Submarine sub = item.Submarine;
             if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
@@ -402,7 +416,9 @@ namespace Barotrauma.Items.Components
 #endif
             //clients communicate node addition/removal with network events
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) { return false; }
-            if (newNodePos != Vector2.Zero && canPlaceNode && nodes.Count > 0 && Vector2.Distance(newNodePos, nodes[nodes.Count - 1]) > MinNodeDistance)
+
+            if (newNodePos != Vector2.Zero && canPlaceNode && editNodeDelay <= 0.0f && nodes.Count > 0 && 
+                Vector2.DistanceSquared(newNodePos, nodes[nodes.Count - 1]) > MinNodeDistance * MinNodeDistance)
             {
                 if (nodes.Count >= MaxNodeCount)
                 {
@@ -426,6 +442,7 @@ namespace Barotrauma.Items.Components
                 }
 #endif
             }
+            editNodeDelay = 0.1f;
             return true;
         }
 
@@ -436,7 +453,7 @@ namespace Barotrauma.Items.Components
             //clients communicate node addition/removal with network events
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) { return false; }
 
-            if (nodes.Count > 1 && removeNodeDelay <= 0.0f)
+            if (nodes.Count > 1 && editNodeDelay <= 0.0f)
             {
                 nodes.RemoveAt(nodes.Count - 1);
                 UpdateSections();
@@ -452,7 +469,7 @@ namespace Barotrauma.Items.Components
                 }
 #endif
             }
-            removeNodeDelay = 0.1f;
+            editNodeDelay = 0.1f;
 
             Drawable = IsActive || sections.Count > 0;
             return true;

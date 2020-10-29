@@ -608,10 +608,10 @@ namespace Barotrauma.Networking
             {
                 string errorMsg = "Error while reading a message from server. {" + e + "}. ";
                 if (GameMain.Client == null) { errorMsg += "Client disposed."; }
-                errorMsg += "\n" + e.StackTrace;
+                errorMsg += "\n" + e.StackTrace.CleanupStackTrace();
                 if (e.InnerException != null)
                 {
-                    errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                    errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace.CleanupStackTrace();
                 }
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
@@ -738,10 +738,10 @@ namespace Barotrauma.Networking
                     }
                     catch (Exception e)
                     {
-                        string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace;
+                        string errorMsg = "Error while reading an ingame update message from server. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
                         if (e.InnerException != null)
                         {
-                            errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                            errorMsg += "\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace.CleanupStackTrace();
                         }
 #if DEBUG
                         DebugConsole.ThrowError("Error while reading an ingame update message from server.", e);
@@ -755,7 +755,7 @@ namespace Barotrauma.Networking
                     {
                         string errorMsg = "Failed to read a voice packet from the server (VoipClient == null). ";
                         if (GameMain.Client == null) { errorMsg += "Client disposed. "; }
-                        errorMsg += "\n" + Environment.StackTrace;
+                        errorMsg += "\n" + Environment.StackTrace.CleanupStackTrace();
                         GameAnalyticsManager.AddErrorEventOnce(
                             "GameClient.ReadDataMessage:VoipClientNull",
                             GameMain.Client == null ? GameAnalyticsSDK.Net.EGAErrorSeverity.Error : GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
@@ -1023,7 +1023,10 @@ namespace Barotrauma.Networking
                 if (Enum.TryParse(splitMsg[0], out disconnectReason)) { disconnectReasonIncluded = true; }
             }
 
-            if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage)
+            if (disconnectMsg == Lidgren.Network.NetConnection.NoResponseMessage ||
+                disconnectReason == DisconnectReason.Banned ||
+                disconnectReason == DisconnectReason.Kicked ||
+                disconnectReason == DisconnectReason.TooManyFailedLogins)
             {
                 allowReconnect = false;
             }
@@ -1124,7 +1127,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     DebugConsole.NewMessage("Not attempting to reconnect (DisconnectReason doesn't allow reconnection).");
-                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString());
+                    msg = TextManager.Get("DisconnectReason." + disconnectReason.ToString()) + " ";
 
                     for (int i = 1; i < splitMsg.Length; i++)
                     {
@@ -1966,7 +1969,12 @@ namespace Barotrauma.Networking
                             string selectShuttleName = inc.ReadString();
                             string selectShuttleHash = inc.ReadString();
 
-                            string campaignSubmarineIndexes = inc.ReadString();
+                            UInt16 campaignSubmarineIndexCount = inc.ReadUInt16();
+                            List<int> campaignSubIndices = new List<int>();
+                            for (int i = 0; i< campaignSubmarineIndexCount; i++)
+                            {
+                                campaignSubIndices.Add(inc.ReadUInt16());
+                            }
 
                             bool allowSubVoting = inc.ReadBoolean();
                             bool allowModeVoting = inc.ReadBoolean();
@@ -2022,22 +2030,16 @@ namespace Barotrauma.Networking
                                     if (GameMain.Client.IsServerOwner) RequestSelectMode(modeIndex);
                                 }
 
-                                if (campaignSubmarineIndexes != null)
+                                if (campaignSubIndices != null)
                                 {
-                                    string[] activeIndexes = campaignSubmarineIndexes.Split(';');
-
                                     GameMain.NetLobbyScreen.CampaignSubmarines = new List<SubmarineInfo>();
-                                    for (int i = 0; i < activeIndexes.Length; i++)
+                                    foreach (UInt16 campaignSubIndex in campaignSubIndices)
                                     {
-                                        int index;
-                                        if (int.TryParse(activeIndexes[i], out index))
+                                        SubmarineInfo sub = GameMain.Client.ServerSubmarines[campaignSubIndex];
+                                        if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, "campaign"))
                                         {
-                                            SubmarineInfo sub = GameMain.Client.ServerSubmarines[index];
-                                            if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, "campaign"))
-                                            {
-                                                GameMain.NetLobbyScreen.CampaignSubmarines.Add(sub);
-                                            }
-                                        }
+                                            GameMain.NetLobbyScreen.CampaignSubmarines.Add(sub);
+                                        }                                        
                                     }
 
                                     if (HasPermission(ClientPermissions.ManageCampaign) && !gameStarted && GameMain.NetLobbyScreen?.CampaignSetupUI != null)
@@ -2139,6 +2141,7 @@ namespace Barotrauma.Networking
                                 return;
                             }
 
+                            entities.Add(entity);
                             if (entity != null && (entity is Item || entity is Character || entity is Submarine))
                             {
                                 entity.ClientRead(objHeader.Value, inc, sendingTime);
@@ -2186,10 +2189,11 @@ namespace Barotrauma.Networking
                     "Previous object was " + (prevBitLength) + " bits long (" + (prevByteLength) + " bytes)",
                     " "
                 };
-                errorLines.Add(ex.StackTrace);
+                errorLines.Add(ex.StackTrace.CleanupStackTrace());
                 errorLines.Add(" ");
                 if (prevObjHeader == ServerNetObject.ENTITY_EVENT || prevObjHeader == ServerNetObject.ENTITY_EVENT_INITIAL || 
-                    objHeader == ServerNetObject.ENTITY_EVENT || objHeader == ServerNetObject.ENTITY_EVENT_INITIAL)
+                    objHeader == ServerNetObject.ENTITY_EVENT || objHeader == ServerNetObject.ENTITY_EVENT_INITIAL ||
+                    objHeader == ServerNetObject.ENTITY_POSITION || prevObjHeader == ServerNetObject.ENTITY_POSITION)
                 {
                     foreach (IServerSerializable ent in entities)
                     {
@@ -2721,7 +2725,7 @@ namespace Barotrauma.Networking
             MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
             if (campaign == null)
             {
-                DebugConsole.ThrowError("Failed send campaign state to the server (no campaign active).\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Failed send campaign state to the server (no campaign active).\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -2738,7 +2742,7 @@ namespace Barotrauma.Networking
         {
             if (string.IsNullOrWhiteSpace(command))
             {
-                DebugConsole.ThrowError("Cannot send an empty console command to the server!\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Cannot send an empty console command to the server!\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -2778,7 +2782,7 @@ namespace Barotrauma.Networking
 
             if (subIndex < 0 || subIndex >= subList.Content.CountChildren)
             {
-                DebugConsole.ThrowError("Submarine index out of bounds (" + subIndex + ")\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Submarine index out of bounds (" + subIndex + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -2818,7 +2822,7 @@ namespace Barotrauma.Networking
             if (!HasPermission(ClientPermissions.SelectMode)) return;
             if (modeIndex < 0 || modeIndex >= GameMain.NetLobbyScreen.ModeList.Content.CountChildren)
             {
-                DebugConsole.ThrowError("Gamemode index out of bounds (" + modeIndex + ")\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Gamemode index out of bounds (" + modeIndex + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 

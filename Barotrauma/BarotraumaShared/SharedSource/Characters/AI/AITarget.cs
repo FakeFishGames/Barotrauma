@@ -38,7 +38,7 @@ namespace Barotrauma
             {
                 if (float.IsNaN(value))
                 {
-                    DebugConsole.ThrowError("Attempted to set the SoundRange of an AITarget to NaN.\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to set the SoundRange of an AITarget to NaN.\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
                 soundRange = MathHelper.Clamp(value, MinSoundRange, MaxSoundRange); 
@@ -52,7 +52,7 @@ namespace Barotrauma
             {
                 if (float.IsNaN(value))
                 {
-                    DebugConsole.ThrowError("Attempted to set the SightRange of an AITarget to NaN.\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to set the SightRange of an AITarget to NaN.\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
                 sightRange = MathHelper.Clamp(value, MinSightRange, MaxSightRange); 
@@ -74,7 +74,7 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value))
                 {
-                    string errorMsg = "Invalid AITarget sector direction (" + value + ")\n" + Environment.StackTrace;
+                    string errorMsg = "Invalid AITarget sector direction (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("AITarget.SectorDir:" + entity?.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     return;
@@ -113,11 +113,11 @@ namespace Barotrauma
                 if (entity == null || entity.Removed)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a removed AITarget\n" + Environment.StackTrace);
+                        "Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
 
@@ -132,11 +132,11 @@ namespace Barotrauma
                 if (entity == null || entity.Removed)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("AITarget.WorldPosition:EntityRemoved",
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a removed AITarget\n" + Environment.StackTrace);
+                        "Attempted to access a removed AITarget\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
 

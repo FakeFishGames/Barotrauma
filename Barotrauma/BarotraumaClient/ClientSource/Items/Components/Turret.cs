@@ -35,6 +35,7 @@ namespace Barotrauma.Items.Components
         private RoundSound startMoveSound, endMoveSound, moveSound;
 
         private SoundChannel moveSoundChannel;
+        private Vector2 oldRotation = Vector2.Zero;
 
         private Vector2 crosshairPos, crosshairPointerPos;
 
@@ -285,7 +286,7 @@ namespace Barotrauma.Items.Components
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
 
-            if (!editing || GUI.DisableHUD) { return; }
+            if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }
 
             float widgetRadius = 60.0f;
 
@@ -304,10 +305,12 @@ namespace Barotrauma.Items.Components
                 drawPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * widgetRadius,
                 Color.LightGreen);
 
-            if (!item.IsSelected) { return; }
-
             Widget minRotationWidget = GetWidget("minrotation", spriteBatch, size: 10, initMethod: (widget) =>
-             {
+            {
+                 widget.Selected += () =>
+                 {
+                     oldRotation = RotationLimits;
+                 };
                  widget.MouseDown += () =>
                  {
                      widget.color = GUI.Style.Green;
@@ -317,6 +320,10 @@ namespace Barotrauma.Items.Components
                  {
                      widget.color = Color.Yellow;
                      item.CreateEditingHUD();
+                     if (SubEditorScreen.IsSubEditor())
+                     {
+                         SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits", RotationLimits, oldRotation));
+                     }
                  };
                  widget.MouseHeld += (deltaTime) =>
                  {
@@ -345,10 +352,14 @@ namespace Barotrauma.Items.Components
                      widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius;
                      widget.Update(deltaTime);
                  };
-             });
+            });
             
             Widget maxRotationWidget = GetWidget("maxrotation", spriteBatch, size: 10, initMethod: (widget) =>
             {
+                widget.Selected += () =>
+                {
+                    oldRotation = RotationLimits;
+                };
                 widget.MouseDown += () =>
                 {
                     widget.color = GUI.Style.Green;
@@ -358,6 +369,10 @@ namespace Barotrauma.Items.Components
                 {
                     widget.color = Color.Yellow;
                     item.CreateEditingHUD();
+                    if (SubEditorScreen.IsSubEditor())
+                    {
+                        SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits", RotationLimits, oldRotation));
+                    }
                 };
                 widget.MouseHeld += (deltaTime) =>
                 {

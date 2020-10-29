@@ -543,9 +543,6 @@ namespace Barotrauma
             if (SteamWorkshopId != 0)
             {
                 doc.Root.Add(new XAttribute("steamworkshopid", SteamWorkshopId.ToString()));
-#if UNSTABLE
-                doc.Root.Add(new XAttribute("steamworkshopurl", $"http://steamcommunity.com/sharedfiles/filedetails/?source=Facepunch.Steamworks&id={SteamWorkshopId}"));
-#endif
             }
 
             if (InstallTime != null)

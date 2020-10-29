@@ -161,7 +161,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!captain_medicObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(captain_medic.Info.DisplayName, TextManager.Get("Captain.Radio.Medic"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f, false);
-            GameMain.GameSession.CrewManager.ToggleCrewListOpen = true;
+            GameMain.GameSession.CrewManager.AutoShowCrewList();
             GameMain.GameSession.CrewManager.AddCharacter(captain_medic);
             TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Command));
             do
@@ -186,8 +186,7 @@ namespace Barotrauma.Tutorials
                 // TODO: Rework order highlighting for new command UI
                 // GameMain.GameSession.CrewManager.HighlightOrderButton(captain_mechanic, "repairsystems", highlightColor, new Vector2(5, 5));
                 //HighlightOrderOption("jobspecific");
-            }
-            while (!HasOrder(captain_mechanic, "repairsystems"));
+            } while (!HasOrder(captain_mechanic, "repairsystems") && !HasOrder(captain_mechanic, "repairmechanical") && !HasOrder(captain_mechanic, "repairelectrical"));
             RemoveCompletedObjective(segments[1]);
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Command));

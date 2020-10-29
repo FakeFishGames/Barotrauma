@@ -56,11 +56,12 @@ namespace Barotrauma
                 if (PlayerInput.PrimaryMouseButtonReleased())
                 {                    
                     newRect.Location -= MathUtils.ToPoint(Submarine.MainSub.Position);
-                    new Structure(newRect, this, Submarine.MainSub)
+                    var structure = new Structure(newRect, this, Submarine.MainSub)
                     {
                         Submarine = Submarine.MainSub
-                    };                    
-
+                    };
+                    
+                    SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { structure }, false));
                     selected = null;
                     return;
                 }

@@ -132,7 +132,15 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return CreateDummy(Submarine, filePath, Position);
+
+            var path = filePath;
+            if (string.IsNullOrEmpty(path))
+            {
+                var linkedSubmarine = CreateDummy(Submarine, saveElement, Position);
+                linkedSubmarine.saveElement = saveElement;
+                return linkedSubmarine;
+            }
+            return CreateDummy(Submarine, path, Position);
         }
 
         private void GenerateWallVertices(XElement rootElement)
@@ -176,7 +184,7 @@ namespace Barotrauma
             else
             {
                 string levelSeed = element.GetAttributeString("location", "");
-                LevelData levelData = GameMain.GameSession.Campaign?.NextLevel ?? GameMain.GameSession.Level?.LevelData;
+                LevelData levelData = GameMain.GameSession.Campaign?.NextLevel ?? GameMain.GameSession.LevelData;
                 linkedSub = new LinkedSubmarine(submarine)
                 {
                     purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,

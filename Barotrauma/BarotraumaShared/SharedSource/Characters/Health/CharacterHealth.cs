@@ -141,17 +141,17 @@ namespace Barotrauma
         {
             get
             {
+                float max = maxVitality;
                 if (Character?.Info?.Job?.Prefab != null)
                 {
-                    return maxVitality + Character.Info.Job.Prefab.VitalityModifier;
+                    max += Character.Info.Job.Prefab.VitalityModifier;
                 }
-                return maxVitality;
+                return max * Character.HealthMultiplier;
             }
             set
             {
                 maxVitality = Math.Max(0, value);
             }
-
         }
 
         public float MinVitality
@@ -450,9 +450,13 @@ namespace Barotrauma
                     matchingAfflictions.AddRange(limbHealth.Afflictions);
                 }
             }
-            matchingAfflictions.RemoveAll(a => 
-                !a.Prefab.Identifier.Equals(affliction, StringComparison.OrdinalIgnoreCase) && 
-                !a.Prefab.AfflictionType.Equals(affliction, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrEmpty(affliction))
+            {
+                matchingAfflictions.RemoveAll(a =>
+                    !a.Prefab.Identifier.Equals(affliction, StringComparison.OrdinalIgnoreCase) &&
+                    !a.Prefab.AfflictionType.Equals(affliction, StringComparison.OrdinalIgnoreCase));
+            }
 
             if (matchingAfflictions.Count == 0) return;
 
@@ -617,8 +621,8 @@ namespace Barotrauma
 
         private void AddAffliction(Affliction newAffliction)
         {
-            if (!DoesBleed && newAffliction is AfflictionBleeding) return;
-            if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) return;
+            if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
+            if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
             if (newAffliction.Prefab.AfflictionType == "huskinfection")
             {
                 var huskPrefab = newAffliction.Prefab as AfflictionPrefabHusk;
@@ -636,7 +640,10 @@ namespace Barotrauma
                     affliction.Strength = newStrength;
                     affliction.Source = newAffliction.Source;
                     CalculateVitality();
-                    if (Vitality <= MinVitality) Kill();
+                    if (Vitality <= MinVitality)
+                    {
+                        Kill();
+                    }
                     return;
                 }
             }
@@ -650,7 +657,10 @@ namespace Barotrauma
             Character.HealthUpdateInterval = 0.0f;
 
             CalculateVitality();
-            if (Vitality <= MinVitality) Kill();
+            if (Vitality <= MinVitality)
+            {
+                Kill();
+            }
         }
 
 
@@ -707,7 +717,11 @@ namespace Barotrauma
             UpdateLimbAfflictionOverlays();
 
             CalculateVitality();
-            if (Vitality <= MinVitality) Kill();
+
+            if (Vitality <= MinVitality)
+            {
+                Kill();
+            }
         }
 
         private void UpdateOxygen(float deltaTime)
@@ -725,10 +739,10 @@ namespace Barotrauma
                 OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (Character.OxygenAvailable < InsufficientOxygenThreshold ? -5.0f : 10.0f), -100.0f, 100.0f);
             }
 
-            UpdateOxygenProjSpecific(prevOxygen);
+            UpdateOxygenProjSpecific(prevOxygen, deltaTime);
         }
         
-        partial void UpdateOxygenProjSpecific(float prevOxygen);
+        partial void UpdateOxygenProjSpecific(float prevOxygen, float deltaTime);
 
         partial void UpdateBleedingProjSpecific(AfflictionBleeding affliction, Limb targetLimb, float deltaTime);
 

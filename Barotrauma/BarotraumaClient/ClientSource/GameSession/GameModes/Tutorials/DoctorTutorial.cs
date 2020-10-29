@@ -275,7 +275,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
             GameMain.GameSession.CrewManager.AddCharacter(doctor);
             GameMain.GameSession.CrewManager.AddCharacter(patient1);
-            GameMain.GameSession.CrewManager.ToggleCrewListOpen = true;
+            GameMain.GameSession.CrewManager.AutoShowCrewList();
             patient1.CharacterHealth.UseHealthWindow = false;
 
             yield return new WaitForSeconds(3.0f, false);

@@ -271,7 +271,7 @@ namespace Barotrauma
 
         private static List<GUIButton> CreateConversation(GUIListBox parentBox, string text, Character speaker, IEnumerable<string> options, bool drawChathead = true)
         {
-            var content = new GUILayoutGroup(new RectTransform(Vector2.One, parentBox.Content.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true)
+            var content = new GUILayoutGroup(new RectTransform(Vector2.One, parentBox.Content.RectTransform), childAnchor: Anchor.TopLeft, isHorizontal: true)
             {
                 Stretch = true,
                 CanBeFocused = true,
@@ -289,7 +289,7 @@ namespace Barotrauma
                 });
             }
 
-            var textContent = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), content.RectTransform), childAnchor: Anchor.TopCenter)
+            var textContent = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0f), content.RectTransform), childAnchor: Anchor.TopCenter)
             {
                 AbsoluteSpacing = GUI.IntScale(5)
             };
@@ -316,7 +316,7 @@ namespace Barotrauma
             content.Recalculate();
             textContent.Recalculate();
             textBlock.CalculateHeightFromText();
-            textBlock.RectTransform.MinSize = new Point(0, (int)(textBlock.Rect.Height * 1.2f));
+            textBlock.RectTransform.MinSize = new Point(0, textBlock.Rect.Height);
             foreach (GUIButton btn in buttons)
             {
                 btn.TextBlock.SetTextPos();
@@ -324,10 +324,12 @@ namespace Barotrauma
                 btn.RectTransform.MinSize = new Point(0, (int)(btn.TextBlock.Rect.Height * 1.2f));
             }
 
-            textContent.RectTransform.MinSize = new Point(0, textContent.Children.Sum(c => c.Rect.Height + textContent.AbsoluteSpacing) + GUI.IntScale(16));
+            textContent.RectTransform.MinSize = new Point(0, textContent.Children.Sum(c => c.Rect.Height) + GUI.IntScale(16));
+            content.RectTransform.MinSize = new Point(0, content.Children.Sum(c => c.Rect.Height));
 
             // Recalculate the text size as it is scaled up and no longer matching the text height due to the textContent's minSize increasing
             textBlock.CalculateHeightFromText();
+            textBlock.TextAlignment = Alignment.TopLeft;
             //content.RectTransform.MinSize = new Point(0, textContent.Rect.Height);
 
             return buttons;

@@ -639,6 +639,7 @@ namespace Barotrauma.Items.Components
             }
 
             target.Body.ApplyLinearImpulse(velocity * item.body.Mass);
+            target.Body.LinearVelocity = target.Body.LinearVelocity.ClampLength(NetConfig.MaxPhysicsBodyVelocity * 0.5f);
 
             if (hits.Count() >= MaxTargetsToHit || hits.LastOrDefault()?.UserData is VoronoiCell)
             {

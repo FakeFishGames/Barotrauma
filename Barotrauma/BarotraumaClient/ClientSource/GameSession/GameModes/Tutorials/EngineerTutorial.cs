@@ -87,9 +87,9 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             engineer = Character.Controlled;
 
-            var toolbox = FindOrGiveItem(engineer, "toolbox");
-            toolbox.Unequip(engineer);
-            engineer.Inventory.RemoveItem(toolbox);
+            var toolbelt = FindOrGiveItem(engineer, "toolbelt");
+            toolbelt.Unequip(engineer);
+            engineer.Inventory.RemoveItem(toolbelt);
 
             var repairOrder = Order.GetPrefab("repairsystems");
             engineer_repairIcon = repairOrder.SymbolSprite;
@@ -123,7 +123,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             engineer_reactorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_reactorobjectivesensor")).GetComponent<MotionSensor>();
-            tutorial_oxygenGenerator = Item.ItemList.Find(i => i.HasTag("tutorial_oxygengenerator")).GetComponent<Powered>();
+            tutorial_oxygenGenerator = Item.ItemList.Find(i => i.HasTag("tutorial_oxygengenerator")).GetComponent<OxygenGenerator>();
             engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
             engineer_reactor.FireDelay = engineer_reactor.MeltdownDelay = float.PositiveInfinity;
             engineer_reactor.FuelConsumptionRate = 0.0f;
@@ -311,6 +311,8 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             } while (engineer_reactor.AvailableFuel == 0);
+            RemoveCompletedObjective(segments[1]);
+            TriggerTutorialSegment(2);
             CoroutineManager.StartCoroutine(ReactorOperatedProperly());
             do
             {
@@ -352,7 +354,7 @@ namespace Barotrauma.Tutorials
             } while (wait > 0.0f);
             engineer.SelectedConstruction = null;
             engineer_reactor.CanBeSelected = false;
-            RemoveCompletedObjective(segments[1]);
+            RemoveCompletedObjective(segments[2]);
             SetHighlight(engineer_reactor.Item, false);
             SetHighlight(engineer_brokenJunctionBox, true);
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, true);
@@ -361,7 +363,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_secondDoor.IsOpen);
             yield return new WaitForSeconds(1f, false);
             Repairable repairableJunctionBoxComponent = engineer_brokenJunctionBox.GetComponent<Repairable>();
-            TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Select)); // Repair the junction box
+            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Select)); // Repair the junction box
             do
             {
                 if (!engineer.HasEquippedItem("screwdriver"))
@@ -378,7 +380,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (engineer_brokenJunctionBox.Condition < repairableJunctionBoxComponent.RepairThreshold); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
-            RemoveCompletedObjective(segments[2]);
+            RemoveCompletedObjective(segments[3]);
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
             for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
             {
@@ -389,14 +391,14 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_thirdDoor.IsOpen);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.FaultyWiring"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Use), GameMain.Config.KeyBindText(InputType.Deselect)); // Connect the junction boxes
+            TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Use), GameMain.Config.KeyBindText(InputType.Deselect)); // Connect the junction boxes
             do { CheckGhostWires(); HandleJunctionBoxWiringHighlights(); yield return null; } while (engineer_workingPump.Voltage < engineer_workingPump.MinVoltage); // Wait until connected all the way to the pump
             CheckGhostWires();
             for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
             {
                 SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, false);
             }
-            RemoveCompletedObjective(segments[3]);
+            RemoveCompletedObjective(segments[4]);
             do { yield return null; } while (engineer_workingPump.Item.CurrentHull.WaterPercentage > waterVolumeBeforeOpening); // Wait until drained
             wiringActive = false;
             SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, true);
@@ -406,7 +408,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!tutorial_enteredSubmarineSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Submarine"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(4); // Repair junction box
+            TriggerTutorialSegment(5); // Repair junction box
             while (ContentRunning) yield return null;
             engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_1, engineer_repairIcon, engineer_repairIconColor);
             engineer.AddActiveObjectiveEntity(engineer_submarineJunctionBox_2, engineer_repairIcon, engineer_repairIconColor);
@@ -422,16 +424,16 @@ namespace Barotrauma.Tutorials
             // Remove highlights when each individual machine is repaired
             do { CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3); yield return null; } while (engineer_submarineJunctionBox_1.Condition < repairableJunctionBoxComponent1.RepairThreshold || engineer_submarineJunctionBox_2.Condition < repairableJunctionBoxComponent2.RepairThreshold || engineer_submarineJunctionBox_3.Condition < repairableJunctionBoxComponent3.RepairThreshold);
             CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3);
-            RemoveCompletedObjective(segments[4]);
+            RemoveCompletedObjective(segments[5]);
             yield return new WaitForSeconds(2f, false);
 
-            TriggerTutorialSegment(5); // Powerup reactor
+            TriggerTutorialSegment(6); // Powerup reactor
             SetHighlight(engineer_submarineReactor.Item, true);
             engineer.AddActiveObjectiveEntity(engineer_submarineReactor.Item, engineer_reactorIcon, engineer_reactorIconColor);
             do { yield return null; } while (!IsReactorPoweredUp(engineer_submarineReactor)); // Wait until ~matches load
             engineer.RemoveActiveObjectiveEntity(engineer_submarineReactor.Item);
             SetHighlight(engineer_submarineReactor.Item, false);
-            RemoveCompletedObjective(segments[5]);
+            RemoveCompletedObjective(segments[6]);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(4f, false);

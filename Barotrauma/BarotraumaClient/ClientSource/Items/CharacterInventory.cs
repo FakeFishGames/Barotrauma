@@ -51,12 +51,13 @@ namespace Barotrauma
                     limbSlotIcons.Add(InvSlotType.LeftHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(634, 0, 128, 128)));
                     limbSlotIcons.Add(InvSlotType.RightHand, new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(762, 0, 128, 128)));
                     limbSlotIcons.Add(InvSlotType.OuterClothes, new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(256 + margin, 128 + margin, 128 - margin * 2, 128 - margin * 2)));
+                    limbSlotIcons.Add(InvSlotType.Bag, new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(639, 926, 128,80)));
                 }
                 return limbSlotIcons;
             }
         }
 
-        public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
+        public const InvSlotType PersonalSlots = InvSlotType.Card | InvSlotType.Bag | InvSlotType.Headset | InvSlotType.InnerClothes | InvSlotType.OuterClothes | InvSlotType.Head;
 
         private Point screenResolution;
 
@@ -143,17 +144,13 @@ namespace Barotrauma
         protected override ItemInventory GetActiveEquippedSubInventory(int slotIndex)
         {
             var item = Items[slotIndex];
-            if (item == null) return null;
+            if (item == null) { return null; }
 
             var container = item.GetComponent<ItemContainer>();
-            if (container == null || 
-                !character.CanAccessInventory(container.Inventory) ||
-                !container.KeepOpenWhenEquipped || 
-                !character.HasEquippedItem(container.Item))
+            if (container == null || !container.KeepOpenWhenEquippedBy(character))
             {
                 return null;
             }
-
             return container.Inventory;
         }
 
@@ -625,7 +622,7 @@ namespace Barotrauma
                         {
                             var itemContainer = item.GetComponent<ItemContainer>();
                             if (itemContainer != null && 
-                                itemContainer.KeepOpenWhenEquipped && 
+                                itemContainer.KeepOpenWhenEquippedBy(character) && 
                                 character.CanAccessInventory(itemContainer.Inventory) &&
                                 !highlightedSubInventorySlots.Any(s => s.Inventory == itemContainer.Inventory))
                             {
@@ -729,6 +726,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < indicators.Length; i++)
             {
+                if (indicatorIndexes[i] < 0) { continue; }
                 Item item = Items[indicatorIndexes[i]];
                 if (item != null)
                 {
@@ -922,12 +920,14 @@ namespace Barotrauma
                         if (slotItem == item)
                         {
                             slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
-                            GUI.PlayUISound(GUISoundType.PickItem);
+                            SoundPlayer.PlayUISound(GUISoundType.PickItem);
                             break;
                         }
                     }
                 }
                 
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { item }, true));
+
                 item.Remove();
                 return;
             }
@@ -1065,7 +1065,7 @@ namespace Barotrauma
             }
 
             draggingItem = null;
-            GUI.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
+            SoundPlayer.PlayUISound(success ? GUISoundType.PickItem : GUISoundType.PickItemFail);
         }
         
         public void DrawOwn(SpriteBatch spriteBatch)

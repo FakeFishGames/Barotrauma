@@ -14,6 +14,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
 
         public override bool AllowOutsideSubmarine => true;
+        public override bool AllowInAnySub => true;
 
         const float TreatmentDelay = 0.5f;
 
@@ -35,7 +36,7 @@ namespace Barotrauma
         {
             if (targetCharacter == null)
             {
-                string errorMsg = $"{character.Name}: Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace;
+                string errorMsg = $"{character.Name}: Attempted to create a Rescue objective with no target!\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("AIObjectiveRescue:ctor:targetnull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 Abandon = true;
@@ -392,11 +393,13 @@ namespace Barotrauma
             if (!IsAllowed)
             {
                 Priority = 0;
+                Abandon = true;
                 return Priority;
             }
             if (character.LockHands || targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
                 Priority = 0;
+                Abandon = true;
             }
             else
             {

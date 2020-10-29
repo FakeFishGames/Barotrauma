@@ -278,17 +278,7 @@ namespace Barotrauma
                         DamagedSprite = new Sprite(subElement, file: GetSpritePath(subElement, Params.damagedSpriteParams));
                         break;
                     case "conditionalsprite":
-                        ISerializableEntity targetEntity;
-                        string target = subElement.GetAttributeString("target", null);
-                        if (string.Equals(target, "character", StringComparison.OrdinalIgnoreCase))
-                        {
-                            targetEntity = character;
-                        }
-                        else
-                        {
-                            targetEntity = this;
-                        }
-                        var conditionalSprite = new ConditionalSprite(subElement, targetEntity, file: GetSpritePath(subElement, null));
+                        var conditionalSprite = new ConditionalSprite(subElement, GetConditionalTarget(), file: GetSpritePath(subElement, null));
                         ConditionalSprites.Add(conditionalSprite);
                         if (conditionalSprite.DeformableSprite != null)
                         {
@@ -300,7 +290,7 @@ namespace Barotrauma
                         CreateDeformations(subElement);
                         break;
                     case "lightsource":
-                        LightSource = new LightSource(subElement)
+                        LightSource = new LightSource(subElement, GetConditionalTarget())
                         {
                             ParentBody = body,
                             SpriteScale = Vector2.One * Scale * TextureScale
@@ -308,6 +298,21 @@ namespace Barotrauma
                         InitialLightSourceColor = LightSource.Color;
                         InitialLightSpriteAlpha = LightSource.OverrideLightSpriteAlpha;
                         break;
+                }
+
+                ISerializableEntity GetConditionalTarget()
+                {
+                    ISerializableEntity targetEntity;
+                    string target = subElement.GetAttributeString("target", null);
+                    if (string.Equals(target, "character", StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetEntity = character;
+                    }
+                    else
+                    {
+                        targetEntity = this;
+                    }
+                    return targetEntity;
                 }
 
                 void CreateDeformations(XElement e)
@@ -341,6 +346,7 @@ namespace Barotrauma
                     }
                 }
             }
+            LightSource?.CheckConditionals();
         }
 
         public void RecreateSprites()
@@ -459,18 +465,16 @@ namespace Barotrauma
                 }
             }
             float damageMultiplier = 1;
+            float bleedingDamageMultiplier = 1;
             foreach (DamageModifier damageModifier in result.AppliedDamageModifiers)
             {
-                foreach (var afflictionPrefab in AfflictionPrefab.List)
+                if (damageModifier.MatchesAfflictionType("damage"))
                 {
-                    if (damageModifier.MatchesAffliction(afflictionPrefab.Identifier, afflictionPrefab.AfflictionType))
-                    {
-                        if (afflictionPrefab.Effects.Any(e => e.MaxVitalityDecrease > 0))
-                        {
-                            damageMultiplier *= damageModifier.DamageMultiplier;
-                            break;
-                        }
-                    }
+                    damageMultiplier *= damageModifier.DamageMultiplier;
+                }
+                else if (damageModifier.MatchesAfflictionType("bleeding"))
+                {
+                    bleedingDamageMultiplier *= damageModifier.DamageMultiplier;
                 }
             }
             if (playSound)
@@ -488,20 +492,29 @@ namespace Barotrauma
             }
 
             // spawn damage particles
-            float damageParticleAmount = Math.Min(damage / 5, 1.0f) * damageMultiplier;
+            float damageParticleAmount = damage < 1 ? 0 : Math.Min(damage / 5, 1.0f) * damageMultiplier;
             if (damageParticleAmount > 0.001f)
             {
                 foreach (ParticleEmitter emitter in character.DamageEmitters)
                 {
                     if (inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Air) { continue; }
                     if (!inWater && emitter.Prefab.ParticlePrefab.DrawTarget == ParticlePrefab.DrawTargetType.Water) { continue; }
-                    emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount);
+                    ParticlePrefab overrideParticle = null;
+                    foreach (DamageModifier damageModifier in result.AppliedDamageModifiers)
+                    {
+                        if (damageModifier.DamageMultiplier > 0 && !string.IsNullOrWhiteSpace(damageModifier.DamageParticle))
+                        {
+                            overrideParticle = GameMain.ParticleManager?.FindPrefab(damageModifier.DamageParticle);
+                            break;
+                        }
+                    }
+                    emitter.Emit(1.0f, WorldPosition, character.CurrentHull, amountMultiplier: damageParticleAmount, overrideParticle: overrideParticle);
                 }
             }
 
             if (bleedingDamage > 0)
             {
-                float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * damageMultiplier;
+                float bloodParticleAmount = Math.Min(bleedingDamage / 5, 1.0f) * bleedingDamageMultiplier;
                 float bloodParticleSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
 
                 foreach (ParticleEmitter emitter in character.BloodEmitters)
@@ -554,6 +567,11 @@ namespace Barotrauma
                 }
             }
 
+            foreach (var conditionalSprite in ConditionalSprites)
+            {
+                conditionalSprite.CheckConditionals();
+            }
+
             if (LightSource != null)
             {
                 LightSource.ParentSub = body.Submarine;
@@ -566,6 +584,7 @@ namespace Barotrauma
                 {
                     LightSource.DeformableLightSprite.Sprite.Depth = ActiveSprite.Depth;
                 }
+                LightSource.CheckConditionals();
             }
 
             UpdateSpriteStates(deltaTime);
@@ -929,6 +948,10 @@ namespace Barotrauma
                 if (wearableItemComponent.AllowedSlots.Contains(InvSlotType.OuterClothes))
                 {
                     depth -= depthStep;
+                }
+                if (wearableItemComponent.AllowedSlots.Contains(InvSlotType.Bag))
+                {
+                    depth -= depthStep * 2;
                 }
                 wearableColor = wearableItemComponent.Item.GetSpriteColor();
             }

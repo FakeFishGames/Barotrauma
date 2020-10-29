@@ -16,8 +16,11 @@ namespace Barotrauma
         private ItemContainer targetContainer;
         private readonly Item targetItem;
 
-        private AIObjectiveGoTo goToObjective;
+        private AIObjectiveGetItem getItemObjective;
         private AIObjectiveContainItem containObjective;
+
+        public AIObjectiveGetItem GetItemObjective => getItemObjective;
+        public AIObjectiveContainItem ContainObjective => containObjective;
 
         public bool Equip { get; set; }
 
@@ -26,7 +29,7 @@ namespace Barotrauma
         /// In both cases abandons the objective.
         /// Note that has no effect if the target container was not defined (always drops) -> completes when the item is dropped.
         /// </summary>
-        public bool DropIfFailsToContain { get; set; } = true;
+        public bool DropIfFails { get; set; } = true;
 
         public AIObjectiveDecontainItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, ItemContainer sourceContainer = null, ItemContainer targetContainer = null, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -74,54 +77,30 @@ namespace Barotrauma
                     return;
                 }
             }
-            else
+            else if (targetContainer.Inventory.Items.Contains(itemToDecontain))
             {
-                if (targetContainer.Inventory.Items.Contains(itemToDecontain))
-                {
-                    IsCompleted = true;
-                    return;
-                }
+                IsCompleted = true;
+                return;
             }
-            if (goToObjective == null && !itemToDecontain.IsOwnedBy(character))
+            if (getItemObjective == null && !itemToDecontain.IsOwnedBy(character))
             {
-                if (sourceContainer == null)
-                {
-                    Abandon = true;
-                    return;
-                }
-                if (!character.CanInteractWith(sourceContainer.Item, out _, checkLinked: false))
-                {
-                    TryAddSubObjective(ref goToObjective,
-                        constructor: () => new AIObjectiveGoTo(sourceContainer.Item, character, objectiveManager)
-                        {
-                            // If the container changes, the item is no longer where it was
-                            abortCondition = () => itemToDecontain.Container != sourceContainer.Item,
-                            DialogueIdentifier = "dialogcannotreachtarget",
-                            TargetName = sourceContainer.Item.Name
-                        },
-                        onAbandon: () => Abandon = true);
-                    return;
-                }
+                TryAddSubObjective(ref getItemObjective,
+                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip),
+                    onAbandon: () => Abandon = true);
+                return;
             }
             if (targetContainer != null)
             {
                 TryAddSubObjective(ref containObjective,
                     constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager)
                     {
-                        Equip = this.Equip,
+                        Equip = Equip,
                         RemoveEmpty = false,
-                        GetItemPriority = this.GetItemPriority,
+                        GetItemPriority = GetItemPriority,
                         ignoredContainerIdentifiers = sourceContainer != null ? new string[] { sourceContainer.Item.Prefab.Identifier } : null
                     },
                     onCompleted: () => IsCompleted = true,
-                    onAbandon: () =>
-                    {
-                        if (DropIfFailsToContain)
-                        {
-                            itemToDecontain.Drop(character);
-                        }
-                        Abandon = true;
-                    });
+                    onAbandon: () => Abandon = true);
             }
             else
             {
@@ -133,8 +112,17 @@ namespace Barotrauma
         public override void Reset()
         {
             base.Reset();
-            goToObjective = null;
+            getItemObjective = null;
             containObjective = null;
+        }
+
+        protected override void OnAbandon()
+        {
+            base.OnAbandon();
+            if (DropIfFails && targetItem != null && targetItem.IsOwnedBy(character))
+            {
+                targetItem.Drop(character);
+            }
         }
     }
 }

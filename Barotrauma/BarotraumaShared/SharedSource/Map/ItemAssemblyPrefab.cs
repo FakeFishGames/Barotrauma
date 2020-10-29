@@ -110,7 +110,13 @@ namespace Barotrauma
         
         protected override void CreateInstance(Rectangle rect)
         {
-            CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
+            var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
+#if CLIENT
+            if (Screen.Selected is SubEditorScreen)
+            {
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(loaded, false));
+            }
+#endif
         }
 
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectPrefabs = false)

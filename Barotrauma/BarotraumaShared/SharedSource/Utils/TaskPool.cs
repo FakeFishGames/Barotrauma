@@ -87,7 +87,7 @@ namespace Barotrauma
             DebugConsole.ThrowError(msg);
             foreach (Exception e in task.Exception.InnerExceptions)
             {
-                DebugConsole.ThrowError(e.Message + "\n" + e.StackTrace);
+                DebugConsole.ThrowError(e.Message + "\n" + e.StackTrace.CleanupStackTrace());
             }
         }
     }

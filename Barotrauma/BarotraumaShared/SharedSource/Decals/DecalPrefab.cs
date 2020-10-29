@@ -62,9 +62,9 @@ namespace Barotrauma
                 {
                     Sprites.Add(new Sprite(subElement));             
                 }
-            }  
-            
-            Color = new Color(element.GetAttributeVector4("color", Vector4.One));
+            }
+
+            Color = element.GetAttributeColor("color", Color.White);
 
             LifeTime = element.GetAttributeFloat("lifetime", 10.0f);
             FadeOutTime = Math.Min(LifeTime, element.GetAttributeFloat("fadeouttime", 1.0f));

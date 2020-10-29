@@ -31,7 +31,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce(
                         "GUIProgressBar.BarSize_setter", 
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to set the BarSize of a GUIProgressBar to an invalid value (" + value + ")\n" + Environment.StackTrace);
+                        "Attempted to set the BarSize of a GUIProgressBar to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
                 barSize = MathHelper.Clamp(value, 0.0f, 1.0f);
@@ -106,7 +106,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce(
                         "GUIProgressBar.Draw:GetProgress",
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "ProgressGetter of a GUIProgressBar (" + ProgressGetter.Target.ToString() + " - " + ProgressGetter.Method.ToString() + ") returned an invalid value (" + newSize + ")\n" + Environment.StackTrace);
+                        "ProgressGetter of a GUIProgressBar (" + ProgressGetter.Target.ToString() + " - " + ProgressGetter.Method.ToString() + ") returned an invalid value (" + newSize + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 }
                 else
                 {

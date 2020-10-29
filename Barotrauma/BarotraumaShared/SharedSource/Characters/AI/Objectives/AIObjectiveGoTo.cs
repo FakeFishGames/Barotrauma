@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -50,6 +51,7 @@ namespace Barotrauma
         public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
 
         public override bool AllowOutsideSubmarine => AllowGoingOutside;
+        public override bool AllowInAnySub => true;
 
         public string DialogueIdentifier { get; set; }
         public string TargetName { get; set; }
@@ -60,17 +62,27 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
+            bool isOrder = objectiveManager.CurrentOrder == this;
+            if (!IsAllowed)
+            {
+                Priority = 0;
+                Abandon = !isOrder;
+                return Priority;
+            }
             if (followControlledCharacter && Character.Controlled == null)
             {
                 Priority = 0;
+                Abandon = !isOrder;
             }
             if (Target is Entity e && e.Removed)
             {
                 Priority = 0;
+                Abandon = !isOrder;
             }
             if (IgnoreIfTargetDead && Target is Character character && character.IsDead)
             {
                 Priority = 0;
+                Abandon = !isOrder;
             }
             else
             {
@@ -84,7 +96,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Priority = objectiveManager.CurrentOrder == this ? AIObjectiveManager.OrderPriority : 10;
+                    Priority = isOrder ? AIObjectiveManager.OrderPriority : 10;
                 }
             }
             return Priority;
@@ -93,7 +105,7 @@ namespace Barotrauma
         public AIObjectiveGoTo(ISpatialEntity target, Character character, AIObjectiveManager objectiveManager, bool repeat = false, bool getDivingGearIfNeeded = true, float priorityModifier = 1, float closeEnough = 0)
             : base(character, objectiveManager, priorityModifier)
         {
-            this.Target = target;
+            Target = target;
             this.repeat = repeat;
             waitUntilPathUnreachable = 3.0f;
             this.getDivingGearIfNeeded = getDivingGearIfNeeded;
@@ -260,60 +272,155 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (!character.AnimController.InWater)
+                {
+                    useScooter = false;
+                    checkScooterTimer = 0;
+                }
+                else if (checkScooterTimer <= 0)
+                {
+                    useScooter = false;
+                    checkScooterTimer = checkScooterTime;
+                    string scooterTag = "scooter";
+                    string batteryTag = "mobilebattery";
+                    Item scooter = null;
+                    bool isScooterEquipped = false;
+                    float closeEnough = 250;
+                    float squaredDistance = Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition);
+                    bool shouldUseScooter = squaredDistance > closeEnough * closeEnough && (!mimic ||
+                        (Target is Character targetCharacter && targetCharacter.HasEquippedItem(scooterTag, allowBroken: false)) || squaredDistance > Math.Pow(closeEnough * 2, 2));
+                    if (HumanAIController.HasItem(character, scooterTag, out IEnumerable<Item> equippedScooters, batteryTag, requireEquipped: true))
+                    {
+                        scooter = equippedScooters.FirstOrDefault();
+                        isScooterEquipped = scooter != null;
+                    }
+                    else if (shouldUseScooter && HumanAIController.HasItem(character, scooterTag, out IEnumerable<Item> scooters, batteryTag, requireEquipped: false))
+                    {
+                        scooter = scooters.FirstOrDefault();
+                        if (scooter != null)
+                        {
+                            isScooterEquipped = HumanAIController.TakeItem(scooter, character.Inventory, equip: true, dropOtherIfCannotMove: false, allowSwapping: true, storeUnequipped: false);
+                        }
+                    }
+                    if (scooter != null && isScooterEquipped)
+                    {
+                        if (shouldUseScooter)
+                        {
+                            useScooter = true;
+                        }
+                        else
+                        {
+                            // Unequip
+                            character.Inventory.TryPutItem(scooter, character, CharacterInventory.anySlot);
+                        }
+                    }
+                }
+                else
+                {
+                    checkScooterTimer -= deltaTime;
+                }
                 if (SteeringManager == PathSteering)
                 {
                     Func<PathNode, bool> nodeFilter = null;
                     if (isInside && !AllowGoingOutside)
                     {
-                        nodeFilter = node => node.Waypoint.CurrentHull != null;
+                        nodeFilter = n => n.Waypoint.CurrentHull != null;
                     }
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(Target), 1, n =>
-                    {
-                        if (n.Waypoint.isObstructed) { return false; }
-                        return (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null);
-                    }, endNodeFilter, nodeFilter, CheckVisibility);
+
+                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(Target), 1, 
+                        startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (character.CurrentHull == null), 
+                        endNodeFilter, 
+                        nodeFilter, 
+                        CheckVisibility);
+
                     if (!isInside && PathSteering.CurrentPath == null || PathSteering.IsPathDirty || PathSteering.CurrentPath.Unreachable)
                     {
-                        SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(Target.WorldPosition - character.WorldPosition));
+                        if (useScooter)
+                        {
+                            UseScooter(Target.WorldPosition);
+                        }
+                        else
+                        {
+                            SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(Target.WorldPosition - character.WorldPosition));
+                            if (character.AnimController.InWater)
+                            {
+                                SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 2);
+                            }
+                        }
+                    }
+                    else if (useScooter && PathSteering.CurrentPath?.CurrentNode != null)
+                    {
+                        UseScooter(PathSteering.CurrentPath.CurrentNode.WorldPosition);
+                    }
+                }
+                else
+                {
+                    if (useScooter)
+                    {
+                        UseScooter(Target.WorldPosition);
+                    }
+                    else
+                    {
+                        SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
                         if (character.AnimController.InWater)
                         {
                             SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
                         }
                     }
                 }
-                else
+            }
+
+            void UseScooter(Vector2 targetWorldPos)
+            {
+                SteeringManager.Reset();
+                character.CursorPosition = targetWorldPos;
+                if (character.Submarine != null)
                 {
-                    SteeringManager.SteeringSeek(character.GetRelativeSimPosition(Target), 10);
-                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: 5, weight: 15);
+                    character.CursorPosition -= character.Submarine.Position;
                 }
+                Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
+                if (!MathUtils.IsValid(dir)) { dir = Vector2.UnitY; }
+                SteeringManager.SteeringManual(1.0f, dir);
+                character.SetInput(InputType.Aim, false, true);
+                character.SetInput(InputType.Shoot, false, true);
             }
         }
 
-        public Hull GetTargetHull()
+        private bool useScooter;
+        private float checkScooterTimer;
+        private readonly float checkScooterTime = 0.2f;
+
+        public Hull GetTargetHull() => GetTargetHull(Target);
+
+        public static Hull GetTargetHull(ISpatialEntity target)
         {
-            if (Target is Hull h)
+            if (target is Hull h)
             {
                 return h;
             }
-            else if (Target is Item i)
+            else if (target is Item i)
             {
                 return i.CurrentHull;
             }
-            else if (Target is Character c)
+            else if (target is Character c)
             {
                 return c.CurrentHull;
             }
-            else if (Target is Gap g)
+            else if (target is Gap g)
             {
                 return g.FlowTargetHull;
             }
-            else if (Target is WayPoint wp)
+            else if (target is WayPoint wp)
             {
                 return wp.CurrentHull;
             }
-            else if (Target is FireSource fs)
+            else if (target is FireSource fs)
             {
                 return fs.Hull;
+            }
+            else if (target is OrderTarget ot)
+            {
+                return ot.Hull;
             }
             return null;
         }
@@ -361,7 +468,7 @@ namespace Barotrauma
                     {
                         if (Target is Item item)
                         {
-                            if (character.CanInteractWith(item, out _, checkLinked: false)) { IsCompleted = true; }
+                            if (!character.IsClimbing && character.CanInteractWith(item, out _, checkLinked: false)) { IsCompleted = true; }
                         }
                         else if (Target is Character targetCharacter)
                         {

@@ -41,7 +41,7 @@ namespace Barotrauma
             setLinuxEnv();
 #endif
             Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
-                " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
+                " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
 
             string executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
@@ -99,7 +99,7 @@ namespace Barotrauma
             sb.AppendLine("\n");
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("\n");
-            sb.AppendLine("Game version " + GameMain.Version + " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
+            sb.AppendLine("Game version " + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
             if (GameMain.Config != null)
             {
                 sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
@@ -124,7 +124,7 @@ namespace Barotrauma
             sb.AppendLine("Exception: " + exception.Message + " (" + exception.GetType().ToString() + ")");
             sb.AppendLine("Target site: " +exception.TargetSite.ToString());
             sb.AppendLine("Stack trace: ");
-            sb.AppendLine(exception.StackTrace);
+            sb.AppendLine(exception.StackTrace.CleanupStackTrace());
             sb.AppendLine("\n");
 
             if (exception.InnerException != null)
@@ -135,7 +135,7 @@ namespace Barotrauma
                     sb.AppendLine("Target site: " + exception.InnerException.TargetSite.ToString());
                 }
                 sb.AppendLine("Stack trace: ");
-                sb.AppendLine(exception.InnerException.StackTrace);
+                sb.AppendLine(exception.InnerException.StackTrace.CleanupStackTrace());
             }
 
             sb.AppendLine("Last debug messages:");

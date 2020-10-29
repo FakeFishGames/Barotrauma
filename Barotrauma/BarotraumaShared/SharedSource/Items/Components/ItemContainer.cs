@@ -328,10 +328,10 @@ namespace Barotrauma.Items.Components
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
+                        DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                         GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Name,
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace);
+                            "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                     }
                     contained.body.Submarine = item.Submarine;
                 }
@@ -349,6 +349,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            if (item.Submarine == null || !item.Submarine.Loading)
+            {
+                SpawnAlwaysContainedItems();
+            }
+        }
+
         public override void OnMapLoaded()
         {
             if (itemIds != null)            
@@ -361,7 +369,11 @@ namespace Barotrauma.Items.Components
                 }
                 itemIds = null;
             }
+            SpawnAlwaysContainedItems();
+        }
 
+        private void SpawnAlwaysContainedItems()
+        {
             if (SpawnWithId.Length > 0)
             {
                 ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);
@@ -374,6 +386,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
 
         protected override void ShallowRemoveComponentSpecific()
         {
@@ -388,9 +401,9 @@ namespace Barotrauma.Items.Components
             inventoryBottomSprite?.Remove();
             ContainedStateIndicator?.Remove();
 
-            if (Screen.Selected == GameMain.SubEditorScreen && !Submarine.Unloading)
+            if (SubEditorScreen.IsSubEditor())
             {
-                GameMain.SubEditorScreen.HandleContainerContentsDeletion(Item, Inventory);
+                Inventory.DeleteAllItems();
                 return;
             }
 #endif

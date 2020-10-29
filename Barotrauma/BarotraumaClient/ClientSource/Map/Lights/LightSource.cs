@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -5,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+
 
 namespace Barotrauma.Lights
 {
@@ -42,6 +44,12 @@ namespace Barotrauma.Lights
             }
         }
 
+        [Serialize(1f, true), Editable(minValue: 0.01f, maxValue: 100f, ValueStep = 0.1f, DecimalCount = 2)]
+        public float Scale { get; set; }
+
+        [Serialize("0, 0", true), Editable(ValueStep = 1, DecimalCount = 1, MinValueFloat = -1000f, MaxValueFloat = 1000f)]
+        public Vector2 Offset { get; set; }
+             
         public float TextureRange
         {
             get;
@@ -239,11 +247,13 @@ namespace Barotrauma.Lights
             }
         }
 
+        private Vector2 _spriteScale = Vector2.One;
+
         public Vector2 SpriteScale
         {
-            get;
-            set;
-        } = Vector2.One;
+            get { return _spriteScale * lightSourceParams.Scale; }
+            set { _spriteScale = value; }
+        }
 
         public float? OverrideLightSpriteAlpha
         {
@@ -278,7 +288,9 @@ namespace Barotrauma.Lights
         {
             get { return lightSourceParams.LightSprite; }
         }
-        
+
+        private Vector2 OverrideLightTextureOrigin => OverrideLightTexture.Origin + LightSourceParams.Offset;
+
         public Color Color
         {
             get { return lightSourceParams.Color; }
@@ -331,15 +343,41 @@ namespace Barotrauma.Lights
 
         public bool Enabled = true;
 
-        public LightSource (XElement element)
+        private ISerializableEntity conditionalTarget;
+        private readonly PropertyConditional.Comparison comparison;
+        private readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
+
+        public LightSource (XElement element, ISerializableEntity conditionalTarget = null)
             : this(Vector2.Zero, 100.0f, Color.White, null)
         {
             lightSourceParams = new LightSourceParams(element);
             CastShadows = element.GetAttributeBool("castshadows", true);
+            string comparison = element.GetAttributeString("comparison", null);
+            if (comparison != null)
+            {
+                Enum.TryParse(comparison, ignoreCase: true, out this.comparison);
+            }
 
             if (lightSourceParams.DeformableLightSpriteElement != null)
             {
                 DeformableLightSprite = new DeformableSprite(lightSourceParams.DeformableLightSpriteElement, invert: true);
+            }
+
+            this.conditionalTarget = conditionalTarget;
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "conditional":
+                        foreach (XAttribute attribute in subElement.Attributes())
+                        {
+                            if (PropertyConditional.IsValid(attribute))
+                            {
+                                conditionals.Add(new PropertyConditional(attribute));
+                            }
+                        }
+                        break;
+                }
             }
         }
 
@@ -363,7 +401,8 @@ namespace Barotrauma.Lights
             CastShadows = true;            
             texture = LightTexture;
             diffToSub = new Dictionary<Submarine, Vector2>();
-            if (addLight) GameMain.LightManager.AddLight(this);
+            if (addLight) { GameMain.LightManager.AddLight(this); }
+
         }
         
         /// <summary>
@@ -493,7 +532,7 @@ namespace Barotrauma.Lights
             {
                 return null;
             }
-            if (Range < 1.0f || Color.A < 0.01f) return null;
+            if (Range < 1.0f || Color.A < 1) { return null; }
 
             Vector2 drawPos = position;
             if (ParentSub != null) drawPos += ParentSub.DrawPosition;
@@ -535,7 +574,7 @@ namespace Barotrauma.Lights
 
                 var overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
 
-                Vector2 origin = OverrideLightTexture.Origin;
+                Vector2 origin = OverrideLightTextureOrigin;
 
                 origin /= Math.Max(overrideTextureDims.X, overrideTextureDims.Y);
                 origin -= Vector2.One * 0.5f;
@@ -844,7 +883,7 @@ namespace Barotrauma.Lights
             {
                 overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
 
-                Vector2 origin = OverrideLightTexture.Origin;
+                Vector2 origin = OverrideLightTextureOrigin;
                 if (LightSpriteEffect == SpriteEffects.FlipHorizontally) { origin.X = OverrideLightTexture.SourceRect.Width - origin.X; }
                 if (LightSpriteEffect == SpriteEffects.FlipVertically) { origin.Y = OverrideLightTexture.SourceRect.Height - origin.Y; }
                 uvOffset = (origin / overrideTextureDims) - new Vector2(0.5f, 0.5f);
@@ -1031,7 +1070,7 @@ namespace Barotrauma.Lights
                 {
                     var overrideTextureDims = new Vector2(OverrideLightTexture.SourceRect.Width, OverrideLightTexture.SourceRect.Height);
 
-                    Vector2 origin = OverrideLightTexture.Origin;
+                    Vector2 origin = OverrideLightTextureOrigin;
 
                     origin /= Math.Max(overrideTextureDims.X, overrideTextureDims.Y);
                     origin *= TextureRange;
@@ -1059,13 +1098,12 @@ namespace Barotrauma.Lights
 
             if (DeformableLightSprite != null)
             {
-                Vector2 origin = DeformableLightSprite.Origin;
+                Vector2 origin = DeformableLightSprite.Origin + LightSourceParams.Offset;
                 Vector2 drawPos = position;
                 if (ParentSub != null)
                 {
                     drawPos += ParentSub.DrawPosition;
                 }
-
                 if (LightSpriteEffect == SpriteEffects.FlipHorizontally)
                 {
                     origin.X = DeformableLightSprite.Sprite.SourceRect.Width - origin.X;
@@ -1084,7 +1122,7 @@ namespace Barotrauma.Lights
 
             if (LightSprite != null)
             {
-                Vector2 origin = LightSprite.Origin;
+                Vector2 origin = LightSprite.Origin + LightSourceParams.Offset;
                 if ((LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally)
                 {
                     origin.X = LightSprite.SourceRect.Width - origin.X;
@@ -1128,12 +1166,27 @@ namespace Barotrauma.Lights
                     GUI.DrawLine(spriteBatch, drawPos - Vector2.One * Range, drawPos + Vector2.One * Range, Color);
                     GUI.DrawLine(spriteBatch, drawPos - new Vector2(1.0f, -1.0f) * Range, drawPos + new Vector2(1.0f, -1.0f) * Range, Color);
                 }
+            }   
+        }
+
+        public void CheckConditionals()
+        {
+            if (conditionals.None()) { return; }
+            if (conditionalTarget == null) { return; }
+            if (comparison == PropertyConditional.Comparison.And)
+            {
+                Enabled = conditionals.All(c => c.Matches(conditionalTarget));
             }
-            
+            else
+            {
+                Enabled = conditionals.Any(c => c.Matches(conditionalTarget));
+            }
         }
 
         public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
         {
+            if (Range < 1.0f || Color.A < 1) { return; }
+
             if (CastShadows)
             {
                 CheckHullsInRange();
@@ -1158,7 +1211,6 @@ namespace Barotrauma.Lights
                 return;
             }
 
-
             if (NeedsRecalculation)
             {
                 var verts = FindRaycastHits();
@@ -1167,7 +1219,6 @@ namespace Barotrauma.Lights
                 lastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
-
 
             Vector2 offset = ParentSub == null ? Vector2.Zero : ParentSub.DrawPosition;
             lightEffect.World =

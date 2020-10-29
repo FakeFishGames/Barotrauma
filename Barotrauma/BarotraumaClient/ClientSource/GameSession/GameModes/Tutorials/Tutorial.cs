@@ -584,8 +584,8 @@ namespace Barotrauma.Tutorials
             }
 
             infoBlock.RectTransform.NonScaledSize = new Point(infoBlock.Rect.Width, (int)(infoContent.Children.Sum(c => c.Rect.Height + infoContent.AbsoluteSpacing) / infoContent.RectTransform.RelativeSize.Y));
-            
-            GUI.PlayUISound(GUISoundType.UIMessage);
+
+            SoundPlayer.PlayUISound(GUISoundType.UIMessage);
 
             return background;
         }

@@ -17,7 +17,16 @@ namespace Barotrauma.Items.Components
         private GUITickBox autoControlIndicator;
 
         private List<Pair<Vector2, ParticleEmitter>> pumpOutEmitters = new List<Pair<Vector2, ParticleEmitter>>(); 
-        private List<Pair<Vector2, ParticleEmitter>> pumpInEmitters = new List<Pair<Vector2, ParticleEmitter>>(); 
+        private List<Pair<Vector2, ParticleEmitter>> pumpInEmitters = new List<Pair<Vector2, ParticleEmitter>>();
+
+        public float CurrentBrokenVolume
+        {
+            get
+            {
+                if (item.ConditionPercentage > 10.0f || !IsActive) { return 0.0f; }
+                return (1.0f - item.ConditionPercentage / 10.0f) * 100.0f;
+            }
+        }
 
         partial void InitProjSpecific(XElement element)
         {

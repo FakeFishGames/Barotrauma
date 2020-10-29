@@ -104,14 +104,14 @@ namespace Barotrauma.Items.Components
 
                 ApplyStatusEffects(ActionType.OnPicked, 1.0f, picker);
 #if CLIENT
-                if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) GUI.PlayUISound(GUISoundType.PickItem);
+                if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) SoundPlayer.PlayUISound(GUISoundType.PickItem);
                 PlaySound(ActionType.OnPicked,  picker);
 #endif
                 return true;
             }
 
 #if CLIENT
-            if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) GUI.PlayUISound(GUISoundType.PickItemFail);
+            if (!GameMain.Instance.LoadingScreenOpen && picker == Character.Controlled) SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
 #endif
 
             return false;

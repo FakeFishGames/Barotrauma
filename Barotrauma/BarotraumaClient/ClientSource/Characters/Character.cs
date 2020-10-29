@@ -559,6 +559,18 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
+            if (InvisibleTimer > 0.0f)
+            {
+                if (Controlled == null || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+                {
+                    InvisibleTimer = 0.0f;
+                }
+                else
+                {
+                    InvisibleTimer -= deltaTime;
+                }
+            }
+
             if (!enabled) { return; }
 
             if (!IsDead && !IsIncapacitated)
@@ -568,20 +580,29 @@ namespace Barotrauma
                     soundTimer -= deltaTime;
                 }
                 else if (AIController != null)
-                {                    
+                {
                     switch (AIController.State)
                     {
                         case AIState.Attack:
                             PlaySound(CharacterSound.SoundType.Attack);
                             break;
                         default:
-                            PlaySound(CharacterSound.SoundType.Idle);
+                            var petBehavior = (AIController as EnemyAIController)?.PetBehavior;
+                            if (petBehavior != null && petBehavior.Happiness < petBehavior.MaxHappiness * 0.25f)
+                            {
+                                PlaySound(CharacterSound.SoundType.Unhappy);
+                            }
+                            else
+                            {
+                                PlaySound(CharacterSound.SoundType.Idle);
+
+                            }
                             break;
                     }
                 }
             }
 
-            if (info != null || Vitality < MaxVitality * 0.98f)
+            if (info != null || Vitality < MaxVitality * 0.98f || IsPet)
             {
                 hudInfoTimer -= deltaTime;
                 if (hudInfoTimer <= 0.0f)
@@ -653,7 +674,7 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) { return; }
+            if (!Enabled || InvisibleTimer > 0.0f) { return; }
             AnimController.Draw(spriteBatch, cam);
         }
 
@@ -665,7 +686,7 @@ namespace Barotrauma
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled) { return; }
+            if (!Enabled || InvisibleTimer > 0.0f) { return; }
 
             if (GameMain.DebugDraw)
             {
@@ -760,48 +781,67 @@ namespace Barotrauma
                 MathHelper.Clamp(1.0f - (cursorDist - (hoverRange - fadeOutRange)) / fadeOutRange, 0.2f, 1.0f) :
                 1.0f;
             
-            if (!GUI.DisableCharacterNames && hudInfoVisible && info != null &&
-                (controlled == null || this != controlled.FocusedCharacter) && cam.Zoom > 0.4f)
+            if (!GUI.DisableCharacterNames && hudInfoVisible &&
+                (controlled == null || this != controlled.FocusedCharacter || IsPet) && cam.Zoom > 0.4f)
             {
-                string name = Info.DisplayName;
-                if (controlled == null && name != Info.Name) { name += " " + TextManager.Get("Disguised"); }
-
-                Vector2 nameSize = GUI.Font.MeasureString(name);
-                Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
-
-                Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            	Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
-                namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
-            	namePos *= screenSize / viewportSize;
-            	namePos.X = (float)Math.Floor(namePos.X); namePos.Y = (float)Math.Floor(namePos.Y);
-            	namePos *= viewportSize / screenSize;
-            	namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
-
-                Color nameColor = Color.White;
-                if (Controlled != null && TeamID != Controlled.TeamID)
+                if (info != null)
                 {
-                    nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+                    string name = Info.DisplayName;
+                    if (controlled == null && name != Info.Name) { name += " " + TextManager.Get("Disguised"); }
+
+                    Vector2 nameSize = GUI.Font.MeasureString(name);
+                    Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
+
+                    Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+            	    Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
+                    namePos.X -= cam.WorldView.X; namePos.Y += cam.WorldView.Y;
+            	    namePos *= screenSize / viewportSize;
+            	    namePos.X = (float)Math.Floor(namePos.X); namePos.Y = (float)Math.Floor(namePos.Y);
+            	    namePos *= viewportSize / screenSize;
+            	    namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
+
+                    Color nameColor = Color.White;
+                    if (Controlled != null && TeamID != Controlled.TeamID)
+                    {
+                        nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+                    }
+                    if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
+                    {
+                        var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
+                        if (iconStyle != null)
+                        {
+                            Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
+                            Vector2 iconPos = headPos;
+                            iconPos.Y = -iconPos.Y;
+                            nameColor = iconStyle.Color;
+                            var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
+                            float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;                 
+                            icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
+                        }
+                    }
+
+                    GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
+                    GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
+                    if (GameMain.DebugDraw)
+                    {
+                        GUI.Font.DrawString(spriteBatch, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
+                    }
                 }
-                if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
+                
+                var petBehavior = (AIController as EnemyAIController)?.PetBehavior;
+                if (petBehavior != null && !IsDead && !IsUnconscious)
                 {
-                    var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
+                    var petStatus = petBehavior.GetCurrentStatusIndicatorType();
+                    var iconStyle = GUI.Style.GetComponentStyle("PetIcon." + petStatus);
                     if (iconStyle != null)
                     {
                         Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
                         Vector2 iconPos = headPos;
                         iconPos.Y = -iconPos.Y;
-                        nameColor = iconStyle.Color;
                         var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
-                        float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;                 
+                        float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;
                         icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
                     }
-                }
-
-                GUI.Font.DrawString(spriteBatch, name, namePos + new Vector2(1.0f / cam.Zoom, 1.0f / cam.Zoom), Color.Black, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.001f);
-                GUI.Font.DrawString(spriteBatch, name, namePos, nameColor * hudInfoAlpha, 0.0f, Vector2.Zero, 1.0f / cam.Zoom, SpriteEffects.None, 0.0f);
-                if (GameMain.DebugDraw)
-                {
-                    GUI.Font.DrawString(spriteBatch, ID.ToString(), namePos - new Vector2(0.0f, 20.0f), Color.White);
                 }
             }
 
@@ -846,11 +886,12 @@ namespace Barotrauma
 
         private readonly List<CharacterSound> matchingSounds = new List<CharacterSound>();
         private SoundChannel soundChannel;
-        public void PlaySound(CharacterSound.SoundType soundType)
+        public void PlaySound(CharacterSound.SoundType soundType, float soundIntervalFactor = 1.0f)
         {
             if (sounds == null || sounds.Count == 0) { return; }
             if (soundChannel != null && soundChannel.IsPlaying) { return; }
             if (GameMain.SoundManager?.Disabled ?? true) { return; }
+            if (soundTimer > soundInterval * soundIntervalFactor) { return; }
             matchingSounds.Clear();
             foreach (var s in sounds)
             {

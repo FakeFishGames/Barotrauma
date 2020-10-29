@@ -519,7 +519,7 @@ namespace Barotrauma
             {
                 if (displayErrors)
                 {
-                    DebugConsole.ThrowError("Parent null" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Parent null" + Environment.StackTrace.CleanupStackTrace());
                 }
                 return false;
             }
@@ -527,7 +527,7 @@ namespace Barotrauma
             {
                 if (displayErrors)
                 {
-                    DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible! " + Environment.StackTrace);
+                    DebugConsole.ThrowError("The children of the parent does not contain this child. This should not be possible! " + Environment.StackTrace.CleanupStackTrace());
                 }
                 return false;
             }
@@ -535,7 +535,7 @@ namespace Barotrauma
             {
                 if (displayErrors)
                 {
-                    DebugConsole.ThrowError("Unable to remove the child from the parent. " + Environment.StackTrace);
+                    DebugConsole.ThrowError("Unable to remove the child from the parent. " + Environment.StackTrace.CleanupStackTrace());
                 }
                 return false;
             }

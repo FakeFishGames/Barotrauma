@@ -332,7 +332,7 @@ namespace Barotrauma.Networking
 
             catch (Exception e)
             {
-                string errorMsg = "Error while writing banlist. {" + e + "}\n" + e.StackTrace;
+                string errorMsg = "Error while writing banlist. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("Banlist.ServerAdminWrite", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 throw;
             }

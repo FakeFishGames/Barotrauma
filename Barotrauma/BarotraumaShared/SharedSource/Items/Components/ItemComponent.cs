@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
         public bool DrawHudWhenEquipped
         {
             get;
-            private set;
+            protected set;
         }
 
         [Serialize(false, false, description: "Can the item be selected by interacting with it.")]
@@ -604,7 +604,7 @@ namespace Barotrauma.Items.Components
 
             if (character == null)
             {
-                string errorMsg = "ItemComponent.DegreeOfSuccess failed (character was null).\n" + Environment.StackTrace;
+                string errorMsg = "ItemComponent.DegreeOfSuccess failed (character was null).\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.DegreeOfSuccess:CharacterNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return 0.0f;
@@ -846,7 +846,7 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError("Error while loading entity of the type " + t + ".", e.InnerException);
                 GameAnalyticsManager.AddErrorEventOnce("ItemComponent.Load:TargetInvocationException" + item.Name + element.Name,
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Error while loading entity of the type " + t + " (" + e.InnerException + ")\n" + Environment.StackTrace);
+                    "Error while loading entity of the type " + t + " (" + e.InnerException + ")\n" + Environment.StackTrace.CleanupStackTrace());
             }
 
             return ic;
@@ -1014,8 +1014,8 @@ namespace Barotrauma.Items.Components
                                 var container = i.GetComponent<ItemContainer>();
                                 if (container == null) { return 0; }
                                 if (container.Inventory.IsFull()) { return 0; }
-                            // Ignore containers that are identical to the source container
-                            if (sourceC != null && container.Item.Prefab == sourceC.Item.Prefab) { return 0; }
+                                // Ignore containers that are identical to the source container
+                                if (sourceC != null && container.Item.Prefab == sourceC.Item.Prefab) { return 0; }
                                 if (container.ShouldBeContained(containedItem, out bool isRestrictionsDefined))
                                 {
                                     if (isRestrictionsDefined)

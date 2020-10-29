@@ -524,12 +524,12 @@ namespace Barotrauma
         {
             if (SelectedConnection == null)
             {
-                DebugConsole.ThrowError("Could not move to the next location (no connection selected).\n"+Environment.StackTrace);
+                DebugConsole.ThrowError("Could not move to the next location (no connection selected).\n"+Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (SelectedLocation == null)
             {
-                DebugConsole.ThrowError("Could not move to the next location (no location selected).\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Could not move to the next location (no location selected).\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
@@ -833,7 +833,7 @@ namespace Barotrauma
                         if (location.Discovered)
                         {
 #if CLIENT
-                            RemoveFogOfWar(StartLocation);
+                            RemoveFogOfWar(location);
 #endif
                             if (furthestDiscoveredLocation == null || location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                             {

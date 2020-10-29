@@ -342,7 +342,8 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        if (Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X || PlayerInput.IsShiftDown())
+                        if ((highlightedNodeIndex.HasValue && Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X) || 
+                            PlayerInput.IsShiftDown())
                         {
                             selectedNodeIndex = highlightedNodeIndex;
                         }
@@ -535,6 +536,9 @@ namespace Barotrauma.Items.Components
             nodes = nodePositions.ToList();
             UpdateSections();
             Drawable = nodes.Any();
+            IsActive = 
+                (connections[0] == null ^ connections[1] == null) &&
+                (item.ParentInventory is CharacterInventory characterInventory && ((characterInventory.Owner as Character)?.HasEquippedItem(item) ?? false));
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

@@ -272,7 +272,7 @@ namespace Barotrauma.Networking
                 GameAnalyticsManager.AddErrorEventOnce(
                     "FileSender.Update:Exception",
                     GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "FileSender threw an exception when trying to send data:\n" + e.Message + "\n" + e.StackTrace);
+                    "FileSender threw an exception when trying to send data:\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
                 transfer.Status = FileTransferStatus.Error;
                 return;
             }

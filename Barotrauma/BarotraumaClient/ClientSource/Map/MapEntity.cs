@@ -27,6 +27,9 @@ namespace Barotrauma
 
         private static bool resizing;
         private int resizeDirX, resizeDirY;
+        private Rectangle? prevRect;
+
+        public static bool SelectionChanged;
 
         //which entities have been selected for editing
         private static List<MapEntity> selectedList = new List<MapEntity>();
@@ -105,6 +108,11 @@ namespace Barotrauma
             return true;
         }
 
+        /// <summary>
+        /// Used for undo/redo to determine what this item has been replaced with
+        /// </summary>
+        public MapEntity ReplacedBy;
+
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back = true) { }
         
         /// <summary>
@@ -147,13 +155,13 @@ namespace Barotrauma
             }
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                if (PlayerInput.KeyDown(Keys.Delete))
+                if (PlayerInput.KeyHit(Keys.Delete))
                 {
-                    selectedList.ForEach(e =>
+                    if (selectedList.Any())
                     {
-                        //orphaned wires may already have been removed
-                        if (!e.Removed) { e.Remove(); }
-                    });
+                        SubEditorScreen.StoreCommand(new AddOrDeleteCommand(selectedList, true));
+                    }
+                    selectedList.ForEach(e => { if (!e.Removed) { e.Remove(); } });
                     selectedList.Clear();
                 }
 
@@ -214,30 +222,6 @@ namespace Barotrauma
                                     // Create a group that can be accessed with any member
                                     SelectionGroups.Add(entity, selectedList);
                                 }
-                            }
-                        }
-                    }
-                    else if (PlayerInput.KeyHit(Keys.Z))
-                    {
-                        SetPreviousRects(e => e.rectMemento.Undo());
-                    }
-                    else if (PlayerInput.KeyHit(Keys.R))
-                    {
-                        SetPreviousRects(e => e.rectMemento.Redo());
-                    }
-
-                    void SetPreviousRects(Func<MapEntity, Rectangle> memoryMethod)
-                    {
-                        foreach (var e in SelectedList)
-                        {
-                            if (e.rectMemento != null)
-                            {
-                                Point diff = memoryMethod(e).Location - e.Rect.Location;
-                                // We have to call the move method, because there's a lot more than just storing the rect (in some cases)
-                                // We also have to reassign the rect, because the move method does not set the width and height. They might have changed too.
-                                // The Rect property is virtual and it's overridden for structs. Setting the rect via the property should automatically recreate the sections for resizable structures.
-                                e.Move(diff.ToVector2());
-                                e.Rect = e.rectMemento.Current;
                             }
                         }
                     }
@@ -343,35 +327,38 @@ namespace Barotrauma
                         //clone
                         if (PlayerInput.IsCtrlDown())
                         {
-                            var clones = Clone(selectedList);
+                            var clones = Clone(selectedList).Where(c => c != null).ToList();
                             selectedList = clones;
+                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
                             selectedList.ForEach(c => c.Move(moveAmount));
                         }
                         else // move
                         {
+                            var oldRects = selectedList.Select(e => e.Rect).ToList();
                             List<MapEntity> deposited = new List<MapEntity>();
                             foreach (MapEntity e in selectedList)
                             {
-                                if (e.rectMemento == null)
-                                {
-                                    e.rectMemento = new Memento<Rectangle>();
-                                    e.rectMemento.Store(e.Rect);
-                                }
                                 e.Move(moveAmount);
 
                                 if (isShiftDown && e is Item item && targetContainer != null)
                                 {
                                     if (targetContainer.OwnInventory.TryPutItem(item, Character.Controlled))
                                     {
-                                        GUI.PlayUISound(GUISoundType.DropItem);
+                                        SoundPlayer.PlayUISound(GUISoundType.DropItem);
                                         deposited.Add(item);
                                     }
                                     else
                                     {
-                                        GUI.PlayUISound(GUISoundType.PickItemFail);
+                                        SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
                                     }                                 
                                 }
-                                e.rectMemento.Store(e.Rect);
+                            }
+                            
+                            SubEditorScreen.StoreCommand(new TransformCommand(new List<MapEntity>(selectedList),selectedList.Select(entity => entity.Rect).ToList(), oldRects, false));
+                            if (deposited.Any() && deposited.Any(entity => entity is Item))
+                            {
+                                var depositedItems = deposited.Where(entity => entity is Item).Cast<Item>().ToList();
+                                SubEditorScreen.StoreCommand(new InventoryPlaceCommand(targetContainer.OwnInventory, depositedItems, false));
                             }
 
                             deposited.ForEach(entity => { selectedList.Remove(entity); });
@@ -490,6 +477,11 @@ namespace Barotrauma
                     Screen.Selected.Cam.StopMovement();
                 }
             }
+        }
+
+        public MapEntity GetReplacementOrThis()
+        {
+            return ReplacedBy?.GetReplacementOrThis() ?? this;
         }
 
         public static Item GetPotentialContainer(Vector2 position, List<MapEntity> entities = null)
@@ -904,13 +896,12 @@ namespace Barotrauma
         public static void Cut(List<MapEntity> entities)
         {
             if (entities.Count == 0) { return; }
-
+            
+            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(entities), true));
+            
             CopyEntities(entities);
-
-            entities.ForEach(e =>
-            {
-                e.Remove();
-            });
+            
+            entities.ForEach(e => { if (!e.Removed) { e.Remove(); } });
             entities.Clear();
         }
 
@@ -922,6 +913,7 @@ namespace Barotrauma
             Clone(copiedList);
 
             var clones = mapEntityList.Except(prevEntities).ToList();
+            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
             var nonWireClones = clones.Where(c => !(c is Item item) || item.GetComponent<Wire>() == null);
             if (!nonWireClones.Any()) { nonWireClones = clones; }
 
@@ -1031,12 +1023,11 @@ namespace Barotrauma
 
             if (resizing)
             {
-                if (rectMemento == null)
+                if (prevRect == null)
                 {
-                    rectMemento = new Memento<Rectangle>();
-                    rectMemento.Store(Rect);
+                    prevRect = new Rectangle(Rect.Location, Rect.Size);
                 }
-
+                
                 Vector2 placePosition = new Vector2(rect.X, rect.Y);
                 Vector2 placeSize = new Vector2(rect.Width, rect.Height);
 
@@ -1079,9 +1070,15 @@ namespace Barotrauma
 
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    rectMemento.Store(Rect);
                     resizing = false;
                     Resized?.Invoke(rect);
+                    if (prevRect != null)
+                    {
+                        var newData = new List<Rectangle> { Rect };
+                        var oldData = new List<Rectangle> { prevRect.Value };
+                        SubEditorScreen.StoreCommand(new TransformCommand(new List<MapEntity> { this }, newData, oldData, true));
+                    }
+                    prevRect = null;
                 }
             }
         }

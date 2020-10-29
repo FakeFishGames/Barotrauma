@@ -37,6 +37,7 @@ namespace Barotrauma
         public static float DefaultReach = 100;
 
         public bool AllowToFindDivingGear { get; set; } = true;
+        public bool MustBeSpecificItem { get; set; }
 
         public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -84,6 +85,11 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
+            if (character.Submarine == null)
+            {
+                Abandon = true;
+                return;
+            }
             if (identifiersOrTags != null && !isDoneSeeking)
             {
                 if (checkInventory)
@@ -109,7 +115,10 @@ namespace Barotrauma
                         }
                     }
                     FindTargetItem();
-                    objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                    if (!objectiveManager.IsCurrentOrder<AIObjectiveGoTo>())
+                    {
+                        objectiveManager.GetObjective<AIObjectiveIdle>().Wander(deltaTime);
+                    }
                     return;
                 }
             }
@@ -137,7 +146,8 @@ namespace Barotrauma
                 if (originalTarget == null)
                 {
                     // Try again
-                    Reset();
+                    ignoredItems.Add(targetItem);
+                    ResetInternal();
                 }
                 else
                 {
@@ -176,12 +186,8 @@ namespace Barotrauma
                     return;
                 }
 
-                if (HumanAIController.TryToMoveItem(targetItem, character.Inventory))
+                if (HumanAIController.TakeItem(targetItem, character.Inventory, equip, storeUnequipped: true))
                 {
-                    if (equip)
-                    {
-                        targetItem.Equip(character);
-                    }
                     IsCompleted = true;
                 }
                 else
@@ -207,8 +213,16 @@ namespace Barotrauma
                     },
                     onAbandon: () =>
                     {
-                        ignoredItems.Add(targetItem);
-                        Reset();
+                        if (originalTarget == null)
+                        {
+                            // Try again
+                            ignoredItems.Add(targetItem);
+                            ResetInternal();
+                        }
+                        else
+                        {
+                            Abandon = true;
+                        }
                     },
                     onCompleted: () => RemoveSubObjective(ref goToObjective));
             }
@@ -235,14 +249,18 @@ namespace Barotrauma
                 Submarine mySub = character.Submarine;
                 if (itemSub == null) { continue; }
                 if (mySub == null) { continue; }
-                if (itemSub.TeamID != mySub.TeamID && itemSub.TeamID != character.TeamID) { continue; }
                 if (!CheckItem(item)) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
                     if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
                 }
-                if (!mySub.IsConnectedTo(itemSub)) { continue; }
+                // Don't allow going into another sub, unless it's connected and of the same team and type.
+                if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { continue; }
                 if (character.IsItemTakenBySomeoneElse(item)) { continue; }
+                if (item.ParentInventory is ItemInventory itemInventory)
+                {
+                    if (!itemInventory.Container.HasRequiredItems(character, addMessage: false)) { continue; }
+                }
                 float itemPriority = 1;
                 if (GetItemPriority != null)
                 {
@@ -272,7 +290,7 @@ namespace Barotrauma
                         if (!(MapEntityPrefab.List.FirstOrDefault(me => me is ItemPrefab ip && identifiersOrTags.Any(id => id == ip.Identifier || ip.Tags.Contains(id))) is ItemPrefab prefab))
                         {
 #if DEBUG
-                            DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", identifiersOrTags)}, tried to spawn the item but no matching item prefabs were found.", Color.Yellow);
+                            DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s) or tag(s): {string.Join(", ", identifiersOrTags)}, tried to spawn the item but no matching item prefabs were found.", Color.Yellow);
 #endif
                             Abandon = true;
                         }
@@ -291,7 +309,7 @@ namespace Barotrauma
                     else
                     {
 #if DEBUG
-                        DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s): {string.Join(", ", identifiersOrTags)}", Color.Yellow);
+                        DebugConsole.NewMessage($"{character.Name}: Cannot find the item with the following identifier(s) or tag(s): {string.Join(", ", identifiersOrTags)}", Color.Yellow);
 #endif
                         Abandon = true;
                     }
@@ -330,11 +348,28 @@ namespace Barotrauma
         public override void Reset()
         {
             base.Reset();
+            ResetInternal();
+        }
+
+        /// <summary>
+        /// Does not reset the ignored items list
+        /// </summary>
+        private void ResetInternal()
+        {
             goToObjective = null;
             targetItem = originalTarget;
             moveToTarget = targetItem?.GetRootInventoryOwner();
             isDoneSeeking = false;
             currSearchIndex = 0;
+        }
+
+        protected override void OnAbandon()
+        {
+            base.OnAbandon();
+            if (objectiveManager.CurrentOrder != null)
+            {
+                character.Speak(TextManager.Get("DialogCannotFindItem"), null, 0.0f, "cannotfinditem", 10.0f);
+            }
         }
     }
 }

@@ -205,6 +205,7 @@ namespace Barotrauma
             };
             validateHiresButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), group.RectTransform), text: TextManager.Get("campaigncrew.validate"))
             {
+                ClickSound = GUISoundType.HireRepairClick,
                 ForceUpperCase = true,
                 OnClicked = (b, o) => ValidatePendingHires(true)
             };
@@ -390,12 +391,29 @@ namespace Barotrauma
 
             if (listBox == hireableList)
             {
-                new GUIButton(new RectTransform(new Vector2(width, 0.9f), mainGroup.RectTransform), style: "CrewManagementAddButton")
+                var hireButton = new GUIButton(new RectTransform(new Vector2(width, 0.9f), mainGroup.RectTransform), style: "CrewManagementAddButton")
                 {
                     UserData = characterInfo,
                     Enabled = HasPermission,
                     OnClicked = (b, o) => AddPendingHire(o as CharacterInfo)
                 };
+                hireButton.OnAddedToGUIUpdateList += (GUIComponent btn) =>
+                {
+                    if (PendingHires.Count + campaign.CrewManager.GetCharacterInfos().Count() >= CrewManager.MaxCrewSize)
+                    {
+                        if (btn.Enabled)
+                        {
+                            btn.ToolTip = TextManager.Get("canthiremorecharacters");
+                            btn.Enabled = false;
+                        }
+                    }
+                    else if (!btn.Enabled)
+                    {
+                        btn.ToolTip = string.Empty;
+                        btn.Enabled = true;
+                    }
+                };
+
             }
             else if (listBox == pendingList)
             {
@@ -514,6 +532,11 @@ namespace Barotrauma
 
         private bool AddPendingHire(CharacterInfo characterInfo, bool createNetworkMessage = true)
         {
+            if (PendingHires.Count + campaign.CrewManager.GetCharacters().Count() >= CrewManager.MaxCrewSize)
+            {
+                return false;
+            }
+
             hireableList.Content.RemoveChild(hireableList.Content.FindChild(c => (c.UserData as Tuple<CharacterInfo, float>).Item1 == characterInfo));
             hireableList.UpdateScrollBarSize();
             if (!PendingHires.Contains(characterInfo)) { PendingHires.Add(characterInfo); }

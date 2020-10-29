@@ -151,13 +151,13 @@ namespace Barotrauma
         public XElement HealthData;
 
         private static ushort idCounter;
+        private const string disguiseName = "???";
 
         public string Name;
         public string DisplayName
         {
             get
             {
-                string disguiseName = "?";
                 if (Character == null || !Character.HideFace)
                 {
                     return Name;
@@ -300,6 +300,7 @@ namespace Barotrauma
 
         public Order CurrentOrder { get; set; }
         public string CurrentOrderOption { get; set; }
+        public bool IsDismissed => CurrentOrder == null || CurrentOrder.Identifier.Equals("dismissed", StringComparison.OrdinalIgnoreCase);
 
         //unique ID given to character infos in MP
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary

@@ -157,6 +157,8 @@ namespace Barotrauma
         private float pulseTimer;
         private float pulseExpand;
         private bool flashed;
+
+        public GUISoundType ClickSound { get; set; } = GUISoundType.Click;
         
         public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
@@ -247,7 +249,7 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.PrimaryMouseButtonClicked())
                 {
-                    GUI.PlayUISound(GUISoundType.Click);
+                    SoundPlayer.PlayUISound(ClickSound);
                     if (OnClicked != null)
                     {
                         if (OnClicked(this, UserData))

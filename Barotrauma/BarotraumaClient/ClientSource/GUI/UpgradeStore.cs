@@ -491,7 +491,7 @@ namespace Barotrauma
                     new GUITextBlock(rectT(1, 0, textLayout), title, font: GUI.SubHeadingFont) { CanBeFocused = false, AutoScaleHorizontal = true };
                     new GUITextBlock(rectT(1, 0, textLayout), FormatCurrency(price));
                 GUILayoutGroup buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, contentLayout), childAnchor: Anchor.Center) { UserData = "buybutton" };
-                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { Enabled = Campaign.Money >= price && !isDisabled, OnClicked = onPressed };
+                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { ClickSound = GUISoundType.HireRepairClick, Enabled = Campaign.Money >= price && !isDisabled, OnClicked = onPressed };
             contentLayout.Recalculate();
             buyButtonLayout.Recalculate();
 

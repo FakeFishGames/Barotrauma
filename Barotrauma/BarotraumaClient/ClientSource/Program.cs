@@ -150,7 +150,7 @@ namespace Barotrauma
             }
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version +
-            " (" + AssemblyInfo.GetBuildString() + ", branch " + AssemblyInfo.GetGitBranch() + ", revision " + AssemblyInfo.GetGitRevision() + ")");
+            " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
             if (GameMain.Config != null)
             {
                 sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
@@ -219,7 +219,7 @@ namespace Barotrauma
             }
 
             sb.AppendLine("Stack trace: ");
-            sb.AppendLine(exception.StackTrace);
+            sb.AppendLine(exception.StackTrace.CleanupStackTrace());
             sb.AppendLine("\n");
 
             if (exception.InnerException != null)
@@ -230,7 +230,7 @@ namespace Barotrauma
                     sb.AppendLine("Target site: " + exception.InnerException.TargetSite.ToString());
                 }
                 sb.AppendLine("Stack trace: ");
-                sb.AppendLine(exception.InnerException.StackTrace);
+                sb.AppendLine(exception.InnerException.StackTrace.CleanupStackTrace());
             }
 
             sb.AppendLine("Last debug messages:");

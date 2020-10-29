@@ -50,7 +50,7 @@ namespace Barotrauma
         //observable collection because some entities may need to be notified when the collection is modified
         public readonly ObservableCollection<MapEntity> linkedTo = new ObservableCollection<MapEntity>();
 
-        private bool flippedX, flippedY;
+        protected bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
         public bool FlippedY { get { return flippedY; } }
 
@@ -354,7 +354,7 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce(
                         "MapEntity.Clone:" + e.Name,
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace);
+                        "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace.CleanupStackTrace());
                     return clones;
                 }
                 Debug.Assert(clones.Last() != null);
@@ -534,7 +534,7 @@ namespace Barotrauma
         public virtual void FlipX(bool relativeToSub)
         {
             flippedX = !flippedX;
-            if (!relativeToSub || Submarine == null) return;
+            if (!relativeToSub || Submarine == null) { return; }
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.Y = 0.0f;
@@ -548,7 +548,7 @@ namespace Barotrauma
         public virtual void FlipY(bool relativeToSub)
         {
             flippedY = !flippedY;
-            if (!relativeToSub || Submarine == null) return;
+            if (!relativeToSub || Submarine == null) { return; }
 
             Vector2 relative = WorldPosition - Submarine.WorldPosition;
             relative.X = 0.0f;

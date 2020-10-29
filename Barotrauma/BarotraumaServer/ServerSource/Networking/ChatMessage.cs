@@ -1,7 +1,5 @@
-﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 using System.Text;
 
 namespace Barotrauma.Networking
@@ -14,19 +12,25 @@ namespace Barotrauma.Networking
 
             UInt16 ID = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
-            string txt = "";
+            string txt;
 
-            int orderIndex = -1;
             Character orderTargetCharacter = null;
             Entity orderTargetEntity = null;
-            int orderOptionIndex = -1;
             OrderChatMessage orderMsg = null;
+            OrderTarget orderTargetPosition = null;
             if (type == ChatMessageType.Order)
             {
-                orderIndex = msg.ReadByte();
+                int orderIndex = msg.ReadByte();
                 orderTargetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
                 orderTargetEntity = Entity.FindEntityByID(msg.ReadUInt16()) as Entity;
-                orderOptionIndex = msg.ReadByte();
+                int orderOptionIndex = msg.ReadByte();
+                if (msg.ReadBoolean())
+                {
+                    var x = msg.ReadSingle();
+                    var y = msg.ReadSingle();
+                    var hull = Entity.FindEntityByID(msg.ReadUInt16()) as Hull;
+                    orderTargetPosition = new OrderTarget(new Vector2(x, y), hull, true);
+                }
 
                 if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                 {
@@ -37,7 +41,7 @@ namespace Barotrauma.Networking
 
                 Order order = Order.PrefabList[orderIndex];
                 string orderOption = orderOptionIndex < 0 || orderOptionIndex >= order.Options.Length ? "" : order.Options[orderOptionIndex];
-                orderMsg = new OrderChatMessage(order, orderOption, orderTargetEntity, orderTargetCharacter, c.Character);
+                orderMsg = new OrderChatMessage(order, orderOption, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character);
                 txt = orderMsg.Text;
             }
             else
@@ -114,20 +118,18 @@ namespace Barotrauma.Networking
 
             if (type == ChatMessageType.Order)
             {
-                if (c.Character == null || c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) return;
-
-                ChatMessageType messageType = CanUseRadio(orderMsg.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
+                if (c.Character == null || c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) { return; }
                 if (orderMsg.Order.TargetAllCharacters)
                 {
-                    //do nothing
+                    HumanAIController.ReportProblem(orderMsg.Sender, orderMsg.Order);
                 }
                 else if (orderTargetCharacter != null)
                 {
-                    orderTargetCharacter.SetOrder(
-                        new Order(orderMsg.Order.Prefab, orderTargetEntity, (orderTargetEntity as Item)?.Components.FirstOrDefault(ic => ic.GetType() == orderMsg.Order.ItemComponentType)),
-                            orderMsg.OrderOption, orderMsg.Sender);
+                    var order = orderTargetPosition == null ?
+                        new Order(orderMsg.Order.Prefab, orderTargetEntity, orderMsg.Order.Prefab?.GetTargetItemComponent(orderTargetEntity as Item), orderMsg.Sender) :
+                        new Order(orderMsg.Order.Prefab, orderTargetPosition, orderMsg.Sender);
+                    orderTargetCharacter.SetOrder(order, orderMsg.OrderOption, orderMsg.Sender);
                 }
-
                 GameMain.Server.SendOrderChatMessage(orderMsg);
             }
             else

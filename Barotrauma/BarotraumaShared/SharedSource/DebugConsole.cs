@@ -230,7 +230,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
                     ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace);
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
                 }
             },
             () =>
@@ -1019,7 +1019,7 @@ namespace Barotrauma
                     }
                     catch (InvalidOperationException e)
                     {
-                        string errorMsg = "Error while executing the fixhulls command.\n" + e.StackTrace;
+                        string errorMsg = "Error while executing the fixhulls command.\n" + e.StackTrace.CleanupStackTrace();
                         GameAnalyticsManager.AddErrorEventOnce("DebugConsole.FixHulls", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     }
                 }
@@ -1899,15 +1899,15 @@ namespace Barotrauma
         {
             if (e != null)
             {
-                error += " {" + e.Message + "}\n" + e.StackTrace;
+                error += " {" + e.Message + "}\n" + e.StackTrace.CleanupStackTrace();
                 if (e.InnerException != null)
                 {
-                    error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace;
+                    error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace.CleanupStackTrace();
                 }
             }
             else if (appendStackTrace)
             {
-                error += "\n" + Environment.StackTrace;
+                error += "\n" + Environment.StackTrace.CleanupStackTrace();
             }
             System.Diagnostics.Debug.WriteLine(error);
 

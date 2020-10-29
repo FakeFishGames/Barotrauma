@@ -1,6 +1,4 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +9,7 @@ namespace Barotrauma
     [Flags]
     public enum InvSlotType
     {
-        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128
+        None = 0, Any = 1, RightHand = 2, LeftHand = 4, Head = 8, InnerClothes = 16, OuterClothes = 32, Headset = 64, Card = 128, Bag = 256
     };
 
     partial class CharacterInventory : Inventory
@@ -23,6 +21,9 @@ namespace Barotrauma
             get;
             private set;
         }
+
+
+        public static readonly List<InvSlotType> anySlot = new List<InvSlotType>() { InvSlotType.Any };
 
         protected bool[] IsEquipped;
 
@@ -68,7 +69,7 @@ namespace Barotrauma
 
 #if CLIENT
             //clients don't create items until the server says so
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
 
             foreach (XElement subElement in element.Elements())
@@ -76,8 +77,7 @@ namespace Barotrauma
                 if (!subElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
                 
                 string itemIdentifier = subElement.GetAttributeString("identifier", "");
-                ItemPrefab itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
-                if (itemPrefab == null)
+                if (!(MapEntityPrefab.Find(null, itemIdentifier) is ItemPrefab itemPrefab))
                 {
                     DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemIdentifier + "\" not found.");
                     continue;
@@ -164,7 +164,7 @@ namespace Barotrauma
 #if DEBUG
                 throw new Exception("Tried to put a removed item (" + item.Name + ") in an inventory");
 #else
-                DebugConsole.ThrowError("Tried to put a removed item (" + item.Name + ") in an inventory.\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Tried to put a removed item (" + item.Name + ") in an inventory.\n" + Environment.StackTrace.CleanupStackTrace());
                 return false;
 #endif
             }
@@ -284,7 +284,7 @@ namespace Barotrauma
         {
             if (index < 0 || index >= Items.Length)
             {
-                string errorMsg = "CharacterInventory.TryPutItem failed: index was out of range(" + index + ").\n" + Environment.StackTrace;
+                string errorMsg = "CharacterInventory.TryPutItem failed: index was out of range(" + index + ").\n" + Environment.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("CharacterInventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return false;
             }

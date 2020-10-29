@@ -9,6 +9,7 @@ namespace Barotrauma
         public override string DebugTag => "fix leaks";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
+        public override bool AllowInAnySub => true;
         private Hull PrioritizedHull { get; set; }
 
         public AIObjectiveFixLeaks(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Hull prioritizedHull = null) : base(character, objectiveManager, priorityModifier)
@@ -71,12 +72,9 @@ namespace Barotrauma
         {
             if (gap == null) { return false; }
             if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
-            if (gap.Submarine == null) { return false; }
-            if (gap.Submarine.TeamID != character.TeamID) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(gap.Submarine)) { return false; }
-            }
+            if (gap.Submarine == null || character.Submarine == null) { return false; }
+            // Don't allow going into another sub, unless it's connected and of the same team and type.
+            if (!character.Submarine.IsEntityFoundOnThisSub(gap, includingConnectedSubs: true)) { return false; }
             return true;
         }
     }

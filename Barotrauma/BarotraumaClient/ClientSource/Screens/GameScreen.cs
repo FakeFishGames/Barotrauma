@@ -75,6 +75,17 @@ namespace Barotrauma
             {
                 Character.Controlled.SelectedConstruction.AddToGUIUpdateList();
             }
+            if (Character.Controlled?.Inventory != null)
+            {
+                foreach (Item item in Character.Controlled.Inventory.Items)
+                {
+                    if (item == null) { continue; }
+                    if (Character.Controlled.HasEquippedItem(item))
+                    {
+                        item.AddToGUIUpdateList();
+                    }
+                }
+            }
 
             if (GameMain.GameSession != null) GameMain.GameSession.AddToGUIUpdateList();
 

@@ -31,6 +31,7 @@ namespace Barotrauma
             get => Math.Min(MaxReputation, Metadata.GetFloat(metaDataIdentifier, InitialReputation));
             set
             {
+                if (MathUtils.NearlyEqual(Value, value)) { return; }
                 Metadata.SetValue(metaDataIdentifier, Math.Clamp(value, MinReputation, MaxReputation));
                 OnReputationValueChanged?.Invoke();
                 OnAnyReputationValueChanged?.Invoke();

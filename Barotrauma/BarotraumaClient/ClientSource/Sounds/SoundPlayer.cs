@@ -74,12 +74,18 @@ namespace Barotrauma
 
         //ambience
         private static Sound waterAmbienceIn, waterAmbienceOut, waterAmbienceMoving;
-        private static SoundChannel[] waterAmbienceChannels = new SoundChannel[3];
+        private static readonly SoundChannel[] waterAmbienceChannels = new SoundChannel[3];
 
         private static float ambientSoundTimer;
         private static Vector2 ambientSoundInterval = new Vector2(20.0f, 40.0f); //x = min, y = max
 
+        private static SoundChannel hullSoundChannel;
+        private static Hull hullSoundSource;
+        private static float hullSoundTimer;
+        private static Vector2 hullSoundInterval = new Vector2(45.0f, 90.0f); //x = min, y = max
+
         //misc
+        private static float[] targetFlowLeft, targetFlowRight;
         public static List<Sound> FlowSounds = new List<Sound>();
         public static List<Sound> SplashSounds = new List<Sound>();
         private static SoundChannel[] flowSoundChannels;
@@ -94,10 +100,17 @@ namespace Barotrauma
         private static float[] fireVolumeRight;
 
         const float FireSoundRange = 1000.0f;
+        const float FireSoundMediumLimit = 100.0f;
         const float FireSoundLargeLimit = 200.0f; //switch to large fire sound when the size of a firesource is above this
+        const int fireSizes = 3;
+        private static string[] fireSoundTags = new string[fireSizes] { "fire", "firemedium", "firelarge" };
 
         // TODO: could use a dictionary to split up the list into smaller lists of same type?
         private static List<DamageSound> damageSounds;
+
+        private static Dictionary<GUISoundType, List<Sound>> guiSounds;
+
+        private static bool firstTimeInMainMenu = true;
 
         private static Sound startUpSound;
 
@@ -163,6 +176,7 @@ namespace Barotrauma
             List<KeyValuePair<string, Sound>> miscSoundList = new List<KeyValuePair<string, Sound>>();
             damageSounds ??= new List<DamageSound>();
             musicClips ??= new List<BackgroundMusic>();
+            guiSounds ??= new Dictionary<GUISoundType, List<Sound>>();
 
             bool firstWaterAmbienceLoaded = false;
 
@@ -251,6 +265,21 @@ namespace Barotrauma
                                 soundElement.GetAttributeString("requiredtag", "")));
 
                             break;
+                        case "guisound":
+                            Sound guiSound = GameMain.SoundManager.LoadSound(soundElement, stream: false);
+                            if (guiSound == null) { continue; }
+                            if (Enum.TryParse(soundElement.GetAttributeString("guisoundtype", null), true, out GUISoundType soundType))
+                            {
+                                if (guiSounds.ContainsKey(soundType))
+                                {
+                                    guiSounds[soundType].Add(guiSound);
+                                }
+                                else
+                                {
+                                    guiSounds.Add(soundType, new List<Sound>() { guiSound });
+                                }
+                            }
+                            break;
                         default:
                             Sound sound = GameMain.SoundManager.LoadSound(soundElement, false);
                             if (sound != null)
@@ -294,20 +323,32 @@ namespace Barotrauma
             });
             damageSounds.RemoveAll(s => s.sound.Disposed);
 
+            guiSounds.ForEach(kvp =>
+            {
+                kvp.Value?.ForEach(s =>
+                {
+                    if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
+                });
+            });
+            guiSounds.ForEach(kvp => kvp.Value?.RemoveAll(s => s.Disposed));
+
             miscSounds?.ForEach(g => g.ForEach(s =>
             {
                 if (!soundElements.Any(e => SoundElementsEquivalent(s.XElement, e))) { s.Dispose(); }
                 else { miscSoundList.Add(new KeyValuePair<string, Sound>(g.Key, s)); }
             }));
 
-
+            flowSoundChannels?.ForEach(ch => ch?.Dispose());
             flowSoundChannels = new SoundChannel[FlowSounds.Count];
             flowVolumeLeft = new float[FlowSounds.Count];
             flowVolumeRight = new float[FlowSounds.Count];
+            targetFlowLeft = new float[FlowSounds.Count];
+            targetFlowRight = new float[FlowSounds.Count];
 
-            fireSoundChannels = new SoundChannel[2];
-            fireVolumeLeft = new float[2];
-            fireVolumeRight = new float[2];
+            fireSoundChannels?.ForEach(ch => ch?.Dispose());
+            fireSoundChannels = new SoundChannel[fireSizes];
+            fireVolumeLeft = new float[fireSizes];
+            fireVolumeRight = new float[fireSizes];
 
             miscSounds = miscSoundList.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
 
@@ -318,7 +359,6 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
 
         }
-
 
         public static void Update(float deltaTime)
         {
@@ -355,6 +395,12 @@ namespace Barotrauma
                 }
                 fireVolumeLeft[0] = 0.0f; fireVolumeLeft[1] = 0.0f;
                 fireVolumeRight[0] = 0.0f; fireVolumeRight[1] = 0.0f;
+                if (hullSoundChannel != null)
+                {
+                    hullSoundChannel.FadeOutAndDispose();
+                    hullSoundChannel = null;
+                    hullSoundSource = null;
+                }
                 return;
             }
 
@@ -372,12 +418,13 @@ namespace Barotrauma
             UpdateWaterAmbience(ambienceVolume, deltaTime);
             UpdateWaterFlowSounds(deltaTime);
             UpdateRandomAmbience(deltaTime);
+            UpdateHullSounds(deltaTime);
             UpdateFireSounds(deltaTime);
         }
 
         private static void UpdateWaterAmbience(float ambienceVolume, float deltaTime)
         {
-            if (GameMain.SoundManager.Disabled) { return; }
+            if (GameMain.SoundManager.Disabled || GameMain.GameScreen?.Cam == null) { return; }
 
             //how fast the sub is moving, scaled to 0.0 -> 1.0
             float movementSoundVolume = 0.0f;
@@ -385,6 +432,7 @@ namespace Barotrauma
             float insideSubFactor = 0.0f;
             foreach (Submarine sub in Submarine.Loaded)
             {
+                if (sub == null || sub.Removed) { continue; }
                 float movementFactor = (sub.Velocity == Vector2.Zero) ? 0.0f : sub.Velocity.Length() / 10.0f;
                 movementFactor = MathHelper.Clamp(movementFactor, 0.0f, 1.0f);
 
@@ -429,6 +477,9 @@ namespace Barotrauma
                         break;
                 }
 
+                // Consider the volume set in sounds.xml
+                if (sound != null) { volume *= sound.BaseGain; }
+
                 if ((waterAmbienceChannels[i] == null || !waterAmbienceChannels[i].IsPlaying) && volume > 0.01f)
                 {
                     waterAmbienceChannels[i] = sound.Play(volume, "waterambience");
@@ -448,9 +499,12 @@ namespace Barotrauma
         private static void UpdateWaterFlowSounds(float deltaTime)
         {
             if (FlowSounds.Count == 0) { return; }
-
-            float[] targetFlowLeft = new float[FlowSounds.Count];
-            float[] targetFlowRight = new float[FlowSounds.Count];
+            
+            for (int i = 0; i < targetFlowLeft.Length; i++)
+            {
+                targetFlowLeft[i] = 0.0f;
+                targetFlowRight[i] = 0.0f;
+            }
 
             Vector2 listenerPos = new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y);
             foreach (Gap gap in Gap.GapList)
@@ -487,6 +541,20 @@ namespace Barotrauma
                     {
                         targetFlowRight[flowSoundIndex] += 1.0f - distFallOff;
                     }
+                }
+            }
+
+            if (Character.Controlled?.CharacterHealth?.GetAffliction("psychosis") is AfflictionPsychosis psychosis)
+            {
+                if (psychosis.CurrentFloodType == AfflictionPsychosis.FloodType.Minor)
+                {
+                    targetFlowLeft[0] = Math.Max(targetFlowLeft[0], 1.0f);
+                    targetFlowRight[0] = Math.Max(targetFlowRight[0], 1.0f);
+                }
+                else if (psychosis.CurrentFloodType == AfflictionPsychosis.FloodType.Major)
+                {
+                    targetFlowLeft[FlowSounds.Count - 1] = Math.Max(targetFlowLeft[FlowSounds.Count - 1], 1.0f);
+                    targetFlowRight[FlowSounds.Count - 1] = Math.Max(targetFlowRight[FlowSounds.Count - 1], 1.0f);
                 }
             }
 
@@ -534,33 +602,11 @@ namespace Barotrauma
             {
                 foreach (FireSource fs in hull.FireSources)
                 {
-                    Vector2 diff = fs.WorldPosition + fs.Size / 2 - listenerPos;
-                    if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
-                    {
-                        Vector2 diffLeft = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
-                        if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffLeft.X = 0.0f; }
-                        if (diffLeft.X <= 0)
-                        {
-                            float distFallOffLeft = diffLeft.Length() / FireSoundRange;
-                            if (distFallOffLeft < 0.99f)
-                            {
-                                fireVolumeLeft[0] += (1.0f - distFallOffLeft);
-                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeLeft[1] += (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
-                            }
-                        }
-
-                        Vector2 diffRight = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
-                        if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffRight.X = 0.0f; }
-                        if (diffRight.X >= 0)
-                        {
-                            float distFallOffRight = diffRight.Length() / FireSoundRange;
-                            if (distFallOffRight < 0.99f)
-                            {
-                                fireVolumeRight[0] += 1.0f - distFallOffRight;
-                                if (fs.Size.X > FireSoundLargeLimit) fireVolumeRight[1] += (1.0f - distFallOffRight) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
-                            }
-                        }
-                    }
+                    AddFireVolume(fs);
+                }
+                foreach (FireSource fs in hull.FakeFireSources)
+                {
+                    AddFireVolume(fs);
                 }
             }
 
@@ -579,11 +625,56 @@ namespace Barotrauma
                     Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (fireVolumeRight[i] - fireVolumeLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
                     if (fireSoundChannels[i] == null || !fireSoundChannels[i].IsPlaying)
                     {
-                        fireSoundChannels[i] = GetSound(i == 0 ? "fire" : "firelarge").Play(1.0f, FlowSoundRange, soundPos);
+                        fireSoundChannels[i] = GetSound(fireSoundTags[i]).Play(1.0f, FlowSoundRange, soundPos);
                         fireSoundChannels[i].Looping = true;
                     }
                     fireSoundChannels[i].Gain = Math.Max(fireVolumeRight[i], fireVolumeLeft[i]);
                     fireSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
+                }
+            }
+
+            void AddFireVolume(FireSource fs)
+            {
+                Vector2 diff = fs.WorldPosition + fs.Size / 2 - listenerPos;
+                if (Math.Abs(diff.X) < FireSoundRange && Math.Abs(diff.Y) < FireSoundRange)
+                {
+                    Vector2 diffLeft = (fs.WorldPosition + new Vector2(fs.Size.X, fs.Size.Y / 2)) - listenerPos;
+                    if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffLeft.X = 0.0f; }
+                    if (diffLeft.X <= 0)
+                    {
+                        float distFallOffLeft = diffLeft.Length() / FireSoundRange;
+                        if (distFallOffLeft < 0.99f)
+                        {
+                            fireVolumeLeft[0] += (1.0f - distFallOffLeft);
+                            if (fs.Size.X > FireSoundLargeLimit)
+                            {
+                                fireVolumeLeft[2] += (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                            }
+                            else if (fs.Size.X > FireSoundMediumLimit)
+                            {
+                                fireVolumeLeft[1] += (1.0f - distFallOffLeft) * ((fs.Size.X - FireSoundMediumLimit) / FireSoundMediumLimit);
+                            }
+                        }
+                    }
+
+                    Vector2 diffRight = (fs.WorldPosition + new Vector2(0.0f, fs.Size.Y / 2)) - listenerPos;
+                    if (Math.Abs(diff.X) < fs.Size.X / 2.0f) { diffRight.X = 0.0f; }
+                    if (diffRight.X >= 0)
+                    {
+                        float distFallOffRight = diffRight.Length() / FireSoundRange;
+                        if (distFallOffRight < 0.99f)
+                        {
+                            fireVolumeRight[0] += 1.0f - distFallOffRight;
+                            if (fs.Size.X > FireSoundLargeLimit)
+                            {
+                                fireVolumeRight[2] += (1.0f - distFallOffRight) * ((fs.Size.X - FireSoundLargeLimit) / FireSoundLargeLimit);
+                            }
+                            else if (fs.Size.X > FireSoundMediumLimit)
+                            {
+                                fireVolumeRight[1] += (1.0f - distFallOffRight) * ((fs.Size.X - FireSoundMediumLimit) / FireSoundMediumLimit);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -603,6 +694,40 @@ namespace Barotrauma
                     1000.0f);
 
                 ambientSoundTimer = Rand.Range(ambientSoundInterval.X, ambientSoundInterval.Y);
+            }
+        }
+
+        private static void UpdateHullSounds(float deltaTime)
+        {
+            if (hullSoundChannel != null && hullSoundChannel.IsPlaying && hullSoundSource != null)
+            {
+                hullSoundChannel.Position = new Vector3(hullSoundSource.WorldPosition, 0.0f);
+                hullSoundChannel.Gain = GetHullSoundVolume(hullSoundSource.Submarine);
+            }
+
+            if (hullSoundTimer > 0.0f)
+            {
+                hullSoundTimer -= deltaTime;
+            }
+            else
+            {
+                if (!Level.IsLoadedOutpost && Character.Controlled?.CurrentHull?.Submarine is Submarine sub &&
+                    sub.Info != null && !sub.Info.IsOutpost)
+                {
+                    hullSoundSource = Character.Controlled.CurrentHull;
+                    hullSoundChannel = PlaySound("hull", hullSoundSource.WorldPosition, volume: GetHullSoundVolume(sub), range: 1500.0f);
+                    hullSoundTimer = Rand.Range(hullSoundInterval.X, hullSoundInterval.Y);
+                }
+                else
+                {
+                    hullSoundTimer = 5.0f;
+                }
+            }
+
+            static float GetHullSoundVolume(Submarine sub)
+            {
+                var depth = Level.Loaded == null ? 0.0f : Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                return Math.Clamp((depth - 800.0f) / 1500.0f, 0.4f, 1.0f);
             }
         }
 
@@ -637,8 +762,8 @@ namespace Barotrauma
         {
             if (sound == null)
             {
-                string errorMsg = "Error in SoundPlayer.PlaySound (sound was null)\n" + Environment.StackTrace;
-                GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.PlaySound:SoundNull" + Environment.StackTrace, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                string errorMsg = "Error in SoundPlayer.PlaySound (sound was null)\n" + Environment.StackTrace.CleanupStackTrace();
+                GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.PlaySound:SoundNull" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return null;
             }
 
@@ -815,7 +940,9 @@ namespace Barotrauma
                 return "editor";
             }
 
-            if (Screen.Selected != GameMain.GameScreen) { return "menu"; }
+            if (Screen.Selected != GameMain.GameScreen) { return firstTimeInMainMenu ? "menu" : "default"; }
+
+            firstTimeInMainMenu = false;
 
 
             if (Character.Controlled != null)
@@ -829,6 +956,18 @@ namespace Barotrauma
                 if (Character.Controlled.Submarine?.Info?.IsWreck ?? false)
                 {
                     return "wreck";
+                }
+
+                if (Level.IsLoadedOutpost && Character.Controlled.Submarine == Level.Loaded.StartOutpost)
+                {
+                    // Only return music type for specific outpost types to not assume that
+                    // every outpost type has an associated music track (switch-case for future tracks)
+                    var locationType = Level.Loaded.StartLocation?.Type?.Identifier?.ToLowerInvariant();
+                    switch (locationType)
+                    {
+                        case "research":
+                            return locationType;
+                    }
                 }
             }
 
@@ -845,12 +984,12 @@ namespace Barotrauma
                 float totalArea = 0.0f;
                 foreach (Hull hull in Hull.hullList)
                 {
-                    if (hull.Submarine != targetSubmarine) continue;
+                    if (hull.Submarine != targetSubmarine) { continue; }
                     floodedArea += hull.WaterVolume;
                     totalArea += hull.Volume;
                 }
 
-                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) return "flooded";             
+                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded"; }        
             }
             
             float enemyDistThreshold = 5000.0f;
@@ -863,7 +1002,7 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) continue;
+                if (!(character.AIController is EnemyAIController enemyAI) || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
 
                 if (targetSubmarine != null)
                 {
@@ -952,6 +1091,16 @@ namespace Barotrauma
                 }
             }
             tempList.GetRandom().sound?.Play(1.0f, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, null));
-        }       
+        }
+
+        public static void PlayUISound(GUISoundType soundType)
+        {
+            if (guiSounds == null || guiSounds.Count < 1) { return; }
+            if (guiSounds.TryGetValue(soundType, out List<Sound> sounds))
+            {
+                if (sounds == null || sounds.Count < 1) { return; }
+                sounds.GetRandom()?.Play(null, "ui");
+            }
+        }
     }
 }

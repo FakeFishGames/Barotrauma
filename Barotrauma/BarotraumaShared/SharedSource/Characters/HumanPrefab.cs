@@ -163,7 +163,13 @@ namespace Barotrauma
                 {
                     item.AddTag("job:" + job.Name);
                 }
+                var idCardTags = itemElement.GetAttributeStringArray("tags", new string[0]);
+                foreach (string tag in idCardTags)
+                {
+                    item.AddTag(tag);
+                }
             }
+
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
             {
                 wifiComponent.TeamID = character.TeamID;

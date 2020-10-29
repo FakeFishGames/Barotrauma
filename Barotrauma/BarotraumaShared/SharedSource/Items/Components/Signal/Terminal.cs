@@ -1,10 +1,11 @@
-﻿using System.Xml.Linq;
+﻿using Barotrauma.Networking;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Terminal : ItemComponent
     {
-        private const int MaxMessageLength = 150;
+        private const int MaxMessageLength = ChatMessage.MaxLength;
 
         public string DisplayedWelcomeMessage
         {
@@ -21,7 +22,7 @@ namespace Barotrauma.Items.Components
             {
                 if (welcomeMessage == value) { return; }
                 welcomeMessage = value;
-                DisplayedWelcomeMessage = TextManager.Get(welcomeMessage, returnNull: true) ?? welcomeMessage;
+                DisplayedWelcomeMessage = TextManager.Get(welcomeMessage, returnNull: true) ?? welcomeMessage.Replace("\\n", "\n");
             }
         }
 
@@ -45,7 +46,9 @@ namespace Barotrauma.Items.Components
             {
                 signal = signal.Substring(0, MaxMessageLength);
             }
-            ShowOnDisplay(signal);
+
+            string inputSignal = signal.Replace("\\n", "\n");
+            ShowOnDisplay(inputSignal);
         }
     }
 }

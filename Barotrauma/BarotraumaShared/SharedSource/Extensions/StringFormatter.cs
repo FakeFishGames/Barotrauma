@@ -63,6 +63,16 @@ namespace Barotrauma
         {
             return $"({value.X.FormatSingleDecimal()}, {value.Y.FormatSingleDecimal()})";
         }
+        
+        public static string FormatSingleDecimal(this Vector3 value)
+        {
+            return $"({value.X.FormatSingleDecimal()}, {value.Y.FormatSingleDecimal()}, {value.Z.FormatSingleDecimal()})";
+        }
+        
+        public static string FormatSingleDecimal(this Vector4 value)
+        {
+            return $"({value.X.FormatSingleDecimal()}, {value.Y.FormatSingleDecimal()}, {value.Z.FormatSingleDecimal()}, {value.W.FormatSingleDecimal()})";
+        }
 
         public static string FormatDoubleDecimal(this Vector2 value)
         {

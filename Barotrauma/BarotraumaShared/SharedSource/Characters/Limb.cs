@@ -203,7 +203,7 @@ namespace Barotrauma
     partial class Limb : ISerializableEntity, ISpatialEntity
     {
         //how long it takes for severed limbs to fade out
-        private const float SeveredFadeOutTime = 10.0f;
+        public float SeveredFadeOutTime => Params.SeveredFadeOutTime;
 
         public readonly Character character;
         /// <summary>
@@ -327,10 +327,10 @@ namespace Barotrauma
                 if (Removed)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a removed limb.\n" + Environment.StackTrace);
+                        "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
                 return body.SimPosition; 
@@ -344,10 +344,10 @@ namespace Barotrauma
                 if (Removed)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a removed limb.\n" + Environment.StackTrace);
+                        "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 0.0f;
                 }
                 return body.Rotation; 
@@ -364,10 +364,10 @@ namespace Barotrauma
                 if (Removed)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("Limb.Mass:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a removed limb.\n" + Environment.StackTrace);
+                        "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 1.0f;
                 }
                 return body.Mass; 
@@ -383,10 +383,10 @@ namespace Barotrauma
                 if (Removed)
                 {
 #if DEBUG
-                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace);
+                    DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                     GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Attempted to access a removed limb.\n" + Environment.StackTrace);
+                        "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
                 return body.LinearVelocity; 
@@ -428,7 +428,7 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value))
                 {
-                    string errorMsg = "Attempted to set the anchor A of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
+                    string errorMsg = "Attempted to set the anchor A of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
@@ -442,7 +442,7 @@ namespace Barotrauma
                     string errorMsg = "Attempted to move the anchor A of a limb's pull joint extremely far from the limb (diff: " + diff +
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
-                        + Environment.StackTrace;
+                        + Environment.StackTrace.CleanupStackTrace();
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
@@ -461,7 +461,7 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value))
                 {
-                    string errorMsg = "Attempted to set the anchor B of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace;
+                    string errorMsg = "Attempted to set the anchor B of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
@@ -475,7 +475,7 @@ namespace Barotrauma
                     string errorMsg = "Attempted to move the anchor B of a limb's pull joint extremely far from the limb (diff: " + diff +
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
-                        + Environment.StackTrace;
+                        + Environment.StackTrace.CleanupStackTrace();
                     GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
@@ -715,7 +715,7 @@ namespace Barotrauma
                     float bloodDecalSize = MathHelper.Clamp(bleedingDamage / 5, 0.1f, 1.0f);
                     if (character.CurrentHull != null && !string.IsNullOrEmpty(character.BloodDecalName))
                     {
-                        character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodDecalSize, 0.5f, 1.0f), true);
+                        character.CurrentHull.AddDecal(character.BloodDecalName, WorldPosition, MathHelper.Clamp(bloodDecalSize, 0.5f, 1.0f), isNetworkEvent: false);
                     }
                 }
             }
@@ -767,6 +767,18 @@ namespace Barotrauma
             if (attack != null)
             {
                 attack.UpdateCoolDown(deltaTime);
+            }
+
+            if (Params.BlinkFrequency > 0)
+            {
+                if (blinkTimer > -TotalBlinkDurationOut)
+                {
+                    blinkTimer -= deltaTime;
+                }
+                else
+                {
+                    blinkTimer = Params.BlinkFrequency;
+                }
             }
         }
 
@@ -1036,6 +1048,45 @@ namespace Barotrauma
                     }
                     statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
                 }
+            }
+        }
+
+        private float blinkTimer;
+        private float blinkPhase;
+
+        private float TotalBlinkDurationOut => Params.BlinkDurationOut + Params.BlinkHoldTime;
+
+        public void Blink(float deltaTime, float referenceRotation)
+        {
+            if (blinkTimer > -TotalBlinkDurationOut)
+            {
+                blinkPhase -= deltaTime;
+                if (blinkPhase > 0)
+                {
+                    // in
+                    float t = ToolBox.GetEasing(Params.BlinkTransitionIn, MathUtils.InverseLerp(1, 0, blinkPhase / Params.BlinkDurationIn));
+                    body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                }
+                else
+                {
+                    if (Math.Abs(blinkPhase) < Params.BlinkHoldTime)
+                    {
+                        // hold
+                        body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationIn) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
+                    }
+                    else
+                    {
+                        // out
+                        float t = ToolBox.GetEasing(Params.BlinkTransitionOut, MathUtils.InverseLerp(0, 1, -blinkPhase / TotalBlinkDurationOut));
+                        body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce * t, wrapAngle: true);
+                    }
+                }
+            }
+            else
+            {
+                // out
+                blinkPhase = Params.BlinkDurationIn;
+                body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
             }
         }
 

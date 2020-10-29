@@ -474,6 +474,12 @@ namespace Barotrauma
             [Serialize(true, true, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
             public bool AvoidGunfire { get; private set; }
 
+            [Serialize(3f, true, description: "How long the creature avoids gunfire. Also used when the creature is unlatched."), Editable(minValue: 0f, maxValue: 100f)]
+            public float AvoidTime { get; private set; }
+
+            [Serialize(20f, true, description: "How long the creature flees before returning to normal state. When the creature sees the target or is being chased, it will always flee, if it's in the flee state."), Editable(minValue: 0f, maxValue: 100f)]
+            public float MinFleeTime { get; private set; }
+
             [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable()]
             public bool AggressiveBoarding { get; private set; }
 
@@ -571,11 +577,17 @@ namespace Barotrauma
             [Serialize(0f, true, description: "What base priority is given to the target?"), Editable(minValue: 0f, maxValue: 1000f, ValueStep = 1, DecimalCount = 0)]
             public float Priority { get; set; }
 
-            [Serialize(0f, true, description: "Generic distance that can be used for different purposes depending on the state. Eg. in Avoid state this defines the distance that the character tries to keep to the target. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
+            [Serialize(0f, true, description: "Generic distance that can be used for different purposes depending on the state. E.g. in Avoid state this defines the distance that the character tries to keep to the target. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
             public float ReactDistance { get; set; }
 
             [Serialize(0f, true, description: "Used for defining the attack distance for PassiveAggressive and Aggressive states. If the distance is 0, it's not used."), Editable(MinValueFloat = 0, ValueStep = 10, DecimalCount = 0)]
             public float AttackDistance { get; set; }
+
+            [Serialize(0f, true, description: "Generic timer that can be used for different purposes depending on the state. E.g. in Observe state this defines how long the character in general keeps staring the targets (Some random is always applied)."), Editable]
+            public float Timer { get; set; }
+
+            [Serialize(false, true, description: "Should the target be ignored if it's inside a container/inventory. Only affects items."), Editable]
+            public bool IgnoreContained { get; set; }
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 

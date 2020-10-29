@@ -15,6 +15,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
         public override bool AllowOutsideSubmarine => true;
+        public override bool AllowInAnySub => true;
 
         private readonly CombatMode initialMode;
 
@@ -54,8 +55,8 @@ namespace Barotrauma
                 if (_weaponComponent == null)
                 {
                     _weaponComponent =
-                        Weapon.GetComponent<RangedWeapon>() as ItemComponent ??
-                        Weapon.GetComponent<MeleeWeapon>() as ItemComponent ??
+                        Weapon.GetComponent<RangedWeapon>() ??
+                        Weapon.GetComponent<MeleeWeapon>() ??
                         Weapon.GetComponent<RepairTool>() as ItemComponent;
                 }
                 return _weaponComponent;
@@ -144,6 +145,7 @@ namespace Barotrauma
                 if (Enemy.Submarine == null || (Enemy.Submarine.TeamID != character.TeamID && Enemy.Submarine != character.Submarine))
                 {
                     Priority = 0;
+                    Abandon = true;
                     return Priority;
                 }
             }
@@ -760,11 +762,7 @@ namespace Barotrauma
             if (HumanAIController.HasItem(character, "handlocker", out IEnumerable<Item> matchingItems) && Enemy.Stun > 0 && character.CanInteractWith(Enemy))
             {
                 var handCuffs = matchingItems.First();
-                if (HumanAIController.TryToMoveItem(handCuffs, Enemy.Inventory))
-                {
-                    handCuffs.Equip(Enemy);
-                }
-                else
+                if (!HumanAIController.TakeItem(handCuffs, Enemy.Inventory, equip: true))
                 {
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Failed to handcuff the target.", Color.Red);
@@ -777,7 +775,7 @@ namespace Barotrauma
                     if (item.StolenDuringRound)
                     {
                         item.Drop(character);
-                        character.Inventory.TryPutItem(item, character, new List<InvSlotType>() { InvSlotType.Any });
+                        character.Inventory.TryPutItem(item, character, CharacterInventory.anySlot);
                     }
                 }
                 character.Speak(TextManager.Get("DialogTargetArrested"), null, 3.0f, "targetarrested", 30.0f);
@@ -885,7 +883,11 @@ namespace Barotrauma
 
         private void Attack(float deltaTime)
         {
-            character.CursorPosition = Enemy.Position;
+            character.CursorPosition = Enemy.WorldPosition;
+            if (character.Submarine != null)
+            {
+                character.CursorPosition -= character.Submarine.Position;
+            }
             visibilityCheckTimer -= deltaTime;
             if (visibilityCheckTimer <= 0.0f)
             {

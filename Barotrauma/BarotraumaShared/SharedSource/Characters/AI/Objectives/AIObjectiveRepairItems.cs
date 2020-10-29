@@ -24,11 +24,11 @@ namespace Barotrauma
         private readonly Item prioritizedItem;
 
         public override bool AllowMultipleInstances => true;
+        public override bool AllowInAnySub => true;
 
         public readonly static float RequiredSuccessFactor = 0.4f;
 
-        public override bool IsDuplicate<T>(T otherObjective) => 
-            (otherObjective as AIObjective) is AIObjectiveRepairItems repairObjective && repairObjective.RequireAdequateSkills == RequireAdequateSkills;
+        public override bool IsDuplicate<T>(T otherObjective) => otherObjective is AIObjectiveRepairItems repairObjective && repairObjective.RequireAdequateSkills == RequireAdequateSkills;
 
         public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Item prioritizedItem = null)
             : base(character, objectiveManager, priorityModifier)
@@ -151,13 +151,9 @@ namespace Barotrauma
             if (item.NonInteractable) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.CurrentHull == null) { return false; }
-            if (item.Submarine == null) { return false; }
-            if (item.Submarine.TeamID != character.TeamID) { return false; }
+            if (item.Submarine == null || character.Submarine == null) { return false; }
+            if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { return false; }
             if (item.Repairables.None()) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(item.Submarine)) { return false; }
-            }
             return true;
         }
     }

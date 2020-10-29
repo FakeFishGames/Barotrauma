@@ -1169,7 +1169,7 @@ namespace Barotrauma
 
             Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
-
+            GUI.PreventPauseMenuToggle = false;
             CampaignCharacterDiscarded = false;
 
             chatInput.Select();
@@ -2799,7 +2799,7 @@ namespace Barotrauma
                         var variantButton = CreateJobVariantButton(jobPrefab, variantIndex, images.Length, jobButton);
                         variantButton.OnClicked = (btn, obj) =>
                         {
-                            currSelected.Selected = false;
+                            if (currSelected != null) { currSelected.Selected = false; }
                             int k = ((Pair<JobPrefab, int>)obj).Second;
                             btn.Parent.UserData = obj;
                             for (int j = 0; j < images.Length; j++)

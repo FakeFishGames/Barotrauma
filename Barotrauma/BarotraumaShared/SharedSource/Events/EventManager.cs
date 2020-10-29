@@ -120,6 +120,7 @@ namespace Barotrauma
                 AddChildEvents(initialEventSet);                
                 void AddChildEvents(EventSet eventSet)
                 {
+                    if (eventSet == null) { return; }
                     foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.First))
                     {
                         if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
@@ -582,7 +583,7 @@ namespace Barotrauma
             enemyDanger = 0.0f;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsDead || character.IsIncapacitated || !character.Enabled) continue;
+                if (character.IsDead || character.IsIncapacitated || !character.Enabled || character.IsPet || character.Params.CompareGroup("human")) { continue; }
 
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null) continue;
@@ -591,13 +592,13 @@ namespace Barotrauma
                     (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine)))
                 {
                     //crawler inside the sub adds 0.1f to enemy danger, mantis 0.25f
-                    enemyDanger += enemyAI.CombatStrength / 1000.0f;
+                    enemyDanger += enemyAI.CombatStrength / 100.0f;
                 }
                 else if (enemyAI.SelectedAiTarget?.Entity?.Submarine != null)
                 {
                     //enemy outside and targeting the sub or something in it
                     //moloch adds 0.24 to enemy danger, a crawler 0.02
-                    enemyDanger += enemyAI.CombatStrength / 2000.0f;
+                    enemyDanger += enemyAI.CombatStrength / 1000.0f;
                 }
             }
             enemyDanger = MathHelper.Clamp(enemyDanger, 0.0f, 1.0f);
@@ -653,12 +654,12 @@ namespace Barotrauma
             if (targetIntensity > currentIntensity)
             {
                 //25 seconds for intensity to go from 0.0 to 1.0
-                currentIntensity = MathHelper.Min(currentIntensity + 0.04f * IntensityUpdateInterval, targetIntensity);
+                currentIntensity = Math.Min(currentIntensity + 0.04f * IntensityUpdateInterval, targetIntensity);
             }
             else
             {
                 //400 seconds for intensity to go from 1.0 to 0.0
-                currentIntensity = MathHelper.Max(0.0025f * IntensityUpdateInterval, targetIntensity);
+                currentIntensity = Math.Max(currentIntensity - 0.0025f * IntensityUpdateInterval, targetIntensity);
             }
         }
 

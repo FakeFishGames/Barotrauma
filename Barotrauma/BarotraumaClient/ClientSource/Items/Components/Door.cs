@@ -261,7 +261,23 @@ namespace Barotrauma.Items.Components
                 if (!isNetworkMessage || open != PredictedState)
                 {
                     StopPicking(null);
-                    PlaySound(forcedOpen ? ActionType.OnPicked : ActionType.OnUse);
+                    ActionType actionType = ActionType.OnUse;
+                    if (forcedOpen)
+                    {
+                        actionType = ActionType.OnPicked;
+                    }
+                    else
+                    {
+                        if (open && HasSoundsOfType[(int)ActionType.OnOpen])
+                        {
+                            actionType = ActionType.OnOpen;
+                        }
+                        else if (!open && HasSoundsOfType[(int)ActionType.OnClose])
+                        {
+                            actionType = ActionType.OnClose;
+                        }
+                    }
+                    PlaySound(actionType);
                     if (isOpen) { stuck = MathHelper.Clamp(stuck - StuckReductionOnOpen, 0.0f, 100.0f); }
                 }
             }       

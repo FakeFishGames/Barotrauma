@@ -420,6 +420,7 @@ namespace Barotrauma
                 if (writeStatus)
                 {
                     WriteStatus(tempBuffer);
+                    (AIController as EnemyAIController)?.PetBehavior?.ServerWrite(tempBuffer);
                     HealthUpdatePending = false;
                 }
 
@@ -478,7 +479,7 @@ namespace Barotrauma
             msg.Write(Info == null);
             msg.Write(entityId);
             msg.Write(SpeciesName);
-            msg.Write(seed);
+            msg.Write(Seed);
 
             if (Removed)
             {
@@ -528,19 +529,19 @@ namespace Barotrauma
             {
                 msg.Write(true);
                 msg.Write((byte)Order.PrefabList.IndexOf(info.CurrentOrder.Prefab));
-                msg.Write(info.CurrentOrder.TargetEntity == null ? (UInt16)0 :
-                    info.CurrentOrder.TargetEntity.ID);
-                if (info.CurrentOrder.OrderGiver != null)
+                msg.Write(info.CurrentOrder.TargetEntity == null ? (UInt16)0 : info.CurrentOrder.TargetEntity.ID);
+                var hasOrderGiver = info.CurrentOrder.OrderGiver != null;
+                msg.Write(hasOrderGiver);
+                if (hasOrderGiver) { msg.Write(info.CurrentOrder.OrderGiver.ID); }
+                msg.Write((byte)(string.IsNullOrWhiteSpace(info.CurrentOrderOption) ? 0 : Array.IndexOf(info.CurrentOrder.Prefab.Options, info.CurrentOrderOption)));
+                var hasTargetPosition = info.CurrentOrder.TargetPosition != null;
+                msg.Write(hasTargetPosition);
+                if (hasTargetPosition)
                 {
-                    msg.Write(true);
-                    msg.Write(info.CurrentOrder.OrderGiver.ID);
+                    msg.Write(info.CurrentOrder.TargetPosition.Position.X);
+                    msg.Write(info.CurrentOrder.TargetPosition.Position.Y);
+                    msg.Write(info.CurrentOrder.TargetPosition.Hull == null ? (UInt16)0 : info.CurrentOrder.TargetPosition.Hull.ID);
                 }
-                else
-                {
-                    msg.Write(false);
-                }
-                msg.Write((byte)(string.IsNullOrWhiteSpace(info.CurrentOrderOption) ? 0 :
-                    Array.IndexOf(info.CurrentOrder.Prefab.Options, info.CurrentOrderOption)));
             }
             else
             {

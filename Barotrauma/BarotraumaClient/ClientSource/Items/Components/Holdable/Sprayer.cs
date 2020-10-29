@@ -263,7 +263,7 @@ namespace Barotrauma.Items.Components
             {
                 for (int i = 0; i < targetSections.Count; i++)
                 {
-                    targetHull.SetSectionColorOrStrength(targetSections[i], color, sizeAdjustedSprayStrength * deltaTime, true, false);
+                    targetHull.IncreaseSectionColorOrStrength(targetSections[i], color, sizeAdjustedSprayStrength * deltaTime, true, false);
                 }
             }
             else

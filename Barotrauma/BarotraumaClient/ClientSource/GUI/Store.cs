@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -31,8 +32,12 @@ namespace Barotrauma
         private GUITextBlock shoppingCrateTotal;
         private GUIButton clearAllButton, confirmButton;
 
+        private bool needsRefresh, needsBuyingRefresh, needsSellingRefresh, needsItemsToSellRefresh;
+
         private Point resolutionWhenCreated;
         private bool hadPermissions;
+
+        private Dictionary<ItemPrefab, int> OwnedItems { get; } = new Dictionary<ItemPrefab, int>(); 
 
         private CargoManager CargoManager => campaignUI.Campaign.CargoManager;
         private Location CurrentLocation => campaignUI.Campaign.Map?.CurrentLocation;
@@ -70,27 +75,30 @@ namespace Barotrauma
             campaignUI.Campaign.Map.OnLocationChanged += UpdateLocation;
             if (CurrentLocation?.Reputation != null)
             {
-                CurrentLocation.Reputation.OnReputationValueChanged += Refresh;
+                CurrentLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
             }
-            campaignUI.Campaign.CargoManager.OnItemsInBuyCrateChanged += RefreshBuying;
-            campaignUI.Campaign.CargoManager.OnPurchasedItemsChanged += RefreshBuying;
-            campaignUI.Campaign.CargoManager.OnItemsInSellCrateChanged += RefreshSelling;
+            campaignUI.Campaign.CargoManager.OnItemsInBuyCrateChanged += () => { needsBuyingRefresh = true; };
+            campaignUI.Campaign.CargoManager.OnPurchasedItemsChanged += () => { needsBuyingRefresh = true; };
+            campaignUI.Campaign.CargoManager.OnItemsInSellCrateChanged += () => { needsSellingRefresh = true; };
             campaignUI.Campaign.CargoManager.OnSoldItemsChanged += () =>
             {
-                RefreshItemsToSell();
-                RefreshSelling();
+                needsItemsToSellRefresh = true;
+                needsSellingRefresh = true;
             };
         }
 
         public void Refresh()
         {
             hadPermissions = HasPermissions;
-            RefreshBuying();
-            RefreshSelling();
+            UpdateOwnedItems();
+            RefreshBuying(updateOwned: false);
+            RefreshSelling(updateOwned: false);
+            needsRefresh = false;
         }
 
-        private void RefreshBuying()
+        private void RefreshBuying(bool updateOwned = true)
         {
+            if (updateOwned) { UpdateOwnedItems(); }
             RefreshShoppingCrateBuyList();
             //RefreshStoreDealsList();
             RefreshStoreBuyList();
@@ -98,15 +106,18 @@ namespace Barotrauma
             //storeDealsList.Enabled = hasPermissions;
             storeBuyList.Enabled = hasPermissions;
             shoppingCrateBuyList.Enabled = hasPermissions;
+            needsBuyingRefresh = false;
         }
 
-        private void RefreshSelling()
+        private void RefreshSelling(bool updateOwned = true)
         {
+            if (updateOwned) { UpdateOwnedItems(); }
             RefreshShoppingCrateSellList();
             RefreshStoreSellList();
             var hasPermissions = HasPermissions;
             storeSellList.Enabled = hasPermissions;
             shoppingCrateSellList.Enabled = hasPermissions;
+            needsSellingRefresh = false;
         }
 
         private void CreateUI()
@@ -400,6 +411,7 @@ namespace Barotrauma
             SetConfirmButtonBehavior();
             clearAllButton = new GUIButton(new RectTransform(new Vector2(0.35f, 1.0f), buttonContainer.RectTransform), TextManager.Get("campaignstore.clearall"))
             {
+                ClickSound = GUISoundType.DecreaseQuantity,
                 Enabled = HasPermissions,
                 ForceUpperCase = true,
                 OnClicked = (button, userData) =>
@@ -422,7 +434,7 @@ namespace Barotrauma
 
             if (prevLocation?.Reputation != null)
             {
-                prevLocation.Reputation.OnReputationValueChanged -= Refresh;
+                prevLocation.Reputation.OnReputationValueChanged = null;
             }
 
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
@@ -432,7 +444,7 @@ namespace Barotrauma
                     ChangeStoreTab(StoreTab.Buy);
                     if (newLocation?.Reputation != null)
                     {
-                        newLocation.Reputation.OnReputationValueChanged += Refresh;
+                        newLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
                     }
                     return;
                 }
@@ -535,6 +547,7 @@ namespace Barotrauma
                     {
                         (itemFrame.UserData as PurchasedItem).Quantity = quantity;
                         SetQuantityLabelText(StoreTab.Buy, itemFrame);
+                        SetOwnedLabelText(itemFrame);
                         SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
                     }
                     existingItemFrames.Add(itemFrame);
@@ -575,6 +588,7 @@ namespace Barotrauma
                 {
                     (itemFrame.UserData as PurchasedItem).Quantity = quantity;
                     SetQuantityLabelText(StoreTab.Sell, itemFrame);
+                    SetOwnedLabelText(itemFrame);
                     SetItemFrameStatus(itemFrame, hasPermissions);
                 }
                 if (quantity < 1) { itemFrame.Visible = false; }
@@ -617,6 +631,7 @@ namespace Barotrauma
                     CargoManager.ModifyItemQuantityInSellCrate(crateItem.ItemPrefab, playerItemQuantity - crateItem.Quantity);
                 }
             }
+            needsItemsToSellRefresh = false;
         }
 
         private void RefreshShoppingCrateList(List<PurchasedItem> items, GUIListBox listBox)
@@ -645,6 +660,7 @@ namespace Barotrauma
                         numInput.UserData = item;
                         numInput.Enabled = hasPermissions;
                     }
+                    SetOwnedLabelText(itemFrame);
                     SetItemFrameStatus(itemFrame, hasPermissions);
                 }
                 existingItemFrames.Add(itemFrame);
@@ -740,7 +756,7 @@ namespace Barotrauma
                 tooltip += "\n" + pi.ItemPrefab.Description;
             }
 
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.yScale * 60)), parent: listBox.Content.RectTransform), style: "ListBoxElement")
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.yScale * 80)), parent: listBox.Content.RectTransform), style: "ListBoxElement")
             {
                 ToolTip = tooltip,
                 UserData = pi
@@ -775,7 +791,7 @@ namespace Barotrauma
                 CanBeFocused = false,
                 Stretch = true
             };
-            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), nameAndQuantityGroup.RectTransform),
+            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), nameAndQuantityGroup.RectTransform),
                 pi.ItemPrefab.Name, font: GUI.SubHeadingFont, textAlignment: Alignment.BottomLeft)
             {
                 CanBeFocused = false,
@@ -783,11 +799,12 @@ namespace Barotrauma
                 TextScale = 0.85f,
                 UserData = "name"
             };
+            GUILayoutGroup shoppingCrateAmountGroup = null;
             GUINumberInput amountInput = null;
             if (listBox == storeBuyList || listBox == storeSellList)
             {
-                var block = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), nameAndQuantityGroup.RectTransform),
-                    CreateQuantityLabelText(listBox == storeSellList ? StoreTab.Sell : StoreTab.Buy, pi.Quantity), font: GUI.Font, textAlignment: Alignment.TopLeft)
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), nameAndQuantityGroup.RectTransform),
+                    CreateQuantityLabelText(listBox == storeSellList ? StoreTab.Sell : StoreTab.Buy, pi.Quantity), font: GUI.Font, textAlignment: Alignment.BottomLeft)
                 {
                     CanBeFocused = false,
                     TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
@@ -797,7 +814,13 @@ namespace Barotrauma
             }
             else if (listBox == shoppingCrateBuyList || listBox == shoppingCrateSellList)
             {
-                amountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f), nameAndQuantityGroup.RectTransform), GUINumberInput.NumberType.Int)
+                var relativePadding = nameBlock.Padding.X / nameBlock.Rect.Width;
+                shoppingCrateAmountGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - relativePadding, 0.6f), nameAndQuantityGroup.RectTransform) { RelativeOffset = new Vector2(relativePadding, 0) },
+                    isHorizontal: true)
+                {
+                    RelativeSpacing = 0.02f
+                };
+                amountInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), shoppingCrateAmountGroup.RectTransform), GUINumberInput.NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = GetMaxAvailable(pi.ItemPrefab, listBox == shoppingCrateBuyList ? StoreTab.Buy : StoreTab.Sell),
@@ -818,8 +841,24 @@ namespace Barotrauma
                     }
                     AddToShoppingCrate(purchasedItem, quantity: numberInput.IntValue - purchasedItem.Quantity);
                 };
+                amountInput.PlusButton.ClickSound = GUISoundType.IncreaseQuantity;
+                amountInput.MinusButton.ClickSound = GUISoundType.DecreaseQuantity;
                 frame.HoverColor = frame.SelectedColor = Color.Transparent;
             }
+
+            // Amount in players' inventories and on the sub
+            var rectTransform = shoppingCrateAmountGroup == null ?
+                new RectTransform(new Vector2(1.0f, 0.3f), nameAndQuantityGroup.RectTransform) :
+                new RectTransform(new Vector2(0.6f, 1.0f), shoppingCrateAmountGroup.RectTransform);
+            new GUITextBlock(rectTransform, CreateOwnedLabelText(OwnedItems.GetValueOrDefault(pi.ItemPrefab, 0)), font: GUI.Font,
+                textAlignment: shoppingCrateAmountGroup == null ? Alignment.TopLeft : Alignment.CenterLeft)
+            {
+                CanBeFocused = false,
+                TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
+                TextScale = 0.85f,
+                UserData = "owned"
+            };
+            shoppingCrateAmountGroup?.Recalculate();
 
             var buttonRelativeWidth = (0.9f * mainGroup.Rect.Height) / mainGroup.Rect.Width;
 
@@ -842,6 +881,7 @@ namespace Barotrauma
             {
                 new GUIButton(new RectTransform(new Vector2(buttonRelativeWidth, 0.9f), mainGroup.RectTransform), style: "StoreAddToCrateButton")
                 {
+                    ClickSound = GUISoundType.IncreaseQuantity,
                     Enabled = !forceDisable && pi.Quantity > 0,
                     ForceUpperCase = true,
                     UserData = "addbutton",
@@ -852,6 +892,7 @@ namespace Barotrauma
             {
                 new GUIButton(new RectTransform(new Vector2(buttonRelativeWidth, 0.9f), mainGroup.RectTransform), style: "StoreRemoveFromCrateButton")
                 {
+                    ClickSound = GUISoundType.DecreaseQuantity,
                     Enabled = !forceDisable,
                     ForceUpperCase = true,
                     UserData = "removebutton",
@@ -867,6 +908,39 @@ namespace Barotrauma
             mainGroup.RectTransform.Children.ForEach(c => c.IsFixedSize = true);
 
             return frame;
+        }
+
+        private void UpdateOwnedItems()
+        {
+            OwnedItems.Clear();
+
+            // Add items on the sub(s)
+            Submarine.MainSub?.GetItems(true)
+                .Where(i => i.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached) &&
+                            i.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null)))
+                .ForEach(i => AddToOwnedItems(i.Prefab));
+
+            // Add items in character inventories
+            foreach (Character c in GameMain.GameSession.CrewManager.GetCharacters())
+            {
+                Item.ItemList.Where(i => i != null && i.GetRootInventoryOwner() == c)
+                    .ForEach(i => AddToOwnedItems(i.Prefab));
+            }
+
+            // Add items already purchased
+            CargoManager?.PurchasedItems?.ForEach(pi => AddToOwnedItems(pi.ItemPrefab, amount: pi.Quantity));
+
+            void AddToOwnedItems(ItemPrefab itemPrefab, int amount = 1)
+            {
+                if (OwnedItems.ContainsKey(itemPrefab))
+                {
+                    OwnedItems[itemPrefab] += amount;
+                }
+                else
+                {
+                    OwnedItems.Add(itemPrefab, amount);
+                }
+            }
         }
 
         private void SetItemFrameStatus(GUIComponent itemFrame, bool enabled)
@@ -901,6 +975,11 @@ namespace Barotrauma
                 numberInput.Enabled = enabled;
             }
 
+            if (itemFrame.FindChild("owned", recursive: true) is GUITextBlock owned)
+            {
+                owned.TextColor = color;
+            }
+
             if (itemFrame.FindChild("price", recursive: true) is GUITextBlock price)
             {
                 price.TextColor = color;
@@ -918,7 +997,8 @@ namespace Barotrauma
 
         private void SetQuantityLabelText(StoreTab mode, GUIComponent itemFrame)
         {
-            if (itemFrame?.FindChild("quantitylabel", recursive: true) is GUITextBlock label)
+            if (itemFrame == null) { return; }
+            if (itemFrame.FindChild("quantitylabel", recursive: true) is GUITextBlock label)
             {
                 label.Text = CreateQuantityLabelText(mode, (itemFrame.UserData as PurchasedItem).Quantity);
             }
@@ -927,6 +1007,23 @@ namespace Barotrauma
         private string CreateQuantityLabelText(StoreTab mode, int quantity) => mode == StoreTab.Sell ?
             TextManager.GetWithVariable("campaignstore.quantity", "[amount]", quantity.ToString()) :
             TextManager.GetWithVariable("campaignstore.instock", "[amount]", quantity.ToString());
+
+        private void SetOwnedLabelText(GUIComponent itemComponent)
+        {
+            if (itemComponent == null) { return; }
+            var itemCount = 0;
+            if (itemComponent.UserData is PurchasedItem pi)
+            {
+                itemCount = OwnedItems.GetValueOrDefault(pi.ItemPrefab, itemCount);
+            }
+            if (itemComponent.FindChild("owned", recursive: true) is GUITextBlock label)
+            {
+                label.Text = CreateOwnedLabelText(itemCount);
+            }
+        }
+
+        private string CreateOwnedLabelText(int itemCount) => itemCount > 0 ?
+            TextManager.GetWithVariable("campaignstore.owned", "[amount]", itemCount.ToString()) : "";
 
         private int GetMaxAvailable(ItemPrefab itemPrefab, StoreTab mode)
         {
@@ -1103,11 +1200,12 @@ namespace Barotrauma
             if (GameMain.GraphicsWidth != resolutionWhenCreated.X || GameMain.GraphicsHeight != resolutionWhenCreated.Y)
             {
                 CreateUI();
+                needsRefresh = false;
             }
-            else if (hadPermissions != HasPermissions)
-            {
-                Refresh();
-            }
+            if (needsRefresh || hadPermissions != HasPermissions) { Refresh(); }
+            if (needsBuyingRefresh) { RefreshBuying(); }
+            if (needsItemsToSellRefresh) { RefreshItemsToSell(); }
+            if (needsSellingRefresh) { RefreshSelling(); }
         }
     }
 }

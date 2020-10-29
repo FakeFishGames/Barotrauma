@@ -40,7 +40,11 @@ namespace Barotrauma
 
     struct AttackResult
     {
-        public readonly float Damage;
+        public float Damage
+        {
+            get;
+            private set;
+        }
         public readonly List<Affliction> Afflictions;
 
         public readonly Limb HitLimb;
@@ -64,9 +68,7 @@ namespace Barotrauma
         {
             Damage = damage;
             HitLimb = null;
-
             Afflictions = null;
-
             AppliedDamageModifiers = appliedDamageModifiers;
         }
     }

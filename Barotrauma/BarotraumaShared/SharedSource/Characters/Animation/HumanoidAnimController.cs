@@ -145,7 +145,7 @@ namespace Barotrauma
             private set;
         }
 
-        private LimbJoint shoulder;
+        private LimbJoint rightShoulder, leftShoulder;
 
         private float upperLegLength = 0.0f, lowerLegLength = 0.0f;
 
@@ -167,7 +167,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? CurrentGroundedParams.CrouchingTorsoPos * RagdollParams.JointScale : base.TorsoPosition;
+                return Crouching && !swimming ? CurrentGroundedParams.CrouchingTorsoPos * RagdollParams.JointScale : base.TorsoPosition;
             }
         }
 
@@ -175,7 +175,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? CurrentGroundedParams.CrouchingHeadPos * RagdollParams.JointScale : base.HeadPosition;
+                return Crouching && !swimming ? CurrentGroundedParams.CrouchingHeadPos * RagdollParams.JointScale : base.HeadPosition;
             }
         }
 
@@ -183,7 +183,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingTorsoAngle) : base.TorsoAngle;
+                return Crouching && !swimming ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingTorsoAngle) : base.TorsoAngle;
             }
         }
 
@@ -191,7 +191,7 @@ namespace Barotrauma
         {
             get
             {
-                return Crouching ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingHeadAngle) : base.HeadAngle;
+                return Crouching && !swimming ? MathHelper.ToRadians(CurrentGroundedParams.CrouchingHeadAngle) : base.HeadAngle;
             }
         }
 
@@ -241,12 +241,13 @@ namespace Barotrauma
             Limb rightHand = GetLimb(LimbType.RightHand);
             if (rightHand == null) { return; }
 
-            shoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm);
+            rightShoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.RightArm);
+            leftShoulder = GetJointBetweenLimbs(LimbType.Torso, LimbType.LeftArm);
             Vector2 localAnchorShoulder = Vector2.Zero;
             Vector2 localAnchorElbow = Vector2.Zero;
-            if (shoulder != null)
+            if (rightShoulder != null)
             {
-                localAnchorShoulder = shoulder.LimbA.type == LimbType.RightArm ? shoulder.LocalAnchorA : shoulder.LocalAnchorB;
+                localAnchorShoulder = rightShoulder.LimbA.type == LimbType.RightArm ? rightShoulder.LocalAnchorA : rightShoulder.LocalAnchorB;
             }
             LimbJoint rightElbow = rightForearm == null ?
                 GetJointBetweenLimbs(LimbType.RightArm, LimbType.RightHand) :
@@ -322,11 +323,12 @@ namespace Barotrauma
             if (MainLimb == null) { return; }
 
             levitatingCollider = true;
-            ColliderIndex = Crouching ? 1 : 0;
-
-            if (character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false)
+            ColliderIndex = Crouching && !swimming ? 1 : 0;
+            if (character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false ||
+                (ForceSelectAnimationType != AnimationType.Walk && ForceSelectAnimationType != AnimationType.NotDefined))
             {
                 Crouching = false;
+                ColliderIndex = 0;
             }
             else if (!Crouching && ColliderIndex == 1) 
             { 
@@ -1611,7 +1613,7 @@ namespace Barotrauma
                         pullLimb.PullJointMaxForce = 5000.0f;
                         targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
                             
-                        Vector2 shoulderPos = shoulder.WorldAnchorA;
+                        Vector2 shoulderPos = rightShoulder.WorldAnchorA;
                         Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
 
                         targetAnchor = shoulderPos - dragDir * ConvertUnits.ToSimUnits(upperArmLength + forearmLength);
@@ -1756,10 +1758,10 @@ namespace Barotrauma
             }
             else
             {
-                itemAngle = (torso.body.Rotation + holdAngle * Dir);
+                itemAngle = torso.body.Rotation + holdAngle * Dir;
             }
 
-            Vector2 transformedHoldPos = shoulder.WorldAnchorA;
+            Vector2 transformedHoldPos = rightShoulder.WorldAnchorA;
             if (itemPos == Vector2.Zero || isClimbing || usingController)
             {
                 if (character.SelectedItems[0] == item)
@@ -1780,15 +1782,17 @@ namespace Barotrauma
                 if (character.SelectedItems[0] == item)
                 {
                     if (rightHand == null || rightHand.IsSevered) { return; }
+                    transformedHoldPos = rightShoulder.WorldAnchorA;
                     rightHand.Disabled = true;
                 }
                 if (character.SelectedItems[1] == item)
                 {
                     if (leftHand == null || leftHand.IsSevered) { return; }
+                    transformedHoldPos = leftShoulder.WorldAnchorA;
                     leftHand.Disabled = true;
                 }
 
-                itemPos.X = itemPos.X * Dir;                
+                itemPos.X *= Dir;                
                 transformedHoldPos += Vector2.Transform(itemPos, Matrix.CreateRotationZ(itemAngle));
             }
 
@@ -1857,18 +1861,21 @@ namespace Barotrauma
 
         private void HandIK(Limb hand, Vector2 pos, float force = 1.0f)
         {
-            if (shoulder == null) { return; }
-            Vector2 shoulderPos = shoulder.WorldAnchorA;
+            Vector2 shoulderPos;
 
             Limb arm, forearm;
             if (hand.type == LimbType.LeftHand)
             {
+                if (leftShoulder == null) { return; }
+                shoulderPos = leftShoulder.WorldAnchorA;
                 arm = GetLimb(LimbType.LeftArm);
                 forearm = GetLimb(LimbType.LeftForearm);
                 LeftHandIKPos = pos;
             }
             else
             {
+                if (rightShoulder == null) { return; }
+                shoulderPos = rightShoulder.WorldAnchorA;
                 arm = GetLimb(LimbType.RightArm);
                 forearm = GetLimb(LimbType.RightForearm);
                 RightHandIKPos = pos;
@@ -1903,7 +1910,7 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(pos))
             {
-                string errorMsg = "Invalid foot position in FootIK (" + pos + ")\n" + Environment.StackTrace;
+                string errorMsg = "Invalid foot position in FootIK (" + pos + ")\n" + Environment.StackTrace.CleanupStackTrace();
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif
@@ -1937,7 +1944,7 @@ namespace Barotrauma
             float legAngle = MathUtils.VectorToAngle(pos - waistPos) + MathHelper.PiOver2;
             if (!MathUtils.IsValid(legAngle))
             {
-                string errorMsg = "Invalid leg angle (" + legAngle + ") in FootIK. Waist pos: " + waistPos + ", target pos: " + pos + "\n" + Environment.StackTrace;
+                string errorMsg = "Invalid leg angle (" + legAngle + ") in FootIK. Waist pos: " + waistPos + ", target pos: " + pos + "\n" + Environment.StackTrace.CleanupStackTrace();
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #endif

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -46,7 +45,7 @@ namespace Barotrauma
         public override bool AllowSubObjectiveSorting => true;
         public virtual bool InverseTargetEvaluation => false;
 
-        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace); }
+        public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + System.Environment.StackTrace.CleanupStackTrace()); }
 
         public override void Update(float deltaTime)
         {
@@ -79,7 +78,12 @@ namespace Barotrauma
                     var target = objective.Key;
                     if (!Targets.Contains(target))
                     {
-                        subObjectives.Remove(objective.Value);
+                        var subObjective = objective.Value;
+                        if (CurrentSubObjective == subObjective)
+                        {
+                            CurrentSubObjective.Abandon = !CurrentSubObjective.IsCompleted;
+                        }
+                        subObjectives.Remove(subObjective);
                     }
                 }
                 SyncRemovedObjectives(Objectives, GetList());
@@ -137,7 +141,7 @@ namespace Barotrauma
                 {
                     if (objectiveManager.CurrentOrder == this)
                     {
-                        Priority = AIObjectiveManager.OrderPriority;
+                        Priority = ForceOrderPriority ? AIObjectiveManager.OrderPriority : targetValue;
                     }
                     else
                     {

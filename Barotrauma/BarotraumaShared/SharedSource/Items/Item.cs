@@ -119,6 +119,8 @@ namespace Barotrauma
             }
         }
 
+        public bool EditableWhenEquipped { get; set; } = false;
+
         //the inventory in which the item is contained in
         public Inventory ParentInventory
         {
@@ -1016,7 +1018,7 @@ namespace Barotrauma
             {
                 string errorMsg =
                     "Attempted to move the item " + Name +
-                    " to an invalid position (" + simPosition + ")\n" + Environment.StackTrace;
+                    " to an invalid position (" + simPosition + ")\n" + Environment.StackTrace.CleanupStackTrace();
 
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
@@ -1073,7 +1075,7 @@ namespace Barotrauma
         {
             if (!MathUtils.IsValid(amount))
             {
-                DebugConsole.ThrowError($"Attempted to move an item by an invalid amount ({amount})\n{Environment.StackTrace}");
+                DebugConsole.ThrowError($"Attempted to move an item by an invalid amount ({amount})\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
 
@@ -1360,12 +1362,15 @@ namespace Barotrauma
 
         public AttackResult AddDamage(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = true)
         {
-            if (Indestructible) return new AttackResult();
+            if (Indestructible) { return new AttackResult(); }
 
             float damageAmount = attack.GetItemDamage(deltaTime);
             Condition -= damageAmount;
 
-            ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+            if (damageAmount > 0)
+            {
+                ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+            }
 
             return new AttackResult(damageAmount, null);
         }
@@ -1629,7 +1634,7 @@ namespace Barotrauma
             OnCollisionProjSpecific(impact);
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (ImpactTolerance > 0.0f && condition > 0.0f && impact > ImpactTolerance)
+                if (ImpactTolerance > 0.0f && condition > 0.0f && Math.Abs(impact) > ImpactTolerance)
                 {
                     ApplyStatusEffects(ActionType.OnImpact, 1.0f);
 #if SERVER
@@ -1653,10 +1658,14 @@ namespace Barotrauma
 
         public override void FlipX(bool relativeToSub)
         {
-            if (!Prefab.CanFlipX) { return; }
-
+            //call the base method even if the item can't flip, to handle repositioning when flipping the whole sub
             base.FlipX(relativeToSub);
 
+            if (!Prefab.CanFlipX) 
+            {
+                flippedX = false;
+                return; 
+            }
 #if CLIENT
             if (Prefab.CanSpriteFlipX)
             {
@@ -1672,9 +1681,14 @@ namespace Barotrauma
 
         public override void FlipY(bool relativeToSub)
         {
-            if (!Prefab.CanFlipY) { return; }
-
+            //call the base method even if the item can't flip, to handle repositioning when flipping the whole sub
             base.FlipY(relativeToSub);
+
+            if (!Prefab.CanFlipY)
+            {
+                flippedY = false;
+                return;
+            }
 
 #if CLIENT
             if (Prefab.CanSpriteFlipY)
@@ -1980,17 +1994,14 @@ namespace Barotrauma
             {
                 if (picker.SelectedConstruction == this)
                 {
-                    if (picker.IsKeyHit(InputType.Select) || forceSelectKey) picker.SelectedConstruction = null;
+                    if (picker.IsKeyHit(InputType.Select) || forceSelectKey)
+                    {
+                        picker.SelectedConstruction = null;
+                    }
                 }
                 else if (selected)
                 {
                     picker.SelectedConstruction = this;
-#if CLIENT
-                    if (GameMain.GameSession?.CrewManager != null && picker == Character.Controlled && GetComponent<Ladder>() == null)
-                    {
-                        GameMain.GameSession.CrewManager.ToggleCrewListOpen = false;
-                    }
-#endif
                 }
             }
 
@@ -2215,7 +2226,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError($"Tried to equip a removed item ({Name}).\n{Environment.StackTrace}");
+                DebugConsole.ThrowError($"Tried to equip a removed item ({Name}).\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
 
@@ -2257,7 +2268,7 @@ namespace Barotrauma
                 var propertyOwner = allProperties.Find(p => p.Second == property);
                 if (allProperties.Count > 1)
                 {
-                    msg.WriteRangedInteger(allProperties.FindIndex(p => p.Second == property), 0, allProperties.Count - 1);
+                    msg.Write((byte)allProperties.FindIndex(p => p.Second == property));
                 }
 
                 object value = property.GetValue(propertyOwner.First);
@@ -2339,7 +2350,7 @@ namespace Barotrauma
             int propertyIndex = 0;
             if (allProperties.Count > 1)
             {
-                propertyIndex = msg.ReadRangedInteger(0, allProperties.Count - 1);
+                propertyIndex = msg.ReadByte();
             }
 
             bool allowEditing = true;
@@ -2360,6 +2371,7 @@ namespace Barotrauma
             if (type == typeof(string))
             {
                 string val = msg.ReadString();
+                logValue = val;
                 if (allowEditing) 
                 { 
                     property.TrySetValue(parentObject, val);
@@ -2712,7 +2724,7 @@ namespace Barotrauma
         {
             if (Removed)
             {
-                DebugConsole.ThrowError("Attempting to remove an already removed item (" + Name + ")\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Attempting to remove an already removed item (" + Name + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             DebugConsole.Log("Removing item " + Name + " (ID: " + ID + ")");

@@ -162,6 +162,7 @@ namespace Barotrauma.Networking
                                 disconnectMsg = $"DisconnectMessage.MissingContentPackages~[missingcontentpackages]={string.Join(", ", packageStrs)}";
                             }
                             Close(disconnectMsg, disableReconnect: true);
+                            OnDisconnectMessageReceived?.Invoke(DisconnectReason.MissingContentPackage + "/" + disconnectMsg);
                         }
                         else
                         {

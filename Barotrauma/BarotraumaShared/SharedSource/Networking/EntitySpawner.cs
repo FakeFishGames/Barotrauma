@@ -179,7 +179,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
             {
-                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue1:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
@@ -192,7 +192,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
             {
-                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue2:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
@@ -205,7 +205,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
             {
-                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to add a null item to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
@@ -218,7 +218,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (string.IsNullOrEmpty(speciesName))
             {
-                string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
@@ -231,7 +231,7 @@ namespace Barotrauma
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (string.IsNullOrEmpty(speciesName))
             {
-                string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue5:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;

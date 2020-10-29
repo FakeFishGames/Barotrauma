@@ -483,7 +483,7 @@ namespace Barotrauma.Particles
 
             if (prefab.GrowTime > 0.0f && totalLifeTime - lifeTime < prefab.GrowTime)
             {
-                drawSize *= ((totalLifeTime - lifeTime) / prefab.GrowTime);
+                drawSize *= MathUtils.SmoothStep((totalLifeTime - lifeTime) / prefab.GrowTime);
             }
 
             Color currColor = new Color(color.ToVector4() * ColorMultiplier);

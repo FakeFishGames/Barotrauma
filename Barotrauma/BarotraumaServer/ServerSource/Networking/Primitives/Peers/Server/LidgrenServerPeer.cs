@@ -124,7 +124,7 @@ namespace Barotrauma.Networking
 
             catch (Exception e)
             {
-                string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace;
+                string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
                 GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);

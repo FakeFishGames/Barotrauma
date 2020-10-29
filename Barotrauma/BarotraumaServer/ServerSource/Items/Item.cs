@@ -131,7 +131,7 @@ namespace Barotrauma
                 case NetEntityEvent.Type.ChangeProperty:
                     try
                     {
-                        WritePropertyChange(msg, extraData, false);
+                        WritePropertyChange(msg, extraData, inGameEditableOnly: !GameMain.NetworkMember.IsServer);
                     }
                     catch (Exception e)
                     {
@@ -222,7 +222,7 @@ namespace Barotrauma
 
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
-                    ReadPropertyChange(msg, true, c);
+                    ReadPropertyChange(msg, inGameEditableOnly: GameMain.NetworkMember.IsServer, sender: c);
                     break;
                 case NetEntityEvent.Type.Combine:
                     UInt16 combineTargetID = msg.ReadUInt16();
@@ -367,23 +367,42 @@ namespace Barotrauma
 
         public void CreateServerEvent<T>(T ic) where T : ItemComponent, IServerSerializable
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server == null) { return; }
 
             if (!ItemList.Contains(this))
             {
-                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace;
+                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
 
             int index = components.IndexOf(ic);
-            if (index == -1) return;
+            if (index == -1) { return; }
 
             object[] extraData = new object[] { NetEntityEvent.Type.ComponentState, index };
             ic.ServerAppendExtraData(ref extraData);
 
             GameMain.Server.CreateEntityEvent(this, extraData);
+        }
+
+        public void CreateServerEvent<T>(T ic, object[] extraData) where T : ItemComponent, IServerSerializable
+        {
+            if (GameMain.Server == null) { return; }
+
+            if (!ItemList.Contains(this))
+            {
+                string errorMsg = "Attempted to create a network event for an item (" + Name + ") that hasn't been fully initialized yet.\n" + Environment.StackTrace.CleanupStackTrace();
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Item.CreateServerEvent:EventForUninitializedItem" + Name + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+
+            int index = components.IndexOf(ic);
+            if (index == -1) { return; }
+
+            object[] data = new object[] { NetEntityEvent.Type.ComponentState, index }.Concat(extraData).ToArray();
+            GameMain.Server.CreateEntityEvent(this, data);
         }
     }
 }

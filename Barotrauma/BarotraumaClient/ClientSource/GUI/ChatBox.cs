@@ -109,7 +109,7 @@ namespace Barotrauma
                     if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
                     {
                         SetChannel(radio.Channel - 1, setText: true);
-                        GUI.PlayUISound(GUISoundType.PopupMenu);
+                        SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                     }
                     return true;
                 }
@@ -142,7 +142,7 @@ namespace Barotrauma
             {
                 int.TryParse(channelText.Text, out int newChannel);
                 SetChannel(newChannel, setText: true);
-                GUI.PlayUISound(GUISoundType.PopupMenu);
+                SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
             };
 
             var buttonRight = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
@@ -152,7 +152,7 @@ namespace Barotrauma
                     if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
                     {
                         SetChannel(radio.Channel + 1, setText: true);
-                        GUI.PlayUISound(GUISoundType.PopupMenu);
+                        SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                     }
                     return true;
                 }
@@ -194,7 +194,7 @@ namespace Barotrauma
                                 channelText.Flash(GUI.Style.Green);
                             }
                             SetChannel(radio.GetChannelMemory(index), setText: true);
-                            GUI.PlayUISound(GUISoundType.PopupMenu);
+                            SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                         }
                         return true;
                     }
@@ -469,7 +469,7 @@ namespace Barotrauma
                 soundType = GUISoundType.DeadMessage;
             }
 
-            GUI.PlayUISound(soundType);
+            SoundPlayer.PlayUISound(soundType);
         }
 
         public void SetVisibility(bool visible)
@@ -650,6 +650,8 @@ namespace Barotrauma
             if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
             {
                 radio.Channel = channel;
+                GameMain.Client?.CreateEntityEvent(radio.Item, new object[] { NetEntityEvent.Type.ChangeProperty, radio.SerializableProperties["channel"] });
+
                 if (setText)
                 {
                     string text = radio.Channel.ToString().PadLeft(4, '0');

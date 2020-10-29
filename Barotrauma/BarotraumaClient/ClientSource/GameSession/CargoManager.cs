@@ -52,11 +52,11 @@ namespace Barotrauma
                 i.GetRootInventoryOwner() == character &&
                 !i.SpawnedInOutpost &&
                 (i.ContainedItems == null || i.ContainedItems.None() || i.ContainedItems.All(ci => soldEntities.Any(se => se.Item == ci))) &&
-                i.Condition >= 0.9f * i.MaxCondition && soldEntities.None(se => se.Item == i));
+                (i.Condition >= 0.9f * i.MaxCondition || i.Prefab.AllowSellingWhenBroken) && soldEntities.None(se => se.Item == i));
 
             // Prevent selling items in equipment slots
-            var slots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
-            foreach (InvSlotType slot in slots)
+            var equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
+            foreach (InvSlotType slot in equipmentSlots)
             {
                 var index = character.Inventory.FindLimbSlot(slot);
                 if (character.Inventory.Items[index] is Item item)
@@ -69,18 +69,27 @@ namespace Barotrauma
                 }
             }
 
-            // Prevent selling items contained in certain equipped items (like battery cell in equipped headset or oxygen tank in equipped diving mask)
-            slots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.OuterClothes, InvSlotType.Headset };
-            foreach (InvSlotType slot in slots)
+            // Prevent selling items contained inside equipped items
+            foreach (InvSlotType slot in equipmentSlots)
             {
                 var index = character.Inventory.FindLimbSlot(slot);
                 if (character.Inventory.Items[index] is Item item &&
                     item.ContainedItems != null && item.AllowedSlots.Contains(InvSlotType.Any))
                 {
-                    foreach (Item containedItem in item.ContainedItems)
+                    RemoveContainedFromSellables(item);
+                }
+            }
+
+            void RemoveContainedFromSellables(Item item)
+            {
+                foreach (Item containedItem in item.ContainedItems)
+                {
+                    if (containedItem == null) { continue; }
+                    if (containedItem.ContainedItems != null)
                     {
-                        sellables.Remove(containedItem);
+                        RemoveContainedFromSellables(containedItem);
                     }
+                    sellables.Remove(containedItem);
                 }
             }
 

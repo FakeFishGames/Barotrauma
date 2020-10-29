@@ -18,6 +18,11 @@ namespace Barotrauma
         public static List<string> MissingLocalizations = new List<string>();
 #endif
 
+        public static bool LockEditing;
+        public static bool PropertyChangesActive;
+        public static DateTime NextCommandPush;
+        public static Tuple<SerializableProperty, PropertyCommand> CommandBuffer;
+
         public int ContentHeight
         {
             get
@@ -1091,8 +1096,65 @@ namespace Barotrauma
 
         private bool SetPropertyValue(SerializableProperty property, object entity, object value)
         {
-            MultiSetProperties(property, entity, value);
+            if (LockEditing) { return false; }
+
+            object oldData = property.GetValue(entity);
+            // some properties have null as the default string value
+            if (oldData == null && value is string) { oldData = ""; }
+            if (entity is ISerializableEntity sEntity && Screen.Selected is SubEditorScreen && !Equals(oldData, value))
+            {
+                List<ISerializableEntity> entities = new List<ISerializableEntity> { sEntity };
+                Dictionary<ISerializableEntity, object> affected = MultiSetProperties(property, entity, value);
+
+                Dictionary<object, List<ISerializableEntity>> oldValues = new Dictionary<object, List<ISerializableEntity>> {{ oldData, new List<ISerializableEntity> { sEntity }}};
+
+                affected.ForEach(aEntity =>
+                {
+                    var (item, oldVal) = aEntity;
+                    entities.Add(item);
+
+                    if (!oldValues.ContainsKey(oldVal))
+                    {
+                        oldValues.Add(oldVal, new List<ISerializableEntity> { item });
+                    }
+                    else
+                    {
+                        oldValues[oldVal].Add(item);
+                    }
+                });
+
+                PropertyCommand cmd = new PropertyCommand(entities, property.Name, value, oldValues);
+                if (CommandBuffer != null)
+                {
+                    if (CommandBuffer.Item1 == property && CommandBuffer.Item2.PropertyCount == cmd.PropertyCount)
+                    {
+                        if (!CommandBuffer.Item2.MergeInto(cmd))
+                        {
+                            CommitCommandBuffer();
+                        }
+                    }
+                    else
+                    {
+                        CommitCommandBuffer();
+                    }
+                }
+
+                NextCommandPush = DateTime.Now.AddSeconds(1);
+                CommandBuffer = Tuple.Create(property, cmd);
+                PropertyChangesActive = true;
+            }
+
             return property.TrySetValue(entity, value);
+        }
+
+        public static void CommitCommandBuffer()
+        {
+            if (CommandBuffer != null)
+            {
+                SubEditorScreen.StoreCommand(CommandBuffer.Item2);
+            }
+            CommandBuffer = null;
+            PropertyChangesActive = false;
         }
 
         /// <summary>
@@ -1103,10 +1165,12 @@ namespace Barotrauma
         /// <param name="parentObject"></param>
         /// <param name="value"></param>
         /// <remarks>The function has the same parameters as <see cref="SetValue"/></remarks>
-        private void MultiSetProperties(SerializableProperty property, object parentObject, object value)
+        private Dictionary<ISerializableEntity, object> MultiSetProperties(SerializableProperty property, object parentObject, object value)
         {
-            if (!(Screen.Selected is SubEditorScreen) || MapEntity.SelectedList.Count <= 1) { return; }
-            if (!(parentObject is ItemComponent || parentObject is Item || parentObject is Structure || parentObject is Hull)) { return; }
+            Dictionary<ISerializableEntity, object> affected = new Dictionary<ISerializableEntity, object>();
+
+            if (!(Screen.Selected is SubEditorScreen) || MapEntity.SelectedList.Count <= 1) { return affected; }
+            if (!(parentObject is ItemComponent || parentObject is Item || parentObject is Structure || parentObject is Hull)) { return affected; }
             
             foreach (var entity in MapEntity.SelectedList.Where(entity => entity != parentObject))
             {
@@ -1115,35 +1179,36 @@ namespace Barotrauma
                     case Hull _:
                     case Structure _:
                     case Item _:
-                        {
                         if (entity.GetType() == parentObject.GetType())
-                        { 
+                        {
+                            affected.Add((ISerializableEntity) entity, property.GetValue(entity));
                             property.PropertyInfo.SetValue(entity, value);
                         } 
                         else if (entity is ISerializableEntity sEntity && sEntity.SerializableProperties != null)
                         {
                             var props = sEntity.SerializableProperties;
-                                    
+
                             if (props.TryGetValue(property.NameToLowerInvariant, out SerializableProperty foundProp))
                             {
+                                affected.Add(sEntity, foundProp.GetValue(sEntity));
                                 foundProp.PropertyInfo.SetValue(entity, value);
                             }
                         }
                         break;
-                    }
                     case ItemComponent _ when entity is Item item:
-                    {
                         foreach (var component in item.Components)
                         {
                             if (component.GetType() == parentObject.GetType() && component != parentObject)
-                            { 
+                            {
+                                affected.Add(component, property.GetValue(component));
                                 property.PropertyInfo.SetValue(component, value);
                             }
                         }
                         break;
-                    }
                 }
             }
+
+            return affected;
         }
     }
 }

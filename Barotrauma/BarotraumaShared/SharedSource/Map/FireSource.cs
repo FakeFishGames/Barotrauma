@@ -69,6 +69,23 @@ namespace Barotrauma
             get { return Math.Min((float)Math.Sqrt(size.X) * 10.0f, MaxDamageRange); }
         }
 
+        public bool DamagesItems
+        {
+            get;
+            set;
+        } = true;
+
+        public bool DamagesCharacters
+        {
+            get;
+            set;
+        } = true;
+
+        public bool Removed
+        {
+            get { return removed; }
+        }
+
         public Hull Hull
         {
             get { return hull; }
@@ -80,7 +97,7 @@ namespace Barotrauma
             if (hull == null || worldPosition.Y < hull.WorldSurface) return;
 
 #if CLIENT
-            if (!isNetworkMessage && GameMain.Client != null) return;
+            if (!isNetworkMessage && GameMain.Client != null) { return; }
 #endif
             
             hull.AddFireSource(this);
@@ -140,9 +157,43 @@ namespace Barotrauma
                 }
             }
         }
-        
+
+        public static void UpdateAll(List<DummyFireSource> fireSources, float deltaTime)
+        {
+            for (int i = fireSources.Count - 1; i >= 0; i--)
+            {
+                fireSources[i].Update(deltaTime);
+            }
+
+            //combine overlapping fires
+            for (int i = fireSources.Count - 1; i >= 0; i--)
+            {
+                for (int j = i - 1; j >= 0; j--)
+                {
+                    i = Math.Min(i, fireSources.Count - 1);
+                    j = Math.Min(j, i - 1);
+
+                    if (!fireSources[i].CheckOverLap(fireSources[j])) { continue; }
+
+                    float leftEdge = Math.Min(fireSources[i].position.X, fireSources[j].position.X);
+
+                    fireSources[j].size.X =
+                        Math.Max(fireSources[i].position.X + fireSources[i].size.X, fireSources[j].position.X + fireSources[j].size.X)
+                        - leftEdge;
+
+                    fireSources[j].position.X = leftEdge;
+                    fireSources[i].Remove();
+                }
+            }
+        }
+
         private bool CheckOverLap(FireSource fireSource)
         {
+            if (this is DummyFireSource != fireSource is DummyFireSource)
+            {
+                return false;
+            }
+
             return !(position.X > fireSource.position.X + fireSource.size.X ||
                 position.X + size.X < fireSource.position.X);
         }
@@ -152,8 +203,8 @@ namespace Barotrauma
             //the firesource will start to shrink if oxygen percentage is below 10
             float growModifier = Math.Min((hull.OxygenPercentage / 10.0f) - 1.0f, 1.0f);
 
-            DamageCharacters(deltaTime);
-            DamageItems(deltaTime);
+            if (DamagesCharacters) { DamageCharacters(deltaTime); }
+            if (DamagesItems) { DamageItems(deltaTime); }
 
             if (hull.WaterVolume > 0.0f)
             {
@@ -161,7 +212,10 @@ namespace Barotrauma
                 if (removed) { return; }
             }
 
-            ReduceOxygen(deltaTime);
+            if (!(this is DummyFireSource))
+            {
+                ReduceOxygen(deltaTime);
+            }
 
             AdjustXPos(growModifier, deltaTime);
 
@@ -175,21 +229,21 @@ namespace Barotrauma
 
             LimitSize();
 
-            if (size.X > 256.0f)
+            if (size.X > 256.0f && !(this is DummyFireSource))
             {
                 if (burnDecals.Count == 0)
                 {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition + size / 2, 1f, true);
+                    var newDecal = hull.AddDecal("burnt", WorldPosition + size / 2, 1f, isNetworkEvent: false);
                     if (newDecal != null) { burnDecals.Add(newDecal); }
                 }
                 else if (WorldPosition.X < burnDecals[0].WorldPosition.X - 256.0f)
                 {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition, 1f, true);
+                    var newDecal = hull.AddDecal("burnt", WorldPosition, 1f, isNetworkEvent: false);
                     if (newDecal != null) { burnDecals.Insert(0, newDecal); }
                 }
                 else if (WorldPosition.X + size.X > burnDecals[burnDecals.Count - 1].WorldPosition.X + 256.0f)
                 {
-                    var newDecal = hull.AddDecal("burnt", WorldPosition + Vector2.UnitX * size.X, 1f, true);
+                    var newDecal = hull.AddDecal("burnt", WorldPosition + Vector2.UnitX * size.X, 1f, isNetworkEvent: false);
                     if (newDecal != null) { burnDecals.Add(newDecal); }
                 }
             }
@@ -281,14 +335,13 @@ namespace Barotrauma
 
         private void DamageItems(float deltaTime)
         {
-            if (size.X <= 0.0f) return;
+            if (size.X <= 0.0f) { return; }
 #if CLIENT
-            if (GameMain.Client != null) return;
+            if (GameMain.Client != null) { return; }
 #endif
-
             foreach (Item item in Item.ItemList)
             {
-                if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) continue;
+                if (item.CurrentHull != hull || item.FireProof || item.Condition <= 0.0f) { continue; }
 
                 //don't apply OnFire effects if the item is inside a fireproof container
                 //(or if it's inside a container that's inside a fireproof container, etc)
@@ -300,8 +353,8 @@ namespace Barotrauma
                 }
 
                 float range = (float)Math.Sqrt(size.X) * 10.0f;
-                if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) continue;
-                if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) continue;
+                if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) { continue; }
+                if (item.Position.Y < position.Y - size.Y || item.Position.Y > hull.Rect.Y) { continue; }
 
                 item.ApplyStatusEffects(ActionType.OnFire, deltaTime);
                 if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)

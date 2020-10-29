@@ -12,6 +12,7 @@ namespace Barotrauma
         public override string DebugTag => "fix leak";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
+        public override bool AllowInAnySub => true;
 
         public Gap Leak { get; private set; }
 
@@ -35,11 +36,7 @@ namespace Barotrauma
             if (!IsAllowed)
             {
                 Priority = 0;
-                return Priority;
-            }
-            if (Leak.Removed || Leak.Open <= 0)
-            {
-                Priority = 0;
+                Abandon = true;
             }
             else if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeak>()?.Leak == Leak))
             {
@@ -116,7 +113,7 @@ namespace Barotrauma
             {
                 HumanAIController.AnimController.Crouching = true;
             }
-            float reach = repairTool.Range + ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
+            float reach = CalculateReach(repairTool, character);
             bool canOperate = toLeak.LengthSquared() < reach * reach;
             if (canOperate)
             {
@@ -144,7 +141,7 @@ namespace Barotrauma
                 onAbandon: () =>
                 {
                     if (Check()) { IsCompleted = true; }
-                    else if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > reach * reach * 2)
+                    else if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > MathUtils.Pow(reach * 2, 2))
                     {
                         // Too far
                         Abandon = true;
@@ -166,6 +163,15 @@ namespace Barotrauma
             refuelObjective = null;
             gotoObjective = null;
             operateObjective = null;
+        }
+
+        public static float CalculateReach(RepairTool repairTool, Character character)
+        {
+            float armLength = ConvertUnits.ToDisplayUnits(((HumanoidAnimController)character.AnimController).ArmLength);
+            // This is an approximation, because we don't know the exact reach until the pose is taken.
+            // And even then the actual range depends on the direction we are aiming to.
+            // Found out that without any multiplier the value (209) is often too short.
+            return repairTool.Range + armLength * 1.2f;
         }
     }
 }

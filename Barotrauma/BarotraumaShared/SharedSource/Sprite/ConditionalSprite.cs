@@ -8,14 +8,7 @@ namespace Barotrauma
     partial class ConditionalSprite
     {
         public readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
-        public bool IsActive
-        {
-            get
-            {
-                if (Target == null) { return false; }
-                return Comparison == PropertyConditional.Comparison.And ? conditionals.All(c => c.Matches(Target)) : conditionals.Any(c => c.Matches(Target));
-            }
-        }
+        public bool IsActive { get; private set; } = true;
 
         public readonly PropertyConditional.Comparison Comparison;
         public readonly bool Exclusive;
@@ -53,6 +46,18 @@ namespace Barotrauma
                         DeformableSprite = new DeformableSprite(subElement, filePath: file, lazyLoad: lazyLoad);
                         break;
                 }
+            }
+        }
+
+        public void CheckConditionals()
+        {
+            if (Target == null)
+            {
+                IsActive = false;
+            }
+            else
+            {
+                IsActive = Comparison == PropertyConditional.Comparison.And ? conditionals.All(c => c.Matches(Target)) : conditionals.Any(c => c.Matches(Target));
             }
         }
     }

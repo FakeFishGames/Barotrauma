@@ -110,5 +110,7 @@ namespace Barotrauma
 
             yield return CoroutineStatus.Success;
         }
+
+        static partial void PlayTinnitusProjSpecific(float volume) => SoundPlayer.PlaySound("tinnitus", volume: volume);
     }
 }

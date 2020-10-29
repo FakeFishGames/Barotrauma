@@ -23,7 +23,7 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null)
         {
             emitTimer += deltaTime * amountMultiplier;
             burstEmitTimer -= deltaTime;
@@ -33,7 +33,7 @@ namespace Barotrauma.Particles
                 float emitInterval = 1.0f / Prefab.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
-                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier);
+                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle);
                     emitTimer -= emitInterval;
                 }
             }
@@ -43,11 +43,11 @@ namespace Barotrauma.Particles
             burstEmitTimer = Prefab.EmitInterval;
             for (int i = 0; i < Prefab.ParticleAmount * amountMultiplier; i++)
             {
-                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier);
+                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle);
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null)
+        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null)
         {
             angle += Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
 
@@ -55,13 +55,20 @@ namespace Barotrauma.Particles
             Vector2 velocity = dir * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax) * velocityMultiplier;
             position += dir * Rand.Range(Prefab.DistanceMin, Prefab.DistanceMax);
 
-            var particle = GameMain.ParticleManager.CreateParticle(Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop);
+            var particle = GameMain.ParticleManager.CreateParticle(overrideParticle ?? Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop);
 
             if (particle != null)
             {
                 particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax) * sizeMultiplier;
                 particle.HighQualityCollisionDetection = Prefab.HighQualityCollisionDetection;
-                if (colorMultiplier.HasValue) { particle.ColorMultiplier = colorMultiplier.Value.ToVector4(); }
+                if (colorMultiplier.HasValue) 
+                { 
+                    particle.ColorMultiplier = colorMultiplier.Value.ToVector4(); 
+                }
+                else if (Prefab.ColorMultiplier != Color.White)
+                {
+                    particle.ColorMultiplier = Prefab.ColorMultiplier.ToVector4();
+                }
             }
         }
 
@@ -138,6 +145,8 @@ namespace Barotrauma.Particles
 
         public readonly bool CopyEntityAngle;
 
+        public readonly Color ColorMultiplier;
+
         public bool DrawOnTop => forceDrawOnTop || ParticlePrefab.DrawOnTop;
         private readonly bool forceDrawOnTop;
 
@@ -204,11 +213,12 @@ namespace Barotrauma.Particles
             }
 
             EmitInterval = element.GetAttributeFloat("emitinterval", 0.0f);
-            ParticlesPerSecond = element.GetAttributeInt("particlespersecond", 0);
+            ParticlesPerSecond = element.GetAttributeFloat("particlespersecond", 0);
             ParticleAmount = element.GetAttributeInt("particleamount", 0);
             HighQualityCollisionDetection = element.GetAttributeBool("highqualitycollisiondetection", false);
             CopyEntityAngle = element.GetAttributeBool("copyentityangle", false);
-            forceDrawOnTop = element.GetAttributeBool("drawontop", false);
+            forceDrawOnTop = element.GetAttributeBool("drawontop", false); 
+            ColorMultiplier = element.GetAttributeColor("colormultiplier", Color.White);
         }
     }
 }

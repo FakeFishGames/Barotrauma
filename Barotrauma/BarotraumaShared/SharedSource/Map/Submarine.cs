@@ -1565,14 +1565,17 @@ namespace Barotrauma
                     if (connectedWp.isObstructed) { continue; }
                     Vector2 start = ConvertUnits.ToSimUnits(wp.WorldPosition) - otherSub.SimPosition;
                     Vector2 end = ConvertUnits.ToSimUnits(connectedWp.WorldPosition) - otherSub.SimPosition;
-                    var body = Submarine.PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: false);
-                    if (body != null && body.UserData is Structure && !((Structure)body.UserData).IsPlatform)
+                    var body = PickBody(start, end, null, Physics.CollisionWall, allowInsideFixture: true);
+                    if (body != null)
                     {
-                        connectedWp.isObstructed = true;
-                        wp.isObstructed = true;
-                        obstructedNodes.Add(node);
-                        obstructedNodes.Add(connection);
-                        break;
+                        if (body.UserData is Structure wall && !wall.IsPlatform || body.UserData is Item && body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
+                        {
+                            connectedWp.isObstructed = true;
+                            wp.isObstructed = true;
+                            obstructedNodes.Add(node);
+                            obstructedNodes.Add(connection);
+                            break;
+                        }
                     }
                 }
             }

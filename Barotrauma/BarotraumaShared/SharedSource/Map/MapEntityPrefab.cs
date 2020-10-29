@@ -284,7 +284,7 @@ namespace Barotrauma
 
             if (showErrorMessages)
             {
-                DebugConsole.ThrowError("Failed to find a matching MapEntityPrefab (name: \"" + name + "\", identifier: \"" + identifier + "\").\n" + Environment.StackTrace);
+                DebugConsole.ThrowError("Failed to find a matching MapEntityPrefab (name: \"" + name + "\", identifier: \"" + identifier + "\").\n" + Environment.StackTrace.CleanupStackTrace());
             }
             return null;
         }

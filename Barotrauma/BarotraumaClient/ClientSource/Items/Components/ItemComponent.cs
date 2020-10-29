@@ -52,6 +52,8 @@ namespace Barotrauma.Items.Components
             get { return sounds.Count > 0; }
         }
 
+        public bool[] HasSoundsOfType { get { return hasSoundsOfType; }  }
+
         private readonly bool[] hasSoundsOfType;
         private readonly Dictionary<ActionType, List<ItemSound>> sounds;
         private Dictionary<ActionType, SoundSelectionMode> soundSelectionModes;
@@ -191,6 +193,12 @@ namespace Barotrauma.Items.Components
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
         private List<SoundChannel> playingOneshotSoundChannels = new List<SoundChannel>();
+        public ItemComponent ReplacedBy;
+
+        public ItemComponent GetReplacementOrThis()
+        {
+            return ReplacedBy?.GetReplacementOrThis() ?? this;
+        }
 
         public void UpdateSounds()
         {

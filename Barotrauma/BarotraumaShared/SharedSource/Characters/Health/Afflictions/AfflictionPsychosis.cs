@@ -1,12 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Linq;
-using Barotrauma.Extensions;
-using System.Xml.Linq;
-using System;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class AfflictionPsychosis : Affliction
     {

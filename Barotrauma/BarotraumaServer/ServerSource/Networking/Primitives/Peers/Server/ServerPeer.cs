@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
 
                     if (!Client.IsValidName(name, serverSettings))
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName, "The name \"" + name + "\" is invalid");
+                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName, "");
                         return;
                     }
 

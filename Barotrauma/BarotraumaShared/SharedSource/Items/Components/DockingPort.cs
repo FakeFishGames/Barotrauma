@@ -431,7 +431,7 @@ namespace Barotrauma.Items.Components
                 string errorMsg =
                     "Attempted to create a door body at an invalid position (item pos: " + item.Position
                     + ", item world pos: " + item.WorldPosition
-                    + ", docking target world pos: " + DockingTarget.Door.Item.WorldPosition + ")\n" + Environment.StackTrace;
+                    + ", docking target world pos: " + DockingTarget.Door.Item.WorldPosition + ")\n" + Environment.StackTrace.CleanupStackTrace();
 
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(

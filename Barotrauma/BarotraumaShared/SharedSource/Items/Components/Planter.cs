@@ -201,6 +201,7 @@ namespace Barotrauma.Items.Components
                 if (seed.Decayed || seed.FullyGrown)
                 {
                     container?.Inventory.RemoveItem(seed.Item);
+                    Entity.Spawner?.AddToRemoveQueue(seed.Item);
                     GrowableSeeds[i] = null;
                     return true;
                 }

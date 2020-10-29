@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -8,14 +10,22 @@ namespace Barotrauma
     {
         public override string DebugTag => "extinguish fires";
         public override bool ForceRun => true;
+        public override bool AllowInAnySub => true;
 
         public AIObjectiveExtinguishFires(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
         protected override bool Filter(Hull hull) => IsValidTarget(hull, character);
 
-        protected override float TargetEvaluation() => Targets.Sum(t => GetFireSeverity(t));
+        protected override float TargetEvaluation() => 
+            // If any target is visible -> 100 priority
+            Targets.Any(t => t == character.CurrentHull || HumanAIController.VisibleHulls.Contains(t)) ? 100 : 
+            // Else based on the fire severity
+            Targets.Sum(t =>  GetFireSeverity(t) * 100);
 
-        public static float GetFireSeverity(Hull hull) => hull.FireSources.Sum(fs => fs.Size.X);
+        /// <summary>
+        /// 0-1 based on the horizontal size of all of the fires in the hull.
+        /// </summary>
+        public static float GetFireSeverity(Hull hull) => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, Math.Min(hull.Rect.Width, 1000), hull.FireSources.Sum(fs => fs.Size.X)));
 
         protected override IEnumerable<Hull> GetList() => Hull.hullList;
 
@@ -31,22 +41,7 @@ namespace Barotrauma
             if (hull.FireSources.None()) { return false; }
             if (hull.Submarine == null) { return false; }
             if (character.Submarine == null) { return false; }
-            if (!character.Submarine.IsConnectedTo(hull.Submarine)) { return false; }
-            if (character.AIController is HumanAIController humanAI)
-            {
-                if (hull.Submarine.TeamID != character.TeamID)
-                {
-                    if (humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>())
-                    {
-                        // For orders, allow targets in the current sub (for example if the bot is inside an outpost or a wreck)
-                        if (hull.Submarine != character.Submarine) { return false; }
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
+            if (!character.Submarine.IsEntityFoundOnThisSub(hull, includingConnectedSubs: true)) { return false; }
             return true;
         }
     }

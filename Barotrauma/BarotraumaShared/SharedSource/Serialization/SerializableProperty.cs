@@ -415,7 +415,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in SerializableProperty.TrySetValue", e);
+                DebugConsole.ThrowError("Error in SerializableProperty.GetValue", e);
                 return false;
             }
         }
@@ -480,6 +480,9 @@ namespace Barotrauma
                 case "IsDead":
                     { if (parentObject is Character character) { return character.IsDead; } }
                     break;
+                case "IsHuman":
+                    { if (parentObject is Character character) { return character.IsHuman; } }
+                    break;
                 case "IsOn":
                     { if (parentObject is LightComponent lightComponent) { return lightComponent.IsOn; } }
                     break;
@@ -542,6 +545,9 @@ namespace Barotrauma
                     break;
                 case "SpeedMultiplier":
                     { if (parentObject is Character character && value is float) { character.StackSpeedMultiplier((float)value); return true; } }
+                    break;
+                case "HealthMultiplier":
+                    { if (parentObject is Character character && value is float) { character.StackHealthMultiplier((float)value); return true; } }
                     break;
                 case "IsOn":
                     { if (parentObject is LightComponent lightComponent && value is bool) { lightComponent.IsOn = (bool)value; return true; } }
@@ -708,6 +714,26 @@ namespace Barotrauma
                 {
                     string attributeName = attribute.Name.ToString().ToLowerInvariant();
                     if (attributeName == "gameversion") { continue; }
+
+                    if (attributeName == "refreshrect")
+                    {
+                        if (entity is Structure structure)
+                        {
+                            if (!structure.ResizeHorizontal)
+                            {
+                                structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    (int)structure.Prefab.ScaledSize.X,
+                                    structure.Rect.Height);
+                            }
+                            if (!structure.ResizeVertical)
+                            {
+                                structure.Rect = structure.DefaultRect = new Rectangle(structure.Rect.X, structure.Rect.Y,
+                                    structure.Rect.Width,
+                                    (int)structure.Prefab.ScaledSize.Y);
+                            }
+                        }
+                    }
+
                     if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                     {
                         FixValue(property, entity, attribute);

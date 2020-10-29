@@ -190,14 +190,45 @@ namespace Barotrauma
                         }
                     }
                     pathFinder.InsideSubmarine = character.Submarine != null;
+                    pathFinder.ApplyPenaltyToOutsideNodes = character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
-                    bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null;
+                    bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.X) <= 0;
                     if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                     {
-                        // It's possible that the current path was calculated from a start point that is no longer valid.
-                        // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
-                        useNewPath = newPath.Cost < currentPath.Cost ||
-                            Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
+                        // Check if the new path is the same as the old, in which case we just ignore it and continue using the old path (or the progress would reset).
+                        if (IsIdenticalPath())
+                        {
+                            useNewPath = false;
+                        }
+                        else
+                        {
+                            // Use the new path if it has significantly lower cost (don't change the path if it has marginally smaller cost. This reduces navigating backwards due to new path that is calculated from the node just behind us).
+                            float t = (float)currentPath.CurrentIndex / (currentPath.Nodes.Count - 1);
+                            useNewPath = newPath.Cost < currentPath.Cost * MathHelper.Lerp(0.95f, 0, t);
+                            if (!useNewPath)
+                            {
+                                // It's possible that the current path was calculated from a start point that is no longer valid.
+                                // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
+                                useNewPath = Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
+                            }
+                        }
+
+                        bool IsIdenticalPath()
+                        {
+                            int nodeCount = newPath.Nodes.Count;
+                            if (nodeCount == currentPath.Nodes.Count)
+                            {
+                                for (int i = 0; i < nodeCount - 1; i++)
+                                {
+                                    if (newPath.Nodes[i] != currentPath.Nodes[i])
+                                    {
+                                        return false;
+                                    }
+                                }
+                                return true;
+                            }
+                            return false;
+                        }
                     }
                     if (useNewPath)
                     {
@@ -343,7 +374,7 @@ namespace Barotrauma
                 }
                 return diff;
             }
-            else if (!canClimb || character.AnimController.InWater)
+            else if (character.AnimController.InWater)
             {
                 // If the character is underwater, we don't need the ladders anymore
                 if (character.IsClimbing && isDiving)
@@ -370,7 +401,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (!IsNextLadderSameAsCurrent)
+            else if (!canClimb || !IsNextLadderSameAsCurrent)
             {
                 // Walking horizontally
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
@@ -378,6 +409,8 @@ namespace Barotrauma
                 Vector2 velocity = collider.LinearVelocity;
                 // If the character is smaller than this, it would fail to use the waypoint nodes because they are always too high.
                 float minHeight = 1;
+                // If the character is very thin, without a min value, it would often fail to reach the waypoints, because the horizontal distance is too small.
+                float minWidth = 0.17f;
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
                 float characterHeight = Math.Max(colliderSize.Y + character.AnimController.ColliderHeightFromFloor, minHeight);
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
@@ -386,7 +419,7 @@ namespace Barotrauma
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 bool blockedByDoor = door != null && !door.IsOpen && !door.IsBroken;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
-                float targetDistance = collider.radius * margin;
+                float targetDistance = Math.Max(collider.radius * margin, minWidth);
                 if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && !blockedByDoor)
                 {
                     currentPath.SkipToNextNode();
