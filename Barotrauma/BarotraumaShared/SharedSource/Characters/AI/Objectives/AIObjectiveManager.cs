@@ -245,7 +245,7 @@ namespace Barotrauma
         public void SortObjectives()
         {
             CurrentOrder?.GetPriority();
-            Objectives.ForEach(o => o.GetPriority());
+            Objectives.ToArray().ForEach(o => o.GetPriority());
             if (Objectives.Any())
             {
                 Objectives.Sort((x, y) => y.Priority.CompareTo(x.Priority));
