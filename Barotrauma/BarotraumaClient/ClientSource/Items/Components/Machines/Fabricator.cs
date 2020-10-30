@@ -220,7 +220,7 @@ namespace Barotrauma.Items.Components
                     if (!linkedItem.Components.Any()) continue;
                 
                     var itemContainer = linkedItem.Components.First();
-                    if (itemContainer == null) { continue; }
+                    if (itemContainer == null || itemContainer.GuiFrame == null) continue;
 
                     if (!itemContainer.Item.DisplaySideBySideWhenLinked) continue;
 
