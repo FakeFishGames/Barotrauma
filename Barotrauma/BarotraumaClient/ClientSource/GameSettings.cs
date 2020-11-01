@@ -1016,6 +1016,19 @@ namespace Barotrauma
             {
                 Visible = VoiceSetting != VoiceMode.Disabled
             };
+            GUITickBox localVoiceByDefault = new GUITickBox(
+                new RectTransform(tickBoxScale, voiceActivityGroup.RectTransform), TextManager.Get("LocalVoiceByDefault"))
+            {
+                Visible = VoiceSetting == VoiceMode.Activity,
+                Selected = UseLocalVoiceByDefault,
+                ToolTip = TextManager.Get("LocalVoiceByDefaultTooltip"),
+                OnSelected = (tickBox) =>
+                {
+                    UseLocalVoiceByDefault = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
             GUITextBlock noiseGateText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), voiceActivityGroup.RectTransform), TextManager.Get("NoiseGateThreshold"), font: GUI.SubHeadingFont)
             {
                 Visible = VoiceSetting == VoiceMode.Activity,
@@ -1142,6 +1155,7 @@ namespace Barotrauma
 
                     noiseGateText.Visible = (vMode == VoiceMode.Activity);
                     noiseGateSlider.Visible = (vMode == VoiceMode.Activity);
+                    localVoiceByDefault.Visible = (vMode == VoiceMode.Activity);
                     voiceActivityGroup.Visible = (vMode != VoiceMode.Disabled);
                     voiceInputContainerHorizontal.Visible = (vMode == VoiceMode.PushToTalk);
                     UnsavedSettings = true;

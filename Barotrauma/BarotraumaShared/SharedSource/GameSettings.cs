@@ -68,6 +68,8 @@ namespace Barotrauma
 
         public float NoiseGateThreshold { get; set; }
 
+        public bool UseLocalVoiceByDefault { get; set; }
+
 #if CLIENT
         private KeyOrMouse[] keyMapping;
         private KeyOrMouse[] inventoryKeyMapping;
@@ -1202,7 +1204,8 @@ namespace Barotrauma
                 new XAttribute("voicesetting", VoiceSetting),
                 new XAttribute("audiooutputdevice", System.Xml.XmlConvert.EncodeName(AudioOutputDevice ?? "")),
                 new XAttribute("voicecapturedevice", System.Xml.XmlConvert.EncodeName(VoiceCaptureDevice ?? "")),
-                new XAttribute("noisegatethreshold", NoiseGateThreshold));
+                new XAttribute("noisegatethreshold", NoiseGateThreshold),
+                new XAttribute("uselocalvoicebydefault", UseLocalVoiceByDefault));
 
             XElement gSettings = doc.Root.Element("graphicssettings");
             if (gSettings == null)
@@ -1459,6 +1462,7 @@ namespace Barotrauma
                 VoiceCaptureDevice = System.Xml.XmlConvert.DecodeName(audioSettings.GetAttributeString("voicecapturedevice", VoiceCaptureDevice));
                 AudioOutputDevice = System.Xml.XmlConvert.DecodeName(audioSettings.GetAttributeString("audiooutputdevice", AudioOutputDevice));
                 NoiseGateThreshold = audioSettings.GetAttributeFloat("noisegatethreshold", NoiseGateThreshold);
+                UseLocalVoiceByDefault = audioSettings.GetAttributeBool("uselocalvoicebydefault", UseLocalVoiceByDefault);
                 MicrophoneVolume = audioSettings.GetAttributeFloat("microphonevolume", MicrophoneVolume);
                 string voiceSettingStr = audioSettings.GetAttributeString("voicesetting", "");
                 if (Enum.TryParse(voiceSettingStr, out VoiceMode voiceSetting))
@@ -1576,6 +1580,7 @@ namespace Barotrauma
             VoiceSetting = VoiceMode.Disabled;
             VoiceCaptureDevice = null;
             NoiseGateThreshold = -45;
+            UseLocalVoiceByDefault = false;
             windowMode = WindowMode.BorderlessWindowed;
             losMode = LosMode.Transparent;
             UseSteamMatchmaking = true;

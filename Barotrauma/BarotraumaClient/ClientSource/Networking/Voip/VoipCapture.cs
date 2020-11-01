@@ -239,7 +239,7 @@ namespace Barotrauma.Networking
                 bool allowEnqueue = false;
                 if (GameMain.WindowActive)
                 {
-                    ForceLocal = captureTimer > 0 ? ForceLocal : false;
+                    ForceLocal = captureTimer > 0 ? ForceLocal : GameMain.Config.UseLocalVoiceByDefault;
                     bool pttDown = false;
                     if ((PlayerInput.KeyDown(InputType.Voice) || PlayerInput.KeyDown(InputType.LocalVoice)) &&
                             GUI.KeyboardDispatcher.Subscriber == null)
