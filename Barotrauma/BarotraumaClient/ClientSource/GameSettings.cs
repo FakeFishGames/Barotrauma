@@ -904,13 +904,28 @@ namespace Barotrauma
             GUITickBox directionalVoiceChat = new GUITickBox(new RectTransform(tickBoxScale, voiceChatContent.RectTransform), TextManager.Get("DirectionalVoiceChat"))
             {
                 Selected = UseDirectionalVoiceChat,
-                ToolTip = TextManager.Get("DirectionalVoiceChatToolTip"),
+                ToolTip = TextManager.Get("DirectionalVoiceChatToolTip")
+            };
+
+            GUITickBox directionalVoiceChatForRadio = new GUITickBox(new RectTransform(tickBoxScale, voiceChatContent.RectTransform), TextManager.Get("DirectionalVoiceChatForRadio"))
+            {
+                Visible = UseDirectionalVoiceChat,
+                Selected = UseDirectionalVoiceChatForRadio,
+                ToolTip = TextManager.Get("DirectionalVoiceChatForRadioToolTip"),
                 OnSelected = (tickBox) =>
                 {
-                    UseDirectionalVoiceChat = tickBox.Selected;
+                    UseDirectionalVoiceChatForRadio = tickBox.Selected;
                     UnsavedSettings = true;
                     return true;
                 }
+            };
+
+            directionalVoiceChat.OnSelected = (tickBox) =>
+            {
+                UseDirectionalVoiceChat = tickBox.Selected;
+                directionalVoiceChatForRadio.Visible = tickBox.Selected;
+                UnsavedSettings = true;
+                return true;
             };
 
             if (string.IsNullOrWhiteSpace(VoiceCaptureDevice) || !(CaptureDeviceNames?.Contains(VoiceCaptureDevice) ?? false))

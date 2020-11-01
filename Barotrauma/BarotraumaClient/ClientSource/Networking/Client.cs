@@ -65,9 +65,18 @@ namespace Barotrauma.Networking
 
             if (character != null)
             {
+                
                 if (GameMain.Config.UseDirectionalVoiceChat)
                 {
-                    VoipSound.SetPosition(new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
+                    if (!VoipSound.UseRadioFilter || (VoipSound.UseRadioFilter && GameMain.Config.UseDirectionalVoiceChatForRadio))
+                    {
+                        VoipSound.SetPosition(new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
+                    }
+                    else
+                    {
+                        VoipSound.SetPosition(null);
+                    }
+                    
                 }
                 else
                 {
