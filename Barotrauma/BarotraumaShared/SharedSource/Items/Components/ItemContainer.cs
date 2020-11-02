@@ -24,6 +24,8 @@ namespace Barotrauma.Items.Components
             set { capacity = Math.Max(value, 1); }
         }
 
+        private float amountFilled = 0;
+
         private bool hideItems;
         [Serialize(true, false, description: "Should the items contained inside this item be hidden."
             + " If set to false, you should use the ItemPos and ItemInterval properties to determine where the items get rendered.")]
@@ -163,10 +165,20 @@ namespace Barotrauma.Items.Components
 
             if (item.GetComponent<ConnectionPanel>() != null)
             {
-                //tag = coilgunammo
-                containedItem.HasTag("coilgunammo"); // Special case since ammo boxes use Condition instead of actually containing bolts.
-                float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
-                Console.WriteLine(containedItem.Name + " contained in " + item.Name + ": " + fullPercentage.ToString());
+                //Console.WriteLine(containedItem.Name + " to be removed's tags: " + containedItem.Tags);
+                if (containedItem.HasTag("coilgunammo"))
+                { // Special case since ammo boxes use Condition instead of actually containing bolts.
+                    float containedConditionPercent = item.GetContainedItemConditionPercentage();
+                    this.amountFilled = (containedConditionPercent == -1 ? 0 : containedConditionPercent) * Capacity * Capacity; // -1 means empty.
+                    //Console.WriteLine(containedItem.Name + " contained In " + item.Name + ": " + this.amountFilled.ToString() + ", " + containedItem.GetContainedItemConditionPercentage() + ", " + containedItem.Condition.ToString() + ", " + containedItem.ConditionPercentage.ToString() + ", " + item.GetContainedItemConditionPercentage() + ", " + item.Condition.ToString() + ", " + item.ConditionPercentage.ToString());
+                }
+                else
+                { // railgun shell or depth charge
+                    this.amountFilled++;
+                    //Console.WriteLine(containedItem.Name + " contained iN " + item.Name + ": " + this.amountFilled.ToString());
+                }
+                //float fullPercentage = this.amountFilled / Capacity; // -1 means empty.
+                //Console.WriteLine(containedItem.Name + " contained in " + item.Name + ": " + fullPercentage.ToString());
             }
         }
 
@@ -179,9 +191,22 @@ namespace Barotrauma.Items.Components
 
             if (item.GetComponent<ConnectionPanel>() != null)
             {
-                float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
-                Console.WriteLine(containedItem.Name + " removed from " + item.Name + ": " + fullPercentage.ToString());
-                item.SendSignal(0, fullPercentage.ToString(), "full_%", null);
+                //Console.WriteLine(containedItem.Name + " to be removed's tags: " + containedItem.Tags);
+                if (containedItem.HasTag("coilgunammo"))
+                { // Special case since ammo boxes use Condition instead of actually containing bolts.
+                    float containedConditionPercent = item.GetContainedItemConditionPercentage();
+                    this.amountFilled = (containedConditionPercent == -1 ? 0 : containedConditionPercent) * Capacity * Capacity; // -1 means empty.
+                    //Console.WriteLine(containedItem.Name + " removed FRom " + item.Name + ": " + this.amountFilled.ToString() + ", " + containedItem.GetContainedItemConditionPercentage() + ", " + containedItem.Condition.ToString() + ", " + containedItem.ConditionPercentage.ToString() + ", " + item.GetContainedItemConditionPercentage() + ", " + item.Condition.ToString() + ", " + item.ConditionPercentage.ToString());
+                }
+                else
+                { // railgun shell or depth charge
+                    this.amountFilled--;
+                    //Console.WriteLine(containedItem.Name + " removed frOM " + item.Name + ": " + this.amountFilled.ToString());
+                }
+                ////if tag == coilgunammo then this.amountFilled -= containedItem.Condition; else (rail/depth) this.amountFilled--;
+                //float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
+                //Console.WriteLine(containedItem.Name + " removed from " + item.Name + ": " + fullPercentage.ToString());
+                item.SendSignal(0, (this.amountFilled / Capacity).ToString(), "full_%", null);
             }
         }
 
@@ -200,9 +225,23 @@ namespace Barotrauma.Items.Components
         {
             if (item.GetComponent<ConnectionPanel>() != null)
             {
-                float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
-                Console.WriteLine(item.Name + " updated: " + fullPercentage.ToString() + ", " + item.Condition.ToString() + ", " + item.ConditionPercentage.ToString() + ", " + Capacity.ToString());
-                item.SendSignal(0, fullPercentage.ToString(), "full_%", null);
+                //float fullPercentage = (item.GetContainedItemConditionPercentage() == -1 ? 0f : item.GetContainedItemConditionPercentage()) / Capacity; // -1 means empty.
+                //Console.WriteLine(item.Name + " updated: " + item.GetContainedItemConditionPercentage() + ", " + this.amountFilled.ToString() + ", " + item.Condition.ToString() + ", " + item.ConditionPercentage.ToString() + ", " + Capacity.ToString());
+                //item.SendSignal(0, fullPercentage.ToString(), "full_%", null);
+                //item.SendSignal(0, (item.GetContainedItemConditionPercentage() / Capacity).ToString(), "full_%", null);
+                //if (item.HasTag("coilgunammo"))
+                //{ // Special case since ammo boxes use Condition instead of actually containing bolts.
+                //    float containedConditionPercent = item.GetContainedItemConditionPercentage();
+                //    this.amountFilled = containedConditionPercent == -1 ? 0 : containedConditionPercent; // -1 means empty.
+                //    Console.WriteLine(item.Name + " UPdated " + item.Name + ": " + this.amountFilled.ToString() + ", " + item.GetContainedItemConditionPercentage() + ", " + item.Condition.ToString() + ", " + item.ConditionPercentage.ToString());
+                //    //item.SendSignal(0, this.amountFilled.ToString(), "full_%", null);
+                //}
+                //else
+                //{ // railgun shell or depth charge
+                    //Console.WriteLine(item.Name + " updatED " + item.Name + ": " + (this.amountFilled / Capacity - item.GetContainedItemConditionPercentage()).ToString() + ", " + (this.amountFilled / Capacity).ToString() + ", " + this.amountFilled.ToString() + ", " + item.GetContainedItemConditionPercentage() + ", " + item.Condition.ToString() + ", " + item.ConditionPercentage.ToString());
+                //}
+                //Console.WriteLine("sum: " + item.ContainedItems.Select(containedItem => containedItem == null ? "null" : (containedItem.Name + "=" + containedItem.Condition)).ToList().ToString());//.Items.Sum(containedItem => (float)(containedItem.HasTag("coilgunammo") ? item.Condition : 1.0f)).ToString());
+                item.SendSignal(0, (this.amountFilled / Capacity).ToString(), "full_%", null);
             }
             if (item.ParentInventory is CharacterInventory)
             {
