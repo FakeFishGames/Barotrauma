@@ -299,9 +299,6 @@ namespace Barotrauma.Items.Components
                 if (resetUserTimer <= 0.0f) { user = null; }
             }
 
-            //GetLoadedProjectiles();
-            //item.SendSignal(0, this.ammoAvailable.Format(3), "ammo_out", null);
-
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
             UpdateProjSpecific(deltaTime);
