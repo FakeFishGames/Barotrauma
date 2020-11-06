@@ -329,8 +329,8 @@ namespace Barotrauma
                         {
                             var clones = Clone(selectedList).Where(c => c != null).ToList();
                             selectedList = clones;
-                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
                             selectedList.ForEach(c => c.Move(moveAmount));
+                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
                         }
                         else // move
                         {
@@ -897,10 +897,10 @@ namespace Barotrauma
         {
             if (entities.Count == 0) { return; }
             
-            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(entities), true));
-            
             CopyEntities(entities);
-            
+
+            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(entities), true));
+
             entities.ForEach(e => { if (!e.Removed) { e.Remove(); } });
             entities.Clear();
         }
@@ -913,7 +913,6 @@ namespace Barotrauma
             Clone(copiedList);
 
             var clones = mapEntityList.Except(prevEntities).ToList();
-            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
             var nonWireClones = clones.Where(c => !(c is Item item) || item.GetComponent<Wire>() == null);
             if (!nonWireClones.Any()) { nonWireClones = clones; }
 
@@ -929,6 +928,8 @@ namespace Barotrauma
                 clone.Move(moveAmount);
                 clone.Submarine = Submarine.MainSub;
             }
+
+            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false, handleInventoryBehavior: false));
         }
 
         /// <summary>

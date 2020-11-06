@@ -9,14 +9,14 @@ namespace Barotrauma
 {
     class BackgroundCreatureManager
     {
-        const int MaxSprites = 100;
+        const int MaxCreatures = 100;
 
-        const float CheckActiveInterval = 1.0f;
+        const float VisibilityCheckInterval = 1.0f;
 
-        private float checkActiveTimer;
+        private float checkVisibleTimer;
 
-        private List<BackgroundCreaturePrefab> prefabs = new List<BackgroundCreaturePrefab>();
-        private List<BackgroundCreature> activeSprites = new List<BackgroundCreature>();
+        private readonly List<BackgroundCreaturePrefab> prefabs = new List<BackgroundCreaturePrefab>();
+        private readonly List<BackgroundCreature> creatures = new List<BackgroundCreature>();
 
         public BackgroundCreatureManager(string configPath)
         {
@@ -60,92 +60,111 @@ namespace Barotrauma
             }
         }
 
-        public void SpawnSprites(int count, Vector2? position = null)
+        public void SpawnCreatures(Level level, int count, Vector2? position = null)
         {
-            activeSprites.Clear();
+            creatures.Clear();
 
-            if (prefabs.Count == 0) return;
+            if (prefabs.Count == 0) { return; }
 
-            count = Math.Min(count, MaxSprites);
+            count = Math.Min(count, MaxCreatures);
 
-            for (int i = 0; i < count; i++ )
+            List<BackgroundCreaturePrefab> availablePrefabs = new List<BackgroundCreaturePrefab>(prefabs);
+
+            for (int i = 0; i < count; i++)
             {
                 Vector2 pos = Vector2.Zero;
-
                 if (position == null)
                 {
-                    var wayPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine==null);
+                    var wayPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == null);
                     if (wayPoints.Any())
                     {
                         WayPoint wp = wayPoints[Rand.Int(wayPoints.Count, Rand.RandSync.ClientOnly)];
-
                         pos = new Vector2(wp.Rect.X, wp.Rect.Y);
                         pos += Rand.Vector(200.0f, Rand.RandSync.ClientOnly);
                     }
                     else
                     {
                         pos = Rand.Vector(2000.0f, Rand.RandSync.ClientOnly);
-                    } 
+                    }
                 }
                 else
                 {
                     pos = (Vector2)position;
                 }
 
-
-                var prefab = prefabs[Rand.Int(prefabs.Count, Rand.RandSync.ClientOnly)];
+                var prefab = ToolBox.SelectWeightedRandom(availablePrefabs, availablePrefabs.Select(p => p.GetCommonness(level.GenerationParams)).ToList(), Rand.RandSync.ClientOnly);
+                if (prefab == null) { break; }
 
                 int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax, Rand.RandSync.ClientOnly);
                 List<BackgroundCreature> swarmMembers = new List<BackgroundCreature>();
-
                 for (int n = 0; n < amount; n++)
                 {
-                    var newSprite = new BackgroundCreature(prefab, pos);
-                    activeSprites.Add(newSprite);
-                    swarmMembers.Add(newSprite);
+                    var creature = new BackgroundCreature(prefab, pos + Rand.Vector(Rand.Range(0.0f, prefab.SwarmRadius, Rand.RandSync.ClientOnly), Rand.RandSync.ClientOnly));
+                    creatures.Add(creature);
+                    swarmMembers.Add(creature);
                 }
-                if (amount > 0)
+                if (amount > 1)
                 {
                     new Swarm(swarmMembers, prefab.SwarmRadius, prefab.SwarmCohesion);
+                }
+                if (creatures.Count(c => c.Prefab == prefab) > prefab.MaxCount)
+                {
+                    availablePrefabs.Remove(prefab);
+                    if (availablePrefabs.Count <= 0) { break; }
                 }
             }
         }
 
-        public void ClearSprites()
+        public void Clear()
         {
-            activeSprites.Clear();
+            creatures.Clear();
         }
 
         public void Update(float deltaTime, Camera cam)
         {
-            if (checkActiveTimer < 0.0f)
+            if (checkVisibleTimer < 0.0f)
             {
-                foreach (BackgroundCreature sprite in activeSprites)
+                int margin = 500;
+                foreach (BackgroundCreature creature in creatures)
                 {
-                    sprite.Enabled = Math.Abs(sprite.TransformedPosition.X - cam.WorldViewCenter.X) < cam.WorldView.Width &&
-                                     Math.Abs(sprite.TransformedPosition.Y - cam.WorldViewCenter.Y) < cam.WorldView.Height;
+                    Rectangle extents = creature.GetExtents(cam);
+                    bool wasVisible = creature.Visible;
+                    creature.Visible =
+                        extents.Right >= cam.WorldView.X - margin &&
+                        extents.X <= cam.WorldView.Right + margin &&
+                        extents.Bottom >= cam.WorldView.Y - cam.WorldView.Height - margin &&
+                        extents.Y <= cam.WorldView.Y + margin;
                 }
 
-                checkActiveTimer = CheckActiveInterval;
+                checkVisibleTimer = VisibilityCheckInterval;
             }
             else
             {
-                checkActiveTimer -= deltaTime;
+                checkVisibleTimer -= deltaTime;
             }
 
-            foreach (BackgroundCreature sprite in activeSprites)
+            foreach (BackgroundCreature creature in creatures)
             {
-                if (!sprite.Enabled) continue;
-                sprite.Update(deltaTime);
+                if (!creature.Visible) { continue; }
+                creature.Update(deltaTime);
             }
         }
 
         public void Draw(SpriteBatch spriteBatch, Camera cam)
         {
-            foreach (BackgroundCreature sprite in activeSprites)
+            foreach (BackgroundCreature creature in creatures)
             {
-                if (!sprite.Enabled) continue;
-                sprite.Draw(spriteBatch, cam);
+                if (!creature.Visible) { continue; }
+                creature.Draw(spriteBatch, cam);
+            }
+        }
+
+        public void DrawLights(SpriteBatch spriteBatch, Camera cam)
+        {
+            foreach (BackgroundCreature creature in creatures)
+            {
+                if (!creature.Visible) { continue; }
+                creature.DrawLightSprite(spriteBatch, cam);
             }
         }
     }

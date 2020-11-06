@@ -1,5 +1,6 @@
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Globalization;
@@ -18,8 +19,19 @@ namespace Barotrauma
             Hungry
         }
 
-        public float Hunger { get; set; } = 50.0f;
-        public float Happiness { get; set; } = 50.0f;
+        private float hunger = 50.0f;
+        public float Hunger 
+        { 
+            get { return hunger; }
+            set { hunger = MathHelper.Clamp(value, 0.0f, MaxHunger); }
+        }
+
+        private float happiness = 50.0f;
+        public float Happiness
+        {
+            get { return happiness; }
+            set { happiness = MathHelper.Clamp(value, 0.0f, MaxHappiness); }
+        }
 
         public float MaxHappiness { get; set; }
         public float MaxHunger { get; set; }
@@ -86,9 +98,10 @@ namespace Barotrauma
                     switch (subElement.Name.LocalName.ToLowerInvariant())
                     {
                         case "item":
+                            string identifier = subElement.GetAttributeString("identifier", "");
                             Item newItemToProduce = new Item
                             {
-                                Prefab = ItemPrefab.Find("", subElement.GetAttributeString("identifier", "")),
+                                Prefab = string.IsNullOrEmpty(identifier) ? null : ItemPrefab.Find("", subElement.GetAttributeString("identifier", "")),
                                 Commonness = subElement.GetAttributeFloat("commonness", 0.0f)
                             };
                             totalCommonness += newItemToProduce.Commonness;
@@ -119,7 +132,7 @@ namespace Barotrauma
                     for (int i = 0; i < Items.Count; i++)
                     {
                         aggregate += Items[i].Commonness;
-                        if (aggregate >= r)
+                        if (aggregate >= r && Items[i].Prefab != null)
                         {
                             Entity.Spawner.AddToSpawnQueue(Items[i].Prefab, pet.AiController.Character.WorldPosition);
                             break;
@@ -192,25 +205,21 @@ namespace Barotrauma
         public StatusIndicatorType GetCurrentStatusIndicatorType()
         {
             if (Hunger > MaxHunger * 0.5f) { return StatusIndicatorType.Hungry; }
-            if (Happiness > MaxHappiness * 0.75f) { return StatusIndicatorType.Happy; }
+            if (Happiness > MaxHappiness * 0.8f) { return StatusIndicatorType.Happy; }
             if (Happiness < MaxHappiness * 0.25f) { return StatusIndicatorType.Sad; }
             return StatusIndicatorType.None;
         }
 
-        public void OnEat(IEnumerable<string> tags, float amount)
+        public bool OnEat(IEnumerable<string> tags, float amount)
         {
-            for (int i = 0; i < foods.Count; i++)
+            foreach (string tag in tags)
             {
-                if (tags.Any(t => t.Equals(foods[i].Tag, System.StringComparison.OrdinalIgnoreCase)))
-                {
-                    Hunger += foods[i].Hunger * amount;
-                    Happiness += foods[i].Happiness * amount;
-                    break;
-                }
+               if (OnEat(tag, amount)) { return true; }
             }
+            return false;
         }
 
-        public void OnEat(string tag, float amount)
+        public bool OnEat(string tag, float amount)
         {
             for (int i = 0; i < foods.Count; i++)
             {
@@ -218,9 +227,13 @@ namespace Barotrauma
                 {
                     Hunger += foods[i].Hunger * amount;
                     Happiness += foods[i].Happiness * amount;
-                    break;
+#if CLIENT
+                    AiController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.5f);
+#endif
+                    return true;
                 }
             }
+            return false;
         }
 
         public void Play(Character player)
@@ -230,9 +243,11 @@ namespace Barotrauma
             PlayTimer = 5.0f;
             AiController.Character.IsRagdolled = true;
             Happiness += 10.0f;
-            if (Happiness > MaxHappiness) { Happiness = MaxHappiness; }
             AiController.Character.AnimController.MainLimb.body.LinearVelocity += new Vector2(0, PlayForce);
             unstunY = AiController.Character.SimPosition.Y;
+#if CLIENT
+            AiController.Character.PlaySound(CharacterSound.SoundType.Happy, 0.9f);
+#endif
         }
 
         public string GetTagName()
@@ -259,15 +274,6 @@ namespace Barotrauma
         {
             var character = AiController.Character;
             if (character?.Removed ?? true || character.IsDead) { return; }
-            if (GameMain.NetworkMember?.IsClient ?? false) { return; }
-
-            if (Owner != null && (Owner.Removed || Owner.IsDead)) { Owner = null; }
-
-            Hunger += HungerIncreaseRate * deltaTime;
-
-            Happiness -= HappinessDecreaseRate * deltaTime;
-
-            PlayTimer -= deltaTime;
 
             if (unstunY.HasValue)
             {
@@ -292,6 +298,14 @@ namespace Barotrauma
                 }
             }
 
+            PlayTimer -= deltaTime;
+
+            if (GameMain.NetworkMember?.IsClient ?? false) { return; }
+            if (Owner != null && (Owner.Removed || Owner.IsDead)) { Owner = null; }
+
+            Hunger += HungerIncreaseRate * deltaTime;
+            Happiness -= HappinessDecreaseRate * deltaTime;
+
             for (int i = 0; i < foods.Count; i++)
             {
                 Food food = foods[i];
@@ -310,12 +324,6 @@ namespace Barotrauma
                     food.TargetParams = null;
                 }
             }
-
-            if (Hunger < 0.0f) { Hunger = 0.0f; }
-            if (Hunger > MaxHunger) { Hunger = MaxHunger; }
-            if (Happiness < 0.0f) { Happiness = 0.0f; }
-            if (Happiness > MaxHappiness) { Happiness = MaxHappiness; }
-            if (PlayTimer < 0.0f) { PlayTimer = 0.0f; }
 
             if (Hunger >= MaxHunger * 0.99f)
             {
@@ -343,7 +351,7 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (!c.IsPet || c.IsDead) { continue; }
-                if (c.Submarine?.Info.Type != SubmarineType.Player) { continue; }
+                if (c.Submarine == null) { continue; }
 
                 var petBehavior = (c.AIController as EnemyAIController)?.PetBehavior;
                 if (petBehavior == null) { continue; }
@@ -396,14 +404,32 @@ namespace Barotrauma
                 if (petBehavior != null)
                 {
                     petBehavior.Owner = owner;
-                    var petBehaviorElement = subElement.Attribute("petbehavior");
+                    var petBehaviorElement = subElement.Element("petbehavior");
                     if (petBehaviorElement != null)
                     {
-                        petBehavior.Hunger = petBehaviorElement.GetAttributeFloat(50.0f);
-                        petBehavior.Happiness = petBehaviorElement.GetAttributeFloat(50.0f);
+                        petBehavior.Hunger = petBehaviorElement.GetAttributeFloat("hunger", 50.0f);
+                        petBehavior.Happiness = petBehaviorElement.GetAttributeFloat("happiness", 50.0f);
                     }
                 }
+
+                var inventoryElement = subElement.Element("inventory");
+                if (inventoryElement != null)
+                {
+                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement);
+                }
             }
+        }
+
+        public void ServerWrite(IWriteMessage msg)
+        {
+            msg.WriteRangedSingle(Happiness, 0.0f, MaxHappiness, 8);
+            msg.WriteRangedSingle(Hunger, 0.0f, MaxHunger, 8);
+        }
+
+        public void ClientRead(IReadMessage msg)
+        {
+            Happiness = msg.ReadRangedSingle(0.0f, MaxHappiness, 8);
+            Hunger = msg.ReadRangedSingle(0.0f, MaxHunger, 8);
         }
     }
 }

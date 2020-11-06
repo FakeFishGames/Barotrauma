@@ -123,7 +123,7 @@ namespace Barotrauma
                         var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
                         if (idleObjective != null)
                         {
-                            idleObjective.Behavior = humanPrefab.BehaviorType;
+                            idleObjective.Behavior = humanPrefab.Behavior;
                             foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
                             {
                                 idleObjective.PreferredOutpostModuleTypes.Add(moduleType); 

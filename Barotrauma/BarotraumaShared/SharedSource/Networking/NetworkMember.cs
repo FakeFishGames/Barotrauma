@@ -29,7 +29,8 @@ namespace Barotrauma.Networking
         REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
 
         ERROR,           //tell the server that an error occurred
-        CREW
+        CREW,
+        READY_CHECK
         
     }
     enum ClientNetObject
@@ -78,7 +79,8 @@ namespace Barotrauma.Networking
         MISSION,
         EVENTACTION,
         RESET_UPGRADES,     //inform the clients that the upgrades on the submarine have been reset
-        CREW                //anything related to managing bots in multiplayer
+        CREW,               //anything related to managing bots in multiplayer
+        READY_CHECK         //start, end and update a ready check 
     }
     enum ServerNetObject
     {
@@ -111,6 +113,13 @@ namespace Barotrauma.Networking
         PurchaseAndSwitchSub,
         PurchaseSub,
         SwitchSub
+    }
+
+    public enum ReadyCheckState
+    {
+        Start,
+        Update,
+        End
     }
 
     enum DisconnectReason

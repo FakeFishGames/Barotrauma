@@ -46,6 +46,7 @@ namespace Barotrauma
                     }
                     return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true)
                     {
+                        AllowStealing = true,
                         AllowToFindDivingGear = false,
                         AllowDangerousPressure = true
                     };

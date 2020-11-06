@@ -126,7 +126,7 @@ namespace FarseerPhysics.Dynamics
                     if (b.IgnoreGravity)
                         v += h * (b._invMass * b._force);
                     else
-                        v += h * (gravity + b._invMass * b._force);
+                        v += h * (gravity * b.GravityScale + b._invMass * b._force);
 
                     w += h * b._invI * b._torque;
 

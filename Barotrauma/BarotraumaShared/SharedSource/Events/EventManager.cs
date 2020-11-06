@@ -107,7 +107,13 @@ namespace Barotrauma
             if (initialEventSet != null)
             {
                 pendingEventSets.Add(initialEventSet);
-                CreateEvents(initialEventSet);
+                int seed = ToolBox.StringToInt(level.Seed);
+                foreach (var previousEvent in level.LevelData.EventHistory)
+                {
+                    seed ^= ToolBox.StringToInt(previousEvent.Identifier);
+                }
+                MTRandom rand = new MTRandom(seed);
+                CreateEvents(initialEventSet, rand);
             }
             
             if (level?.LevelData?.Type == LevelData.LevelType.Outpost)
@@ -325,7 +331,7 @@ namespace Barotrauma
             return retVal;
         }
 
-        private void CreateEvents(EventSet eventSet)
+        private void CreateEvents(EventSet eventSet, Random rand)
         {
             if (level == null) { return; }
             int applyCount = 1;
@@ -343,13 +349,6 @@ namespace Barotrauma
                 {
                     if (eventSet.EventPrefabs.Count > 0)
                     {
-                        int seed = ToolBox.StringToInt(level.Seed);
-                        foreach (var previousEvent in level.LevelData.EventHistory)
-                        {
-                            seed |= ToolBox.StringToInt(previousEvent.Identifier);
-                        }
-
-                        MTRandom rand = new MTRandom(seed);
                         List<Pair<EventPrefab, float>> unusedEvents = new List<Pair<EventPrefab, float>>(eventSet.EventPrefabs);
                         for (int j = 0; j < eventSet.EventCount; j++)
                         {
@@ -371,7 +370,7 @@ namespace Barotrauma
                     if (eventSet.ChildSets.Count > 0)
                     {
                         var newEventSet = SelectRandomEvents(eventSet.ChildSets);
-                        if (newEventSet != null) { CreateEvents(newEventSet); }
+                        if (newEventSet != null) { CreateEvents(newEventSet, rand); }
                     }
                 }
                 else
@@ -390,7 +389,7 @@ namespace Barotrauma
 
                     foreach (EventSet childEventSet in eventSet.ChildSets)
                     {
-                        CreateEvents(childEventSet);
+                        CreateEvents(childEventSet, rand);
                     }
                 }
             }
@@ -583,7 +582,7 @@ namespace Barotrauma
             enemyDanger = 0.0f;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.IsDead || character.IsIncapacitated || !character.Enabled) continue;
+                if (character.IsDead || character.IsIncapacitated || !character.Enabled || character.IsPet || character.Params.CompareGroup("human")) { continue; }
 
                 EnemyAIController enemyAI = character.AIController as EnemyAIController;
                 if (enemyAI == null) continue;

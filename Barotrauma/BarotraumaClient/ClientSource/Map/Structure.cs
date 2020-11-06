@@ -238,6 +238,7 @@ namespace Barotrauma
             else if (HiddenInGame) { return; }
 
             Color color = IsHighlighted ? GUI.Style.Orange : spriteColor;
+            
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);
@@ -253,6 +254,10 @@ namespace Barotrauma
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
+            bool isWiringMode = editing && SubEditorScreen.IsWiringMode();
+
+            if (isWiringMode) { color *= 0.15f; }
+
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
 
             float depth = GetDrawDepth();
@@ -261,7 +266,7 @@ namespace Barotrauma
             if (FlippedX) textureOffset.X = -textureOffset.X;
             if (FlippedY) textureOffset.Y = -textureOffset.Y;
 
-            if (back && damageEffect == null)
+            if (back && damageEffect == null && !isWiringMode)
             {
                 if (Prefab.BackgroundSprite != null)
                 {

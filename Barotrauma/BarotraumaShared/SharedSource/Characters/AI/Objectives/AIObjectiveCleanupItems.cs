@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -58,12 +59,10 @@ namespace Barotrauma
         public static bool IsValidTarget(Item item, Character character)
         {
             if (item == null) { return false; }
+            if (item.IgnoreByAI) { return false; }
             if (item.NonInteractable) { return false; }
             if (item.ParentInventory != null) { return false; }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
-            //var rootContainer = item.GetRootContainer();
-            //// Only target items lying on the ground (= not inside a container) (do we need this check?)
-            //if (rootContainer != null) { return false; }
             var pickable = item.GetComponent<Pickable>();
             if (pickable == null) { return false; }
             if (pickable is Holdable h && h.Attachable && h.Attached) { return false; }
@@ -80,7 +79,28 @@ namespace Barotrauma
                     return false;
                 }
             }
-            return item.Prefab.PreferredContainers.Any();
+            if (item.Prefab.PreferredContainers.None())
+            {
+                return false;
+            }
+            bool canEquip = true;
+            if (!item.AllowedSlots.Contains(InvSlotType.Any))
+            {
+                canEquip = false;
+                foreach (var allowedSlot in item.AllowedSlots)
+                {
+                    int slot = character.Inventory.FindLimbSlot(allowedSlot);
+                    if (slot > -1)
+                    {
+                        if (character.Inventory.Items[slot] == null)
+                        {
+                            canEquip = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return canEquip;
         }
     }
 }

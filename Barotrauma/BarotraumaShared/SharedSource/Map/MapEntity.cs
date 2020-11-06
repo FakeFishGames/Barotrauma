@@ -12,13 +12,14 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    abstract partial class MapEntity : Entity
+    abstract partial class MapEntity : Entity, ISpatialEntity
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
 
         public readonly MapEntityPrefab prefab;
 
         protected List<ushort> linkedToID;
+        public List<ushort> unresolvedLinkedToID;
         
         /// <summary>
         /// List of upgrades this item has
@@ -249,10 +250,53 @@ namespace Barotrauma
             get { return ""; }
         }
 
-        public MapEntity(MapEntityPrefab prefab, Submarine submarine) : base(submarine)
+        private bool ignoreByAI;
+        public bool IgnoreByAI => ignoreByAI;
+        public void SetIgnoreByAI(bool ignore) => ignoreByAI = ignore;
+        
+        public MapEntity(MapEntityPrefab prefab, Submarine submarine, ushort id) : base(submarine, id)
         {
             this.prefab = prefab;
             Scale = prefab != null ? prefab.Scale : 1;
+        }
+
+        protected void ParseLinks(XElement element, IdRemap idRemap)
+        {
+            string linkedToString = element.GetAttributeString("linked", "");
+            if (!string.IsNullOrEmpty(linkedToString))
+            {
+                string[] linkedToIds = linkedToString.Split(',');
+                for (int i = 0; i < linkedToIds.Length; i++)
+                {
+                    int srcId = int.Parse(linkedToIds[i]);
+                    int targetId = idRemap.GetOffsetId(srcId);
+                    if (targetId <= 0)
+                    {
+                        unresolvedLinkedToID ??= new List<ushort>();
+                        unresolvedLinkedToID.Add((ushort)srcId);
+                        continue;
+                    }
+                    linkedToID.Add((ushort)targetId);
+                }
+            }
+        }
+
+        public void ResolveLinks(IdRemap childRemap)
+        {
+            if (unresolvedLinkedToID == null) { return; }
+            for (int i=0;i<unresolvedLinkedToID.Count;i++)
+            {
+                int srcId = unresolvedLinkedToID[i];
+                int targetId = childRemap.GetOffsetId(srcId);
+                if (targetId > 0)
+                {
+                    var otherEntity = FindEntityByID((ushort)targetId) as MapEntity;
+                    linkedTo.Add(otherEntity);
+                    if (otherEntity.Linkable && otherEntity.linkedTo != null) otherEntity.linkedTo.Add(this);
+                    unresolvedLinkedToID.RemoveAt(i);
+                    i--;
+                }
+            }
         }
 
         public virtual void Move(Vector2 amount)
@@ -555,8 +599,10 @@ namespace Barotrauma
             Move(-relative * 2.0f);
         }
 
-        public static List<MapEntity> LoadAll(Submarine submarine, XElement parentElement, string filePath)
+        public static List<MapEntity> LoadAll(Submarine submarine, XElement parentElement, string filePath, int idOffset)
         {
+            IdRemap idRemap = new IdRemap(parentElement, idOffset);
+
             List<MapEntity> entities = new List<MapEntity>();
             foreach (XElement element in parentElement.Elements())
             {
@@ -580,7 +626,7 @@ namespace Barotrauma
 
                 try
                 {
-                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(XElement), typeof(Submarine) });
+                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(XElement), typeof(Submarine), typeof(IdRemap) });
                     if (loadMethod == null)
                     {
                         DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");
@@ -591,7 +637,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        object newEntity = loadMethod.Invoke(t, new object[] { element, submarine });
+                        object newEntity = loadMethod.Invoke(t, new object[] { element, submarine, idRemap });
                         if (newEntity != null) entities.Add((MapEntity)newEntity);
                     }
                 }

@@ -33,7 +33,7 @@ namespace Barotrauma
                 {
                     OriginalContainerID = item.OriginalContainerID;
                 }
-                OriginalID = item.OriginalID;
+                OriginalID = item.ID;
                 ModuleIndex = (ushort)item.OriginalModuleIndex;
                 Identifier = item.prefab.Identifier;
             }
@@ -50,7 +50,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return item.OriginalID == OriginalID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.ID == OriginalID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
                 }
             }
         }
@@ -76,20 +76,11 @@ namespace Barotrauma
 
         public LevelData LevelData { get; set; }
 
-        private float normalizedDepth;
-        public float NormalizedDepth
-        {
-            get { return normalizedDepth; }
-            set
-            {
-                if (!MathUtils.IsValid(value)) { return; }
-                normalizedDepth = MathHelper.Clamp(value, 0.0f, 1.0f);
-            }
-        }
-
         public int PortraitId { get; private set; }
 
         public Reputation Reputation { get; set; }
+
+        public int[] ProximityTime { get; private set; }
 
         private const float StoreMaxReputationModifier = 0.1f;
         private const float StoreSellPriceModifier = 0.8f;
@@ -191,6 +182,7 @@ namespace Barotrauma
             MapPosition = mapPosition;
             PortraitId = ToolBox.StringToInt(Name);
             Connections = new List<LocationConnection>();
+            ProximityTime = new int[Type.CanChangeTo.Count];
         }
 
         public Location(XElement element)
@@ -200,10 +192,11 @@ namespace Barotrauma
             baseName        = element.GetAttributeString("basename", "");
             Name            = element.GetAttributeString("name", "");
             MapPosition     = element.GetAttributeVector2("position", Vector2.Zero);
-            NormalizedDepth = element.GetAttributeFloat("normalizeddepth", 0.0f);
             TypeChangeTimer = element.GetAttributeInt("changetimer", 0);
             Discovered      = element.GetAttributeBool("discovered", false);
             PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 1.0f);
+            ProximityTime = element.GetAttributeIntArray("proximitytime", new int[Type.CanChangeTo.Count]);
+            if (ProximityTime.Length != Type.CanChangeTo.Count) { ProximityTime = new int[Type.CanChangeTo.Count]; }
             MechanicalPriceMultiplier = element.GetAttributeFloat("mechanicalpricemultipler", 1.0f);
 
             string[] takenItemStr = element.GetAttributeStringArray("takenitems", new string[0]);
@@ -285,6 +278,7 @@ namespace Barotrauma
             DebugConsole.Log("Location " + baseName + " changed it's type from " + Type + " to " + newType);
 
             Type = newType;
+            ProximityTime = new int[Type.CanChangeTo.Count];
             Name = Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
             CreateStore(force: true);
         }
@@ -292,7 +286,8 @@ namespace Barotrauma
         public void UnlockMission(MissionPrefab missionPrefab, LocationConnection connection)
         {
             if (AvailableMissions.Any(m => m.Prefab == missionPrefab)) { return; }
-            availableMissions.Add(InstantiateMission(missionPrefab, connection));
+            var mission = InstantiateMission(missionPrefab, ref connection);
+            availableMissions.Add(mission);
 #if CLIENT
             GameMain.GameSession?.Campaign?.CampaignUI?.RefreshLocationInfo();
 #endif
@@ -309,7 +304,8 @@ namespace Barotrauma
             }
             else
             {
-                var mission = InstantiateMission(missionPrefab);
+                LocationConnection connection = null;
+                var mission = InstantiateMission(missionPrefab, ref connection);
                 //don't allow duplicate missions in the same connection
                 if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Contains(mission.Locations[0]) && m.Locations.Contains(mission.Locations[1])))
                 {
@@ -341,8 +337,9 @@ namespace Barotrauma
                     {
                         suitableMissions = unusedMissions;
                     }
+                    LocationConnection connection = null;
                     MissionPrefab missionPrefab = suitableMissions.GetRandom();
-                    var mission = InstantiateMission(missionPrefab);
+                    var mission = InstantiateMission(missionPrefab, ref connection);
                     //don't allow duplicate missions in the same connection
                     if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Contains(mission.Locations[0]) && m.Locations.Contains(mission.Locations[1])))
                     {
@@ -363,24 +360,23 @@ namespace Barotrauma
             return null;
         }
 
-        private Mission InstantiateMission(MissionPrefab prefab, LocationConnection connection = null)
+        private Mission InstantiateMission(MissionPrefab prefab, ref LocationConnection connection)
         {
-            if (connection == null)
+            var suitableConnections = Connections.Where(c => prefab.IsAllowed(this, c.OtherLocation(this)));
+            if (!suitableConnections.Any())
             {
-                var suitableConnections = Connections.Where(c => prefab.IsAllowed(this, c.OtherLocation(this)));
-                if (!suitableConnections.Any())
-                {
-                    suitableConnections = Connections;
-                }
-                //prefer connections that haven't been passed through, and connections with fewer available missions
-                connection = ToolBox.SelectWeightedRandom(
-                    suitableConnections.ToList(),
-                    suitableConnections.Select(c => (c.Passed ? 1.0f : 5.0f) / Math.Max(availableMissions.Count(m => m.Locations.Contains(c.OtherLocation(this))), 1.0f)).ToList(),
-                    Rand.RandSync.Unsynced);
+                suitableConnections = Connections.ToList();
             }
+            //prefer connections that haven't been passed through, and connections with fewer available missions
+            connection = ToolBox.SelectWeightedRandom(
+                suitableConnections.ToList(),
+                suitableConnections.Select(c => (c.Passed ? 1.0f : 5.0f) / Math.Max(availableMissions.Count(m => m.Locations.Contains(c.OtherLocation(this))), 1.0f)).ToList(),
+                Rand.RandSync.Unsynced);
 
             Location destination = connection.OtherLocation(this);
-            return prefab.Instantiate(new Location[] { this, destination });
+            var mission = prefab.Instantiate(new Location[] { this, destination });
+            mission.AdjustLevelData(connection.LevelData);
+            return mission;
         }
 
         public void InstantiateLoadedMissions(Map map)
@@ -499,7 +495,7 @@ namespace Barotrauma
         {
             foreach (Item item in items)
             {
-                if (takenItems.Any(it => it.Matches(item) && it.OriginalID == item.OriginalID)) { continue; }
+                if (takenItems.Any(it => it.Matches(item) && it.OriginalID == item.ID)) { continue; }
                 if (item.OriginalModuleIndex < 0)
                 {
                     DebugConsole.ThrowError("Tried to register a non-outpost item as being taken from the outpost.");
@@ -698,9 +694,12 @@ namespace Barotrauma
                 new XAttribute("name", Name),
                 new XAttribute("discovered", Discovered),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
-                new XAttribute("normalizeddepth", NormalizedDepth.ToString("G", CultureInfo.InvariantCulture)),
                 new XAttribute("pricemultiplier", PriceMultiplier),
                 new XAttribute("mechanicalpricemultipler", MechanicalPriceMultiplier));
+            if (ProximityTime.Length > 0 && ProximityTime.Any(t => t > 0))
+            {
+                locationElement.Add(new XAttribute("proximitytime", string.Join(',', ProximityTime.Select(i => i.ToString()))));
+            }
             LevelData.Save(locationElement);
 
             if (TypeChangeTimer > 0)
@@ -749,6 +748,40 @@ namespace Barotrauma
             parentElement.Add(locationElement);
 
             return locationElement;
+        }
+
+        public int Distance(Location other, int maxRecursionDepth, int currRecursionDepth = 0)
+        {
+            if (currRecursionDepth >= maxRecursionDepth) { return -1; }
+            if (other == this) { return 0; }
+            int minDist = -1;
+            foreach (Location connected in Connections.Select(c => c.Locations.First(l => l != this)))
+            {
+                int dist = connected.Distance(other, maxRecursionDepth, currRecursionDepth+1);
+                if (dist >= 0)
+                {
+                    if (minDist < 0 || dist < minDist) { minDist = dist; }
+                }
+            }
+            return minDist;
+        }
+
+        public void DetermineProximityTime(Location currentLocation)
+        {
+            int dist = Distance(currentLocation, Type.CanChangeTo.Select(cct => cct.RequiredProximityForProbabilityIncrease).Max());
+            for (int i=0;i<ProximityTime.Length;i++)
+            {
+                if (dist <= Type.CanChangeTo[i].RequiredProximityForProbabilityIncrease)
+                {
+                    ProximityTime[i]++;
+                    if (ProximityTime[i] > 5) { ProximityTime[i] = 5; }
+                }
+                else
+                {
+                    ProximityTime[i]--;
+                    if (ProximityTime[i] < 0) { ProximityTime[i] = 0; }
+                }
+            }
         }
 
         public void Remove()

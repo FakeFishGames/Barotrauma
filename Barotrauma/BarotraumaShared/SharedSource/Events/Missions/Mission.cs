@@ -95,7 +95,7 @@ namespace Barotrauma
             get { return Enumerable.Empty<Vector2>(); }
         }
         
-        public string SonarLabel
+        public virtual string SonarLabel
         {
             get { return Prefab.SonarLabel; }
         }
@@ -233,5 +233,7 @@ namespace Barotrauma
                 }
             }
         }
+
+        public virtual void AdjustLevelData(LevelData levelData) { }
     }
 }

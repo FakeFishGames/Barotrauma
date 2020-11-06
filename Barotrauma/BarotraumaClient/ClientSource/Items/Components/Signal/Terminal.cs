@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -70,7 +69,13 @@ namespace Barotrauma.Items.Components
 
         partial void ShowOnDisplay(string input)
         {
-            while (historyBox.Content.CountChildren > 60)
+            messageHistory.Add(input);
+            while (messageHistory.Count > MaxMessages)
+            {
+                messageHistory.RemoveAt(0);
+            }
+
+            while (historyBox.Content.CountChildren > MaxMessages)
             {
                 historyBox.RemoveChild(historyBox.Content.Children.First());
             }
@@ -114,11 +119,6 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList()
         {
             base.AddToGUIUpdateList();
-            if (!string.IsNullOrEmpty(DisplayedWelcomeMessage))
-            {
-                ShowOnDisplay(DisplayedWelcomeMessage);
-                DisplayedWelcomeMessage = "";
-            }
             if (shouldSelectInputBox)
             {
                 inputBox.Select();

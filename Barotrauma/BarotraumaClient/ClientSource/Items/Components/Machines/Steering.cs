@@ -319,8 +319,7 @@ namespace Barotrauma.Items.Components
                         centerText = $"({TextManager.Get("Meter")})";
                         rightTextGetter = () =>
                         {
-                            Vector2 pos = controlledSub == null ? Vector2.Zero : controlledSub.Position;
-                            float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(pos.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                            float realWorldDepth = controlledSub == null ? -1000.0f : controlledSub.RealWorldDepth;
                             return ((int)realWorldDepth).ToString();
                         };
                         break;

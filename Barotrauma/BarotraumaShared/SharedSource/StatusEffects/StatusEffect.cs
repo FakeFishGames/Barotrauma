@@ -64,12 +64,23 @@ namespace Barotrauma
                 ContainedInventory
             }
 
+            public enum SpawnRotationType
+            {
+                Fixed,
+                Target,
+                Limb,
+                MainLimb,
+                Collider
+            }
+
             public readonly ItemPrefab ItemPrefab;
             public readonly SpawnPositionType SpawnPosition;
             public readonly float Speed;
             public readonly float Rotation;
             public readonly int Count;
             public readonly float Spread;
+            public readonly SpawnRotationType RotationType;
+            public readonly float AimSpread;
 
             public ItemSpawnInfo(XElement element, string parentDebugName)
             {
@@ -101,14 +112,21 @@ namespace Barotrauma
                 }
 
                 Speed = element.GetAttributeFloat("speed", 0.0f);
+
                 Rotation = element.GetAttributeFloat("rotation", 0.0f);
                 Count = element.GetAttributeInt("count", 1);
                 Spread = element.GetAttributeFloat("spread", 0f);
+                AimSpread = element.GetAttributeFloat("aimspread", 0f);
 
                 string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
-                if (!Enum.TryParse(spawnTypeStr, out SpawnPosition))
+                if (!Enum.TryParse(spawnTypeStr, ignoreCase: true, out SpawnPosition))
                 {
                     DebugConsole.ThrowError("Error in StatusEffect config - \"" + spawnTypeStr + "\" is not a valid spawn position.");
+                }
+                string rotationTypeStr = element.GetAttributeString("rotationtype", Rotation != 0 ? "Fixed" : "Target");
+                if (!Enum.TryParse(rotationTypeStr, ignoreCase: true, out RotationType))
+                {
+                    DebugConsole.ThrowError("Error in StatusEffect config - \"" + rotationTypeStr + "\" is not a valid rotation type.");
                 }
             }
         }
@@ -146,7 +164,7 @@ namespace Barotrauma
         private readonly List<RelatedItem> requiredItems;
 
         public readonly string[] propertyNames;
-        private readonly object[] propertyEffects;
+        public readonly object[] propertyEffects;
 
         private readonly PropertyConditional.Comparison conditionalComparison = PropertyConditional.Comparison.Or;
         private readonly List<PropertyConditional> propertyConditionals;
@@ -168,9 +186,14 @@ namespace Barotrauma
 
         public readonly bool Stackable = true; //Can the same status effect be applied several times to the same targets?
 
+#if CLIENT
+        private readonly bool playSoundOnRequiredItemFailure = false;
+#endif
+
         private readonly int useItemCount;
 
-        private readonly bool removeItem, removeCharacter;
+        private readonly bool removeItem, removeCharacter, breakLimb, hideLimb;
+        private readonly float hideLimbTimer;
 
         public readonly ActionType type = ActionType.OnActive;
 
@@ -186,6 +209,8 @@ namespace Barotrauma
         public readonly LimbType[] targetLimbs;
 
         public readonly float SeverLimbsProbability;
+
+        public PhysicsBody sourceBody;
 
         public HashSet<string> TargetIdentifiers
         {
@@ -268,6 +293,21 @@ namespace Barotrauma
             List<XAttribute> propertyAttributes = new List<XAttribute>();
             propertyConditionals = new List<PropertyConditional>();
 
+            string[] targetTypesStr = 
+                element.GetAttributeStringArray("target", null) ?? 
+                element.GetAttributeStringArray("targettype", new string[0]);
+            foreach (string s in targetTypesStr)
+            {
+                if (!Enum.TryParse(s, true, out TargetType targetType))
+                {
+                    DebugConsole.ThrowError("Invalid target type \"" + s + "\" in StatusEffect (" + parentDebugName + ")");
+                }
+                else
+                {
+                    targetTypes |= targetType;
+                }
+            }
+
             foreach (XAttribute attribute in attributes)
             {
                 switch (attribute.Name.ToString())
@@ -280,18 +320,6 @@ namespace Barotrauma
                         break;
                     case "targettype":
                     case "target":
-                        string[] Flags = attribute.Value.Split(',');
-                        foreach (string s in Flags)
-                        {
-                            if (!Enum.TryParse(s, true, out TargetType targetType))
-                            {
-                                DebugConsole.ThrowError("Invalid target type \"" + s + "\" in StatusEffect (" + parentDebugName + ")");
-                            }
-                            else
-                            {
-                                targetTypes |= targetType;
-                            }
-                        }
                         break;
                     case "disabledeltatime":
                         disableDeltaTime = attribute.GetAttributeBool(false);
@@ -334,9 +362,22 @@ namespace Barotrauma
                             DebugConsole.ThrowError("Invalid conditional comparison type \"" + attribute.Value + "\" in StatusEffect (" + parentDebugName + ")");
                         }
                         break;
+#if CLIENT
+                    case "playsoundonrequireditemfailure":
+                        playSoundOnRequiredItemFailure = attribute.GetAttributeBool(false);
+                        break;
+#endif
                     case "sound":
                         DebugConsole.ThrowError("Error in StatusEffect " + element.Parent.Name.ToString() +
                             " - sounds should be defined as child elements of the StatusEffect, not as attributes.");
+                        break;
+                    case "delay":
+                        break;
+                    case "range":
+                        if (!HasTargetType(TargetType.NearbyCharacters) && !HasTargetType(TargetType.NearbyItems))
+                        {
+                            propertyAttributes.Add(attribute);
+                        }
                         break;
                     default:
                         propertyAttributes.Add(attribute);
@@ -376,6 +417,13 @@ namespace Barotrauma
                         break;
                     case "removecharacter":
                         removeCharacter = true;
+                        break;
+                    case "breaklimb":
+                        breakLimb = true;
+                        break;
+                    case "hidelimb":
+                        hideLimb = true;
+                        hideLimbTimer = subElement.GetAttributeFloat("duration", 0);
                         break;
                     case "requireditem":
                     case "requireditems":
@@ -521,7 +569,7 @@ namespace Barotrauma
                     if (item.Removed || !IsValidTarget(item)) { continue; }
                     if (CheckDistance(item))
                     {
-                        targets.Add(item);
+                        targets.AddRange(item.AllPropertyObjects);
                     }
                 }
             }
@@ -688,7 +736,17 @@ namespace Barotrauma
 
             if (targetIdentifiers != null && currentTargets.Count == 0) { return; }
 
-            if (!HasRequiredItems(entity) || !HasRequiredConditions(currentTargets)) { return; }
+            bool hasRequiredItems = HasRequiredItems(entity);
+            if (!hasRequiredItems || !HasRequiredConditions(currentTargets))
+            {
+#if CLIENT
+                if (!hasRequiredItems && playSoundOnRequiredItemFailure)
+                {
+                    PlaySound(entity, GetHull(entity), GetPosition(entity, targets, worldPosition));
+                }
+#endif
+                return; 
+            }
 
             if (duration > 0.0f && !Stackable)
             {
@@ -788,6 +846,27 @@ namespace Barotrauma
                 foreach (var target in targets)
                 {
                     if (target is Character character) { Entity.Spawner?.AddToRemoveQueue(character); }
+                }
+            }
+            if (breakLimb || hideLimb)
+            {
+                foreach (var target in targets)
+                {
+                    if (target is Character character)
+                    {
+                        var matchingLimb = character.AnimController.Limbs.FirstOrDefault(l => l.body == sourceBody);
+                        if (matchingLimb != null)
+                        {
+                            if (breakLimb)
+                            {
+                                character.TrySeverLimbJoints(matchingLimb, severLimbsProbability: 100, damage: 100, allowBeheading: true);
+                            }
+                            else
+                            {
+                                matchingLimb.HideAndDisable(hideLimbTimer);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -936,8 +1015,44 @@ namespace Barotrauma
                             case ItemSpawnInfo.SpawnPositionType.This:
                                 Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, position + Rand.Vector(itemSpawnInfo.Spread, Rand.RandSync.Server), onSpawned: newItem =>
                                 {
-                                    newItem.body?.ApplyLinearImpulse(Rand.Vector(1) * itemSpawnInfo.Speed);
-                                    newItem.Rotation = itemSpawnInfo.Rotation;
+                                    Projectile projectile = newItem.GetComponent<Projectile>();
+                                    if (projectile != null && user != null && sourceBody != null && entity != null)
+                                    {
+                                        float spread = MathHelper.ToRadians(Rand.Range(-itemSpawnInfo.AimSpread, itemSpawnInfo.AimSpread));
+                                        var worldPos = sourceBody.Position;
+                                        float rotation = itemSpawnInfo.Rotation;
+                                        if (user.Submarine != null)
+                                        {
+                                            worldPos += user.Submarine.Position;
+                                        }
+                                        switch (itemSpawnInfo.RotationType)
+                                        {
+                                            case ItemSpawnInfo.SpawnRotationType.Fixed:
+                                                rotation = sourceBody.TransformRotation(itemSpawnInfo.Rotation);
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.Target:
+                                                rotation = MathUtils.VectorToAngle(entity.WorldPosition - worldPos);
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.Limb:
+                                                rotation = sourceBody.TransformedRotation;
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.Collider:
+                                                rotation = user.AnimController.Collider.Rotation;
+                                                break;
+                                            case ItemSpawnInfo.SpawnRotationType.MainLimb:
+                                                rotation = user.AnimController.MainLimb.body.TransformedRotation;
+                                                break;
+                                            default: 
+                                                throw new NotImplementedException("Not implemented: " + itemSpawnInfo.RotationType);
+                                        }
+                                        rotation += MathHelper.ToRadians(itemSpawnInfo.Rotation * user.AnimController.Dir);
+                                        projectile.Shoot(user, sourceBody.SimPosition, sourceBody.SimPosition, rotation + spread, ignoredBodies: user.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
+                                    }
+                                    else
+                                    {
+                                        newItem.body?.ApplyLinearImpulse(Rand.Vector(1) * itemSpawnInfo.Speed);
+                                        newItem.Rotation = itemSpawnInfo.Rotation;
+                                    }
                                 });
                                 break;
                             case ItemSpawnInfo.SpawnPositionType.ThisInventory:

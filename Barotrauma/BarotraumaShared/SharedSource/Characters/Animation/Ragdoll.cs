@@ -227,7 +227,7 @@ namespace Barotrauma
                     }
                 }
 
-                bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.ignoreCollisions;
+                bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.IgnoreCollisions && !limb.Hidden;
                 return mainLimb;
             }
         }
@@ -782,6 +782,14 @@ namespace Barotrauma
 
         partial void SeverLimbJointProjSpecific(LimbJoint limbJoint, bool playSound);
 
+        protected List<Limb> GetConnectedLimbs(Limb limb)
+        {
+            connectedLimbs.Clear();
+            checkedJoints.Clear();
+            GetConnectedLimbs(connectedLimbs, checkedJoints, limb);
+            return connectedLimbs;
+        }
+
         private void GetConnectedLimbs(List<Limb> connectedLimbs, List<LimbJoint> checkedJoints, Limb limb)
         {
             connectedLimbs.Add(limb);
@@ -1052,7 +1060,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.ignoreCollisions || limb.IsSevered) { continue; }
+                if (limb.IgnoreCollisions || limb.IsSevered) { continue; }
 
                 try
                 {
@@ -1626,7 +1634,8 @@ namespace Barotrauma
 
         protected void CheckDistFromCollider()
         {
-            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;     
+            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;
+            allowedDist = Math.Max(allowedDist, 1.0f);
             float resetDist = allowedDist * 5.0f;
 
             Vector2 diff = Collider.SimPosition - MainLimb.SimPosition;

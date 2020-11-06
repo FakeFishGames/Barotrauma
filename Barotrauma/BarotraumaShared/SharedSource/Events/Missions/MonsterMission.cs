@@ -96,7 +96,7 @@ namespace Barotrauma
 
             if (!IsClient)
             {
-                Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
+                Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
                 foreach (var monster in monsterPrefabs)
                 {
                     int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);

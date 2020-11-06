@@ -35,7 +35,8 @@ namespace Barotrauma
         PursueIfCanAttack,
         Pursue,
         FollowThrough,
-        FollowThroughUntilCanAttack
+        FollowThroughUntilCanAttack,
+        IdleUntilCanAttack
     }
 
     struct AttackResult
@@ -117,11 +118,23 @@ namespace Barotrauma
         [Serialize(0f, true, description: "A random factor applied to all cooldowns. Example: 0.1 -> adds a random value between -10% and 10% of the cooldown. Min 0 (default), Max 1 (could disable or double the cooldown in extreme cases)."), Editable(MinValueFloat = 0, MaxValueFloat = 1, DecimalCount = 2)]
         public float CoolDownRandomFactor { get; private set; } = 0;
 
+        [Serialize(false, true), Editable]
+        public bool FullSpeedAfterAttack { get; private set; }
+
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
         public float StructureDamage { get; set; }
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float ItemDamage { get; set; }
+
+        [Serialize(false, true)]
+        public bool Ranged { get; set; }
+
+        [Serialize(false, true, description:"Only affects ranged attacks.")]
+        public bool AvoidFriendlyFire { get; set; }
+
+        [Serialize(20f, true)]
+        public float RequiredAngle { get; set; }
 
         /// <summary>
         /// Legacy support. Use Afflictions.
@@ -379,7 +392,7 @@ namespace Barotrauma
             ReloadAfflictions(element);
         }
         
-        public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true)
+        public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null)
         {
             Character targetCharacter = target as Character;
             if (OnlyHumans)
@@ -403,6 +416,7 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
+                effect.sourceBody = sourceBody;
                 // TODO: do we want to apply the effect at the world position or the entity positions in each cases? -> go through also other cases where status effects are applied
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
@@ -423,14 +437,18 @@ namespace Barotrauma
                         effect.Apply(effectType, deltaTime, targetCharacter, targetCharacter.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
                     }
                 }
-                if (target is Entity entity)
+                if (target is Entity targetEntity)
                 {
                     if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                         effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
                         var targets = new List<ISerializableEntity>();
                         effect.GetNearbyTargets(worldPosition, targets);
-                        effect.Apply(ActionType.OnActive, deltaTime, entity, targets);
+                        effect.Apply(effectType, deltaTime, targetEntity, targets);
+                    }
+                    if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                    {
+                        effect.Apply(effectType, deltaTime, targetEntity, attacker, worldPosition);
                     }
                 }
             }
@@ -438,7 +456,7 @@ namespace Barotrauma
             return attackResult;
         }
 
-        public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true)
+        public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null)
         {
             if (targetLimb == null)
             {
@@ -462,6 +480,7 @@ namespace Barotrauma
 
             foreach (StatusEffect effect in statusEffects)
             {
+                effect.sourceBody = sourceBody;
                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                 {
                     effect.Apply(effectType, deltaTime, attacker, attacker);
@@ -477,6 +496,17 @@ namespace Barotrauma
                 if (effect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, targetLimb.character.AnimController.Limbs.Cast<ISerializableEntity>().ToList());
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                    effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                {
+                    var targets = new List<ISerializableEntity>();
+                    effect.GetNearbyTargets(worldPosition, targets);
+                    effect.Apply(effectType, deltaTime, targetLimb.character, targets);
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                {
+                    effect.Apply(effectType, deltaTime, targetLimb.character, attacker, worldPosition);
                 }
             }
 

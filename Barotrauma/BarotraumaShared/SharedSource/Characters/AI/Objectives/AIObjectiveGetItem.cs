@@ -18,13 +18,13 @@ namespace Barotrauma
         public float TargetCondition { get; set; } = 1;
         public bool AllowDangerousPressure { get; set; }
 
-        private string[] identifiersOrTags;
+        private readonly string[] identifiersOrTags;
 
         //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
         private bool spawnItemIfNotFound = false;
 
         private Item targetItem;
-        private Item originalTarget;
+        private readonly Item originalTarget;
         private ISpatialEntity moveToTarget;
         private bool isDoneSeeking;
         public Item TargetItem => targetItem;
@@ -32,12 +32,17 @@ namespace Barotrauma
         public string[] ignoredContainerIdentifiers;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
-        private bool checkInventory;
+        private readonly bool checkInventory;
 
         public static float DefaultReach = 100;
 
         public bool AllowToFindDivingGear { get; set; } = true;
         public bool MustBeSpecificItem { get; set; }
+
+        /// <summary>
+        /// Is the character allowed to take the item from somewhere else than their own sub (e.g. an outpost)
+        /// </summary>
+        public bool AllowStealing { get; set; }
 
         public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -246,9 +251,13 @@ namespace Barotrauma
                 currSearchIndex++;
                 var item = Item.ItemList[currSearchIndex];
                 Submarine itemSub = item.Submarine ?? item.ParentInventory?.Owner?.Submarine;
-                Submarine mySub = character.Submarine;
                 if (itemSub == null) { continue; }
+                Submarine mySub = character.Submarine;
                 if (mySub == null) { continue; }
+                if (!AllowStealing)
+                {
+                    if (character.TeamID == Character.TeamType.FriendlyNPC != item.SpawnedInOutpost) { continue; }
+                }
                 if (!CheckItem(item)) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
                 {
@@ -339,6 +348,7 @@ namespace Barotrauma
         private bool CheckItem(Item item)
         {
             if (item.NonInteractable) { return false; }
+            if (item.IsThisOrAnyContainerIgnoredByAI()) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
@@ -361,15 +371,6 @@ namespace Barotrauma
             moveToTarget = targetItem?.GetRootInventoryOwner();
             isDoneSeeking = false;
             currSearchIndex = 0;
-        }
-
-        protected override void OnAbandon()
-        {
-            base.OnAbandon();
-            if (objectiveManager.CurrentOrder != null)
-            {
-                character.Speak(TextManager.Get("DialogCannotFindItem"), null, 0.0f, "cannotfinditem", 10.0f);
-            }
         }
     }
 }

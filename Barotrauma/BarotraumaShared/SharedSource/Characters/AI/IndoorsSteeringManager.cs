@@ -192,13 +192,43 @@ namespace Barotrauma
                     pathFinder.InsideSubmarine = character.Submarine != null;
                     pathFinder.ApplyPenaltyToOutsideNodes = character.PressureProtection <= 0;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
-                    bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || findPathTimer < -1;
+                    bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.X) <= 0;
                     if (!useNewPath && currentPath != null && currentPath.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
                     {
-                        // It's possible that the current path was calculated from a start point that is no longer valid.
-                        // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
-                        useNewPath = newPath.Cost < currentPath.Cost ||
-                            Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
+                        // Check if the new path is the same as the old, in which case we just ignore it and continue using the old path (or the progress would reset).
+                        if (IsIdenticalPath())
+                        {
+                            useNewPath = false;
+                        }
+                        else
+                        {
+                            // Use the new path if it has significantly lower cost (don't change the path if it has marginally smaller cost. This reduces navigating backwards due to new path that is calculated from the node just behind us).
+                            float t = (float)currentPath.CurrentIndex / (currentPath.Nodes.Count - 1);
+                            useNewPath = newPath.Cost < currentPath.Cost * MathHelper.Lerp(0.95f, 0, t);
+                            if (!useNewPath)
+                            {
+                                // It's possible that the current path was calculated from a start point that is no longer valid.
+                                // Therefore, let's accept also paths with a greater cost than the current, if the current node is much farther than the new start node.
+                                useNewPath = Vector2.DistanceSquared(character.WorldPosition, currentPath.CurrentNode.WorldPosition) > Math.Pow(Vector2.Distance(character.WorldPosition, newPath.Nodes.First().WorldPosition) * 3, 2);
+                            }
+                        }
+
+                        bool IsIdenticalPath()
+                        {
+                            int nodeCount = newPath.Nodes.Count;
+                            if (nodeCount == currentPath.Nodes.Count)
+                            {
+                                for (int i = 0; i < nodeCount - 1; i++)
+                                {
+                                    if (newPath.Nodes[i] != currentPath.Nodes[i])
+                                    {
+                                        return false;
+                                    }
+                                }
+                                return true;
+                            }
+                            return false;
+                        }
                     }
                     if (useNewPath)
                     {
@@ -407,7 +437,7 @@ namespace Barotrauma
             if (door.IsOpen) { return true; }
             if (door.Item.NonInteractable) { return false; }
             if (CanBreakDoors) { return true; }
-            if (door.IsStuck) { return false; }
+            if (door.IsStuck || door.IsJammed) { return false; }
             if (!canOpenDoors || character.LockHands) { return false; }
             if (door.HasIntegratedButtons)
             {
@@ -689,7 +719,10 @@ namespace Barotrauma
             if (wander)
             {
                 SteeringWander();
-                SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance), 5);
+                if (inWater)
+                {
+                    SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance), 5);
+                }
             }
             if (!inWater)
             {

@@ -11,6 +11,8 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.MapCreatures.Behavior;
+
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 #endif
@@ -27,7 +29,7 @@ namespace Barotrauma
                 
         private HashSet<string> tags;
 
-        private bool isWire;
+        private bool isWire, isLogic;
 
         private Hull currentHull;
         public Hull CurrentHull
@@ -626,6 +628,8 @@ namespace Barotrauma
             get { return Prefab.Linkable; }
         }
 
+        public BallastFloraBranch Infector { get; set; }
+
         public override string ToString()
         {
 #if CLIENT
@@ -640,14 +644,15 @@ namespace Barotrauma
         {
             get { return allPropertyObjects; }
         }
+        
 
-        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine)
+        public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, ushort id = Entity.NullEntityID)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.sprite.size.X / 2 * itemPrefab.Scale), 
                 (int)(position.Y + itemPrefab.sprite.size.Y / 2 * itemPrefab.Scale), 
                 (int)(itemPrefab.sprite.size.X * itemPrefab.Scale), 
                 (int)(itemPrefab.sprite.size.Y * itemPrefab.Scale)), 
-            itemPrefab, submarine)
+            itemPrefab, submarine, id: id)
         {
 
         }
@@ -656,8 +661,8 @@ namespace Barotrauma
         /// Creates a new item
         /// </summary>
         /// <param name="callOnItemLoaded">Should the OnItemLoaded methods of the ItemComponents be called. Use false if the item needs additional initialization before it can be considered fully loaded (e.g. when loading an item from a sub file or cloning an item).</param>
-        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true)
-            : base(itemPrefab, submarine)
+        public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true, ushort id = Entity.NullEntityID)
+            : base(itemPrefab, submarine, id)
         {
             spriteColor = prefab.SpriteColor;
 
@@ -737,6 +742,8 @@ namespace Barotrauma
                     case "upgrademodule":
                     case "upgradeoverride":
                     case "minimapicon":
+                    case "infectedsprite":
+                    case "damagedinfectedsprite":
                         break;
                     case "staticbody":
                         StaticBodyConfig = subElement;
@@ -834,7 +841,8 @@ namespace Barotrauma
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
 
-            if (Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
+            if (Components.Any() && Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
+            if (HasTag("logic")) { isLogic = true; }
         }
 
         partial void InitProjSpecific();
@@ -1172,6 +1180,23 @@ namespace Barotrauma
 
             return rootContainer;
         }
+        
+        /// <summary>
+        /// Is the item or any of its containers of the item set to be ignored?
+        /// </summary>
+        public bool IsThisOrAnyContainerIgnoredByAI()
+        {
+            if (IgnoreByAI) { return true; }
+            if (Container == null) { return false; }
+            if (Container.IgnoreByAI) { return true; }
+            var container = Container;
+            while (container.Container != null)
+            {
+                container = container.Container;
+                if (container.IgnoreByAI) { return true; }
+            }
+            return false;
+        }
 
         public bool IsOwnedBy(Entity entity) => FindParentInventory(i => i.Owner == entity) != null;
 
@@ -1419,6 +1444,7 @@ namespace Barotrauma
             if (!isActive) { return; }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
+            ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
 
             for (int i = 0; i < updateableComponents.Count; i++)
             {
@@ -1450,8 +1476,6 @@ namespace Barotrauma
                 }
 #endif
                 ic.WasUsed = false;
-
-                ic.ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
 
                 if (ic.IsActive)
                 {
@@ -2481,9 +2505,9 @@ namespace Barotrauma
 
         partial void UpdateNetPosition(float deltaTime);
 
-        public static Item Load(XElement element, Submarine submarine)
+        public static Item Load(XElement element, Submarine submarine, IdRemap idRemap)
         {
-            return Load(element, submarine, createNetworkEvent: false);
+            return Load(element, submarine, createNetworkEvent: false, idRemap: idRemap);
         }
 
         /// <summary>
@@ -2493,7 +2517,7 @@ namespace Barotrauma
         /// <param name="submarine">The submarine to spawn the item in (can be null)</param>
         /// <param name="createNetworkEvent">Should an EntitySpawner event be created to notify clients about the item being created.</param>
         /// <returns></returns>
-        public static Item Load(XElement element, Submarine submarine, bool createNetworkEvent)
+        public static Item Load(XElement element, Submarine submarine, bool createNetworkEvent, IdRemap idRemap)
         {
             string name = element.Attribute("name").Value;            
             string identifier = element.GetAttributeString("identifier", "");
@@ -2512,13 +2536,11 @@ namespace Barotrauma
                 rect.Height = (int)(prefab.Size.Y * prefab.Scale);
             }
 
-            Item item = new Item(rect, prefab, submarine, callOnItemLoaded: false)
+            Item item = new Item(rect, prefab, submarine, callOnItemLoaded: false, id: idRemap.GetOffsetId(element))
             {
                 Submarine = submarine,
-                ID = (ushort)int.Parse(element.Attribute("ID").Value),
                 linkedToID = new List<ushort>()
             };
-            item.OriginalID = item.ID;
 
 #if SERVER
             if (createNetworkEvent)
@@ -2543,15 +2565,7 @@ namespace Barotrauma
                 if (shouldBeLoaded) { property.TrySetValue(item, attribute.Value); }
             }
 
-            string linkedToString = element.GetAttributeString("linked", "");
-            if (linkedToString != "")
-            {
-                string[] linkedToIds = linkedToString.Split(',');
-                for (int i = 0; i < linkedToIds.Length; i++)
-                {
-                    item.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
-                }
-            }
+            item.ParseLinks(element, idRemap);
 
             bool thisIsOverride = element.GetAttributeBool("isoverride", false);
 
@@ -2583,7 +2597,7 @@ namespace Barotrauma
                     {
                         ItemComponent component = unloadedComponents.Find(x => x.Name == subElement.Name.ToString());
                         if (component == null) { continue; }
-                        component.Load(subElement, usePrefabValues);
+                        component.Load(subElement, usePrefabValues, idRemap);
                         unloadedComponents.Remove(component);
                         break;
                     }

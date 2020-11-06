@@ -38,11 +38,49 @@ namespace Barotrauma
         private float respondToAttackTimer;
         private const float RespondToAttackInterval = 1.0f;
 
+        private bool freezeAI;
+
+        private readonly float maxSteeringBuffer = 5000;
+        private readonly float minSteeringBuffer = 500;
+        private readonly float steeringBufferIncreaseSpeed = 100;
+        private float steeringBuffer;
+
+        private readonly float obstacleRaycastInterval = 1;
+        private float obstacleRaycastTimer;
+
         /// <summary>
         /// List of previous attacks done to this character
         /// </summary>
         private readonly Dictionary<Character, AttackResult> previousAttackResults = new Dictionary<Character, AttackResult>();
 
+        private readonly SteeringManager outsideSteering, insideSteering;
+
+        public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
+        public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
+
+        public override AIObjectiveManager ObjectiveManager
+        {
+            get { return objectiveManager; }
+        }
+
+        public Order CurrentOrder
+        {
+            get;
+            private set;
+        }
+
+        public string CurrentOrderOption
+        {
+            get;
+            private set;
+        }
+
+        public float CurrentHullSafety { get; private set; } = 100;
+
+        private readonly Dictionary<Character, float> damageDoneByAttacker = new Dictionary<Character, float>();
+        private readonly HashSet<Character> attackers = new HashSet<Character>();
+
+        private readonly Dictionary<Hull, HullSafety> knownHulls = new Dictionary<Hull, HullSafety>();
         private class HullSafety
         {
             public float safety;
@@ -72,35 +110,6 @@ namespace Barotrauma
             }
         }
 
-        private readonly Dictionary<Hull, HullSafety> knownHulls = new Dictionary<Hull, HullSafety>();
-
-        private SteeringManager outsideSteering, insideSteering;
-
-        public IndoorsSteeringManager PathSteering => insideSteering as IndoorsSteeringManager;
-        public HumanoidAnimController AnimController => Character.AnimController as HumanoidAnimController;
-
-        public override AIObjectiveManager ObjectiveManager
-        {
-            get { return objectiveManager; }
-        }
-
-        public Order CurrentOrder
-        {
-            get;
-            private set;
-        }
-
-        public string CurrentOrderOption
-        {
-            get;
-            private set;
-        }
-
-        public float CurrentHullSafety { get; private set; } = 100;
-
-        private readonly Dictionary<Character, float> damageDoneByAttacker = new Dictionary<Character, float>();
-        private readonly HashSet<Character> attackers = new HashSet<Character>();
-
         public HumanAIController(Character c) : base(c)
         {
             if (!c.IsHuman)
@@ -116,8 +125,6 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific();
-
-        private bool freezeAI;
 
         public override void Update(float deltaTime)
         {
@@ -176,15 +183,38 @@ namespace Barotrauma
                 IgnoredItems.Clear();
             }
 
-            // Use the pathfinding also outside of the sub, but not farther than the extents of the sub + 500 units.
-            if (Character.Submarine != null || SelectedAiTarget?.Entity?.Submarine is Submarine sub && sub != null &&
-                    Vector2.DistanceSquared(Character.WorldPosition, sub.WorldPosition) < MathUtils.Pow(Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2 + 500, 2))
+            bool IsCloseEnoughToTargetSub(float threshold) => SelectedAiTarget?.Entity?.Submarine is Submarine sub && sub != null && Vector2.DistanceSquared(Character.WorldPosition, sub.WorldPosition) < MathUtils.Pow(Math.Max(sub.Borders.Size.X, sub.Borders.Size.Y) / 2 + threshold, 2);
+            bool hasValidPath = steeringManager is IndoorsSteeringManager pathSteering && pathSteering.CurrentPath != null && !pathSteering.CurrentPath.Finished && !pathSteering.CurrentPath.Unreachable;
+
+            if (Character.Submarine == null && hasValidPath)
+            {
+                obstacleRaycastTimer -= deltaTime;
+                if (obstacleRaycastTimer <= 0)
+                {
+                    obstacleRaycastTimer = obstacleRaycastInterval;
+                    // Swimming outside and using the path finder -> check that the path is not blocked with anything (the path finder doesn't know about other subs).
+                    foreach (var connectedSub in Submarine.MainSub.GetConnectedSubs())
+                    {
+                        if (connectedSub == Submarine.MainSub) { continue; }
+                        Vector2 rayStart = SimPosition - connectedSub.SimPosition;
+                        Vector2 dir = PathSteering.CurrentPath.CurrentNode.WorldPosition - WorldPosition;
+                        Vector2 rayEnd = rayStart + dir.ClampLength(Character.AnimController.Collider.GetLocalFront().Length() * 5);
+                        if (Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true) != null)
+                        {
+                            PathSteering.CurrentPath.Unreachable = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (Character.Submarine != null || hasValidPath && IsCloseEnoughToTargetSub(maxSteeringBuffer) || IsCloseEnoughToTargetSub(steeringBuffer))
             {
                 if (steeringManager != insideSteering)
                 {
                     insideSteering.Reset();
                 }
                 steeringManager = insideSteering;
+                steeringBuffer += steeringBufferIncreaseSpeed * deltaTime;
             }
             else
             {
@@ -193,7 +223,9 @@ namespace Barotrauma
                     outsideSteering.Reset();
                 }
                 steeringManager = outsideSteering;
+                steeringBuffer = minSteeringBuffer;
             }
+            steeringBuffer = Math.Clamp(steeringBuffer, minSteeringBuffer, maxSteeringBuffer);
 
             AnimController.Crouching = shouldCrouch;
             CheckCrouching(deltaTime);
@@ -369,7 +401,7 @@ namespace Barotrauma
                 if (!NeedsDivingGear(Character.CurrentHull, out bool needsSuit) || !needsSuit || oxygenLow)
                 {
                     bool shouldKeepTheGearOn = Character.AnimController.HeadInWater
-                        || Character.Submarine.TeamID != Character.TeamID && Character.Submarine.TeamID != Character.TeamType.FriendlyNPC
+                        || Character.Submarine.TeamID != Character.TeamID
                         || ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>()
                         || ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character   // wait order
                         || ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
@@ -435,6 +467,7 @@ namespace Barotrauma
                             if (oxygenLow || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
                             {
                                 divingSuit.Drop(Character);
+                                HandleRelocation(divingSuit);
                             }
                             else if (findItemState == FindItemState.None || findItemState == FindItemState.DivingSuit)
                             {
@@ -461,6 +494,7 @@ namespace Barotrauma
                                     else
                                     {
                                         divingSuit.Drop(Character);
+                                        HandleRelocation(divingSuit);
                                     }
                                 }
                             }
@@ -478,6 +512,7 @@ namespace Barotrauma
                                     if (ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
                                     {
                                         mask.Drop(Character);
+                                        HandleRelocation(mask);
                                     }
                                     else if (findItemState == FindItemState.None || findItemState == FindItemState.DivingMask)
                                     {
@@ -501,6 +536,7 @@ namespace Barotrauma
                                             else
                                             {
                                                 mask.Drop(Character);
+                                                HandleRelocation(mask);
                                             }
                                         }
                                     }
@@ -548,11 +584,68 @@ namespace Barotrauma
                                 else
                                 {
                                     item.Drop(Character);
+                                    HandleRelocation(item);
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+
+        private readonly HashSet<Item> itemsToRelocate = new HashSet<Item>();
+
+        private void HandleRelocation(Item item)
+        {
+            if (item.Submarine?.TeamID == Character.TeamType.FriendlyNPC)
+            {
+                if (itemsToRelocate.Contains(item)) { return; }
+                itemsToRelocate.Add(item);
+                if (item.Submarine.ConnectedDockingPorts.TryGetValue(Submarine.MainSub, out DockingPort myPort))
+                {
+                    myPort.OnUnDocked += Relocate;
+                }
+                var campaign = GameMain.GameSession.Campaign;
+                if (campaign != null)
+                {
+                    // In the campaign mode, undocking happens after leaving the outpost, so we can't use that.
+                    campaign.BeforeLevelLoading += Relocate;
+                }
+            }
+
+            void Relocate()
+            {
+                if (item == null || item.Removed) { return; }
+                if (!itemsToRelocate.Contains(item)) { return; }
+                var mainSub = Submarine.MainSub;
+                if (item.ParentInventory != null)
+                {
+                    if (item.ParentInventory.Owner is Character c)
+                    {
+                        if (c.TeamID == Character.TeamType.Team1 || c.TeamID == Character.TeamType.Team2)
+                        {
+                            // Taken by a player/bot (if npc or monster would take the item, we'd probably still want it to spawn back to the main sub.
+                            return;
+                        }
+                    }
+                    else if (item.ParentInventory.Owner.Submarine == mainSub)
+                    {
+                        // Placed inside an inventory that's already in the main sub.
+                        return;
+                    }
+                }
+                // Laying on ground inside the main sub.
+                if (item.Submarine == mainSub)
+                {
+                    return;
+                }
+                WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, mainSub);
+                if (wp != null)
+                {
+                    item.Submarine = mainSub;
+                    item.SetTransform(wp.SimPosition, 0.0f);
+                }
+                itemsToRelocate.Remove(item);
             }
         }
 
@@ -585,6 +678,7 @@ namespace Barotrauma
             suitableContainer = null;
             if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredItems, customPriorityFunction: i =>
             {
+                if (i.IsThisOrAnyContainerIgnoredByAI()) { return 0; }
                 var container = i.GetComponent<ItemContainer>();
                 if (container == null) { return 0; }
                 if (container.Inventory.IsFull()) { return 0; }
@@ -1223,6 +1317,14 @@ namespace Barotrauma
                     }
                     //if (!otherCharacter.IsFacing(thief.WorldPosition)) { continue; }
                     if (!otherCharacter.CanSeeCharacter(thief)) { continue; }
+                    // Don't react if the player is taking an extinguisher and there's any fires on the sub, or diving gear when the sub is flooding
+                    // -> allow them to use the emergency items
+                    if (character.Submarine != null)
+                    {
+                        var connectedHulls = character.Submarine.GetHulls(alsoFromConnectedSubs: true);
+                        if (item.HasTag("fireextinguisher") && connectedHulls.Any(h => h.FireSources.Any())) { continue; }
+                        if (item.HasTag("diving") && connectedHulls.Any(h => h.ConnectedGaps.Any(g => AIObjectiveFixLeaks.IsValidTarget(g, thief)))) { continue; }
+                    }
                     if (!someoneSpoke && !character.IsIncapacitated && character.Stun <= 0.0f)
                     {
                         if (!item.StolenDuringRound && GameMain.GameSession?.Campaign?.Map?.CurrentLocation != null)
@@ -1236,8 +1338,6 @@ namespace Barotrauma
                         otherCharacter.Speak(TextManager.Get("dialogstealwarning"), null, Rand.Range(0.5f, 1.0f), "thief", 10.0f);
                         someoneSpoke = true;
                     }
-                    // Don't react if the player is taking an extinguisher and there's any fires on the sub -> allow them to use the emergency items
-                    if (item.HasTag("fireextinguisher") && character.Submarine.GetHulls(alsoFromConnectedSubs: true).Any(h => h.FireSources.Any())) { continue; }
                     // React if we are security
                     if (!TriggerSecurity(otherHumanAI))
                     {
@@ -1464,7 +1564,16 @@ namespace Barotrauma
                 // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
                 enemyFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             }
-            float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor;
+            float dangerousItemsFactor = 1f;
+            foreach (Item item in Item.ItemList.Where(it => it.CurrentHull == hull))
+            {
+                if (item.Prefab != null && item.Prefab.IsDangerous)
+                {
+                    dangerousItemsFactor = 0;
+                }
+            }
+
+            float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor * dangerousItemsFactor;
             return MathHelper.Clamp(safety * 100, 0, 100);
         }
 

@@ -1974,9 +1974,6 @@ namespace Barotrauma
 
         public override void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
-            var leftHand = GetLimb(LimbType.LeftHand);
-            var rightHand = GetLimb(LimbType.RightHand);
-
             useItemTimer = 0.5f;
             Anim = Animation.UsingConstruction;
 
@@ -1999,13 +1996,21 @@ namespace Barotrauma
                 handSimPos -= character.Submarine.SimPosition;
             }
 
-            leftHand.Disabled = true;
-            leftHand.PullJointEnabled = true;
-            leftHand.PullJointWorldAnchorB = handSimPos;
+            var leftHand = GetLimb(LimbType.LeftHand);
+            if (leftHand != null)
+            {
+                leftHand.Disabled = true;
+                leftHand.PullJointEnabled = true;
+                leftHand.PullJointWorldAnchorB = handSimPos;
+            }
 
-            rightHand.Disabled = true;
-            rightHand.PullJointEnabled = true;
-            rightHand.PullJointWorldAnchorB = handSimPos;
+            var rightHand = GetLimb(LimbType.RightHand);
+            if (rightHand != null)
+            {
+                rightHand.Disabled = true;
+                rightHand.PullJointEnabled = true;
+                rightHand.PullJointWorldAnchorB = handSimPos;
+            }
         }
 
         public override void Flip()

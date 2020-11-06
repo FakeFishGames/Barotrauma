@@ -19,9 +19,9 @@ namespace Barotrauma
         {
             get { return aiController; }
         }
-        
+
         public AICharacter(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isNetworkPlayer = false, RagdollParams ragdoll = null)
-            : base(speciesName, position, seed, characterInfo, isNetworkPlayer, ragdoll)
+            : base(speciesName, position, seed, characterInfo, id: Entity.NullEntityID, isRemotePlayer: isNetworkPlayer, ragdollParams: ragdoll)
         {
             InitProjSpecific();
         }

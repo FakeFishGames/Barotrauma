@@ -181,6 +181,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Automatically cleared after triggering -> no need to unregister
+        /// </summary>
+        public event Action BeforeLevelLoading;
+
         public void LoadNewLevel()
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) 
@@ -193,6 +198,9 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Level transition already running.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
+
+            BeforeLevelLoading?.Invoke();
+            BeforeLevelLoading = null;
 
             if (Level.Loaded == null || Submarine.MainSub == null)
             {

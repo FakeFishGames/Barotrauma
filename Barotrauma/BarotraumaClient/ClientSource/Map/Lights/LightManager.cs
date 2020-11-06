@@ -151,7 +151,16 @@ namespace Barotrauma.Lights
 
         private readonly List<LightSource> activeLights = new List<LightSource>(capacity: 100);
 
-        public void UpdateLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
+        public void Update(float deltaTime)
+        {
+            foreach (LightSource light in lights)
+            {
+                if (!light.Enabled) { continue; }
+                light.Update(deltaTime);
+            }
+        }
+
+        public void RenderLightMap(GraphicsDevice graphics, SpriteBatch spriteBatch, Camera cam, RenderTarget2D backgroundObstructor = null)
         {
             if (!LightingEnabled) { return; }
 
@@ -174,7 +183,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in lights)
             {
                 if (!light.Enabled) { continue; }    
-                if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
+                if ((light.Color.A < 1 || light.Range < 1.0f || light.CurrentBrightness <= 0.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
                 if (light.ParentBody != null)
                 {
                     light.Position = light.ParentBody.DrawPosition;
@@ -205,7 +214,7 @@ namespace Barotrauma.Lights
             {
                 if (light.IsBackground) { continue; }
                 //draw limb lights at this point, because they were skipped over previously to prevent them from being obstructed
-                if (light.ParentBody?.UserData is Limb) { light.DrawSprite(spriteBatch, cam); }
+                if (light.ParentBody?.UserData is Limb limb && !limb.Hide) { light.DrawSprite(spriteBatch, cam); }
             }
             spriteBatch.End();
 
@@ -215,6 +224,7 @@ namespace Barotrauma.Lights
             graphics.Clear(AmbientLight);
             graphics.BlendState = BlendState.Additive;
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, transformMatrix: spriteBatchTransform);
+            Level.Loaded?.BackgroundCreatureManager?.DrawLights(spriteBatch, cam);
             foreach (LightSource light in activeLights)
             {
                 if (!light.IsBackground) { continue; }

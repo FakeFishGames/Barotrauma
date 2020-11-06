@@ -193,7 +193,7 @@ namespace Barotrauma.Items.Components
 
         partial void DischargeProjSpecific();
 
-        private void FindNodes(Vector2 worldPosition, float range)
+        public void FindNodes(Vector2 worldPosition, float range)
         {
             //see which submarines are within range so we can skip structures that are in far-away subs
             List<Submarine> submarinesInRange = new List<Submarine>();

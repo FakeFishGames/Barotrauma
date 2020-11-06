@@ -8,46 +8,6 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    internal partial class VineTile
-    {
-        public void Draw(SpriteBatch spriteBatch, Vector2 position, float depth, float leafDepth)
-        {
-            Vector2 pos = position + Position;
-            pos.Y = -pos.Y;
-
-            VineSprite vineSprite = Parent.VineSprites[Type];
-            Color color = Parent.Decayed ? Parent.DeadTint : Parent.VineTint;
-
-            float layer1 = depth + 0.01f, // flowers
-                  layer2 = depth + 0.02f, // decay atlas
-                  layer3 = depth + 0.03f; // branches and leaves
-
-            float scale = Parent.VineScale * VineStep;
-
-            if (Parent.VineAtlas != null)
-            {
-                spriteBatch.Draw(Parent.VineAtlas.Texture, pos + offset, vineSprite.SourceRect, color, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer3);
-            }
-
-            if (Parent.DecayAtlas != null)
-            {
-                spriteBatch.Draw(Parent.DecayAtlas.Texture, pos, vineSprite.SourceRect, HealthColor, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer2);
-            }
-
-            if (FlowerConfig.Variant >= 0 && !Parent.Decayed)
-            {
-                Sprite flowerSprite = Parent.FlowerSprites[FlowerConfig.Variant];
-                flowerSprite.Draw(spriteBatch, pos, Parent.FlowerTint, flowerSprite.Origin, scale: Parent.BaseFlowerScale * FlowerConfig.Scale * FlowerStep, rotate: FlowerConfig.Rotation, depth: layer1);
-            }
-
-            if (LeafConfig.Variant >= 0)
-            {
-                Sprite leafSprite = Parent.LeafSprites[LeafConfig.Variant];
-                leafSprite.Draw(spriteBatch, pos, Parent.Decayed ? Parent.DeadTint : Parent.LeafTint, leafSprite.Origin, scale: Parent.BaseLeafScale * LeafConfig.Scale * FlowerStep, rotate: LeafConfig.Rotation, depth: layer3 + leafDepth);
-            }
-        }
-    }
-
     internal class VineSprite
     {
         [Serialize("0,0,0,0", false)]
@@ -97,7 +57,7 @@ namespace Barotrauma.Items.Components
             foreach (VineTile vine in Vines)
             {
                 leafDepth += zStep;
-                vine.Draw(spriteBatch, planter.Item.DrawPosition + offset, depth, leafDepth);
+                DrawBranch(vine, spriteBatch, planter.Item.DrawPosition + offset, depth, leafDepth);
             }
 
             if (GameMain.DebugDraw)
@@ -109,6 +69,43 @@ namespace Barotrauma.Items.Components
                     wRect.Y -= wRect.Height;
                     GUI.DrawRectangle(spriteBatch, wRect, Color.Red);
                 }
+            }
+        }
+        
+        private void DrawBranch(VineTile vine, SpriteBatch spriteBatch, Vector2 position, float depth, float leafDepth)
+        {
+            Vector2 pos = position + vine.Position;
+            pos.Y = -pos.Y;
+
+            VineSprite vineSprite = VineSprites[vine.Type];
+            Color color = Decayed ? DeadTint : VineTint;
+
+            float layer1 = depth + 0.01f, // flowers
+                  layer2 = depth + 0.02f, // decay atlas
+                  layer3 = depth + 0.03f; // branches and leaves
+
+            float scale = VineScale * vine.VineStep;
+
+            if (VineAtlas != null)
+            {
+                spriteBatch.Draw(VineAtlas.Texture, pos + vine.offset, vineSprite.SourceRect, color, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer3);
+            }
+
+            if (DecayAtlas != null)
+            {
+                spriteBatch.Draw(DecayAtlas.Texture, pos, vineSprite.SourceRect, vine.HealthColor, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer2);
+            }
+
+            if (vine.FlowerConfig.Variant >= 0 && !Decayed)
+            {
+                Sprite flowerSprite = FlowerSprites[vine.FlowerConfig.Variant];
+                flowerSprite.Draw(spriteBatch, pos, FlowerTint, flowerSprite.Origin, scale: BaseFlowerScale * vine.FlowerConfig.Scale * vine.FlowerStep, rotate: vine.FlowerConfig.Rotation, depth: layer1);
+            }
+
+            if (vine.LeafConfig.Variant >= 0)
+            {
+                Sprite leafSprite = LeafSprites[vine.LeafConfig.Variant];
+                leafSprite.Draw(spriteBatch, pos, Decayed ? DeadTint : LeafTint, leafSprite.Origin, scale: BaseLeafScale * vine.LeafConfig.Scale * vine.FlowerStep, rotate: vine.LeafConfig.Rotation, depth: layer3 + leafDepth);
             }
         }
 

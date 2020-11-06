@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (button, data) =>
                 {
-                    targetLevel = null;
+                    TargetLevel = null;
                     IsActive = !IsActive;
                     if (GameMain.Client != null)
                     {
@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (pumpSpeedLockTimer <= 0.0f)
                     {
-                        targetLevel = null;
+                        TargetLevel = null;
                     }
                     float newValue = barScroll * 200.0f - 100.0f;
                     if (Math.Abs(newValue - FlowPercentage) < 0.1f) { return false; }
@@ -223,6 +223,7 @@ namespace Barotrauma.Items.Components
 
             FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
             IsActive = msg.ReadBoolean();
+            Hijacked = msg.ReadBoolean();
         }
     }
 }

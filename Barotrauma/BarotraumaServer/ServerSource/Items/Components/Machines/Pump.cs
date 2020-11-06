@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (pumpSpeedLockTimer <= 0.0f)
                 {
-                    targetLevel = null;
+                    TargetLevel = null;
                 }
 
                 FlowPercentage = newFlowPercentage;
@@ -41,6 +41,7 @@ namespace Barotrauma.Items.Components
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
             msg.Write(IsActive);
+            msg.Write(Hijacked);
         }
     }
 }

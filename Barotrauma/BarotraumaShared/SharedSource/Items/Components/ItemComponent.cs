@@ -763,7 +763,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void Load(XElement componentElement, bool usePrefabValues)
+        public virtual void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             if (componentElement != null) 
             { 
@@ -1011,6 +1011,7 @@ namespace Barotrauma.Items.Components
                         if (FindSuitableContainer(character,
                             i =>
                             {
+                                if (i.IsThisOrAnyContainerIgnoredByAI()) { return 0; }
                                 var container = i.GetComponent<ItemContainer>();
                                 if (container == null) { return 0; }
                                 if (container.Inventory.IsFull()) { return 0; }

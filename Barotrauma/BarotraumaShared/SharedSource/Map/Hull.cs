@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
@@ -391,14 +392,16 @@ namespace Barotrauma
 
         public List<DummyFireSource> FakeFireSources { get; private set; }
 
+        public BallastFloraBehavior BallastFlora { get; set; }
+
         public Hull(MapEntityPrefab prefab, Rectangle rectangle)
             : this (prefab, rectangle, Submarine.MainSub)
         {
 
         }
 
-        public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine)
-            : base (prefab, submarine)
+        public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine, ushort id = Entity.NullEntityID)
+            : base (prefab, submarine, id)
         {
             rect = rectangle;
 
@@ -524,6 +527,8 @@ namespace Barotrauma
                 }
             }
             Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
+            
+            BallastFlora?.OnMapLoaded();
         }
 
         public void AddToGrid(Submarine submarine)
@@ -607,6 +612,7 @@ namespace Barotrauma
         {
             base.Remove();
             hullList.Remove(this);
+            BallastFlora?.Remove();
 
             if (Submarine != null && !Submarine.Loading && !Submarine.Unloading)
             {
@@ -687,6 +693,9 @@ namespace Barotrauma
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
+            
+            BallastFlora?.Update(deltaTime);
+            
             UpdateProjSpecific(deltaTime, cam);
 
             Oxygen -= OxygenDeteriorationSpeed * deltaTime;
@@ -1352,7 +1361,7 @@ namespace Barotrauma
         }
 #endregion
 
-        public static Hull Load(XElement element, Submarine submarine)
+        public static Hull Load(XElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect;
             if (element.Attribute("rect") != null)
@@ -1369,23 +1378,13 @@ namespace Barotrauma
                     int.Parse(element.Attribute("height").Value));
             }
 
-            var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine)
+            var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine, idRemap.GetOffsetId(element))
             {
-                WaterVolume = element.GetAttributeFloat("pressure", 0.0f),
-                ID = (ushort)int.Parse(element.Attribute("ID").Value)
+                WaterVolume = element.GetAttributeFloat("pressure", 0.0f)
             };
-            hull.OriginalID = hull.ID;
             hull.linkedToID = new List<ushort>();
 
-            string linkedToString = element.GetAttributeString("linked", "");
-            if (linkedToString != "")
-            {
-                string[] linkedToIds = linkedToString.Split(',');
-                for (int i = 0; i < linkedToIds.Length; i++)
-                {
-                    hull.linkedToID.Add((ushort)int.Parse(linkedToIds[i]));
-                }
-            }
+            hull.ParseLinks(element, idRemap);
 
             string originalAmbientLight = element.GetAttributeString("originalambientlight", null);
             if (!string.IsNullOrWhiteSpace(originalAmbientLight))
@@ -1408,6 +1407,15 @@ namespace Barotrauma
                         {
                             decal.FadeTimer = timer;
                             decal.BaseAlpha = baseAlpha;
+                        }
+                        break;
+                    case "ballastflorabehavior":
+                        string identifier = subElement.GetAttributeString("identifier", string.Empty);
+                        BallastFloraPrefab prefab = BallastFloraPrefab.Find(identifier);
+                        if (prefab != null)
+                        {
+                            hull.BallastFlora = new BallastFloraBehavior(hull, prefab, Vector2.Zero);
+                            hull.BallastFlora.LoadSave(subElement);
                         }
                         break;
                 }
@@ -1487,6 +1495,8 @@ namespace Barotrauma
                         new XAttribute("alpha", decal.BaseAlpha.ToString("G", CultureInfo.InvariantCulture))
                     ));
             }
+
+            BallastFlora?.Save(element);
 
             SerializableProperty.SerializeProperties(this, element);
             parentElement.Add(element);

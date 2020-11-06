@@ -105,8 +105,8 @@ namespace Barotrauma
         {
         }
 
-        public WayPoint(MapEntityPrefab prefab, Rectangle newRect, Submarine submarine)
-            : base (prefab, submarine)
+        public WayPoint(MapEntityPrefab prefab, Rectangle newRect, Submarine submarine, ushort id = Entity.NullEntityID)
+            : base (prefab, submarine, id)
         {
             rect = newRect;
             idCardTags = new string[0];
@@ -626,7 +626,7 @@ namespace Barotrauma
             }
         }
 
-        public static WayPoint Load(XElement element, Submarine submarine)
+        public static WayPoint Load(XElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect = new Rectangle(
                 int.Parse(element.Attribute("x").Value),
@@ -635,11 +635,7 @@ namespace Barotrauma
 
 
             Enum.TryParse(element.GetAttributeString("spawn", "Path"), out SpawnType spawnType);
-            WayPoint w = new WayPoint(MapEntityPrefab.Find(null, spawnType == SpawnType.Path ? "waypoint" : "spawnpoint"), rect, submarine)
-            {
-                ID = (ushort)int.Parse(element.Attribute("ID").Value)
-            };
-            w.OriginalID = w.ID;
+            WayPoint w = new WayPoint(MapEntityPrefab.Find(null, spawnType == SpawnType.Path ? "waypoint" : "spawnpoint"), rect, submarine, idRemap.GetOffsetId(element));
             w.spawnType = spawnType;
 
             string idCardDescString = element.GetAttributeString("idcarddesc", "");
@@ -663,14 +659,24 @@ namespace Barotrauma
                     JobPrefab.Prefabs.Find(jp => jp.Name.Equals(jobIdentifier, StringComparison.OrdinalIgnoreCase));                
             }
 
-            w.ladderId = (ushort)element.GetAttributeInt("ladders", 0);
-            w.gapId = (ushort)element.GetAttributeInt("gap", 0);
-
             w.linkedToID = new List<ushort>();
+            w.ladderId = idRemap.GetOffsetId(element.GetAttributeInt("ladders", 0));
+            w.gapId = idRemap.GetOffsetId(element.GetAttributeInt("gap", 0));
+
             int i = 0;
             while (element.Attribute("linkedto" + i) != null)
             {
-                w.linkedToID.Add((ushort)int.Parse(element.Attribute("linkedto" + i).Value));
+                int srcId = int.Parse(element.Attribute("linkedto" + i).Value);
+                int destId = idRemap.GetOffsetId(srcId);
+                if (destId > 0)
+                {
+                    w.linkedToID.Add((ushort)destId);
+                }
+                else
+                {
+                    w.unresolvedLinkedToID ??= new List<ushort>();
+                    w.unresolvedLinkedToID.Add((ushort)srcId);
+                }
                 i += 1;
             }
             return w;

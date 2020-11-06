@@ -50,12 +50,18 @@ namespace Barotrauma.Networking
                     Entity targetEntity = Entity.FindEntityByID(msg.ReadUInt16());
                     int optionIndex = msg.ReadByte();
                     OrderTarget orderTargetPosition = null;
+                    Order.OrderTargetType orderTargetType = (Order.OrderTargetType)msg.ReadByte();
+                    int wallSectionIndex = 0;
                     if (msg.ReadBoolean())
                     {
                         var x = msg.ReadSingle();
                         var y = msg.ReadSingle();
                         var hull = Entity.FindEntityByID(msg.ReadUInt16()) as Hull;
                         orderTargetPosition = new OrderTarget(new Vector2(x, y), hull, creatingFromExistingData: true);
+                    }
+                    else if(orderTargetType == Order.OrderTargetType.WallSection)
+                    {
+                        wallSectionIndex = msg.ReadByte();
                     }
 
                     Order orderPrefab;
@@ -78,17 +84,31 @@ namespace Barotrauma.Networking
 
                     if (GameMain.Client.GameStarted && Screen.Selected == GameMain.GameScreen)
                     {
-                        var order = orderTargetPosition == null ?
-                            new Order(orderPrefab, targetEntity, orderPrefab.GetTargetItemComponent(targetEntity as Item), orderGiver: senderCharacter) :
-                            new Order(orderPrefab, orderTargetPosition, orderGiver: senderCharacter);
-
-                        if (order.TargetAllCharacters)
+                        Order order = null;
+                        switch (orderTargetType)
                         {
-                            GameMain.GameSession?.CrewManager?.AddOrder(order, orderPrefab.FadeOutTime);
+                            case Order.OrderTargetType.Entity:
+                                order = new Order(orderPrefab, targetEntity, orderPrefab.GetTargetItemComponent(targetEntity as Item), orderGiver: senderCharacter);
+                                break;
+                            case Order.OrderTargetType.Position:
+                                order = new Order(orderPrefab, orderTargetPosition, orderGiver: senderCharacter);
+                                break;
+                            case Order.OrderTargetType.WallSection:
+                                order = new Order(orderPrefab, targetEntity as Structure, wallSectionIndex, orderGiver: senderCharacter);
+                                break;
                         }
-                        else if (targetCharacter != null)
+
+                        if (order != null)
                         {
-                            targetCharacter.SetOrder(order, orderOption, senderCharacter);
+                            if (order.TargetAllCharacters)
+                            {
+                                var fadeOutTime = !orderPrefab.IsIgnoreOrder ? (float?)orderPrefab.FadeOutTime : null;
+                                GameMain.GameSession?.CrewManager?.AddOrder(order, fadeOutTime);
+                            }
+                            else if (targetCharacter != null)
+                            {
+                                targetCharacter.SetOrder(order, orderOption, senderCharacter);
+                            }
                         }
                     }
 

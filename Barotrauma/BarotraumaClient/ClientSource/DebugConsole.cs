@@ -491,7 +491,11 @@ namespace Barotrauma
             {
                 SteamManager.NetworkingDebugLog = !SteamManager.NetworkingDebugLog;
                 SteamManager.SetSteamworksNetworkingDebugLog(SteamManager.NetworkingDebugLog);
+            }));
 
+            commands.Add(new Command("readycheck", "Commence a ready check in multiplayer.", (string[] args) =>
+            {
+                NewMessage("Ready checks can only be commenced in multiplayer.", Color.Red);
             }));
 
             AssignRelayToServer("kick", false);
@@ -527,6 +531,7 @@ namespace Barotrauma
             AssignRelayToServer("traitorlist", true);
             AssignRelayToServer("money", true);
             AssignRelayToServer("setskill", true);
+            AssignRelayToServer("readycheck", true);
 
             AssignOnExecute("control", (string[] args) =>
             {

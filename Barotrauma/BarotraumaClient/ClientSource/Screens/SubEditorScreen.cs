@@ -71,6 +71,7 @@ namespace Barotrauma
 
         private bool entityMenuOpen = true;
         private float entityMenuOpenState = 1.0f;
+        private string lastFilter;
         public GUIComponent EntityMenu;
         private GUITextBox entityFilterBox;
         private GUIListBox entityList;
@@ -105,7 +106,23 @@ namespace Barotrauma
         private static GUIComponent autoSaveLabel;
         private static int maxAutoSaves = GameSettings.MaximumAutoSaves;
 
-        public static bool BulkItemBufferInUse;
+        public static readonly object ItemAddMutex = new object(), ItemRemoveMutex = new object();
+
+        private static object bulkItemBufferinUse;
+
+        public static object BulkItemBufferInUse
+        {
+            get => bulkItemBufferinUse;
+            set
+            {
+                if (value != bulkItemBufferinUse && bulkItemBufferinUse != null)
+                {
+                    CommitBulkItemBuffer();
+                }
+
+                bulkItemBufferinUse = value;
+            }
+        }
         public static List<AddOrDeleteCommand> BulkItemBuffer = new List<AddOrDeleteCommand>();
 
         public static List<WarningType> SuppressedWarnings = new List<WarningType>();
@@ -630,35 +647,33 @@ namespace Barotrauma
                 return Structure.WallList.Count.ToString();
             };
             
-            var lightCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedEntityCountPanel.RectTransform), TextManager.Get("SubEditorLights"), 
+            var lightCountLabel = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedEntityCountPanel.RectTransform), TextManager.Get("SubEditorLights"), 
                 textAlignment: Alignment.CenterLeft, font: GUI.SmallFont);
-            var lightCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), lightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
-            lightCount.TextGetter = () =>
+            var lightCountText = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), lightCountLabel.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
+            lightCountText.TextGetter = () =>
             {
-                int disabledItemLightCount = 0;
+                int lightCount = 0;
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.ParentInventory == null) { continue; }
-                    disabledItemLightCount += item.GetComponents<LightComponent>().Count();
+                    if (item.ParentInventory != null) { continue; }
+                    lightCount += item.GetComponents<LightComponent>().Count();
                 }
-                int count = GameMain.LightManager.Lights.Count() - disabledItemLightCount;
-                lightCount.TextColor = ToolBox.GradientLerp(count / 250.0f, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
-                return count.ToString();
+                lightCountText.TextColor = ToolBox.GradientLerp(lightCount / 250.0f, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
+                return lightCount.ToString();
             };
-            var shadowCastingLightCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedEntityCountPanel.RectTransform), TextManager.Get("SubEditorShadowCastingLights"), 
+            var shadowCastingLightCountLabel = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedEntityCountPanel.RectTransform), TextManager.Get("SubEditorShadowCastingLights"), 
                 textAlignment: Alignment.CenterLeft, font: GUI.SmallFont, wrap: true);
-            var shadowCastingLightCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), shadowCastingLightCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
-            shadowCastingLightCount.TextGetter = () =>
+            var shadowCastingLightCountText = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), shadowCastingLightCountLabel.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
+            shadowCastingLightCountText.TextGetter = () =>
             {
-                int disabledItemLightCount = 0;
+                int lightCount = 0;
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.ParentInventory == null) { continue; }
-                    disabledItemLightCount += item.GetComponents<LightComponent>().Count();
+                    if (item.ParentInventory != null) { continue; }
+                    lightCount += item.GetComponents<LightComponent>().Count(l => l.CastShadows);
                 }
-                int count = GameMain.LightManager.Lights.Count(l => l.CastShadows) - disabledItemLightCount;
-                shadowCastingLightCount.TextColor = ToolBox.GradientLerp(count / 60.0f, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
-                return count.ToString();
+                shadowCastingLightCountText.TextColor = ToolBox.GradientLerp(lightCount / 60.0f, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
+                return lightCount.ToString();
             };
             entityCountPanel.RectTransform.NonScaledSize =
                 new Point(
@@ -737,7 +752,13 @@ namespace Barotrauma
             var filterText = new GUITextBlock(new RectTransform(new Vector2(0.1f, 1.0f), entityMenuTop.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.SubHeadingFont);
             filterText.RectTransform.MaxSize = new Point((int)(filterText.TextSize.X * 1.5f), int.MaxValue);
             entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.17f, 1.0f), entityMenuTop.RectTransform), font: GUI.Font, createClearButton: true);
-            entityFilterBox.OnTextChanged += (textBox, text) => { FilterEntities(text); return true; };
+            entityFilterBox.OnTextChanged += (textBox, text) =>
+            {
+                if (text == lastFilter) { return true; }
+                lastFilter = text;
+                FilterEntities(text); 
+                return true;
+            };
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(0.075f, 1.0f), entityMenuTop.RectTransform), style: null);
@@ -994,8 +1015,7 @@ namespace Barotrauma
             
             GameMain.LightManager.AmbientLight = 
                 Level.Loaded?.GenerationParams?.AmbientLightColor ??
-                LevelGenerationParams.LevelParams?.FirstOrDefault()?.AmbientLightColor ??
-                new Color(20, 20, 20, 255);
+                new Color(3, 3, 3, 3);
 
             UpdateEntityList();
             if (!wasSelectedBefore)
@@ -1150,7 +1170,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", hasAi: false);
+            dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.RespawnManagerID, hasAi: false);
             dummyCharacter.Info.Name = "Galldren";
 
             //make space for the entity menu
@@ -1853,6 +1873,10 @@ namespace Barotrauma
                     Submarine.MainSub.Info.Price = numberInput.IntValue;
                 }
             };
+            if (Submarine.MainSub?.Info != null)
+            {
+                Submarine.MainSub.Info.Price = Math.Max(Submarine.MainSub.Info.Price, basePrice);
+            }
 
             if (!Submarine.MainSub.Info.HasTag(SubmarineTag.Shuttle))
             {
@@ -2665,7 +2689,7 @@ namespace Barotrauma
 
             foreach (GUIComponent child in entityList.Content.Children)
             {
-                child.Visible = !entityCategory.HasValue || ((MapEntityPrefab) child.UserData).Category == entityCategory;
+                child.Visible = !entityCategory.HasValue || ((MapEntityPrefab) child.UserData).Category.HasFlag(entityCategory);
                 if (child.Visible && dummyCharacter?.SelectedConstruction?.OwnInventory != null)
                 {
                     child.Visible = child.UserData is MapEntityPrefab item && IsItemPrefab(item);
@@ -3710,6 +3734,24 @@ namespace Barotrauma
             }
         }
 
+        private static void CommitBulkItemBuffer()
+        {
+            if (BulkItemBuffer.Any())
+            {
+                AddOrDeleteCommand master = BulkItemBuffer[0];
+                for (int i = 1; i < BulkItemBuffer.Count; i++)
+                {
+                    AddOrDeleteCommand command = BulkItemBuffer[i];
+                    command.MergeInto(master);
+                }
+
+                StoreCommand(master);
+                BulkItemBuffer.Clear();
+            }
+
+            bulkItemBufferinUse = null;
+        }
+
         /// <summary>
         /// Allows the game to run logic such as updating the world,
         /// checking for collisions, gathering input, and playing audio.
@@ -3939,6 +3981,11 @@ namespace Barotrauma
                 CloseItem();
             }
 
+            if (lightingEnabled)
+            {
+                GameMain.LightManager?.Update((float)deltaTime);
+            }
+
             if (contextMenu != null)
             {
                 Rectangle expandedRect = contextMenu.Rect;
@@ -4034,7 +4081,7 @@ namespace Barotrauma
 
             // Deposit item from our "infinite stack" into inventory slots
             var inv = dummyCharacter?.SelectedConstruction?.OwnInventory;
-            if (inv?.slots != null)
+            if (inv?.slots != null && !PlayerInput.IsCtrlDown())
             {
                 var dragginMouse = MouseDragStart != Vector2.Zero && Vector2.Distance(PlayerInput.MousePosition, MouseDragStart) >= GUI.Scale * 20;
                 
@@ -4090,7 +4137,7 @@ namespace Barotrauma
 
                                 if (!newItem.Removed)
                                 {
-                                    BulkItemBufferInUse = true;
+                                    BulkItemBufferInUse = ItemAddMutex;
                                     BulkItemBuffer.Add(new AddOrDeleteCommand(new List<MapEntity> { newItem }, false));
                                 }
 
@@ -4162,7 +4209,7 @@ namespace Barotrauma
                                 List<MapEntity> placedEntities = itemInstance.Where(it => !it.Removed).Cast<MapEntity>().ToList();
                                 if (placedEntities.Any())
                                 {
-                                    BulkItemBufferInUse = true;
+                                    BulkItemBufferInUse = ItemAddMutex;
                                     BulkItemBuffer.Add(new AddOrDeleteCommand(placedEntities, false));
                                 }
                             }
@@ -4174,18 +4221,9 @@ namespace Barotrauma
                 }
             }
 
-            if (BulkItemBufferInUse && PlayerInput.PrimaryMouseButtonReleased() && BulkItemBuffer.Any())
+            if (PlayerInput.PrimaryMouseButtonReleased() && BulkItemBufferInUse != null)
             {
-                AddOrDeleteCommand master = BulkItemBuffer[0];
-                for (int i = 1; i < BulkItemBuffer.Count; i++)
-                {
-                    AddOrDeleteCommand command = BulkItemBuffer[i];
-                    command.MergeInto(master);
-                }
-
-                StoreCommand(master);
-                BulkItemBuffer.Clear();
-                BulkItemBufferInUse = false;
+                CommitBulkItemBuffer();
             }
 
             if (SerializableEntityEditor.PropertyChangesActive && (SerializableEntityEditor.NextCommandPush < DateTime.Now || MapEntity.EditingHUD == null))
@@ -4326,7 +4364,7 @@ namespace Barotrauma
             cam.UpdateTransform();
             if (lightingEnabled)
             {
-                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+                GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam);
             }
 
             foreach (Submarine sub in Submarine.Loaded)
@@ -4493,6 +4531,7 @@ namespace Barotrauma
             stream.Dispose();
         }
 
-        public static bool IsSubEditor() { return Screen.Selected is SubEditorScreen && !Submarine.Unloading;  }
+        public static bool IsSubEditor() => Screen.Selected is SubEditorScreen && !Submarine.Unloading;
+        public static bool IsWiringMode() => Screen.Selected == GameMain.SubEditorScreen && GameMain.SubEditorScreen.WiringMode && !Submarine.Unloading;
     }
 }

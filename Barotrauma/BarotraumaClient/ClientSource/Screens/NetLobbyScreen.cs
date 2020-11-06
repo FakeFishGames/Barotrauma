@@ -832,7 +832,7 @@ namespace Barotrauma
                 var modeFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), modeList.Content.RectTransform), style: null)
                 {
                     UserData = mode
-                };                
+                };
 
                 var modeContent = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.9f), modeFrame.RectTransform, Anchor.CenterRight) { RelativeOffset = new Vector2(0.02f, 0.0f) })
                 {
@@ -910,15 +910,17 @@ namespace Barotrauma
                 }
             };
 
-            missionTypeTickBoxes = new GUITickBox[Enum.GetValues(typeof(MissionType)).Length - 2];
+            var missionTypes = (MissionType[])Enum.GetValues(typeof(MissionType));
+            missionTypeTickBoxes = new GUITickBox[missionTypes.Length - 2];
             int index = 0;
-            foreach (MissionType missionType in Enum.GetValues(typeof(MissionType)))
+            for (int i = 0; i < missionTypes.Length; i++)
             {
+                var missionType = missionTypes[i];
                 if (missionType == MissionType.None || missionType == MissionType.All) { continue; }
 
                 GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), missionTypeList.Content.RectTransform) { MinSize = new Point(0, (int)(30 * GUI.Scale)) }, style: "ListBoxElement")
                 {
-                    UserData = index,
+                    UserData = missionType,
                 };
 
                 missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform),
@@ -934,7 +936,6 @@ namespace Barotrauma
                     }
                 };
                 frame.RectTransform.MinSize = missionTypeTickBoxes[index].RectTransform.MinSize;
-
                 index++;
             }
             clientDisabledElements.AddRange(missionTypeTickBoxes);
@@ -1485,7 +1486,7 @@ namespace Barotrauma
                         return true;
                     }
                 };
-            }          
+            }
         }
         
         private void CreateChangesPendingText()
@@ -2509,7 +2510,7 @@ namespace Barotrauma
                 Selected = info.Gender == Gender.Female
             };
 
-            int hairCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Hair).Count();
+            int hairCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Head.gender, info.Head.race), WearableType.Hair, info.HeadSpriteId).Count();
             if (hairCount > 0)
             {
                 var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Hair"), font: GUI.SubHeadingFont);
@@ -2524,7 +2525,7 @@ namespace Barotrauma
                 };
             }
 
-            int beardCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Beard).Count();
+            int beardCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Head.gender, info.Head.race), WearableType.Beard, info.HeadSpriteId).Count();
             if (beardCount > 0)
             {
                 var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Beard"), font: GUI.SubHeadingFont);
@@ -2539,7 +2540,7 @@ namespace Barotrauma
                 };
             }
 
-            int moustacheCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.Moustache).Count();
+            int moustacheCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Head.gender, info.Head.race), WearableType.Moustache, info.HeadSpriteId).Count();
             if (moustacheCount > 0)
             {
                 var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Moustache"), font: GUI.SubHeadingFont);
@@ -2554,7 +2555,7 @@ namespace Barotrauma
                 };
             }
 
-            int faceAttachmentCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables), WearableType.FaceAttachment).Count();
+            int faceAttachmentCount = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Head.gender, info.Head.race), WearableType.FaceAttachment, info.HeadSpriteId).Count();
             if (faceAttachmentCount > 0)
             {
                 var label = new GUITextBlock(new RectTransform(elementSize, content.RectTransform), TextManager.Get("FaceAttachment.Accessories"), font: GUI.SubHeadingFont);
@@ -2976,7 +2977,7 @@ namespace Barotrauma
         public void SelectMode(int modeIndex)
         {
             if (modeIndex < 0 || modeIndex >= modeList.Content.CountChildren) { return; }
-            
+
             if ((GameModePreset)modeList.Content.GetChild(modeIndex).UserData != GameModePreset.MultiPlayerCampaign)
             {
                 ToggleCampaignMode(false);
@@ -3001,16 +3002,33 @@ namespace Barotrauma
             RefreshGameModeContent();
         }
 
+        private void RefreshMissionTypes()
+        {
+            for (int i = 0; i < missionTypeTickBoxes.Length; i++)
+            {
+                MissionType missionType = (MissionType)((int)missionTypeTickBoxes[i].UserData);
+                if (SelectedMode == GameModePreset.Mission)
+                {
+                    missionTypeTickBoxes[i].Parent.Visible = MissionPrefab.CoOpMissionClasses.ContainsKey(missionType);
+                }
+                else if (SelectedMode == GameModePreset.PvP)
+                {
+                    missionTypeTickBoxes[i].Parent.Visible = MissionPrefab.PvPMissionClasses.ContainsKey(missionType);
+                }
+            }
+        }
+
         private void RefreshGameModeContent()
         {
             if (GameMain.Client == null) { return; }
 
             autoRestartBox.Parent.Visible = true;
             settingsBlocker.Visible = false;
-            if (SelectedMode == GameModePreset.Mission)
+            if (SelectedMode == GameModePreset.Mission || SelectedMode == GameModePreset.PvP)
             {
                 MissionTypeFrame.Visible = true;
                 CampaignFrame.Visible = CampaignSetupFrame.Visible = false;
+                RefreshMissionTypes();
             }
             else if (SelectedMode == GameModePreset.MultiPlayerCampaign)
             {
@@ -3062,7 +3080,7 @@ namespace Barotrauma
             RefreshEnabledElements();
             if (enabled)
             {
-                modeList.Select(2, true);
+                modeList.Select(GameModePreset.MultiPlayerCampaign, true);
             }
         }
 

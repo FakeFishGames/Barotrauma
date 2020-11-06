@@ -21,6 +21,7 @@ namespace Barotrauma
         Outpost,
         OutpostModule,
         OutpostConfig,
+        BeaconStation,
         NPCSets,
         Factions,
         Text,
@@ -28,6 +29,7 @@ namespace Barotrauma
         LocationTypes,
         MapGenerationParameters,
         LevelGenerationParameters,
+        CaveGenerationParameters,
         LevelObjectPrefabs,
         RandomEvents,
         Missions, 
@@ -47,7 +49,8 @@ namespace Barotrauma
         Wreck,
         Corpses,
         WreckAIConfig,
-        UpgradeModules
+        UpgradeModules,
+        MapCreature
     }
 
     public class ContentPackage
@@ -84,6 +87,7 @@ namespace Barotrauma
             ContentType.Factions,
             ContentType.MapGenerationParameters,
             ContentType.LevelGenerationParameters,
+            ContentType.CaveGenerationParameters,
             ContentType.Missions,
             ContentType.LevelObjectPrefabs,
             ContentType.RuinConfig,
@@ -92,10 +96,12 @@ namespace Barotrauma
             ContentType.OutpostConfig,
             ContentType.Wreck,
             ContentType.WreckAIConfig,
+            ContentType.BeaconStation,
             ContentType.Afflictions,
             ContentType.Orders,
             ContentType.Corpses,
-            ContentType.UpgradeModules
+            ContentType.UpgradeModules,
+            ContentType.MapCreature
         };
 
         //at least one file of each these types is required in core content packages
@@ -111,11 +117,13 @@ namespace Barotrauma
             ContentType.Factions,
             ContentType.Wreck,
             ContentType.WreckAIConfig,
+            ContentType.BeaconStation,
             ContentType.Text,
             ContentType.ServerExecutable,
             ContentType.LocationTypes,
             ContentType.MapGenerationParameters,
             ContentType.LevelGenerationParameters,
+            ContentType.CaveGenerationParameters,
             ContentType.RandomEvents,
             ContentType.Missions,
             ContentType.RuinConfig,
@@ -384,6 +392,7 @@ namespace Barotrauma
                     case ContentType.OutpostModule:
                     case ContentType.Submarine:
                     case ContentType.Wreck:
+                    case ContentType.BeaconStation:
                         break;
                     default:
                         try

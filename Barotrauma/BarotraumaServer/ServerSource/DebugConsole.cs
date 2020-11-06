@@ -2155,6 +2155,43 @@ namespace Barotrauma
                 }
             );
 
+            commands.Add(new Command("readycheck", "Commence a ready check.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.GameScreen && GameMain.NetworkMember != null)
+                {
+                    CrewManager crewManager = GameMain.GameSession?.CrewManager;
+                    if (crewManager != null && crewManager.ActiveReadyCheck == null)
+                    {
+                        ReadyCheck.StartReadyCheck("");
+                        NewMessage("Attempted to commence a ready check.", Color.Green);
+                        return;
+                    }
+                    NewMessage("A ready check is already running.", Color.Red);
+                    return;
+                }
+                NewMessage("Ready checks cannot be commenced in the lobby.", Color.Red);
+            }));
+
+            AssignOnClientRequestExecute(
+                "readycheck",
+                (senderClient, cursorWorldPos, args) =>
+                {
+                    if (Screen.Selected == GameMain.GameScreen && GameMain.NetworkMember != null && !(GameMain.GameSession?.GameMode?.IsSinglePlayer ?? true))
+                    {
+                        CrewManager crewManager = GameMain.GameSession?.CrewManager;
+                        if (crewManager != null && crewManager.ActiveReadyCheck == null)
+                        {
+                            ReadyCheck.StartReadyCheck(senderClient.Name, senderClient);
+                            GameMain.Server.SendConsoleMessage("Attempted to commence a ready check.", senderClient);
+                            return;
+                        }
+                        GameMain.Server.SendConsoleMessage("A ready check is already running.", senderClient);
+                        return;
+                    }
+                    GameMain.Server.SendConsoleMessage("Ready checks cannot be commenced in the lobby.", senderClient);
+                }
+            );
+
 #if DEBUG
             commands.Add(new Command("spamevents", "A debug command that creates a ton of entity events.", (string[] args) =>
             {

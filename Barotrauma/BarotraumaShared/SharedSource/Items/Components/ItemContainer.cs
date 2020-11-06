@@ -415,17 +415,17 @@ namespace Barotrauma.Items.Components
             }               
         }        
 
-        public override void Load(XElement componentElement, bool usePrefabValues)
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(componentElement, usePrefabValues);
+            base.Load(componentElement, usePrefabValues, idRemap);
 
             string containedString = componentElement.GetAttributeString("contained", "");
             string[] itemIdStrings = containedString.Split(',');
             itemIds = new ushort[itemIdStrings.Length];
             for (int i = 0; i < itemIdStrings.Length; i++)
             {
-                if (!ushort.TryParse(itemIdStrings[i], out ushort id)) { continue; }
-                itemIds[i] = id;
+                if (!int.TryParse(itemIdStrings[i], out int id)) { continue; }
+                itemIds[i] = idRemap.GetOffsetId(id);
             }
         }
 

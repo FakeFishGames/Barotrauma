@@ -407,8 +407,8 @@ namespace Barotrauma
         {
             if (CurrentSwimParams == null) { return; }
             movement = TargetMovement;
-
-            if (movement.LengthSquared() > 0.00001f)
+            bool isMoving = movement.LengthSquared() > 0.00001f;
+            if (isMoving)
             {
                 float t = 0.5f;
                 if (CurrentSwimParams.RotateTowardsMovement && VectorExtensions.Angle(VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2), movement) > MathHelper.PiOver2)
@@ -425,7 +425,7 @@ namespace Barotrauma
             mainLimb.PullJointEnabled = true;
             //mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
 
-            if (movement.LengthSquared() < 0.00001f)
+            if (!isMoving)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
                 mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
@@ -625,7 +625,8 @@ namespace Barotrauma
                 if (limb.IsSevered) { continue; }
                 if (Math.Abs(limb.Params.ConstantTorque) > 0)
                 {
-                    limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque, wrapAngle: true);
+                    float movementFactor = Math.Max(character.AnimController.Collider.LinearVelocity.Length() * 0.5f, 1);
+                    limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque * movementFactor, wrapAngle: true);
                 }
                 if (limb.Params.BlinkFrequency > 0)
                 {
@@ -703,7 +704,7 @@ namespace Barotrauma
             if (head != null)
             {
                 bool headFacingBackwards = false;
-                if (HeadAngle.HasValue)
+                if (HeadAngle.HasValue && head != mainLimb)
                 {
                     SmoothRotateWithoutWrapping(head, movementAngle + HeadAngle.Value * Dir, mainLimb, HeadTorque);
                     if (Math.Sign(head.SimPosition.X - mainLimb.SimPosition.X) != Math.Sign(Dir))
@@ -853,11 +854,35 @@ namespace Barotrauma
             float noise = (PerlinNoise.GetPerlin(WalkPos * 0.002f, WalkPos * 0.003f) - 0.5f) * 5.0f;
             float animStrength = (1.0f - deathAnimTimer / deathAnimDuration);
 
-            Limb head = GetLimb(LimbType.Head);
-            if (head != null && head.IsSevered) { return; }
+            Limb baseLimb = GetLimb(LimbType.Head);
+            //if head is the main limb, it technically can't be severed - the rest of the limbs are considered severed if the head gets cut off
+            if (baseLimb == MainLimb)
+            {
+                int connectedToHeadCount = GetConnectedLimbs(baseLimb).Count;
+                //if there's nothing connected to the head, don't make it wiggle by itself
+                if (connectedToHeadCount == 1) { baseLimb = null; }
+                Limb torso = GetLimb(LimbType.Torso, excludeSevered: false);
+                if (torso != null)
+                {
+                    //if there are more limbs connected to the torso than to the head, make the torso wiggle instead
+                    int connectedToTorsoCount = GetConnectedLimbs(torso).Count;
+                    if (connectedToTorsoCount > connectedToHeadCount)
+                    {
+                        baseLimb = torso;
+                    }
+                }
+            }
+            else if (baseLimb == null)
+            {
+                baseLimb = GetLimb(LimbType.Torso, excludeSevered: true);
+                if (baseLimb == null) { return; }
+            }
+
+            var connectedToBaseLimb = GetConnectedLimbs(baseLimb);
+
             Limb tail = GetLimb(LimbType.Tail);
-            if (head != null && !head.IsSevered) head.body.ApplyTorque((float)(Math.Sqrt(head.Mass) * Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength);
-            if (tail != null && !tail.IsSevered) tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength);
+            if (baseLimb != null) { baseLimb.body.ApplyTorque((float)(Math.Sqrt(baseLimb.Mass) * Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength); }
+            if (tail != null && connectedToBaseLimb.Contains(tail)) { tail.body.ApplyTorque((float)(Math.Sqrt(tail.Mass) * -Dir * (Math.Sin(WalkPos) + noise)) * 30.0f * animStrength); }
 
             WalkPos += deltaTime * 10.0f * animStrength;
 
@@ -865,7 +890,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.IsSevered) { continue; }
+                if (!connectedToBaseLimb.Contains(limb)) { continue; }
 #if CLIENT
                 if (limb.LightSource != null)
                 {

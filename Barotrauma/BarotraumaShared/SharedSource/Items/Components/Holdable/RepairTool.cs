@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma.Items.Components
 {
@@ -49,6 +50,18 @@ namespace Barotrauma.Items.Components
 
         [Serialize(0.0f, false, description: "How many units of damage the item removes from structures per second.")]
         public float StructureFixAmount
+        {
+            get; set;
+        }
+
+        [Serialize(0.0f, false, description: "How much damage is applied to ballast flora.")]
+        public float FireDamage
+        {
+            get; set;
+        }
+
+        [Serialize(0.0f, false, description: "How many units of damage the item removes from destructible level walls per second.")]
+        public float LevelWallFixAmount
         {
             get; set;
         }
@@ -183,23 +196,40 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 rayStart;
+            Vector2 rayStartWorld;
             Vector2 sourcePos = character?.AnimController == null ? item.SimPosition : character.AnimController.AimSourceSimPos;
             Vector2 barrelPos = item.SimPosition + ConvertUnits.ToSimUnits(TransformedBarrelPos);
             //make sure there's no obstacles between the base of the item (or the shoulder of the character) and the end of the barrel
             if (Submarine.PickBody(sourcePos, barrelPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
             {
                 //no obstacles -> we start the raycast at the end of the barrel
-                rayStart = ConvertUnits.ToSimUnits(item.WorldPosition + TransformedBarrelPos);
+                rayStart = ConvertUnits.ToSimUnits(item.Position + TransformedBarrelPos);
+                rayStartWorld = ConvertUnits.ToSimUnits(item.WorldPosition + TransformedBarrelPos);
             }
             else
             {
-                rayStart = Submarine.LastPickedPosition + Submarine.LastPickedNormal * 0.1f;
-                if (item.Submarine != null) { rayStart += item.Submarine.SimPosition; }
+                rayStart = rayStartWorld = Submarine.LastPickedPosition + Submarine.LastPickedNormal * 0.1f;
+                if (item.Submarine != null) { rayStartWorld += item.Submarine.SimPosition; }
+            }
+
+            //if the calculated barrel pos is in another hull, use the origin of the item to make sure the particles don't end up in an incorrect hull
+            if (item.CurrentHull != null)
+            {
+                var barrelHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(rayStartWorld), item.CurrentHull, useWorldCoordinates: true);
+                if (barrelHull != null && barrelHull != item.CurrentHull)
+                {
+                    if (MathUtils.GetLineRectangleIntersection(ConvertUnits.ToDisplayUnits(sourcePos), ConvertUnits.ToDisplayUnits(rayStart), item.CurrentHull.Rect, out Vector2 hullIntersection))
+                    {
+                        Vector2 rayDir = rayStart.NearlyEquals(sourcePos) ? Vector2.Zero : Vector2.Normalize(rayStart - sourcePos);
+                        rayStartWorld = ConvertUnits.ToSimUnits(hullIntersection - rayDir * 5.0f);
+                        if (item.Submarine != null) { rayStartWorld += item.Submarine.SimPosition; }
+                    }
+                }
             }
 
             float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
             float angle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + spread * Rand.Range(-0.5f, 0.5f);
-            Vector2 rayEnd = rayStart + 
+            Vector2 rayEnd = rayStartWorld + 
                 ConvertUnits.ToSimUnits(new Vector2(
                     (float)Math.Cos(angle),
                     (float)Math.Sin(angle)) * Range * item.body.Dir);
@@ -218,7 +248,7 @@ namespace Barotrauma.Items.Components
             IsActive = true;
             activeTimer = 0.1f;
             
-            debugRayStartPos = ConvertUnits.ToDisplayUnits(rayStart);
+            debugRayStartPos = ConvertUnits.ToDisplayUnits(rayStartWorld);
             debugRayEndPos = ConvertUnits.ToDisplayUnits(rayEnd);
 
             Submarine parentSub = character?.Submarine ?? item.Submarine;
@@ -232,16 +262,16 @@ namespace Barotrauma.Items.Components
                     {
                         continue;
                     }
-                    Repair(rayStart - sub.SimPosition, rayEnd - sub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
+                    Repair(rayStartWorld - sub.SimPosition, rayEnd - sub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
                 }
-                Repair(rayStart, rayEnd, deltaTime, character, degreeOfSuccess, ignoredBodies);
+                Repair(rayStartWorld, rayEnd, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
             else
             {
-                Repair(rayStart - parentSub.SimPosition, rayEnd - parentSub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
+                Repair(rayStartWorld - parentSub.SimPosition, rayEnd - parentSub.SimPosition, deltaTime, character, degreeOfSuccess, ignoredBodies);
             }
             
-            UseProjSpecific(deltaTime, rayStart);
+            UseProjSpecific(deltaTime, rayStartWorld);
 
             return true;
         }
@@ -289,6 +319,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure || (f.Body?.UserData is Item it && it.GetComponent<Planter>() != null)) { return false; }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
+                        if (f.Body?.UserData is VineTile && !(FireDamage > 0)) { return false; }
                         return true;
                     },
                     allowInsideFixture: true);
@@ -324,9 +355,16 @@ namespace Barotrauma.Items.Components
                         hitCharacters.Add(hitCharacter);
                     }
 
+                    //if repairing through walls is not allowed and the next wall is more than 100 pixels away from the previous one, stop here
+                    //(= repairing multiple overlapping walls is allowed as long as the edges of the walls are less than 100 pixels apart)
+                    float thisBodyFraction = Submarine.LastPickedBodyDist(body);
+                    if (!RepairThroughWalls && lastHitType == typeof(Structure) && Range * (thisBodyFraction - lastPickedFraction) > 100.0f)
+                    {
+                        break;
+                    }
                     if (FixBody(user, deltaTime, degreeOfSuccess, body))
                     {
-                        lastPickedFraction = Submarine.LastPickedBodyDist(body);
+                        lastPickedFraction = thisBodyFraction;
                         if (bodyType != null) { lastHitType = bodyType; }
                     }
                 }
@@ -341,6 +379,8 @@ namespace Barotrauma.Items.Components
                     {
                         if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure) { return false; }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
+                        if (f.Body?.UserData is VineTile && !(FireDamage > 0)) { return false; }
+
                         if (f.Body?.UserData is Item targetItem)
                         {
                             if (!HitItems) { return false; }
@@ -479,6 +519,15 @@ namespace Barotrauma.Items.Components
                 }
                 return true;
             }
+            else if (targetBody.UserData is Voronoi2.VoronoiCell cell)
+            {
+                var levelWall = Level.Loaded?.ExtraWalls.Find(w => w.Body == cell.Body) as DestructibleLevelWall;
+                if (levelWall != null)
+                {
+                    levelWall.AddDamage(-LevelWallFixAmount * deltaTime, item.WorldPosition);
+                }
+                return true;
+            }
             else if (targetBody.UserData is Character targetCharacter)
             {
                 if (targetCharacter.Removed) { return false; }
@@ -568,6 +617,13 @@ namespace Barotrauma.Items.Components
 
                 FixItemProjSpecific(user, deltaTime, targetItem);
                 return true;
+            }
+            else if (targetBody.UserData is BallastFloraBranch branch)
+            {
+                if (branch.ParentBallastFlora is { } ballastFlora)
+                {
+                    ballastFlora.DamageBranch(branch, FireDamage * deltaTime, BallastFloraBehavior.AttackType.Fire, user);
+                }
             }
             return false;
         }
@@ -769,7 +825,8 @@ namespace Barotrauma.Items.Components
                         object value = property.GetValue(target);
                         if (door.Stuck > 0)
                         {
-                            var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White, "progressbar.welding");
+                            var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
+                                effect.propertyEffects[i].GetType() == typeof(float) && (float)effect.propertyEffects[i] < 0 ? "progressbar.cutting" : "progressbar.welding");
                             if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                         }
                     }                    

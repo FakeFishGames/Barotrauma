@@ -204,7 +204,7 @@ namespace Barotrauma
                 {
                     SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,
-                    OriginalContainerID = validContainer.Key.Item.OriginalID
+                    OriginalContainerID = validContainer.Key.Item.ID
                 };
                 foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
                 {

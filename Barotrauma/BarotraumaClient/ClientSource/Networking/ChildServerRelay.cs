@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Barotrauma.IO;
+﻿using System.Diagnostics;
 using System.IO.Pipes;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Barotrauma.Networking
 {
@@ -26,7 +20,15 @@ namespace Barotrauma.Networking
             PrivateStart();
 
             processInfo.Arguments += " -pipes " + writePipe.GetClientHandleAsString() + " " + readPipe.GetClientHandleAsString();
-            Process = Process.Start(processInfo);
+            try
+            {
+                Process = Process.Start(processInfo);
+            }
+            catch
+            {
+                DebugConsole.ThrowError($"Failed to start ChildServerRelay Process. File: {processInfo.FileName}, arguments: {processInfo.Arguments}");
+                throw;
+            }
 
             localHandlesDisposed = false;
         }

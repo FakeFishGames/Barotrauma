@@ -85,6 +85,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsRemotePlayer { get; set; }
 
+        public bool IsLocalPlayer => Controlled == this;
         public bool IsPlayer => Controlled == this || IsRemotePlayer;
         public bool IsBot => !IsPlayer && AIController is HumanAIController humanAI && humanAI.Enabled;
 
@@ -314,6 +315,7 @@ namespace Barotrauma
             set
             {
                 hideFaceTimer = MathHelper.Clamp(hideFaceTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+                if (info != null && info.IsDisguisedAsAnother != HideFace) info.CheckDisguiseStatus(true);
             }
         }
 
@@ -744,9 +746,9 @@ namespace Barotrauma
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
         {
-            return Create(characterInfo.SpeciesName, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
+            return Create(characterInfo.SpeciesName, position, seed, characterInfo, id, isRemotePlayer, hasAi, true, ragdoll);
         }
 
         /// <summary>
@@ -756,16 +758,24 @@ namespace Barotrauma
         /// <param name="position">Position in display units.</param>
         /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
         /// <param name="characterInfo">The name, gender, etc of the character. Only used for humans, and if the parameter is not given, a random CharacterInfo is generated.</param>
+        /// <param name="id">ID to assign to the character. If set to 0, automatically find an available ID.</param>
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
+        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
                 speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
             }
+
+            if (CharacterPrefab.FindBySpeciesName(speciesName) == null)
+            {
+                DebugConsole.ThrowError($"Failed to create character \"{speciesName}\". Matching prefab not found.\n" + Environment.StackTrace);
+                return null;
+            }
+
             Character newCharacter = null;
             if (!speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
@@ -783,7 +793,7 @@ namespace Barotrauma
             }
             else
             {
-                newCharacter = new Character(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                newCharacter = new Character(speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isRemotePlayer, ragdollParams: ragdoll);
             }
 
             float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
@@ -823,8 +833,8 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
-            : base(null)
+        protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
+            : base(null, id)
         {
             prefab = CharacterPrefab.FindBySpeciesName(speciesName);
 
@@ -1461,7 +1471,7 @@ namespace Barotrauma
                 AnimController.ReleaseStuckLimbs();
                 if (AIController != null && AIController is EnemyAIController enemyAI)
                 {
-                    enemyAI.LatchOntoAI?.DeattachFromBody();
+                    enemyAI.LatchOntoAI?.DeattachFromBody(reset: true);
                 }
             }
 #endif
@@ -1517,6 +1527,7 @@ namespace Barotrauma
                 var validLimbs = AnimController.Limbs.Where(l =>
                 {
                     if (l.IsSevered || l.IsStuck) { return false; }
+                    if (l.Disabled) { return false; }
                     var attack = l.attack;
                     if (attack == null) { return false; }
                     if (attack.CoolDownTimer > 0) { return false; }
@@ -1629,6 +1640,7 @@ namespace Barotrauma
                 foreach (Limb limb in target.AnimController.Limbs)
                 {
                     if (limb.IsSevered || limb == target.AnimController.MainLimb) { continue; }
+                    if (limb.Hidden) { continue; }
                     Vector2 limbDir = limb.WorldPosition - WorldPosition;
                     float leftDot = Vector2.Dot(limbDir, leftDir);
                     if (leftDot > leftMostDot)
@@ -2919,7 +2931,7 @@ namespace Barotrauma
             }
 #endif
             // Don't allow beheading for monster attacks, because it happens too frequently (crawlers/tigerthreshers etc attacking each other -> they will most often target to the head)
-            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: attacker.IsHuman || attacker.IsPlayer);
+            TrySeverLimbJoints(limbHit, attack.SeverLimbsProbability, attackResult.Damage, allowBeheading: attacker == null || attacker.IsHuman || attacker.IsPlayer);
 
             return attackResult;
         }
@@ -2962,7 +2974,7 @@ namespace Barotrauma
                 if (severed)
                 {       
                     Limb otherLimb = joint.LimbA == targetLimb ? joint.LimbB : joint.LimbA;
-                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass);             
+                    otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);             
                     ApplyStatusEffects(ActionType.OnSevered, 1.0f);
                     targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
                     otherLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
@@ -3422,6 +3434,75 @@ namespace Barotrauma
                 }
             }
         }
+
+        public void SpawnInventoryItems(Inventory inventory, XElement itemData)
+        {
+            SpawnInventoryItemsRecursive(inventory, itemData);
+        }
+        
+        private void SpawnInventoryItemsRecursive(Inventory inventory, XElement element)
+        {
+            foreach (XElement itemElement in element.Elements())
+            {
+                var newItem = Item.Load(itemElement, inventory.Owner.Submarine, createNetworkEvent: true, idRemap: IdRemap.DiscardId);
+                if (newItem == null) { continue; }
+
+                if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
+                    GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(newItem, new object[] { NetEntityEvent.Type.Status });
+                }
+#if SERVER
+                newItem.GetComponent<Terminal>()?.SyncHistory();
+#endif
+                int[] slotIndices = itemElement.GetAttributeIntArray("i", new int[] { 0 });
+                if (!slotIndices.Any())
+                {
+                    DebugConsole.ThrowError("Invalid inventory data in character \"" + Name + "\" - no slot indices found");
+                    continue;
+                }
+
+                //make sure there's no other item in the slot
+                //this should not happen normally, but can occur if the character is accidentally given new job items while also loading previous items in the campaign
+                for (int i = 0; i < inventory.Capacity; i++)
+                {
+                    if (slotIndices.Contains(i) && inventory.Items[i] != null && inventory.Items[i] != newItem)
+                    {
+                        DebugConsole.ThrowError($"Error while loading character inventory data. The slot {i} was already occupied by the item \"{inventory.Items[i].Name} ({inventory.Items[i].ID})\" when loading the item \"{newItem.Name} ({newItem.ID})\"");
+                        inventory.Items[i].Drop(null, createNetworkEvent: false);
+                    }
+                }
+
+                inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
+                newItem.ParentInventory = inventory;
+
+                //force the item to the correct slots
+                //  e.g. putting the item in a hand slot will also put it in the first available Any-slot, 
+                //  which may not be where it actually was
+                for (int i = 0; i < inventory.Capacity; i++)
+                {
+                    if (slotIndices.Contains(i))
+                    {
+                        inventory.Items[i] = newItem;
+                    }
+                    else if (inventory.Items[i] == newItem)
+                    {
+                        inventory.Items[i] = null;
+                    }
+                }
+
+                int itemContainerIndex = 0;
+                var itemContainers = newItem.GetComponents<ItemContainer>().ToList();
+                foreach (XElement childInvElement in itemElement.Elements())
+                {
+                    if (itemContainerIndex >= itemContainers.Count) break;
+                    if (!childInvElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    SpawnInventoryItemsRecursive(itemContainers[itemContainerIndex].Inventory, childInvElement);
+                    itemContainerIndex++;
+                }
+            }
+        }
+
 
         private readonly HashSet<AttackContext> currentContexts = new HashSet<AttackContext>();
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
@@ -138,19 +139,25 @@ namespace Barotrauma.Items.Components
         public TileSide Sides = TileSide.None;
         public TileSide BlockedSides = TileSide.None;
 
-        public readonly FoliageConfig FlowerConfig;
-        public readonly FoliageConfig LeafConfig;
+        public FoliageConfig FlowerConfig;
+        public FoliageConfig LeafConfig;
 
         public int FailedGrowthAttempts;
         public Rectangle Rect;
         public Vector2 Position;
-        public Color HealthColor = Color.Transparent;
-        public float DecayDelay;
 
-        private float VineStep;
-        private float FlowerStep;
+        private readonly float diameter;
+        public Vector2 offset;
+
+        public VineTileType Type;
+        public readonly Dictionary<TileSide, Vector2> AdjacentPositions;
+        public static int Size = 32;
+        
+        
+        public float VineStep;
+        public float FlowerStep;
+
         private float growthStep;
-
         public float GrowthStep
         {
             get => growthStep;
@@ -166,17 +173,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private readonly float diameter;
-        private Vector2 offset;
+        public Color HealthColor = Color.Transparent;
+        public float DecayDelay;
 
-        private readonly Growable Parent;
-        public VineTileType Type;
+        private readonly Growable? Parent;
 
-        public readonly Dictionary<TileSide, Vector2> AdjacentPositions;
-
-        public static int Size = 32;
-
-        public VineTile(Growable parent, Vector2 position, VineTileType type, FoliageConfig? flowerConfig = null, FoliageConfig? leafConfig = null, Rectangle? rect = null)
+        public VineTile(Growable? parent, Vector2 position, VineTileType type, FoliageConfig? flowerConfig = null, FoliageConfig? leafConfig = null, Rectangle? rect = null)
         {
             FlowerConfig = flowerConfig ?? FoliageConfig.EmptyConfig;
             LeafConfig = leafConfig ?? FoliageConfig.EmptyConfig;
@@ -197,7 +199,9 @@ namespace Barotrauma.Items.Components
 
         public void UpdateScale(float deltaTime)
         {
-            if (Parent.Decayed && GrowthStep > 1.0f)
+            bool decayed = Parent?.Decayed ?? false;
+
+            if (decayed && GrowthStep > 1.0f)
             {
                 if (DecayDelay > 0)
                 {
@@ -209,7 +213,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (GrowthStep >= 2.0f || Parent.Decayed) { return; }
+            if (GrowthStep >= 2.0f || decayed) { return; }
 
             GrowthStep += deltaTime;
 
@@ -289,6 +293,8 @@ namespace Barotrauma.Items.Components
 
         public bool CanGrowMore() => (Sides | BlockedSides).Count() < 4;
 
+        public bool IsSideBlocked(TileSide side) => BlockedSides.IsBitSet(side) || Sides.IsBitSet(side);
+
         public static Rectangle CreatePlantRect(Vector2 pos) => new Rectangle((int) pos.X - Size / 2, (int) pos.Y + Size / 2, Size, Size);
     }
 
@@ -312,6 +318,11 @@ namespace Barotrauma.Items.Components
             }
 
             return count;
+        }
+
+        public static TileSide GetOppositeSide(this TileSide side)
+        {
+            return (TileSide) (1 << ((int) Math.Log2((int) side) + 2) % 4);
         }
     }
 
@@ -705,8 +716,7 @@ namespace Barotrauma.Items.Components
                     // if the X value is bigger than Y it's to the left or right of us and then check if X is negative or positive to determine if it's right or left
                     TileSide connectingSide = absDistX > absDistY ? distX > 0 ? TileSide.Right : TileSide.Left : distY > 0 ? TileSide.Top : TileSide.Bottom;
 
-                    // We use log2 to find the index and offset that index by 2 since the opposite side is always 2 offsets away
-                    TileSide oppositeSide = (TileSide) (1 << ((int) Math.Log2((int) connectingSide) + 2) % 4);
+                    TileSide oppositeSide = connectingSide.GetOppositeSide();
 
                     if (otherVine.BlockedSides.IsBitSet(connectingSide))
                     {
@@ -810,9 +820,9 @@ namespace Barotrauma.Items.Components
             return element;
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues)
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(componentElement, usePrefabValues);
+            base.Load(componentElement, usePrefabValues, idRemap);
             flowerTiles = componentElement.GetAttributeIntArray("flowertiles", new int[0]);
             Decayed = componentElement.GetAttributeBool("decayed", false);
 

@@ -24,7 +24,8 @@
     karmanotificationinterval="15" 
     resetkarmabetweenrounds="true"
     dangerousitemstealkarmadecrease="15"
-    dangerousitemstealbots="false" />
+    dangerousitemstealbots="false"
+    ballastflorakarmaincrease="0.05" />
   <Preset
     name="Strict"
     karmadecay="0.08"
@@ -49,7 +50,8 @@
     karmanotificationinterval="15"
     resetkarmabetweenrounds="true"
     dangerousitemstealkarmadecrease="15"
-    dangerousitemstealbots="true" />
+    dangerousitemstealbots="true"
+    ballastflorakarmaincrease="0.03" />
   <Preset
     name="Custom"
     karmadecay="0.08"
@@ -74,5 +76,6 @@
     karmanotificationinterval="15"
     resetkarmabetweenrounds="true"
     dangerousitemstealkarmadecrease="15"
-    dangerousitemstealbots="false" />
+    dangerousitemstealbots="false"
+    ballastflorakarmaincrease="0.05" />
 </KarmaManager>

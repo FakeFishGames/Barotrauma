@@ -288,72 +288,77 @@ namespace Barotrauma.Items.Components
 
             if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }
 
-            float widgetRadius = 60.0f;
-
-            GUI.DrawLine(spriteBatch,
-                drawPos,
-                drawPos + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius,
-                GUI.Style.Green);
-
-            GUI.DrawLine(spriteBatch,
-                drawPos,
-                drawPos + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * widgetRadius,
-                GUI.Style.Green);
+            const float widgetRadius = 60.0f;
 
             GUI.DrawLine(spriteBatch,
                 drawPos,
                 drawPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * widgetRadius,
                 Color.LightGreen);
 
+            const float coneRadius = 300.0f;
+            float radians = maxRotation - minRotation;
+            float circleRadius = coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
+            float lineThickness = 1f / Screen.Selected.Cam.Zoom;
+
+            if (radians > Math.PI * 2)
+            {
+                spriteBatch.DrawCircle(drawPos, circleRadius, 180, GUI.Style.Red, thickness: lineThickness);
+            }
+            else
+            {
+                spriteBatch.DrawSector(drawPos, circleRadius, radians, (int)Math.Abs(90 * radians), GUI.Style.Green, offset: minRotation, thickness: lineThickness);
+            }
+
             Widget minRotationWidget = GetWidget("minrotation", spriteBatch, size: 10, initMethod: (widget) =>
             {
-                 widget.Selected += () =>
+                widget.Selected += () =>
                  {
                      oldRotation = RotationLimits;
                  };
-                 widget.MouseDown += () =>
-                 {
-                     widget.color = GUI.Style.Green;
-                     prevAngle = minRotation;
-                 };
-                 widget.Deselected += () =>
-                 {
-                     widget.color = Color.Yellow;
-                     item.CreateEditingHUD();
-                     if (SubEditorScreen.IsSubEditor())
-                     {
-                         SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits", RotationLimits, oldRotation));
-                     }
-                 };
-                 widget.MouseHeld += (deltaTime) =>
-                 {
-                     minRotation = GetRotationAngle(GetDrawPos());
-                     if (minRotation > maxRotation)
-                     {
-                         float temp = minRotation;
-                         minRotation = maxRotation;
-                         maxRotation = temp;
-                     }
-                     MapEntity.DisableSelect = true;
-                 };
-                 widget.PreUpdate += (deltaTime) =>
-                 {
-                     widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
-                     widget.DrawPos = Screen.Selected.Cam.WorldToScreen(widget.DrawPos);
-                 };
-                 widget.PostUpdate += (deltaTime) =>
-                 {
-                     widget.DrawPos = Screen.Selected.Cam.ScreenToWorld(widget.DrawPos);
-                     widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
-                 };
-                 widget.PreDraw += (sprtBtch, deltaTime) =>
-                 {
-                     widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
-                     widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * widgetRadius;
-                     widget.Update(deltaTime);
-                 };
+                widget.MouseDown += () =>
+                {
+                    widget.color = GUI.Style.Green;
+                    prevAngle = minRotation;
+                };
+                widget.Deselected += () =>
+                {
+                    widget.color = Color.Yellow;
+                    item.CreateEditingHUD();
+                    if (SubEditorScreen.IsSubEditor())
+                    {
+                        SubEditorScreen.StoreCommand(new PropertyCommand(this, "RotationLimits", RotationLimits, oldRotation));
+                    }
+                };
+                widget.MouseHeld += (deltaTime) =>
+                {
+                    minRotation = GetRotationAngle(GetDrawPos());
+                    if (minRotation > maxRotation)
+                    {
+                        float temp = minRotation;
+                        minRotation = maxRotation;
+                        maxRotation = temp;
+                    }
+                    RotationLimits = RotationLimits;
+                    MapEntity.DisableSelect = true;
+                };
+                widget.PreUpdate += (deltaTime) =>
+                {
+                    widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
+                    widget.DrawPos = Screen.Selected.Cam.WorldToScreen(widget.DrawPos);
+                };
+                widget.PostUpdate += (deltaTime) =>
+                {
+                    widget.DrawPos = Screen.Selected.Cam.ScreenToWorld(widget.DrawPos);
+                    widget.DrawPos = new Vector2(widget.DrawPos.X, -widget.DrawPos.Y);
+                };
+                widget.PreDraw += (sprtBtch, deltaTime) =>
+                {
+                    widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
+                    widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
+                    widget.Update(deltaTime);
+                };
             });
-            
+
             Widget maxRotationWidget = GetWidget("maxrotation", spriteBatch, size: 10, initMethod: (widget) =>
             {
                 widget.Selected += () =>
@@ -383,6 +388,7 @@ namespace Barotrauma.Items.Components
                         minRotation = maxRotation;
                         maxRotation = temp;
                     }
+                    RotationLimits = RotationLimits;
                     MapEntity.DisableSelect = true;
                 };
                 widget.PreUpdate += (deltaTime) =>
@@ -398,7 +404,7 @@ namespace Barotrauma.Items.Components
                 widget.PreDraw += (sprtBtch, deltaTime) =>
                 {
                     widget.tooltip = "Max: " + (int)MathHelper.ToDegrees(maxRotation);
-                    widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * widgetRadius;
+                    widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(maxRotation), (float)Math.Sin(maxRotation)) * coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
                     widget.Update(deltaTime);
                 };
             });
@@ -580,7 +586,6 @@ namespace Barotrauma.Items.Components
                 }
                 Launch(projectile, launchRotation: newTargetRotation);
             }
-
         }
     }
 }

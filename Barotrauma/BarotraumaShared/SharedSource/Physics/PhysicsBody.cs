@@ -254,6 +254,8 @@ namespace Barotrauma
         /// </summary>
         public float TransformedRotation => TransformRotation(Rotation, Dir);
 
+        public float TransformRotation(float rotation) => TransformRotation(rotation, dir);
+
         public static float TransformRotation(float rot, float dir) => dir < 0 ? rot - MathHelper.Pi : rot;
 
         public Vector2 LinearVelocity

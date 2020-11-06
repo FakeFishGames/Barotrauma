@@ -123,6 +123,7 @@ namespace Steamworks
 		/// </summary>
 		public static async Task WaitForPingDataAsync( float maxAgeInSeconds = 60 * 5 )
 		{
+			await Task.Yield();
 			if ( Internal.CheckPingDataUpToDate( maxAgeInSeconds ) )
 				return;
 

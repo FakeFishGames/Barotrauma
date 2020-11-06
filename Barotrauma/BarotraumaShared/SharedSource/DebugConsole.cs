@@ -11,6 +11,7 @@ using System.Globalization;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
+using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
@@ -1160,8 +1161,10 @@ namespace Barotrauma
             {
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (!(c.AIController is EnemyAIController)) continue;
-                    c.SetAllDamage(200.0f, 0.0f, 0.0f);
+                    if (c.AIController is EnemyAIController enemyAI && enemyAI.PetBehavior == null)
+                    {
+                        c.SetAllDamage(200.0f, 0.0f, 0.0f);
+                    }
                 }
             }, null, isCheat: true));
 
@@ -1259,6 +1262,75 @@ namespace Barotrauma
                     }
                 }
             }, isCheat: true));
+            
+            commands.Add(new Command("ballastflora", "infectballast [options]: Infect ballasts and control its growth.", args =>
+            {
+                if (args.Length == 0)
+                {
+                    ThrowError("No action specified."); 
+                    return;
+                }
+
+                string primaryAction = args.Length > 0 ? args[0] : "";
+                string secondaryArgument = args.Length > 1 ? args[1] : "";
+
+                if (Submarine.MainSub == null)
+                {
+                    ThrowError("No submarine loaded.");
+                    return;
+                }
+
+                if (primaryAction.Equals("infect", StringComparison.OrdinalIgnoreCase))
+                {
+                    List<Pump> pumps = new List<Pump>();
+                    foreach (Item item in Submarine.MainSub.GetItems(true))
+                    {
+                        if (item.CurrentHull != null && item.HasTag("ballast") && item.GetComponent<Pump>() is { } pump)
+                        {
+                            pumps.Add(pump);
+                        }
+                    }
+                
+                    if (pumps.Any())
+                    {
+                        BallastFloraPrefab prefab = string.IsNullOrWhiteSpace(secondaryArgument) ? BallastFloraPrefab.Prefabs.First() : BallastFloraPrefab.Find(secondaryArgument);
+                        if (prefab == null)
+                        {
+                            ThrowError($"No such behavior: {secondaryArgument}");
+                            return;
+                        }
+
+                        Pump random = pumps.GetRandom();
+                        random.InfectBallast(prefab.Identifier);
+                        NewMessage($"Infected {random.Name} with {prefab.Identifier}.", Color.Green);
+                        return;
+                    }
+
+                    ThrowError("No available pumps to infect on this submarine.");
+                }
+
+                if (primaryAction.Equals("growthwarp", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (int.TryParse(secondaryArgument, out int value))
+                    {
+                        foreach (Hull hull in Hull.hullList.Where(h => h.BallastFlora != null))
+                        {
+                            BallastFloraBehavior bs = hull.BallastFlora;
+                            bs.GrowthWarps = value;
+                        }
+
+                        NewMessage("Accelerating growth...", Color.Green);
+                        return;
+                    }
+
+                    ThrowError($"Invalid integer \"{secondaryArgument}\".");
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                string[] primaries = { "infect", "growthwarp" };
+                string[] identifiers = BallastFloraPrefab.Prefabs.Select(bfp => bfp.Identifier).Distinct().ToArray();
+                return new[] { primaries, identifiers };
+            }));
 
             commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
             

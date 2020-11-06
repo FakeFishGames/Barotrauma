@@ -148,6 +148,7 @@ namespace Barotrauma
         public static bool IsValidTarget(Item item, Character character)
         {
             if (item == null) { return false; }
+            if (item.IgnoreByAI) { return false; }
             if (item.NonInteractable) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.CurrentHull == null) { return false; }

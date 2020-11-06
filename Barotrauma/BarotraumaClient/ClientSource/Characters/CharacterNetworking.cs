@@ -84,6 +84,10 @@ namespace Barotrauma
                     {
                         newMem.interact = FocusedCharacter.ID;
                     }
+                    else if (newMem.states.HasFlag(InputNetFlags.Use) && (FocusedCharacter?.IsPet ?? false))
+                    {
+                        newMem.interact = FocusedCharacter.ID;
+                    }
                     else if (focusedItem != null && !CharacterInventory.DraggingItemToWorld &&
                         !newMem.states.HasFlag(InputNetFlags.Grab) && !newMem.states.HasFlag(InputNetFlags.Health))
                     {
@@ -254,6 +258,7 @@ namespace Barotrauma
                     if (readStatus)
                     {
                         ReadStatus(msg);
+                        (AIController as EnemyAIController)?.PetBehavior?.ClientRead(msg);
                     }
 
                     msg.ReadPadBits();
@@ -411,8 +416,7 @@ namespace Barotrauma
             Character character = null;
             if (noInfo)
             {
-                character = Create(speciesName, position, seed, null, false);
-                character.ID = id;
+                character = Create(speciesName, position, seed, characterInfo: null, id: id, isRemotePlayer: false);
                 bool containsStatusData = inc.ReadBoolean();
                 if (containsStatusData)
                 {
@@ -429,8 +433,7 @@ namespace Barotrauma
 
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
-                character = Create(speciesName, position, seed, info, ownerId > 0 && GameMain.Client.ID != ownerId, hasAi);
-                character.ID = id;
+                character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
                 character.TeamID = (TeamType)teamID;
                 character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
                 if (character.CampaignInteractionType != CampaignMode.InteractionType.None)

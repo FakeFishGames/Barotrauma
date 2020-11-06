@@ -420,6 +420,7 @@ namespace Barotrauma
                 if (writeStatus)
                 {
                     WriteStatus(tempBuffer);
+                    (AIController as EnemyAIController)?.PetBehavior?.ServerWrite(tempBuffer);
                     HealthUpdatePending = false;
                 }
 

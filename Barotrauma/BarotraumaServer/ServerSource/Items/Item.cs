@@ -238,7 +238,9 @@ namespace Barotrauma
 
         public void WriteSpawnData(IWriteMessage msg, UInt16 entityID, UInt16 originalInventoryID, byte originalItemContainerIndex)
         {
-            if (GameMain.Server == null) return;
+            if (GameMain.Server == null) { return; }
+
+            int initialLength = msg.LengthBytes;
 
             msg.Write(Prefab.OriginalName);
             msg.Write(Prefab.Identifier);
@@ -282,9 +284,21 @@ namespace Barotrauma
             msg.Write(tagsChanged);
             if (tagsChanged)
             {
-                msg.Write(Tags);
+                string[] splitTags = Tags.Split(',');
+                msg.Write(string.Join(',', splitTags.Where(t => !prefab.Tags.Contains(t))));
+                msg.Write(string.Join(',', prefab.Tags.Where(t => !splitTags.Contains(t))));
+            }
+            var nameTag = GetComponent<NameTag>();
+            msg.Write(nameTag != null);
+            if (nameTag != null)
+            {
+                msg.Write(nameTag.WrittenName ?? "");
             }
 
+            if (msg.LengthBytes - initialLength >= 255)
+            {
+                DebugConsole.ThrowError($"Too much data in an item spawn message. Item: \"{Prefab.Identifier}\", msg bytes: {(msg.LengthBytes - initialLength)}, description changed: {(Description != prefab.Description)}, description: {Description}, tags changed: {tagsChanged}, tags: {Tags}");
+            }
         }
 
         partial void UpdateNetPosition(float deltaTime)

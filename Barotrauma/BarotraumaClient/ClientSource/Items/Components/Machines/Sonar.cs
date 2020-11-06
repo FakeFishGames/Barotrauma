@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -28,10 +29,17 @@ namespace Barotrauma.Items.Components
         private GUITickBox activeTickBox, passiveTickBox;
         private GUITextBlock signalWarningText;
 
+        private GUIFrame lowerAreaFrame;
+
         private GUIScrollBar zoomSlider;
 
         private GUIButton directionalModeSwitch;
         private Vector2? pingDragDirection = null;
+
+        /// <summary>
+        /// Can be null if the property HasMineralScanner is false
+        /// </summary>
+        private GUIButton mineralScannerSwitch;
 
         private GUIFrame controlContainer;
 
@@ -59,8 +67,6 @@ namespace Barotrauma.Items.Components
 
         private const float DisruptionUpdateInterval = 0.2f;
         private float disruptionUpdateTimer;
-
-        private float zoomSqrt;
 
         private float showDirectionalIndicatorTimer;
 
@@ -113,6 +119,10 @@ namespace Barotrauma.Items.Components
         public float DisplayRadius { get; private set; }
 
         public static Vector2 GUISizeCalculation => Vector2.One * Math.Min(GUI.RelativeHorizontalAspectRatio, 1f) * sonarAreaSize;
+
+        private List<Tuple<Vector2, List<Item>>> MineralClusters { get; set; }
+
+        private readonly List<GUITextBlock> textBlocksToScaleAndNormalize = new List<GUITextBlock>();
 
         partial void InitProjSpecific(XElement element)
         {
@@ -214,11 +224,14 @@ namespace Barotrauma.Items.Components
             };
             passiveTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
             activeTickBox.TextBlock.OverrideTextColor(GUI.Style.TextColor);
+            textBlocksToScaleAndNormalize.Add(passiveTickBox.TextBlock);
+            textBlocksToScaleAndNormalize.Add(activeTickBox.TextBlock);
 
-            var lowerArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.BottomCenter), style: null);
-            var zoomContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerArea.RectTransform, Anchor.TopCenter), style: null);
+            lowerAreaFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.BottomCenter), style: null);
+            var zoomContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerAreaFrame.RectTransform, Anchor.TopCenter), style: null);
             var zoomText = new GUITextBlock(new RectTransform(new Vector2(0.3f, 0.6f), zoomContainer.RectTransform, Anchor.CenterLeft),
                 TextManager.Get("SonarZoom"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterRight);
+            textBlocksToScaleAndNormalize.Add(zoomText);
             zoomSlider = new GUIScrollBar(new RectTransform(new Vector2(0.5f, 0.8f), zoomContainer.RectTransform, Anchor.CenterLeft)
             {
                 RelativeOffset = new Vector2(0.35f, 0)
@@ -238,7 +251,7 @@ namespace Barotrauma.Items.Components
 
             new GUIFrame(new RectTransform(new Vector2(0.8f, 0.01f), paddedControlContainer.RectTransform, Anchor.Center), style: "HorizontalLine");
 
-            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerArea.RectTransform, Anchor.BottomCenter), style: null);
+            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerAreaFrame.RectTransform, Anchor.BottomCenter), style: null);
             directionalModeSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), directionalModeFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
             {
                 OnClicked = (button, data) =>
@@ -255,11 +268,11 @@ namespace Barotrauma.Items.Components
             };
             var directionalModeSwitchText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1), directionalModeFrame.RectTransform, Anchor.CenterRight),
                 TextManager.Get("SonarDirectionalPing"), GUI.Style.TextColor, GUI.SubHeadingFont, Alignment.CenterLeft);
-
+            textBlocksToScaleAndNormalize.Add(directionalModeSwitchText);
 
             GuiFrame.CanBeFocused = false;
-
-            GUITextBlock.AutoScaleAndNormalize(passiveTickBox.TextBlock, activeTickBox.TextBlock, zoomText, directionalModeSwitchText);
+            
+            GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
 
             sonarView = new GUICustomComponent(new RectTransform(Vector2.One * 0.7f, GuiFrame.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight),
                 (spriteBatch, guiCustomComponent) => { DrawSonar(spriteBatch, guiCustomComponent.Rect); }, null);
@@ -275,7 +288,7 @@ namespace Barotrauma.Items.Components
                 sonarView.RectTransform.ScaleBasis = ScaleBasis.Smallest;
                 sonarView.RectTransform.SetPosition(Anchor.CenterRight);
                 sonarView.RectTransform.Resize(GUISizeCalculation);
-                GUITextBlock.AutoScaleAndNormalize(passiveTickBox.TextBlock, activeTickBox.TextBlock, zoomText, directionalModeSwitchText);
+                GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
             }
         }
 
@@ -293,8 +306,38 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
+            if (HasMineralScanner) { AddMineralScannerSwitchToGUI(); }
             //make the sonarView customcomponent render the steering view so it gets drawn in front of the sonar
             item.GetComponent<Steering>()?.AttachToSonarHUD(sonarView);
+        }
+
+        private void AddMineralScannerSwitchToGUI()
+        {
+            // First adjust other elements of the lower area
+            zoomSlider.Parent.RectTransform.RelativeSize = new Vector2(1.0f, 0.3f);
+            directionalModeSwitch.Parent.RectTransform.RelativeSize = new Vector2(1.0f, 0.3f);
+            directionalModeSwitch.Parent.RectTransform.SetPosition(Anchor.Center);
+
+            // Then add the scanner switch
+            var mineralScannerFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.3f), lowerAreaFrame.RectTransform, Anchor.BottomCenter), style: null);
+            mineralScannerSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), mineralScannerFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
+            {
+                OnClicked = (button, data) =>
+                {
+                    useMineralScanner = !useMineralScanner;
+                    button.Selected = useMineralScanner;
+                    if (GameMain.Client != null)
+                    {
+                        unsentChanges = true;
+                        correctionTimer = CorrectionDelay;
+                    }
+                    return true;
+                }
+            };
+            var mineralScannerSwitchText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1), mineralScannerFrame.RectTransform, Anchor.CenterRight),
+                TextManager.Get("SonarMineralScanner"), GUI.Style.TextColor, GUI.SubHeadingFont, Alignment.CenterLeft);
+            textBlocksToScaleAndNormalize.Add(mineralScannerSwitchText);
+            GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
@@ -339,6 +382,32 @@ namespace Barotrauma.Items.Components
                 Vector2.DistanceSquared(sonarView.Rect.Center.ToVector2(), PlayerInput.MousePosition) <
                 (sonarView.Rect.Width / 2 * sonarView.Rect.Width / 2);
 
+            if (HasMineralScanner && Level.Loaded != null && !Level.Loaded.Generating)
+            {
+                if (MineralClusters == null)
+                {
+                    MineralClusters = new List<Tuple<Vector2, List<Item>>>();
+                    foreach (var p in Level.Loaded.PathPoints)
+                    {
+                        foreach (var c in p.ClusterLocations)
+                        {
+                            if (c.Resources.None(i => i != null && !i.Removed && i.Tags.Contains("ore"))) { continue; }
+                            var pos = Vector2.Zero;
+                            foreach (var r in c.Resources)
+                            {
+                                pos += r.WorldPosition;
+                            }
+                            pos /= c.Resources.Count;
+                            MineralClusters.Add(new Tuple<Vector2, List<Item>>(pos, c.Resources));
+                        }
+                    }
+                }
+                else
+                {
+                    MineralClusters.RemoveAll(t => t.Item2 == null || t.Item2.None() || t.Item2.All(i => i == null || i.Removed));
+                }
+            }
+
             if (UseTransducers && connectedTransducers.Count == 0)
             {
                 return;
@@ -348,12 +417,16 @@ namespace Barotrauma.Items.Components
 
             if (Level.Loaded != null)
             {
+                List<LevelTrigger> ballastFloraSpores = new List<LevelTrigger>();
                 Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
                 for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
                 {
                     var activePing = activePings[pingIndex];
-                    foreach (LevelObject levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(transducerCenter, range * activePing.State / zoom))
+                    LevelObjectManager objManager = Level.Loaded.LevelObjectManager;
+                    float pingRange = range * activePing.State / zoom;
+                    foreach (LevelObject levelObject in objManager.GetAllObjects(transducerCenter, pingRange))
                     {
+                        if (levelObject.Triggers == null) { continue; }
                         //gather all nearby triggers that are causing the water to flow into the dictionary
                         foreach (LevelTrigger trigger in levelObject.Triggers)
                         {
@@ -362,6 +435,10 @@ namespace Barotrauma.Items.Components
                             if (flow.LengthSquared() > 1.0f && !levelTriggerFlows.ContainsKey(trigger))
                             {
                                 levelTriggerFlows.Add(trigger, flow);
+                            }
+                            if (!string.IsNullOrWhiteSpace(trigger.InfectIdentifier) && Vector2.DistanceSquared(transducerCenter, trigger.WorldPosition) < pingRange / 2 * pingRange / 2)
+                            {
+                                ballastFloraSpores.Add(trigger);
                             }
                         }
                     }
@@ -398,6 +475,19 @@ namespace Barotrauma.Items.Components
                         };
                         sonarBlips.Add(flowBlip);
                     }
+                }
+
+                foreach (LevelTrigger spore in ballastFloraSpores)
+                {
+                    Vector2 blipPos = spore.WorldPosition + Rand.Vector(spore.ColliderRadius * Rand.Range(0.0f, 1.0f));
+                    SonarBlip sporeBlip = new SonarBlip(blipPos, Rand.Range(0.1f, 0.5f), 0.5f)
+                    {
+                        Rotation = Rand.Range(-MathHelper.TwoPi, MathHelper.TwoPi),
+                        BlipType = BlipType.Default,
+                        Velocity = Rand.Vector(100f, Rand.RandSync.Unsynced)
+                    };
+
+                    sonarBlips.Add(sporeBlip);
                 }
 
                 float outsideLevelFlow = 0.0f;
@@ -718,6 +808,24 @@ namespace Barotrauma.Items.Components
                             sonarPosition, transducerCenter, 
                             displayScale, center, DisplayRadius * 0.95f);
                     }
+                }
+            }
+
+            if (HasMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null)
+            {
+                var maxMineralScanRangeSquared = Range * Range;
+                foreach (var t in MineralClusters)
+                {
+                    var unobtainedMinerals = t.Item2.Where(i => i != null && i.GetRootInventoryOwner() == i);
+                    if (unobtainedMinerals.None()) { continue; }
+                    if (Vector2.DistanceSquared(transducerCenter, t.Item1) > maxMineralScanRangeSquared) { continue; }
+                    var i = unobtainedMinerals.FirstOrDefault();
+                    if (i == null) { continue; }
+                    DrawMarker(spriteBatch,
+                        i.Name, null, i,
+                        t.Item1, transducerCenter,
+                        displayScale, center, DisplayRadius * 0.95f,
+                        onlyShowTextOnMouseOver: true);
                 }
             }
 
@@ -1334,7 +1442,8 @@ namespace Barotrauma.Items.Components
             sonarBlip.Draw(spriteBatch, center + pos, color * 0.5f, sonarBlip.Origin, 0, scale, SpriteEffects.None, 0);
         }
 
-        private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius)
+        private void DrawMarker(SpriteBatch spriteBatch, string label, string iconIdentifier, object targetIdentifier, Vector2 worldPosition, Vector2 transducerPosition, float scale, Vector2 center, float radius,
+            bool onlyShowTextOnMouseOver = false)
         {
             float linearDist = Vector2.Distance(worldPosition, transducerPosition);
             float dist = linearDist;
@@ -1391,16 +1500,27 @@ namespace Barotrauma.Items.Components
             markerPos.Y = (int)markerPos.Y;
 
             float alpha = 1.0f;
-            if (linearDist * scale < radius)
+            if (!onlyShowTextOnMouseOver)
             {
-                float normalizedDist = linearDist * scale / radius;
-                alpha = Math.Max(normalizedDist - 0.4f, 0.0f);
-
-                float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
-                float hoverThreshold = 150.0f;
-                if (mouseDist < hoverThreshold)
+                if (linearDist * scale < radius)
                 {
-                    alpha += (hoverThreshold - mouseDist) / hoverThreshold;
+                    float normalizedDist = linearDist * scale / radius;
+                    alpha = Math.Max(normalizedDist - 0.4f, 0.0f);
+
+                    float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
+                    float hoverThreshold = 150.0f;
+                    if (mouseDist < hoverThreshold)
+                    {
+                        alpha += (hoverThreshold - mouseDist) / hoverThreshold;
+                    }
+                }
+            }
+            else
+            {
+                float mouseDist = Vector2.Distance(PlayerInput.MousePosition, markerPos);
+                if (mouseDist > 5)
+                {
+                    alpha = 0.0f;
                 }
             }
 
@@ -1446,6 +1566,8 @@ namespace Barotrauma.Items.Components
                 sprite.Remove();
             }
             targetIcons.Clear();
+
+            MineralClusters = null;
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)
@@ -1460,6 +1582,7 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
+                msg.Write(useMineralScanner);
             }
         }
         
@@ -1471,6 +1594,7 @@ namespace Barotrauma.Items.Components
             float zoomT             = 1.0f;
             bool directionalPing    = useDirectionalPing;
             float directionT        = 0.0f;
+            bool mineralScanner     = useMineralScanner;
             if (isActive)
             {
                 zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
@@ -1479,6 +1603,7 @@ namespace Barotrauma.Items.Components
                 {
                     directionT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                 }
+                mineralScanner = msg.ReadBoolean();
             }
 
             if (correctionTimer > 0.0f)
@@ -1500,6 +1625,11 @@ namespace Barotrauma.Items.Components
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
                 useDirectionalPing = directionalModeSwitch.Selected = directionalPing;
+                useMineralScanner = mineralScanner;
+                if (mineralScannerSwitch != null)
+                {
+                    mineralScannerSwitch.Selected = mineralScanner;
+                }
             }
         }
 
@@ -1510,6 +1640,10 @@ namespace Barotrauma.Items.Components
             passiveTickBox.Selected = !isActive;
             activeTickBox.Selected = isActive;
             directionalModeSwitch.Selected = useDirectionalPing;
+            if (mineralScannerSwitch != null)
+            {
+                mineralScannerSwitch.Selected = useMineralScanner;
+            }
         }
     }
 

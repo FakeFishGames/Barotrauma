@@ -98,10 +98,11 @@ namespace Barotrauma
 
         private void ApplyDamage(float deltaTime, bool applyForce)
         {
-            int limbCount = character.AnimController.Limbs.Count(l => !l.ignoreCollisions && !l.IsSevered);
+            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered);
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.IsSevered) { continue; }
+                if (limb.Hidden) { continue; }
                 float random = Rand.Value();
                 huskInfection.Clear();
                 huskInfection.Add(AfflictionPrefab.InternalDamage.Instantiate(random * 10 * deltaTime / limbCount));
@@ -170,7 +171,16 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to turn character \"" + character.Name + "\" into a husk - husk config file not found.");
                 yield return CoroutineStatus.Success;
             }
-            var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), character.Info, isRemotePlayer: false, hasAi: true);
+
+            XElement parentElement = new XElement("CharacterInfo");
+            XElement infoElement = character.Info?.Save(parentElement);
+            CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(infoElement);
+            var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), huskCharacterInfo, isRemotePlayer: false, hasAi: true);
+            if (husk.Info != null)
+            {
+                husk.Info.Character = husk;
+                husk.Info.TeamID = Character.TeamType.None;
+            }
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {

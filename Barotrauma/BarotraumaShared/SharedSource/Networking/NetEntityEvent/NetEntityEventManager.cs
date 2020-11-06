@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -46,7 +47,7 @@ namespace Barotrauma.Networking
                 //the length of the data is written as a byte, so the data needs to be less than 255 bytes long
                 if (tempEventBuffer.LengthBytes > 255)
                 {
-                    DebugConsole.ThrowError("Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes, event ID " + e.ID + ")");
+                    DebugConsole.ThrowError("Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes, event ID " + e.ID + $", {string.Join(' ',e.Data.Select(d => d.ToString()))})");
                     GameAnalyticsManager.AddErrorEventOnce("NetEntityEventManager.Write:TooLong" + e.Entity.ToString(),
                         GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                         "Too much data in network event for entity \"" + e.Entity.ToString() + "\" (" + tempEventBuffer.LengthBytes + " bytes, event ID " + e.ID + ")");

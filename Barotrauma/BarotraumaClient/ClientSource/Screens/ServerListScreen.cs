@@ -1061,7 +1061,7 @@ namespace Barotrauma
                         (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
                         (!filterEmpty.Selected || serverInfo.PlayerCount > 0) &&
                         (!filterWhitelisted.Selected || serverInfo.UsingWhiteList == true) &&
-                        (filterOffensive.Selected || !ForbiddenWordFilter.IsForbidden(serverInfo.ServerName)) &&
+                        (!filterOffensive.Selected || !ForbiddenWordFilter.IsForbidden(serverInfo.ServerName)) &&
                         (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
                         (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
                         (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&

@@ -63,14 +63,14 @@ namespace Barotrauma.Items.Components
                 if (item.body.LinearVelocity.LengthSquared() < 0.01f)
                 {
                     CurrentThrower = null;
-                    if (statusEffectLists.ContainsKey(ActionType.OnImpact))
+                    if (statusEffectLists?.ContainsKey(ActionType.OnImpact) ?? false)
                     {
                         foreach (var statusEffect in statusEffectLists[ActionType.OnImpact])
                         {
                             statusEffect.SetUser(null);
                         }
                     }
-                    if (statusEffectLists.ContainsKey(ActionType.OnBroken))
+                    if (statusEffectLists?.ContainsKey(ActionType.OnBroken) ?? false)
                     {
                         foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
                         {
@@ -135,14 +135,14 @@ namespace Barotrauma.Items.Components
                     GameServer.Log(GameServer.CharacterLogName(picker) + " threw " + item.Name, ServerLog.MessageType.ItemInteraction);
 #endif
                     CurrentThrower = picker;
-                    if (statusEffectLists.ContainsKey(ActionType.OnImpact))
+                    if (statusEffectLists?.ContainsKey(ActionType.OnImpact) ?? false)
                     {
                         foreach (var statusEffect in statusEffectLists[ActionType.OnImpact])
                         {
                             statusEffect.SetUser(CurrentThrower);
                         }
                     }
-                    if (statusEffectLists.ContainsKey(ActionType.OnBroken))
+                    if (statusEffectLists?.ContainsKey(ActionType.OnBroken) ?? false)
                     {
                         foreach (var statusEffect in statusEffectLists[ActionType.OnBroken])
                         {

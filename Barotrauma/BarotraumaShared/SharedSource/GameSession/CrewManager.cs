@@ -25,8 +25,10 @@ namespace Barotrauma
 
         public bool HasBots { get; set; }
 
-        public List<Pair<Order, float>> ActiveOrders { get; } = new List<Pair<Order, float>>();
+        public List<Pair<Order, float?>> ActiveOrders { get; } = new List<Pair<Order, float?>>();
         public bool IsSinglePlayer { get; private set; }
+
+        public ReadyCheck ActiveReadyCheck;
 
         public CrewManager(bool isSinglePlayer)
         {
@@ -38,7 +40,7 @@ namespace Barotrauma
 
         partial void InitProjectSpecific();
 
-        public bool AddOrder(Order order, float fadeOutTime)
+        public bool AddOrder(Order order, float? fadeOutTime)
         {
             if (order.TargetEntity == null)
             {
@@ -46,7 +48,10 @@ namespace Barotrauma
                 return false;
             }
 
-            Pair<Order, float> existingOrder = ActiveOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity);
+            Pair<Order, float?> existingOrder =
+                ActiveOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity &&
+                                       (o.First.TargetType != Order.OrderTargetType.WallSection || o.First.WallSectionIndex == order.WallSectionIndex));
+            
             if (existingOrder != null)
             {
                 existingOrder.Second = fadeOutTime;
@@ -54,32 +59,33 @@ namespace Barotrauma
             }
             else
             {
-                ActiveOrders.Add(new Pair<Order, float>(order, fadeOutTime));
+                ActiveOrders.Add(new Pair<Order, float?>(order, fadeOutTime));
                 return true;
             }
         }
 
-        public void RemoveOrder(Order order)
-        {
-            ActiveOrders.RemoveAll(o => o.First == order);
-        }
-
         public void AddCharacterElements(XElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (XElement characterElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (!characterElement.Name.ToString().Equals("character", StringComparison.OrdinalIgnoreCase)) { continue; }
 
-                CharacterInfo characterInfo = new CharacterInfo(subElement);
+                CharacterInfo characterInfo = new CharacterInfo(characterElement);
 #if CLIENT
-                if (subElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
+                if (characterElement.GetAttributeBool("lastcontrolled", false)) { characterInfo.LastControlled = true; }
 #endif
                 characterInfos.Add(characterInfo);
-                foreach (XElement invElement in subElement.Elements())
+                foreach (XElement subElement in characterElement.Elements())
                 {
-                    if (!invElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
-                    characterInfo.InventoryData = invElement;
-                    break;
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "inventory":
+                            characterInfo.InventoryData = subElement;
+                            break;
+                        case "health":
+                            characterInfo.HealthData = subElement;
+                            break;
+                    }
                 }
             }
         }
@@ -118,6 +124,12 @@ namespace Barotrauma
             AddCharacterToCrewList(character);
             AddCurrentOrderIcon(character, character.CurrentOrder, character.CurrentOrderOption);
 #endif
+            var idleObjective = character.AIController?.ObjectiveManager?.GetObjective<AIObjectiveIdle>();
+            if (idleObjective != null)
+            {
+                idleObjective.Behavior = character.Info.Job.Prefab.IdleBehavior;
+            }
+            
         }
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
@@ -175,7 +187,7 @@ namespace Barotrauma
                     }
                     if (character.Info.InventoryData != null)
                     {
-                        character.Info.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
+                        character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData);
                     }
                     else if (!character.Info.StartItemsGiven)
                     {
@@ -206,14 +218,19 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            foreach (Pair<Order, float> order in ActiveOrders)
+            foreach (Pair<Order, float?> order in ActiveOrders)
             {
-                order.Second -= deltaTime;
+                if (order.Second.HasValue) { order.Second -= deltaTime; }
             }
-            ActiveOrders.RemoveAll(o => o.Second <= 0.0f);
+            ActiveOrders.RemoveAll(o => o.Second.HasValue && o.Second <= 0.0f);
 
             UpdateConversations(deltaTime);
             UpdateProjectSpecific(deltaTime);
+            ActiveReadyCheck?.Update(deltaTime);
+            if (ActiveReadyCheck != null && ActiveReadyCheck.IsFinished)
+            {
+                ActiveReadyCheck = null;
+            }
         }
 
         #region Dialog

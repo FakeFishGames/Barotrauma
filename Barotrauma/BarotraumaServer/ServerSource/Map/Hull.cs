@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
@@ -70,6 +71,37 @@ namespace Barotrauma
 
         public void ServerWrite(IWriteMessage message, Client c, object[] extraData = null)
         {
+            if (extraData != null && extraData.Length >= 2 && extraData[0] is BallastFloraBehavior behavior && extraData[1] is BallastFloraBehavior.NetworkHeader header)
+            {
+                message.Write(true);
+                message.Write((byte)header);
+
+                switch (header)
+                {
+                    case BallastFloraBehavior.NetworkHeader.Spawn:
+                        behavior.ServerWriteSpawn(message);
+                        break;
+                    case BallastFloraBehavior.NetworkHeader.Kill:
+                        break;
+                    case BallastFloraBehavior.NetworkHeader.BranchCreate when extraData.Length >= 4 && extraData[2] is BallastFloraBranch branch && extraData[3] is int parentId:
+                        behavior.ServerWriteBranchGrowth(message, branch, parentId);
+                        break;
+                    case BallastFloraBehavior.NetworkHeader.BranchDamage when extraData.Length >= 4 && extraData[2] is BallastFloraBranch branch && extraData[3] is float damage:
+                        behavior.ServerWriteBranchDamage(message, branch, damage);
+                        break;
+                    case BallastFloraBehavior.NetworkHeader.BranchRemove when extraData.Length >= 3 && extraData[2] is BallastFloraBranch branch:
+                        behavior.ServerWriteBranchRemove(message, branch);
+                        break;
+                    case BallastFloraBehavior.NetworkHeader.Infect when extraData.Length >= 4 && extraData[2] is UInt16 itemID && extraData[3] is bool infect:
+                        behavior.ServerWriteInfect(message, itemID, infect);
+                        break;
+                }
+
+                message.Write(behavior.PowerConsumptionTimer);
+                return;
+            }
+
+            message.Write(false);
             message.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
             message.WriteRangedSingle(MathHelper.Clamp(OxygenPercentage, 0.0f, 100.0f), 0.0f, 100.0f, 8);
 

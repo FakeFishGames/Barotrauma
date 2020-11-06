@@ -65,7 +65,14 @@ namespace Barotrauma
             if (weldingTool == null)
             {
                 TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
-                    onAbandon: () => Abandon = true,
+                    onAbandon: () =>
+                    {
+                        if (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>())
+                        {
+                            character.Speak(TextManager.Get("dialogcannotfindweldingequipment"), null, 0.0f, "dialogcannotfindweldingequipment", 10.0f);
+                        }
+                        Abandon = true;
+                    },
                     onCompleted: () => RemoveSubObjective(ref getWeldingTool));
                 return;
             }

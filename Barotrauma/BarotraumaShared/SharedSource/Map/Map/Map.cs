@@ -101,7 +101,10 @@ namespace Barotrauma
                         Locations[locationIndices.Y].Connections.Add(connection);
                         connection.LevelData = new LevelData(subElement.Element("Level"));
                         string biomeId = subElement.GetAttributeString("biome", "");
-                        connection.Biome = LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.Identifier == biomeId) ?? LevelGenerationParams.GetBiomes().First();
+                        connection.Biome = 
+                            LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.Identifier == biomeId) ??
+                            LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.OldIdentifier == biomeId) ??
+                            LevelGenerationParams.GetBiomes().First();
                         Connections.Add(connection);
                         break;
                 }
@@ -354,9 +357,8 @@ namespace Barotrauma
             CreateEndLocation();
 
             foreach (Location location in Locations)
-            { 
+            {
                 location.LevelData = new LevelData(location);
-                location.NormalizedDepth = location.MapPosition.X / Width;
             }
             foreach (LocationConnection connection in Connections) 
             { 
@@ -682,10 +684,12 @@ namespace Barotrauma
                 if (location == CurrentLocation || location == SelectedLocation) { continue; }
 
                 //find which types of locations this one can change to
+                var cct = location.Type.CanChangeTo;
                 List<LocationTypeChange> allowedTypeChanges = new List<LocationTypeChange>();
-                List<LocationTypeChange> readyTypeChanges = new List<LocationTypeChange>();
-                foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
+                List<int> readyTypeChanges = new List<int>();
+                for (int i = 0; i < cct.Count; i++)
                 {
+                    LocationTypeChange typeChange = cct[i];
                     //check if there are any adjacent locations that would prevent the change
                     bool disallowedFound = false;
                     foreach (string disallowedLocationName in typeChange.DisallowedAdjacentLocations)
@@ -714,15 +718,19 @@ namespace Barotrauma
 
                     if (location.TypeChangeTimer >= typeChange.RequiredDuration)
                     {
-                        readyTypeChanges.Add(typeChange);
+                        readyTypeChanges.Add(i);
                     }
                 }
 
                 //select a random type change
-                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(t => t.Probability))
+                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(i => cct[i].Probability + (cct[i].ProximityProbabilityIncrease * (float)location.ProximityTime[i])))
                 {
-                    var selectedTypeChange = 
-                        ToolBox.SelectWeightedRandom(readyTypeChanges, readyTypeChanges.Select(t => t.Probability).ToList(), Rand.RandSync.Unsynced);
+                    var selectedTypeChangeIndex = 
+                        ToolBox.SelectWeightedRandom(
+                            readyTypeChanges,
+                            readyTypeChanges.Select(i => cct[i].Probability + (cct[i].ProximityProbabilityIncrease * (float)location.ProximityTime[i])).ToList(),
+                            Rand.RandSync.Unsynced);
+                    var selectedTypeChange = cct[selectedTypeChangeIndex];
                     if (selectedTypeChange != null)
                     {
                         string prevName = location.Name;

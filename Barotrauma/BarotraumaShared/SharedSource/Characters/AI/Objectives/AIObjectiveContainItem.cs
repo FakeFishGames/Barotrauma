@@ -59,7 +59,7 @@ namespace Barotrauma
         protected override bool Check()
         {
             if (IsCompleted) { return true; }
-            if (container == null)
+            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
             {
                 Abandon = true;
                 return false;
@@ -86,7 +86,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (container == null)
+            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
             {
                 Abandon = true;
                 return;
@@ -94,6 +94,11 @@ namespace Barotrauma
             Item itemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
             if (itemToContain != null)
             {
+                if (!character.CanInteractWith(itemToContain))
+                {
+                    Abandon = true;
+                    return;
+                }
                 if (character.CanInteractWith(container.Item, out _, checkLinked: false))
                 {
                     if (RemoveEmpty)
@@ -142,11 +147,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // TODO: should we just use GetItem?
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
-                        TargetName = container.Item.Name
+                        TargetName = container.Item.Name,
+                        abortCondition = () => !itemToContain.IsOwnedBy(character)
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));

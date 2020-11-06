@@ -6,7 +6,7 @@ namespace Barotrauma
     {
         public enum SoundType
         {
-            Idle, Attack, Die, Damage
+            Idle, Attack, Die, Damage, Happy, Unhappy
         }
 
         private readonly RoundSound roundSound;

@@ -129,8 +129,8 @@ namespace Barotrauma
             : this(rect, rect.Width < rect.Height, submarine)
         { }
 
-        public Gap(Rectangle rect, bool isHorizontal, Submarine submarine)
-            : base(MapEntityPrefab.Find(null, "gap"), submarine)
+        public Gap(Rectangle rect, bool isHorizontal, Submarine submarine, ushort id = Entity.NullEntityID)
+            : base(MapEntityPrefab.Find(null, "gap"), submarine, id)
         {
             this.rect = rect;
             flowForce = Vector2.Zero;
@@ -141,7 +141,8 @@ namespace Barotrauma
             GapList.Add(this);
             InsertToList();
 
-            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * 2.0f, Vector2.UnitX * 2.0f);
+            float blockerSize = ConvertUnits.ToSimUnits(Math.Max(rect.Width, rect.Height)) / 2;
+            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize);
             outsideCollisionBlocker.UserData = $"CollisionBlocker (Gap {ID})";
             outsideCollisionBlocker.BodyType = BodyType.Static;
             outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
@@ -711,7 +712,7 @@ namespace Barotrauma
             if (!DisableHullRechecks) FindHulls();
         }
         
-        public static Gap Load(XElement element, Submarine submarine)
+        public static Gap Load(XElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect = Rectangle.Empty;
 
@@ -737,12 +738,10 @@ namespace Barotrauma
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";
             }
 
-            Gap g = new Gap(rect, isHorizontal, submarine)
+            Gap g = new Gap(rect, isHorizontal, submarine, idRemap.GetOffsetId(element))
             {
-                ID = (ushort)int.Parse(element.Attribute("ID").Value),
                 linkedToID = new List<ushort>(),
             };
-            g.OriginalID = g.ID;
             return g;
         }
 

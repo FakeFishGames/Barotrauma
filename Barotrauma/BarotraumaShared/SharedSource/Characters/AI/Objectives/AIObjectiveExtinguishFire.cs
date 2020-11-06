@@ -79,11 +79,17 @@ namespace Barotrauma
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
                     character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
-                    return new AIObjectiveGetItem(character, "fireextinguisher", objectiveManager, equip: true)
+                    var getItemObjective = new AIObjectiveGetItem(character, "fireextinguisher", objectiveManager, equip: true)
                     {
+                        AllowStealing = true,
                         // If the item is inside an unsafe hull, decrease the priority
                         GetItemPriority = i => HumanAIController.UnsafeHulls.Contains(i.CurrentHull) ? 0.1f : 1
                     };
+                    if (objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>())
+                    {
+                        getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindfireextinguisher"), null, 0.0f, "dialogcannotfindfireextinguisher", 10.0f);
+                    };
+                    return getItemObjective;
                 });
             }
             else

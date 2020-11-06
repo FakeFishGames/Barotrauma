@@ -492,8 +492,6 @@ namespace Barotrauma
             [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable()]
             public bool RandomAttack { get; private set; }
 
-            // TODO: latchonto, swarming
-
             public IEnumerable<TargetParams> Targets => targets;
             protected readonly List<TargetParams> targets = new List<TargetParams>();
 
@@ -588,6 +586,21 @@ namespace Barotrauma
 
             [Serialize(false, true, description: "Should the target be ignored if it's inside a container/inventory. Only affects items."), Editable]
             public bool IgnoreContained { get; set; }
+
+            [Serialize(false, true, description: "Should the target be ignored while the creature is inside. Doesn't matter where the target is."), Editable]
+            public bool IgnoreWhileInside { get; set; }
+
+            [Serialize(false, true, description: "Should the target be ignored while the creature is outside. Doesn't matter where the target is."), Editable]
+            public bool IgnoreWhileOutside { get; set; }
+
+            [Serialize(0f, true, description: "Use to define a distance at which the creature starts the sweeping movement."), Editable(MinValueFloat = 0, MaxValueFloat = 10000, ValueStep = 1, DecimalCount = 0)]
+            public float SweepDistance { get; private set; }
+
+            [Serialize(10f, true, description: "How much the sweep affects the steering?"), Editable(MinValueFloat = 0, MaxValueFloat = 100, ValueStep = 1f, DecimalCount = 1)]
+            public float SweepStrength { get; private set; }
+
+            [Serialize(1f, true, description: "How quickly the sweep direction changes. Uses the sine wave pattern."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
+            public float SweepSpeed { get; private set; }
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 

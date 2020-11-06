@@ -1335,7 +1335,7 @@ namespace Barotrauma
                     };
                     msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
-                        LoadDefaultConfig(setLanguage: false);
+                        LoadDefaultConfig(setLanguage: false, loadContentPackages: Screen.Selected != GameMain.GameScreen);
                         CheckBindings(true);
                         RefreshItemMessages();
                         ApplySettings();

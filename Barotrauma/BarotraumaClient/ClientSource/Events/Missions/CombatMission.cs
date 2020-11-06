@@ -2,7 +2,7 @@
 
 namespace Barotrauma
 {
-    partial class CombatMission
+    partial class CombatMission : Mission
     {
         public override string Description
         {

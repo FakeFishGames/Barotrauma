@@ -525,6 +525,7 @@ namespace Barotrauma
             Tutorials.Tutorial.Init();
             MapGenerationParams.Init();
             LevelGenerationParams.LoadPresets();
+            CaveGenerationParams.LoadPresets();
             OutpostGenerationParams.LoadPresets();
             WreckAIConfig.LoadAll();
             EventSet.LoadPrefabs();
@@ -533,6 +534,7 @@ namespace Barotrauma
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
             Order.Init();
             EventManagerSettings.Init();
+            BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
             TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 

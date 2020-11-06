@@ -328,8 +328,7 @@ namespace Barotrauma
                             deformation = ragdoll.Limbs
                                 .Where(l => l != null)
                                 .SelectMany(l => l.Deformations)
-                                .Where(d => d.TypeName == typeName && d.Sync == sync)
-                                .FirstOrDefault();
+                                .FirstOrDefault(d => d.TypeName == typeName && d.Sync == sync);
                         }
                         if (deformation == null)
                         {
@@ -971,11 +970,11 @@ namespace Barotrauma
             XElement element;
             if (random)
             {
-                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.GetRandom(Rand.RandSync.ClientOnly);
+                element = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Gender, info.Race), type, info.Head.HeadSpriteId)?.GetRandom(Rand.RandSync.ClientOnly);
             }
             else
             {
-                element = info.FilterByTypeAndHeadID(character.Info.FilterElementsByGenderAndRace(character.Info.Wearables), type)?.FirstOrDefault();
+                element = info.FilterByTypeAndHeadID(info.FilterElementsByGenderAndRace(info.Wearables, info.Gender, info.Race), type, info.Head.HeadSpriteId)?.FirstOrDefault();
             }
             if (element != null)
             {

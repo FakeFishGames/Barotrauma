@@ -811,6 +811,9 @@ namespace Barotrauma.Networking
                 case ClientPacketHeader.CREW:
                     ReadCrewMessage(inc, connectedClient);
                     break;
+                case ClientPacketHeader.READY_CHECK:
+                    ReadyCheck.ServerRead(inc, connectedClient);
+                    break;
                 case ClientPacketHeader.FILE_REQUEST:
                     if (serverSettings.AllowFileTransfers)
                     {
@@ -2130,6 +2133,7 @@ namespace Barotrauma.Networking
 
             Level.Loaded?.SpawnNPCs();
             Level.Loaded?.SpawnCorpses();
+            Level.Loaded?.PrepareBeaconStation();
             AutoItemPlacer.PlaceIfNeeded();
 
             CrewManager crewManager = campaign?.CrewManager;
@@ -2253,7 +2257,7 @@ namespace Barotrauma.Networking
 
                 for (int i = 0; i < teamClients.Count; i++)
                 {
-                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, spawnWaypoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, true, false);
+                    Character spawnedCharacter = Character.Create(teamClients[i].CharacterInfo, spawnWaypoints[i].WorldPosition, teamClients[i].CharacterInfo.Name, isRemotePlayer: true, hasAi: false);
                     spawnedCharacter.AnimController.Frozen = true;
                     spawnedCharacter.TeamID = teamID;
                     teamClients[i].Character = spawnedCharacter;
@@ -2269,7 +2273,7 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        characterData.SpawnInventoryItems(spawnedCharacter.Info, spawnedCharacter.Inventory);
+                        characterData.SpawnInventoryItems(spawnedCharacter, spawnedCharacter.Inventory);
                         characterData.ApplyHealthData(spawnedCharacter.Info, spawnedCharacter);
                         spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
                         characterData.HasSpawned = true;
@@ -2280,7 +2284,7 @@ namespace Barotrauma.Networking
 
                 for (int i = teamClients.Count; i < teamClients.Count + bots.Count; i++)
                 {
-                    Character spawnedCharacter = Character.Create(characterInfos[i], spawnWaypoints[i].WorldPosition, characterInfos[i].Name, false, true);
+                    Character spawnedCharacter = Character.Create(characterInfos[i], spawnWaypoints[i].WorldPosition, characterInfos[i].Name, isRemotePlayer: false, hasAi: true);
                     spawnedCharacter.TeamID = teamID;
                     spawnedCharacter.GiveJobItems(mainSubWaypoints[i]);
                     spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
@@ -3662,7 +3666,7 @@ namespace Barotrauma.Networking
 
         public static void Log(string line, ServerLog.MessageType messageType)
         {
-            if (GameMain.Server == null || !GameMain.Server.ServerSettings.SaveServerLogs) return;
+            if (GameMain.Server == null || !GameMain.Server.ServerSettings.SaveServerLogs) { return; }
 
             GameMain.Server.ServerSettings.ServerLog.WriteLine(line, messageType);
 

@@ -707,6 +707,8 @@ namespace Barotrauma
 
         private void SortItems(GUIListBox list, SortingMethod sortingMethod)
         {
+            if (CurrentLocation == null) { return; }
+
             if (sortingMethod == SortingMethod.AlphabeticalAsc || sortingMethod == SortingMethod.AlphabeticalDesc)
             {
                 list.Content.RectTransform.SortChildren(
@@ -868,13 +870,13 @@ namespace Barotrauma
                 TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
                 UserData = "price"
             };
-            if(listBox == storeSellList || listBox == shoppingCrateSellList)
+            if (listBox == storeSellList || listBox == shoppingCrateSellList)
             {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation.GetAdjustedItemSellPrice(priceInfo));
+                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemSellPrice(priceInfo) ?? 0);
             }
             else
             {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation.GetAdjustedItemBuyPrice(priceInfo));
+                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemBuyPrice(priceInfo) ?? 0);
             }
 
             if (listBox == storeDealsList || listBox == storeBuyList || listBox == storeSellList)

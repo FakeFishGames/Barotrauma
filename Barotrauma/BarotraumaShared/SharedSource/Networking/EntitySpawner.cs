@@ -123,6 +123,36 @@ namespace Barotrauma
             }
         }
 
+        class SubmarineSpawnInfo : IEntitySpawnInfo
+        {
+            public readonly string Name;
+
+            public readonly Vector2 Position;
+
+            private readonly Action<Character> onSpawned;
+
+            public SubmarineSpawnInfo(string name, Vector2 worldPosition, Action<Character> onSpawn = null)
+            {
+                this.Name = name ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
+                Position = worldPosition;
+                this.onSpawned = onSpawn;
+            }
+
+
+            public Entity Spawn()
+            {
+                var submarine = string.IsNullOrEmpty(Name) ? null :
+                    new Submarine(SubmarineInfo.SavedSubmarines.First(s => s.Name.Equals(Name, StringComparison.OrdinalIgnoreCase)));
+                return submarine;
+            }
+
+            public void OnSpawned(Entity spawnedCharacter)
+            {
+                if (!(spawnedCharacter is Character character)) { throw new ArgumentException($"The entity passed to CharacterSpawnInfo.OnSpawned must be a Character (value was {spawnedCharacter?.ToString() ?? "null"})."); }
+                onSpawned?.Invoke(character);
+            }
+        }
+
         private readonly Queue<IEntitySpawnInfo> spawnQueue;
         private readonly Queue<Entity> removeQueue;
 
@@ -135,6 +165,14 @@ namespace Barotrauma
             public readonly byte OriginalItemContainerIndex;
 
             public readonly bool Remove = false;
+
+            public override string ToString()
+            {
+                return
+                    (Remove ? "Remove" : "Spawn") + "(" +
+                    ((Entity as MapEntity)?.Name ?? "[NULL]") +
+                    $", {OriginalID}, {OriginalInventoryID})";
+            }
 
             public SpawnOrRemove(Entity entity, bool remove)
             {
@@ -163,7 +201,7 @@ namespace Barotrauma
         }
         
         public EntitySpawner()
-            : base(null)
+            : base(null, Entity.EntitySpawnerID)
         {
             spawnQueue = new Queue<IEntitySpawnInfo>();
             removeQueue = new Queue<Entity>();
@@ -253,7 +291,7 @@ namespace Barotrauma
                     if (client != null) GameMain.Server.SetClientCharacter(client, null);
                 }
 #endif
-            }            
+            }
 
             removeQueue.Enqueue(entity);
         }

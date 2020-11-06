@@ -216,11 +216,13 @@ namespace Barotrauma
             List<MapEntity> loadEntities(Submarine sub)
             {
                 Dictionary<PlacedModule, List<MapEntity>> entities = new Dictionary<PlacedModule, List<MapEntity>>();
+                int idOffset = sub.IdOffset;
                 for (int i = 0; i < selectedModules.Count; i++)
                 {
                     var selectedModule = selectedModules[i];
                     sub.Info.GameVersion = selectedModule.Info.GameVersion;
-                    var moduleEntities = MapEntity.LoadAll(sub, selectedModule.Info.SubmarineElement, selectedModule.Info.FilePath);
+                    var moduleEntities = MapEntity.LoadAll(sub, selectedModule.Info.SubmarineElement, selectedModule.Info.FilePath, idOffset);
+                    idOffset = moduleEntities.Max(e => e.ID);
                     MapEntity.InitializeLoadedLinks(moduleEntities);
 
                     foreach (MapEntity entity in moduleEntities)
@@ -958,7 +960,7 @@ namespace Barotrauma
                     return placedEntities;
                 }
 
-                var moduleEntities = MapEntity.LoadAll(sub, hallwayInfo.SubmarineElement, hallwayInfo.FilePath);
+                var moduleEntities = MapEntity.LoadAll(sub, hallwayInfo.SubmarineElement, hallwayInfo.FilePath, -1);
 
                 //remove items that don't fit in the hallway
                 moduleEntities.Where(e => e is Item item && item.GetComponent<Door>() == null && e.Rect.Width > hallwayLength).ForEach(e => e.Remove());
@@ -1418,7 +1420,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        idleObjective.Behavior = humanPrefab.BehaviorType;
+                        idleObjective.Behavior = humanPrefab.Behavior;
                         foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
                         {
                             idleObjective.PreferredOutpostModuleTypes.Add(moduleType);

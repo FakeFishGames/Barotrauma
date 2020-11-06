@@ -17,7 +17,8 @@ namespace Barotrauma.Items.Components
             Atan,
         }
 
-        protected float[] receivedSignal = new float[2];
+        private float[] receivedSignal = new float[2];
+        private float[] timeSinceReceived = new float[2];
 
         [Serialize(FunctionType.Sin, false, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
         public FunctionType Function
@@ -41,11 +42,24 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            //reset received signals
-            receivedSignal[0] = float.NaN;
-            receivedSignal[1] = float.NaN;
+            if (Function == FunctionType.Atan)
+            {
+                for (int i = 0; i < 2; i++)
+                {
+                    timeSinceReceived[i] += deltaTime;
+                    if (timeSinceReceived[i] > 0.1f)
+                    {
+                        receivedSignal[i] = float.NaN;
+                    }
+                }
+                if (!float.IsNaN(receivedSignal[0]) && !float.IsNaN(receivedSignal[1]))
+                {
+                    float angle = (float)Math.Atan2(receivedSignal[1], receivedSignal[0]);
+                    if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
+                    item.SendSignal(0, angle.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                }
+            }
         }
-
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
@@ -89,17 +103,13 @@ namespace Barotrauma.Items.Components
                 case FunctionType.Atan:                    
                     if (connection.Name == "signal_in_x")
                     {
+                        timeSinceReceived[0] = 0.0f;
                         float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     }
                     else if (connection.Name == "signal_in_y")
                     {
-                        float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);   
-                        if (!float.IsNaN(receivedSignal[0]) && !float.IsNaN(receivedSignal[1]))
-                        {
-                            float angle = (float)Math.Atan2(receivedSignal[1], receivedSignal[0]);
-                            if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
-                            item.SendSignal(0, angle.ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
-                        }
+                        timeSinceReceived[1] = 0.0f;
+                        float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
                     }
                     else
                     {

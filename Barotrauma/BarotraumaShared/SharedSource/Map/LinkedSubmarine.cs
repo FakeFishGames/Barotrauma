@@ -71,8 +71,8 @@ namespace Barotrauma
             }
         }
         
-        public LinkedSubmarine(Submarine submarine)
-            : base(null, submarine) 
+        public LinkedSubmarine(Submarine submarine, ushort id = Entity.NullEntityID)
+            : base(null, submarine, id)
         {
             linkedToID = new List<ushort>();
 
@@ -102,9 +102,9 @@ namespace Barotrauma
             return sl;
         }
 
-        public static LinkedSubmarine CreateDummy(Submarine mainSub, XElement element, Vector2 position)
+        public static LinkedSubmarine CreateDummy(Submarine mainSub, XElement element, Vector2 position, ushort id = Entity.NullEntityID)
         {
-            LinkedSubmarine sl = new LinkedSubmarine(mainSub);
+            LinkedSubmarine sl = new LinkedSubmarine(mainSub, id);
             sl.GenerateWallVertices(element);
             if (sl.wallVertices.Any())
             {
@@ -132,15 +132,7 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-
-            var path = filePath;
-            if (string.IsNullOrEmpty(path))
-            {
-                var linkedSubmarine = CreateDummy(Submarine, saveElement, Position);
-                linkedSubmarine.saveElement = saveElement;
-                return linkedSubmarine;
-            }
-            return CreateDummy(Submarine, path, Position);
+            return CreateDummy(Submarine, filePath, Position);
         }
 
         private void GenerateWallVertices(XElement rootElement)
@@ -171,13 +163,13 @@ namespace Barotrauma
         }
 
         // LinkedSubmarine.Load() is called from MapEntity.LoadAll()
-        public static LinkedSubmarine Load(XElement element, Submarine submarine)
+        public static LinkedSubmarine Load(XElement element, Submarine submarine, IdRemap idRemap)
         {
             Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
             LinkedSubmarine linkedSub;
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
-                linkedSub = CreateDummy(submarine, element, pos);
+                linkedSub = CreateDummy(submarine, element, pos, idRemap.AssignMaxId());
                 linkedSub.saveElement = element;
                 linkedSub.purchasedLostShuttles = false;
             }
@@ -185,7 +177,7 @@ namespace Barotrauma
             {
                 string levelSeed = element.GetAttributeString("location", "");
                 LevelData levelData = GameMain.GameSession.Campaign?.NextLevel ?? GameMain.GameSession.LevelData;
-                linkedSub = new LinkedSubmarine(submarine)
+                linkedSub = new LinkedSubmarine(submarine, idRemap.AssignMaxId())
                 {
                     purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,
                     saveElement = element
@@ -207,9 +199,9 @@ namespace Barotrauma
             int[] linkedToIds = element.GetAttributeIntArray("linkedto", new int[0]);
             for (int i = 0; i < linkedToIds.Length; i++)
             {
-                linkedSub.linkedToID.Add((ushort)linkedToIds[i]);
+                linkedSub.linkedToID.Add(idRemap.GetOffsetId(linkedToIds[i]));
             }
-            linkedSub.originalLinkedToID = (ushort)element.GetAttributeInt("originallinkedto", 0);
+            linkedSub.originalLinkedToID = idRemap.GetOffsetId(element.GetAttributeInt("originallinkedto", 0));
             linkedSub.originalMyPortID = (ushort)element.GetAttributeInt("originalmyport", 0);
 
             return linkedSub.loadSub ? linkedSub : null;
@@ -238,8 +230,11 @@ namespace Barotrauma
                 return;
             }
 
-            sub = Submarine.Load(info, false);
-            
+            IdRemap parentRemap = new IdRemap(Submarine.Info.SubmarineElement, Submarine.IdOffset);
+            sub = Submarine.Load(info, false, parentRemap);
+
+            IdRemap childRemap = new IdRemap(saveElement, sub.IdOffset);
+
             Vector2 worldPos = saveElement.GetAttributeVector2("worldpos", Vector2.Zero);
             if (worldPos != Vector2.Zero)
             {
@@ -273,7 +268,8 @@ namespace Barotrauma
             }
             originalLinkedPort = linkedPort;
 
-            myPort = (FindEntityByID(originalMyPortID) as Item)?.GetComponent<DockingPort>();
+            ushort originalMyId = childRemap.GetOffsetId(originalMyPortID);
+            myPort = (FindEntityByID(originalMyId) as Item)?.GetComponent<DockingPort>();
             if (myPort == null)
             {
                 float closestDistance = 0.0f;

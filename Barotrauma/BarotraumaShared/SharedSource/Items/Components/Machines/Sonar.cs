@@ -64,6 +64,7 @@ namespace Barotrauma.Items.Components
 
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
+        private bool useMineralScanner;
 
         private bool aiPingCheckPending;
 
@@ -102,6 +103,9 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+
+        [Editable, Serialize(false, false, description: "Does the sonar have mineral scanning mode?")]
+        public bool HasMineralScanner { get; set; }
 
         public float Zoom
         {
@@ -343,6 +347,7 @@ namespace Barotrauma.Items.Components
             bool isActive = msg.ReadBoolean();
             bool directionalPing = useDirectionalPing;
             float zoomT = zoom, pingDirectionT = 0.0f;
+            bool mineralScanner = useMineralScanner;
             if (isActive)
             {
                 zoomT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
@@ -351,6 +356,7 @@ namespace Barotrauma.Items.Components
                 {
                     pingDirectionT = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                 }
+                mineralScanner = msg.ReadBoolean();
             }
 
             if (!item.CanClientAccess(c)) { return; }
@@ -366,9 +372,14 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathHelper.Lerp(0.0f, MathHelper.TwoPi, pingDirectionT);
                     pingDirection = new Vector2((float)Math.Cos(pingAngle), (float)Math.Sin(pingAngle));
                 }
+                useMineralScanner = mineralScanner;
 #if CLIENT
                 zoomSlider.BarScroll = zoomT;
                 directionalModeSwitch.Selected = useDirectionalPing;
+                if (mineralScannerSwitch != null)
+                {
+                    mineralScannerSwitch.Selected = useMineralScanner;
+                }
 #endif
             }
 #if SERVER
@@ -388,6 +399,7 @@ namespace Barotrauma.Items.Components
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
+                msg.Write(useMineralScanner);
             }
         }
     }
