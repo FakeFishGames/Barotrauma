@@ -1047,6 +1047,8 @@ namespace Barotrauma
                         return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
                     case InputType.Ragdoll:
                         return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
+                    case InputType.Reload:
+                        return !(dequeuedInput.HasFlag(InputNetFlags.Reload)) && (prevDequeuedInput.HasFlag(InputNetFlags.Reload));
                     default:
                         return false;
                 }
@@ -1089,6 +1091,8 @@ namespace Barotrauma
                         return dequeuedInput.HasFlag(InputNetFlags.Attack);
                     case InputType.Ragdoll:
                         return dequeuedInput.HasFlag(InputNetFlags.Ragdoll);
+                    case InputType.Reload:
+                        return dequeuedInput.HasFlag(InputNetFlags.Reload);
                 }
                 return false;
             }
@@ -1549,6 +1553,22 @@ namespace Barotrauma
                     {
                         attackCoolDown = 1.0f;
                     }
+                }
+            }
+
+            if (IsKeyDown(InputType.Reload) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
+            {
+//#if CLIENT
+//                GUI.AddMessage("Reloading", Color.Red);
+//#endif
+                // Check if reloadable item is held, check if it has empty space in it. If yes call some reload function
+                // There is some xFindItem function below maybe usable for this
+                // disable climbing ladders or just stop movement on them (there is some code about Ladders below) 
+                for (int i = 0; i < selectedItems.Length; i++)
+                {
+                    if (selectedItems[i] == null) { continue; }
+                    var item = selectedItems[i];
+                    item.Reload(deltaTime, this);
                 }
             }
 

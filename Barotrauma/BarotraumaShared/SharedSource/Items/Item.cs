@@ -2116,6 +2116,68 @@ namespace Barotrauma
             }
         }
 
+        public void Reload(float deltaTime, Character character = null)
+        {
+            // if reloadable item (ranged weapons, battery things?)
+            //if (this.Tags && this.IsSelected && this.IsMouseOn && this.IsFullCondition && this.GetTags() && this.HasTag("adsa")
+#if CLIENT
+                GUI.AddMessage($"Container: {(this.container)} Full: {GetContainedItemConditionPercentage()}", Color.Blue);
+#endif
+            // SMG if ifull?
+            // if (condition == 1.0f) { return; }
+            // Get the container component of the weapon/item
+            ItemContainer ic = this.GetComponent<ItemContainer>();
+            if (!ic.PlayerReloadable || (this.OwnInventory?.IsFull() ?? true)) return;
+
+            // Get the type of items storable in the item
+            List<string> ammunitionIdentifiers = new List<string>();
+            foreach (RelatedItem containableItem in ic.ContainableItems)
+            {
+                foreach (string itemId in containableItem.Identifiers)
+                {
+                    ammunitionIdentifiers.Add(itemId);
+                }
+            }
+            if (ammunitionIdentifiers.Count == 0) return;
+
+            // Get the player's inventory minus the current item to prevent reloading items from original weapon/item
+            //CharacterInventory playerInventory = character.Inventory;
+
+            // get the first suitable item from the inventory ?
+
+            // Try reload ammunition from inventory
+            var ammunition = character.Inventory.FindItem(i => ammunitionIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+            if (ammunition != null)
+            {
+                if (ic.Item.ParentInventory == character.Inventory)
+                {
+                    if (!ic.Inventory.CanBePut(ammunition))
+                    {
+                        return;
+                    }
+                    character.Inventory.RemoveItem(ammunition);
+                    if (!ic.Inventory.TryPutItem(ammunition, null))
+                    {
+                        ammunition.Drop(character);
+                    }
+                }
+                else
+                {
+                    ic.Combine(ammunition, character);
+                }
+
+            }
+
+            // Reload while the container is not full and there are suitable items in the inventory
+            //                while ( !(this.OwnInventory?.IsFull() ?? true)      )
+            //            {
+            //                return true;
+            //            }
+            //            
+            return;
+        }
+
+
         public void ApplyTreatment(Character user, Character character, Limb targetLimb)
         {
             //can't apply treatment to dead characters

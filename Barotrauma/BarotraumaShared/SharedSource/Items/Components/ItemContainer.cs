@@ -51,6 +51,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "Can the \"Reload\" action of the item be triggered by players.")]
+        public bool PlayerReloadable { get; set; }
 
         [Serialize(false, false, description: "If set to true, interacting with this item will make the character interact with the contained item(s), automatically picking them up if they can be picked up.")]
         public bool AutoInteractWithContained

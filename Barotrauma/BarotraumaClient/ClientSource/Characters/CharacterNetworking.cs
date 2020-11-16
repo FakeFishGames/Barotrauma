@@ -64,6 +64,7 @@ namespace Barotrauma
                     if (IsKeyDown(InputType.Aim)) newInput |= InputNetFlags.Aim;
                     if (IsKeyDown(InputType.Shoot)) newInput |= InputNetFlags.Shoot;
                     if (IsKeyDown(InputType.Attack)) newInput |= InputNetFlags.Attack;
+                    if (IsKeyDown(InputType.Reload)) newInput |= InputNetFlags.Reload;
                     if (IsKeyDown(InputType.Ragdoll)) newInput |= InputNetFlags.Ragdoll;
 
                     if (AnimController.TargetDir == Direction.Left) newInput |= InputNetFlags.FacingLeft;
