@@ -446,6 +446,10 @@ namespace Barotrauma.Networking
                         return;
                     }
                     pendingClient.SteamID = steamId;
+
+                    LidgrenConnection c = (LidgrenConnection)pendingClient.Connection;
+                    c.setSteamId(steamId);
+
                     pendingClient.Connection.Name = name;
                     pendingClient.Name = name;
                     pendingClient.OwnerKey = ownKey;

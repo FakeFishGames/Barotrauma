@@ -34,6 +34,11 @@ namespace Barotrauma.Networking
             EndPointString = IPString;
         }
 
+        public void setSteamId(UInt64 steamId)
+        {
+            SteamID = steamId;
+        }
+
         public override bool EndpointMatches(string endPoint)
         {
             if (IPEndPoint?.Address == null) { return false; }
