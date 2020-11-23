@@ -1569,6 +1569,7 @@ namespace Barotrauma
                     if (selectedItems[i] == null) { continue; }
                     var item = selectedItems[i];
                     item.Reload(deltaTime, this);
+                    if (selectedItems[i] == selectedItems[i+1]) break; 
                 }
             }
 
