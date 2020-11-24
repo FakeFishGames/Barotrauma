@@ -2139,25 +2139,33 @@ namespace Barotrauma
             }
             if (containableId.Count == 0) return;
 
-            // get the first suitable item from the inventory
-            var ammunition = character.Inventory.FindItem(i => i.ParentInventory != this.OwnInventory && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+            Item loadable = null;
+            // get the first suitable item from the selected construction's inventory (like cabinet) 
+            if (character.SelectedConstruction != null)
+            {
+                loadable = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+            }
+            if (loadable == null)
+            {   // get the first suitable item from the inventory
+                loadable = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner) && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+            }
 
-            // Try reload ammunition from inventory
-            if (ammunition != null && ammunition.Container != this)
+            // Try reload loadable from inventory
+            if (loadable != null && loadable.Container != this)
             {
                     if (this.OwnInventory.IsFull())
                     {
                     Item firstUsedItem = ic.Inventory.Items.First(i => i.condition != 100);
                         {
-                            firstUsedItem.Combine(ammunition, character);
+                            firstUsedItem.Combine(loadable, character);
                         }
                     }
                     else
                     {
-                        character.Inventory.RemoveItem(ammunition);
-                        if (!ic.Inventory.TryPutItem(ammunition, null))
+                        character.Inventory.RemoveItem(loadable);
+                        if (!ic.Inventory.TryPutItem(loadable, null))
                         {
-                            ammunition.Drop(character);
+                            loadable.Drop(character);
                         }
                     }
             }

@@ -1558,21 +1558,21 @@ namespace Barotrauma
 
             if (IsKeyDown(InputType.Reload) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
-//#if CLIENT
-//                GUI.AddMessage("Reloading", Color.Red);
-//#endif
-                // Check if reloadable item is held, check if it has empty space in it. If yes call some reload function
-                // There is some xFindItem function below maybe usable for this
-                // disable climbing ladders or just stop movement on them (there is some code about Ladders below) 
+                //#if CLIENT
+                //                GUI.AddMessage("Reloading", Color.Red);
+                //#endif
                 for (int i = 0; i < selectedItems.Length; i++)
                 {
                     if (selectedItems[i] == null) { continue; }
+                    if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
                     var item = selectedItems[i];
+                    if (item == null) { continue; }
                     item.Reload(deltaTime, this);
-                    if (selectedItems[i] == selectedItems[i+1]) break; 
                 }
+                //if (selectedItems[0] != null) selectedItems[0].Reload(deltaTime, this);
+                //if (selectedItems[1] != null && selectedItems[0] != selectedItems[1]) selectedItems[1].Reload(deltaTime, this);
             }
-
+            
             if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
             {
                 for (int i = 0; i < selectedItems.Length; i++)
