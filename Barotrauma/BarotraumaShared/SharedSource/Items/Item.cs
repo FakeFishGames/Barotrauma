@@ -2126,7 +2126,7 @@ namespace Barotrauma
             if (ic == null || !ic.PlayerReloadable) return;
 
             // Return if item's inventory is full and all itmes in it are in perfect condition.
-            if ((this.OwnInventory?.IsFull() ?? true) && this.OwnInventory.Items.All(i => i.condition == 100)) return;
+            if (this.OwnInventory.IsFull() && this.OwnInventory.Items.All(i => i.condition == 100)) return;
             
             // Get the type of items storable in the item
             List<string> containableId = new List<string>();
@@ -2139,35 +2139,57 @@ namespace Barotrauma
             }
             if (containableId.Count == 0) return;
 
-            Item loadable = null;
-            // get the first suitable item from the selected construction's inventory (like cabinet) 
-            if (character.SelectedConstruction != null)
+            Item ammoToLoad = null;
+            Item ammoInWorstCondition = null;
+            if (this.OwnInventory.IsFull())
             {
-                loadable = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+                // get the item in the worst condition from the weapon's inventory
+                ammoInWorstCondition = this.OwnInventory.Items.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
+                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
+                if (character.SelectedConstruction != null)
+                {
+                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier 
+                                                                                            && i.Condition > ammoInWorstCondition.Condition, true);
+                }
+                if (ammoToLoad == null)
+                {   // get the first suitable item from the inventory
+                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
+                                                                && character.HeadSlotItem != i.ParentInventory.Owner
+                                                                && ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier 
+                                                                && i.Condition > ammoInWorstCondition.Condition, true);
+                }
             }
-            if (loadable == null)
-            {   // get the first suitable item from the inventory
-                loadable = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner) && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+            else
+            {
+                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
+                if (character.SelectedConstruction != null)
+                {
+                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) 
+                                                                                            && i.Condition > 0, true);
+                }
+                if (ammoToLoad == null)
+                {   // get the first suitable item from the inventory
+                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
+                                                                && character.HeadSlotItem != i.ParentInventory.Owner
+                                                                && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+                }
             }
 
-            // Try reload loadable from inventory
-            if (loadable != null && loadable.Container != this)
+            // Try to add ammo to the wapon/item if it's inventory is not full otherwise swap worst with a better one
+            if (ammoToLoad != null)
             {
-                    if (this.OwnInventory.IsFull())
-                    {
-                    Item firstUsedItem = ic.Inventory.Items.First(i => i.condition != 100);
-                        {
-                            firstUsedItem.Combine(loadable, character);
-                        }
-                    }
-                    else
-                    {
-                        character.Inventory.RemoveItem(loadable);
-                        if (!ic.Inventory.TryPutItem(loadable, null))
-                        {
-                            loadable.Drop(character);
-                        }
-                    }
+                Inventory newAmmoInventory = ammoToLoad.ParentInventory;
+                var newAmmoInventoryPosition = ammoToLoad.ParentInventory.FindIndex(ammoToLoad);
+                if (ammoInWorstCondition != null)
+                {
+                    newAmmoInventory.TryPutItem(ammoInWorstCondition, newAmmoInventoryPosition, true, false, character, true);
+                }
+                else
+                {
+                    ic.Inventory.TryPutItem(ammoToLoad, character);
+                }
             }
             return;
         }

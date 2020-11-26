@@ -100,7 +100,9 @@ namespace Barotrauma
         }
 
         protected Key[] keys;
+
         private readonly Item[] selectedItems;
+
 
         public enum TeamType
         {
@@ -571,7 +573,17 @@ namespace Barotrauma
         {
             get;
             set;
-        }       
+        }
+
+        public Item HeadsetSlotItem
+        {
+            get { return this.Inventory.Items[1]; }
+        }
+
+        public Item HeadSlotItem
+        {
+            get { return this.Inventory.Items[2]; }
+        }
 
         public Item[] SelectedItems
         {
