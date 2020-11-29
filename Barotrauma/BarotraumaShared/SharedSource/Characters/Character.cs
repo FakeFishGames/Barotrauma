@@ -188,6 +188,8 @@ namespace Barotrauma
         public bool IsMale => Info != null && Info.HasGenders && Info.Gender == Gender.Male;
         public bool IsFemale => Info != null && Info.HasGenders && Info.Gender == Gender.Female;
 
+        public float ReloadCooldown { get; set; }
+
         private float attackCoolDown;
 
         public Order CurrentOrder
@@ -1488,12 +1490,11 @@ namespace Barotrauma
                 }
             }
 #endif
+            if (ReloadCooldown > 0.0f) ReloadCooldown -= deltaTime;
 
-            if (attackCoolDown > 0.0f)
-            {
-                attackCoolDown -= deltaTime;
-            }
-            else if (IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
+            if (attackCoolDown > 0.0f) attackCoolDown -= deltaTime;
+
+            if (attackCoolDown <= 0.0f && ReloadCooldown <= 0.0f && IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
                 Vector2 attackPos = SimPosition + ConvertUnits.ToSimUnits(cursorPosition - Position);
                 List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
@@ -1568,7 +1569,7 @@ namespace Barotrauma
                 }
             }
 
-            if (IsKeyDown(InputType.Reload) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
+            if (ReloadCooldown <= 0.0f && IsKeyDown(InputType.Reload) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
                 //#if CLIENT
                 //                GUI.AddMessage("Reloading", Color.Red);
@@ -1585,7 +1586,7 @@ namespace Barotrauma
                 //if (selectedItems[1] != null && selectedItems[0] != selectedItems[1]) selectedItems[1].Reload(deltaTime, this);
             }
             
-            if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
+            if (ReloadCooldown <= 0.0f && (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected))
             {
                 for (int i = 0; i < selectedItems.Length; i++)
                 {

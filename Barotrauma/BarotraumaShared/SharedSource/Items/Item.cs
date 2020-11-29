@@ -2118,9 +2118,6 @@ namespace Barotrauma
 
         public void Reload(float deltaTime, Character character = null)
         {
-#if CLIENT
-                GUI.AddMessage($"Container: {(this.container)} Full: {GetContainedItemConditionPercentage()}", Color.Blue);
-#endif
             // Get the container component of the weapon/item and check if it is reloadable by the player
             ItemContainer ic = this.GetComponent<ItemContainer>();
             if (ic == null || !ic.PlayerReloadable) return;
@@ -2180,11 +2177,14 @@ namespace Barotrauma
             // Try to add ammo to the wapon/item if it's inventory is not full otherwise swap worst with a better one
             if (ammoToLoad != null)
             {
-                Inventory newAmmoInventory = ammoToLoad.ParentInventory;
-                var newAmmoInventoryPosition = ammoToLoad.ParentInventory.FindIndex(ammoToLoad);
+#if CLIENT
+                GUI.AddMessage("Reloading", Color.Blue);
+#endif
+                character.ReloadCooldown = 2.0f;
                 if (ammoInWorstCondition != null)
                 {
-                    newAmmoInventory.TryPutItem(ammoInWorstCondition, newAmmoInventoryPosition, true, false, character, true);
+                    var ammoInWorstConditionInventoryPosition = ammoInWorstCondition.ParentInventory.FindIndex(ammoInWorstCondition);
+                    ammoInWorstCondition.ParentInventory.TryPutItem(ammoToLoad, ammoInWorstConditionInventoryPosition, true, false, character, true);
                 }
                 else
                 {
