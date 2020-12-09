@@ -219,6 +219,7 @@ namespace Steamworks.Data
 		/// </summary>
 		public async Task<Lobby[]> RequestAsync()
 		{
+			await Task.Yield();
 			ApplyFilters();
 
 			LobbyMatchList_t? list = await SteamMatchmaking.Internal.RequestLobbyList();

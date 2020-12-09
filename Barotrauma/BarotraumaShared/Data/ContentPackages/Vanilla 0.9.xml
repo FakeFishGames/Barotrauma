@@ -99,6 +99,8 @@
   <Character file="Content/Characters/Leucocyte/Leucocyte.xml" />
   <Character file="Content/Characters/Terminalcell/Terminalcell.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
+  <Character file="Content/Characters/Spineling/Spineling.xml" />
+  <MapCreature file="Content/Items/Gardening/ballastflora.xml" />
   <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
   <Wreck file="Content/Map/Wrecks/Kastrull_Wrecked.sub" />
   <Wreck file="Content/Map/Wrecks/Berilia_Wrecked.sub" />
@@ -143,7 +145,7 @@
   <RuinConfig file="Content/Map/RuinConfig.xml" />
   <WreckAIConfig file="Content/Map/Thalamus/ThalamusAI.xml" />
   <BackgroundCreaturePrefabs file="Content/BackgroundCreatures/BackgroundCreaturePrefabs.xml" />
-  <LevelObjectPrefabs file="Content/LevelObjects/LevelObjectPrefabs.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/Common/CommonLevelObjects.xml" />
   <Particles file="Content/Particles/ParticlePrefabs.xml" />
   <Decals file="Content/Particles/DecalPrefabs.xml" />
   <RandomEvents file="Content/randomevents.xml" />
@@ -151,7 +153,30 @@
   <EventManagerSettings file="Content/EventManagerSettings.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
-  <LevelGenerationParameters file="Content/Map/LevelGenerationParameters.xml" />
+
+  <LevelGenerationParameters file="Content/Map/Biomes/Biomes.xml" />
+  
+  <CaveGenerationParameters file="Content/Map/Biomes//CaveGenerationParameters.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/IceCave/IceCaveObjects.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/RockCave/RockCaveObjects.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/MushroomCave/MushroomCaveObjects.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/CrystalCave/CrystalCaveObjects.xml" />
+  
+  <LevelGenerationParameters file="Content/Map/Biomes/AphoticPlateau/AphoticPlateau.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/AphoticPlateau/AphoticPlateauObjects.xml" />
+  
+  <LevelGenerationParameters file="Content/Map/Biomes/ColdCaverns/ColdCaverns.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/ColdCaverns/ColdCavernsObjects.xml" />
+  
+  <LevelGenerationParameters file="Content/Map/Biomes/EuropanRidge/EuropanRidge.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/EuropanRidge/EuropanRidgeObjects.xml" />
+  
+  <LevelGenerationParameters file="Content/Map/Biomes/HydrothermalWastes/HydrothermalWastes.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/HydrothermalWastes/HydrothermalWastesObjects.xml" />
+  
+  <LevelGenerationParameters file="Content/Map/Biomes/TheGreatSea/TheGreatSea.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/TheGreatSea/TheGreatSeaObjects.xml" />
+  
   <OutpostConfig file="Content/Map/Outposts/OutpostGenerationParameters.xml" />
   <NPCSets file="Content/Map/Outposts/OutpostGenerationNpcs.xml" />
   <Missions file="Content/Missions.xml" />
@@ -209,4 +234,5 @@
   <OutpostModule file="Content/Map/Outposts/mine_chamber_01r.sub" />
   <OutpostModule file="Content/Map/Outposts/Mine_HallwayModuleHorizontal.sub" />
   <OutpostModule file="Content/Map/Outposts/Mine_HallwayModuleVertical.sub" />
+  <BeaconStation file="Content/Map/BeaconStations/BeaconStation1.sub" />
 </contentpackage>

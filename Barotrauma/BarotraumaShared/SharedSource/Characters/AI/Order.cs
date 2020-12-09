@@ -94,7 +94,9 @@ namespace Barotrauma
 
 
         //if true, the order is issued to all available characters
-        public bool TargetAllCharacters;
+        public bool TargetAllCharacters { get; }
+        public bool IsReport => TargetAllCharacters && !MustSetTarget;
+
 
         public readonly float FadeOutTime;
 
@@ -132,10 +134,30 @@ namespace Barotrauma
         {
             get
             {
-                if (targetSpatialEntity == null) { targetSpatialEntity = TargetEntity ?? TargetPosition as ISpatialEntity; }
+                if (targetSpatialEntity == null)
+                {
+                    if (TargetType == OrderTargetType.WallSection && WallSectionIndex.HasValue)
+                    {
+                        targetSpatialEntity = (TargetEntity as Structure)?.Sections[WallSectionIndex.Value];
+                    }
+                    else
+                    {
+                        targetSpatialEntity = TargetEntity ?? TargetPosition as ISpatialEntity;
+                    }
+                }
                 return targetSpatialEntity;
             }
         }
+
+        public enum OrderTargetType
+        {
+            Entity,
+            Position,
+            WallSection
+        }
+        public OrderTargetType TargetType { get; }
+        public int? WallSectionIndex { get; }
+        public bool IsIgnoreOrder { get; }
 
         public static void Init()
         {
@@ -292,6 +314,7 @@ namespace Barotrauma
 
             IsPrefab = true;
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
+            IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
         }
 
         /// <summary>
@@ -299,7 +322,7 @@ namespace Barotrauma
         /// </summary>
         public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
         {
-            Prefab = prefab;
+            Prefab = prefab.Prefab ?? prefab;
 
             Name                = prefab.Name;
             Identifier          = prefab.Identifier;
@@ -317,6 +340,7 @@ namespace Barotrauma
             AppropriateSkill    = prefab.AppropriateSkill;
             Category            = prefab.Category;
             MustManuallyAssign  = prefab.MustManuallyAssign;
+            IsIgnoreOrder       = prefab.IsIgnoreOrder;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;
@@ -337,12 +361,21 @@ namespace Barotrauma
                 TargetItemComponent = targetItem;
             }
 
+            TargetType = OrderTargetType.Entity;
+
             IsPrefab = false;
         }
 
         public Order(Order prefab, OrderTarget target, Character orderGiver = null) : this(prefab, targetEntity: null, targetItem: null, orderGiver)
         {
             TargetPosition = target;
+            TargetType = OrderTargetType.Position;
+        }
+
+        public Order(Order prefab, Structure wall, int? sectionIndex, Character orderGiver = null) : this(prefab, targetEntity: wall, null, orderGiver: orderGiver)
+        {
+            WallSectionIndex = sectionIndex;
+            TargetType = OrderTargetType.WallSection;
         }
         
         public bool HasAppropriateJob(Character character)

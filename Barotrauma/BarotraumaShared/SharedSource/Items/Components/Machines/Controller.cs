@@ -318,16 +318,12 @@ namespace Barotrauma.Items.Components
 
             if (!character.IsRemotePlayer || character.ViewTarget == focusTarget)
             {
-                Vector2 centerPos = new Vector2(item.WorldRect.Center.X, item.WorldRect.Center.Y);
+                Vector2 centerPos = new Vector2(focusTarget.WorldRect.Center.X, focusTarget.WorldRect.Center.Y);
 
-                Item targetItem = focusTarget as Item;
-                if (targetItem != null)
+                Turret turret = focusTarget.GetComponent<Turret>();
+                if (turret != null)
                 {
-                    Turret turret = targetItem.GetComponent<Turret>();
-                    if (turret != null)
-                    {
-                        centerPos = new Vector2(targetItem.WorldRect.X + turret.TransformedBarrelPos.X, targetItem.WorldRect.Y - turret.TransformedBarrelPos.Y);
-                    }
+                    centerPos = new Vector2(focusTarget.WorldRect.X + turret.TransformedBarrelPos.X, focusTarget.WorldRect.Y - turret.TransformedBarrelPos.Y);
                 }
 
                 Vector2 offset = character.CursorWorldPosition - centerPos;
@@ -356,6 +352,9 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
+#if CLIENT
+            if (Screen.Selected == GameMain.SubEditorScreen) { return false; }
+#endif
             if (IsToggle)
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)

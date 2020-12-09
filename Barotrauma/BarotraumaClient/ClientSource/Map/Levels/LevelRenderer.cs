@@ -3,10 +3,68 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Voronoi2;
 
 namespace Barotrauma
 {
+    class LevelWallVertexBuffer : IDisposable
+    {
+        public VertexBuffer WallEdgeBuffer, WallBuffer;
+        public readonly Texture2D WallTexture, EdgeTexture;
+        private VertexPositionColorTexture[] wallVertices;
+        private VertexPositionColorTexture[] wallEdgeVertices;
+
+        public bool IsDisposed
+        {
+            get;
+            private set;
+        }
+
+        public LevelWallVertexBuffer(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Texture2D wallTexture, Texture2D edgeTexture, Color color)
+        {
+            this.wallVertices = LevelRenderer.GetColoredVertices(wallVertices, color);
+            WallBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, wallVertices.Length, BufferUsage.WriteOnly);
+            WallBuffer.SetData(this.wallVertices);
+            WallTexture = wallTexture;
+
+            this.wallEdgeVertices = LevelRenderer.GetColoredVertices(wallEdgeVertices, color);
+            WallEdgeBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, wallEdgeVertices.Length, BufferUsage.WriteOnly);
+            WallEdgeBuffer.SetData(this.wallEdgeVertices);
+            EdgeTexture = edgeTexture;
+        }
+
+        public void Append(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Color color)
+        {
+            WallBuffer.Dispose();
+            WallBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, this.wallVertices.Length + wallVertices.Length, BufferUsage.WriteOnly);
+            int originalWallVertexCount = this.wallVertices.Length;
+            Array.Resize(ref this.wallVertices, originalWallVertexCount + wallVertices.Length);
+            Array.Copy(LevelRenderer.GetColoredVertices(wallVertices, color), 0, this.wallVertices, originalWallVertexCount, wallVertices.Length);
+            WallBuffer.SetData(this.wallVertices);
+
+            WallEdgeBuffer.Dispose();
+            WallEdgeBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, this.wallEdgeVertices.Length + wallEdgeVertices.Length, BufferUsage.WriteOnly);
+            int originalWallEdgeVertexCount = this.wallEdgeVertices.Length;
+            Array.Resize(ref this.wallEdgeVertices, originalWallEdgeVertexCount + wallEdgeVertices.Length);
+            Array.Copy(LevelRenderer.GetColoredVertices(wallEdgeVertices, color), 0, this.wallEdgeVertices, originalWallEdgeVertexCount, wallEdgeVertices.Length);
+            WallEdgeBuffer.SetData(this.wallEdgeVertices);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            IsDisposed = true;
+            WallEdgeBuffer?.Dispose();
+            WallBuffer?.Dispose();
+        }
+    }
+
     class LevelRenderer : IDisposable
     {
         private static BasicEffect wallEdgeEffect, wallCenterEffect;
@@ -15,11 +73,11 @@ namespace Barotrauma
         private Vector2 defaultDustVelocity;
         private Vector2 dustVelocity;
 
-        private RasterizerState cullNone;
+        private readonly RasterizerState cullNone;
 
-        private Level level;
+        private readonly Level level;
 
-        private VertexBuffer wallVertices, bodyVertices;
+        private readonly List<LevelWallVertexBuffer> vertexBuffers = new List<LevelWallVertexBuffer>();
 
         public LevelRenderer(Level level)
         {
@@ -68,6 +126,7 @@ namespace Barotrauma
             Vector2 currentDustVel = defaultDustVelocity;
             foreach (LevelObject levelObject in level.LevelObjectManager.GetVisibleObjects())
             {
+                if (levelObject.Triggers == null) { continue; }
                 //use the largest water flow velocity of all the triggers
                 Vector2 objectMaxFlow = Vector2.Zero;
                 foreach (LevelTrigger trigger in levelObject.Triggers)
@@ -94,7 +153,6 @@ namespace Barotrauma
                 while (dustOffset.Y <= -waterTextureSize.Y) dustOffset.Y += waterTextureSize.Y;
                 while (dustOffset.Y >= waterTextureSize.Y) dustOffset.Y -= waterTextureSize.Y;
             }
-
         }
 
         public static VertexPositionColorTexture[] GetColoredVertices(VertexPositionTexture[] vertices, Color color)
@@ -107,38 +165,27 @@ namespace Barotrauma
             return verts;
         }
 
-        public void SetWallVertices(VertexPositionTexture[] vertices, Color color)
+        public void SetVertices(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Texture2D wallTexture, Texture2D edgeTexture, Color color)
         {
-            wallVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-            wallVertices.SetData(GetColoredVertices(vertices, color));
+            var existingBuffer = vertexBuffers.Find(vb => vb.WallTexture == wallTexture && vb.EdgeTexture == edgeTexture);
+            if (existingBuffer != null)
+            {
+                existingBuffer.Append(wallVertices, wallEdgeVertices,color);
+            }
+            else
+            {
+                vertexBuffers.Add(new LevelWallVertexBuffer(wallVertices, wallEdgeVertices, wallTexture, edgeTexture, color));
+            }
         }
 
-        public void SetBodyVertices(VertexPositionTexture[] vertices, Color color)
-        {
-            bodyVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-            bodyVertices.SetData(GetColoredVertices(vertices, color));
-        }
-
-        public void SetWallVertices(VertexPositionColorTexture[] vertices)
-        {
-            wallVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length,BufferUsage.WriteOnly);
-            wallVertices.SetData(vertices);
-        }
-
-        public void SetBodyVertices(VertexPositionColorTexture[] vertices)
-        {
-            bodyVertices = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, vertices.Length, BufferUsage.WriteOnly);
-            bodyVertices.SetData(vertices);
-        }
-
-        public void DrawBackground(SpriteBatch spriteBatch, Camera cam, 
-            LevelObjectManager backgroundSpriteManager = null, 
+        public void DrawBackground(SpriteBatch spriteBatch, Camera cam,
+            LevelObjectManager backgroundSpriteManager = null,
             BackgroundCreatureManager backgroundCreatureManager = null)
         {
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearWrap);
 
             Vector2 backgroundPos = cam.WorldViewCenter;
-            
+
             backgroundPos.Y = -backgroundPos.Y;
             backgroundPos *= 0.05f;
 
@@ -173,10 +220,13 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
                 cam.Transform);            
 
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: false);
-            if (backgroundCreatureManager != null) backgroundCreatureManager.Draw(spriteBatch, cam);
+            backgroundSpriteManager?.DrawObjects(spriteBatch, cam, drawFront: false);
+            if (cam.Zoom > 0.05f)
+            {
+                backgroundCreatureManager?.Draw(spriteBatch, cam);
+            }
 
-            if (level.GenerationParams.WaterParticles != null)
+            if (level.GenerationParams.WaterParticles != null && cam.Zoom > 0.05f)
             {
                 float textureScale = level.GenerationParams.WaterParticleScale;
 
@@ -216,7 +266,7 @@ namespace Barotrauma
 
             spriteBatch.End();
 
-            RenderWalls(GameMain.Instance.GraphicsDevice, cam, specular: false);
+            RenderWalls(GameMain.Instance.GraphicsDevice, cam);
 
             spriteBatch.Begin(SpriteSortMode.Deferred,
                 BlendState.NonPremultiplied,
@@ -243,7 +293,8 @@ namespace Barotrauma
                     foreach (GraphEdge edge in cell.Edges)
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
-                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), cell.Body == null ? Color.Cyan * 0.5f : Color.White);
+                            new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), edge.NextToCave ? Color.Red : (cell.Body == null ? Color.Cyan * 0.5f : (edge.IsSolid ? Color.White : Color.Gray)),
+                            width: edge.NextToCave ? 8 :1);
                     }
 
                     foreach (Vector2 point in cell.BodyVertices)
@@ -252,7 +303,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (List<Point> nodeList in level.SmallTunnels)
+                /*foreach (List<Point> nodeList in level.SmallTunnels)
                 {
                     for (int i = 1; i < nodeList.Count; i++)
                     {
@@ -261,7 +312,7 @@ namespace Barotrauma
                             new Vector2(nodeList[i].X, -nodeList[i].Y),
                             Color.Lerp(Color.Yellow, GUI.Style.Red, i / (float)nodeList.Count), 0, 10);
                     }
-                }
+                }*/
 
                 foreach (var ruin in level.Ruins)
                 {
@@ -270,108 +321,142 @@ namespace Barotrauma
             }
 
             Vector2 pos = new Vector2(0.0f, -level.Size.Y);
-
             if (cam.WorldView.Y >= -pos.Y - 1024)
             {
-                pos.X = cam.WorldView.X -1024;
-                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                int topBarrierWidth = level.GenerationParams.WallEdgeSprite.Texture.Width;
+                int topBarrierHeight = level.GenerationParams.WallEdgeSprite.Texture.Height;
 
-                GUI.DrawRectangle(spriteBatch,new Rectangle(
-                    (int)(MathUtils.Round(pos.X, 1024)), 
-                    -cam.WorldView.Y, 
-                    width, 
-                    (int)(cam.WorldView.Y + pos.Y) - 30),
+                pos.X = cam.WorldView.X - topBarrierWidth;
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * topBarrierWidth);
+
+                GUI.DrawRectangle(spriteBatch, new Rectangle(
+                    (int)MathUtils.Round(pos.X, topBarrierWidth),
+                    -cam.WorldView.Y,
+                    width,
+                    (int)(cam.WorldView.Y + pos.Y) - 60),
                     Color.Black, true);
 
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
-                    new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)pos.Y-1000, width, 1024),
-                    new Rectangle(0, 0, width, -1024),
-                    level.BackgroundTextureColor, 0.0f,
+                    new Rectangle((int)MathUtils.Round(pos.X, topBarrierWidth), (int)(pos.Y - topBarrierHeight + level.GenerationParams.WallEdgeExpandOutwardsAmount), width, topBarrierHeight),
+                    new Rectangle(0, 0, width, -topBarrierHeight),
+                    GameMain.LightManager?.LightingEnabled ?? false ? GameMain.LightManager.AmbientLight : level.WallColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.None, 0.0f);
             }
 
             if (cam.WorldView.Y - cam.WorldView.Height < level.SeaFloorTopPos + 1024)
             {
-                pos = new Vector2(cam.WorldView.X - 1024, -level.BottomPos);
-
-                int width = (int)(Math.Ceiling(cam.WorldView.Width / 1024 + 4.0f) * 1024);
+                int bottomBarrierWidth = level.GenerationParams.WallEdgeSprite.Texture.Width;
+                int bottomBarrierHeight = level.GenerationParams.WallEdgeSprite.Texture.Height;
+                pos = new Vector2(cam.WorldView.X - bottomBarrierWidth, -level.BottomPos);
+                int width = (int)(Math.Ceiling(cam.WorldView.Width / bottomBarrierWidth + 4.0f) * bottomBarrierWidth);
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle(
-                    (int)(MathUtils.Round(pos.X, 1024)), 
-                    (int)-(level.BottomPos - 30), 
-                    width, 
-                    (int)(level.BottomPos - (cam.WorldView.Y - cam.WorldView.Height))), 
+                    (int)(MathUtils.Round(pos.X, bottomBarrierWidth)),
+                    -(level.BottomPos - 60),
+                    width,
+                    level.BottomPos - (cam.WorldView.Y - cam.WorldView.Height)),
                     Color.Black, true);
 
                 spriteBatch.Draw(level.GenerationParams.WallEdgeSprite.Texture,
-                    new Rectangle((int)(MathUtils.Round(pos.X, 1024)), (int)-level.BottomPos, width, 1024),
-                    new Rectangle(0, 0, width, -1024),
-                    level.BackgroundTextureColor, 0.0f,
+                    new Rectangle((int)MathUtils.Round(pos.X, bottomBarrierWidth), -level.BottomPos - (int)level.GenerationParams.WallEdgeExpandOutwardsAmount, width, bottomBarrierHeight),
+                    new Rectangle(0, 0, width, -bottomBarrierHeight),
+                    GameMain.LightManager?.LightingEnabled ?? false ? GameMain.LightManager.AmbientLight : level.WallColor, 0.0f,
                     Vector2.Zero,
                     SpriteEffects.FlipVertically, 0.0f);
             }
         }
 
 
-        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam, bool specular)
+        public void RenderWalls(GraphicsDevice graphicsDevice, Camera cam)
         {
-            if (wallVertices == null) return;
+            if (!vertexBuffers.Any()) { return; }
 
-            bool renderLevel = cam.WorldView.Y >= 0.0f;
-            bool renderSeaFloor = cam.WorldView.Y - cam.WorldView.Height < level.SeaFloorTopPos + 1024;
-
-            if (!renderLevel && !renderSeaFloor) return;
+            var defaultRasterizerState = graphicsDevice.RasterizerState;
 
             Matrix transformMatrix = cam.ShaderTransform
                 * Matrix.CreateOrthographic(GameMain.GraphicsWidth, GameMain.GraphicsHeight, -1, 100) * 0.5f;
 
-            wallEdgeEffect.Texture = specular && level.GenerationParams.WallEdgeSpriteSpecular != null ?
-                level.GenerationParams.WallEdgeSpriteSpecular.Texture :
-                level.GenerationParams.WallEdgeSprite.Texture;
-            wallEdgeEffect.World = transformMatrix;
-            wallCenterEffect.Texture = specular && level.GenerationParams.WallSpriteSpecular != null ?
-                level.GenerationParams.WallSpriteSpecular.Texture :
-                level.GenerationParams.WallSprite.Texture;
-            wallCenterEffect.World = transformMatrix;
-            
             graphicsDevice.SamplerStates[0] = SamplerState.LinearWrap;
-            wallCenterEffect.CurrentTechnique.Passes[0].Apply();
-
-            if (renderLevel)
-            {
-                graphicsDevice.SetVertexBuffer(bodyVertices);
-                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(bodyVertices.VertexCount / 3.0f));
-            }
-
-            foreach (LevelWall wall in level.ExtraWalls)
-            {
-                if (!renderSeaFloor && wall == level.SeaFloor) continue;
-                wallCenterEffect.World = wall.GetTransform() * transformMatrix;
-                wallCenterEffect.CurrentTechnique.Passes[0].Apply();
-                graphicsDevice.SetVertexBuffer(wall.BodyVertices);
-                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.BodyVertices.VertexCount / 3.0f));
-            }
-
-            var defaultRasterizerState = graphicsDevice.RasterizerState;
             graphicsDevice.RasterizerState = cullNone;
-            wallEdgeEffect.World = transformMatrix;
-            wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
 
-            if (renderLevel)
+            //render destructible walls
+            for (int i = 0; i < 2; i++)
             {
-                wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
-                graphicsDevice.SetVertexBuffer(wallVertices);
-                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wallVertices.VertexCount / 3.0f));
+                var wallList = i == 0 ? level.ExtraWalls : level.UnsyncedExtraWalls;
+                foreach (LevelWall wall in wallList)
+                {
+                    if (!(wall is DestructibleLevelWall destructibleWall) || destructibleWall.Destroyed) { continue; }
+
+                    wallCenterEffect.Texture = level.GenerationParams.DestructibleWallSprite?.Texture ?? level.GenerationParams.WallSprite.Texture;
+                    wallCenterEffect.World = wall.GetTransform() * transformMatrix;
+                    wallCenterEffect.Alpha = wall.Alpha;
+                    wallCenterEffect.CurrentTechnique.Passes[0].Apply();
+                    graphicsDevice.SetVertexBuffer(wall.WallBuffer);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallBuffer.VertexCount / 3.0f));
+
+                    if (destructibleWall.Damage > 0.0f)
+                    {
+                        wallCenterEffect.Texture = level.GenerationParams.WallSpriteDestroyed.Texture;
+                        wallCenterEffect.Alpha = MathHelper.Lerp(0.2f, 1.0f, destructibleWall.Damage / destructibleWall.MaxHealth) * wall.Alpha;
+                        wallCenterEffect.CurrentTechnique.Passes[0].Apply();
+                        graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallEdgeBuffer.VertexCount / 3.0f));
+                    }
+
+                    wallEdgeEffect.Texture = level.GenerationParams.DestructibleWallEdgeSprite?.Texture ?? level.GenerationParams.WallEdgeSprite.Texture;
+                    wallEdgeEffect.World = wall.GetTransform() * transformMatrix;
+                    wallEdgeEffect.Alpha = wall.Alpha;
+                    wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
+                    graphicsDevice.SetVertexBuffer(wall.WallEdgeBuffer);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallEdgeBuffer.VertexCount / 3.0f));
+                }
             }
-            foreach (LevelWall wall in level.ExtraWalls)
+
+            wallEdgeEffect.Alpha = 1.0f;
+            wallCenterEffect.Alpha = 1.0f;
+
+            wallCenterEffect.World = transformMatrix;
+            wallEdgeEffect.World = transformMatrix;
+
+            //render static walls
+            foreach (var vertexBuffer in vertexBuffers)
             {
-                if (!renderSeaFloor && wall == level.SeaFloor) continue;
-                wallEdgeEffect.World = wall.GetTransform() * transformMatrix;
+                wallCenterEffect.Texture = vertexBuffer.WallTexture;
+                wallCenterEffect.CurrentTechnique.Passes[0].Apply();
+                graphicsDevice.SetVertexBuffer(vertexBuffer.WallBuffer);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(vertexBuffer.WallBuffer.VertexCount / 3.0f));
+
+                wallEdgeEffect.Texture = vertexBuffer.EdgeTexture;
                 wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
-                graphicsDevice.SetVertexBuffer(wall.WallVertices);
-                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallVertices.VertexCount / 3.0f));
+                graphicsDevice.SetVertexBuffer(vertexBuffer.WallEdgeBuffer);
+                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(vertexBuffer.WallEdgeBuffer.VertexCount / 3.0f));
             }
+
+            wallCenterEffect.Texture = level.GenerationParams.WallSprite.Texture;
+            wallEdgeEffect.Texture = level.GenerationParams.WallEdgeSprite.Texture;
+
+            //render non-destructible extra walls
+            for (int i = 0; i < 2; i++)
+            {
+                var wallList = i == 0 ? level.ExtraWalls : level.UnsyncedExtraWalls;
+                foreach (LevelWall wall in wallList)
+                {
+                    if (wall is DestructibleLevelWall) { continue; }
+                    //TODO: use LevelWallVertexBuffers for extra walls as well
+                    wallCenterEffect.World = wall.GetTransform() * transformMatrix;
+                    wallCenterEffect.Alpha = wall.Alpha;
+                    wallCenterEffect.CurrentTechnique.Passes[0].Apply();
+                    graphicsDevice.SetVertexBuffer(wall.WallBuffer);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallBuffer.VertexCount / 3.0f));
+
+                    wallEdgeEffect.World = wall.GetTransform() * transformMatrix;
+                    wallEdgeEffect.Alpha = wall.Alpha;
+                    wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
+                    graphicsDevice.SetVertexBuffer(wall.WallEdgeBuffer);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallEdgeBuffer.VertexCount / 3.0f));
+                }
+            }
+
             graphicsDevice.RasterizerState = defaultRasterizerState;
         }
 
@@ -383,8 +468,11 @@ namespace Barotrauma
 
         protected virtual void Dispose(bool disposing)
         {
-            if (wallVertices != null) wallVertices.Dispose();
-            if (bodyVertices != null) bodyVertices.Dispose();
+            foreach (var vertexBuffer in vertexBuffers)
+            {
+                vertexBuffer.Dispose();
+            }
+            vertexBuffers.Clear();
         }
     }
 }

@@ -491,7 +491,11 @@ namespace Barotrauma
             {
                 SteamManager.NetworkingDebugLog = !SteamManager.NetworkingDebugLog;
                 SteamManager.SetSteamworksNetworkingDebugLog(SteamManager.NetworkingDebugLog);
+            }));
 
+            commands.Add(new Command("readycheck", "Commence a ready check in multiplayer.", (string[] args) =>
+            {
+                NewMessage("Ready checks can only be commenced in multiplayer.", Color.Red);
             }));
 
             AssignRelayToServer("kick", false);
@@ -527,6 +531,7 @@ namespace Barotrauma
             AssignRelayToServer("traitorlist", true);
             AssignRelayToServer("money", true);
             AssignRelayToServer("setskill", true);
+            AssignRelayToServer("readycheck", true);
 
             AssignOnExecute("control", (string[] args) =>
             {
@@ -547,14 +552,15 @@ namespace Barotrauma
             AssignOnExecute("explosion", (string[] args) =>
             {
                 Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f;
+                float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
                 if (args.Length > 2) float.TryParse(args[2], out damage);
                 if (args.Length > 3) float.TryParse(args[3], out structureDamage);
                 if (args.Length > 4) float.TryParse(args[4], out itemDamage);
                 if (args.Length > 5) float.TryParse(args[5], out empStrength);
-                new Explosion(range, force, damage, structureDamage, itemDamage, empStrength).Explode(explosionPos, null);
+                if (args.Length > 6) float.TryParse(args[6], out ballastFloraStrength);
+                new Explosion(range, force, damage, structureDamage, itemDamage, empStrength, ballastFloraStrength).Explode(explosionPos, null);
             });
 
             AssignOnExecute("teleportcharacter|teleport", (string[] args) =>
@@ -2230,6 +2236,37 @@ namespace Barotrauma
                     }
                 }
             );
+
+#if DEBUG
+            commands.Add(new Command("setcurrentlocationtype", "setcurrentlocationtype [location type]: Change the type of the current location.", (string[] args) =>
+            {
+                var character = Character.Controlled;
+                if (GameMain.GameSession?.Campaign == null)
+                {
+                    ThrowError("Campaign not active!");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please give the location type after the command.");
+                    return;
+                }
+                var locationType = LocationType.List.Find(lt => lt.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                if (locationType == null)
+                {
+                    ThrowError($"Could not find the location type \"{args[0]}\".");
+                    return;
+                }
+                GameMain.GameSession.Campaign.Map.CurrentLocation.ChangeType(locationType);
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    LocationType.List.Select(lt => lt.Identifier).ToArray()
+                };
+            }));
+#endif
 
             commands.Add(new Command("limbscale", "Define the limbscale for the controlled character. Provide id or name if you want to target another character. Note: the changes are not saved!", (string[] args) =>
             {

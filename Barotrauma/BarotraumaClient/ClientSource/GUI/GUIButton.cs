@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -217,6 +218,12 @@ namespace Barotrauma
                 expandRect.Inflate(expand, expand);
                 
                 GUI.Style.ButtonPulse.Draw(spriteBatch, expandRect, ToolBox.GradientLerp(pulseExpand, Color.White, Color.White, Color.Transparent));
+            }
+
+            if (UserData is string s && s == "ReadyCheckButton"  && ReadyCheck.lastReadyCheck > DateTime.Now)
+            {
+                float progress = (ReadyCheck.lastReadyCheck - DateTime.Now).Seconds / 60.0f;
+                Frame.Color = ToolBox.GradientLerp(progress, Color.White, GUI.Style.Red);
             }
         }
 

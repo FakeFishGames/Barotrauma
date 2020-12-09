@@ -11,6 +11,9 @@ namespace Barotrauma
     {
         public const ushort NullEntityID = 0;
         public const ushort EntitySpawnerID = ushort.MaxValue;
+        public const ushort RespawnManagerID = ushort.MaxValue - 1;
+
+        public const ushort ReservedIDStart = ushort.MaxValue - 2;
 
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
         public static IEnumerable<Entity> GetEntities()
@@ -21,8 +24,6 @@ namespace Barotrauma
         public static int EntityCount => dictionary.Count;
 
         public static EntitySpawner Spawner;
-
-        private ushort id;
 
         protected AITarget aiTarget;
 
@@ -39,53 +40,7 @@ namespace Barotrauma
             get { return idFreed; }
         }
 
-        public ushort ID
-        {
-            get 
-            {                                
-                return id;             
-            }
-            set
-            {
-                if (this is EntitySpawner) { return; }
-                if (value == NullEntityID)
-                {
-                    DebugConsole.ThrowError("Cannot set the ID of an entity to " + NullEntityID +
-                        "! The value is reserved for entity events referring to a non-existent (e.g. removed) entity.\n" + Environment.StackTrace.CleanupStackTrace());
-                    return;
-                }
-                if (value == EntitySpawnerID)
-                {
-                    DebugConsole.ThrowError("Cannot set the ID of an entity to " + EntitySpawnerID +
-                        "! The value is reserved for EntitySpawner.\n" + Environment.StackTrace.CleanupStackTrace());
-                    return;
-                }
-
-                if (dictionary.TryGetValue(id, out Entity thisEntity) && thisEntity == this)
-                {
-                    dictionary.Remove(id);
-                }
-                //if there's already an entity with the same ID, give it the old ID of this one
-                if (dictionary.TryGetValue(value, out Entity existingEntity))
-                {
-                    DebugConsole.Log(existingEntity + " had the same ID as " + this + " (" + value + ")");
-                    dictionary.Remove(value);
-                    dictionary.Add(id, existingEntity);
-                    existingEntity.id = id;
-                    DebugConsole.Log("The id of " + existingEntity + " is now " + id);
-                    DebugConsole.Log("The id of " + this + " is now " + value);
-                }
-
-                id = value;
-                idFreed = false;
-                dictionary.Add(id, this);
-            }
-        }
-
-        /// <summary>
-        /// The ID the entity had after instantiation/loading. May have been taken up by another entity, causing a new ID to be assigned to this entity.
-        /// </summary>
-        public ushort OriginalID;
+        public readonly ushort ID;
 
         public virtual Vector2 SimPosition
         {
@@ -125,17 +80,27 @@ namespace Barotrauma
 
         private readonly double spawnTime;
 
-        public Entity(Submarine submarine)
+        public Entity(Submarine submarine, ushort id)
         {
             this.Submarine = submarine;
             spawnTime = Timing.TotalTime;
 
+            if (id != NullEntityID && dictionary.ContainsKey(id))
+            {
+                throw new Exception($"ID {id} is taken by {dictionary[id].ToString()}");
+            }
+
             //give a unique ID
-            id = OriginalID = this is EntitySpawner ?
-                EntitySpawnerID :
-                FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
+            ID = DetermineID(id, submarine);
             
-            dictionary.Add(id, this);
+            dictionary.Add(ID, this);
+        }
+
+        protected virtual ushort DetermineID(ushort id, Submarine submarine)
+        {
+            return id != NullEntityID ?
+                id :
+                FindFreeID(submarine == null ? (ushort)1 : submarine.IdOffset);
         }
 
         public static ushort FindFreeID(ushort idOffset = 0)
@@ -153,7 +118,7 @@ namespace Barotrauma
             {
                 id += 1;
                 IDfound = dictionary.ContainsKey(id);
-            } while (IDfound || id == NullEntityID || id == EntitySpawnerID);
+            } while (IDfound || id == NullEntityID || id > ReservedIDStart);
             return id;
         }
         
@@ -192,7 +157,7 @@ namespace Barotrauma
                 errorMsg.AppendLine("Some entities were not removed in Entity.RemoveAll:");
                 foreach (Entity e in dictionary.Values)
                 {
-                    errorMsg.AppendLine(" - " + e.ToString() + "(ID " + e.id + ")");
+                    errorMsg.AppendLine(" - " + e.ToString() + "(ID " + e.ID + ")");
                 }
             }
             if (Item.ItemList.Count > 0)
@@ -200,7 +165,7 @@ namespace Barotrauma
                 errorMsg.AppendLine("Some items were not removed in Entity.RemoveAll:");
                 foreach (Item item in Item.ItemList)
                 {
-                    errorMsg.AppendLine(" - " + item.Name + "(ID " + item.id + ")");
+                    errorMsg.AppendLine(" - " + item.Name + "(ID " + item.ID + ")");
                 }
 
                 var items = new List<Item>(Item.ItemList);
@@ -222,7 +187,7 @@ namespace Barotrauma
                 errorMsg.AppendLine("Some characters were not removed in Entity.RemoveAll:");
                 foreach (Character character in Character.CharacterList)
                 {
-                    errorMsg.AppendLine(" - " + character.Name + "(ID " + character.id + ")");
+                    errorMsg.AppendLine(" - " + character.Name + "(ID " + character.ID + ")");
                 }
 
                 var characters = new List<Character>(Character.CharacterList);
@@ -293,15 +258,15 @@ namespace Barotrauma
 
         public static void DumpIds(int count, string filename)
         {
-            List<Entity> entities = dictionary.Values.OrderByDescending(e => e.id).ToList();
+            List<Entity> entities = dictionary.Values.OrderByDescending(e => e.ID).ToList();
 
             count = Math.Min(entities.Count, count);
 
             List<string> lines = new List<string>();
             for (int i = 0; i < count; i++)
             {
-                lines.Add(entities[i].id + ": " + entities[i].ToString());
-                DebugConsole.ThrowError(entities[i].id + ": " + entities[i].ToString());
+                lines.Add(entities[i].ID + ": " + entities[i].ToString());
+                DebugConsole.ThrowError(entities[i].ID + ": " + entities[i].ToString());
             }
 
             if (!string.IsNullOrWhiteSpace(filename))

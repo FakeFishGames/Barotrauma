@@ -394,12 +394,10 @@ namespace Barotrauma
                 float expandY = MathHelper.Lerp(30.0f, 0.0f, normalizedDistY);
 
                 GUI.DrawLine(spriteBatch,
-                    horizontalLine,
                     new Vector2(topLeft.X - expandX, -bottomRight.Y + i * GridSize.Y),
                     new Vector2(bottomRight.X + expandX, -bottomRight.Y + i * GridSize.Y),
                     Color.White * (1.0f - normalizedDistY) * alpha, depth: 0.6f, width: 3);
                 GUI.DrawLine(spriteBatch,
-                    verticalLine,
                     new Vector2(topLeft.X + i * GridSize.X, -topLeft.Y + expandY),
                     new Vector2(topLeft.X + i * GridSize.X, -bottomRight.Y - expandY),
                     Color.White * (1.0f - normalizedDistX) * alpha, depth: 0.6f, width: 3);

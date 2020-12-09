@@ -53,7 +53,7 @@ namespace Barotrauma
 
         private GUIFrame healthWindow;
 
-        private GUIComponent deadIndicator;
+        private GUITextBlock deadIndicator;
 
         private GUIComponent lowSkillIndicator;
 
@@ -225,13 +225,14 @@ namespace Barotrauma
                 Character.Controlled.ResetInteract = true;
                 if (openHealthWindow != null)
                 {
-                    if (value.Character.Info == null || Character.Controlled.HasEquippedItem("healthscanner"))
+                    if (value.Character.Info == null || value.Character == Character.Controlled || Character.Controlled.HasEquippedItem("healthscanner"))
                     {
                         openHealthWindow.characterName.Text = value.Character.Name;
                     }
                     else
                     {
                         openHealthWindow.characterName.Text = value.Character.Info.DisplayName;
+                        value.Character.Info.CheckDisguiseStatus(false);
                     }
 
                     if (Character.Controlled.SelectedConstruction != null && Character.Controlled.SelectedConstruction.GetComponent<Ladder>() == null)
@@ -330,11 +331,19 @@ namespace Barotrauma
                 }
             );
             deadIndicator = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.1f), limbSelection.RectTransform, Anchor.Center),
-                text: TextManager.Get("Deceased"), font: GUI.LargeFont, textAlignment: Alignment.Center, wrap: true, style: "GUIToolTip")
+                text: TextManager.Get("Deceased"), font: GUI.LargeFont, textAlignment: Alignment.Center, style: "GUIToolTip")
             {
                 Visible = false,
                 CanBeFocused = false
             };
+            if (deadIndicator.Text.Contains(' '))
+            {
+                deadIndicator.Wrap = true;
+            }
+            else
+            {
+                deadIndicator.AutoScaleHorizontal = true;
+            }
 
             var rightSide = new GUIFrame(new RectTransform(new Vector2(0.4f, 1.0f), paddedHealthWindow.RectTransform), style: null);
 
@@ -405,15 +414,17 @@ namespace Barotrauma
                 CanBeFocused = true
             };
 
+            textLayout.RectTransform.RelativeOffset = new Vector2(0, 0.025f);
+
             var nameContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), textLayout.RectTransform) { MinSize = new Point(0, 20) }, isHorizontal: true)
             {
                 Stretch = true
             };
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), nameContainer.RectTransform),
+            new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), nameContainer.RectTransform, Anchor.CenterLeft),
                 onDraw: (spriteBatch, component) =>
                 {
-                    character.Info.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), Vector2.Zero, component.Rect.Width);
+                    character.Info.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), Vector2.Zero, component.Rect.Width, false, openHealthWindow?.Character != Character.Controlled);
                 });
             characterName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), nameContainer.RectTransform), "", textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont)
             {
@@ -422,7 +433,7 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), nameContainer.RectTransform),
                 onDraw: (spriteBatch, component) =>
                 {
-                    character.Info.DrawJobIcon(spriteBatch, component.Rect);
+                    character.Info.DrawJobIcon(spriteBatch, component.Rect, openHealthWindow?.Character != Character.Controlled);
                 });
 
 
@@ -950,6 +961,28 @@ namespace Barotrauma
             }
 
             SuicideButton.Visible = Character == Character.Controlled && !Character.IsDead && Character.IsIncapacitated;
+
+            if (GameMain.GameSession?.Campaign is { } campaign)
+            {
+                RectTransform endRoundButton = campaign?.EndRoundButton?.RectTransform;
+                RectTransform readyCheckButton = campaign?.ReadyCheckButton?.RectTransform;
+                if (endRoundButton != null)
+                {
+                    if (SuicideButton.Visible)
+                    {
+                        Point offset = new Point(0, SuicideButton.Rect.Height);
+                        endRoundButton.ScreenSpaceOffset = offset;
+                    }
+                    else if (endRoundButton.ScreenSpaceOffset != Point.Zero)
+                    {
+                        endRoundButton.ScreenSpaceOffset = Point.Zero;
+                    }
+                    if (readyCheckButton != null)
+                    {
+                        readyCheckButton.ScreenSpaceOffset = endRoundButton.ScreenSpaceOffset;
+                    }
+                }
+            }
 
             cprButton.Visible =
                 Character == Character.Controlled?.SelectedCharacter

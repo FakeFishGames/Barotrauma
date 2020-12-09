@@ -585,7 +585,8 @@ namespace Barotrauma
             if (files.Any(f => f.Type == ContentType.Submarine ||
                                f.Type == ContentType.Outpost ||
                                f.Type == ContentType.OutpostModule ||
-                               f.Type == ContentType.Wreck)) { SubmarineInfo.RefreshSavedSubs(); }
+                               f.Type == ContentType.Wreck ||
+                               f.Type == ContentType.BeaconStation)) { SubmarineInfo.RefreshSavedSubs(); }
             if (files.Any(f => f.Type == ContentType.NPCSets)) { NPCSet.LoadSets(); }
             if (files.Any(f => f.Type == ContentType.OutpostConfig)) { OutpostGenerationParams.LoadPresets(); }
             if (files.Any(f => f.Type == ContentType.Factions)) { FactionPrefab.LoadFactions(); }
@@ -602,6 +603,7 @@ namespace Barotrauma
             if (files.Any(f => f.Type == ContentType.LevelObjectPrefabs)) { LevelObjectPrefab.LoadAll(); }
             if (files.Any(f => f.Type == ContentType.MapGenerationParameters)) { MapGenerationParams.Init(); }
             if (files.Any(f => f.Type == ContentType.LevelGenerationParameters)) { LevelGenerationParams.LoadPresets(); }
+            if (files.Any(f => f.Type == ContentType.CaveGenerationParameters)) { CaveGenerationParams.LoadPresets(); }
             if (files.Any(f => f.Type == ContentType.TraitorMissions)) { TraitorMissionPrefab.Init(); }
             if (files.Any(f => f.Type == ContentType.Orders)) { Order.Init(); }
             if (files.Any(f => f.Type == ContentType.EventManagerSettings)) { EventManagerSettings.Init(); }
@@ -635,6 +637,7 @@ namespace Barotrauma
             ContentType.LocationTypes,
             ContentType.MapGenerationParameters,
             ContentType.LevelGenerationParameters,
+            ContentType.CaveGenerationParameters,
             ContentType.Sounds,
             ContentType.Particles,
             ContentType.Decals,
@@ -645,6 +648,7 @@ namespace Barotrauma
             ContentType.Factions,
             ContentType.Wreck,
             ContentType.WreckAIConfig,
+            ContentType.BeaconStation,
             ContentType.BackgroundCreaturePrefabs,
             ContentType.ServerExecutable,
             ContentType.TraitorMissions,
@@ -834,7 +838,7 @@ namespace Barotrauma
             }
         }
 
-        private void LoadDefaultConfig(bool setLanguage = true)
+        private void LoadDefaultConfig(bool setLanguage = true, bool loadContentPackages = true)
         {
             XDocument doc = XMLExtensions.TryLoadXml(SavePath);
             if (doc == null)
@@ -866,7 +870,10 @@ namespace Barotrauma
 #if CLIENT
             LoadControls(doc);
 #endif
-            LoadContentPackages(doc);
+            if (loadContentPackages)
+            {
+                LoadContentPackages(doc);
+            }
 
 #if DEBUG
             WindowMode = WindowMode.Windowed;

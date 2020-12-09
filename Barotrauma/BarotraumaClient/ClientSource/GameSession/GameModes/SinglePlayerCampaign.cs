@@ -368,6 +368,9 @@ namespace Barotrauma
             SoundPlayer.OverrideMusicDuration = 18.0f;
             crewDead = false;
 
+            LevelData lvlData = GameMain.GameSession.LevelData;
+            bool beaconActive = GameMain.GameSession.Level.CheckBeaconActive();
+
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
@@ -451,6 +454,8 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                lvlData.IsBeaconActive = beaconActive;
 
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }

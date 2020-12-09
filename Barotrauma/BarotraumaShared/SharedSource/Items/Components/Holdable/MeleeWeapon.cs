@@ -143,13 +143,15 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (!item.body.Enabled) { impactQueue.Clear(); return; }
-            if (!picker.HasSelectedItem(item)) { impactQueue.Clear(); IsActive = false; }
+            if (picker == null && !picker.HasSelectedItem(item)) { impactQueue.Clear(); IsActive = false; }
 
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
                 HandleImpact(impact.Body);
             }
+            //in case handling the impact does something to the picker
+            if (picker == null) { return; }
 
             reloadTimer -= deltaTime;
             if (reloadTimer < 0) { reloadTimer = 0; }

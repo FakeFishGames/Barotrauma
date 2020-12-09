@@ -1,4 +1,5 @@
 ﻿using FarseerPhysics;
+using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -80,7 +81,7 @@ namespace Barotrauma
                         }
                     }
                     if (MathUtils.NearlyEqual(ge.Point2.X, borders.X) || MathUtils.NearlyEqual(ge.Point2.X, borders.Right) ||
-                             MathUtils.NearlyEqual(ge.Point2.Y, borders.Y) || MathUtils.NearlyEqual(ge.Point2.Y, borders.Bottom))
+                        MathUtils.NearlyEqual(ge.Point2.Y, borders.Y) || MathUtils.NearlyEqual(ge.Point2.Y, borders.Bottom))
                     {
                         if (point1 == null)
                         {
@@ -95,14 +96,43 @@ namespace Barotrauma
                     if (point1.HasValue && point2.HasValue)
                     {
                         Debug.Assert(point1 != point2);
-                        var newEdge = new GraphEdge(point1.Value, point2.Value)
+                        bool point1OnSide = MathUtils.NearlyEqual(point1.Value.X, borders.X) || MathUtils.NearlyEqual(point1.Value.X, borders.Right);
+                        bool point2OnSide = MathUtils.NearlyEqual(point2.Value.X, borders.X) || MathUtils.NearlyEqual(point2.Value.X, borders.Right);
+                        //one point is one the side, another on top/bottom
+                        // -> the cell is in the corner of the level, we need 2 edges
+                        if (point1OnSide != point2OnSide)
                         {
-                            Cell1 = cell,
-                            IsSolid = true,
-                            Site1 = cell.Site,
-                            OutsideLevel = true
-                        };
-                        cell.Edges.Add(newEdge);
+                            Vector2 cornerPos = new Vector2(
+                                point1.Value.X < borders.Center.X ? borders.X : borders.Right,
+                                point1.Value.Y < borders.Center.Y ? borders.Y : borders.Bottom);
+                            cell.Edges.Add(
+                                new GraphEdge(point1.Value, cornerPos)
+                                {
+                                    Cell1 = cell,
+                                    IsSolid = true,
+                                    Site1 = cell.Site,
+                                    OutsideLevel = true
+                                }); 
+                            cell.Edges.Add(
+                                 new GraphEdge(point2.Value, cornerPos)
+                                 {
+                                     Cell1 = cell,
+                                     IsSolid = true,
+                                     Site1 = cell.Site,
+                                     OutsideLevel = true
+                                 });
+                        }
+                        else
+                        {
+                            cell.Edges.Add(
+                                new GraphEdge(point1.Value, point2.Value)
+                                {
+                                    Cell1 = cell,
+                                    IsSolid = true,
+                                    Site1 = cell.Site,
+                                    OutsideLevel = true
+                                });
+                        }
                         break;
                     }
                 }
@@ -111,44 +141,16 @@ namespace Barotrauma
             return cells;
         }
 
-
-        private static Vector2 GetEdgeNormal(GraphEdge edge, VoronoiCell cell = null)
-        {
-            if (cell == null) { cell = edge.AdjacentCell(null); }
-            if (cell == null) { return Vector2.UnitX; }
-
-            CompareCCW compare = new CompareCCW(cell.Center);
-            if (compare.Compare(edge.Point1, edge.Point2) == -1)
-            {
-                var temp = edge.Point1;
-                edge.Point1 = edge.Point2;
-                edge.Point2 = temp;
-            }
-
-            Vector2 normal = Vector2.Normalize(edge.Point2 - edge.Point1);
-            Vector2 diffToCell = Vector2.Normalize(cell.Center - edge.Point2);
-
-            normal = new Vector2(-normal.Y, normal.X);
-            if (Vector2.Dot(normal, diffToCell) < 0)
-            {
-                normal = -normal;
-            }
-
-            return normal;
-        }
-
-        public static List<VoronoiCell> GeneratePath(
-            List<Point> pathNodes, List<VoronoiCell> cells, List<VoronoiCell>[,] cellGrid,
-            int gridCellSize, Rectangle limits, float wanderAmount = 0.3f, bool mirror = false)
+        public static void GeneratePath(Level.Tunnel tunnel, List<VoronoiCell> cells, List<VoronoiCell>[,] cellGrid, int gridCellSize, Rectangle limits)
         {
             var targetCells = new List<VoronoiCell>();
-            for (int i = 0; i < pathNodes.Count; i++)
+            for (int i = 0; i < tunnel.Nodes.Count; i++)
             {
                 //a search depth of 2 is large enough to find a cell in almost all maps, but in case it fails, we increase the depth
                 int searchDepth = 2;
                 while (searchDepth < 5)
                 {
-                    int cellIndex = FindCellIndex(pathNodes[i], cells, cellGrid, gridCellSize, searchDepth);
+                    int cellIndex = FindCellIndex(tunnel.Nodes[i], cells, cellGrid, gridCellSize, searchDepth);
                     if (cellIndex > -1)
                     {
                         targetCells.Add(cells[cellIndex]);
@@ -157,25 +159,15 @@ namespace Barotrauma
 
                     searchDepth++;
                 }
-
             }
-
-            return GeneratePath(targetCells, cells, cellGrid, gridCellSize, limits, wanderAmount, mirror);
+            tunnel.Cells.AddRange(GeneratePath(targetCells, cells, limits));
         }
 
-
-        public static List<VoronoiCell> GeneratePath(
-            List<VoronoiCell> targetCells, List<VoronoiCell> cells, List<VoronoiCell>[,] cellGrid, 
-            int gridCellSize, Rectangle limits, float wanderAmount = 0.3f, bool mirror = false)
+        public static List<VoronoiCell> GeneratePath(List<VoronoiCell> targetCells, List<VoronoiCell> cells, Rectangle limits)
         {
             Stopwatch sw2 = new Stopwatch();
             sw2.Start();
 
-            //how heavily the path "steers" towards the endpoint
-            //lower values will cause the path to "wander" more, higher will make it head straight to the end
-            wanderAmount = MathHelper.Clamp(wanderAmount, 0.0f, 1.0f);
-
-            List<GraphEdge> allowedEdges = new List<GraphEdge>();
             List<VoronoiCell> pathCells = new List<VoronoiCell>();
             
             VoronoiCell currentCell = targetCells[0];
@@ -190,40 +182,23 @@ namespace Barotrauma
             {
                 int edgeIndex = 0;
 
-                allowedEdges.Clear();
-                foreach (GraphEdge edge in currentCell.Edges)
+                double smallestDist = double.PositiveInfinity;
+                for (int i = 0; i < currentCell.Edges.Count; i++)
                 {
-                    var adjacentCell = edge.AdjacentCell(currentCell);
-                    if (adjacentCell != null && limits.Contains(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y))
+                    var adjacentCell = currentCell.Edges[i].AdjacentCell(currentCell);
+                    if (adjacentCell == null) { continue; }
+                    double dist = MathUtils.Distance(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y, targetCells[currentTargetIndex].Site.Coord.X, targetCells[currentTargetIndex].Site.Coord.Y);
+                    dist += MathUtils.Distance(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y, currentCell.Site.Coord.X, currentCell.Site.Coord.Y) * 0.5f;
+                    //disfavor small edges to prevent generating a very small passage
+                    if (Vector2.Distance(currentCell.Edges[i].Point1, currentCell.Edges[i].Point2) < 200.0f)
                     {
-                        allowedEdges.Add(edge);
+                        dist += 1000000;
                     }
-                }
-
-                //steer towards target
-                if (Rand.Range(0.0f, 1.0f, Rand.RandSync.Server) > wanderAmount || allowedEdges.Count == 0)
-                {
-                    double smallestDist = double.PositiveInfinity;
-                    for (int i = 0; i < currentCell.Edges.Count; i++)
+                    if (dist < smallestDist)
                     {
-                        var adjacentCell = currentCell.Edges[i].AdjacentCell(currentCell);
-                        if (adjacentCell == null) { continue; }
-                        double dist = MathUtils.Distance(
-                            adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y,
-                            targetCells[currentTargetIndex].Site.Coord.X, targetCells[currentTargetIndex].Site.Coord.Y);
-                        if (dist < smallestDist)
-                        {
-                            edgeIndex = i;
-                            smallestDist = dist;
-                        }
+                        edgeIndex = i;
+                        smallestDist = dist;
                     }
-                }
-                //choose random edge (ignoring ones where the adjacent cell is outside limits)
-                else
-                {
-                    edgeIndex = Rand.Int(allowedEdges.Count, Rand.RandSync.Server);
-                    if (mirror && edgeIndex > 0) edgeIndex = allowedEdges.Count - edgeIndex;
-                    edgeIndex = currentCell.Edges.IndexOf(allowedEdges[edgeIndex]);
                 }
 
                 currentCell = currentCell.Edges[edgeIndex].AdjacentCell(currentCell);
@@ -234,8 +209,8 @@ namespace Barotrauma
 
                 if (currentCell == targetCells[currentTargetIndex])
                 {
-                    currentTargetIndex += 1;
-                    if (currentTargetIndex >= targetCells.Count) break;
+                    currentTargetIndex++;
+                    if (currentTargetIndex >= targetCells.Count) { break; }
                 }
 
             } while (currentCell != targetCells[targetCells.Count - 1] && iterationsLeft > 0);
@@ -256,17 +231,42 @@ namespace Barotrauma
             List<GraphEdge> tempEdges = new List<GraphEdge>();
             foreach (GraphEdge edge in cell.Edges)
             {
-                if (!edge.IsSolid)
+                if (!edge.IsSolid || edge.OutsideLevel)
                 {
                     tempEdges.Add(edge);
                     continue;
                 }
 
+                //If the edge is next to an empty cell and there's another solid cell at the other side of the empty one,
+                //don't touch this edge. Otherwise we may end up closing off small passages between cells.
+                var adjacentEmptyCell = edge.AdjacentCell(cell);
+                if (adjacentEmptyCell?.CellType == CellType.Solid) { adjacentEmptyCell = null; }
+                if (adjacentEmptyCell != null)
+                {
+                    GraphEdge adjacentEdge = null;
+                    //find the edge at the opposite side of the adjacent cell
+                    foreach (GraphEdge otherEdge in adjacentEmptyCell.Edges)
+                    {
+                        if (Vector2.Dot(adjacentEmptyCell.Center - edge.Center, adjacentEmptyCell.Center - otherEdge.Center) < 0 &&
+                            otherEdge.AdjacentCell(adjacentEmptyCell)?.CellType == CellType.Solid)
+                        {
+                            adjacentEdge = otherEdge;
+                            break;
+                        }
+                    }
+                    if (adjacentEdge != null)
+                    {
+                        tempEdges.Add(edge);
+                        continue;
+                    }
+                }
+
                 List<Vector2> edgePoints = new List<Vector2>();
-                Vector2 edgeNormal = GetEdgeNormal(edge, cell);
+                Vector2 edgeNormal = edge.GetNormal(cell);
+
                 float edgeLength = Vector2.Distance(edge.Point1, edge.Point2);
                 int pointCount = (int)Math.Max(Math.Ceiling(edgeLength / minEdgeLength), 1);
-                Vector2 edgeDir = (edge.Point2 - edge.Point1);
+                Vector2 edgeDir = edge.Point2 - edge.Point1;
                 for (int i = 0; i <= pointCount; i++)
                 {
                     if (i == 0)
@@ -279,16 +279,48 @@ namespace Barotrauma
                     }
                     else
                     {
+
                         float centerF = 0.5f - Math.Abs(0.5f - (i / (float)pointCount));
                         float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.Server);
-                        edgePoints.Add(
+                        Vector2 extrudedPoint = 
                             edge.Point1 +
-                            edgeDir * (i / (float)pointCount) -
-                            edgeNormal * edgeLength * (roundingAmount + randomVariance) * centerF);
+                            edgeDir * (i / (float)pointCount) +
+                            edgeNormal * edgeLength * (roundingAmount + randomVariance) * centerF;
+
+                        var nearbyCells = Level.Loaded.GetCells(extrudedPoint, searchDepth: 2);
+                        bool isInside = false;
+                        foreach (var nearbyCell in nearbyCells)
+                        {
+                            if (nearbyCell == cell || nearbyCell.CellType != CellType.Solid) { continue; }
+                            //check if extruding the edge causes it to go inside another one
+                            if (nearbyCell.IsPointInside(extrudedPoint))
+                            {
+                                isInside = true;
+                                break;
+                            }
+                            //check if another edge will be inside this cell after the extrusion
+                            Vector2 triangleCenter = (edge.Point1 + edge.Point2 + extrudedPoint) / 3;
+                            foreach (GraphEdge nearbyEdge in nearbyCell.Edges)
+                            {
+                                if (!MathUtils.LinesIntersect(nearbyEdge.Point1, triangleCenter, edge.Point1, extrudedPoint) && 
+                                    !MathUtils.LinesIntersect(nearbyEdge.Point1, triangleCenter, edge.Point2, extrudedPoint) &&
+                                    !MathUtils.LinesIntersect(nearbyEdge.Point1, triangleCenter, edge.Point1, edge.Point2))
+                                {
+                                    isInside = true;
+                                    break;
+                                }
+                            }
+                            if (isInside) { break; }
+                        }
+
+                        if (!isInside) 
+                        { 
+                            edgePoints.Add(extrudedPoint); 
+                        }                       
                     }
                 }
 
-                for (int i = 0; i < pointCount; i++)
+                for (int i = 0; i < edgePoints.Count - 1; i++)
                 {
                     tempEdges.Add(new GraphEdge(edgePoints[i], edgePoints[i + 1])
                     {
@@ -297,7 +329,10 @@ namespace Barotrauma
                         IsSolid = edge.IsSolid,
                         Site1 = edge.Site1,
                         Site2 = edge.Site2,
-                        OutsideLevel = edge.OutsideLevel
+                        OutsideLevel = edge.OutsideLevel,
+                        NextToCave = edge.NextToCave,
+                        NextToMainPath = edge.NextToMainPath,
+                        NextToSidePath = edge.NextToSidePath
                     });
                 }
             }
@@ -347,15 +382,27 @@ namespace Barotrauma
                     continue;
                 }
 
-                renderTriangles.AddRange(MathUtils.TriangulateConvexHull(tempVertices, cell.Center));
-                
-                if (bodyPoints.Count < 2) continue;
+                Vector2 minVert = tempVertices[0];
+                Vector2 maxVert = tempVertices[0];
+                foreach (var vert in tempVertices)
+                {
+                    minVert = new Vector2(
+                        Math.Min(minVert.X, vert.X),
+                        Math.Min(minVert.Y, vert.Y));
+                    maxVert = new Vector2(
+                        Math.Max(maxVert.X, vert.X),
+                        Math.Max(maxVert.Y, vert.Y));
+                }
+                Vector2 center = (minVert + maxVert) / 2;
+                renderTriangles.AddRange(MathUtils.TriangulateConvexHull(tempVertices, center));
+
+                if (bodyPoints.Count < 2) { continue; }
 
                 if (bodyPoints.Count < 3)
                 {
                     foreach (Vector2 vertex in tempVertices)
                     {
-                        if (bodyPoints.Contains(vertex)) continue;
+                        if (bodyPoints.Contains(vertex)) { continue; }
                         bodyPoints.Add(vertex);
                         break;
                     }
@@ -366,11 +413,11 @@ namespace Barotrauma
                     cell.BodyVertices.Add(bodyPoints[i]);
                     bodyPoints[i] = ConvertUnits.ToSimUnits(bodyPoints[i]);
                 }
-                
-                if (cell.CellType == CellType.Empty) continue;
+
+                if (cell.CellType == CellType.Empty) { continue; }
 
                 cellBody.UserData = cell;
-                var triangles = MathUtils.TriangulateConvexHull(bodyPoints, ConvertUnits.ToSimUnits(cell.Center));
+                var triangles = MathUtils.TriangulateConvexHull(bodyPoints, ConvertUnits.ToSimUnits(center));
                 
                 for (int i = 0; i < triangles.Count; i++)
                 {
@@ -380,13 +427,17 @@ namespace Barotrauma
                     Vector2 b = triangles[i][1];
                     Vector2 c = triangles[i][2];
                     float area = Math.Abs(a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y)) / 2.0f;
-                    if (area < 1.0f) continue;
+                    if (area < 1.0f) { continue; }
 
                     Vertices bodyVertices = new Vertices(triangles[i]);
-                    var newFixture = cellBody.CreatePolygon(bodyVertices, 5.0f);
-                    newFixture.UserData = cell;
+                    PolygonShape polygon = new PolygonShape(bodyVertices, 5.0f);
+                    Fixture fixture = new Fixture(polygon)
+                    {
+                        UserData = cell
+                    };
+                    cellBody.Add(fixture, resetMassData: false);
 
-                    if (newFixture.Shape.MassData.Area < FarseerPhysics.Settings.Epsilon)
+                    if (fixture.Shape.MassData.Area < FarseerPhysics.Settings.Epsilon)
                     {
                         DebugConsole.ThrowError("Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + ")");
                         GameAnalyticsManager.AddErrorEventOnce(
@@ -394,10 +445,12 @@ namespace Barotrauma
                             GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
                             "Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + "). Seed: " + level.Seed);
                     }
-                }
-                
+                }                
                 cell.Body = cellBody;
             }
+
+            cellBody.CollisionCategories = Physics.CollisionLevel;
+            cellBody.ResetMassData();
 
             return cellBody;
         }

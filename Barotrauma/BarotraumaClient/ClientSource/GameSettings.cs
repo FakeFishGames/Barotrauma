@@ -65,10 +65,8 @@ namespace Barotrauma
             keyMapping[(int)InputType.Voice] = new KeyOrMouse(Keys.V);
             keyMapping[(int)InputType.LocalVoice] = new KeyOrMouse(Keys.B);
             keyMapping[(int)InputType.Command] = new KeyOrMouse(MouseButton.MiddleMouse);
-#if DEBUG
             keyMapping[(int)InputType.PreviousFireMode] = new KeyOrMouse(MouseButton.MouseWheelDown);
             keyMapping[(int)InputType.NextFireMode] = new KeyOrMouse(MouseButton.MouseWheelUp);
-#endif
 
             if (Language == "French")
             {
@@ -1335,7 +1333,7 @@ namespace Barotrauma
                     };
                     msgBox.Buttons[0].OnClicked = (yesButton, obj) =>
                     {
-                        LoadDefaultConfig(setLanguage: false);
+                        LoadDefaultConfig(setLanguage: false, loadContentPackages: Screen.Selected != GameMain.GameScreen);
                         CheckBindings(true);
                         RefreshItemMessages();
                         ApplySettings();

@@ -439,7 +439,7 @@ namespace Barotrauma
         protected virtual void ControlInput(Camera cam)
         {
             // Note that these targets are static. Therefore the outcome is the same if this method is called multiple times or only once.
-            if (selectedSlot != null && !DraggingItemToWorld)
+            if (selectedSlot != null && !DraggingItemToWorld && cam.GetZoomAmountFromPrevious() <= 0.25f)
             {
                 cam.Freeze = true;
             }
@@ -461,7 +461,7 @@ namespace Barotrauma
             }*/
 
             bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI && !slot.Disabled;
-            
+
             // Delete item from container in sub editor
             if (SubEditorScreen.IsSubEditor() && PlayerInput.IsCtrlDown())
             {
@@ -477,8 +477,12 @@ namespace Barotrauma
                             SoundPlayer.PlayUISound(GUISoundType.PickItem);
                         }
 
-                        SubEditorScreen.BulkItemBufferInUse = true;
-                        SubEditorScreen.BulkItemBuffer.Add(new AddOrDeleteCommand(new List<MapEntity> { item }, true));
+                        if (!item.Removed)
+                        {
+                            SubEditorScreen.BulkItemBufferInUse = SubEditorScreen.ItemRemoveMutex;
+                            SubEditorScreen.BulkItemBuffer.Add(new AddOrDeleteCommand(new List<MapEntity> { item }, true));
+                        }
+
                         item.OwnInventory?.DeleteAllItems();
                         item.Remove();
                     }
@@ -686,6 +690,18 @@ namespace Barotrauma
             
             subInventory.isSubInventory = true;
             subInventory.Update(deltaTime, cam, true);
+        }
+
+        public void ClearSubInventories()
+        {
+            if (highlightedSubInventorySlots.Count == 0) return;
+
+            foreach (SlotReference highlightedSubInventorySlot in highlightedSubInventorySlots)
+            {
+                highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
+            }
+
+            highlightedSubInventorySlots.Clear();
         }
 
         public virtual void Draw(SpriteBatch spriteBatch, bool subInventory = false)

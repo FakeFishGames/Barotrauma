@@ -160,10 +160,12 @@ namespace Barotrauma
             {
                 if (Character == null || !Character.HideFace)
                 {
+                    IsDisguised = IsDisguisedAsAnother = false;
                     return Name;
                 }
                 else if ((GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowDisguises))
                 {
+                    IsDisguised = IsDisguisedAsAnother = false;
                     return Name;
                 }
 
@@ -260,6 +262,62 @@ namespace Barotrauma
                     portrait.Remove();
                 }
                 portrait = value;
+            }
+        }
+
+        public bool IsDisguised = false;
+        public bool IsDisguisedAsAnother = false;
+
+        public void CheckDisguiseStatus(bool handleBuff, IdCard idCard = null)
+        {
+            if (Character == null) { return; }
+
+            string currentlyDisplayedName = DisplayName;
+
+            IsDisguised = currentlyDisplayedName == disguiseName;
+            IsDisguisedAsAnother = !IsDisguised && currentlyDisplayedName != Name;
+
+            if (IsDisguisedAsAnother)
+            {
+                if (handleBuff)
+                {
+                    Character.CharacterHealth.ApplyAffliction(Character.AnimController.GetLimb(LimbType.Head), AfflictionPrefab.List.FirstOrDefault(a => a.Identifier.Equals("disguised", StringComparison.OrdinalIgnoreCase)).Instantiate(100f));
+                }
+
+                if (idCard != null)
+                {
+#if CLIENT
+                    GetDisguisedSprites(idCard);
+#endif
+                    return;
+                }
+
+                if (Character.Inventory != null)
+                {
+                    int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
+                    if (cardSlotIndex >= 0)
+                    {
+                        idCard = Character.Inventory.Items[cardSlotIndex].GetComponent<IdCard>();
+
+                        if (idCard != null)
+                        {
+#if CLIENT
+                            GetDisguisedSprites(idCard);
+#endif
+                            return;
+                        }
+                    }
+                }
+            }
+
+#if CLIENT
+            disguisedJobIcon = null;
+            disguisedPortrait = null;
+#endif
+
+            if (handleBuff)
+            {
+                Character.CharacterHealth.ReduceAffliction(Character.AnimController.GetLimb(LimbType.Head), "disguised", 100f);
             }
         }
 
@@ -582,7 +640,7 @@ namespace Barotrauma
             return id;
         }
 
-        public IEnumerable<XElement> FilterByTypeAndHeadID(IEnumerable<XElement> elements, WearableType targetType)
+        public IEnumerable<XElement> FilterByTypeAndHeadID(IEnumerable<XElement> elements, WearableType targetType, int headSpriteId)
         {
             if (elements == null) { return elements; }
             return elements.Where(e =>
@@ -590,16 +648,16 @@ namespace Barotrauma
                 if (Enum.TryParse(e.GetAttributeString("type", ""), true, out WearableType type) && type != targetType) { return false; }
                 int headId = e.GetAttributeInt("headid", -1);
                 // if the head id is less than 1, the id is not valid and the condition is ignored.
-                return headId < 1 || headId == Head.HeadSpriteId;
+                return headId < 1 || headId == headSpriteId;
             });
         }
 
-        public IEnumerable<XElement> FilterElementsByGenderAndRace(IEnumerable<XElement> elements)
+        public IEnumerable<XElement> FilterElementsByGenderAndRace(IEnumerable<XElement> elements, Gender gender, Race race)
         {
             if (elements == null) { return elements; }
             return elements.Where(w =>
-                Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == Head.gender &&
-                Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == Head.race);
+                Enum.TryParse(w.GetAttributeString("gender", "None"), true, out Gender g) && g == gender &&
+                Enum.TryParse(w.GetAttributeString("race", "None"), true, out Race r) && r == race);
         }
 
         private void LoadHeadPresets()
@@ -639,7 +697,7 @@ namespace Barotrauma
             {
                 var wearableElements = Wearables;
                 if (wearableElements == null) { return; }
-                var wearables = FilterElementsByGenderAndRace(wearableElements).ToList();
+                var wearables = FilterElementsByGenderAndRace(wearableElements, head.gender, head.race).ToList();
                 if (wearables == null)
                 {
                     Head.headSpriteRange = Vector2.Zero;
@@ -739,19 +797,19 @@ namespace Barotrauma
                 if (hairs == null)
                 {
                     float commonness = Gender == Gender.Female ? 0.05f : 0.2f;
-                    hairs = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Hair), WearableType.Hair, commonness);
+                    hairs = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, head.gender, head.race), WearableType.Hair, head.HeadSpriteId), WearableType.Hair, commonness);
                 }
                 if (beards == null)
                 {
-                    beards = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Beard), WearableType.Beard);
+                    beards = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, head.gender, head.race), WearableType.Beard, head.HeadSpriteId), WearableType.Beard);
                 }
                 if (moustaches == null)
                 {
-                    moustaches = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.Moustache), WearableType.Moustache);
+                    moustaches = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, head.gender, head.race), WearableType.Moustache, head.HeadSpriteId), WearableType.Moustache);
                 }
                 if (faceAttachments == null)
                 {
-                    faceAttachments = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables), WearableType.FaceAttachment), WearableType.FaceAttachment);
+                    faceAttachments = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, head.gender, head.race), WearableType.FaceAttachment, head.HeadSpriteId), WearableType.FaceAttachment);
                 }
 
                 if (IsValidIndex(Head.HairIndex, hairs))
@@ -790,48 +848,48 @@ namespace Barotrauma
                     Head.FaceAttachment = GetRandomElement(faceAttachments);
                     Head.FaceAttachmentIndex = faceAttachments.IndexOf(Head.FaceAttachment);
                 }
-
-                static List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
-                {
-                    // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
-                    var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness));
-                    var list = new List<XElement>() { emptyElement };
-                    list.AddRange(elements);
-                    return list;
-                }
-
-                XElement GetRandomElement(IEnumerable<XElement> elements)
-                {
-                    var filtered = elements.Where(e => IsWearableAllowed(e));
-                    if (filtered.Count() == 0) { return null; }
-                    var element = ToolBox.SelectWeightedRandom(filtered.ToList(), GetWeights(filtered).ToList(), Rand.RandSync.Unsynced);
-                    return element == null || element.Name == "Empty" ? null : element;
-                }
-
-                bool IsWearableAllowed(XElement element)
-                {
-                    string spriteName = element.Element("sprite").GetAttributeString("name", string.Empty);
-                    return IsAllowed(Head.HairElement, spriteName) && IsAllowed(Head.BeardElement, spriteName) && IsAllowed(Head.MoustacheElement, spriteName) && IsAllowed(Head.FaceAttachment, spriteName);
-                }
-
-                bool IsAllowed(XElement element, string spriteName)
-                {
-                    if (element != null)
-                    {
-                        var disallowed = element.GetAttributeStringArray("disallow", new string[0]);
-                        if (disallowed.Any(s => spriteName.Contains(s)))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-
-                static bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
-
-                static IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
             }
         }
+
+        private static List<XElement> AddEmpty(IEnumerable<XElement> elements, WearableType type, float commonness = 1)
+        {
+            // Let's add an empty element so that there's a chance that we don't get any actual element -> allows bald and beardless guys, for example.
+            var emptyElement = new XElement("EmptyWearable", type.ToString(), new XAttribute("commonness", commonness));
+            var list = new List<XElement>() { emptyElement };
+            list.AddRange(elements);
+            return list;
+        }
+
+        private XElement GetRandomElement(IEnumerable<XElement> elements)
+        {
+            var filtered = elements.Where(e => IsWearableAllowed(e));
+            if (filtered.Count() == 0) { return null; }
+            var element = ToolBox.SelectWeightedRandom(filtered.ToList(), GetWeights(filtered).ToList(), Rand.RandSync.Unsynced);
+            return element == null || element.Name == "Empty" ? null : element;
+        }
+
+        private bool IsWearableAllowed(XElement element)
+        {
+            string spriteName = element.Element("sprite").GetAttributeString("name", string.Empty);
+            return IsAllowed(Head.HairElement, spriteName) && IsAllowed(Head.BeardElement, spriteName) && IsAllowed(Head.MoustacheElement, spriteName) && IsAllowed(Head.FaceAttachment, spriteName);
+        }
+
+        private bool IsAllowed(XElement element, string spriteName)
+        {
+            if (element != null)
+            {
+                var disallowed = element.GetAttributeStringArray("disallow", new string[0]);
+                if (disallowed.Any(s => spriteName.Contains(s)))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool IsValidIndex(int index, List<XElement> list) => index >= 0 && index < list.Count;
+
+        private static IEnumerable<float> GetWeights(IEnumerable<XElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
 
         partial void LoadAttachmentSprites(bool omitJob);
         
@@ -923,72 +981,6 @@ namespace Barotrauma
 
             parentElement.Add(charElement);
             return charElement;
-        }
-
-        public void SpawnInventoryItems(Inventory inventory, XElement itemData)
-        {
-            SpawnInventoryItemsRecursive(inventory, itemData);
-        }
-
-        private void SpawnInventoryItemsRecursive(Inventory inventory, XElement element)
-        {
-            foreach (XElement itemElement in element.Elements())
-            {
-                var newItem = Item.Load(itemElement, inventory.Owner.Submarine, createNetworkEvent: true);
-                if (newItem == null) { continue; }
-
-                if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
-                    GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                {
-                    GameMain.NetworkMember.CreateEntityEvent(newItem, new object[] { NetEntityEvent.Type.Status });
-                }
-
-                int[] slotIndices = itemElement.GetAttributeIntArray("i", new int[] { 0 });
-                if (!slotIndices.Any())
-                {
-                    DebugConsole.ThrowError("Invalid inventory data in character \"" + Name + "\" - no slot indices found");
-                    continue;
-                }
-
-                //make sure there's no other item in the slot
-                //this should not happen normally, but can occur if the character is accidentally given new job items while also loading previous items in the campaign
-                for (int i = 0; i < inventory.Capacity; i++)
-                {
-                    if (slotIndices.Contains(i) && inventory.Items[i] != null && inventory.Items[i] != newItem)
-                    {
-                        DebugConsole.ThrowError($"Error while loading character inventory data. The slot {i} was already occupied by the item \"{inventory.Items[i].Name} ({inventory.Items[i].ID})\" when loading the item \"{newItem.Name} ({newItem.ID})\"");
-                        inventory.Items[i].Drop(null, createNetworkEvent: false);
-                    }
-                }
-
-                inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
-                newItem.ParentInventory = inventory;
-
-                //force the item to the correct slots
-                //  e.g. putting the item in a hand slot will also put it in the first available Any-slot, 
-                //  which may not be where it actually was
-                for (int i = 0; i < inventory.Capacity; i++)
-                {
-                    if (slotIndices.Contains(i))
-                    {
-                        inventory.Items[i] = newItem;
-                    }
-                    else if (inventory.Items[i] == newItem)
-                    {
-                        inventory.Items[i] = null;
-                    }
-                }
-
-                int itemContainerIndex = 0;
-                var itemContainers = newItem.GetComponents<ItemContainer>().ToList();
-                foreach (XElement childInvElement in itemElement.Elements())
-                {
-                    if (itemContainerIndex >= itemContainers.Count) break;
-                    if (!childInvElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
-                    SpawnInventoryItemsRecursive(itemContainers[itemContainerIndex].Inventory, childInvElement);
-                    itemContainerIndex++;
-                }
-            }
         }
 
         public void ApplyHealthData(Character character, XElement healthData)

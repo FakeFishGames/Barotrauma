@@ -23,7 +23,7 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck }
+    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation }
     public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
 
     partial class SubmarineInfo : IDisposable
@@ -517,7 +517,8 @@ namespace Barotrauma
         {
             var contentPackageSubs = ContentPackage.GetFilesOfType(
                 GameMain.Config.AllEnabledPackages, 
-                ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule, ContentType.Wreck);
+                ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule,
+                ContentType.Wreck, ContentType.BeaconStation);
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {
@@ -553,7 +554,7 @@ namespace Barotrauma
                 subDirectories = Directory.GetDirectories(SavePath).Where(s =>
                 {
                     DirectoryInfo dir = new DirectoryInfo(s);
-                    return (dir.Attributes & System.IO.FileAttributes.Hidden) == 0;
+                    return !dir.Attributes.HasFlag(System.IO.FileAttributes.Hidden) && !dir.Name.StartsWith(".");
                 }).ToArray();
             }
             catch (Exception e)

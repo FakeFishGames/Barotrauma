@@ -27,6 +27,7 @@ namespace Barotrauma
         protected override bool Filter(Pump pump)
         {
             if (pump == null) { return false; }
+            if (pump.Item.IgnoreByAI) { return false; }
             if (pump.Item.NonInteractable) { return false; }
             if (pump.Item.HasTag("ballast")) { return false; }
             if (pump.Item.Submarine == null) { return false; }

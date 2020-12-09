@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             set { launchImpulse = value; }
         }
 
-        [Editable(0.0f, 1000.0f), Serialize(5.0f, false, description: "The period of time the user has to wait between shots.")]
+        [Editable(0.0f, 1000.0f, decimals: 3), Serialize(5.0f, false, description: "The period of time the user has to wait between shots.")]
         public float Reload
         {
             get { return reloadTime; }
@@ -198,6 +198,7 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        private float prevScale;
         float prevBaseRotation;
         [Serialize(0.0f, true, description: "The angle of the turret's base in degrees.", alwaysUseInstanceValues: true)]
         public float BaseRotation
@@ -250,20 +251,17 @@ namespace Barotrauma.Items.Components
 
         private void UpdateTransformedBarrelPos()
         {
-            float flippedRotation = item.Rotation;
-            if (item.FlippedX) { flippedRotation = -flippedRotation; }
-            //if (item.FlippedY) flippedRotation = 180.0f - flippedRotation;
-            transformedBarrelPos = MathUtils.RotatePointAroundTarget(barrelPos * item.Scale, new Vector2(item.Rect.Width / 2, item.Rect.Height / 2), flippedRotation);
+            transformedBarrelPos = MathUtils.RotatePointAroundTarget(barrelPos * item.Scale, new Vector2(item.Rect.Width / 2, item.Rect.Height / 2), item.Rotation);
 #if CLIENT
             item.ResetCachedVisibleSize();
 #endif
-            item.Rotation = flippedRotation;
             prevBaseRotation = item.Rotation;
+            prevScale = item.Scale;
         }
 
-        public override void OnItemLoaded()
+        public override void OnMapLoaded()
         {
-            base.OnItemLoaded();
+            base.OnMapLoaded();
             var lightComponents = item.GetComponents<LightComponent>();
             if (lightComponents != null && lightComponents.Count() > 0)
             {
@@ -277,6 +275,9 @@ namespace Barotrauma.Items.Components
                 }
 #endif
             }
+            if (loadedRotationLimits.HasValue) { RotationLimits = loadedRotationLimits.Value; }
+            if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
+            UpdateTransformedBarrelPos();
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -284,7 +285,7 @@ namespace Barotrauma.Items.Components
             this.cam = cam;
 
             if (reload > 0.0f) { reload -= deltaTime; }
-            if (!MathUtils.NearlyEqual(item.Rotation, prevBaseRotation))
+            if (!MathUtils.NearlyEqual(item.Rotation, prevBaseRotation) || !MathUtils.NearlyEqual(item.Scale, prevScale))
             {
                 UpdateTransformedBarrelPos();
             }
@@ -328,19 +329,42 @@ namespace Barotrauma.Items.Components
                     user.WorldPosition + Vector2.UnitY * 150.0f);
             }
 
+            float rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
+
+            float targetRotationDiff = MathHelper.WrapAngle(targetRotation - rotation);
+
+            if ((maxRotation - minRotation) < MathHelper.TwoPi)
+            {
+                float targetRotationMaxDiff = MathHelper.WrapAngle(targetRotation - maxRotation);
+                float targetRotationMinDiff = MathHelper.WrapAngle(targetRotation - minRotation);
+
+                if (Math.Abs(targetRotationMaxDiff) < Math.Abs(targetRotationMinDiff) &&
+                    rotMidDiff < 0.0f &&
+                    targetRotationDiff < 0.0f)
+                {
+                    targetRotationDiff += MathHelper.TwoPi;
+                }
+                else if (Math.Abs(targetRotationMaxDiff) > Math.Abs(targetRotationMinDiff) &&
+                    rotMidDiff > 0.0f &&
+                    targetRotationDiff > 0.0f)
+                {
+                    targetRotationDiff -= MathHelper.TwoPi;
+                }
+            }
+
             angularVelocity += 
-                (MathHelper.WrapAngle(targetRotation - rotation) * springStiffness - angularVelocity * springDamping) * deltaTime;
+                (targetRotationDiff * springStiffness - angularVelocity * springDamping) * deltaTime;
             angularVelocity = MathHelper.Clamp(angularVelocity, -rotationSpeed, rotationSpeed);
 
             rotation += angularVelocity * deltaTime;
 
-            float rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
+            rotMidDiff = MathHelper.WrapAngle(rotation - (minRotation + maxRotation) / 2.0f);
 
             if (rotMidDiff < -maxDist)
             {
                 rotation = minRotation;
                 angularVelocity *= -0.5f;
-            } 
+            }
             else if (rotMidDiff > maxDist)
             {
                 rotation = maxRotation;
@@ -804,7 +828,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (objective.SubObjectives.None())
                 {
-                    var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1, equip: true, removeEmpty: true);
+                    var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1, equip: true, removeEmpty: true, dropItemOnDeselected: true);
                     if (loadItemsObjective == null)
                     {
                         if (usableProjectileCount == 0)
@@ -976,6 +1000,8 @@ namespace Barotrauma.Items.Components
 
         public override void FlipX(bool relativeToSub)
         {
+            BaseRotation = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(MathHelper.ToRadians(-BaseRotation)));
+
             minRotation = MathHelper.Pi - minRotation;
             maxRotation = MathHelper.Pi - maxRotation;
 
@@ -997,7 +1023,22 @@ namespace Barotrauma.Items.Components
 
         public override void FlipY(bool relativeToSub)
         {
-            BaseRotation = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(MathHelper.ToRadians(BaseRotation - 180)));
+            BaseRotation = MathHelper.ToDegrees(MathUtils.WrapAngleTwoPi(MathHelper.ToRadians(180 - BaseRotation)));
+
+            minRotation = -minRotation;
+            maxRotation = -maxRotation;
+
+            var temp = minRotation;
+            minRotation = maxRotation;
+            maxRotation = temp;
+
+            while (minRotation < 0)
+            {
+                minRotation += MathHelper.TwoPi;
+                maxRotation += MathHelper.TwoPi;
+            }
+            rotation = (minRotation + maxRotation) / 2;
+
             UpdateTransformedBarrelPos();
         }
 
@@ -1038,6 +1079,25 @@ namespace Barotrauma.Items.Components
                         lightComponent.IsOn = signal != "0";
                     }
                     break;
+            }
+        }
+
+        private Vector2? loadedRotationLimits;
+        private float? loadedBaseRotation;
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+            loadedRotationLimits = componentElement.GetAttributeVector2("rotationlimits", RotationLimits);
+            loadedBaseRotation = componentElement.GetAttributeFloat("baserotation", componentElement.Parent.GetAttributeFloat("rotation", BaseRotation));
+        }
+
+        public override void OnItemLoaded()
+        {
+            base.OnItemLoaded();
+            if (!loadedBaseRotation.HasValue)
+            {
+                if (item.FlippedX) { FlipX(relativeToSub: false); }
+                if (item.FlippedY) { FlipY(relativeToSub: false); }
             }
         }
 

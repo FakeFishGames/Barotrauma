@@ -30,9 +30,9 @@ namespace Barotrauma
             return other.SteamID == SteamID && other.ClientEndPoint == ClientEndPoint;
         }
 
-        public void SpawnInventoryItems(CharacterInfo characterInfo, Inventory inventory)
+        public void SpawnInventoryItems(Character character, Inventory inventory)
         {
-            characterInfo.SpawnInventoryItems(inventory, itemData);
+            character.SpawnInventoryItems(inventory, itemData);
         }
 
         public void ApplyHealthData(CharacterInfo characterInfo, Character character)

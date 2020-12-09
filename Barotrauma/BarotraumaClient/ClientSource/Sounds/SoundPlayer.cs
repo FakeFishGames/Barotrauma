@@ -625,7 +625,8 @@ namespace Barotrauma
                     Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (fireVolumeRight[i] - fireVolumeLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
                     if (fireSoundChannels[i] == null || !fireSoundChannels[i].IsPlaying)
                     {
-                        fireSoundChannels[i] = GetSound(fireSoundTags[i]).Play(1.0f, FlowSoundRange, soundPos);
+                        fireSoundChannels[i] = GetSound(fireSoundTags[i])?.Play(1.0f, FlowSoundRange, soundPos);
+                        if (fireSoundChannels[i] == null) { continue; }
                         fireSoundChannels[i].Looping = true;
                     }
                     fireSoundChannels[i].Gain = Math.Max(fireVolumeRight[i], fireVolumeLeft[i]);
@@ -960,20 +961,18 @@ namespace Barotrauma
 
                 if (Level.IsLoadedOutpost && Character.Controlled.Submarine == Level.Loaded.StartOutpost)
                 {
-                    // Only return music type for specific outpost types to not assume that
-                    // every outpost type has an associated music track (switch-case for future tracks)
+                    // Only return music type for location types which have music tracks defined
                     var locationType = Level.Loaded.StartLocation?.Type?.Identifier?.ToLowerInvariant();
-                    switch (locationType)
+                    if (!string.IsNullOrEmpty(locationType) && musicClips.Any(c => c.Type == locationType))
                     {
-                        case "research":
-                            return locationType;
+                        return locationType;
                     }
                 }
             }
 
             Submarine targetSubmarine = Character.Controlled?.Submarine;
             if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
-                (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && GameMain.GameScreen.Cam.Position.Y < SubmarineBody.DamageDepth))
+                (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && Level.Loaded != null && Level.Loaded.GetRealWorldDepth(GameMain.GameScreen.Cam.Position.Y) > Level.Loaded.RealWorldCrushDepth))
             {
                 return "deep";
             }
@@ -1026,7 +1025,8 @@ namespace Barotrauma
                 {
                     return "levelend";
                 }
-                if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0)
+                if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0 && 
+                    Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
                 {
                     return "start";
                 }

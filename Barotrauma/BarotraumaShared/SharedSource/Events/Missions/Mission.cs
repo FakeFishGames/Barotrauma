@@ -95,7 +95,7 @@ namespace Barotrauma
             get { return Enumerable.Empty<Vector2>(); }
         }
         
-        public string SonarLabel
+        public virtual string SonarLabel
         {
             get { return Prefab.SonarLabel; }
         }
@@ -233,5 +233,17 @@ namespace Barotrauma
                 }
             }
         }
+
+        protected void ChangeLocationType(string from, string to)
+        {
+            if (GameMain.GameSession.GameMode is CampaignMode && !IsClient)
+            {
+                int srcIndex = Locations[0].Type.Identifier.Equals(from, StringComparison.OrdinalIgnoreCase) ? 0 : 1;
+                var upgradeLocation = Locations[srcIndex];
+                upgradeLocation.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(to, StringComparison.OrdinalIgnoreCase)));
+            }
+        }
+
+        public virtual void AdjustLevelData(LevelData levelData) { }
     }
 }

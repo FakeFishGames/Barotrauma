@@ -31,7 +31,7 @@ namespace Barotrauma.RuinGeneration
 
         private string filePath;
 
-        private List<RuinRoom> roomTypeList;
+        private readonly List<RuinRoom> roomTypeList;
                 
         public string Name => "RuinGenerationParams";
         

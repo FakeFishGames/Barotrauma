@@ -33,7 +33,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GameMain.GameSession.EventManager.QueuedEvents.Enqueue(eventPrefab.CreateInstance());
+                    var ev = eventPrefab.CreateInstance();
+                    if (ev != null)
+                    {
+                        GameMain.GameSession.EventManager.QueuedEvents.Enqueue(ev);
+                    }
                 }
             }
 

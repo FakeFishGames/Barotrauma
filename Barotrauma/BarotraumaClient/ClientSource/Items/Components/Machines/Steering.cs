@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
 
         protected override void CreateGUI()
         {
-            controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterLeft), "ItemUI");
+            controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterRight), "ItemUI");
             var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
             {
                 AbsoluteOffset = GUIStyle.ItemFrameOffset
@@ -265,7 +265,7 @@ namespace Barotrauma.Items.Components
                                           levelStartSelected ? Destination.LevelStart : Destination.LevelEnd);
 
             // Status ->
-            statusContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomLeft)
+            statusContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomRight)
             {
                 RelativeOffset = Sonar.controlBoxOffset
             }, "ItemUI");
@@ -319,8 +319,7 @@ namespace Barotrauma.Items.Components
                         centerText = $"({TextManager.Get("Meter")})";
                         rightTextGetter = () =>
                         {
-                            Vector2 pos = controlledSub == null ? Vector2.Zero : controlledSub.Position;
-                            float realWorldDepth = Level.Loaded == null ? 0.0f : Math.Abs(pos.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                            float realWorldDepth = controlledSub == null ? -1000.0f : controlledSub.RealWorldDepth;
                             return ((int)realWorldDepth).ToString();
                         };
                         break;
@@ -340,9 +339,9 @@ namespace Barotrauma.Items.Components
             //docking interface ----------------------------------------------------
             float dockingButtonSize = 1.1f;
             float elementScale = 0.6f;
-            dockingContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest)
+            dockingContainer = new GUIFrame(new RectTransform(Sonar.controlBoxSize, GuiFrame.RectTransform, Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)
             {
-                RelativeOffset = new Vector2(Sonar.controlBoxOffset.X + 0.05f, Sonar.controlBoxOffset.Y)
+                RelativeOffset = new Vector2(Sonar.controlBoxOffset.X + 0.05f, -0.05f)
             }, style: null);
 
             dockText = TextManager.Get("label.navterminaldock", fallBackTag: "captain.dock");
@@ -437,7 +436,7 @@ namespace Barotrauma.Items.Components
             };
 
             // Sonar area
-            steerArea = new GUICustomComponent(new RectTransform(Sonar.GUISizeCalculation, GuiFrame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest),
+            steerArea = new GUICustomComponent(new RectTransform(Sonar.GUISizeCalculation, GuiFrame.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest),
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
             steerRadius = steerArea.Rect.Width / 2;
 

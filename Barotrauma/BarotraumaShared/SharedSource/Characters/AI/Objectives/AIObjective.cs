@@ -67,6 +67,12 @@ namespace Barotrauma
                 _abandon = value;
                 if (_abandon)
                 {
+#if DEBUG
+                    if (HumanAIController.debugai && objectiveManager.CurrentOrder == this)
+                    {
+                        throw new Exception("Order abandoned!");
+                    }
+#endif
                     OnAbandon();
                 }
             }
@@ -96,9 +102,21 @@ namespace Barotrauma
             return all;
         }
 
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnCompleted method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Completed;
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnAbandoned method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Abandoned;
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnSelected method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Selected;
+        /// <summary>
+        /// A single shot event. Automatically cleared after launching. Use OnDeselected method for implementing (internal) persistent behavior.
+        /// </summary>
         public event Action Deselected;
 
         protected HumanAIController HumanAIController => character.AIController as HumanAIController;
@@ -318,22 +336,26 @@ namespace Barotrauma
         {
             Reset();
             Selected?.Invoke();
+            Selected = null;
         }
 
         public virtual void OnDeselected()
         {
             CumulatedDevotion = 0;
             Deselected?.Invoke();
+            Deselected = null;
         }
 
         protected virtual void OnCompleted()
         {
             Completed?.Invoke();
+            Completed = null;
         }
 
         protected virtual void OnAbandon()
         {
             Abandoned?.Invoke();
+            Abandoned = null;
         }
 
         public virtual void Reset()
@@ -408,7 +430,14 @@ namespace Barotrauma
                     subObjectives.Remove(subObjective);
                     if (AbandonWhenCannotCompleteSubjectives)
                     {
-                        Abandon = true;
+                        if (objectiveManager.CurrentOrder == this)
+                        {
+                            Reset();
+                        }
+                        else
+                        {
+                            Abandon = true;
+                        }
                     }
                 }
             }

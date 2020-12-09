@@ -69,6 +69,7 @@ namespace Barotrauma
         private Map(CampaignMode campaign, XElement element) : this()
         {
             Seed = element.GetAttributeString("seed", "a");
+            Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -80,11 +81,14 @@ namespace Barotrauma
                             Locations.Add(null);
                         }
                         Locations[i] = new Location(subElement);
-                        Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
                         break;
                 }
             }
             System.Diagnostics.Debug.Assert(!Locations.Contains(null));
+            for (int i = 0; i < Locations.Count; i++)
+            {
+                Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
+            }
 
             foreach (XElement subElement in element.Elements())
             {
@@ -101,7 +105,10 @@ namespace Barotrauma
                         Locations[locationIndices.Y].Connections.Add(connection);
                         connection.LevelData = new LevelData(subElement.Element("Level"));
                         string biomeId = subElement.GetAttributeString("biome", "");
-                        connection.Biome = LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.Identifier == biomeId) ?? LevelGenerationParams.GetBiomes().First();
+                        connection.Biome = 
+                            LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.Identifier == biomeId) ??
+                            LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.OldIdentifier == biomeId) ??
+                            LevelGenerationParams.GetBiomes().First();
                         Connections.Add(connection);
                         break;
                 }
@@ -354,9 +361,8 @@ namespace Barotrauma
             CreateEndLocation();
 
             foreach (Location location in Locations)
-            { 
+            {
                 location.LevelData = new LevelData(location);
-                location.NormalizedDepth = location.MapPosition.X / Width;
             }
             foreach (LocationConnection connection in Connections) 
             { 
@@ -672,9 +678,16 @@ namespace Barotrauma
         {
             foreach (Location location in Locations)
             {
-                if (!location.Discovered) { continue; }
+                if (furthestDiscoveredLocation == null || 
+                    location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                {
+                    furthestDiscoveredLocation = location;
+                }
+            }
 
-                if (furthestDiscoveredLocation == null || location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+            foreach (Location location in Locations)
+            {
+                if (location.MapPosition.X < furthestDiscoveredLocation.MapPosition.X)
                 {
                     furthestDiscoveredLocation = location;
                 }
@@ -682,10 +695,13 @@ namespace Barotrauma
                 if (location == CurrentLocation || location == SelectedLocation) { continue; }
 
                 //find which types of locations this one can change to
+                var cct = location.Type.CanChangeTo;
                 List<LocationTypeChange> allowedTypeChanges = new List<LocationTypeChange>();
-                List<LocationTypeChange> readyTypeChanges = new List<LocationTypeChange>();
-                foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
+                List<int> readyTypeChanges = new List<int>();
+                for (int i = 0; i < cct.Count; i++)
                 {
+                    LocationTypeChange typeChange = cct[i];
+                    if (typeChange.RequireDiscovered && !location.Discovered) { continue; }
                     //check if there are any adjacent locations that would prevent the change
                     bool disallowedFound = false;
                     foreach (string disallowedLocationName in typeChange.DisallowedAdjacentLocations)
@@ -714,22 +730,26 @@ namespace Barotrauma
 
                     if (location.TypeChangeTimer >= typeChange.RequiredDuration)
                     {
-                        readyTypeChanges.Add(typeChange);
+                        readyTypeChanges.Add(i);
                     }
                 }
 
+                List<float> readyTypeProbabilities = readyTypeChanges.Select(i => cct[i].DetermineProbability(location)).ToList();
                 //select a random type change
-                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(t => t.Probability))
+                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(i => readyTypeProbabilities[i]))
                 {
-                    var selectedTypeChange = 
-                        ToolBox.SelectWeightedRandom(readyTypeChanges, readyTypeChanges.Select(t => t.Probability).ToList(), Rand.RandSync.Unsynced);
+                    var selectedTypeChangeIndex = 
+                        ToolBox.SelectWeightedRandom(
+                            readyTypeChanges,
+                            readyTypeChanges.Select(i => readyTypeProbabilities[i]).ToList(),
+                            Rand.RandSync.Unsynced);
+                    var selectedTypeChange = cct[selectedTypeChangeIndex];
                     if (selectedTypeChange != null)
                     {
                         string prevName = location.Name;
                         location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(selectedTypeChange.ChangeToType, StringComparison.OrdinalIgnoreCase)));
                         ChangeLocationType(location, prevName, selectedTypeChange);
                         location.TypeChangeTimer = -1;
-                        break;
                     }
                 }
                 

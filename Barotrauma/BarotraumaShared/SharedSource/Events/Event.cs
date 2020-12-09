@@ -56,5 +56,10 @@ namespace Barotrauma
         {
             return true;
         }
+
+        public virtual bool LevelMeetsRequirements()
+        {
+            return true;
+        }
     }
 }

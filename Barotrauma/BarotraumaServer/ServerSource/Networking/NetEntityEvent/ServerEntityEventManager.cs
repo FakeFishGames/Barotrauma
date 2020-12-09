@@ -490,7 +490,7 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
-                byte msgLength = msg.ReadByte();
+                int msgLength = (int)msg.ReadVariableUInt32();
 
                 IClientSerializable entity = Entity.FindEntityByID(entityID) as IClientSerializable;
 
@@ -499,7 +499,7 @@ namespace Barotrauma.Networking
                 {
                     if (GameSettings.VerboseLogging)
                     {
-                        DebugConsole.NewMessage("Received msg " + thisEventID, Color.Red);
+                        DebugConsole.NewMessage("Received msg " + thisEventID + ", expecting " + sender.LastSentEntityEventID, Color.Red);
                     }
                     msg.BitPosition += msgLength * 8;
                 }

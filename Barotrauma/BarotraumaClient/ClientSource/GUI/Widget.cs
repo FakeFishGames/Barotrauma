@@ -32,6 +32,7 @@ namespace Barotrauma
 
         public Vector2 DrawPos { get; set; }
         public int size = 10;
+        public float thickness = 1f;
         /// <summary>
         /// Used only for circles.
         /// </summary>
@@ -157,7 +158,7 @@ namespace Barotrauma
                     {
                         GUI.DrawRectangle(spriteBatch, drawRect, secondaryColor.Value, isFilled, thickness: 2);
                     }
-                    GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? 3 : 1);
+                    GUI.DrawRectangle(spriteBatch, drawRect, color, isFilled, thickness: IsSelected ? (int)(thickness * 3) : (int)thickness);
                     break;
                 case Shape.Circle:
                     if (secondaryColor.HasValue)
@@ -182,7 +183,7 @@ namespace Barotrauma
             {
                 if (showTooltip && !string.IsNullOrEmpty(tooltip))
                 {
-                    var offset = tooltipOffset ?? new Vector2(size, -size / 2);
+                    var offset = tooltipOffset ?? new Vector2(size, -size / 2f);
                     GUI.DrawString(spriteBatch, DrawPos + offset, tooltip, textColor, textBackgroundColor);
                 }
             }

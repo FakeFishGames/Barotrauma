@@ -404,12 +404,18 @@ namespace Barotrauma
                 if (petBehavior != null)
                 {
                     petBehavior.Owner = owner;
-                    var petBehaviorElement = subElement.Attribute("petbehavior");
+                    var petBehaviorElement = subElement.Element("petbehavior");
                     if (petBehaviorElement != null)
                     {
-                        petBehavior.Hunger = petBehaviorElement.GetAttributeFloat(50.0f);
-                        petBehavior.Happiness = petBehaviorElement.GetAttributeFloat(50.0f);
+                        petBehavior.Hunger = petBehaviorElement.GetAttributeFloat("hunger", 50.0f);
+                        petBehavior.Happiness = petBehaviorElement.GetAttributeFloat("happiness", 50.0f);
                     }
+                }
+
+                var inventoryElement = subElement.Element("inventory");
+                if (inventoryElement != null)
+                {
+                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement);
                 }
             }
         }

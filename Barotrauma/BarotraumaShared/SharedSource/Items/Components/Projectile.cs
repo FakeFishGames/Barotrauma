@@ -60,14 +60,14 @@ namespace Barotrauma.Items.Components
 
         public List<Body> IgnoredBodies;
 
-        private Character user;
+        private Character _user;
         public Character User
         {
-            get { return user; }
+            get { return _user; }
             set
             {
-                user = value;
-                Attack?.SetUser(user);                
+                _user = value;
+                Attack?.SetUser(_user);                
             }
         }
 
@@ -211,7 +211,54 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool Use(float deltaTime, Character character = null)
+        private void Launch(Character user, Vector2 simPosition, float rotation)
+        {
+            Item.body.ResetDynamics();
+            Item.SetTransform(simPosition, rotation);
+            // Set user for hitscan projectiles to work properly.
+            User = user;
+            // Need to set null for non-characterusable items.
+            Use(character: null);
+            // Set user for normal projectiles to work properly.
+            User = user;
+            if (Item.Removed) { return; }
+            launchPos = simPosition;
+            //set the rotation of the projectile again because dropping the projectile resets the rotation
+            Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians));
+        }
+
+        public void Shoot(Character user, Vector2 weaponPos, Vector2 spawnPos, float rotation, List<Body> ignoredBodies, bool createNetworkEvent)
+        {
+            //add the limbs of the shooter to the list of bodies to be ignored
+            //so that the player can't shoot himself
+            IgnoredBodies = ignoredBodies;
+            Vector2 projectilePos = weaponPos;
+            //make sure there's no obstacles between the base of the weapon (or the shoulder of the character) and the end of the barrel
+            if (Submarine.PickBody(weaponPos, spawnPos, IgnoredBodies, Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking) == null)
+            {
+                //no obstacles -> we can spawn the projectile at the barrel
+                projectilePos = spawnPos;
+            }
+            else if ((weaponPos - spawnPos).LengthSquared() > 0.0001f)
+            {
+                //spawn the projectile body.GetMaxExtent() away from the position where the raycast hit the obstacle
+                Vector2 newPos = weaponPos - Vector2.Normalize(spawnPos - projectilePos) * Math.Max(Item.body.GetMaxExtent(), 0.1f);
+                if (MathUtils.IsValid(newPos))
+                {
+                    projectilePos = newPos;
+                }
+            }
+            Launch(user, projectilePos, rotation);
+            if (createNetworkEvent && !Item.Removed && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            {
+#if SERVER
+                launchRot = rotation;               
+                Item.CreateServerEvent(this, new object[] { true }); //true = indicate that this is a launch event          
+#endif
+            }
+        }
+
+        public bool Use(Character character = null)
         {
             if (character != null && !characterUsable) { return false; }
 
@@ -230,16 +277,16 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    Launch(launchDir * LaunchImpulse * item.body.Mass);
+                    DoLaunch(launchDir * LaunchImpulse * item.body.Mass);
                 }
             }
-
             User = character;
-
             return true;
         }
 
-        private void Launch(Vector2 impulse)
+        public override bool Use(float deltaTime, Character character = null) => Use(character);
+
+        private void DoLaunch(Vector2 impulse)
         {
             hits.Clear();
 
@@ -342,7 +389,15 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    Entity.Spawner.AddToRemoveQueue(item);
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                    {
+                        //clients aren't allowed to remove items by themselves, so lets hide the projectile until the server tells us to remove it
+                        item.HiddenInGame = Hitscan;
+                    }
+                    else
+                    {
+                        Entity.Spawner.AddToRemoveQueue(item);
+                    }
                 }
             }
         }
@@ -360,6 +415,7 @@ namespace Barotrauma.Items.Components
             {
                 //ignore sensors and items
                 if (fixture?.Body == null || fixture.IsSensor) { return true; }
+                if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return true; }
                 if (fixture.Body?.UserData as string == "ruinroom") { return true; }
 
@@ -381,6 +437,7 @@ namespace Barotrauma.Items.Components
             {
                 //ignore sensors and items
                 if (fixture?.Body == null || fixture.IsSensor) { return -1; }
+                if (fixture.Body.UserData is VineTile) { return -1; }
 
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
                 if (fixture.Body?.UserData as string == "ruinroom") { return -1; }
@@ -577,20 +634,27 @@ namespace Barotrauma.Items.Components
             {
                 if (Attack != null) { attackResult = Attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }
             }
+            else if (target.Body.UserData is VoronoiCell voronoiCell && voronoiCell.IsDestructible && Attack != null && Math.Abs(Attack.StructureDamage) > 0.0f)
+            {
+                if (Level.Loaded?.ExtraWalls.Find(w => w.Body == target.Body) is DestructibleLevelWall destructibleWall)
+                {
+                    attackResult = Attack.DoDamage(User, destructibleWall, item.WorldPosition, 1.0f);
+                }
+            }
 
             if (character != null) { character.LastDamageSource = item; }
 
 #if CLIENT
-            PlaySound(ActionType.OnUse, user: user);
-            PlaySound(ActionType.OnImpact, user: user);
+            PlaySound(ActionType.OnUse, user: _user);
+            PlaySound(ActionType.OnImpact, user: _user);
 #endif
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
                 if (target.Body.UserData is Limb targetLimb)
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb, user: user);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: user);
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb, user: _user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: _user);
                     var attack = targetLimb.attack;
                     if (attack != null)
                     {
@@ -626,8 +690,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: user);
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
@@ -703,7 +767,15 @@ namespace Barotrauma.Items.Components
 
             if (RemoveOnHit)
             {
-                Entity.Spawner.AddToRemoveQueue(item);
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                {
+                    //clients aren't allowed to remove items by themselves, so lets hide the projectile until the server tells us to remove it
+                    item.HiddenInGame = Hitscan;
+                }
+                else
+                {
+                    Entity.Spawner?.AddToRemoveQueue(item);
+                }
             }
 
             return true;

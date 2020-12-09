@@ -24,7 +24,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <para>The value is an implementation detail and may change between application launches or MonoGame versions.
         /// It is only guaranteed to stay consistent during application lifetime.</para>
         /// </remarks>
-        internal int SortingKey
+        public int SortingKey
         {
             get { return _sortingKey; }
         }

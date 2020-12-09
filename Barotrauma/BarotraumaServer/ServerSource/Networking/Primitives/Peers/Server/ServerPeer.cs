@@ -39,7 +39,16 @@ namespace Barotrauma.Networking
             public double UpdateTime;
             public double TimeOut;
             public int Retries;
-            public UInt64? SteamID;
+            private UInt64? steamId;
+            public UInt64? SteamID
+            {
+                get { return steamId; }
+                set
+                {
+                    steamId = value;
+                    Connection.SetSteamIDIfUnknown(value ?? 0);
+                }
+            }
             public Int32? PasswordSalt;
             public bool AuthSessionStarted;
 
@@ -224,7 +233,7 @@ namespace Barotrauma.Networking
                 case ConnectionInitialization.ContentPackageOrder:
                     outMsg.Write(GameMain.Server.ServerName);
 
-                    var mpContentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
+                    var mpContentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).Reverse().ToList();
                     outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count);
                     for (int i = 0; i < mpContentPackages.Count; i++)
                     {

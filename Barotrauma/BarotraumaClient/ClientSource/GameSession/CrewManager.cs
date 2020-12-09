@@ -199,7 +199,7 @@ namespace Barotrauma
                             var headset = GetHeadset(Character.Controlled, true);
                             if (headset != null && headset.CanTransmit())
                             {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sendToChat: false);
+                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sentFromChat: true);
                             }
                         }
                         textbox.Deselect();
@@ -232,7 +232,7 @@ namespace Barotrauma
                 };
             }
 
-            var reports = Order.PrefabList.FindAll(o => o.TargetAllCharacters && o.SymbolSprite != null);
+            var reports = Order.PrefabList.FindAll(o => o.IsReport && o.SymbolSprite != null);
             if (reports.None())
             {
                 DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
@@ -252,7 +252,7 @@ namespace Barotrauma
             //report buttons
             foreach (Order order in reports)
             {
-                if (!order.TargetAllCharacters || order.SymbolSprite == null) { continue; }
+                if (!order.IsReport || order.SymbolSprite == null) { continue; }
                 var btn = new GUIButton(new RectTransform(new Point(ReportButtonFrame.Rect.Width), ReportButtonFrame.RectTransform), style: null)
                 {
                     OnClicked = (GUIButton button, object userData) =>
@@ -667,6 +667,8 @@ namespace Barotrauma
 
         #region Crew List Order Displayment
 
+        // TODO: CHECK ALL THE ORDER CONSTUCTOR CALLS
+
         /// <summary>
         /// Sets the character's current order (if it's close enough to receive messages from orderGiver) and
         /// displays the order in the crew UI
@@ -675,16 +677,69 @@ namespace Barotrauma
         {
             if (order != null && order.TargetAllCharacters)
             {
-                if (orderGiver == null || orderGiver.CurrentHull == null) { return; }
-                var hull = orderGiver.CurrentHull;
-                AddOrder(new Order(order.Prefab ?? order, hull, null, orderGiver), order.FadeOutTime);
+                Hull hull = null;
+                if (order.IsReport)
+                {
+                    if (orderGiver?.CurrentHull == null) { return; }
+                    hull = orderGiver.CurrentHull;
+                    AddOrder(new Order(order.Prefab ?? order, hull, null, orderGiver), order.FadeOutTime);
+                }
+                else if(order.IsIgnoreOrder)
+                {
+                    WallSection ws = null;
+                    if (order.TargetType == Order.OrderTargetType.Entity && order.TargetEntity is MapEntity me)
+                    {
+                        if (order.Identifier == "ignorethis")
+                        {
+                            me.SetIgnoreByAI(true);
+                            AddOrder(new Order(order.Prefab ?? order, order.TargetEntity, order.TargetItemComponent, orderGiver), null);
+                        }
+                        else
+                        {
+                            me.SetIgnoreByAI(false);
+                            ActiveOrders.RemoveAll(p => p.First.Identifier == "ignorethis" && p.First.TargetEntity == order.TargetEntity);
+                        }
+                    }
+                    else if (order.TargetType == Order.OrderTargetType.WallSection && order.TargetEntity is Structure s)
+                    {
+                        var wallSectionIndex = order.WallSectionIndex ?? s.Sections.IndexOf(wallContext);
+                        ws = s.GetSection(wallSectionIndex);
+                        if (ws != null)
+                        {
+                            if (order.Identifier == "ignorethis")
+                            {
+                                ws.SetIgnoreByAI(true);
+                                AddOrder(new Order(order.Prefab ?? order, s, wallSectionIndex, orderGiver), null);
+                            }
+                            else
+                            {
+                                ws.SetIgnoreByAI(false);
+                                ActiveOrders.RemoveAll(p => p.First.Identifier == "ignorethis" && p.First.TargetEntity == s && p.First.WallSectionIndex == wallSectionIndex);
+                            }
+                        }
+                    }
+
+                    if (ws != null)
+                    {
+                        hull = Hull.FindHull(ws.WorldPosition);
+                    }
+                    else if (order.TargetEntity is Item i)
+                    {
+                        hull = i.CurrentHull;
+                    }
+                    else if (order.TargetEntity is ISpatialEntity se)
+                    {
+                        hull = Hull.FindHull(se.WorldPosition);
+                    }
+                }
+
                 if (IsSinglePlayer)
                 {
-                    orderGiver.Speak(order.GetChatMessage("", hull.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
+                    orderGiver.Speak(order.GetChatMessage("", hull?.DisplayName, givingOrderToSelf: character == orderGiver), ChatMessageType.Order);
                 }
                 else
                 {
-                    OrderChatMessage msg = new OrderChatMessage(order, "", hull, null, orderGiver);
+                    OrderChatMessage msg = new OrderChatMessage(order, "", order.IsReport ? hull : order.TargetEntity, null, orderGiver);
                     GameMain.Client?.SendChatMessage(msg);
                 }
             }
@@ -696,7 +751,7 @@ namespace Barotrauma
                 if (IsSinglePlayer)
                 {
                     character.SetOrder(order, option, orderGiver, speak: orderGiver != character);
-                    orderGiver?.Speak(order.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option), null);
+                    orderGiver?.Speak(order?.GetChatMessage(character.Name, orderGiver.CurrentHull?.DisplayName, givingOrderToSelf: character == orderGiver, orderOption: option));
                 }
                 else if (orderGiver != null)
                 {
@@ -1591,6 +1646,7 @@ namespace Barotrauma
         private Character characterContext;
         private Item itemContext;
         private Hull hullContext;
+        private WallSection wallContext;
         private bool isContextual;
         private readonly List<Order> contextualOrders = new List<Order>();
         private Point shorcutCenterNodeOffset;
@@ -1640,7 +1696,7 @@ namespace Barotrauma
                 }
 
             }
-            else if (TryGetBreachedHullAtHoveredWall(out Hull breachedHull))
+            else if (TryGetBreachedHullAtHoveredWall(out Hull breachedHull, out wallContext))
             {
                 return breachedHull;
             }
@@ -1662,16 +1718,24 @@ namespace Barotrauma
             if (entityContext is Character character)
             {
                 characterContext = character;
+                itemContext = null;
+                hullContext = null;
+                wallContext = null;
                 isContextual = false;
             }
             else if (entityContext is Item item)
             {
                 itemContext = item;
+                characterContext = null;
+                hullContext = null;
+                wallContext = null;
                 isContextual = true;
             }
             else if (entityContext is Hull hull)
             {
                 hullContext = hull;
+                characterContext = null;
+                itemContext = null;
                 isContextual = true;
             }
 
@@ -1785,7 +1849,7 @@ namespace Barotrauma
             availableCategories = new List<OrderCategory>();
             foreach (OrderCategory category in Enum.GetValues(typeof(OrderCategory)))
             {
-                if (Order.PrefabList.Any(o => o.Category == category && !o.TargetAllCharacters))
+                if (Order.PrefabList.Any(o => o.Category == category && !o.IsReport))
                 {
                     availableCategories.Add(category);
                 }
@@ -2129,7 +2193,7 @@ namespace Barotrauma
                     if (Order.GetPrefab(orderIdentifier) is Order orderPrefab &&
                         shortcutNodes.None(n => (n.UserData is Order order && order.Identifier == orderIdentifier) ||
                                                 (n.UserData is Tuple<Order, string> orderWithOption && orderWithOption.Item1.Identifier == orderIdentifier)) &&
-                        !orderPrefab.TargetAllCharacters && orderPrefab.Category != null)
+                        !orderPrefab.IsReport && orderPrefab.Category != null)
                     {
                         if (!orderPrefab.MustSetTarget || orderPrefab.GetMatchingItems(sub, true).Any())
                         {
@@ -2172,7 +2236,7 @@ namespace Barotrauma
 
         private void CreateOrderNodes(OrderCategory orderCategory)
         {
-            var orders = Order.PrefabList.FindAll(o => o.Category == orderCategory && !o.TargetAllCharacters);
+            var orders = Order.PrefabList.FindAll(o => o.Category == orderCategory && !o.IsReport);
             Order order;
             bool disableNode;
             var offsets = MathUtils.GetPointsOnCircumference(Vector2.Zero, nodeDistance,
@@ -2250,34 +2314,38 @@ namespace Barotrauma
                     if (contextualOrders.None())
                     {
                         orderIdentifier = "cleanupitems";
-                        if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)) && AIObjectiveCleanupItems.IsValidTarget(itemContext, Character.Controlled))
+                        if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)) && AIObjectiveCleanupItems.IsValidTarget(itemContext, Character.Controlled, checkInventory: false))
                         {
                             contextualOrders.Add(new Order(Order.GetPrefab(orderIdentifier), itemContext, targetItem: null, Character.Controlled));
                         }
                     }
+
+                    AddIgnoreOrder(itemContext);
                 }
                 else if (hullContext != null)
                 {
                     contextualOrders.Add(new Order(Order.GetPrefab("fixleaks"), hullContext, targetItem: null, Character.Controlled));
+
+                    if (wallContext != null)
+                    {
+                        AddIgnoreOrder(wallContext);
+                    }
                 }
 
-                if (contextualOrders.None(o => o.Category != OrderCategory.Movement))
+                orderIdentifier = "wait";
+                if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)))
                 {
-                    orderIdentifier = "wait";
+                    Vector2 position = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                    Hull hull = Hull.FindHull(position, guess: Character.Controlled?.CurrentHull);
+                    contextualOrders.Add(new Order(Order.GetPrefab(orderIdentifier), new OrderTarget(position, hull), Character.Controlled));
+                }
+
+                if (contextualOrders.None(o => o.Category != OrderCategory.Movement) && characters.Any(c => c != Character.Controlled))
+                {
+                    orderIdentifier = "follow";
                     if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)))
                     {
-                        Vector2 position = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
-                        Hull hull = Hull.FindHull(position, guess: Character.Controlled?.CurrentHull);
-                        contextualOrders.Add(new Order(Order.GetPrefab(orderIdentifier), new OrderTarget(position, hull), Character.Controlled));
-                    }
-
-                    if (characters.Any(c => c != Character.Controlled))
-                    {
-                        orderIdentifier = "follow";
-                        if (contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)))
-                        {
-                            contextualOrders.Add(Order.GetPrefab(orderIdentifier));
-                        }
+                        contextualOrders.Add(Order.GetPrefab(orderIdentifier));
                     }
                 }
 
@@ -2298,6 +2366,35 @@ namespace Barotrauma
                     CreateOrderNode(nodeSize, commandFrame.RectTransform, offsets[i].ToPoint(), contextualOrders[i], (i + 1) % 10, disableNode: disableNode, checkIfOrderCanBeHeard: false),
                     !disableNode ? Keys.D0 + (i + 1) % 10 : Keys.None));
             }
+
+            void AddIgnoreOrder(ISpatialEntity target)
+            {
+                var orderIdentifier = "ignorethis";
+                if (!target.IgnoreByAI && contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)))
+                {
+                    AddOrder(orderIdentifier, target);
+                }
+                else
+                {
+                    orderIdentifier = "unignorethis";
+                    if (target.IgnoreByAI && contextualOrders.None(o => o.Identifier.Equals(orderIdentifier)))
+                    {
+                        AddOrder(orderIdentifier, target);
+                    }
+                }
+
+                void AddOrder(string id, ISpatialEntity target)
+                {
+                    if (target is WallSection ws)
+                    {
+                        contextualOrders.Add(new Order(Order.GetPrefab(orderIdentifier), ws.Wall, ws.Wall.Sections.IndexOf(ws), orderGiver: Character.Controlled));
+                    }
+                    else
+                    {
+                        contextualOrders.Add(new Order(Order.GetPrefab(orderIdentifier), target as Entity, null, Character.Controlled));
+                    }
+                }
+            }
         }
 
         // TODO: there's duplicate logic here and above -> would be better to refactor so that the conditions are only defined in one place
@@ -2306,7 +2403,7 @@ namespace Barotrauma
             if (Order.PrefabList.Any(o => o.TargetItems.Length > 0 && o.TargetItems.Contains(item.Prefab.Identifier))) { return true; }
             if (Order.PrefabList.Any(o => item.HasTag(o.TargetItems))) { return true; }
             if (Order.PrefabList.Any(o => o.TryGetTargetItemComponent(item, out _))) { return true; }
-            if (AIObjectiveCleanupItems.IsValidTarget(item, Character.Controlled)) { return true; }
+            if (AIObjectiveCleanupItems.IsValidTarget(item, Character.Controlled, checkInventory: false)) { return true; }
 
             if (item.Repairables.Any(r => item.ConditionPercentage < r.RepairThreshold)) { return true; }
             var operateWeaponsPrefab = Order.GetPrefab("operateweapons");
@@ -2367,11 +2464,13 @@ namespace Barotrauma
                     {
                         o = new Order(o.Prefab, orderTargetEntity, orderTargetEntity.Components.FirstOrDefault(ic => ic.GetType() == order.ItemComponentType), orderGiver: order.OrderGiver);
                     }
-                    SetCharacterOrder(characterContext ?? GetCharacterForQuickAssignment(o), o, null, Character.Controlled);
+                    var character = !o.TargetAllCharacters ? characterContext ?? GetCharacterForQuickAssignment(o) : null;
+                    SetCharacterOrder(character, o, null, Character.Controlled);
                     DisableCommandUI();
                 }
                 return true;
             };
+            // TODO: Might need to edit the tooltip
             var icon = CreateNodeIcon(node.RectTransform, order.SymbolSprite, order.Color,
                 tooltip: mustSetOptionOrTarget || characterContext != null ? order.Name : order.Name +
                     "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse")) + ": " + TextManager.Get("commandui.quickassigntooltip") +
@@ -2948,9 +3047,10 @@ namespace Barotrauma
             return (degrees < 0) ? (degrees + 360) : degrees;
         }
 
-        private bool TryGetBreachedHullAtHoveredWall(out Hull breachedHull)
+        private bool TryGetBreachedHullAtHoveredWall(out Hull breachedHull, out WallSection hoveredWall)
         {
             breachedHull = null;
+            hoveredWall = null;
             // Based on the IsValidTarget() method of AIObjectiveFixLeaks class
             List<Gap> leaks = Gap.GapList.FindAll(g =>
                 g != null && g.ConnectedWall != null && g.ConnectedDoor == null && g.Open > 0 && g.linkedTo.Any(l => l != null) &&
@@ -2962,6 +3062,15 @@ namespace Barotrauma
                 if (Submarine.RectContains(leak.ConnectedWall.WorldRect, mouseWorldPosition))
                 {
                     breachedHull = leak.FlowTargetHull;
+                    foreach (var section in leak.ConnectedWall.Sections)
+                    {
+                        if (Submarine.RectContains(section.WorldRect, mouseWorldPosition))
+                        {
+                            hoveredWall = section;
+                            break;
+                        }
+                        
+                    }
                     return true;
                 }
             }

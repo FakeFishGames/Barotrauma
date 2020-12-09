@@ -34,7 +34,6 @@ namespace Barotrauma
             }
         }
 
-
         public static void StartCampaignSetup(IEnumerable<string> saveFiles)
         {
             var parent = GameMain.NetLobbyScreen.CampaignSetupFrame;
@@ -103,11 +102,13 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-            
-            int buttonHeight = (int)(GUI.Scale * 40);
-            int buttonWidth = GUI.IntScale(450);
 
-            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle((GameMain.GraphicsWidth / 2) - (buttonWidth / 2), HUDLayoutSettings.ButtonAreaTop.Center.Y - (buttonHeight / 2), buttonWidth, buttonHeight), GUICanvas.Instance),
+            int buttonHeight = (int) (GUI.Scale * 40),
+                buttonWidth = GUI.IntScale(450),
+                buttonCenter = buttonHeight / 2,
+                screenMiddle = GameMain.GraphicsWidth / 2;
+
+            endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle - buttonWidth / 2, HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, buttonWidth, buttonHeight), GUICanvas.Instance),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
             {
                 Pulse = true,
@@ -140,6 +141,25 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            int readyButtonHeight = buttonHeight;
+            int readyButtonWidth = (int) (GUI.Scale * 50);
+
+            ReadyCheckButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle(screenMiddle + (buttonWidth / 2) + GUI.IntScale(16), HUDLayoutSettings.ButtonAreaTop.Center.Y - buttonCenter, readyButtonWidth, readyButtonHeight), GUICanvas.Instance), 
+                style: "RepairBuyButton")
+            {
+                ToolTip = TextManager.Get("ReadyCheck.Tooltip"),
+                OnClicked = delegate
+                {
+                    if (CrewManager != null && CrewManager.ActiveReadyCheck == null)
+                    {
+                        ReadyCheck.CreateReadyCheck();
+                    }
+                    return true;
+                },
+                UserData = "ReadyCheckButton"
+            };
+            
             buttonContainer.Recalculate();
         }
 
@@ -378,6 +398,7 @@ namespace Barotrauma
             if (!GUI.DisableHUD && !GUI.DisableUpperHUD)
             {
                 endRoundButton.UpdateManually(deltaTime);
+                ReadyCheckButton?.UpdateManually(deltaTime);
                 if (CoroutineManager.IsCoroutineRunning("LevelTransition") || ForceMapUI) { return; }
             }
 

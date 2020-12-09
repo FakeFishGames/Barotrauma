@@ -39,6 +39,10 @@ namespace Barotrauma
             base.Start();
             
             CrewManager.InitSinglePlayerRound();
+            foreach (Submarine submarine in Submarine.Loaded)
+            {
+                submarine.NeutralizeBallast();
+            }
 
             if (SpawnOutpost)
             {

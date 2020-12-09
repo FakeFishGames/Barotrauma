@@ -13,6 +13,7 @@ namespace Barotrauma
         TopLeft = (Top | Left), TopCenter = (CenterX | Top), TopRight = (Top | Right),
         CenterLeft = (Left | CenterY), Center = (CenterX | CenterY), CenterRight = (Right | CenterY),
         BottomLeft = (Bottom | Left), BottomCenter = (CenterX | Bottom), BottomRight = (Bottom | Right),
+        Any = Left | Right | Top | Bottom | Center
     }
 
     static class MathUtils
@@ -368,7 +369,7 @@ namespace Barotrauma
 
         public static bool GetLineRectangleIntersection(Vector2 a1, Vector2 a2, Rectangle rect, out Vector2 intersection)
         {
-            if (GetAxisAlignedLineIntersection(a1, a2, 
+            if (GetAxisAlignedLineIntersection(a1, a2,
                 new Vector2(rect.X, rect.Y),
                 new Vector2(rect.Right, rect.Y),
                 true, out intersection))
@@ -377,14 +378,14 @@ namespace Barotrauma
             }
 
             if (GetAxisAlignedLineIntersection(a1, a2,
-                new Vector2(rect.X, rect.Y-rect.Height),
-                new Vector2(rect.Right, rect.Y-rect.Height),
+                new Vector2(rect.X, rect.Y - rect.Height),
+                new Vector2(rect.Right, rect.Y - rect.Height),
                 true, out intersection))
             {
                 return true;
             }
 
-            if(GetAxisAlignedLineIntersection(a1, a2,
+            if (GetAxisAlignedLineIntersection(a1, a2,
                 new Vector2(rect.X, rect.Y),
                 new Vector2(rect.X, rect.Y - rect.Height),
                 false, out intersection))
@@ -548,8 +549,72 @@ namespace Barotrauma
             }
 
             float numerator = xDiff * (lineA.Y - point.Y) - yDiff * (lineA.X - point.X);
-            return (numerator*numerator) /
-                (xDiff * xDiff + yDiff * yDiff);
+            return (numerator * numerator) / (xDiff * xDiff + yDiff * yDiff);
+        }
+
+        public static double LineSegmentToPointDistanceSquared(Point lineA, Point lineB, Point point)
+        {
+            double xDiff = lineB.X - lineA.X;
+            double yDiff = lineB.Y - lineA.Y;
+
+            if (xDiff == 0 && yDiff == 0)
+            {
+                double v1 = lineA.X - point.X;
+                double v2 = lineA.Y - point.Y;
+                return (v1 * v1) + (v2 * v2);
+            }
+
+            // Calculate the t that minimizes the distance.
+            double t = ((point.X - lineA.X) * xDiff + (point.Y - lineA.Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
+
+            // See if this represents one of the segment's
+            // end points or a point in the middle.
+            if (t < 0)
+            {
+                xDiff = point.X - lineA.X;
+                yDiff = point.Y - lineA.Y;
+            }
+            else if (t > 1)
+            {
+                xDiff = point.X - lineB.X;
+                yDiff = point.Y - lineB.Y;
+            }
+            else
+            {
+                xDiff = point.X - (lineA.X + t * xDiff);
+                yDiff = point.Y - (lineA.Y + t * yDiff);
+            }
+
+            return xDiff * xDiff + yDiff * yDiff;
+        }
+
+        public static Vector2 GetClosestPointOnLineSegment(Vector2 lineA, Vector2 lineB, Vector2 point)
+        {
+            float xDiff = lineB.X - lineA.X;
+            float yDiff = lineB.Y - lineA.Y;
+
+            if (xDiff == 0 && yDiff == 0)
+            {
+                return lineA;
+            }
+
+            // Calculate the t that minimizes the distance.
+            float t = ((point.X - lineA.X) * xDiff + (point.Y - lineA.Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
+
+            // See if this represents one of the segment's
+            // end points or a point in the middle.
+            if (t < 0)
+            {
+                return lineA;
+            }
+            else if (t > 1)
+            {
+                return lineB;
+            }
+            else
+            {
+                return new Vector2(lineA.X + t * xDiff, lineA.Y + t * yDiff);
+            }
         }
 
         public static bool CircleIntersectsRectangle(Vector2 circlePos, float radius, Rectangle rect)
@@ -613,27 +678,11 @@ namespace Barotrauma
         public static List<Vector2[]> TriangulateConvexHull(List<Vector2> vertices, Vector2 center)
         {
             List<Vector2[]> triangles = new List<Vector2[]>();
-
-            int triangleCount = vertices.Count - 2;
-
             vertices.Sort(new CompareCCW(center));
-
-            int lastIndex = 1;
-            for (int i = 0; i < triangleCount; i++)
+            for (int i = 0; i < vertices.Count; i++)
             {
-                Vector2[] triangleVertices = new Vector2[3];
-                triangleVertices[0] = vertices[0];
-                int k = 1;
-                for (int j = lastIndex; j <= lastIndex + 1; j++)
-                {
-                    triangleVertices[k] = vertices[j];
-                    k++;
-                }
-                lastIndex += 1;
-
-                triangles.Add(triangleVertices);
+                triangles.Add(new Vector2[3] { center, vertices[i], vertices[(i + 1) % vertices.Count] });
             }
-
             return triangles;
         }
 
@@ -658,7 +707,7 @@ namespace Barotrauma
 
                 for (int i = 1; i < points.Count; i++)
                 {
-                    if (points[i] == currPoint) continue;
+                    if (points[i].NearlyEquals(currPoint)) continue;
                     if (currPoint == endPoint ||
                         MathUtils.VectorOrientation(currPoint, endPoint, points[i]) == -1)
                     {

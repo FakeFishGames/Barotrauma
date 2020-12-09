@@ -227,7 +227,7 @@ namespace Barotrauma
                     }
                 }
 
-                bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.ignoreCollisions;
+                bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.IgnoreCollisions && !limb.Hidden;
                 return mainLimb;
             }
         }
@@ -1060,7 +1060,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb.ignoreCollisions || limb.IsSevered) { continue; }
+                if (limb.IgnoreCollisions || limb.IsSevered) { continue; }
 
                 try
                 {
@@ -1562,7 +1562,7 @@ namespace Barotrauma
             }
         }
 
-        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
+        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true, bool forceMainLimbToCollider = false)
         {
             if (!MathUtils.IsValid(simPosition))
             {
@@ -1575,8 +1575,7 @@ namespace Barotrauma
             }
             if (MainLimb == null) { return; }
 
-            Vector2 limbMoveAmount = simPosition - Collider.SimPosition;
-
+            Vector2 limbMoveAmount = forceMainLimbToCollider ? simPosition - MainLimb.SimPosition : simPosition - Collider.SimPosition;
             if (lerp)
             {
                 Collider.TargetPosition = simPosition;
@@ -1587,13 +1586,15 @@ namespace Barotrauma
                 Collider.SetTransform(simPosition, Collider.Rotation);
             }
 
-            foreach (Limb limb in Limbs)
+            if (!MathUtils.NearlyEqual(limbMoveAmount, Vector2.Zero))
             {
-                if (limb.IsSevered) { continue; }
-                //check visibility from the new position of the collider to the new position of this limb
-                Vector2 movePos = limb.SimPosition + limbMoveAmount;
-
-                TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
+                foreach (Limb limb in Limbs)
+                {
+                    if (limb.IsSevered) { continue; }
+                    //check visibility from the new position of the collider to the new position of this limb
+                    Vector2 movePos = limb.SimPosition + limbMoveAmount;
+                    TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
+                }
             }
         }
 
@@ -1634,7 +1635,8 @@ namespace Barotrauma
 
         protected void CheckDistFromCollider()
         {
-            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;     
+            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;
+            allowedDist = Math.Max(allowedDist, 1.0f);
             float resetDist = allowedDist * 5.0f;
 
             Vector2 diff = Collider.SimPosition - MainLimb.SimPosition;
@@ -1643,7 +1645,7 @@ namespace Barotrauma
             if (distSqrd > resetDist * resetDist)
             {
                 //ragdoll way too far, reset position
-                SetPosition(Collider.SimPosition, true);
+                SetPosition(Collider.SimPosition, true, forceMainLimbToCollider: true);
             }
             if (distSqrd > allowedDist * allowedDist)
             {

@@ -696,6 +696,7 @@ namespace Barotrauma
         private void ReadServerMemFromFile(string file, ref List<ServerInfo> servers)
         {
             if (servers == null) { servers = new List<ServerInfo>(); }
+            servers.Clear();
 
             if (!File.Exists(file)) { return; }
 
@@ -716,11 +717,21 @@ namespace Barotrauma
                 return;
             }
 
+            bool saveCleanup = false;
             foreach (XElement element in doc.Root.Elements())
             {
                 if (element.Name != "ServerInfo") { continue; }
-                servers.Add(ServerInfo.FromXElement(element));
+                var info = ServerInfo.FromXElement(element);
+                if (!servers.Any(s => s.Equals(info)))
+                {
+                    servers.Add(info);
+                }
+                else
+                {
+                    saveCleanup = true;
+                }
             }
+            if (saveCleanup) { WriteServerMemToFile(file, servers); }
         }
 
         private void WriteServerMemToFile(string file, List<ServerInfo> servers)
@@ -1061,7 +1072,7 @@ namespace Barotrauma
                         (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
                         (!filterEmpty.Selected || serverInfo.PlayerCount > 0) &&
                         (!filterWhitelisted.Selected || serverInfo.UsingWhiteList == true) &&
-                        (filterOffensive.Selected || !ForbiddenWordFilter.IsForbidden(serverInfo.ServerName)) &&
+                        (!filterOffensive.Selected || !ForbiddenWordFilter.IsForbidden(serverInfo.ServerName)) &&
                         (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
                         (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
                         (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&

@@ -50,10 +50,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
-                        Connections.Add(new Connection(subElement, this));
+                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
                         break;
                     case "output":
-                        Connections.Add(new Connection(subElement, this));
+                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
                         break;
                 }
             }
@@ -218,9 +218,9 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Load(XElement element, bool usePrefabValues)
+        public override void Load(XElement element, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(element, usePrefabValues);
+            base.Load(element, usePrefabValues, idRemap);
 
             List<Connection> loadedConnections = new List<Connection>();
 
@@ -229,10 +229,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":
-                        loadedConnections.Add(new Connection(subElement, this));
+                        loadedConnections.Add(new Connection(subElement, this, idRemap));
                         break;
                     case "output":
-                        loadedConnections.Add(new Connection(subElement, this));
+                        loadedConnections.Add(new Connection(subElement, this, idRemap));
                         break;
                 }
             }

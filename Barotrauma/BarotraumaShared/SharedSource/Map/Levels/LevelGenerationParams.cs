@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +9,7 @@ namespace Barotrauma
     class Biome
     {
         public readonly string Identifier;
+        public readonly string OldIdentifier;
         public readonly string DisplayName;
         public readonly string Description;
 
@@ -26,6 +26,7 @@ namespace Barotrauma
         public Biome(XElement element)
         {
             Identifier = element.GetAttributeString("identifier", "");
+            OldIdentifier = element.GetAttributeString("oldidentifier", null);
             if (string.IsNullOrEmpty(Identifier))
             {
                 Identifier = element.GetAttributeString("name", "");
@@ -61,6 +62,8 @@ namespace Barotrauma
 
         public readonly string Identifier;
 
+        public readonly string OldIdentifier;
+
         private int minWidth, maxWidth, height;
 
         private Point voronoiSiteInterval;
@@ -72,9 +75,7 @@ namespace Barotrauma
         //x = min interval, y = max interval
         private Point mainPathNodeIntervalRange;
 
-        private int smallTunnelCount;
-        //x = min length, y = max length
-        private Point smallTunnelLengthRange;
+        private int caveCount;
 
         //how large portion of the bottom of the level should be "carved out"
         //if 0.0f, the bottom will be completely solid (making the abyss unreachable)
@@ -95,6 +96,8 @@ namespace Barotrauma
         private int mountainHeightMin, mountainHeightMax;
 
         private float waterParticleScale;
+
+        private int initialDepthMin, initialDepthMax;
 
         //which biomes can this type of level appear in
         private readonly List<Biome> allowedBiomes = new List<Biome>();
@@ -146,7 +149,7 @@ namespace Barotrauma
         }
 
         private Vector2 startPosition;
-        [Serialize("0,0", true, "Start position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable]
+        [Serialize("0,0", true, "Start position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable(DecimalCount = 2)]
         public Vector2 StartPosition
         {
             get { return startPosition; }
@@ -159,7 +162,7 @@ namespace Barotrauma
         }
 
         private Vector2 endPosition;
-        [Serialize("1,0", true, "End position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable]
+        [Serialize("1,0", true, "End position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable(DecimalCount = 2)]
         public Vector2 EndPosition
         {
             get { return endPosition; }
@@ -185,29 +188,73 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(100000, true), Editable(MinValueInt = 10000, MaxValueInt = 1000000)]
+        [Serialize(80, true, description: "The total number of decorative background creatures."), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        public int BackgroundCreatureAmount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(100000, true), Editable]
         public int MinWidth
         {
             get { return minWidth; }
-            set { minWidth = Math.Max(value, 2000); }
+            set { minWidth = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(100000, true), Editable(MinValueInt = 10000, MaxValueInt = 1000000)]
+        [Serialize(100000, true), Editable]
         public int MaxWidth
         {
             get { return maxWidth; }
-            set { maxWidth = Math.Max(value, 2000); }
+            set { maxWidth = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(50000, true), Editable(MinValueInt = 10000, MaxValueInt = 1000000)]
+        [Serialize(50000, true), Editable]
         public int Height
         {
             get { return height; }
-            set { height = Math.Max(value, 2000); }
+            set { height = MathHelper.Clamp(value, 2000, 1000000); }
+        }
+
+        [Serialize(80000, true), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        public int InitialDepthMin
+        {
+            get { return initialDepthMin; }
+            set { initialDepthMin = Math.Max(value, 0); }
+        }
+
+        [Serialize(80000, true), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
+        public int InitialDepthMax
+        {
+            get { return initialDepthMax; }
+            set { initialDepthMax = Math.Max(value, initialDepthMin); }
         }
 
         [Serialize(6500, true), Editable(MinValueInt = 5000, MaxValueInt = 1000000)]
         public int MinTunnelRadius
+        {
+            get;
+            set;
+        }
+
+
+        [Serialize("0,1", true), Editable]
+        public Point SideTunnelCount
+        {
+            get;
+            set;
+        }
+
+
+        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        public float SideTunnelVariance
+        {
+            get;
+            set;
+        }
+
+        [Serialize("2000,6000", true), Editable]
+        public Point MinSideTunnelRadius
         {
             get;
             set;
@@ -239,7 +286,7 @@ namespace Barotrauma
             }
         }
 
-        [Editable(MinValueInt = 100, MaxValueInt = 10000), Serialize(1000, true, description: "The edges of the individual wall cells are subdivided into edges of this size. "
+        [Editable(MinValueInt = 500, MaxValueInt = 10000), Serialize(5000, true, description: "The edges of the individual wall cells are subdivided into edges of this size. "
             + "Can be used in conjunction with the rounding values to make the cells rounder. Smaller values will make the cells look smoother, " +
             "but make the level more performance-intensive as the number of polygons used in rendering and physics calculations increases.")]
         public int CellSubdivisionLength
@@ -287,23 +334,18 @@ namespace Barotrauma
             }
         }
 
-        [Editable, Serialize(5, true, description: "The number of small tunnels placed along the main path.")]
-        public int SmallTunnelCount
+        [Serialize(0.5f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        public float MainPathVariance
         {
-            get { return smallTunnelCount; }
-            set { smallTunnelCount = MathHelper.Clamp(value, 0, 100); }
+            get;
+            set;
         }
 
-        [Editable(VectorComponentLabels = new string[] { "editable.minvalue", "editable.maxvalue" }), 
-            Serialize("5000, 10000", true, description: "The minimum and maximum length of small tunnels placed along the main path.")]
-        public Point SmallTunnelLengthRange
+        [Editable, Serialize(5, true, description: "The number of caves placed along the main path.")]
+        public int CaveCount
         {
-            get { return smallTunnelLengthRange; }
-            set
-            {
-                smallTunnelLengthRange.X = MathHelper.Clamp(value.X, 100, MinWidth);
-                smallTunnelLengthRange.Y = MathHelper.Clamp(value.Y, smallTunnelLengthRange.X, MinWidth);
-            }
+            get { return caveCount; }
+            set { caveCount = MathHelper.Clamp(value, 0, 100); }
         }
 
         [Serialize(100, true), Editable(MinValueInt = 0, MaxValueInt = 10000)]
@@ -313,8 +355,50 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize("19200,38400", true, description: "The minimum and maximum distance between two resource spawn points on a path."), Editable(100, 100000)]
+        public Point ResourceIntervalRange
+        {
+            get;
+            set;
+        }
+
+        [Serialize("9600,19200", true, description: "The minimum and maximum distance between two resource spawn points on a cave path."), Editable(100, 100000)]
+        public Point CaveResourceIntervalRange
+        {
+            get;
+            set;
+        }
+
+        [Serialize("2,8", true, description: "The minimum and maximum amount of resources in a single cluster. " +
+            "In addition to this, resource commonness affects the cluster size. Less common resources spawn in smaller clusters."), Editable(1, 20)]
+        public Point ResourceClusterSizeRange
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.3f, true, description: "How likely a resource spawn point on a path is to contain resources."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float ResourceSpawnChance { get; set; }
+
+        [Serialize(1.0f, true, description: "How likely a resource spawn point on a cave path is to contain resources."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
+        public float CaveResourceSpawnChance { get; set; }
+
         [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int FloatingIceChunkCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 100)]
+        public int IslandCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        public int IceSpireCount
         {
             get;
             set;
@@ -415,12 +499,41 @@ namespace Barotrauma
             private set { waterParticleScale = Math.Max(value, 0.01f); }
         }
 
+        [Serialize(2048.0f, true, description: "Size of the level wall texture."), Editable(minValue: 10.0f, maxValue: 10000.0f)]
+        public float WallTextureSize
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(2048.0f, true), Editable(minValue: 10.0f, maxValue: 10000.0f)]
+        public float WallEdgeTextureWidth
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(120.0f, true, description: "How far the level walls' edge texture portrudes outside the actual, \"physical\" edge of the cell."), Editable(minValue: 0.0f, maxValue: 1000.0f)]
+        public float WallEdgeExpandOutwardsAmount
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(1000.0f, true, description: "How far inside the level walls the edge texture continues."), Editable(minValue: 0.0f, maxValue: 10000.0f)]
+        public float WallEdgeExpandInwardsAmount
+        {
+            get;
+            private set;
+        }
+
         public Sprite BackgroundSprite { get; private set; }
         public Sprite BackgroundTopSprite { get; private set; }
         public Sprite WallSprite { get; private set; }
-        public Sprite WallSpriteSpecular { get; private set; }
         public Sprite WallEdgeSprite { get; private set; }
-        public Sprite WallEdgeSpriteSpecular { get; private set; }
+        public Sprite DestructibleWallSprite { get; private set; }
+        public Sprite DestructibleWallEdgeSprite { get; private set; }
+        public Sprite WallSpriteDestroyed { get; private set; }
         public Sprite WaterParticles { get; private set; }
 
         public static IEnumerable<Biome> GetBiomes()
@@ -469,6 +582,8 @@ namespace Barotrauma
         {
             Identifier = element == null ? "default" :
                 element.GetAttributeString("identifier", null) ?? element.Name.ToString();
+            OldIdentifier = element?.GetAttributeString("oldidentifier", null)?.ToLowerInvariant();
+            Identifier = Identifier.ToLowerInvariant();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
             if (element == null) { return; }
@@ -486,7 +601,8 @@ namespace Barotrauma
                     string biomeName = biomeNames[i].Trim().ToLowerInvariant();
                     if (biomeName == "none") { continue; }
 
-                    Biome matchingBiome = biomes.Find(b => b.Identifier.Equals(biomeName, StringComparison.OrdinalIgnoreCase));
+                    Biome matchingBiome = biomes.Find(b => 
+                        b.Identifier.Equals(biomeName, StringComparison.OrdinalIgnoreCase) || (b.OldIdentifier?.Equals(biomeName, StringComparison.OrdinalIgnoreCase) ?? false));
                     if (matchingBiome == null)
                     {
                         matchingBiome = biomes.Find(b => b.DisplayName.Equals(biomeName, StringComparison.OrdinalIgnoreCase));
@@ -518,14 +634,17 @@ namespace Barotrauma
                     case "wall":
                         WallSprite = new Sprite(subElement);
                         break;
-                    case "wallspecular":
-                        WallSpriteSpecular = new Sprite(subElement);
-                        break;
                     case "walledge":
                         WallEdgeSprite = new Sprite(subElement);
                         break;
-                    case "walledgespecular":
-                        WallEdgeSpriteSpecular = new Sprite(subElement);
+                    case "destructiblewall":
+                        DestructibleWallSprite = new Sprite(subElement);
+                        break;
+                    case "destructiblewalledge":
+                        DestructibleWallEdgeSprite = new Sprite(subElement);
+                        break;
+                    case "walldestroyed":
+                        WallSpriteDestroyed = new Sprite(subElement);
                         break;
                     case "waterparticles":
                         WaterParticles = new Sprite(subElement);
@@ -546,8 +665,7 @@ namespace Barotrauma
             }
 
             List<XElement> biomeElements = new List<XElement>();
-            List<XElement> levelParamElements = new List<XElement>();
-
+            Dictionary<string, XElement> levelParamElements = new Dictionary<string, XElement>();
             foreach (ContentFile file in files)
             {
                 XDocument doc = XMLExtensions.TryLoadXml(file.Path);
@@ -557,18 +675,18 @@ namespace Barotrauma
                 {
                     mainElement = doc.Root.FirstElement();
                     biomeElements.Clear();
-                    levelParamElements.Clear();
-                    DebugConsole.NewMessage($"Overriding the level generation parameters and biomes with '{file.Path}'", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding biomes with '{file.Path}'", Color.Yellow);
                 }
-                else if (biomeElements.Any() || levelParamElements.Any())
+                else if (biomeElements.Any() && mainElement.Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
                 {
-                    DebugConsole.ThrowError($"Error in '{file.Path}': Another level generation parameter file already loaded! Use <override></override> tags to override it.");
+                    DebugConsole.ThrowError($"Error in '{file.Path}': Another level generation parameter file already loaded! Use <override></override> tags to override the biomes.");
                     break;
                 }
 
                 foreach (XElement element in mainElement.Elements())
                 {
-                    if (element.IsOverride())
+                    bool isOverride = element.IsOverride();
+                    if (isOverride)
                     {
                         if (element.FirstElement().Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
                         {
@@ -578,18 +696,31 @@ namespace Barotrauma
                         }
                         else
                         {
-                            levelParamElements.Clear();
-                            DebugConsole.NewMessage($"Overriding the level generation parameters with '{file.Path}'", Color.Yellow);
-                            levelParamElements.AddRange(element.Elements());
+                            string identifier = element.FirstElement().GetAttributeString("identifier", null) ?? element.GetAttributeString("name", "");
+                            if (levelParamElements.ContainsKey(identifier))
+                            {
+                                DebugConsole.NewMessage($"Overriding the level generation parameters '{identifier}' using the file '{file.Path}'", Color.Yellow);
+                                levelParamElements.Remove(identifier);
+                            }
+                            levelParamElements.Add(identifier, element.FirstElement());
                         }
-                    }                    
+                    }
                     else if (element.Name.ToString().Equals("biomes", StringComparison.OrdinalIgnoreCase))
                     {
                         biomeElements.AddRange(element.Elements());
                     }
                     else
                     {
-                        levelParamElements.Add(element);
+                        string identifier = element.GetAttributeString("identifier", null) ?? element.GetAttributeString("name", "");
+                        if (levelParamElements.ContainsKey(identifier))
+                        {
+                            DebugConsole.ThrowError($"Duplicate level generation parameters: '{identifier}' defined in {element.Name} of '{file.Path}'. Use <override></override> tags to override the generation parameters.");
+                            continue;
+                        }
+                        else
+                        {
+                            levelParamElements.Add(identifier, element);
+                        }
                     }
                 }
             }
@@ -599,7 +730,7 @@ namespace Barotrauma
                 biomes.Add(new Biome(biomeElement));
             }
 
-            foreach (XElement levelParamElement in levelParamElements)
+            foreach (XElement levelParamElement in levelParamElements.Values)
             {
                 LevelParams.Add(new LevelGenerationParams(levelParamElement));
             }

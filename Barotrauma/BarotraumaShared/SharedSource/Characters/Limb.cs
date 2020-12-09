@@ -223,7 +223,29 @@ namespace Barotrauma
 
         public readonly LimbType type;
 
-        public readonly bool ignoreCollisions;
+        private bool ignoreCollisions;
+        public bool IgnoreCollisions
+        {
+            get { return ignoreCollisions; }
+            set
+            {
+                ignoreCollisions = value;
+                if (body != null)
+                {
+                    if (ignoreCollisions)
+                    {
+                        body.CollisionCategories = Category.None;
+                        body.CollidesWith = Category.None;
+                    }
+                    else
+                    {
+                        //limbs don't collide with each other
+                        body.CollisionCategories = Physics.CollisionCharacter;
+                        body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
+                    }
+                }
+            }
+        }
         
         private bool isSevered;
         private float severedFadeOutTimer;
@@ -309,6 +331,12 @@ namespace Barotrauma
         }
 
         public Submarine Submarine => character.Submarine;
+
+        public bool Hidden
+        {
+            get => Params.Hide;
+            set => Params.Hide = value;
+        }
 
         public Vector2 WorldPosition
         {
@@ -549,7 +577,7 @@ namespace Barotrauma
             {
                 body.CollisionCategories = Category.None;
                 body.CollidesWith = Category.None;
-                ignoreCollisions = true;
+                IgnoreCollisions = true;
             }
             else
             {
@@ -763,27 +791,56 @@ namespace Barotrauma
                     severedFadeOutTimer = SeveredFadeOutTime;
                 }
             }
+            else if (!IsDead)
+            {
+                if (Params.BlinkFrequency > 0)
+                {
+                    if (blinkTimer > -TotalBlinkDurationOut)
+                    {
+                        blinkTimer -= deltaTime;
+                    }
+                    else
+                    {
+                        blinkTimer = Params.BlinkFrequency;
+                    }
+                }
+                if (reEnableTimer > 0)
+                {
+                    reEnableTimer -= deltaTime;
+                }
+                else if (reEnableTimer > -1)
+                {
+                    ReEnable();
+                }
+            }
 
             if (attack != null)
             {
                 attack.UpdateCoolDown(deltaTime);
             }
+        }
 
-            if (Params.BlinkFrequency > 0)
+        private float reEnableTimer = -1;
+        public void HideAndDisable(float duration = 0)
+        {
+            Hidden = true;
+            Disabled = true;
+            IgnoreCollisions = true;
+            if (duration > 0)
             {
-                if (blinkTimer > -TotalBlinkDurationOut)
-                {
-                    blinkTimer -= deltaTime;
-                }
-                else
-                {
-                    blinkTimer = Params.BlinkFrequency;
-                }
+                reEnableTimer = duration;
             }
         }
 
-        partial void UpdateProjSpecific(float deltaTime);
+        private void ReEnable()
+        {
+            Hidden = false;
+            Disabled = false;
+            IgnoreCollisions = false;
+            reEnableTimer = -1;
+        }
 
+        partial void UpdateProjSpecific(float deltaTime);
 
         private readonly List<Body> contactBodies = new List<Body>();
         /// <summary>
@@ -942,7 +999,7 @@ namespace Barotrauma
 #endif
             if (damageTarget is Character targetCharacter && targetLimb != null)
             {
-                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound);
+                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body);
             }
             else
             {
@@ -952,7 +1009,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound);
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body);
                 }
             }
             /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))

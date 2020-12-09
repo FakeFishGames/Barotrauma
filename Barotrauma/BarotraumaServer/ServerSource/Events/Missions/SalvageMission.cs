@@ -18,11 +18,11 @@ namespace Barotrauma
             msg.Write(usedExistingItem);
             if (usedExistingItem)
             {
-                msg.Write(item.OriginalID);
+                msg.Write(item.ID);
             }
             else
             {
-                item.WriteSpawnData(msg, item.OriginalID, originalInventoryID, originalItemContainerIndex);
+                item.WriteSpawnData(msg, item.ID, originalInventoryID, originalItemContainerIndex);
             }
 
             msg.Write((byte)executedEffectIndices.Count);

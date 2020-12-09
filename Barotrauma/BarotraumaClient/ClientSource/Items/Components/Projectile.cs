@@ -1,8 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -10,6 +9,23 @@ namespace Barotrauma.Items.Components
     {
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            bool launch = msg.ReadBoolean();
+            if (launch)
+            {
+                ushort userId = msg.ReadUInt16();
+                User = Entity.FindEntityByID(userId) as Character;
+                Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+                float rotation = msg.ReadSingle();
+                if (User != null)
+                {
+                    Shoot(User, simPosition, simPosition, rotation, ignoredBodies: User.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: false);
+                }
+                else
+                {
+                    Launch(User, simPosition, rotation);
+                }
+            }
+
             bool isStuck = msg.ReadBoolean();
             if (isStuck)
             {
@@ -56,7 +72,15 @@ namespace Barotrauma.Items.Components
                 else if (entity is Item item)
                 {
                     if (item.Removed) { return; }
-                    StickToTarget(item.body.FarseerBody, axis);
+                    var door = item.GetComponent<Door>();
+                    if (door != null)
+                    {
+                        StickToTarget(door.Body.FarseerBody, axis);
+                    }
+                    else if (item.body != null)
+                    {
+                        StickToTarget(item.body.FarseerBody, axis);
+                    }
                 }
                 else if (entity is  Submarine sub)
                 {

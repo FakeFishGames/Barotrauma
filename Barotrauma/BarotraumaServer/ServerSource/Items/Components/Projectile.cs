@@ -5,8 +5,20 @@ namespace Barotrauma.Items.Components
 {
     partial class Projectile : ItemComponent
     {
+        private float launchRot;
+
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
+            bool launch = extraData.Length > 2 && (bool)extraData[2];
+            msg.Write(launch);
+            if (launch)
+            {
+                msg.Write(User.ID);
+                msg.Write(launchPos.X);
+                msg.Write(launchPos.Y);
+                msg.Write(launchRot);
+            }
+
             bool stuck = StickTarget != null && !item.Removed && !StickTargetRemoved();
             msg.Write(stuck);
             if (stuck)

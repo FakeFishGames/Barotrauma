@@ -61,6 +61,7 @@ namespace Barotrauma
             CreateLabeledNumberInput(parent, 0, 20, nameof(AllowedWireDisconnectionsPerMinute));
             CreateLabeledSlider(parent, 0.0f, 20.0f, 0.5f, nameof(WireDisconnectionKarmaDecrease));
             CreateLabeledSlider(parent, 0.0f, 30.0f, 1.0f, nameof(SpamFilterKarmaDecrease));
+            CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, nameof(BallastFloraKarmaIncrease));
 
             //hide these for now if a localized text is not available
             if (TextManager.ContainsTag("Karma." + nameof(DangerousItemStealKarmaDecrease)))

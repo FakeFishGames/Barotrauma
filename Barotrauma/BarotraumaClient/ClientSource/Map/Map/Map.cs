@@ -63,6 +63,8 @@ namespace Barotrauma
         private Sprite[,] mapTiles;
         private bool[,] tileDiscovered;
 
+        private Pair<Rectangle, string> connectionTooltip;
+
 #if DEBUG
         private GUIComponent editor;
 
@@ -410,6 +412,8 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
+            connectionTooltip = null;
+
             Rectangle rect = mapContainer.Rect;
 
             Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
@@ -639,6 +643,10 @@ namespace Barotrauma
             {
                 GUIComponent.DrawToolTip(spriteBatch, tooltip.Second, tooltip.First);
             }
+            if (connectionTooltip != null)
+            {
+                GUIComponent.DrawToolTip(spriteBatch, connectionTooltip.Second, connectionTooltip.First);
+            }
             spriteBatch.End();
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
@@ -689,12 +697,16 @@ namespace Barotrauma
             int startIndex = connection.CrackSegments.Count > 2 ? 1 : 0;
             int endIndex = connection.CrackSegments.Count > 2 ? connection.CrackSegments.Count - 1 : connection.CrackSegments.Count;
 
+            Vector2? connectionStart = null;
+            Vector2? connectionEnd = null;
             for (int i = startIndex; i < endIndex; i++)
             {
                 var segment = connection.CrackSegments[i];
 
                 Vector2 start = rectCenter + (segment[0] + viewOffset) * zoom;
-                Vector2 end = rectCenter + (segment[1] + viewOffset) * zoom;
+                if (!connectionStart.HasValue) { connectionStart = start; }
+                Vector2 end =  rectCenter + (segment[1] + viewOffset) * zoom;
+                connectionEnd = end;
 
                 if (!viewArea.Contains(start) && !viewArea.Contains(end))
                 {
@@ -733,6 +745,59 @@ namespace Barotrauma
                     new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
                     connectionSprite.SourceRect, connectionColor * a, MathUtils.VectorToAngle(end - start),
                     new Vector2(0, connectionSprite.size.Y / 2), SpriteEffects.None, 0.01f);
+            }
+            if (connectionStart.HasValue && connectionEnd.HasValue)
+            {                
+                GUIComponentStyle crushDepthWarningIconStyle = null;
+                string tooltip = null;
+                var subCrushDepth = Submarine.MainSub?.RealWorldCrushDepth ?? Level.DefaultRealWorldCrushDepth;
+                if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
+                {
+                    var hullUpgradePrefab =  UpgradePrefab.Find("increasewallhealth");
+                    if (hullUpgradePrefab != null)
+                    {
+                        int pendingLevel = GameMain.GameSession.Campaign.UpgradeManager.GetUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
+                        int currentLevel = GameMain.GameSession.Campaign.UpgradeManager.GetRealUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
+                        if (pendingLevel > currentLevel)
+                        {
+                            string updateValueStr = hullUpgradePrefab.SourceElement?.Element("Structure")?.GetAttributeString("crushdepth", null);
+                            if (!string.IsNullOrEmpty(updateValueStr))
+                            {
+                                subCrushDepth = PropertyReference.CalculateUpgrade(subCrushDepth, pendingLevel - currentLevel, updateValueStr);
+                            }
+                        }
+                    }
+                }
+
+                if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
+                {
+                    crushDepthWarningIconStyle = GUI.Style.GetComponentStyle("CrushDepthWarningHighIcon");
+                    tooltip = "crushdepthwarninghigh";
+                }
+                else if ((connection.LevelData.InitialDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
+                {
+                    crushDepthWarningIconStyle = GUI.Style.GetComponentStyle("CrushDepthWarningLowIcon");
+                    tooltip = "crushdepthwarninglow";
+                }
+
+                if (crushDepthWarningIconStyle != null)
+                {
+                    Vector2 iconPos = (connectionStart.Value + connectionEnd.Value) / 2;
+                    float iconSize = 32.0f * GUI.Scale;
+                    bool mouseOn = HighlightedLocation == null && Vector2.DistanceSquared(iconPos, PlayerInput.MousePosition) < iconSize * iconSize;
+                    Sprite crushDepthWarningIcon = crushDepthWarningIconStyle.GetDefaultSprite();
+                    crushDepthWarningIcon.Draw(spriteBatch, iconPos, 
+                        mouseOn ? crushDepthWarningIconStyle.HoverColor : crushDepthWarningIconStyle.Color, 
+                        scale: iconSize / crushDepthWarningIcon.size.X);
+                    if (mouseOn)
+                    {
+                        connectionTooltip = new Pair<Rectangle, string>(
+                            new Rectangle(iconPos.ToPoint(), new Point((int)iconSize)), 
+                            TextManager.Get(tooltip)
+                                .Replace("[initialdepth]", ((int)(connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio)).ToString())
+                                .Replace("[submarinecrushdepth]", ((int)subCrushDepth).ToString()));
+                    }
+                }
             }
 
             if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)

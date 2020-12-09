@@ -1256,17 +1256,26 @@ namespace Barotrauma
 
         #region Element drawing
 
-        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color)
+
+        /// <param name="createOffset">Should the indicator move based on the camera position?</param>
+        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color, bool createOffset = true, float scaleMultiplier = 1.0f)
         {
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
-            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f);
+            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier;
 
             if (dist > hideDist)
             {
                 float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
-                Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);                
+                Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);
+
+                if (!createOffset)
+                {
+                    sprite.Draw(spriteBatch, targetScreenPos, color * alpha, rotate: 0.0f, scale: symbolScale);
+                    return;
+                }
+
                 float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
                 float angle = MathUtils.VectorToAngle(diff);
 

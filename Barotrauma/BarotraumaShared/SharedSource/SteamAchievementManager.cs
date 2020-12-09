@@ -71,11 +71,11 @@ namespace Barotrauma
                     //achievement for descending below crush depth and coming back
                     if (Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
                     {
-                        if (c.WorldPosition.Y < SubmarineBody.DamageDepth || (c.Submarine != null && c.Submarine.WorldPosition.Y < SubmarineBody.DamageDepth))
+                        if (c.Submarine != null && c.Submarine.AtDamageDepth || Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) > Level.Loaded.RealWorldCrushDepth)
                         {
                             roundData.EnteredCrushDepth.Add(c);
                         }
-                        else if (c.WorldPosition.Y > SubmarineBody.DamageDepth * 0.5f)
+                        else if (Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) < Level.Loaded.RealWorldCrushDepth * 0.5f)
                         {
                             //all characters that have entered crush depth and are still alive get an achievement
                             if (roundData.EnteredCrushDepth.Contains(c)) UnlockAchievement(c, "survivecrushdepth");

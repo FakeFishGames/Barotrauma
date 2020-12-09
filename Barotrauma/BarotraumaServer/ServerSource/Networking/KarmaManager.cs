@@ -226,6 +226,13 @@ namespace Barotrauma
             clientMemories.Remove(client);
         }
 
+        public void OnBallastFloraDamaged(Character character, float damage)
+        {
+            if (character == null) { return; }
+            float karmaChange = damage * BallastFloraKarmaIncrease;
+            AdjustKarma(character, karmaChange, "Damaged ballast flora");
+        }
+
         // ReSharper disable once UseNegatedPatternMatching, LoopCanBeConvertedToQuery
         public void OnItemTakenFromPlayer(CharacterInventory inventory, Client yoinker, Item item)
         {

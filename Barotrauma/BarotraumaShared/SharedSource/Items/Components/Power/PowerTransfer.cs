@@ -55,6 +55,22 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float extraLoad;
+        private float extraLoadSetTime;
+        /// <summary>
+        /// Additional load coming from somewhere else than the devices connected to the junction box (e.g. ballast flora or piezo crystals).
+        /// Goes back to zero automatically if you stop setting the value.
+        /// </summary>
+        public float ExtraLoad
+        {
+            get { return extraLoad; }
+            set 
+            {
+                extraLoad = Math.Max(value, 0.0f);
+                extraLoadSetTime = (float)Timing.TotalTime;
+            }
+        }
+
         //can the component transfer power
         private bool canTransfer;
         public bool CanTransfer
@@ -134,6 +150,11 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             RefreshConnections();
+
+            if (Timing.TotalTime > extraLoadSetTime + 1.0)
+            {
+                extraLoad = Math.Max(extraLoad - 1000.0f * deltaTime, 0);
+            }
 
             if (!CanTransfer) { return; }
 

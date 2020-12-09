@@ -20,6 +20,7 @@ namespace Barotrauma
 
         protected GUIButton endRoundButton;
 
+        public GUIButton ReadyCheckButton;
         public GUIButton EndRoundButton => endRoundButton;
 
         protected GUIFrame campaignUIContainer;
@@ -142,7 +143,8 @@ namespace Barotrauma
 
             if (GUI.DisableHUD || GUI.DisableUpperHUD || ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"))
             {
-                endRoundButton.Visible = false; 
+                endRoundButton.Visible = false;
+                if (ReadyCheckButton != null) { ReadyCheckButton.Visible = false; }
                 return; 
             }
             if (Submarine.MainSub == null) { return; }
@@ -188,6 +190,8 @@ namespace Barotrauma
                     break;
             }
 
+            if (ReadyCheckButton != null) { ReadyCheckButton.Visible = endRoundButton.Visible; }
+
             if (endRoundButton.Visible)
             {
                 if (!AllowedToEndRound()) { buttonText = TextManager.Get("map"); }
@@ -211,6 +215,10 @@ namespace Barotrauma
                 }
             }
             endRoundButton.DrawManually(spriteBatch);
+            if (this is MultiPlayerCampaign)
+            {
+                ReadyCheckButton?.DrawManually(spriteBatch);
+            }
         }
 
         public Task SelectSummaryScreen(RoundSummary roundSummary, LevelData newLevel, bool mirror, Action action)
@@ -279,6 +287,7 @@ namespace Barotrauma
             base.AddToGUIUpdateList();
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
+            ReadyCheckButton?.AddToGUIUpdateList();
         }
 
         public override void Update(float deltaTime)

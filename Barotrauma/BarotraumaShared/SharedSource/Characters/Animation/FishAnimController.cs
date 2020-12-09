@@ -407,8 +407,8 @@ namespace Barotrauma
         {
             if (CurrentSwimParams == null) { return; }
             movement = TargetMovement;
-
-            if (movement.LengthSquared() > 0.00001f)
+            bool isMoving = movement.LengthSquared() > 0.00001f;
+            if (isMoving)
             {
                 float t = 0.5f;
                 if (CurrentSwimParams.RotateTowardsMovement && VectorExtensions.Angle(VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2), movement) > MathHelper.PiOver2)
@@ -425,7 +425,7 @@ namespace Barotrauma
             mainLimb.PullJointEnabled = true;
             //mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
 
-            if (movement.LengthSquared() < 0.00001f)
+            if (!isMoving)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
                 mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
@@ -625,7 +625,8 @@ namespace Barotrauma
                 if (limb.IsSevered) { continue; }
                 if (Math.Abs(limb.Params.ConstantTorque) > 0)
                 {
-                    limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque, wrapAngle: true);
+                    float movementFactor = Math.Max(character.AnimController.Collider.LinearVelocity.Length() * 0.5f, 1);
+                    limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque * movementFactor, wrapAngle: true);
                 }
                 if (limb.Params.BlinkFrequency > 0)
                 {

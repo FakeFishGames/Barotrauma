@@ -257,6 +257,8 @@ namespace Barotrauma.Items.Components
                 spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
             }
 
+            bool isWiringMode = SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
+
             int i = 0;
             foreach (Item containedItem in Inventory.Items)
             {
@@ -278,7 +280,7 @@ namespace Barotrauma.Items.Components
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
-                    containedItem.GetSpriteColor(),
+                    isWiringMode ? containedItem.GetSpriteColor() * 0.15f : containedItem.GetSpriteColor(),
                     origin,
                     -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation + MathHelper.ToRadians(-item.Rotation)),
                     containedItem.Scale,

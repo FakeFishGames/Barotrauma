@@ -23,16 +23,16 @@ namespace Barotrauma
             Prefab = prefab;
 
             IncreaseLow = UpgradePrefab.ParsePercentage(element.GetAttributeString("increaselow", string.Empty),
-                "IncreaseLow", element, suppressWarnings: prefab.SupressWarnings);
+                "IncreaseLow", element, suppressWarnings: prefab.SuppressWarnings);
 
             IncreaseHigh = UpgradePrefab.ParsePercentage(element.GetAttributeString("increasehigh", string.Empty),
-                "IncreaseHigh", element, suppressWarnings: prefab.SupressWarnings);
+                "IncreaseHigh", element, suppressWarnings: prefab.SuppressWarnings);
 
             BasePrice = element.GetAttributeInt("baseprice", -1);
 
             if (BasePrice == -1)
             {
-                if (prefab.SupressWarnings)
+                if (prefab.SuppressWarnings)
                 {
                     DebugConsole.AddWarning($"Price attribute \"baseprice\" is not defined for {prefab?.Identifier}.\n " +
                                             "The value has been assumed to be '1000'.");
@@ -143,7 +143,7 @@ namespace Barotrauma
 
         private bool Disposed { get; set; }
 
-        public bool SupressWarnings { get; }
+        public bool SuppressWarnings { get; }
 
         public bool HideInMenus { get; }
 
@@ -159,7 +159,7 @@ namespace Barotrauma
             Description = element.GetAttributeString("description", string.Empty);
             MaxLevel = element.GetAttributeInt("maxlevel", 1);
             Identifier = element.GetAttributeString("identifier", "");
-            SupressWarnings = element.GetAttributeBool("supresswarnings", false);
+            SuppressWarnings = element.GetAttributeBool("supresswarnings", false);
             HideInMenus = element.GetAttributeBool("hideinmenus", false);
             FilePath = filePath;
             SourceElement = element;
@@ -219,7 +219,7 @@ namespace Barotrauma
             string[] categories = element.GetAttributeStringArray("categories", new string[] { });
             UpgradeCategories = (from category in UpgradeCategory.Categories from identifier in categories where string.Equals(category.Identifier, identifier) select category).ToArray();
 
-            if (!SupressWarnings && !IsOverride)
+            if (!SuppressWarnings && !IsOverride)
             {
                 foreach (UpgradePrefab matchingPrefab in Prefabs.Where(prefab => prefab.TargetItems.Any(s => TargetItems.Contains(s))))
                 {
@@ -243,9 +243,9 @@ namespace Barotrauma
             Prefabs.Add(this, isOverride);
         }
 
-        public static UpgradePrefab? Find(string idenfitier)
+        public static UpgradePrefab? Find(string identifier)
         {
-            return !string.IsNullOrWhiteSpace(idenfitier) ? Prefabs.Find(prefab => prefab.Identifier == idenfitier) : null;
+            return !string.IsNullOrWhiteSpace(identifier) ? Prefabs.Find(prefab => prefab.Identifier == identifier) : null;
         }
 
         public static void LoadAll(IEnumerable<ContentFile> files)

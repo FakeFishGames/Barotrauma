@@ -30,6 +30,7 @@ namespace Barotrauma.Items.Components
         private float swingState;
 
         private bool attachable, attached, attachedByDefault;
+        private Voronoi2.VoronoiCell attachTargetCell;
         private readonly PhysicsBody body;
         public PhysicsBody Pusher
         {
@@ -213,9 +214,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues)
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(componentElement, usePrefabValues);
+            base.Load(componentElement, usePrefabValues, idRemap);
 
             if (usePrefabValues)
             {
@@ -255,6 +256,7 @@ namespace Barotrauma.Items.Components
             if (Pusher != null) { Pusher.Enabled = false; }
             if (item.body != null) { item.body.Enabled = true; }
             IsActive = false;
+            attachTargetCell = null;
 
             if (picker == null || picker.Removed)
             {
@@ -359,7 +361,7 @@ namespace Barotrauma.Items.Components
 
         public override void Unequip(Character character)
         {
-            if (picker == null) return;
+            if (picker == null) { return; }
 
             picker.DeselectItem(item);
 #if SERVER
@@ -383,9 +385,9 @@ namespace Barotrauma.Items.Components
             //can be attached anywhere inside hulls
             if (item.CurrentHull != null && Submarine.RectContains(item.CurrentHull.WorldRect, attachPos)) { return true; }
 
-            return Structure.GetAttachTarget(attachPos) != null;
+            return Structure.GetAttachTarget(attachPos) != null || GetAttachTargetCell(100.0f) != null;
         }
-        
+
         public bool CanBeDeattached()
         {
             if (!attachable || !attached) { return true; }
@@ -406,7 +408,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null)
             {
-                return Structure.GetAttachTarget(item.WorldPosition) != null;
+                return attachTargetCell != null && Structure.GetAttachTarget(item.WorldPosition) != null;
             }
             else
             {
@@ -464,7 +466,7 @@ namespace Barotrauma.Items.Components
 
         public void AttachToWall()
         {
-            if (!attachable) return;
+            if (!attachable) { return; }
 
             //outside hulls/subs -> we need to check if the item is being attached on a structure outside the sub
             if (item.CurrentHull == null && item.Submarine == null)
@@ -478,6 +480,11 @@ namespace Barotrauma.Items.Components
                         item.SetTransform(ConvertUnits.ToSimUnits(item.WorldPosition - attachTarget.Submarine.Position), 0.0f, false);
                     }
                     item.Submarine = attachTarget.Submarine;
+                }
+                else
+                {
+                    attachTargetCell = GetAttachTargetCell(150.0f);
+                    if (attachTargetCell != null) { IsActive = true; }
                 }
             }
 
@@ -507,6 +514,7 @@ namespace Barotrauma.Items.Components
             if (!attachable) return;
 
             Attached = false;
+            attachTargetCell = null;
 
             //make the item pickable with the default pick key and with no specific tools/items when it's deattached
             requiredItems.Clear();
@@ -568,9 +576,47 @@ namespace Barotrauma.Items.Components
 
             Vector2 userPos = useWorldCoordinates ? user.WorldPosition : user.Position;
 
-            return new Vector2(
-                MathUtils.RoundTowardsClosest(userPos.X + mouseDiff.X, Submarine.GridSize.X),
-                MathUtils.RoundTowardsClosest(userPos.Y + mouseDiff.Y, Submarine.GridSize.Y));
+            Vector2 attachPos = userPos + mouseDiff;
+
+            if (user.Submarine == null)
+            {
+                bool edgeFound = false;
+                foreach (var cell in Level.Loaded.GetCells(attachPos))
+                {
+                    if (cell.CellType != Voronoi2.CellType.Solid) { continue; }
+                    foreach (var edge in cell.Edges)
+                    {
+                        if (!edge.IsSolid) { continue; }
+                        if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, user.WorldPosition, attachPos, out Vector2 intersection))
+                        {
+                            attachPos = intersection;
+                            edgeFound = true;
+                            break;
+                        }
+                    }
+                    if (edgeFound) { break; }
+                }
+            }
+
+            return
+                new Vector2(
+                    MathUtils.RoundTowardsClosest(attachPos.X, Submarine.GridSize.X),
+                    MathUtils.RoundTowardsClosest(attachPos.Y, Submarine.GridSize.Y));
+        }
+
+        private Voronoi2.VoronoiCell GetAttachTargetCell(float maxDist)
+        {
+            foreach (var cell in Level.Loaded.GetCells(item.WorldPosition, searchDepth: 1))
+            {
+                if (cell.CellType != Voronoi2.CellType.Solid) { continue; }
+                Vector2 diff = cell.Center - item.WorldPosition;
+                if (diff.LengthSquared() > 0.0001f) { diff = Vector2.Normalize(diff); }
+                if (cell.IsPointInside(item.WorldPosition + diff * maxDist))
+                {
+                    return cell;
+                }
+            }
+            return null;
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -580,12 +626,26 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (attachTargetCell != null)
+            {
+                if (attachTargetCell.CellType != Voronoi2.CellType.Solid)
+                {
+                    Drop(dropConnectedWires: true, dropper: null);
+                }
+                return;
+            }
+
             if (item.body == null || !item.body.Enabled) { return; }
             if (picker == null || !picker.HasEquippedItem(item))
             {
                 if (Pusher != null) { Pusher.Enabled = false; }
-                IsActive = false;
+                if (attachTargetCell == null) { IsActive = false; }
                 return;
+            }
+
+            if (picker == Character.Controlled && picker.IsKeyDown(InputType.Aim) && CanBeAttached(picker))
+            {
+                Drawable = true;
             }
 
             Vector2 swing = Vector2.Zero;

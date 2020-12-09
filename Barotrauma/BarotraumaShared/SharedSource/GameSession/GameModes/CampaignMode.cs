@@ -146,7 +146,7 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < wall.SectionCount; i++)
                         {
-                            wall.AddDamage(i, -wall.MaxHealth);
+                            wall.SetDamage(i, 0, createNetworkEvent: false);
                         }
                     }
                 }
@@ -181,6 +181,11 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Automatically cleared after triggering -> no need to unregister
+        /// </summary>
+        public event Action BeforeLevelLoading;
+
         public void LoadNewLevel()
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) 
@@ -193,6 +198,9 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Level transition already running.\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
+
+            BeforeLevelLoading?.Invoke();
+            BeforeLevelLoading = null;
 
             if (Level.Loaded == null || Submarine.MainSub == null)
             {
@@ -504,6 +512,12 @@ namespace Barotrauma
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
             EndCampaignProjSpecific();
+
+            if (CampaignMetadata != null)
+            {
+                int loops = CampaignMetadata.GetInt("campaign.endings", 0);
+                CampaignMetadata.SetValue("campaign.endings",  loops + 1);
+            }
         }
 
         protected virtual void EndCampaignProjSpecific() { }

@@ -46,6 +46,7 @@ namespace Barotrauma
                     }
                     return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true)
                     {
+                        AllowStealing = true,
                         AllowToFindDivingGear = false,
                         AllowDangerousPressure = true
                     };
@@ -85,8 +86,7 @@ namespace Barotrauma
                             return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC)
                             {
                                 AllowToFindDivingGear = false,
-                                AllowDangerousPressure = true,
-                                ConditionLevel = 0
+                                AllowDangerousPressure = true
                             };
                         },
                         onAbandon: () => Abandon = true,

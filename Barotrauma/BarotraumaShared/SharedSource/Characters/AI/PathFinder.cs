@@ -7,41 +7,32 @@ namespace Barotrauma
 {
     class PathNode
     {
-        private readonly int wayPointID;
-
         public int state;
 
         public PathNode Parent;
 
-        private Vector2 position;
-
         public float F, G, H;
 
-        public List<PathNode> connections;
+        public readonly List<PathNode> connections = new List<PathNode>();
         public List<float> distances;
 
         public Vector2 TempPosition;
         public float TempDistance;
 
-        public WayPoint Waypoint { get; private set; }
-
-        public Vector2 Position
-        {
-            get { return position; }
-        }
+        public readonly WayPoint Waypoint;
+        public readonly Vector2 Position;
+        public readonly int WayPointID;
 
         public override string ToString()
         {
-            return $"PathNode {wayPointID}";
+            return $"PathNode {WayPointID}";
         }
 
         public PathNode(WayPoint wayPoint)
         {
-            this.Waypoint = wayPoint;
-            this.position = wayPoint.SimPosition;
-            wayPointID = wayPoint.ID;
-
-            connections = new List<PathNode>();
+            Waypoint = wayPoint;
+            Position = wayPoint.SimPosition;
+            WayPointID = Waypoint.ID;
         }
 
         public static List<PathNode> GenerateNodes(List<WayPoint> wayPoints)
@@ -78,7 +69,7 @@ namespace Barotrauma
                 node.distances = new List<float>();
                 for (int i = 0; i < node.connections.Count; i++)
                 {
-                    node.distances.Add(Vector2.Distance(node.position, node.connections[i].position));
+                    node.distances.Add(Vector2.Distance(node.Position, node.connections[i].Position));
                 }
             }
 
