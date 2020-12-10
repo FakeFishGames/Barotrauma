@@ -53,6 +53,8 @@ namespace Barotrauma.Items.Components
 
         private GUIFrame inventoryContainer;
 
+        private GUILayoutGroup paddedFrame;
+
         private readonly Dictionary<string, GUIButton> warningButtons = new Dictionary<string, GUIButton>();
 
         private static readonly string[] warningTexts = new string[]
@@ -74,7 +76,7 @@ namespace Barotrauma.Items.Components
             tempRangeIndicator = new Sprite(element.GetChildElement("temprangeindicator")?.GetChildElement("sprite"));
             graphLine = new Sprite(element.GetChildElement("graphline")?.GetChildElement("sprite"));
 
-            var paddedFrame = new GUILayoutGroup(new RectTransform(
+            paddedFrame = new GUILayoutGroup(new RectTransform(
                     GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
                     { AbsoluteOffset = GUIStyle.ItemFrameOffset }, 
                 isHorizontal: true)
@@ -533,8 +535,7 @@ namespace Barotrauma.Items.Components
             warningButtons["ReactorWarningMeltdown"].Selected = meltDownTimer > MeltdownDelay * 0.5f || item.Condition == 0.0f && lightOn;
             warningButtons["ReactorWarningSCRAM"].Selected = temperature > 0.1f && !PowerOn;
 
-            if ((FissionRateScrollBar.Rect.Contains(PlayerInput.MousePosition) || FissionRateScrollBar.Children.Contains(GUIScrollBar.DraggingBar) ||
-                TurbineOutputScrollBar.Rect.Contains(PlayerInput.MousePosition) || TurbineOutputScrollBar.Children.Contains(GUIScrollBar.DraggingBar)) &&
+            if (paddedFrame.Rect.Contains(PlayerInput.MousePosition) &&
                 !PlayerInput.KeyDown(InputType.Deselect) && !PlayerInput.KeyHit(InputType.Deselect))
             {
                 Character.DisableControls = true;
