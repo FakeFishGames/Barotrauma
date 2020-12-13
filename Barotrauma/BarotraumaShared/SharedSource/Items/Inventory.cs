@@ -340,9 +340,12 @@ namespace Barotrauma
                     {
                         if (Items[j] == item) slots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f);                            
                     }
+                }
+                if (otherInventory.slots != null)
+                {
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
-                        if (otherInventory.Items[j] == existingItem) otherInventory.slots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f);                            
+                        if (otherInventory.Items[j] == existingItem) otherInventory.slots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f);
                     }
                 }
 #endif

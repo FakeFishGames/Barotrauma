@@ -54,6 +54,18 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false, description: "Can the Reload action of the item be triggered by players.")]
         public bool PlayerReloadable { get; set; }
 
+        [Serialize(0.5f, false, description: "Minimum time it takes to remove magazine/ammo")]
+        public float UnloadBaseTime { get; set; }
+
+        [Serialize(1.5f, false, description: "Additional time it takes to remove magazine/ammo if the character's skill is 0")]
+        public float UnloadUnskilledExtraTime { get; set; }
+
+        [Serialize(0.5f, false, description: "Minimum time it takes to load magazine/ammo")]
+        public float ReloadBaseTime { get; set; }
+
+        [Serialize(1.5f, false, description: "Additional time it takes to load magazine/ammo if the character's skill is 0")]
+        public float ReloadUnskilledExtraTime { get; set; }
+
         [Serialize(false, false, description: "If set to true, interacting with this item will make the character interact with the contained item(s), automatically picking them up if they can be picked up.")]
         public bool AutoInteractWithContained
         {
@@ -294,6 +306,107 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
+            return false;
+        }
+        public override bool Reload(float deltaTime, Character character = null)
+        {
+
+            if (!this.PlayerReloadable) return false;
+
+            // Return if item's inventory is full and all itmes in it are in perfect condition.
+            if (this.Inventory.IsFull() && this.Inventory.Items.All(i => i.Condition == 100)) return false;
+
+            // Get the type of items storable in the item
+            List<string> containableId = new List<string>();
+            foreach (RelatedItem containableItem in this.ContainableItems)
+            {
+                foreach (string itemId in containableItem.Identifiers)
+                {
+                    containableId.Add(itemId);
+                }
+            }
+            if (containableId.Count == 0) return false;
+
+            Item ammoToLoad = null;
+            Item ammoInWorstCondition = null;
+
+            // If the weapon/item is full then look for ammo that is in better condition
+            if (this.Inventory.IsFull())
+            {
+                // get the item in the worst condition from the weapon's inventory
+                ammoInWorstCondition = this.Inventory.Items.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
+                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
+                if (character.SelectedConstruction != null && character.SelectedConstruction.OwnInventory != null)
+                {
+                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier
+                                                                                            && i.Condition > ammoInWorstCondition.Condition, true);
+                }
+                if (ammoToLoad == null)
+                {   // get the first suitable item from the inventory
+                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
+                                                                && character.HeadSlotItem != i.ParentInventory.Owner
+                                                                && ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier
+                                                                && i.Condition > ammoInWorstCondition.Condition, true);
+                }
+            }
+            // If the weapon/item is not full then look for any suitable ammo
+            else
+            {
+                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
+                if (character.SelectedConstruction != null && character.SelectedConstruction.OwnInventory != null)
+                {
+                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id))
+                                                                                            && i.Condition > 0, true);
+                }
+                else
+                //if (ammoToLoad == null) 
+                {   // get the first suitable item from the inventory
+                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
+                                                                && character.HeadSlotItem != i.ParentInventory.Owner
+                                                                && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+                }
+            }
+
+            // Try to add ammo to the wapon/item if it's inventory is not full otherwise swap worst with a better one
+            if (ammoToLoad != null)
+            {
+                float skillModifier = 0f;
+                if (this.requiredSkills.Count >= 1)
+                {
+                    float charSkillSum = 0f;
+                    foreach (Skill requiredSkill in this.requiredSkills)
+                    {
+                        charSkillSum += character.GetSkillLevel(requiredSkill.Identifier);
+                    }
+                    skillModifier = (100f - charSkillSum / this.requiredSkills.Count) / 100f;
+                }
+                
+                if (ammoInWorstCondition != null)
+                {
+                    var ammoInWorstConditionInventoryPosition = ammoInWorstCondition.ParentInventory.FindIndex(ammoInWorstCondition);
+                    if (ammoInWorstCondition.ParentInventory.TryPutItem(ammoToLoad, ammoInWorstConditionInventoryPosition, true, false, character, true))
+                    {
+                        character.ReloadCooldown = UnloadBaseTime + UnloadUnskilledExtraTime * skillModifier + ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
+#if CLIENT
+                        GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
+#endif
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (this.Inventory.TryPutItem(ammoToLoad, character))
+                    {
+                        character.ReloadCooldown = ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
+#if CLIENT
+                        GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
+#endif
+                        return true;
+                    }
+                }
+            }
             return false;
         }
 

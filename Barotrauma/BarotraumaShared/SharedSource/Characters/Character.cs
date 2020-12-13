@@ -1571,10 +1571,7 @@ namespace Barotrauma
 
             if (ReloadCooldown <= 0.0f && IsKeyDown(InputType.Reload) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
-                //#if CLIENT
-                //                GUI.AddMessage("Reloading", Color.Red);
-                //#endif
-                for (int i = 0; i < selectedItems.Length; i++)
+                for (int i = 0; i < selectedItems.Length && ReloadCooldown <= 0.0f; i++)
                 {
                     if (selectedItems[i] == null) { continue; }
                     if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
@@ -1582,8 +1579,6 @@ namespace Barotrauma
                     if (item == null) { continue; }
                     item.Reload(deltaTime, this);
                 }
-                //if (selectedItems[0] != null) selectedItems[0].Reload(deltaTime, this);
-                //if (selectedItems[1] != null && selectedItems[0] != selectedItems[1]) selectedItems[1].Reload(deltaTime, this);
             }
             
             if (ReloadCooldown <= 0.0f && (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected))

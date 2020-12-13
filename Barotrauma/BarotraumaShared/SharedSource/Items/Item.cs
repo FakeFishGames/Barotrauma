@@ -2118,77 +2118,19 @@ namespace Barotrauma
 
         public void Reload(float deltaTime, Character character = null)
         {
-            // Get the container component of the weapon/item and check if it is reloadable by the player
-            ItemContainer ic = this.GetComponent<ItemContainer>();
-            if (ic == null || !ic.PlayerReloadable) return;
-
-            // Return if item's inventory is full and all itmes in it are in perfect condition.
-            if (this.OwnInventory.IsFull() && this.OwnInventory.Items.All(i => i.condition == 100)) return;
-            
-            // Get the type of items storable in the item
-            List<string> containableId = new List<string>();
-            foreach (RelatedItem containableItem in ic.ContainableItems)
+            foreach (ItemComponent ic in components)
             {
-                foreach (string itemId in containableItem.Identifiers)
-                {
-                    containableId.Add(itemId);
-                }
-            }
-            if (containableId.Count == 0) return;
-
-            Item ammoToLoad = null;
-            Item ammoInWorstCondition = null;
-            if (this.OwnInventory.IsFull())
-            {
-                // get the item in the worst condition from the weapon's inventory
-                ammoInWorstCondition = this.OwnInventory.Items.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
-                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
-                if (character.SelectedConstruction != null)
-                {
-                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier 
-                                                                                            && i.Condition > ammoInWorstCondition.Condition, true);
-                }
-                if (ammoToLoad == null)
-                {   // get the first suitable item from the inventory
-                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
-                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
-                                                                && character.HeadSlotItem != i.ParentInventory.Owner
-                                                                && ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier 
-                                                                && i.Condition > ammoInWorstCondition.Condition, true);
-                }
-            }
-            else
-            {
-                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
-                if (character.SelectedConstruction != null)
-                {
-                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) 
-                                                                                            && i.Condition > 0, true);
-                }
-                if (ammoToLoad == null)
-                {   // get the first suitable item from the inventory
-                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
-                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
-                                                                && character.HeadSlotItem != i.ParentInventory.Owner
-                                                                && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
-                }
-            }
-
-            // Try to add ammo to the wapon/item if it's inventory is not full otherwise swap worst with a better one
-            if (ammoToLoad != null)
-            {
+                bool isControlled = false;
 #if CLIENT
-                GUI.AddMessage("Reloading", Color.Blue);
+                isControlled = character == Character.Controlled;
 #endif
-                character.ReloadCooldown = 2.0f;
-                if (ammoInWorstCondition != null)
+                if (ic.Reload(deltaTime, character))
                 {
-                    var ammoInWorstConditionInventoryPosition = ammoInWorstCondition.ParentInventory.FindIndex(ammoInWorstCondition);
-                    ammoInWorstCondition.ParentInventory.TryPutItem(ammoToLoad, ammoInWorstConditionInventoryPosition, true, false, character, true);
-                }
-                else
-                {
-                    ic.Inventory.TryPutItem(ammoToLoad, character);
+                    //ic.WasReloaded = true;
+#if CLIENT
+                    //ic.PlaySound(ActionType.OnReload, character);
+#endif
+                    //ic.ApplyStatusEffects(ActionType.OnReload, deltaTime, character, targetLimb);
                 }
             }
             return;

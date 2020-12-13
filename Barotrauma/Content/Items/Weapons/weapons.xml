@@ -144,9 +144,10 @@
       <RequiredItems items="harpoonammo" type="Contained" msg="ItemMsgSpearRequired" />
       <RequiredSkill identifier="weapons" level="30" />
     </RangedWeapon>
-    <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false" capacity="6" PlayerReloadable="true">
+    <ItemContainer itempos="27,10" iteminterval="0,-4" hideitems="false" capacity="6" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="0,0,121,30" />
       <Containable items="harpoonammo" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="0" soundrange="500" fadeouttime="2" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -235,9 +236,10 @@
       <RequiredItems items="revolverround" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="40" />
     </RangedWeapon>
-    <ItemContainer capacity="6" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="6" hideitems="true" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="revolverammo" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="2000" soundrange="5000" fadeouttime="5" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -332,9 +334,10 @@
       <RequiredItems items="smgmagazine" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="50" />
     </RangedWeapon>
-    <ItemContainer capacity="1" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" unloadbasetime="0.5" unloadunskilledextratime="1.5" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="smgammo" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="2000" soundrange="4000" fadeouttime="5" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -566,9 +569,10 @@
         <RequiredItem items="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       </StatusEffect>
     </MeleeWeapon>
-    <ItemContainer capacity="1" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" unloadbasetime="0.5" unloadunskilledextratime="1.5" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable items="mobilebattery" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="500" soundrange="500" fadeouttime="1" />
   </Item>
@@ -642,9 +646,10 @@
       <RequiredSkill identifier="weapons" level="60" />
     </RangedWeapon>
     <!--Holds one grenade at a time-->
-    <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="grenade" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="500" soundrange="500" fadeouttime="3" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -791,9 +796,10 @@
       <RequiredItems items="shotgunammo" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="60" />
     </RangedWeapon>
-    <ItemContainer capacity="6" itempos="27,10" iteminterval="0,-4" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="6" itempos="27,10" iteminterval="0,-4" hideitems="true" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="shotgunammo" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="3000" soundrange="5000" fadeouttime="5" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -864,9 +870,10 @@
       <RequiredItems items="stungunammo" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="20" />
     </RangedWeapon>
-    <ItemContainer capacity="1" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="stungunammo" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="0" soundrange="0" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -1043,9 +1050,10 @@
       <RequiredItems items="shotgunammo" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="60" />
     </RangedWeapon>
-    <ItemContainer capacity="2" itempos="27,10" iteminterval="0,-4" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="2" itempos="27,10" iteminterval="0,-4" hideitems="true" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="shotgunammo" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="3000" soundrange="5000" fadeouttime="5" />
   </Item>
@@ -1154,9 +1162,10 @@
       <RequiredItems items="smgmagazine" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="50" />
     </RangedWeapon>
-    <ItemContainer capacity="1" hideitems="true" PlayerReloadable="true">
+    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" unloadbasetime="0.5" unloadunskilledextratime="1.5" reloadbasetime="0.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="smgammo" />
+      <RequiredSkill identifier="weapons" />
     </ItemContainer>
     <aitarget sightrange="2000" soundrange="4000" fadeouttime="5" />
   </Item>
