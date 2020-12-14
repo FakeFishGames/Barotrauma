@@ -109,7 +109,10 @@ namespace Barotrauma
                         foreach (ItemComponent component in components)
                         {
                             if (!component.AllowInGameEditing) { continue; }
-                            if (component.SerializableProperties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any()))
+                            if (component.SerializableProperties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any())
+                            || component.SerializableProperties.Values.Any( p => p.Attributes.OfType<ConditionallyEditable>()
+                                .Any(a => a.isEditable()))
+                            )
                             {
                                 hasInGameEditableProperties = true;
                                 break;
@@ -2278,7 +2281,7 @@ namespace Barotrauma
 
         private void WritePropertyChange(IWriteMessage msg, object[] extraData, bool inGameEditableOnly)
         {
-            var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
+            var allProperties = inGameEditableOnly ? InGameEditableProperties() : GetProperties<Editable>();
             SerializableProperty property = extraData[1] as SerializableProperty;
             if (property != null)
             {
@@ -2357,11 +2360,20 @@ namespace Barotrauma
             }
         }
 
+        private List<Pair<object, SerializableProperty>> InGameEditableProperties()
+        {
+            return GetProperties<ConditionallyEditable>()
+                .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().isEditable())
+                .Union(GetProperties<InGameEditable>())
+                .ToList();
+
+        }
+
         private CoroutineHandle logPropertyChangeCoroutine;
 
         private void ReadPropertyChange(IReadMessage msg, bool inGameEditableOnly, Client sender = null)
         {
-            var allProperties = inGameEditableOnly ? GetProperties<InGameEditable>() : GetProperties<Editable>();
+            var allProperties = inGameEditableOnly ? InGameEditableProperties() : GetProperties<Editable>();
             if (allProperties.Count == 0) { return; }
 
             int propertyIndex = 0;

@@ -109,6 +109,8 @@ namespace Barotrauma.Networking
         //only used when connected to steam
         public int QueryPort => serverSettings?.QueryPort ?? 0;
 
+        public bool AllowWifiChatter => serverSettings?.AllowWifiChat ?? false;
+
         public NetworkConnection OwnerConnection { get; private set; }
         private readonly int? ownerKey;
         private readonly UInt64? ownerSteamId;

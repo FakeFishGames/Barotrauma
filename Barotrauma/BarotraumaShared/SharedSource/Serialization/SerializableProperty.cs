@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -58,6 +59,42 @@ namespace Barotrauma
     [AttributeUsage(AttributeTargets.Property)]
     class InGameEditable : Editable
     {
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    class ConditionallyEditable : Editable
+    {
+        public ConditionallyEditable(ConditionalProperty propCheck)
+        {
+            thisProperty = propCheck;
+        }
+
+        private ConditionalProperty thisProperty;
+
+        public enum ConditionalProperty
+        {
+            //These need to exist at compile time, so it is a little awkward
+            //I would love to see a better way to do this
+            WifiChatter
+        }
+
+        public bool isEditable()
+        {
+            if (thisProperty == ConditionalProperty.WifiChatter)
+            {
+#if SERVER
+                return GameMain.Server.AllowWifiChatter;
+#endif
+
+#if CLIENT
+                return GameMain.Client.ServerSettings.AllowWifiChat;
+#endif
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 
 

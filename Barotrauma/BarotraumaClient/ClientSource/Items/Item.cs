@@ -696,7 +696,8 @@ namespace Barotrauma
                 if (inGame)
                 {
                     if (!ic.AllowInGameEditing) { continue; }
-                    if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0) { continue; }
+                    if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0 &&
+                        SerializableProperty.GetProperties<ConditionallyEditable>(ic).Any(p => p.GetAttribute<ConditionallyEditable>().isEditable())) { continue; }
                 }
                 else
                 {
