@@ -1315,16 +1315,23 @@ namespace Barotrauma
                 var thigh = i == 0 ? GetLimb(LimbType.LeftThigh) : GetLimb(LimbType.RightThigh);
                 if (thigh == null) { continue; }
                 if (thigh.IsSevered) { continue; }
-
                 float thighDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, thigh.Rotation));
-                float thighTorque = thighDiff * thigh.Mass * Math.Sign(torso.Rotation - thigh.Rotation) * 5.0f;
-                thigh.body.ApplyTorque(thighTorque * strength);                
+                float diff = torso.Rotation - thigh.Rotation;
+                if (MathUtils.IsValid(diff))
+                {
+                    float thighTorque = thighDiff * thigh.Mass * Math.Sign(diff) * 5.0f;
+                    thigh.body.ApplyTorque(thighTorque * strength);
+                }               
 
                 var leg = i == 0 ? GetLimb(LimbType.LeftLeg) : GetLimb(LimbType.RightLeg);
                 if (leg == null || leg.IsSevered) { continue; }
                 float legDiff = Math.Abs(MathUtils.GetShortestAngle(torso.Rotation, leg.Rotation));
-                float legTorque = legDiff * leg.Mass * Math.Sign(torso.Rotation - leg.Rotation) * 5.0f;
-                leg.body.ApplyTorque(legTorque * strength);                
+                diff = torso.Rotation - leg.Rotation;
+                if (MathUtils.IsValid(diff))
+                {
+                    float legTorque = legDiff * leg.Mass * Math.Sign(diff) * 5.0f;
+                    leg.body.ApplyTorque(legTorque * strength);
+                }
             }
         }
 

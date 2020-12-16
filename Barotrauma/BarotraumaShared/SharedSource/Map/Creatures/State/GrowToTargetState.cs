@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 
@@ -25,6 +26,17 @@ namespace Barotrauma.MapCreatures.Behavior
 
         protected override void Grow()
         {
+            if (TargetBranches.Any(b => b.Removed))
+            {
+                if (!Behavior.IgnoredTargets.ContainsKey(Target))
+                {
+                    Behavior.IgnoredTargets.Add(Target, 10);
+                }
+
+                isFinished = true;
+                return;
+            }
+
             if (Target == null || Target.Removed)
             {
                 isFinished = true;

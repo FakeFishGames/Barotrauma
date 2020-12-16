@@ -185,15 +185,19 @@ namespace Barotrauma
 
         private void GetDisguisedSprites(IdCard idCard)
         {
+            if (idCard.Item.Tags == string.Empty) return;
+
             if (idCard.StoredJobPrefab == null || idCard.StoredPortrait == null)
             {
                 string[] readTags = idCard.Item.Tags.Split(',');
 
+                if (readTags.Length == 0) return;
+
                 if (idCard.StoredJobPrefab == null)
                 {
-                    string jobIdTag = readTags.First(s => s.StartsWith("jobid:"));
+                    string jobIdTag = readTags.FirstOrDefault(s => s.StartsWith("jobid:"));
 
-                    if (jobIdTag != string.Empty && jobIdTag.Length > 6)
+                    if (jobIdTag != null && jobIdTag.Length > 6)
                     {
                         string jobId = jobIdTag.Substring(6);
                         if (jobId != string.Empty)

@@ -31,20 +31,6 @@ namespace Barotrauma.Items.Components
 
         private float pumpSpeedLockTimer, isActiveLockTimer;
 
-        private bool infected;
-
-        [Serialize(false, true, description: "Whether or not the pump is infected with ballast flora spores.")]
-        public bool Infected
-        {
-            get => infected;
-            set
-            {
-                infected = value;
-            }
-        }
-
-        public string InfectIdentifier;
-
         [Serialize(0.0f, true, description: "How fast the item is currently pumping water (-100 = full speed out, 100 = full speed in). Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public float FlowPercentage
         {
@@ -122,13 +108,6 @@ namespace Barotrauma.Items.Components
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
-
-            if (currFlow < 0 && Infected)
-            {
-                InfectBallast(InfectIdentifier);
-            }
-            Infected = false;
-
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
         }
@@ -143,8 +122,15 @@ namespace Barotrauma.Items.Components
 
             if (hull.BallastFlora != null) { return; }
 
+            var ballastFloraPrefab = BallastFloraPrefab.Find(identifier);
+            if (ballastFloraPrefab == null)
+            {
+                DebugConsole.ThrowError($"Failed to infect a ballast pump (could not find a ballast flora prefab with the identifier \"{identifier}\").\n" + Environment.StackTrace);
+                return;
+            }
+
             Vector2 offset = item.WorldPosition - hull.WorldPosition;
-            hull.BallastFlora = new BallastFloraBehavior(hull, BallastFloraPrefab.Find(identifier), offset, firstGrowth: true);
+            hull.BallastFlora = new BallastFloraBehavior(hull, ballastFloraPrefab, offset, firstGrowth: true);
 
 #if SERVER
             hull.BallastFlora.SendNetworkMessage(hull.BallastFlora, BallastFloraBehavior.NetworkHeader.Spawn);

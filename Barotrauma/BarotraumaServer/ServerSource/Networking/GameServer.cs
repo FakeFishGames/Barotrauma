@@ -2293,9 +2293,18 @@ namespace Barotrauma.Networking
                 }
             }
 
-            if (crewManager != null && crewManager.HasBots && hadBots)
+            if (crewManager != null && crewManager.HasBots)
             {
-                crewManager?.InitRound();
+                if (hadBots)
+                {
+                    //loaded existing bots -> init them
+                    crewManager?.InitRound();
+                }
+                else
+                {
+                    //created new bots -> save them
+                    SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                }
             }
 
             campaign?.LoadPets();

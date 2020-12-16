@@ -1677,10 +1677,6 @@ namespace Barotrauma
             };
             outpostModuleGroup.RectTransform.MinSize = new Point(0, outpostModuleGroup.RectTransform.Children.Max(c => c.MinSize.Y));
 
-
-
-
-
             // module flags ---------------------
 
             var allowAttachGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.1f), outpostSettingsContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
@@ -1716,17 +1712,6 @@ namespace Barotrauma
                 return true;
             };
             allowAttachGroup.RectTransform.MinSize = new Point(0, allowAttachGroup.RectTransform.Children.Max(c => c.MinSize.Y));
-
-
-
-
-
-
-
-
-
-
-
 
             // location types ---------------------
 

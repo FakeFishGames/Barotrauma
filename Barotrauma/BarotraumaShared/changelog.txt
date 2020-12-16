@@ -1,4 +1,20 @@
 ---------------------------------------------------------------------------------------------------------
+v0.11.0.10
+---------------------------------------------------------------------------------------------------------
+
+- Fixed monster missions causing a disconnect in multiplayer mission mode.
+- Fixed bots getting removed from the crew when starting a multiplayer campaign, returning to the lobby during the first round and then reloading the campaign.
+- Fixed crashing when entering a new level in the campaign when an inactive pump has been infected with ballast flora.
+- Fixed ballast flora branches respawning instantly if they're destroyed while they're growing towards a target.
+- Fixed crashing when attempting to place components outside of the submarine in test mode.
+- Fixed inability to rewire beacon stations when rewiring is disabled on the server. 
+- Fixed repair tools that aren't held causing a crash upon use (only affects modded items).
+- Fixed raycast weapons (revolvers, shotguns, SMGs) sometimes not hitting monsters in specific areas outside the sub.
+- Fixed submarine's price field being difficult to edit in the sub editor due to the value getting clamped above the minimum price while typing in the box.
+- Potential fix to certain projectiles (e.g. harpoons, spineling's spikes) sometimes causing erratic physics behavior and errors (ragdolls going crazy, submarine getting launched off at a high velocity...) when they stick to the submarine or to characters.
+- Fixed occasional crashes when swapping to another character's ID card with a mask or diving suit on.
+
+---------------------------------------------------------------------------------------------------------
 v0.11.0.9
 ---------------------------------------------------------------------------------------------------------
 

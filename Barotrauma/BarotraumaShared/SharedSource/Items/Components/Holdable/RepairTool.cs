@@ -109,10 +109,11 @@ namespace Barotrauma.Items.Components
         {
             get
             {
+                if (item.body == null) { return BarrelPos; }
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation + MathHelper.ToRadians(BarrelRotation));
                 Vector2 flippedPos = BarrelPos;
                 if (item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
-                return (Vector2.Transform(flippedPos, bodyTransform));
+                return Vector2.Transform(flippedPos, bodyTransform);
             }
         }
 
@@ -228,11 +229,15 @@ namespace Barotrauma.Items.Components
             }
 
             float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
-            float angle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + spread * Rand.Range(-0.5f, 0.5f);
-            Vector2 rayEnd = rayStartWorld + 
-                ConvertUnits.ToSimUnits(new Vector2(
-                    (float)Math.Cos(angle),
-                    (float)Math.Sin(angle)) * Range * item.body.Dir);
+
+            float angle = MathHelper.ToRadians(BarrelRotation) + spread * Rand.Range(-0.5f, 0.5f);
+            float dir = 1;
+            if (item.body != null)
+            {
+                angle += item.body.Rotation;
+                dir = item.body.Dir;
+            }
+            Vector2 rayEnd = rayStartWorld + ConvertUnits.ToSimUnits(new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Range * dir);
 
             ignoredBodies.Clear();
             if (character != null)
@@ -438,7 +443,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (WaterAmount > 0.0f && item.CurrentHull?.Submarine != null)
+            if (WaterAmount > 0.0f && item.Submarine != null)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(rayStart + item.Submarine.SimPosition);
 
@@ -466,7 +471,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                                     float barOffset = 10f * GUI.Scale;
                                     Vector2 offset = planter.PlantSlots.ContainsKey(i) ? planter.PlantSlots[i].Offset : Vector2.Zero;
-                                    user.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUI.Style.Blue, GUI.Style.Blue, "progressbar.watering");
+                                    user?.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUI.Style.Blue, GUI.Style.Blue, "progressbar.watering");
 #endif
                                 }
                             }

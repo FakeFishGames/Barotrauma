@@ -331,21 +331,21 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             Vector2 rayStart = simPositon;
-            Vector2 rayEnd = simPositon + dir * 1000.0f;
+            Vector2 rayEnd = simPositon + dir * 500.0f;
 
             List<HitscanResult> hits = new List<HitscanResult>();
 
-            hits.AddRange(DoRayCast(rayStart, rayEnd));
+            hits.AddRange(DoRayCast(rayStart, rayEnd, submarine: item.Submarine));
 
             if (item.Submarine != null)
             {
                 //shooting indoors, do a hitscan outside as well
-                hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition));
+                hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition, submarine: null));
                 //also in the coordinate space of docked subs
                 foreach (Submarine dockedSub in item.Submarine.DockedTo)
                 {
                     if (dockedSub == item.Submarine) { continue; }
-                    hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition - dockedSub.SimPosition, rayEnd + item.Submarine.SimPosition - dockedSub.SimPosition));
+                    hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition - dockedSub.SimPosition, rayEnd + item.Submarine.SimPosition - dockedSub.SimPosition, dockedSub));
                 }
             }
             else
@@ -353,7 +353,7 @@ namespace Barotrauma.Items.Components
                 //shooting outdoors, see if we can hit anything inside a sub
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    var inSubHits = DoRayCast(rayStart - submarine.SimPosition, rayEnd - submarine.SimPosition);
+                    var inSubHits = DoRayCast(rayStart - submarine.SimPosition, rayEnd - submarine.SimPosition, submarine);
                     //transform back to world coordinates
                     for (int i = 0; i < inSubHits.Count; i++)
                     {
@@ -402,7 +402,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        private List<HitscanResult> DoRayCast(Vector2 rayStart, Vector2 rayEnd)
+        private List<HitscanResult> DoRayCast(Vector2 rayStart, Vector2 rayEnd, Submarine submarine)
         {
             List<HitscanResult> hits = new List<HitscanResult>();
 
@@ -417,14 +417,20 @@ namespace Barotrauma.Items.Components
                 if (fixture?.Body == null || fixture.IsSensor) { return true; }
                 if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return true; }
-                if (fixture.Body?.UserData as string == "ruinroom") { return true; }
+                if (fixture.Body.UserData as string == "ruinroom") { return true; }
+
+                //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
+                if (submarine != null)
+                {
+                    if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return true; }
+                }
 
                 //ignore everything else than characters, sub walls and level walls
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return true; }
 
-                if (fixture.Body.UserData is VoronoiCell && this.item.Submarine != null) { return true; }
+                if (fixture.Body.UserData is VoronoiCell && (this.item.Submarine != null || submarine != null)) { return true; }
 
                 fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
                 if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
@@ -447,7 +453,13 @@ namespace Barotrauma.Items.Components
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
 
-                //ignore level cells if the item the point of impact are inside a sub
+                //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
+                if (submarine != null)
+                {
+                    if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return -1; }
+                }
+
+                //ignore level cells if the item and the point of impact are inside a sub
                 if (fixture.Body.UserData is VoronoiCell && this.item.Submarine != null) 
                 { 
                     if (Hull.FindHull(ConvertUnits.ToDisplayUnits(point), this.item.CurrentHull) != null)
@@ -805,7 +817,8 @@ namespace Barotrauma.Items.Components
             {
                 MotorEnabled = true,
                 MaxMotorForce = 30.0f,
-                LimitEnabled = true
+                LimitEnabled = true,
+                Breakpoint = 1000.0f
             };
 
             if (StickPermanently)

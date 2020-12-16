@@ -21,6 +21,14 @@ namespace Barotrauma.Items.Components
 
         private List<ushort> disconnectedWireIds;
 
+        /// <summary>
+        /// Allows rewiring the connection panel despite rewiring being disabled on a server
+        /// </summary>
+        public bool AlwaysAllowRewiring
+        {
+            get { return item.Submarine?.Info.Type == SubmarineType.BeaconStation; }
+        }
+
         [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
         public bool Locked
         {

@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -98,6 +99,17 @@ namespace Barotrauma
                 currOffset += srcRanges[i].Y - srcRanges[i].X + 1;
             }
             return 0;
+        }
+
+        public static ushort DetermineNewOffset()
+        {
+            ushort idOffset = 0;
+            foreach (Entity e in Entity.GetEntities())
+            {
+                if (e.ID > Entity.ReservedIDStart || e is Submarine) { continue; }
+                idOffset = Math.Max(idOffset, e.ID);
+            }
+            return idOffset;
         }
     }
 }

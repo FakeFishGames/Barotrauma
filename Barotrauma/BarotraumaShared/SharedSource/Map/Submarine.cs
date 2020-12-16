@@ -304,7 +304,6 @@ namespace Barotrauma
             {
                 if ((!anyHasTag || item.HasTag("ballast")) && item.GetComponent<Pump>() is { } pump)
                 {
-                    if (pump.Infected) { continue; }
                     pumps.Add(pump);
                 }
             }
@@ -312,11 +311,13 @@ namespace Barotrauma
             if (!pumps.Any()) { return; }
 
             Pump randomPump = pumps.GetRandom(Rand.RandSync.Unsynced);
-            randomPump.Infected = true;
-            randomPump.InfectIdentifier = identifier;
+            if (randomPump.IsOn && randomPump.HasPower && randomPump.FlowPercentage > 0 && randomPump.Item.Condition > 0.0f)
+            {
+                randomPump.InfectBallast(identifier);
 #if SERVER
-            randomPump.Item.CreateServerEvent(randomPump);
+                randomPump.Item.CreateServerEvent(randomPump);
 #endif
+            }
         }
 
         public void MakeWreck()
@@ -1277,11 +1278,7 @@ namespace Barotrauma
                 HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);
             }
 
-            IdOffset = 0;
-            foreach (MapEntity me in MapEntity.mapEntityList)
-            {
-                IdOffset = Math.Max(IdOffset, me.ID);
-            }
+            IdOffset = IdRemap.DetermineNewOffset();
 
             List<MapEntity> newEntities = new List<MapEntity>();
             if (loadEntities == null)

@@ -401,7 +401,7 @@ namespace Barotrauma.Items.Components
 
             //if the item has a connection panel and rewiring is disabled, don't allow deattaching
             var connectionPanel = item.GetComponent<ConnectionPanel>();
-            if (connectionPanel != null && (connectionPanel.Locked || !(GameMain.NetworkMember?.ServerSettings?.AllowRewiring ?? true)))
+            if (connectionPanel != null && !connectionPanel.AlwaysAllowRewiring && (connectionPanel.Locked || !(GameMain.NetworkMember?.ServerSettings?.AllowRewiring ?? true)))
             {
                 return false;
             }
@@ -578,7 +578,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 attachPos = userPos + mouseDiff;
 
-            if (user.Submarine == null)
+            if (user.Submarine == null && Level.Loaded != null)
             {
                 bool edgeFound = false;
                 foreach (var cell in Level.Loaded.GetCells(attachPos))
@@ -606,6 +606,7 @@ namespace Barotrauma.Items.Components
 
         private Voronoi2.VoronoiCell GetAttachTargetCell(float maxDist)
         {
+            if (Level.Loaded == null) { return null; }
             foreach (var cell in Level.Loaded.GetCells(item.WorldPosition, searchDepth: 1))
             {
                 if (cell.CellType != Voronoi2.CellType.Solid) { continue; }
