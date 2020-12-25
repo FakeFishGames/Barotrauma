@@ -48,7 +48,7 @@ namespace Barotrauma
 
             foreach (string word in words)
             {
-                if (forbiddenWords.Any(w => Homoglyphs.Compare(word, w) || Homoglyphs.Compare(word + 's', w)))
+                if (forbiddenWords.Any(w => Homoglyphs.Compare(word, w)))
                 {
                     forbiddenWord = word;
                     return true;

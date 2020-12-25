@@ -13,6 +13,8 @@ namespace Barotrauma
         private int prevEntityCount;
         private int prevPlayerCount, prevBotCount;
 
+        private string[] requiredDestinationTypes;
+
         public int CurrentActionIndex { get; private set; }
         public List<EventAction> Actions { get; } = new List<EventAction>();
         public Dictionary<string, List<Entity>> Targets { get; } = new Dictionary<string, List<Entity>>();
@@ -39,6 +41,8 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Scripted event \"{prefab.Identifier}\" has no actions. The event will do nothing.");
             }
+
+            requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
         }
 
         public void AddTarget(string tag, Entity target)
@@ -198,6 +202,15 @@ namespace Barotrauma
             {
                 currentAction.Update(deltaTime);
             }
+        }
+
+        public override bool LevelMeetsRequirements()
+        {
+            if (requiredDestinationTypes == null) { return true; }
+            var currLocation = GameMain.GameSession?.Campaign?.Map.CurrentLocation;
+            if (currLocation == null) { return true; }
+            var locations = currLocation?.Connections?.Select(c => c.Locations.First(l => l != currLocation));
+            return locations.Any(l => requiredDestinationTypes.Any(t => l.Type.Identifier.Equals(t, StringComparison.OrdinalIgnoreCase)));
         }
     }
 }

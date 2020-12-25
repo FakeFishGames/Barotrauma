@@ -13,6 +13,11 @@
         //additional instructions (power up, fire at will, etc)
         public readonly string OrderOption;
 
+        /// <summary>
+        /// Used when the order targets a wall
+        /// </summary>
+        public int? WallSectionIndex { get; set; }
+
         public OrderChatMessage(Order order, string orderOption, ISpatialEntity targetEntity, Character targetCharacter, Character sender)
             : this(order, orderOption,
                    order?.GetChatMessage(targetCharacter?.Name, sender?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == sender, orderOption: orderOption),

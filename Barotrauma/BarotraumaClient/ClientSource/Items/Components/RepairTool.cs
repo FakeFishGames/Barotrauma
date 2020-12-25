@@ -66,7 +66,11 @@ namespace Barotrauma.Items.Components
         {
             foreach (ParticleEmitter particleEmitter in particleEmitters)
             {
-                float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                float particleAngle = MathHelper.ToRadians(BarrelRotation);
+                if (item.body != null)
+                {
+                    particleAngle += item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
+                }
                 particleEmitter.Emit(
                     deltaTime, ConvertUnits.ToDisplayUnits(raystart),
                     item.CurrentHull, particleAngle, particleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0);
@@ -118,7 +122,7 @@ namespace Barotrauma.Items.Components
                 if (door == null || door.Stuck <= 0)
                 {
                     Vector2 progressBarPos = targetItem.DrawPosition;
-                    var progressBar = user.UpdateHUDProgressBar(
+                    var progressBar = user?.UpdateHUDProgressBar(
                         targetItem,
                         progressBarPos,
                         progressBarState,

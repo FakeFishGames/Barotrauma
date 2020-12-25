@@ -2,7 +2,9 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma.Items.Components
 {
@@ -11,7 +13,21 @@ namespace Barotrauma.Items.Components
         private float flowPercentage;
         private float maxFlow;
 
-        private float? targetLevel;
+        public float? TargetLevel;
+
+        private bool hijacked;
+        public bool Hijacked
+        {
+            get { return hijacked; }
+            set 
+            {
+                if (value == hijacked) { return; }
+                hijacked = value;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
+        }
 
         private float pumpSpeedLockTimer, isActiveLockTimer;
 
@@ -66,12 +82,12 @@ namespace Barotrauma.Items.Components
         {
             currFlow = 0.0f;
 
-            if (targetLevel != null)
+            if (TargetLevel != null)
             {
                 pumpSpeedLockTimer -= deltaTime;
                 float hullPercentage = 0.0f;
                 if (item.CurrentHull != null) { hullPercentage = (item.CurrentHull.WaterVolume / item.CurrentHull.Volume) * 100.0f; }
-                FlowPercentage = ((float)targetLevel - hullPercentage) * 10.0f;
+                FlowPercentage = ((float)TargetLevel - hullPercentage) * 10.0f;
             }
 
             currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
@@ -96,10 +112,37 @@ namespace Barotrauma.Items.Components
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
         }
 
+        public void InfectBallast(string identifier)
+        {
+            Hull hull = item.CurrentHull;
+            if (hull == null) { return; }
+
+            // if the ship is already infected then do nothing
+            if (Hull.hullList.Where(h => h.Submarine == hull.Submarine).Any(h => h.BallastFlora != null)) { return; }
+
+            if (hull.BallastFlora != null) { return; }
+
+            var ballastFloraPrefab = BallastFloraPrefab.Find(identifier);
+            if (ballastFloraPrefab == null)
+            {
+                DebugConsole.ThrowError($"Failed to infect a ballast pump (could not find a ballast flora prefab with the identifier \"{identifier}\").\n" + Environment.StackTrace);
+                return;
+            }
+
+            Vector2 offset = item.WorldPosition - hull.WorldPosition;
+            hull.BallastFlora = new BallastFloraBehavior(hull, ballastFloraPrefab, offset, firstGrowth: true);
+
+#if SERVER
+            hull.BallastFlora.SendNetworkMessage(hull.BallastFlora, BallastFloraBehavior.NetworkHeader.Spawn);
+#endif
+        }
+
         partial void UpdateProjSpecific(float deltaTime);
         
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
+            if (Hijacked) { return; }
+
             if (connection.Name == "toggle")
             {
                 IsActive = !IsActive;
@@ -115,7 +158,7 @@ namespace Barotrauma.Items.Components
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
-                    targetLevel = null;
+                    TargetLevel = null;
                     pumpSpeedLockTimer = 0.1f;
                 }
             }
@@ -123,7 +166,7 @@ namespace Barotrauma.Items.Components
             {
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    targetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
+                    TargetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
                     pumpSpeedLockTimer = 0.1f;
                 }
             }

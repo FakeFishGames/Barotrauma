@@ -32,8 +32,10 @@ namespace Barotrauma
 
         [Serialize(0.05f, true)]
         public float StructureRepairKarmaIncrease { get; set; }
+
         [Serialize(0.1f, true)]
         public float StructureDamageKarmaDecrease { get; set; }
+
         [Serialize(30.0f, true)]
         public float MaxStructureDamageKarmaDecreasePerSecond { get; set; }
 
@@ -66,6 +68,9 @@ namespace Barotrauma
         
         [Serialize(defaultValue: false, true)]
         public bool DangerousItemStealBots { get; set; }
+
+        [Serialize(defaultValue: 0.05f, true)]
+        public float BallastFloraKarmaIncrease { get; set; }
 
 
         private int allowedWireDisconnectionsPerMinute;

@@ -123,7 +123,7 @@ namespace Barotrauma.Items.Components
                         //drop all items that are inside the deconstructed item
                         foreach (ItemContainer ic in targetItem.GetComponents<ItemContainer>())
                         {
-                            if (ic?.Inventory?.Items == null) { continue; }
+                            if (ic?.Inventory?.Items == null || ic.RemoveContainedItemsOnDeconstruct) { continue; }
                             foreach (Item containedItem in ic.Inventory.Items)
                             {
                                 containedItem?.Drop(dropper: null, createNetworkEvent: true);

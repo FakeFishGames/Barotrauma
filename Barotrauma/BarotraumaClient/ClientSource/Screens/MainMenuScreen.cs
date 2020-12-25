@@ -38,6 +38,9 @@ namespace Barotrauma
         private GUIImage playstyleBanner;
         private GUITextBlock playstyleDescription;
 
+        private GUIComponent remoteContentContainer;
+        private XDocument remoteContentDoc;
+
         private Tab selectedTab;
 
         private Sprite backgroundSprite;
@@ -62,6 +65,14 @@ namespace Barotrauma
                 }
                 CreateHostServerFields();
                 CreateCampaignSetupUI();
+                if (remoteContentDoc?.Root != null)
+                {
+                    remoteContentContainer.ClearChildren();
+                    foreach (XElement subElement in remoteContentDoc.Root.Elements())
+                    {
+                        GUIComponent.FromXML(subElement, remoteContentContainer.RectTransform);
+                    }
+                }
             };
 
             new GUIImage(new RectTransform(new Vector2(0.4f, 0.25f), Frame.RectTransform, Anchor.BottomRight)
@@ -84,6 +95,11 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
+            remoteContentContainer = new GUIFrame(new RectTransform(Vector2.One, parent: Frame.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
+
 #if TEST_REMOTE_CONTENT
 
             var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
@@ -91,7 +107,7 @@ namespace Barotrauma
             {
                 foreach (XElement subElement in doc?.Root.Elements())
                 {
-                    GUIComponent.FromXML(subElement, Frame.RectTransform);
+                    GUIComponent.FromXML(subElement, remoteContentContainer.RectTransform);
                 }
             }   
 #else
@@ -1402,10 +1418,10 @@ namespace Barotrauma
                     if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
                     if (!string.IsNullOrWhiteSpace(xml))
                     {
-                        XElement element = XDocument.Parse(xml)?.Root;
-                        foreach (XElement subElement in element.Elements())
+                        remoteContentDoc = XDocument.Parse(xml);
+                        foreach (XElement subElement in remoteContentDoc?.Root.Elements())
                         {
-                            GUIComponent.FromXML(subElement, Frame.RectTransform);
+                            GUIComponent.FromXML(subElement, remoteContentContainer.RectTransform);
                         }
                     }
                 }

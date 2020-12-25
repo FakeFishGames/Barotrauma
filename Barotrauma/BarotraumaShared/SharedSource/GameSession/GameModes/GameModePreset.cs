@@ -12,6 +12,7 @@ namespace Barotrauma
         public static GameModePreset MultiPlayerCampaign;
         public static GameModePreset Tutorial;
         public static GameModePreset Mission;
+        public static GameModePreset PvP;
         public static GameModePreset TestMode;
         public static GameModePreset Sandbox;
         public static GameModePreset DevSandbox;
@@ -51,7 +52,8 @@ namespace Barotrauma
             TestMode = new GameModePreset("testmode", typeof(TestGameMode), true);
 #endif
             Sandbox = new GameModePreset("sandbox", typeof(GameMode), false);
-            Mission = new GameModePreset("mission", typeof(MissionMode), false);
+            Mission = new GameModePreset("mission", typeof(CoOpMode), false);
+            PvP = new GameModePreset("pvp", typeof(PvPMode), false);
             MultiPlayerCampaign = new GameModePreset("multiplayercampaign", typeof(MultiPlayerCampaign), false, false);
         }
     }

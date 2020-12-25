@@ -33,7 +33,7 @@ namespace Barotrauma
                 {
                     OriginalContainerID = item.OriginalContainerID;
                 }
-                OriginalID = item.OriginalID;
+                OriginalID = item.ID;
                 ModuleIndex = (ushort)item.OriginalModuleIndex;
                 Identifier = item.prefab.Identifier;
             }
@@ -50,7 +50,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return item.OriginalID == OriginalID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.ID == OriginalID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
                 }
             }
         }
@@ -75,17 +75,6 @@ namespace Barotrauma
         public LocationType Type { get; private set; }
 
         public LevelData LevelData { get; set; }
-
-        private float normalizedDepth;
-        public float NormalizedDepth
-        {
-            get { return normalizedDepth; }
-            set
-            {
-                if (!MathUtils.IsValid(value)) { return; }
-                normalizedDepth = MathHelper.Clamp(value, 0.0f, 1.0f);
-            }
-        }
 
         public int PortraitId { get; private set; }
 
@@ -200,7 +189,6 @@ namespace Barotrauma
             baseName        = element.GetAttributeString("basename", "");
             Name            = element.GetAttributeString("name", "");
             MapPosition     = element.GetAttributeVector2("position", Vector2.Zero);
-            NormalizedDepth = element.GetAttributeFloat("normalizeddepth", 0.0f);
             TypeChangeTimer = element.GetAttributeInt("changetimer", 0);
             Discovered      = element.GetAttributeBool("discovered", false);
             PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 1.0f);
@@ -285,14 +273,15 @@ namespace Barotrauma
             DebugConsole.Log("Location " + baseName + " changed it's type from " + Type + " to " + newType);
 
             Type = newType;
-            Name = Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
+            Name = Type.NameFormats == null ? baseName : Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
             CreateStore(force: true);
         }
 
         public void UnlockMission(MissionPrefab missionPrefab, LocationConnection connection)
         {
             if (AvailableMissions.Any(m => m.Prefab == missionPrefab)) { return; }
-            availableMissions.Add(InstantiateMission(missionPrefab, connection));
+            var mission = InstantiateMission(missionPrefab, connection);
+            availableMissions.Add(mission);
 #if CLIENT
             GameMain.GameSession?.Campaign?.CampaignUI?.RefreshLocationInfo();
 #endif
@@ -309,7 +298,7 @@ namespace Barotrauma
             }
             else
             {
-                var mission = InstantiateMission(missionPrefab);
+                var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
                 //don't allow duplicate missions in the same connection
                 if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Contains(mission.Locations[0]) && m.Locations.Contains(mission.Locations[1])))
                 {
@@ -342,7 +331,7 @@ namespace Barotrauma
                         suitableMissions = unusedMissions;
                     }
                     MissionPrefab missionPrefab = suitableMissions.GetRandom();
-                    var mission = InstantiateMission(missionPrefab);
+                    var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
                     //don't allow duplicate missions in the same connection
                     if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Contains(mission.Locations[0]) && m.Locations.Contains(mission.Locations[1])))
                     {
@@ -363,24 +352,31 @@ namespace Barotrauma
             return null;
         }
 
-        private Mission InstantiateMission(MissionPrefab prefab, LocationConnection connection = null)
+        private Mission InstantiateMission(MissionPrefab prefab, out LocationConnection connection)
         {
-            if (connection == null)
+            var suitableConnections = Connections.Where(c => prefab.IsAllowed(this, c.OtherLocation(this)));
+            if (!suitableConnections.Any())
             {
-                var suitableConnections = Connections.Where(c => prefab.IsAllowed(this, c.OtherLocation(this)));
-                if (!suitableConnections.Any())
-                {
-                    suitableConnections = Connections;
-                }
-                //prefer connections that haven't been passed through, and connections with fewer available missions
-                connection = ToolBox.SelectWeightedRandom(
-                    suitableConnections.ToList(),
-                    suitableConnections.Select(c => (c.Passed ? 1.0f : 5.0f) / Math.Max(availableMissions.Count(m => m.Locations.Contains(c.OtherLocation(this))), 1.0f)).ToList(),
-                    Rand.RandSync.Unsynced);
+                suitableConnections = Connections.ToList();
             }
+            //prefer connections that haven't been passed through, and connections with fewer available missions
+            connection = ToolBox.SelectWeightedRandom(
+                suitableConnections.ToList(),
+                suitableConnections.Select(c => (c.Passed ? 1.0f : 5.0f) / Math.Max(availableMissions.Count(m => m.Locations.Contains(c.OtherLocation(this))), 1.0f)).ToList(),
+                Rand.RandSync.Unsynced);            
 
             Location destination = connection.OtherLocation(this);
-            return prefab.Instantiate(new Location[] { this, destination });
+            var mission = prefab.Instantiate(new Location[] { this, destination });
+            mission.AdjustLevelData(connection.LevelData);
+            return mission;
+        }
+
+        private Mission InstantiateMission(MissionPrefab prefab, LocationConnection connection)
+        {
+            Location destination = connection.OtherLocation(this);
+            var mission = prefab.Instantiate(new Location[] { this, destination });
+            mission.AdjustLevelData(connection.LevelData);
+            return mission;
         }
 
         public void InstantiateLoadedMissions(Map map)
@@ -499,7 +495,7 @@ namespace Barotrauma
         {
             foreach (Item item in items)
             {
-                if (takenItems.Any(it => it.Matches(item) && it.OriginalID == item.OriginalID)) { continue; }
+                if (takenItems.Any(it => it.Matches(item) && it.OriginalID == item.ID)) { continue; }
                 if (item.OriginalModuleIndex < 0)
                 {
                     DebugConsole.ThrowError("Tried to register a non-outpost item as being taken from the outpost.");
@@ -698,7 +694,6 @@ namespace Barotrauma
                 new XAttribute("name", Name),
                 new XAttribute("discovered", Discovered),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
-                new XAttribute("normalizeddepth", NormalizedDepth.ToString("G", CultureInfo.InvariantCulture)),
                 new XAttribute("pricemultiplier", PriceMultiplier),
                 new XAttribute("mechanicalpricemultipler", MechanicalPriceMultiplier));
             LevelData.Save(locationElement);

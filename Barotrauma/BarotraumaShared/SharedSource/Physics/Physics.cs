@@ -1,4 +1,5 @@
 ﻿using FarseerPhysics.Dynamics;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -19,7 +20,7 @@ namespace Barotrauma
         public static float DisplayToRealWorldRatio = 1.0f / 100.0f;
 
         public const float DisplayToSimRation = 100.0f;    
-        
+
         public static bool TryParseCollisionCategory(string categoryName, out Category category)
         {
             category = Category.None;

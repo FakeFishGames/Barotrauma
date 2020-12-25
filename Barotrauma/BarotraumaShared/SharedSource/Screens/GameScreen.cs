@@ -119,11 +119,15 @@ namespace Barotrauma
             }
 #endif
 
+#if CLIENT
+            GameMain.LightManager?.Update((float)deltaTime);
+#endif
+
             GameTime += deltaTime;
 
             foreach (PhysicsBody body in PhysicsBody.List)
             {
-                if (body.Enabled) { body.Update(); }               
+                if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) { body.Update(); }               
             }
             foreach (MapEntity e in MapEntity.mapEntityList)
             {
@@ -221,7 +225,10 @@ namespace Barotrauma
 
             foreach (PhysicsBody body in PhysicsBody.List)
             {
-                if (body.Enabled) { body.SetPrevTransform(body.SimPosition, body.Rotation); }
+                if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) 
+                { 
+                    body.SetPrevTransform(body.SimPosition, body.Rotation); 
+                }
             }
 
 #if CLIENT

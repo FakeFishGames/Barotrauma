@@ -61,11 +61,11 @@ namespace Barotrauma
             }
         }
 
-        [Serialize("None", false)]
+        [Serialize(CampaignMode.InteractionType.None, false)]
         public CampaignMode.InteractionType CampaignInteractionType { get; protected set; }
 
-        [Serialize("Passive", false)]
-        public AIObjectiveIdle.BehaviorType BehaviorType { get; protected set; }
+        [Serialize(AIObjectiveIdle.BehaviorType.Passive, false)]
+        public AIObjectiveIdle.BehaviorType Behavior { get; protected set; }
 
         public List<string> PreferredOutpostModuleTypes { get; protected set; }
 
@@ -163,6 +163,13 @@ namespace Barotrauma
                 {
                     item.AddTag("job:" + job.Name);
                 }
+
+                IdCard idCardComponent = item.GetComponent<IdCard>();
+                if (idCardComponent != null)
+                {
+                    idCardComponent.Initialize(character.Info);
+                }
+
                 var idCardTags = itemElement.GetAttributeStringArray("tags", new string[0]);
                 foreach (string tag in idCardTags)
                 {

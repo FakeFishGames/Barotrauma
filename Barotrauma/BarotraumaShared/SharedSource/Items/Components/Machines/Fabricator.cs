@@ -482,9 +482,9 @@ namespace Barotrauma.Items.Components
             return componentElement;
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues)
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(componentElement, usePrefabValues);
+            base.Load(componentElement, usePrefabValues, idRemap);
             savedFabricatedItem = componentElement.GetAttributeString("fabricateditemidentifier", "");
             savedTimeUntilReady = componentElement.GetAttributeFloat("savedtimeuntilready", 0.0f);
             savedRequiredTime = componentElement.GetAttributeFloat("savedrequiredtime", 0.0f);

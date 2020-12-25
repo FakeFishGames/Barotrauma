@@ -114,6 +114,18 @@ namespace Barotrauma
         public MapEntity ReplacedBy;
 
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back = true) { }
+
+        /// <summary>
+        /// A method that modifies the draw depth to prevent z-fighting between entities with the same sprite depth
+        /// </summary>
+        public float GetDrawDepth(float baseDepth, Sprite sprite)
+        {
+            float depth = baseDepth            
+                //take texture into account to get entities with (roughly) the same base depth and texture to render consecutively to minimize texture swaps
+                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.00001f
+                + ID % 100 * 0.000001f;
+            return Math.Min(depth, 1.0f);
+        }
         
         /// <summary>
         /// Update the selection logic in submarine editor
@@ -329,8 +341,8 @@ namespace Barotrauma
                         {
                             var clones = Clone(selectedList).Where(c => c != null).ToList();
                             selectedList = clones;
-                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
                             selectedList.ForEach(c => c.Move(moveAmount));
+                            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
                         }
                         else // move
                         {
@@ -897,10 +909,10 @@ namespace Barotrauma
         {
             if (entities.Count == 0) { return; }
             
-            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(entities), true));
-            
             CopyEntities(entities);
-            
+
+            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity>(entities), true));
+
             entities.ForEach(e => { if (!e.Removed) { e.Remove(); } });
             entities.Clear();
         }
@@ -913,7 +925,6 @@ namespace Barotrauma
             Clone(copiedList);
 
             var clones = mapEntityList.Except(prevEntities).ToList();
-            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false));
             var nonWireClones = clones.Where(c => !(c is Item item) || item.GetComponent<Wire>() == null);
             if (!nonWireClones.Any()) { nonWireClones = clones; }
 
@@ -929,6 +940,8 @@ namespace Barotrauma
                 clone.Move(moveAmount);
                 clone.Submarine = Submarine.MainSub;
             }
+
+            SubEditorScreen.StoreCommand(new AddOrDeleteCommand(clones, false, handleInventoryBehavior: false));
         }
 
         /// <summary>

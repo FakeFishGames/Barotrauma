@@ -23,7 +23,6 @@ namespace Barotrauma
         const float VerticalDrag = 0.05f;
         const float MaxDrag = 0.1f;
 
-        public const float DamageDepth = -30000.0f;
         private const float ImpactDamageMultiplier = 10.0f;
 
         //limbs with a mass smaller than this won't cause an impact when they hit the sub
@@ -40,7 +39,7 @@ namespace Barotrauma
             private set;
         }
 
-        private float depthDamageTimer;
+        private float depthDamageTimer = 10.0f;
 
         private readonly Submarine submarine;
 
@@ -94,11 +93,6 @@ namespace Barotrauma
             get { return positionBuffer; }
         }
         
-        public bool AtDamageDepth
-        {
-            get { return Position.Y < DamageDepth; }
-        }
-
         public Submarine Submarine
         {
             get { return submarine; }
@@ -275,7 +269,7 @@ namespace Barotrauma
 
                 if (impact.Target.UserData is VoronoiCell cell)
                 {
-                    HandleLevelCollision(impact);
+                    HandleLevelCollision(impact, cell);
                 }
                 else if (impact.Target.Body.UserData is Structure)
                 {
@@ -451,29 +445,26 @@ namespace Barotrauma
 
         private void UpdateDepthDamage(float deltaTime)
         {
-            if (Position.Y > DamageDepth) { return; }
 #if CLIENT
-            if (GameMain.GameSession.GameMode is TestGameMode) { return; }
+            if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
 #endif
-            float depth = DamageDepth - Position.Y;
+            if (Level.Loaded == null) { return; }
+            float submarineDepth = submarine.RealWorldDepth;
+            if (submarineDepth < Level.Loaded.RealWorldCrushDepth) { return; }
 
             depthDamageTimer -= deltaTime;
-
             if (depthDamageTimer > 0.0f) { return; }
 
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != submarine) { continue; }
+                if (wall.Submarine != submarine || wall.CrushDepth > submarineDepth) { continue; }
 
-                if (wall.Health < depth * 0.01f)
+                float pastCrushDepth = submarineDepth - wall.CrushDepth;
+                Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
+                if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
                 {
-                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, depth * 0.01f);
-
-                    if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
-                    {
-                        GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(depth * 0.001f, 50.0f));
-                    }
-                }
+                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(pastCrushDepth * 0.001f, 50.0f));
+                }                
             }
 
             depthDamageTimer = 10.0f;
@@ -655,7 +646,7 @@ namespace Barotrauma
             }
         }
 
-        private void HandleLevelCollision(Impact impact)
+        private void HandleLevelCollision(Impact impact, VoronoiCell cell = null)
         {
             if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 10)
             {
@@ -670,6 +661,22 @@ namespace Barotrauma
             foreach (Submarine dockedSub in submarine.DockedTo)
             {
                 dockedSub.SubBody.ApplyImpact(wallImpact, -impact.Normal, impact.ImpactPos);
+            }
+
+            if (cell != null && cell.IsDestructible && wallImpact > 0.0f)
+            {
+                var hitWall = Level.Loaded?.ExtraWalls.Find(w => w.Cells.Contains(cell));
+                if (hitWall != null && hitWall.WallDamageOnTouch > 0.0f)
+                {
+                    var damagedStructures = Explosion.RangedStructureDamage(
+                        ConvertUnits.ToDisplayUnits(impact.ImpactPos),
+                        500.0f,
+                        hitWall.WallDamageOnTouch, 
+                        levelWallDamage: 0.0f);
+#if CLIENT
+                    PlayDamageSounds(damagedStructures, impact.ImpactPos, wallImpact, "StructureSlash");
+#endif
+                }
             }
 
 #if CLIENT
@@ -836,34 +843,15 @@ namespace Barotrauma
 
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse, 10.0f);
             }
-            
+
+            float dmg = applyDamage ? impact * ImpactDamageMultiplier : 0.0f;
             var damagedStructures = Explosion.RangedStructureDamage(
                 ConvertUnits.ToDisplayUnits(impactPos), 
-                impact * 50.0f, 
-                applyDamage ? impact * ImpactDamageMultiplier : 0.0f);
+                impact * 50.0f,
+                dmg, dmg);
 
 #if CLIENT
-            //play a damage sound for the structure that took the most damage
-            float maxDamage = 0.0f;
-            Structure maxDamageStructure = null;
-            foreach (KeyValuePair<Structure, float> structureDamage in damagedStructures)
-            {
-                if (maxDamageStructure == null || structureDamage.Value > maxDamage)
-                {
-                    maxDamage = structureDamage.Value;
-                    maxDamageStructure = structureDamage.Key;
-                }
-            }
-
-            if (maxDamageStructure != null)
-            {
-                SoundPlayer.PlayDamageSound(
-                    "StructureBlunt",
-                    impact * 10.0f,
-                    ConvertUnits.ToDisplayUnits(impactPos),
-                    MathHelper.Lerp(2000.0f, 10000.0f, (impact - MinCollisionImpact) / 2.0f),
-                    maxDamageStructure.Tags);            
-            }
+            PlayDamageSounds(damagedStructures, impactPos, impact, "StructureBlunt");
 #endif
         }
 

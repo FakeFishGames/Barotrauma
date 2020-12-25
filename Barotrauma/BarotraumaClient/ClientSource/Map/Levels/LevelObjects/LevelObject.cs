@@ -1,14 +1,14 @@
 ﻿using Barotrauma.Lights;
+using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
-using Barotrauma.Networking;
+using Barotrauma.SpriteDeformations;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
-using Barotrauma.SpriteDeformations;
 using System.Linq;
-using FarseerPhysics.Dynamics;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -74,10 +74,21 @@ namespace Barotrauma
             private set;
         }
 
+        public bool VisibleOnSonar
+        {
+            get;
+            private set;
+        }
+
+        public float SonarRadius
+        {
+            get;
+            private set;
+        }
+
         partial void InitProjSpecific()
         {
             Sprite?.EnsureLazyLoaded();
-            SpecularSprite?.EnsureLazyLoaded();
             Prefab.DeformableSprite?.EnsureLazyLoaded();
 
             CurrentSwingAmount = Prefab.SwingAmountRad;
@@ -98,7 +109,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Prefab.LightSourceParams != null)
+            if (Prefab.LightSourceParams != null && Prefab.LightSourceParams.Count > 0)
             {
                 LightSources = new LightSource[Prefab.LightSourceParams.Count];
                 LightSourceTriggers = new LevelTrigger[Prefab.LightSourceParams.Count];
@@ -137,6 +148,13 @@ namespace Barotrauma
                         j++;
                     }
                 }                
+            }
+
+            VisibleOnSonar = Prefab.SonarDisruption > 0.0f || Prefab.OverrideProperties.Any(p => p != null && p.SonarDisruption > 0.0f) || 
+                (Triggers != null && Triggers.Any(t => !MathUtils.NearlyEqual(t.Force, Vector2.Zero) && t.ForceMode != LevelTrigger.TriggerForceMode.LimitVelocity || !string.IsNullOrWhiteSpace(t.InfectIdentifier)));
+            if (VisibleOnSonar && Triggers.Any())
+            {
+                SonarRadius = Triggers.Select(t => t.ColliderRadius * 1.5f).Max();
             }
         }
 
@@ -232,17 +250,21 @@ namespace Barotrauma
                 deformation.Update(deltaTime);
             }
             CurrentSpriteDeformation = SpriteDeformation.GetDeformation(spriteDeformations, ActivePrefab.DeformableSprite.Size);
-            foreach (LightSource lightSource in LightSources)
+            if (LightSources != null)
             {
-                if (lightSource?.DeformableLightSprite != null)
+                foreach (LightSource lightSource in LightSources)
                 {
-                    lightSource.DeformableLightSprite.Deform(CurrentSpriteDeformation);
+                    if (lightSource?.DeformableLightSprite != null)
+                    {
+                        lightSource.DeformableLightSprite.Deform(CurrentSpriteDeformation);
+                    }
                 }
             }
         }
 
         private void UpdatePositionalDeformation(PositionalDeformation positionalDeformation, float deltaTime)
         {
+            if (Triggers == null) { return; }
             Matrix matrix = ActivePrefab.DeformableSprite.GetTransform(
                                 Position,
                                 ActivePrefab.DeformableSprite.Origin,
@@ -258,7 +280,7 @@ namespace Barotrauma
                     Vector2 moveAmount = triggerer.WorldPosition - trigger.TriggererPosition[triggerer];
 
                     moveAmount = Vector2.Transform(moveAmount, rotationMatrix);
-                    moveAmount /= (ActivePrefab.DeformableSprite.Size * Scale);
+                    moveAmount /= ActivePrefab.DeformableSprite.Size * Scale;
                     moveAmount.Y = -moveAmount.Y;
 
                     positionalDeformation.Deform(trigger.WorldPosition, moveAmount, deltaTime, Matrix.Invert(matrix) *
@@ -269,9 +291,10 @@ namespace Barotrauma
 
         public void ClientRead(IReadMessage msg)
         {
+            if (Triggers == null) { return; }
             for (int i = 0; i < Triggers.Count; i++)
             {
-                if (!Triggers[i].UseNetworkSyncing) continue;
+                if (!Triggers[i].UseNetworkSyncing) { continue; }
                 Triggers[i].ClientRead(msg);
             }
         }

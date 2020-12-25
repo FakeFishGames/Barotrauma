@@ -446,7 +446,7 @@ namespace Barotrauma.Items.Components
                     //oxygen generators don't deteriorate if they're not running
                     if (oxyGenerator.CurrFlow > 0.1f) { return true; }
                 }
-                else if (ic is Powered powered)
+                else if (ic is Powered powered && !(powered is LightComponent))
                 {
                     if (powered.Voltage >= powered.MinVoltage) { return true; }
                 }
@@ -477,6 +477,7 @@ namespace Barotrauma.Items.Components
 
         private void UpdateFixAnimation(Character character)
         {
+            if (character == null || character.IsDead || character.IsIncapacitated) { return; }
             character.AnimController.UpdateUseItem(false, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((item.Condition / item.MaxCondition) % 0.1f));
         }
 

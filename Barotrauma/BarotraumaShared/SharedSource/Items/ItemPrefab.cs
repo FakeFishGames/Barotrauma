@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using Voronoi2;
 
 namespace Barotrauma
 {
@@ -465,12 +466,33 @@ namespace Barotrauma
             private set;
         } = new Dictionary<string, float>();
 
+        public Dictionary<string, FixedQuantityResourceInfo> LevelQuantity
+        {
+            get;
+        } = new Dictionary<string, FixedQuantityResourceInfo>();
+
+        public struct FixedQuantityResourceInfo
+        {
+            public int ClusterQuantity { get; }
+            public int ClusterSize { get; }
+            public bool IsIslandSpecifc { get; }
+
+            public FixedQuantityResourceInfo(int clusterQuantity, int clusterSize, bool isIslandSpecific)
+            {
+                ClusterQuantity = clusterQuantity;
+                ClusterSize = clusterSize;
+                IsIslandSpecifc = isIslandSpecific;
+            }
+        }
 
         [Serialize(true, false)]
         public bool CanFlipX { get; private set; }
         
         [Serialize(true, false)]
         public bool CanFlipY { get; private set; }
+        
+        [Serialize(false, false)]
+        public bool IsDangerous { get; private set; }
 
         public bool CanSpriteFlipX { get; private set; }
 
@@ -594,7 +616,6 @@ namespace Barotrauma
             originalName = element.GetAttributeString("name", "");
             name = originalName;
             identifier = element.GetAttributeString("identifier", "");
-
             if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Misc;
@@ -648,7 +669,7 @@ namespace Barotrauma
             
             if (string.IsNullOrEmpty(name))
             {
-                DebugConsole.ThrowError($"Unnamed item ({identifier})in {filePath}!");
+                DebugConsole.ThrowError($"Unnamed item ({identifier}) in {filePath}!");
             }
 
             DebugConsole.Log("    " + name);
@@ -771,6 +792,28 @@ namespace Barotrauma
                             MinimapIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
+                    case "infectedsprite":
+                        {
+                            string iconFolder = "";
+                            if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                            {
+                                iconFolder = Path.GetDirectoryName(filePath);
+                            }
+
+                            InfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
+                        }
+                        break;
+                    case "damagedinfectedsprite":
+                    {
+                        string iconFolder = "";
+                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                        {
+                            iconFolder = Path.GetDirectoryName(filePath);
+                        }
+
+                        DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
+                    }
+                        break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
                         if (!subElement.GetAttributeString("texture", "").Contains("/"))
@@ -874,12 +917,25 @@ namespace Barotrauma
 
                         break;
                     case "levelresource":
-                        foreach (XElement levelCommonnessElement in subElement.Elements())
+                        foreach (XElement levelCommonnessElement in subElement.GetChildElements("commonness"))
                         {
-                            string levelName = levelCommonnessElement.GetAttributeString("levelname", "").ToLowerInvariant();
-                            if (!LevelCommonness.ContainsKey(levelName))
+                            string levelName = levelCommonnessElement.GetAttributeString("leveltype", "").ToLowerInvariant();
+                            if (!levelCommonnessElement.GetAttributeBool("fixedquantity", false))
                             {
-                                LevelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                                if (!LevelCommonness.ContainsKey(levelName))
+                                {
+                                    LevelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                                }
+                            }
+                            else
+                            {
+                                if (!LevelQuantity.ContainsKey(levelName))
+                                {
+                                    LevelQuantity.Add(levelName, new FixedQuantityResourceInfo(
+                                        levelCommonnessElement.GetAttributeInt("clusterquantity", 0),
+                                        levelCommonnessElement.GetAttributeInt("clustersize", 0),
+                                        levelCommonnessElement.GetAttributeBool("isislandspecific", false)));
+                                }
                             }
                         }
                         break;
@@ -926,6 +982,16 @@ namespace Barotrauma
                 DebugConsole.ThrowError(
                     "Item prefab \"" + name + "\" has no identifier. All item prefabs have a unique identifier string that's used to differentiate between items during saving and loading.");
             }
+
+#if DEBUG
+            if (!Category.HasFlag(MapEntityCategory.Legacy) && !HideInMenus)
+            {
+                if (!string.IsNullOrEmpty(originalName))
+                {
+                    DebugConsole.AddWarning($"Item \"{(string.IsNullOrEmpty(identifier) ? name : identifier)}\" has a hard-coded name, and won't be localized to other languages.");
+                }
+            }
+#endif
 
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 

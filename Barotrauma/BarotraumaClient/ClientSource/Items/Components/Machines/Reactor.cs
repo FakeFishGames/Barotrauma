@@ -502,8 +502,16 @@ namespace Barotrauma.Items.Components
         {
             if (item.Removed) { return; }
 
+            Vector2 clampedOptimalTurbineOutput = optimalTurbineOutput;
+            Vector2 clampedAllowedTurbineOutput = allowedTurbineOutput;
+            if (clampedOptimalTurbineOutput.X > 100.0f)
+            {
+                clampedOptimalTurbineOutput = new Vector2(92.0f, 110.0f);
+                clampedAllowedTurbineOutput = new Vector2(85.0f, 110.0f);
+            }
+
             DrawMeter(spriteBatch, container.Rect,
-                turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), optimalTurbineOutput, allowedTurbineOutput);
+                turbineOutputMeter, TurbineOutput, new Vector2(0.0f, 100.0f), clampedOptimalTurbineOutput, clampedAllowedTurbineOutput);
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)

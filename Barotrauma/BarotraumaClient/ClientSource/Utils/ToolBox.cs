@@ -150,7 +150,7 @@ namespace Barotrauma
                 return Color.Black;
             }
 
-            if (t <= 0.0f) { return gradient[0]; }
+            if (t <= 0.0f || !MathUtils.IsValid(t)) { return gradient[0]; }
             if (t >= 1.0f) { return gradient[gradient.Length - 1]; }
 
             float scaledT = t * (gradient.Length - 1);

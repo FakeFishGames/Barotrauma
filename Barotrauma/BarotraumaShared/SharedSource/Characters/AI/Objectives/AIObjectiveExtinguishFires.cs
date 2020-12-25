@@ -38,6 +38,7 @@ namespace Barotrauma
         public static bool IsValidTarget(Hull hull, Character character)
         {
             if (hull == null) { return false; }
+            if (hull.IgnoreByAI) { return false; }
             if (hull.FireSources.None()) { return false; }
             if (hull.Submarine == null) { return false; }
             if (character.Submarine == null) { return false; }

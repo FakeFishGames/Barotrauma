@@ -49,6 +49,19 @@ namespace Barotrauma.Extensions
                 return count == 0 ? default : source.ElementAt(Rand.Range(0, count, randSync));
             }
         }
+        public static T GetRandom<T>(this IEnumerable<T> source, Random random)
+        {
+            if (source is IList<T> list)
+            {
+                int count = list.Count;
+                return count == 0 ? default : list[random.Next(0, count)];
+            }
+            else
+            {
+                int count = source.Count();
+                return count == 0 ? default : source.ElementAt(random.Next(0, count));
+            }
+        }
 
         public static T RandomElementByWeight<T>(this IEnumerable<T> source, Func<T, float> weightSelector, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {

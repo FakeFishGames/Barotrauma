@@ -149,8 +149,12 @@ namespace Barotrauma
                         continue;
                     }
                 }
-                if (position.PositionType != Level.PositionType.MainPath) { continue; }
-                if (Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(position.Position.ToVector2()))))
+                if (position.PositionType != Level.PositionType.MainPath && 
+                    position.PositionType != Level.PositionType.SidePath) 
+                { 
+                    continue; 
+                }
+                if (Level.Loaded.ExtraWalls.Any(w => w.IsPointInside(position.Position.ToVector2())))
                 {
                     removals.Add(position);
                 }
@@ -281,7 +285,8 @@ namespace Barotrauma
                         spawnPos = spawnPoint.WorldPosition; 
                     }
                 }
-                else if (chosenPosition.PositionType == Level.PositionType.MainPath && offset > 0)
+                else if ((chosenPosition.PositionType == Level.PositionType.MainPath || chosenPosition.PositionType == Level.PositionType.SidePath)
+                    && offset > 0)
                 {
                     Vector2 dir;
                     var waypoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == null);
@@ -381,9 +386,10 @@ namespace Barotrauma
                 //+1 because Range returns an integer less than the max value
                 int amount = Rand.Range(minAmount, maxAmount + 1);
                 monsters = new List<Character>();
-                float offsetAmount = spawnPosType == Level.PositionType.MainPath ? scatter : 100;
+                float offsetAmount = spawnPosType == Level.PositionType.MainPath || spawnPosType == Level.PositionType.SidePath ? scatter : 100;
                 for (int i = 0; i < amount; i++)
                 {
+                    string seed = Level.Loaded.Seed + i.ToString();
                     CoroutineManager.InvokeAfter(() =>
                     {
                         //round ended before the coroutine finished
@@ -392,7 +398,7 @@ namespace Barotrauma
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 
                         Vector2 pos = spawnPos.Value + Rand.Vector(offsetAmount);
-                        if (spawnPosType == Level.PositionType.MainPath)
+                        if (spawnPosType == Level.PositionType.MainPath || spawnPosType == Level.PositionType.SidePath)
                         {
                             if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)))
                             {
@@ -406,7 +412,7 @@ namespace Barotrauma
                             }
                         }
 
-                        monsters.Add(Character.Create(speciesName, pos, Level.Loaded.Seed + i.ToString(), null, false, true, true));
+                        monsters.Add(Character.Create(speciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true));
 
                         if (monsters.Count == amount)
                         {

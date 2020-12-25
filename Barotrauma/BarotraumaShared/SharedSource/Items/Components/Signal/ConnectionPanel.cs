@@ -21,6 +21,14 @@ namespace Barotrauma.Items.Components
 
         private List<ushort> disconnectedWireIds;
 
+        /// <summary>
+        /// Allows rewiring the connection panel despite rewiring being disabled on a server
+        /// </summary>
+        public bool AlwaysAllowRewiring
+        {
+            get { return item.Submarine?.Info.Type == SubmarineType.BeaconStation; }
+        }
+
         [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
         public bool Locked
         {
@@ -50,10 +58,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":                        
-                        Connections.Add(new Connection(subElement, this));
+                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
                         break;
                     case "output":
-                        Connections.Add(new Connection(subElement, this));
+                        Connections.Add(new Connection(subElement, this, IdRemap.DiscardId));
                         break;
                 }
             }
@@ -218,9 +226,9 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Load(XElement element, bool usePrefabValues)
+        public override void Load(XElement element, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(element, usePrefabValues);
+            base.Load(element, usePrefabValues, idRemap);
 
             List<Connection> loadedConnections = new List<Connection>();
 
@@ -229,10 +237,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString())
                 {
                     case "input":
-                        loadedConnections.Add(new Connection(subElement, this));
+                        loadedConnections.Add(new Connection(subElement, this, idRemap));
                         break;
                     case "output":
-                        loadedConnections.Add(new Connection(subElement, this));
+                        loadedConnections.Add(new Connection(subElement, this, idRemap));
                         break;
                 }
             }

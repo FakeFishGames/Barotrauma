@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(0.25f, true, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.25f, true, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, ValueStep = 0.1f, DecimalCount = 2)]
         public float Duration
         {
             get;
@@ -193,7 +193,7 @@ namespace Barotrauma.Items.Components
 
         partial void DischargeProjSpecific();
 
-        private void FindNodes(Vector2 worldPosition, float range)
+        public void FindNodes(Vector2 worldPosition, float range)
         {
             //see which submarines are within range so we can skip structures that are in far-away subs
             List<Submarine> submarinesInRange = new List<Submarine>();

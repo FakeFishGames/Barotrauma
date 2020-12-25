@@ -503,7 +503,7 @@ namespace Barotrauma
             Character character = characterInfo.Character;
             if (character == null || character.IsDead)
             {
-                if (character == null && characterInfo.IsNewHire)
+                if (character == null && characterInfo.IsNewHire && characterInfo.CauseOfDeath == null)
                 {
                     statusText = TextManager.Get("CampaignCrew.NewHire");
                     statusColor = GUI.Style.Blue;

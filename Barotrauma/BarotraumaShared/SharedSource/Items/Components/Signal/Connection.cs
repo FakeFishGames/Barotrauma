@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (recipientsDirty) RefreshRecipients();
+                if (recipientsDirty) { RefreshRecipients(); }
                 return recipients;
             }
         }
@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
             return "Connection (" + item.Name + ", " + Name + ")";
         }
 
-        public Connection(XElement element, ConnectionPanel connectionPanel)
+        public Connection(XElement element, ConnectionPanel connectionPanel, IdRemap idRemap)
         {
 
 #if CLIENT
@@ -150,8 +150,11 @@ namespace Barotrauma.Items.Components
                         if (index == -1) break;
 
                         int id = subElement.GetAttributeInt("w", 0);
-                        if (id < 0) id = 0;
-                        wireId[index] = (ushort)id;
+                        if (id < 0)
+                        {
+                            id = 0;
+                        }
+                        wireId[index] = idRemap.GetOffsetId(id);
 
                         break;
 
@@ -160,6 +163,11 @@ namespace Barotrauma.Items.Components
                         break;
                 }
             }
+        }
+
+        public void SetRecipientsDirty()
+        {
+            recipientsDirty = true;
         }
 
         private void RefreshRecipients()
@@ -304,6 +312,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (wires[i].Item.body != null) wires[i].Item.body.Enabled = false;
                     wires[i].Connect(this, false, false);
+                    wires[i].FixNodeEnds();
                 }
             }
         }

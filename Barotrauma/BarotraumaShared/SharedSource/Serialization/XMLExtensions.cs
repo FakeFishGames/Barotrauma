@@ -242,7 +242,7 @@ namespace Barotrauma
 
             try
             {
-                val = Int32.Parse(element.Attribute(name).Value);
+                val = Int32.Parse(element.Attribute(name).Value, CultureInfo.InvariantCulture);
             }
             catch (Exception e)
             {

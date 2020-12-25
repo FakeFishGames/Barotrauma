@@ -212,23 +212,21 @@ namespace Barotrauma.Items.Components
             // TODO, This works fine as of now but if GUI.PreventElementOverlap ever gets fixed this block of code may become obsolete or detrimental.
             // Only do this if there's only one linked component. If you link more containers then may
             // GUI.PreventElementOverlap have mercy on your HUD layout
-            if (item.linkedTo.Count(entity => entity is Item item && item.DisplaySideBySideWhenLinked) == 1)
+            if (GuiFrame != null && item.linkedTo.Count(entity => entity is Item item && item.DisplaySideBySideWhenLinked) == 1)
             {
                 foreach (MapEntity linkedTo in item.linkedTo)
                 {
-                    if (!(linkedTo is Item linkedItem)) continue;
-                    if (!linkedItem.Components.Any()) continue;
-                
-                    var itemContainer = linkedItem.Components.First();
-                    if (itemContainer == null) { continue; }
+                    if (!(linkedTo is Item linkedItem) || !linkedItem.DisplaySideBySideWhenLinked) { continue; }
+                    if (!linkedItem.Components.Any()) { continue; }
 
-                    if (!itemContainer.Item.DisplaySideBySideWhenLinked) continue;
+                    var itemContainer = linkedItem.GetComponent<ItemContainer>();
+                    if (itemContainer?.GuiFrame == null || itemContainer.AllowUIOverlap) { continue; }
 
                     // how much spacing do we want between the components
                     var padding = (int) (8 * GUI.Scale);
                     // Move the linked container to the right and move the fabricator to the left
-                    itemContainer.GuiFrame.RectTransform.AbsoluteOffset = new Point(GuiFrame.Rect.Width / -2 - padding, 0);
-                    GuiFrame.RectTransform.AbsoluteOffset = new Point(itemContainer.GuiFrame.Rect.Width / 2 + padding, 0);
+                    itemContainer.GuiFrame.RectTransform.AbsoluteOffset = new Point(-100, 0);
+                    GuiFrame.RectTransform.AbsoluteOffset = new Point(100, 0);
                 }
             }
             

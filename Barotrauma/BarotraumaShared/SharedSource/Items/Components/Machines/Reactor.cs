@@ -137,7 +137,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Serialize(0.2f, true, description: "How fast the condition of the contained fuel rods deteriorates per second."), Editable(0.0f, 1000.0f)]
+        [Serialize(0.2f, true, description: "How fast the condition of the contained fuel rods deteriorates per second."), Editable(0.0f, 1000.0f, decimals: 3)]
         public float FuelConsumptionRate
         {
             get { return fuelConsumptionRate; }
@@ -399,6 +399,8 @@ namespace Barotrauma.Items.Components
 
             //fission rate is clamped to the amount of available fuel
             float maxFissionRate = Math.Min(prevAvailableFuel, 100.0f);
+            if (maxFissionRate >= 100.0f) { return false; }
+
             float maxTurbineOutput = 100.0f;
 
             //calculate the maximum output if the fission rate is cranked as high as it goes and turbine output is at max
@@ -589,7 +591,7 @@ namespace Barotrauma.Items.Components
                     if (objective.SubObjectives.None())
                     {
                         int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
-                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC);
+                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC, dropItemOnDeselected: true);
                         character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
                     }
                     return false;
@@ -604,10 +606,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (item != null && container.ContainableItems.Any(ri => ri.MatchesItem(item)))
                             {
-                                if (!character.Inventory.TryPutItem(item, character, allowedSlots: item.AllowedSlots))
-                                {
-                                    item.Drop(character);
-                                }
+                                item.Drop(character);
                                 break;
                             }
                         }

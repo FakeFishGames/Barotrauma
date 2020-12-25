@@ -14,20 +14,29 @@ namespace Barotrauma
         Salvage = 0x1,
         Monster = 0x2,
         Cargo = 0x4,
-        Combat = 0x8,
-        All = 0xf
+        Beacon = 0x8,
+        Nest = 0x10,
+        Mineral = 0x20,
+        Combat = 0x40,
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat
     }
 
     partial class MissionPrefab
     {
         public static readonly List<MissionPrefab> List = new List<MissionPrefab>();
 
-        private static readonly Dictionary<MissionType, Type> missionClasses = new Dictionary<MissionType, Type>()
+        public static readonly Dictionary<MissionType, Type> CoOpMissionClasses = new Dictionary<MissionType, Type>()
         {
             { MissionType.Salvage, typeof(SalvageMission) },
             { MissionType.Monster, typeof(MonsterMission) },
             { MissionType.Cargo, typeof(CargoMission) },
-            { MissionType.Combat, typeof(CombatMission) },
+            { MissionType.Beacon, typeof(BeaconMission) },
+            { MissionType.Nest, typeof(NestMission) },
+            { MissionType.Mineral, typeof(MineralMission) },
+        };
+        public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
+        {
+            { MissionType.Combat, typeof(CombatMission) }
         };
         
         private readonly ConstructorInfo constructor;
@@ -146,15 +155,32 @@ namespace Barotrauma
             Headers = new List<string>();
             Messages = new List<string>();
             AllowedLocationTypes = new List<Pair<string, string>>();
+
+            for (int i = 0; i < 100; i++)
+            {
+                string header = TextManager.Get("MissionHeader" + i + "." + TextIdentifier, true);
+                string message = TextManager.Get("MissionMessage" + i + "." + TextIdentifier, true);
+                if (!string.IsNullOrEmpty(message))
+                {
+                    Headers.Add(header);
+                    Messages.Add(message);
+                }
+            }
+
+            int messageIndex = 0;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "message":
-                        int index = Messages.Count;
-
-                        Headers.Add(TextManager.Get("MissionHeader" + index + "." + TextIdentifier, true) ?? subElement.GetAttributeString("header", ""));
-                        Messages.Add(TextManager.Get("MissionMessage" + index + "." + TextIdentifier, true) ?? subElement.GetAttributeString("text", ""));
+                        if (messageIndex > Headers.Count - 1)
+                        {
+                            Headers.Add(string.Empty);
+                            Messages.Add(string.Empty);
+                        }
+                        Headers[messageIndex] = TextManager.Get("MissionHeader" + messageIndex + "." + TextIdentifier, true) ?? subElement.GetAttributeString("header", "");
+                        Messages[messageIndex] = TextManager.Get("MissionMessage" + messageIndex + "." + TextIdentifier, true) ?? subElement.GetAttributeString("text", "");
+                        messageIndex++;
                         break;
                     case "locationtype":
                         AllowedLocationTypes.Add(new Pair<string, string>(
@@ -211,7 +237,18 @@ namespace Barotrauma
                 return;
             }
 
-            constructor = missionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+            if (CoOpMissionClasses.ContainsKey(Type))
+            {
+                constructor = CoOpMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+            }
+            else if (PvPMissionClasses.ContainsKey(Type))
+            {
+                constructor = PvPMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+            }
+            else
+            {
+                DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - unsupported mission type \"" + Type.ToString() + "\"");
+            }
 
             InitProjSpecific(element);
         }

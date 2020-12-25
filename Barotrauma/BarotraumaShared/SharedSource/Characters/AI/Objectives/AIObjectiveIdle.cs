@@ -21,20 +21,31 @@ namespace Barotrauma
             set
             {
                 behavior = value;
+                if (behavior == BehaviorType.StayInHull && character.TeamID != Character.TeamType.FriendlyNPC)
+                {
+                    DebugConsole.NewMessage($"AIObjectiveIdle.BehaviorType.StayInHull is implemented only for outpost NPCs. Using passive behavior for {character.Name} ({character.Info.Job.Prefab.Identifier})", color: Color.Red);
+                    behavior = BehaviorType.Passive;
+                }
                 switch (behavior)
                 {
-                    case BehaviorType.Active:
-                        newTargetIntervalMin = 10;
-                        newTargetIntervalMax = 20;
-                        standStillMin = 2;
-                        standStillMax = 10;
-                        break;
                     case BehaviorType.Passive:
                     case BehaviorType.StayInHull:
                         newTargetIntervalMin = 60;
                         newTargetIntervalMax = 120;
                         standStillMin = 30;
                         standStillMax = 60;
+                        break;
+                    case BehaviorType.Active:
+                        newTargetIntervalMin = 40;
+                        newTargetIntervalMax = 60;
+                        standStillMin = 20;
+                        standStillMax = 40;
+                        break;
+                    case BehaviorType.Patrol:
+                        newTargetIntervalMin = 15;
+                        newTargetIntervalMax = 30;
+                        standStillMin = 5;
+                        standStillMax = 10;
                         break;
                 }
             }
@@ -49,9 +60,10 @@ namespace Barotrauma
 
         public enum BehaviorType
         {
-            Active,
+            Patrol,
             Passive,
-            StayInHull
+            StayInHull,
+            Active
         }
         public Hull TargetHull { get; set; }
         private Hull currentTarget;
@@ -307,14 +319,14 @@ namespace Barotrauma
         public void Wander(float deltaTime)
         {
             if (character.IsClimbing) { return; }
-            if (!character.AnimController.InWater)
+            var currentHull = character.CurrentHull;
+            if (!character.AnimController.InWater && currentHull != null)
             {
                 standStillTimer -= deltaTime;
                 if (standStillTimer > 0.0f)
                 {
                     walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
-                    var currentHull = character.CurrentHull;
-                    if (currentHull != null && currentHull.Rect.Width > IndoorsSteeringManager.smallRoomSize / 2 && tooCloseCharacter == null)
+                    if (currentHull.Rect.Width > IndoorsSteeringManager.smallRoomSize / 2 && tooCloseCharacter == null)
                     {
                         foreach (Character c in Character.CharacterList)
                         {
@@ -434,10 +446,11 @@ namespace Barotrauma
                     targetHulls.Add(hull);
                     float weight = hull.RectWidth;
                     // Prefer rooms that are closer. Avoid rooms that are not in the same level.
+                    // If the behavior is active, prefer rooms that are not close.
                     float yDist = Math.Abs(character.WorldPosition.Y - hull.WorldPosition.Y);
                     yDist = yDist > 100 ? yDist * 5 : 0;
                     float dist = Math.Abs(character.WorldPosition.X - hull.WorldPosition.X) + yDist;
-                    float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 2500, dist));
+                    float distanceFactor = behavior == BehaviorType.Patrol ? MathHelper.Lerp(1, 0, MathUtils.InverseLerp(2500, 0, dist)) : MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 2500, dist));
                     float waterFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, 100, hull.WaterPercentage * 2));
                     weight *= distanceFactor * waterFactor;
                     hullWeights.Add(weight);
@@ -474,7 +487,7 @@ namespace Barotrauma
                     foreach (Item item in Item.ItemList)
                     {
                         if (item.CurrentHull != hull) { continue; }
-                        if (AIObjectiveCleanupItems.IsValidTarget(item, character) && !ignoredItems.Contains(item))
+                        if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true) && !ignoredItems.Contains(item))
                         {
                             itemsToClean.Add(item);
                         }

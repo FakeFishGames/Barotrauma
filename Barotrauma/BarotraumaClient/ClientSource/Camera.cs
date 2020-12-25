@@ -328,9 +328,9 @@ namespace Barotrauma
                 {
                     previousOffset = offset;
                 }
-                                
+
                 //how much to zoom out (zoom completely out when offset is 1000)
-                float zoomOutAmount = Math.Min(offset.Length() / 1000.0f, 1.0f);                
+                float zoomOutAmount = GetZoomAmount(offset);        
                 //zoom amount when resolution is not taken into account
                 float unscaledZoom = MathHelper.Lerp(DefaultZoom, MinZoom, zoomOutAmount);
                 //zoom with resolution taken into account (zoom further out on smaller resolutions)
@@ -408,6 +408,16 @@ namespace Barotrauma
             coords.Y = -coords.Y;
             //Vector2 screenCoords = Vector2.Transform(coords, transform);
             return Vector2.Transform(coords, transform);
+        }
+
+        private float GetZoomAmount(Vector2 offset)
+        {
+            return Math.Min(offset.Length() / 1000.0f, 1.0f);
+        }
+
+        public float GetZoomAmountFromPrevious()
+        {
+            return GetZoomAmount(previousOffset);
         }
     }
 }

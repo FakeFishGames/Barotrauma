@@ -10,7 +10,7 @@ namespace Barotrauma
             foreach (Item item in items)
             {
                 item.WriteSpawnData(msg, 
-                    item.OriginalID, 
+                    item.ID, 
                     parentInventoryIDs.ContainsKey(item) ? parentInventoryIDs[item] : Entity.NullEntityID,
                     parentItemContainerIndices.ContainsKey(item) ? parentItemContainerIndices[item] : (byte)0);
             }

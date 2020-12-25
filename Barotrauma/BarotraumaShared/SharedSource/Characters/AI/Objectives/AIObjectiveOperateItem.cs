@@ -157,11 +157,20 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            // Don't allow to operate an item that someone with a better skills already operates, unless this is an order
-            if (objectiveManager.CurrentOrder != this && HumanAIController.IsItemOperatedByAnother(target, out _))
+            // If this is not an order...
+            if (objectiveManager.CurrentOrder != this)
             {
-                // Don't abandon
-                return;
+                // Don't allow to operate an item that someone with a better skills already operates
+                if (HumanAIController.IsItemOperatedByAnother(target, out _))
+                {
+                    // Don't abandon
+                    return;
+                }
+                if (component.Item.IgnoreByAI || (useController && controller.Item.IgnoreByAI))
+                {
+                    Abandon = true;
+                    return;
+                }
             }
             if (operateTarget != null)
             {

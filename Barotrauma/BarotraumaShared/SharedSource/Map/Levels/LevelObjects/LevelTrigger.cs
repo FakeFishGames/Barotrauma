@@ -186,6 +186,18 @@ namespace Barotrauma
             get;
             set;
         }
+
+        public string InfectIdentifier
+        {
+            get;
+            set;
+        }
+
+        public float InfectionChance
+        {
+            get;
+            set;
+        }
                 
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f, string parentDebugName = "")
         {
@@ -211,6 +223,9 @@ namespace Barotrauma
             }
 
             cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
+            
+            InfectIdentifier = element.GetAttributeString("infectidentifier", null);
+            InfectionChance = element.GetAttributeFloat("infectionchance", 0.05f);
 
             stayTriggeredDelay = element.GetAttributeFloat("staytriggereddelay", 0.0f);
             randomTriggerInterval = element.GetAttributeFloat("randomtriggerinterval", 0.0f);
@@ -513,8 +528,13 @@ namespace Barotrauma
                         float structureDamage = attack.GetStructureDamage(deltaTime);
                         if (structureDamage > 0.0f)
                         {
-                            Explosion.RangedStructureDamage(worldPosition, attack.DamageRange, structureDamage);
+                            Explosion.RangedStructureDamage(worldPosition, attack.DamageRange, structureDamage, levelWallDamage: 0.0f);
                         }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(InfectIdentifier))
+                    {
+                        submarine.AttemptBallastFloraInfection(InfectIdentifier, deltaTime, InfectionChance);
                     }
                 }
 
@@ -598,7 +618,7 @@ namespace Barotrauma
 
         public Vector2 GetWaterFlowVelocity()
         {
-            if (Force == Vector2.Zero) return Vector2.Zero;
+            if (Force == Vector2.Zero || ForceMode == TriggerForceMode.LimitVelocity) { return Vector2.Zero; }
             
             Vector2 vel = Force;
             if (ForceMode == TriggerForceMode.Acceleration)

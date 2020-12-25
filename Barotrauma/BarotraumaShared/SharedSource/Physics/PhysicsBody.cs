@@ -254,6 +254,8 @@ namespace Barotrauma
         /// </summary>
         public float TransformedRotation => TransformRotation(Rotation, Dir);
 
+        public float TransformRotation(float rotation) => TransformRotation(rotation, dir);
+
         public static float TransformRotation(float rot, float dir) => dir < 0 ? rot - MathHelper.Pi : rot;
 
         public Vector2 LinearVelocity
@@ -711,9 +713,10 @@ namespace Barotrauma
 
         public void SetPrevTransform(Vector2 simPosition, float rotation)
         {
-            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
-            if (!IsValidValue(rotation, "rotation")) return;
-
+#if DEBUG || UNSTABLE
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) { return; }
+            if (!IsValidValue(rotation, "rotation")) { return; }
+#endif
             prevPosition = simPosition;
             prevRotation = rotation;
         }

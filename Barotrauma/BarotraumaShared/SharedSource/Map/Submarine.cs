@@ -152,6 +152,47 @@ namespace Barotrauma
             }
         }
 
+        private float? realWorldCrushDepth;
+        public float RealWorldCrushDepth
+        {
+            get 
+            {
+                if (!realWorldCrushDepth.HasValue)
+                {
+                    realWorldCrushDepth = float.PositiveInfinity;
+                    foreach (Structure structure in Structure.WallList)
+                    {
+                        if (structure.Submarine != this || !structure.HasBody || structure.Indestructible) { continue; }
+                        realWorldCrushDepth = Math.Min(structure.CrushDepth, realWorldCrushDepth.Value);
+                    }
+                    if (Info.SubmarineClass == SubmarineClass.DeepDiver)
+                    {
+                        realWorldCrushDepth *= 1.2f;
+                    }
+                }
+                return realWorldCrushDepth.Value;
+            }
+        }
+
+        /// <summary>
+        /// How deep down the sub is from the surface of Europa in meters (affected by level type, does not correspond to "actual" coordinate systems)
+        /// </summary>
+        public float RealWorldDepth
+        {
+            get 
+            {
+                if (Level.Loaded?.GenerationParams == null)
+                {
+                    return -WorldPosition.Y * Physics.DisplayToRealWorldRatio;
+                }
+                else if (GameMain.GameSession?.Campaign == null)
+                {
+                    return (-(WorldPosition.Y - Level.Loaded.GenerationParams.Height) + 80000.0f) * Physics.DisplayToRealWorldRatio;
+                }
+                return Level.Loaded.GetRealWorldDepth(WorldPosition.Y);
+            }
+        }
+
         public bool AtEndPosition
         {
             get 
@@ -210,7 +251,11 @@ namespace Barotrauma
 
         public bool AtDamageDepth
         {
-            get { return subBody != null && subBody.AtDamageDepth; }
+            get 
+            {
+                if (Level.Loaded == null || subBody == null) { return false; }
+                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth; 
+            }
         }
 
         public override string ToString()
@@ -234,6 +279,45 @@ namespace Barotrauma
             float price = volume / 500.0f + itemValue / 100.0f;
             System.Diagnostics.Debug.Assert(price >= 0);
             return Math.Max(minPrice, (int)price);
+        }
+
+        private float ballastFloraTimer;
+        public void AttemptBallastFloraInfection(string identifier, float deltaTime, float probability)
+        {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
+            if (ballastFloraTimer < 1f)
+            {
+                ballastFloraTimer += deltaTime;
+                return;
+            }
+
+            ballastFloraTimer = 0;
+            if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) >= probability) { return; }
+
+            List<Pump> pumps = new List<Pump>();
+            List<Item> allItems = GetItems(true);
+
+            bool anyHasTag = allItems.Any(i => i.HasTag("ballast"));
+
+            foreach (Item item in allItems)
+            {
+                if ((!anyHasTag || item.HasTag("ballast")) && item.GetComponent<Pump>() is { } pump)
+                {
+                    pumps.Add(pump);
+                }
+            }
+
+            if (!pumps.Any()) { return; }
+
+            Pump randomPump = pumps.GetRandom(Rand.RandSync.Unsynced);
+            if (randomPump.IsOn && randomPump.HasPower && randomPump.FlowPercentage > 0 && randomPump.Item.Condition > 0.0f)
+            {
+                randomPump.InfectBallast(identifier);
+#if SERVER
+                randomPump.Item.CreateServerEvent(randomPump);
+#endif
+            }
         }
 
         public void MakeWreck()
@@ -732,7 +816,7 @@ namespace Barotrauma
         /// check visibility between two points (in sim units)
         /// </summary>
         /// <returns>a physics body that was between the points (or null)</returns>
-        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false, bool ignoreSensors = true, bool ignoreDisabledWalls = true)
+        public static Body CheckVisibility(Vector2 rayStart, Vector2 rayEnd, bool ignoreLevel = false, bool ignoreSubs = false, bool ignoreSensors = true, bool ignoreDisabledWalls = true, bool ignoreBranches = true)
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
@@ -753,6 +837,7 @@ namespace Barotrauma
                     && !fixture.CollisionCategories.HasFlag(Physics.CollisionWall)
                     && !fixture.CollisionCategories.HasFlag(Physics.CollisionRepair)) { return -1; }
                 if (ignoreSubs && fixture.Body.UserData is Submarine) { return -1; }
+                if (ignoreBranches && fixture.Body.UserData is VineTile) { return -1; }
                 if (fixture.Body.UserData as string == "ruinroom") { return -1; }
                 if (fixture.Body.UserData is Structure structure)
                 {
@@ -1171,9 +1256,11 @@ namespace Barotrauma
             return new Rectangle((int)bounds.X, (int)bounds.Y, (int)(bounds.Z - bounds.X), (int)(bounds.Y - bounds.W));
         }
 
-        public Submarine(SubmarineInfo info, bool showWarningMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null) : base(null)
+        public Submarine(SubmarineInfo info, bool showWarningMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
         {
             Loading = true;
+
+            loaded.Add(this);
 
             Info = new SubmarineInfo(info);
 
@@ -1191,24 +1278,29 @@ namespace Barotrauma
                 HiddenSubPosition += Vector2.UnitY * (sub.Borders.Height + 5000.0f);
             }
 
-            IdOffset = 0;
-            foreach (MapEntity me in MapEntity.mapEntityList)
-            {
-                IdOffset = Math.Max(IdOffset, me.ID);
-            }
+            IdOffset = IdRemap.DetermineNewOffset();
 
             List<MapEntity> newEntities = new List<MapEntity>();
             if (loadEntities == null)
             {
                 if (Info.SubmarineElement != null)
                 {
-                    newEntities = MapEntity.LoadAll(this, Info.SubmarineElement, Info.FilePath);
+                    newEntities = MapEntity.LoadAll(this, Info.SubmarineElement, Info.FilePath, IdOffset);
                 }
             }
             else
             {
                 newEntities = loadEntities(this);
                 newEntities.ForEach(me => me.Submarine = this);
+            }
+
+            if (newEntities != null)
+            {
+                foreach (var e in newEntities)
+                {
+                    if (linkedRemap != null) { e.ResolveLinks(linkedRemap); }
+                    e.unresolvedLinkedToID = null;
+                }
             }
 
             Vector2 center = Vector2.Zero;
@@ -1279,8 +1371,6 @@ namespace Barotrauma
                 }
             }
 
-            loaded.Add(this);
-
             if (entityGrid != null)
             {
                 Hull.EntityGrids.Remove(entityGrid);
@@ -1290,7 +1380,7 @@ namespace Barotrauma
 
             for (int i = 0; i < MapEntity.mapEntityList.Count; i++)
             {
-                if (MapEntity.mapEntityList[i].Submarine != this) continue;
+                if (MapEntity.mapEntityList[i].Submarine != this) { continue; }
                 MapEntity.mapEntityList[i].Move(HiddenSubPosition);
             }
 
@@ -1313,6 +1403,11 @@ namespace Barotrauma
                 }
             }
 
+            if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
+            {
+                GameMain.GameSession.Campaign.UpgradeManager.OnUpgradesChanged += ResetCrushDepth;
+            }
+
 #if CLIENT
             GameMain.LightManager.OnMapLoaded();
 #endif
@@ -1333,17 +1428,25 @@ namespace Barotrauma
                     if (lightComponent != null) lightComponent.LightColor = new Color(lightComponent.LightColor, lightComponent.LightColor.A / 255.0f * 0.5f);
                 }
             }
-
-            ID = (ushort)(ushort.MaxValue - 1 - Submarine.loaded.IndexOf(this));
         }
 
-        public static Submarine Load(SubmarineInfo info, bool unloadPrevious)
+        protected override ushort DetermineID(ushort id, Submarine submarine)
+        {
+            return (ushort)(ReservedIDStart - Submarine.loaded.Count);
+        }
+
+        public static Submarine Load(SubmarineInfo info, bool unloadPrevious, IdRemap linkedRemap = null)
         {
             if (unloadPrevious) { Unload(); }
 
-            Submarine sub = new Submarine(info, false);
+            Submarine sub = new Submarine(info, false, linkedRemap: linkedRemap);
 
             return sub;
+        }
+
+        private void ResetCrushDepth()
+        {
+            realWorldCrushDepth = null;
         }
 
         public static void RepositionEntities(Vector2 moveAmount, IEnumerable<MapEntity> entities)
@@ -1444,7 +1547,7 @@ namespace Barotrauma
 
             visibleEntities = null;
 
-            if (GameMain.GameScreen.Cam != null) GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+            if (GameMain.GameScreen.Cam != null) { GameMain.GameScreen.Cam.TargetPos = Vector2.Zero; }
 
             RemoveAll();
 
@@ -1482,6 +1585,11 @@ namespace Barotrauma
             subBody?.Remove();
             subBody = null;
 
+            if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
+            {
+                GameMain.GameSession.Campaign.UpgradeManager.OnUpgradesChanged -= ResetCrushDepth;
+            }
+
             if (entityGrid != null)
             {
                 Hull.EntityGrids.Remove(entityGrid);
@@ -1516,7 +1624,7 @@ namespace Barotrauma
             }
         }
 
-        private HashSet<PathNode> obstructedNodes = new HashSet<PathNode>();
+        private readonly Dictionary<Submarine, HashSet<PathNode>> obstructedNodes = new Dictionary<Submarine, HashSet<PathNode>>();
 
         /// <summary>
         /// Permanently disables obstructed waypoints obstructed by the level.
@@ -1553,7 +1661,7 @@ namespace Barotrauma
         {
             if (otherSub == null) { return; }
             if (otherSub == this) { return; }
-            // Check collisions to other subs. Currently only walls are taken into account.
+            // Check collisions to other subs.
             foreach (var node in OutdoorNodes)
             {
                 if (node == null || node.Waypoint == null) { continue; }
@@ -1572,8 +1680,13 @@ namespace Barotrauma
                         {
                             connectedWp.isObstructed = true;
                             wp.isObstructed = true;
-                            obstructedNodes.Add(node);
-                            obstructedNodes.Add(connection);
+                            if (!obstructedNodes.TryGetValue(otherSub, out HashSet<PathNode> nodes))
+                            {
+                                nodes = new HashSet<PathNode>();
+                                obstructedNodes.Add(otherSub, nodes);
+                            }
+                            nodes.Add(node);
+                            nodes.Add(connection);
                             break;
                         }
                     }
@@ -1584,13 +1697,14 @@ namespace Barotrauma
         /// <summary>
         /// Only affects temporarily disabled waypoints.
         /// </summary>
-        public void EnableObstructedWaypoints()
+        public void EnableObstructedWaypoints(Submarine otherSub)
         {
-            foreach (var node in obstructedNodes)
+            if (obstructedNodes.TryGetValue(otherSub, out HashSet<PathNode> nodes))
             {
-                node.Waypoint.isObstructed = false;
+                nodes.ForEach(n => n.Waypoint.isObstructed = false);
+                nodes.Clear();
+                obstructedNodes.Remove(otherSub);
             }
-            obstructedNodes.Clear();
         }
     }
 }

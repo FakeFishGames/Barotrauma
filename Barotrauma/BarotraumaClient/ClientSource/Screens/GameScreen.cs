@@ -186,7 +186,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             graphics.SetRenderTarget(null);
-            GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam, renderTarget);
+            GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam, renderTarget);
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTargetBackground);
