@@ -372,6 +372,9 @@ namespace Barotrauma.CharacterEditor
         {
             base.Update(deltaTime);
             if (Wizard.instance != null) { return; }
+
+            GameMain.LightManager?.Update((float)deltaTime);
+
             spriteSheetRect = CalculateSpritesheetRectangle();
             // Handle shortcut keys
             if (PlayerInput.KeyHit(Keys.F1))
@@ -787,7 +790,7 @@ namespace Barotrauma.CharacterEditor
             if (GameMain.LightManager.LightingEnabled)
             {
                 GameMain.LightManager.ObstructVision = Character.Controlled.ObstructVision;
-                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+                GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam);
                 GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
             }
             base.Draw(deltaTime, graphics, spriteBatch);

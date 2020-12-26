@@ -5,8 +5,6 @@ namespace Barotrauma
 {
     partial class HumanAIController : AIController
     {
-        public static bool debugai;
-
         partial void InitProjSpecific()
         {
             /*if (GameMain.GameSession != null && GameMain.GameSession.CrewManager != null)

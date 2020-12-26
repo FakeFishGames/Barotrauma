@@ -216,6 +216,9 @@ namespace Barotrauma
 
                 characterData.ForEach(cd => cd.HasSpawned = false);
 
+                petsElement = new XElement("pets");
+                PetBehavior.SavePets(petsElement);
+
                 //remove all items that are in someone's inventory
                 foreach (Character c in Character.CharacterList)
                 {
@@ -236,9 +239,6 @@ namespace Barotrauma
                     
                     c.Inventory.DeleteAllItems();
                 }
-
-                petsElement = new XElement("pets");
-                PetBehavior.SavePets(petsElement);
 
                 yield return CoroutineStatus.Running;
 

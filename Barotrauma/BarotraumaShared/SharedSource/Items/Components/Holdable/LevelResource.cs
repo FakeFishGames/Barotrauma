@@ -33,6 +33,9 @@ namespace Barotrauma.Items.Components
                 {
                     return;
                 }
+
+                if (holdable == null) { return; }
+
                 deattachTimer = Math.Max(0.0f, value);
 #if SERVER
                 if (deattachTimer >= DeattachDuration)
@@ -57,7 +60,7 @@ namespace Barotrauma.Items.Components
 
         public bool Attached
         {
-            get { return holdable == null ? false : holdable.Attached; }
+            get { return holdable != null && holdable.Attached; }
         }
                 
         public LevelResource(Item item, XElement element) : base(item, element)
@@ -67,14 +70,14 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!holdable.Attached)
+            if (holdable != null && !holdable.Attached)
             {
                 trigger.Enabled = false;
                 IsActive = false;
             }
             else
             {
-                if (Vector2.DistanceSquared(item.SimPosition, trigger.SimPosition) > 0.01f)
+                if (trigger != null && Vector2.DistanceSquared(item.SimPosition, trigger.SimPosition) > 0.01f)
                 {
                     trigger.SetTransform(item.SimPosition, 0.0f);
                 }
@@ -87,7 +90,6 @@ namespace Barotrauma.Items.Components
             holdable = item.GetComponent<Holdable>();
             if (holdable == null)
             {
-                DebugConsole.ThrowError("Error while initializing item \"" + item.Name + "\". Level resources require a Holdable component.");
                 IsActive = false;
                 return;
             }

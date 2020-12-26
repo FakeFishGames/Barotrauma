@@ -46,7 +46,7 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                Priority = objectiveManager.CurrentOrder is AIObjectiveGoTo && HumanAIController.HasDivingSuit(character) ? 0 : 100;
+                Priority = (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.Objectives.Any(o => o is AIObjectiveCombat)) && HumanAIController.HasDivingSuit(character) ? 0 : 100;
             }
             else
             {

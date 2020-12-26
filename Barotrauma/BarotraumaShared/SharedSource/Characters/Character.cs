@@ -85,6 +85,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsRemotePlayer { get; set; }
 
+        public bool IsLocalPlayer => Controlled == this;
         public bool IsPlayer => Controlled == this || IsRemotePlayer;
         public bool IsBot => !IsPlayer && AIController is HumanAIController humanAI && humanAI.Enabled;
 
@@ -318,6 +319,7 @@ namespace Barotrauma
             set
             {
                 hideFaceTimer = MathHelper.Clamp(hideFaceTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+                if (info != null && info.IsDisguisedAsAnother != HideFace) info.CheckDisguiseStatus(true);
             }
         }
 
@@ -758,9 +760,9 @@ namespace Barotrauma
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
         {
-            return Create(characterInfo.SpeciesName, position, seed, characterInfo, isRemotePlayer, hasAi, true, ragdoll);
+            return Create(characterInfo.SpeciesName, position, seed, characterInfo, id, isRemotePlayer, hasAi, true, ragdoll);
         }
 
         /// <summary>
@@ -770,11 +772,12 @@ namespace Barotrauma
         /// <param name="position">Position in display units.</param>
         /// <param name="seed">RNG seed to use if the character config has randomizable parameters.</param>
         /// <param name="characterInfo">The name, gender, etc of the character. Only used for humans, and if the parameter is not given, a random CharacterInfo is generated.</param>
+        /// <param name="id">ID to assign to the character. If set to 0, automatically find an available ID.</param>
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
+        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -804,7 +807,7 @@ namespace Barotrauma
             }
             else
             {
-                newCharacter = new Character(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                newCharacter = new Character(speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isRemotePlayer, ragdollParams: ragdoll);
             }
 
             float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
@@ -844,8 +847,8 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
-            : base(null)
+        protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
+            : base(null, id)
         {
             prefab = CharacterPrefab.FindBySpeciesName(speciesName);
 
@@ -1486,7 +1489,7 @@ namespace Barotrauma
                 AnimController.ReleaseStuckLimbs();
                 if (AIController != null && AIController is EnemyAIController enemyAI)
                 {
-                    enemyAI.LatchOntoAI?.DeattachFromBody();
+                    enemyAI.LatchOntoAI?.DeattachFromBody(reset: true);
                 }
             }
 #endif
@@ -1541,6 +1544,7 @@ namespace Barotrauma
                 var validLimbs = AnimController.Limbs.Where(l =>
                 {
                     if (l.IsSevered || l.IsStuck) { return false; }
+                    if (l.Disabled) { return false; }
                     var attack = l.attack;
                     if (attack == null) { return false; }
                     if (attack.CoolDownTimer > 0) { return false; }
@@ -1665,6 +1669,7 @@ namespace Barotrauma
                 foreach (Limb limb in target.AnimController.Limbs)
                 {
                     if (limb.IsSevered || limb == target.AnimController.MainLimb) { continue; }
+                    if (limb.Hidden) { continue; }
                     Vector2 limbDir = limb.WorldPosition - WorldPosition;
                     float leftDot = Vector2.Dot(limbDir, leftDir);
                     if (leftDot > leftMostDot)
@@ -1935,9 +1940,9 @@ namespace Barotrauma
             return checkVisibility ? CanSeeCharacter(c) : true;
         }
 
-        public bool CanInteractWith(Item item)
+        public bool CanInteractWith(Item item, bool checkLinked = true)
         {
-            return CanInteractWith(item, out _, checkLinked: true);
+            return CanInteractWith(item, out _, checkLinked);
         }
 
         public bool CanInteractWith(Item item, out float distanceToItem, bool checkLinked)
@@ -2027,7 +2032,7 @@ namespace Barotrauma
                 distanceToItem = Vector2.Distance(rectIntersectionPoint, playerDistanceCheckPosition);
             }
 
-            if (distanceToItem > item.InteractDistance && item.InteractDistance > 0.0f) return false;
+            if (distanceToItem > item.InteractDistance && item.InteractDistance > 0.0f) { return false; }
 
             if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.SubEditorScreen && !insideTrigger)
             {
@@ -2048,8 +2053,8 @@ namespace Barotrauma
                     itemPosition += item.Submarine.SimPosition;
                     itemPosition -= Submarine.SimPosition;
                 }
-                var body = Submarine.CheckVisibility(SimPosition, itemPosition, true);
-                if (body != null && body.UserData as Item != item) return false;
+                var body = Submarine.CheckVisibility(SimPosition, itemPosition, ignoreLevel: true);
+                if (body != null && body.UserData as Item != item) { return false; }
             }
 
             return true;
@@ -2578,21 +2583,30 @@ namespace Barotrauma
                 }
                 OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
             }
-
         }
-
-        partial void UpdateOxygenProjSpecific(float prevOxygen);
 
         /// <summary>
         /// How far the character is from the closest human player (including spectators)
         /// </summary>
-        private float GetDistanceToClosestPlayer()
+        protected float GetDistanceToClosestPlayer()
+        {
+            return (float)Math.Sqrt(GetDistanceSqrToClosestPlayer());
+        }
+
+        /// <summary>
+        /// How far the character is from the closest human player (including spectators)
+        /// </summary>
+        protected float GetDistanceSqrToClosestPlayer()
         {
             float distSqr = float.MaxValue;
             foreach (Character otherCharacter in CharacterList)
             {
                 if (otherCharacter == this || !otherCharacter.IsRemotePlayer) { continue; }
                 distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.WorldPosition, WorldPosition));
+                if (otherCharacter.ViewTarget != null)
+                {
+                    distSqr = Math.Min(distSqr, Vector2.DistanceSquared(otherCharacter.ViewTarget.WorldPosition, WorldPosition));
+                }
             }
 #if SERVER
             for (int i = 0; i < GameMain.Server.ConnectedClients.Count; i++)
@@ -2611,7 +2625,7 @@ namespace Barotrauma
             }
             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.Position, WorldPosition));
 #endif
-            return (float)Math.Sqrt(distSqr);
+            return distSqr;
         }
 
         private float despawnTimer;
@@ -3458,6 +3472,75 @@ namespace Barotrauma
                 }
             }
         }
+
+        public void SpawnInventoryItems(Inventory inventory, XElement itemData)
+        {
+            SpawnInventoryItemsRecursive(inventory, itemData);
+        }
+        
+        private void SpawnInventoryItemsRecursive(Inventory inventory, XElement element)
+        {
+            foreach (XElement itemElement in element.Elements())
+            {
+                var newItem = Item.Load(itemElement, inventory.Owner.Submarine, createNetworkEvent: true, idRemap: IdRemap.DiscardId);
+                if (newItem == null) { continue; }
+
+                if (!MathUtils.NearlyEqual(newItem.Condition, newItem.MaxCondition) &&
+                    GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                {
+                    GameMain.NetworkMember.CreateEntityEvent(newItem, new object[] { NetEntityEvent.Type.Status });
+                }
+#if SERVER
+                newItem.GetComponent<Terminal>()?.SyncHistory();
+#endif
+                int[] slotIndices = itemElement.GetAttributeIntArray("i", new int[] { 0 });
+                if (!slotIndices.Any())
+                {
+                    DebugConsole.ThrowError("Invalid inventory data in character \"" + Name + "\" - no slot indices found");
+                    continue;
+                }
+
+                //make sure there's no other item in the slot
+                //this should not happen normally, but can occur if the character is accidentally given new job items while also loading previous items in the campaign
+                for (int i = 0; i < inventory.Capacity; i++)
+                {
+                    if (slotIndices.Contains(i) && inventory.Items[i] != null && inventory.Items[i] != newItem)
+                    {
+                        DebugConsole.ThrowError($"Error while loading character inventory data. The slot {i} was already occupied by the item \"{inventory.Items[i].Name} ({inventory.Items[i].ID})\" when loading the item \"{newItem.Name} ({newItem.ID})\"");
+                        inventory.Items[i].Drop(null, createNetworkEvent: false);
+                    }
+                }
+
+                inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
+                newItem.ParentInventory = inventory;
+
+                //force the item to the correct slots
+                //  e.g. putting the item in a hand slot will also put it in the first available Any-slot, 
+                //  which may not be where it actually was
+                for (int i = 0; i < inventory.Capacity; i++)
+                {
+                    if (slotIndices.Contains(i))
+                    {
+                        inventory.Items[i] = newItem;
+                    }
+                    else if (inventory.Items[i] == newItem)
+                    {
+                        inventory.Items[i] = null;
+                    }
+                }
+
+                int itemContainerIndex = 0;
+                var itemContainers = newItem.GetComponents<ItemContainer>().ToList();
+                foreach (XElement childInvElement in itemElement.Elements())
+                {
+                    if (itemContainerIndex >= itemContainers.Count) break;
+                    if (!childInvElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    SpawnInventoryItemsRecursive(itemContainers[itemContainerIndex].Inventory, childInvElement);
+                    itemContainerIndex++;
+                }
+            }
+        }
+
 
         private readonly HashSet<AttackContext> currentContexts = new HashSet<AttackContext>();
 

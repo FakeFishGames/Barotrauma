@@ -197,6 +197,12 @@ namespace Barotrauma
                 item.AddTag("job:" + Name);
                 if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc))
                     item.Description = spawnPoint.IdCardDesc;
+
+                IdCard idCardComponent = item.GetComponent<IdCard>();
+                if (idCardComponent != null)
+                {
+                    idCardComponent.Initialize(character.Info);
+                }
             }
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())

@@ -67,7 +67,10 @@ namespace Barotrauma.Items.Components
                 {
                     if (pathFinder == null)
                     {
-                        pathFinder = new PathFinder(WayPoint.WayPointList, false);
+                        pathFinder = new PathFinder(WayPoint.WayPointList, false)
+                        {
+                            GetNodePenalty = GetNodePenalty
+                        };
                     }
                     MaintainPos = true;
                     if (posToMaintain == null)
@@ -87,7 +90,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(0.0f, 1.0f, decimals: 3),
+        [Editable(0.0f, 1.0f, decimals: 4),
         Serialize(0.5f, true, description: "How full the ballast tanks should be when the submarine is not being steered upwards/downwards."
             + " Can be used to compensate if the ballast tanks are too large/small relative to the size of the submarine.")]
         public float NeutralBallastLevel
@@ -417,6 +420,7 @@ namespace Barotrauma.Items.Components
                 Math.Max(1000.0f * Math.Abs(controlledSub.Velocity.Y), controlledSub.Borders.Height * 0.75f));
 
             float avoidRadius = avoidDist.Length();
+            float damagingWallAvoidRadius = avoidRadius * 1.5f;
 
             Vector2 newAvoidStrength = Vector2.Zero;
 
@@ -426,12 +430,26 @@ namespace Barotrauma.Items.Components
             var closeCells = Level.Loaded.GetCells(controlledSub.WorldPosition, 4);
             foreach (VoronoiCell cell in closeCells)
             {
+                if (cell.DoesDamage)
+                {
+                    foreach (GraphEdge edge in cell.Edges)
+                    {
+                        Vector2 closestPoint = MathUtils.GetClosestPointOnLineSegment(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, controlledSub.WorldPosition);
+                        float dist = Vector2.Distance(closestPoint, controlledSub.WorldPosition);
+                        if (dist > damagingWallAvoidRadius) { continue; }
+                        Vector2 diff = controlledSub.WorldPosition - cell.Center;
+                        Vector2 avoid =  Vector2.Normalize(diff) * (damagingWallAvoidRadius - dist) / damagingWallAvoidRadius;
+                        newAvoidStrength += avoid;
+                        debugDrawObstacles.Add(new ObstacleDebugInfo(edge, edge.Center, 1.0f, avoid, cell.Translation));
+                    }
+                    continue;
+                }
+
                 foreach (GraphEdge edge in cell.Edges)
                 {
                     if (MathUtils.GetLineIntersection(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, controlledSub.WorldPosition, cell.Center, out Vector2 intersection))
                     {
                         Vector2 diff = controlledSub.WorldPosition - intersection;
-
                         //far enough -> ignore
                         if (Math.Abs(diff.X) > avoidDist.X && Math.Abs(diff.Y) > avoidDist.Y)
                         {
@@ -495,6 +513,15 @@ namespace Barotrauma.Items.Components
             {
                 TargetVelocity *= 100.0f / velMagnitude;
             }
+        }
+
+        private float? GetNodePenalty(PathNode node, PathNode nextNode)
+        {
+            if (node.Waypoint?.Tunnel == null || controlledSub == null || node.Waypoint.Tunnel.Type == Level.TunnelType.MainPath) { return 0.0f; }
+            //never navigate from the main path to another type of path
+            if (node.Waypoint.Tunnel.Type == Level.TunnelType.MainPath && nextNode.Waypoint?.Tunnel?.Type != Level.TunnelType.MainPath) { return null; }
+            //higher cost for side paths (= autopilot prefers the main path, but can still navigate side paths if it ends up on one)
+            return 1000.0f;
         }
 
         private void UpdatePath()

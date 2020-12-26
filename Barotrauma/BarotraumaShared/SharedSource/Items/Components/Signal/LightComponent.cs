@@ -14,12 +14,12 @@ namespace Barotrauma.Items.Components
         private Color lightColor;
         private float lightBrightness;
         private float blinkFrequency;
+        private float pulseFrequency, pulseAmount;
         private float range;
-        private float flicker, flickerState;
+        private float flicker, flickerSpeed;
         private bool castShadows;
         private bool drawBehindSubs;
 
-        private float blinkTimer;
 
         private double lastToggleSignalTime;
 
@@ -90,14 +90,49 @@ namespace Barotrauma.Items.Components
             set
             {
                 flicker = MathHelper.Clamp(value, 0.0f, 1.0f);
+#if CLIENT
+                if (light != null) { light.LightSourceParams.Flicker = flicker; }
+#endif
             }
         }
 
         [Editable, Serialize(1.0f, false, description: "How fast the light flickers.")]
         public float FlickerSpeed
         {
-            get;
-            set;
+            get { return flickerSpeed; }
+            set
+            {
+                flickerSpeed = value;
+#if CLIENT
+                if (light != null) { light.LightSourceParams.FlickerSpeed = flickerSpeed; }
+#endif
+            }
+        }
+
+        [Editable, Serialize(0.0f, true, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
+        public float PulseFrequency
+        {
+            get { return pulseFrequency; }
+            set
+            {
+                pulseFrequency = MathHelper.Clamp(value, 0.0f, 60.0f);
+#if CLIENT
+                if (light != null) { light.LightSourceParams.PulseFrequency = pulseFrequency; }
+#endif
+            }
+        }
+
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, true, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        public float PulseAmount
+        {
+            get { return pulseAmount; }
+            set
+            {
+                pulseAmount = MathHelper.Clamp(value, 0.0f, 1.0f);
+#if CLIENT
+                if (light != null) { light.LightSourceParams.PulseAmount = pulseAmount; }
+#endif
+            }
         }
 
         [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
@@ -107,6 +142,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 blinkFrequency = MathHelper.Clamp(value, 0.0f, 60.0f);
+#if CLIENT
+                if (light != null) { light.LightSourceParams.BlinkFrequency = blinkFrequency; }
+#endif
             }
         }
 
@@ -161,11 +199,16 @@ namespace Barotrauma.Items.Components
             {
                 ParentSub = item.CurrentHull?.Submarine,
                 Position = item.Position,
-                CastShadows = castShadows,
+                CastShadows = castShadows,                
                 IsBackground = drawBehindSubs,
                 SpriteScale = Vector2.One * item.Scale,
                 Range = range
             };
+            light.LightSourceParams.Flicker = flicker;
+            light.LightSourceParams.FlickerSpeed = FlickerSpeed;
+            light.LightSourceParams.PulseAmount = pulseAmount;
+            light.LightSourceParams.PulseFrequency = pulseFrequency;
+            light.LightSourceParams.BlinkFrequency = blinkFrequency;
 #endif
 
             IsActive = IsOn;
@@ -229,22 +272,7 @@ namespace Barotrauma.Items.Components
                 lightBrightness = MathHelper.Lerp(lightBrightness, powerConsumption <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f), 0.1f);
             }
 
-            if (blinkFrequency > 0.0f)
-            {
-                blinkTimer = (blinkTimer + deltaTime * blinkFrequency) % 1.0f;
-            }
-
-            if (blinkTimer > 0.5f)
-            {
-                SetLightSourceState(false, lightBrightness);
-            }
-            else
-            {
-                flickerState += deltaTime * FlickerSpeed;
-                flickerState %= 255;
-                float noise = PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * flicker;
-                SetLightSourceState(true, lightBrightness * (1.0f - noise));
-            }
+            SetLightSourceState(true, lightBrightness);
 
             if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
         }

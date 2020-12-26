@@ -302,7 +302,7 @@ namespace Barotrauma
                     return;
                 }
 
-                float dmg = (float)Math.Sqrt(Math.Min(500, size.X)) * deltaTime / c.AnimController.Limbs.Count(l => !l.IsSevered);
+                float dmg = (float)Math.Sqrt(Math.Min(500, size.X)) * deltaTime / c.AnimController.Limbs.Count(l => !l.IsSevered && !l.Hidden);
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (limb.IsSevered) { continue; }

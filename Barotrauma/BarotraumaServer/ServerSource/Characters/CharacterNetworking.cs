@@ -26,6 +26,11 @@ namespace Barotrauma
             Vector2 comparePosition = recipient.SpectatePos == null ? recipient.Character.WorldPosition : recipient.SpectatePos.Value;
 
             float distance = Vector2.Distance(comparePosition, WorldPosition);
+            if (recipient.Character?.ViewTarget != null)
+            {
+                distance = Math.Min(distance, Vector2.Distance(recipient.Character.ViewTarget.WorldPosition, WorldPosition));
+            }
+
             float priority = 1.0f - MathUtils.InverseLerp(
                 NetConfig.HighPrioCharacterPositionUpdateDistance, 
                 NetConfig.LowPrioCharacterPositionUpdateDistance,

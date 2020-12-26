@@ -1,8 +1,4 @@
-using Barotrauma.Networking;
 using System.Xml.Linq;
-#if CLIENT
-using Microsoft.Xna.Framework.Graphics;
-#endif
 
 namespace Barotrauma.Items.Components
 {

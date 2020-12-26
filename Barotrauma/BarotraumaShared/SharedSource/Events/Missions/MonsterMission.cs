@@ -86,17 +86,27 @@ namespace Barotrauma
         {
             if (monsters.Count > 0)
             {
+#if DEBUG
                 throw new Exception($"monsters.Count > 0 ({monsters.Count})");
+#else
+                DebugConsole.AddWarning("Monster list was not empty at the start of a monster mission. The mission instance may not have been ended correctly on previous rounds.");
+                monsters.Clear();            
+#endif
             }
 
             if (tempSonarPositions.Count > 0)
             {
+#if DEBUG
                 throw new Exception($"tempSonarPositions.Count > 0 ({tempSonarPositions.Count})");
+#else
+                DebugConsole.AddWarning("Sonar position list was not empty at the start of a monster mission. The mission instance may not have been ended correctly on previous rounds.");
+                tempSonarPositions.Clear();            
+#endif
             }
 
             if (!IsClient)
             {
-                Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
+                Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
                 foreach (var monster in monsterPrefabs)
                 {
                     int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);

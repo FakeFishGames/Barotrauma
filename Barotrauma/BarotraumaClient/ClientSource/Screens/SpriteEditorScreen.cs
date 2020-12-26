@@ -353,6 +353,8 @@ namespace Barotrauma
             {
                 element.Elements("sprite").ForEach(s => CreateSprite(s));
                 element.Elements("Sprite").ForEach(s => CreateSprite(s));
+                element.Elements("deformablesprite").ForEach(s => CreateSprite(s));
+                element.Elements("DeformableSprite").ForEach(s => CreateSprite(s));
                 element.Elements("backgroundsprite").ForEach(s => CreateSprite(s));
                 element.Elements("BackgroundSprite").ForEach(s => CreateSprite(s));
                 element.Elements("brokensprite").ForEach(s => CreateSprite(s));

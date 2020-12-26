@@ -12,6 +12,9 @@ namespace Barotrauma
         [Serialize("", true)]
         public string Tag { get; set; }
 
+        [Serialize(true, true)]
+        public bool IgnoreIncapacitatedCharacters { get; set; }
+
         private bool isFinished = false;
 
         public TagAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
@@ -27,12 +30,26 @@ namespace Barotrauma
 
         private void TagPlayers()
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsPlayer);
+            if (IgnoreIncapacitatedCharacters)
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsPlayer && !c.IsIncapacitated);
+            }
+            else
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsPlayer);
+            }
         }
 
         private void TagBots()
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot);
+            if (IgnoreIncapacitatedCharacters)
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot && !c.IsIncapacitated);
+            }
+            else
+            {
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot);
+            }
         }
 
         private void TagCrew()

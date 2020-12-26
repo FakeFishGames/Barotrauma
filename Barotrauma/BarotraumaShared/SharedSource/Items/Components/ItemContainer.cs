@@ -108,6 +108,9 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false)]
+        public bool RemoveContainedItemsOnDeconstruct { get; set; }
+
         public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
         {
             isRestrictionsDefined = containableRestrictions.Any();
@@ -492,12 +495,9 @@ namespace Barotrauma.Items.Components
             if (SpawnWithId.Length > 0)
             {
                 ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);
-                if (prefab != null)
+                if (prefab != null && Inventory != null && Inventory.Items.Any(it => it == null))
                 {
-                    if (Inventory != null && Inventory.Items.Any(it => it == null))
-                    {
-                        Entity.Spawner?.AddToSpawnQueue(prefab, Inventory);
-                    }
+                    Entity.Spawner?.AddToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false);                    
                 }
             }
         }
@@ -530,17 +530,17 @@ namespace Barotrauma.Items.Components
             }               
         }        
 
-        public override void Load(XElement componentElement, bool usePrefabValues)
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
-            base.Load(componentElement, usePrefabValues);
+            base.Load(componentElement, usePrefabValues, idRemap);
 
             string containedString = componentElement.GetAttributeString("contained", "");
             string[] itemIdStrings = containedString.Split(',');
             itemIds = new ushort[itemIdStrings.Length];
             for (int i = 0; i < itemIdStrings.Length; i++)
             {
-                if (!ushort.TryParse(itemIdStrings[i], out ushort id)) { continue; }
-                itemIds[i] = id;
+                if (!int.TryParse(itemIdStrings[i], out int id)) { continue; }
+                itemIds[i] = idRemap.GetOffsetId(id);
             }
         }
 

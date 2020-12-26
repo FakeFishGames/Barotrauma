@@ -25,11 +25,12 @@ namespace Barotrauma
                 subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
             }
             
-            foreach (var wreck in Submarine.Loaded)
+            foreach (var sub in Submarine.Loaded)
             {
-                if (wreck.Info.IsWreck)
+                if (sub.Info.Type == SubmarineType.Wreck || 
+                    sub.Info.Type == SubmarineType.BeaconStation)
                 {
-                    Place(wreck.ToEnumerable());
+                    Place(sub.ToEnumerable());
                 }
             }
 
@@ -204,7 +205,7 @@ namespace Barotrauma
                 {
                     SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,
-                    OriginalContainerID = validContainer.Key.Item.OriginalID
+                    OriginalContainerID = validContainer.Key.Item.ID
                 };
                 foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
                 {

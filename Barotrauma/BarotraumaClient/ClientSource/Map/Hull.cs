@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
@@ -48,7 +49,7 @@ namespace Barotrauma
         {
             get
             {
-                return decals.Count > 0;
+                return decals.Count > 0 || BallastFlora != null;
             }
         }
 
@@ -65,6 +66,8 @@ namespace Barotrauma
 
         public override bool IsVisible(Rectangle worldView)
         {
+            if (BallastFlora != null) { return true; }
+
             if (Screen.Selected != GameMain.SubEditorScreen && !GameMain.DebugDraw)
             {
                 if (decals.Count == 0 && paintAmount < minimumPaintAmountToDraw) { return false; }
@@ -229,6 +232,7 @@ namespace Barotrauma
         {
             if (back && Screen.Selected != GameMain.SubEditorScreen)
             {
+                BallastFlora?.Draw(spriteBatch);
                 DrawDecals(spriteBatch);
                 return;
             }
@@ -244,7 +248,7 @@ namespace Barotrauma
                 alpha = Math.Min((float)(Timing.TotalTime - lastAmbientLightEditTime) / hideTimeAfterEdit - 1.0f, 1.0f);
             }
 
-           Rectangle drawRect =
+            Rectangle drawRect =
                 Submarine == null ? rect : new Rectangle((int)(Submarine.DrawPosition.X + rect.X), (int)(Submarine.DrawPosition.Y + rect.Y), rect.Width, rect.Height);
 
             if ((IsSelected || IsHighlighted) && editing)
@@ -332,6 +336,7 @@ namespace Barotrauma
 
         public void DrawSectionColors(SpriteBatch spriteBatch)
         {
+            if (BackgroundSections == null || BackgroundSections.Count == 0) { return; }
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
             Point sectionSize = BackgroundSections[0].Rect.Size;
             Vector2 drawPos = drawOffset + new Vector2(rect.Location.X + sectionSize.X / 2, rect.Location.Y - sectionSize.Y / 2);
@@ -607,6 +612,26 @@ namespace Barotrauma
 
         public void ClientRead(ServerNetObject type, IReadMessage message, float sendingTime)
         {
+            bool isBallastFloraUpdate = message.ReadBoolean();
+            if (isBallastFloraUpdate)
+            {
+                BallastFloraBehavior.NetworkHeader header = (BallastFloraBehavior.NetworkHeader) message.ReadByte();
+                if (header == BallastFloraBehavior.NetworkHeader.Spawn)
+                {
+                    string identifier = message.ReadString();
+                    float x = message.ReadSingle();
+                    float y = message.ReadSingle();
+                    BallastFlora = new BallastFloraBehavior(this, BallastFloraPrefab.Find(identifier), new Vector2(x, y), firstGrowth: true)
+                    {
+                        PowerConsumptionTimer = message.ReadSingle()
+                    };
+                }
+                else if (BallastFlora != null)
+                {
+                    BallastFlora.ClientRead(message, header);
+                }
+                return;
+            }
             remoteWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
             remoteOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
 

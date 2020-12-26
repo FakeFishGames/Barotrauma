@@ -160,11 +160,17 @@ namespace Barotrauma
 
         private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, MissionPrefab missionPrefab = null, MissionType missionType = MissionType.None)
         {
-            if (gameModePreset.GameModeType == typeof(MissionMode))
+            if (gameModePreset.GameModeType == typeof(CoOpMode))
             {
                 return missionPrefab != null ?
-                    new MissionMode(gameModePreset, missionPrefab) :
-                    new MissionMode(gameModePreset, missionType, seed ?? ToolBox.RandomSeed(8));
+                    new CoOpMode(gameModePreset, missionPrefab) :
+                    new CoOpMode(gameModePreset, missionType, seed ?? ToolBox.RandomSeed(8));
+            }
+            else if (gameModePreset.GameModeType == typeof(PvPMode))
+            {
+                return missionPrefab != null ?
+                    new PvPMode(gameModePreset, missionPrefab) :
+                    new PvPMode(gameModePreset, missionType, seed ?? ToolBox.RandomSeed(8));
             }
             else if (gameModePreset.GameModeType == typeof(MultiPlayerCampaign))
             {
@@ -382,7 +388,7 @@ namespace Barotrauma
             }
 
             Entity.Spawner = new EntitySpawner();
-            
+
             if (GameMode.Mission != null) { Mission = GameMode.Mission; }
             if (GameMode != null) { GameMode.Start(); }
             if (GameMode.Mission != null)
@@ -411,6 +417,7 @@ namespace Barotrauma
                     //the server does this after loading the respawn shuttle
                     Level?.SpawnNPCs();
                     Level?.SpawnCorpses();
+                    Level?.PrepareBeaconStation();
                     AutoItemPlacer.PlaceIfNeeded();
                 }
                 if (GameMode is MultiPlayerCampaign mpCampaign)

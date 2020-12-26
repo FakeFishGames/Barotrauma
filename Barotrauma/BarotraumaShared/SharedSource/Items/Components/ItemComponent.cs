@@ -394,7 +394,10 @@ namespace Barotrauma.Items.Components
         }
 
         //called when isActive is true and condition > 0.0f
-        public virtual void Update(float deltaTime, Camera cam) { }
+        public virtual void Update(float deltaTime, Camera cam) 
+        {
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
+        }
 
         //called when isActive is true and condition == 0.0f
         public virtual void UpdateBroken(float deltaTime, Camera cam)
@@ -770,7 +773,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void Load(XElement componentElement, bool usePrefabValues)
+        public virtual void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             if (componentElement != null) 
             { 
@@ -970,12 +973,12 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective objective, int itemCount, bool equip, bool removeEmpty, bool spawnItemIfNotFound = false) where T : ItemComponent
+        protected AIObjectiveContainItem AIContainItems<T>(ItemContainer container, Character character, AIObjective currentObjective, int itemCount, bool equip, bool removeEmpty, bool spawnItemIfNotFound = false, bool dropItemOnDeselected = false) where T : ItemComponent
         {
             AIObjectiveContainItem containObjective = null;
             if (character.AIController is HumanAIController aiController)
             {
-                containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, objective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
+                containObjective = new AIObjectiveContainItem(character, container.GetContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
                     targetItemCount = itemCount,
                     Equip = equip,
@@ -993,11 +996,21 @@ namespace Barotrauma.Items.Components
                         return 1.0f;
                     }
                 };
-                containObjective.Abandoned += () =>
+                containObjective.Abandoned += () => aiController.IgnoredItems.Add(container.Item);
+                if (dropItemOnDeselected)
                 {
-                    aiController.IgnoredItems.Add(container.Item);
-                };
-                objective.AddSubObjective(containObjective);
+                    currentObjective.Deselected += () =>
+                    {
+                        if (containObjective == null) { return; }
+                        if (containObjective.IsCompleted) { return; }
+                        Item item = containObjective.ItemToContain;
+                        if (item != null && character.CanInteractWith(item, checkLinked: false))
+                        {
+                            item.Drop(character);
+                        }
+                    };
+                }
+                currentObjective.AddSubObjective(containObjective);
             }
             return containObjective;
         }
@@ -1018,6 +1031,7 @@ namespace Barotrauma.Items.Components
                         if (FindSuitableContainer(character,
                             i =>
                             {
+                                if (i.IsThisOrAnyContainerIgnoredByAI()) { return 0; }
                                 var container = i.GetComponent<ItemContainer>();
                                 if (container == null) { return 0; }
                                 if (container.Inventory.IsFull()) { return 0; }

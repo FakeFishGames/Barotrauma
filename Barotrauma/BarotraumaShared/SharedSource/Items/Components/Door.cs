@@ -23,6 +23,20 @@ namespace Barotrauma.Items.Components
         private readonly Sprite doorSprite, weldedSprite, brokenSprite;
         private readonly bool scaleBrokenSprite, fadeBrokenSprite;
         private readonly bool autoOrientGap;
+        
+        private bool isJammed;
+        public bool IsJammed
+        {
+            get { return isJammed; }
+            set
+            {
+                if (isJammed == value) { return; }
+                isJammed = value;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
+            }
+        }
 
         private bool isStuck;
         public bool IsStuck
@@ -297,7 +311,7 @@ namespace Barotrauma.Items.Components
         {
             if (toggleCooldownTimer > 0.0f && user != lastUser) { OnFailedToOpen(); return; }
             toggleCooldownTimer = ToggleCoolDown;
-            if (IsStuck) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
+            if (IsStuck || IsJammed) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
             lastUser = user;
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }
@@ -341,7 +355,7 @@ namespace Barotrauma.Items.Components
             }
 
             bool isClosing = false;
-            if (!IsStuck)
+            if ((!IsStuck && !IsJammed) || !isOpen)
             {
                 if (PredictedState == null)
                 {
@@ -630,7 +644,7 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
-            if (IsStuck) { return; }
+            if (IsStuck || IsJammed) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             

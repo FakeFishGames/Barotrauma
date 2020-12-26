@@ -245,7 +245,10 @@ namespace Barotrauma
         public void SortObjectives()
         {
             CurrentOrder?.GetPriority();
-            Objectives.ForEach(o => o.GetPriority());
+            for (int i = Objectives.Count - 1; i >= 0; i--)
+            {
+                Objectives[i].GetPriority();
+            }
             if (Objectives.Any())
             {
                 Objectives.Sort((x, y) => y.Priority.CompareTo(x.Priority));
@@ -305,6 +308,8 @@ namespace Barotrauma
                     newObjective = new AIObjectiveGoTo(orderGiver, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
                         CloseEnough = Rand.Range(90, 100) + Rand.Range(50, 70) * Math.Min(HumanAIController.CountCrew(c => c.ObjectiveManager.CurrentOrder is AIObjectiveGoTo gotoOrder && gotoOrder.Target == orderGiver, onlyBots: true), 4),
+                        extraDistanceOutsideSub = 100,
+                        extraDistanceWhileSwimming = 100,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
                         followControlledCharacter = orderGiver == character,

@@ -399,7 +399,7 @@ namespace Barotrauma
 
         public void ApplyAffliction(Limb targetLimb, Affliction affliction)
         {
-            if (Unkillable || Character.GodMode) { return; }
+            if (!affliction.Prefab.IsBuff && Unkillable || Character.GodMode) { return; }
             if (affliction.Prefab.LimbSpecific)
             {
                 if (targetLimb == null)

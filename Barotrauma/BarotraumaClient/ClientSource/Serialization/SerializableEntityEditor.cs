@@ -566,8 +566,13 @@ namespace Barotrauma
             {
                 ToolTip = toolTip
             };
+
+            bool isFlagsAttribute = value.GetType().IsDefined(typeof(FlagsAttribute), false);
+
             foreach (object enumValue in Enum.GetValues(value.GetType()))
             {
+                if (isFlagsAttribute && !MathHelper.IsPowerOfTwo((int)enumValue)) { continue; }
+
                 enumDropDown.AddItem(enumValue.ToString(), enumValue);
                 if (((int)enumValue != 0 || (int)value == 0) && ((Enum)value).HasFlag((Enum)enumValue))
                 {

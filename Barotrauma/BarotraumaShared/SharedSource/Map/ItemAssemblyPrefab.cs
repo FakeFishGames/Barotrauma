@@ -114,14 +114,16 @@ namespace Barotrauma
 #if CLIENT
             if (Screen.Selected is SubEditorScreen)
             {
-                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(loaded, false));
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(loaded, false, handleInventoryBehavior: false));
             }
 #endif
         }
 
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectPrefabs = false)
         {
-            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath);
+            int idOffset = Entity.FindFreeID(1);
+            if (MapEntity.mapEntityList.Any()) { idOffset = MapEntity.mapEntityList.Max(e => e.ID); }
+            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath, idOffset);
             if (entities.Count == 0) { return entities; }
 
             Vector2 offset = sub == null ? Vector2.Zero : sub.HiddenSubPosition;
@@ -132,7 +134,16 @@ namespace Barotrauma
                 me.Submarine = sub;
                 if (!(me is Item item)) { continue; }
                 Wire wire = item.GetComponent<Wire>();
-                if (wire != null) { wire.MoveNodes(position - offset); }
+                //Vector2 subPosition = Submarine == null ? Vector2.Zero : Submarine.HiddenSubPosition;
+                if (wire != null) 
+                { 
+                    //fix wires that have been erroneously saved at the "hidden position"
+                    if (sub != null && Vector2.Distance(me.Position, sub.HiddenSubPosition) > sub.HiddenSubPosition.Length() / 2)
+                    {
+                        me.Move(position);
+                    }
+                    wire.MoveNodes(position - offset); 
+                }
             }
 
             MapEntity.MapLoaded(entities, true);

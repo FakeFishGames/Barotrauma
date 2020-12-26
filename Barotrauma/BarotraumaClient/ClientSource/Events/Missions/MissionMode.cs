@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma
 {
-    partial class MissionMode : GameMode
+    abstract partial class MissionMode : GameMode
     {
         public override void ShowStartMessage()
         {

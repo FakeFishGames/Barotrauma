@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (button, data) =>
                 {
-                    targetLevel = null;
+                    TargetLevel = null;
                     IsActive = !IsActive;
                     if (GameMain.Client != null)
                     {
@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (pumpSpeedLockTimer <= 0.0f)
                     {
-                        targetLevel = null;
+                        TargetLevel = null;
                     }
                     float newValue = barScroll * 200.0f - 100.0f;
                     if (Math.Abs(newValue - FlowPercentage) < 0.1f) { return false; }
@@ -215,14 +215,33 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            int msgStartPos = msg.BitPosition;
+
+            float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
+            bool isActive = msg.ReadBoolean();
+            bool hijacked = msg.ReadBoolean();
+            float? targetLevel;
+            if (msg.ReadBoolean())
+            {
+                targetLevel = msg.ReadSingle();
+            }
+            else
+            {
+                targetLevel = null;
+            }
+
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(5 + 1), sendingTime);
+                int msgLength = msg.BitPosition - msgStartPos;
+                msg.BitPosition = msgStartPos;
+                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
                 return;
             }
 
-            FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            IsActive = msg.ReadBoolean();
+            FlowPercentage = flowPercentage;
+            IsActive = isActive;
+            Hijacked = hijacked;
+            TargetLevel = targetLevel;
         }
     }
 }

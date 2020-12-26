@@ -126,7 +126,6 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "childobject":
-                    case "lightsource":
                         subElement.Remove();
                         break;
                     case "deformablesprite":
@@ -141,11 +140,31 @@ namespace Barotrauma
                 }
             }
 
-            foreach (LightSourceParams lightSourceParams in LightSourceParams)
+            for (int i = 0; i < LightSourceParams.Count; i++)
             {
-                var lightElement = new XElement("LightSource");
-                SerializableProperty.SerializeProperties(lightSourceParams, lightElement);
-                element.Add(lightElement);
+                int elementIndex = 0;
+                bool wasSaved = false;
+                foreach (XElement subElement in element.Elements().ToList())
+                {
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "lightsource":
+                            if (elementIndex == i)
+                            {
+                                SerializableProperty.SerializeProperties(LightSourceParams[i], subElement);
+                                wasSaved = true;
+                                break;
+                            }
+                            elementIndex++;
+                            break;
+                    }
+                }
+                if (!wasSaved)
+                {
+                    var lightElement = new XElement("LightSource");
+                    SerializableProperty.SerializeProperties(LightSourceParams[i], lightElement);
+                    element.Add(lightElement);
+                }
             }
 
             foreach (ChildObject childObj in ChildObjects)
@@ -162,7 +181,7 @@ namespace Barotrauma
                 foreach (XElement subElement in element.Elements())
                 {
                     if (subElement.Name.ToString().Equals("overridecommonness", System.StringComparison.OrdinalIgnoreCase)
-                        && subElement.GetAttributeString("leveltype", "") == overrideCommonness.Key)
+                        && subElement.GetAttributeString("leveltype", "").Equals(overrideCommonness.Key, System.StringComparison.OrdinalIgnoreCase))
                     {
                         subElement.Attribute("commonness").Value = overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture);
                         elementFound = true;

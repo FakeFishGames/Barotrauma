@@ -745,7 +745,7 @@ namespace Barotrauma
             {
                 if (LightSource != null) { return false; }
                 var lightSourceElement = new XElement("lightsource",
-                    new XElement("lighttexture", new XAttribute("texture", "Content/Lights/light.png")));
+                    new XElement("lighttexture", new XAttribute("texture", "Content/Lights/pointlight_bright.png")));
                 TryAddSubParam(lightSourceElement, (e, c) => new LightSourceParams(e, c), out LightSourceParams newLightSource);
                 LightSource = newLightSource;
                 return LightSource != null;

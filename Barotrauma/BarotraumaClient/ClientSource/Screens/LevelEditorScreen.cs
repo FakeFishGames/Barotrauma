@@ -24,23 +24,25 @@ namespace Barotrauma
             get { return cam; }
         }
 
-        private GUIFrame leftPanel, rightPanel, bottomPanel, topPanel;
+        private readonly GUIFrame leftPanel, rightPanel, bottomPanel, topPanel;
         
         private LevelGenerationParams selectedParams;
         private LevelObjectPrefab selectedLevelObject;
 
-        private GUIListBox paramsList, ruinParamsList, outpostParamsList, levelObjectList;
-        private GUIListBox editorContainer;
+        private readonly GUIListBox paramsList, ruinParamsList, caveParamsList, outpostParamsList, levelObjectList;
+        private readonly GUIListBox editorContainer;
 
-        private GUIButton spriteEditDoneButton;
+        private readonly GUIButton spriteEditDoneButton;
 
-        private GUITextBox seedBox;
+        private readonly GUITextBox seedBox;
 
-        private GUITickBox lightingEnabled, cursorLightEnabled;
+        private readonly GUITickBox lightingEnabled, cursorLightEnabled;
 
         private Sprite editingSprite;
 
         private LightSource pointerLightSource;
+
+        private readonly Color[] tunnelDebugColors = new Color[] { Color.White, Color.Cyan, Color.LightGreen, Color.Red, Color.LightYellow, Color.LightSeaGreen };
 
         public LevelEditorScreen()
         {
@@ -78,8 +80,17 @@ namespace Barotrauma
                 return true;
             };
 
+            var caveTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("leveleditor.caveparams"), font: GUI.SubHeadingFont);
+
+            caveParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedLeftPanel.RectTransform));
+            caveParamsList.OnSelected += (GUIComponent component, object obj) =>
+            {
+                CreateCaveParamsEditor(obj as CaveGenerationParams);
+                return true;
+            };
+
             var outpostTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("leveleditor.outpostparams"), font: GUI.SubHeadingFont);
-            GUITextBlock.AutoScaleAndNormalize(ruinTitle, outpostTitle);
+            GUITextBlock.AutoScaleAndNormalize(ruinTitle, caveTitle, outpostTitle);
 
             outpostParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform));
             outpostParamsList.OnSelected += (GUIComponent component, object obj) =>
@@ -237,13 +248,17 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
+                    bool wasLevelLoaded = Level.Loaded != null;
                     Submarine.Unload();
                     GameMain.LightManager.ClearLights();
                     LevelData levelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                     levelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
                     Level.Generate(levelData, mirror: false);
                     GameMain.LightManager.AddLight(pointerLightSource);
-                    cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
+                    if (!wasLevelLoaded || cam.Position.X < 0 || cam.Position.Y < 0 || cam.Position.Y > Level.Loaded.Size.X || cam.Position.Y > Level.Loaded.Size.Y)
+                    {
+                        cam.Position = new Vector2(Level.Loaded.Size.X / 2, Level.Loaded.Size.Y / 2);
+                    }
                     foreach (GUITextBlock param in paramsList.Content.Children)
                     {
                         param.TextColor = param.UserData == selectedParams ? GUI.Style.Green : param.Style.TextColor;
@@ -344,6 +359,7 @@ namespace Barotrauma
             editingSprite = null;
             UpdateParamsList();
             UpdateRuinParamsList();
+            UpdateCaveParamsList();
             UpdateOutpostParamsList();
             UpdateLevelObjectsList();
         }
@@ -364,6 +380,22 @@ namespace Barotrauma
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paramsList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     genParams.Identifier)
+                {
+                    Padding = Vector4.Zero,
+                    UserData = genParams
+                };
+            }
+        }
+
+        private void UpdateCaveParamsList()
+        {
+            editorContainer.ClearChildren();
+            caveParamsList.Content.ClearChildren();
+
+            foreach (CaveGenerationParams genParams in CaveGenerationParams.CaveParams)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), caveParamsList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                    genParams.Name)
                 {
                     Padding = Vector4.Zero,
                     UserData = genParams
@@ -425,6 +457,7 @@ namespace Barotrauma
                     text: ToolBox.LimitString(levelObjPrefab.Name, GUI.SmallFont, paddedFrame.Rect.Width), textAlignment: Alignment.Center, font: GUI.SmallFont)
                 {
                     CanBeFocused = false,
+                    ToolTip = levelObjPrefab.Name
                 };
 
                 Sprite sprite = levelObjPrefab.Sprites.FirstOrDefault() ?? levelObjPrefab.DeformableSprite?.Sprite;
@@ -437,15 +470,14 @@ namespace Barotrauma
             }
         }
 
-        private void CreateLevelObjectEditor(LevelObjectPrefab levelObjectPrefab)
+        private void CreateCaveParamsEditor(CaveGenerationParams caveGenerationParams)
         {
             editorContainer.ClearChildren();
-
-            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, levelObjectPrefab, false, true, elementHeight: 20, titleFont: GUI.LargeFont);
+            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, caveGenerationParams, false, true, elementHeight: 20);
 
             if (selectedParams != null)
             {
-                var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)) { IsFixedSize = true }, 
+                var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)) { IsFixedSize = true },
                     isHorizontal: false, childAnchor: Anchor.TopCenter)
                 {
                     AbsoluteSpacing = 5,
@@ -457,14 +489,59 @@ namespace Barotrauma
                 {
                     MinValueFloat = 0,
                     MaxValueFloat = 100,
-                    FloatValue = levelObjectPrefab.GetCommonness(selectedParams.Identifier),
+                    FloatValue = caveGenerationParams.GetCommonness(selectedParams),
                     OnValueChanged = (numberInput) =>
                     {
-                        levelObjectPrefab.OverrideCommonness[selectedParams.Identifier] = numberInput.FloatValue;
+                        caveGenerationParams.OverrideCommonness[selectedParams.Identifier] = numberInput.FloatValue;
                     }
                 };
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
                 editor.AddCustomContent(commonnessContainer, 1);
+            }
+        }
+
+        private void CreateLevelObjectEditor(LevelObjectPrefab levelObjectPrefab)
+        {
+            editorContainer.ClearChildren();
+
+            var editor = new SerializableEntityEditor(editorContainer.Content.RectTransform, levelObjectPrefab, false, true, elementHeight: 20, titleFont: GUI.LargeFont);
+
+            if (selectedParams != null)
+            {
+                List<string> availableIdentifiers = new List<string>();
+                {
+                    if (selectedParams != null) { availableIdentifiers.Add(selectedParams.Identifier); }
+                }
+                foreach (var caveParam in CaveGenerationParams.CaveParams)
+                {
+                    if (selectedParams != null && caveParam.GetCommonness(selectedParams) <= 0.0f) { continue; }
+                    availableIdentifiers.Add(caveParam.Identifier);
+                }
+                availableIdentifiers.Reverse();
+
+                foreach (string paramsId in availableIdentifiers)
+                {
+                    var commonnessContainer = new GUILayoutGroup(new RectTransform(new Point(editor.Rect.Width, 70)) { IsFixedSize = true }, 
+                        isHorizontal: false, childAnchor: Anchor.TopCenter)
+                    {
+                        AbsoluteSpacing = 5,
+                        Stretch = true
+                    };
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
+                        TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", paramsId), textAlignment: Alignment.Center);
+                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
+                    {
+                        MinValueFloat = 0,
+                        MaxValueFloat = 100,
+                        FloatValue = selectedParams.Identifier == paramsId ? levelObjectPrefab.GetCommonness(selectedParams) : levelObjectPrefab.GetCommonness(CaveGenerationParams.CaveParams.Find(p => p.Identifier == paramsId)),
+                        OnValueChanged = (numberInput) =>
+                        {
+                            levelObjectPrefab.OverrideCommonness[paramsId] = numberInput.FloatValue;
+                        }
+                    };
+                    new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), commonnessContainer.RectTransform), style: null);
+                    editor.AddCustomContent(commonnessContainer, 1);
+                }
             }
 
             Sprite sprite = levelObjectPrefab.Sprites.FirstOrDefault() ?? levelObjectPrefab.DeformableSprite?.Sprite;
@@ -508,7 +585,7 @@ namespace Barotrauma
                 foreach (LevelObjectPrefab objPrefab in LevelObjectPrefab.List)
                 {
                     dropdown.AddItem(objPrefab.Name, objPrefab);
-                    if (childObj.AllowedNames.Contains(objPrefab.Name)) dropdown.SelectItem(objPrefab);
+                    if (childObj.AllowedNames.Contains(objPrefab.Name)) { dropdown.SelectItem(objPrefab); }
                 }
                 dropdown.OnSelected = (selected, obj) =>
                 {
@@ -590,7 +667,7 @@ namespace Barotrauma
             foreach (GUIComponent levelObjFrame in levelObjectList.Content.Children)
             {
                 var levelObj = levelObjFrame.UserData as LevelObjectPrefab;
-                float commonness = levelObj.GetCommonness(selectedParams.Identifier);
+                float commonness = levelObj.GetCommonness(selectedParams);
                 levelObjFrame.Color = commonness > 0.0f ? GUI.Style.Green * 0.4f : Color.Transparent;
                 levelObjFrame.SelectedColor = commonness > 0.0f ? GUI.Style.Green * 0.6f : Color.White * 0.5f;
                 levelObjFrame.HoverColor = commonness > 0.0f ? GUI.Style.Green * 0.7f : Color.White * 0.6f;
@@ -607,7 +684,7 @@ namespace Barotrauma
             {
                 var levelObj1 = c1.GUIComponent.UserData as LevelObjectPrefab;
                 var levelObj2 = c2.GUIComponent.UserData as LevelObjectPrefab;
-                return Math.Sign(levelObj2.GetCommonness(selectedParams.Identifier) - levelObj1.GetCommonness(selectedParams.Identifier));
+                return Math.Sign(levelObj2.GetCommonness(selectedParams) - levelObj1.GetCommonness(selectedParams));
             });
         }
 
@@ -630,7 +707,7 @@ namespace Barotrauma
         {
             if (lightingEnabled.Selected)
             {
-                GameMain.LightManager.UpdateLightMap(graphics, spriteBatch, cam);
+                GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam);
             }
             graphics.Clear(Color.Black);
 
@@ -643,6 +720,72 @@ namespace Barotrauma
                 Submarine.DrawFront(spriteBatch);
                 Submarine.DrawDamageable(spriteBatch, null);
                 GUI.DrawRectangle(spriteBatch, new Rectangle(new Point(0, -Level.Loaded.Size.Y), Level.Loaded.Size), Color.Gray, thickness: (int)(1.0f / cam.Zoom));
+
+                for (int i = 0; i < Level.Loaded.Tunnels.Count; i++)
+                {
+                    var tunnel = Level.Loaded.Tunnels[i];
+                    Color tunnelColor = tunnelDebugColors[i % tunnelDebugColors.Length] * 0.2f;
+                    for (int j = 1; j < tunnel.Nodes.Count; j++)
+                    {
+                        Vector2 start = new Vector2(tunnel.Nodes[j - 1].X, -tunnel.Nodes[j - 1].Y);
+                        Vector2 end = new Vector2(tunnel.Nodes[j].X, -tunnel.Nodes[j].Y);
+                        GUI.DrawLine(spriteBatch, start, end, tunnelColor, width: (int)(2.0f / cam.Zoom));
+                    }
+                }
+
+                foreach (Level.InterestingPosition interestingPos in Level.Loaded.PositionsOfInterest)
+                {
+                    if (interestingPos.Position.X < cam.WorldView.X || interestingPos.Position.X > cam.WorldView.Right ||
+                        interestingPos.Position.Y > cam.WorldView.Y || interestingPos.Position.Y < cam.WorldView.Y - cam.WorldView.Height)
+                    {
+                        continue;
+                    }
+
+                    Vector2 pos = new Vector2(interestingPos.Position.X, -interestingPos.Position.Y);
+                    spriteBatch.DrawCircle(pos, 500, 6, Color.White * 0.5f, thickness: (int)(2 / cam.Zoom));
+                    GUI.DrawString(spriteBatch, pos, interestingPos.PositionType.ToString(), Color.White, font: GUI.LargeFont);
+                }
+
+                // TODO: Improve this temporary level editor debug solution (or remove it)
+                foreach (var pathPoint in Level.Loaded.PathPoints)
+                {
+                    Vector2 pathPointPos = new Vector2(pathPoint.Position.X, -pathPoint.Position.Y);
+                    foreach (var location in pathPoint.ClusterLocations)
+                    {
+                        if (location.Resources == null) { continue; }
+                        foreach (var resource in location.Resources)
+                        {
+                            Vector2 resourcePos = new Vector2(resource.Position.X, -resource.Position.Y);
+                            spriteBatch.DrawCircle(resourcePos, 100, 6, Color.DarkGreen * 0.5f, thickness: (int)(2 / cam.Zoom));
+                            GUI.DrawString(spriteBatch, resourcePos, resource.Name, Color.DarkGreen, font: GUI.LargeFont);
+                            var dist = Vector2.Distance(resourcePos, pathPointPos);
+                            var lineStartPos = Vector2.Lerp(resourcePos, pathPointPos, 110 / dist);
+                            var lineEndPos = Vector2.Lerp(pathPointPos, resourcePos, 310 / dist);
+                            GUI.DrawLine(spriteBatch, lineStartPos, lineEndPos, Color.DarkGreen * 0.5f, width: (int)(2 / cam.Zoom));
+                        }
+                    }
+                    var color = pathPoint.ShouldContainResources ? Color.DarkGreen : Color.DarkRed;
+                    spriteBatch.DrawCircle(pathPointPos, 300, 6, color * 0.5f, thickness: (int)(2 / cam.Zoom));
+                    GUI.DrawString(spriteBatch, pathPointPos, "Path Point\n" + pathPoint.Id, color, font: GUI.LargeFont);
+                }
+
+                /*for (int i = 0; i < Level.Loaded.distanceField.Count; i++)
+                {
+                    GUI.DrawRectangle(spriteBatch, 
+                        new Vector2(Level.Loaded.distanceField[i].First.X, -Level.Loaded.distanceField[i].First.Y), 
+                        Vector2.One * 5 / cam.Zoom, 
+                        ToolBox.GradientLerp((float)(Level.Loaded.distanceField[i].Second / 20000.0), Color.Red, Color.Orange, Color.Yellow, Color.LightGreen), 
+                        isFilled: true);
+                }*/
+                /*for (int i = 0; i < Level.Loaded.siteCoordsX.Count; i++)
+                {
+                    GUI.DrawRectangle(spriteBatch,
+                        new Vector2((float)Level.Loaded.siteCoordsX[i], -(float)Level.Loaded.siteCoordsY[i]),
+                        Vector2.One * 5 / cam.Zoom,
+                        Color.Red,
+                        isFilled: true);
+                }*/
+
                 spriteBatch.End();
 
                 if (lightingEnabled.Selected)
@@ -659,12 +802,23 @@ namespace Barotrauma
             }
 
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
+            if (Level.Loaded != null)
+            {
+                float crushDepthScreen = cam.WorldToScreen(new Vector2(0.0f, -Level.Loaded.CrushDepth)).Y;
+                if (crushDepthScreen > 0.0f && crushDepthScreen < GameMain.GraphicsHeight)
+                {
+                    GUI.DrawLine(spriteBatch, new Vector2(0, crushDepthScreen), new Vector2(GameMain.GraphicsWidth, crushDepthScreen), GUI.Style.Red * 0.25f, width: 5);
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, crushDepthScreen), "Crush depth", GUI.Style.Red, backgroundColor: Color.Black);
+                }
+            }
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
         }
 
         public override void Update(double deltaTime)
         {
+            GameMain.LightManager?.Update((float)deltaTime);
+
             pointerLightSource.Position = cam.ScreenToWorld(PlayerInput.MousePosition);
             pointerLightSource.Enabled = cursorLightEnabled.Selected;
             pointerLightSource.IsBackground = true;
@@ -694,7 +848,40 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        XElement levelParamElement = element;
+                        if (element.IsOverride())
+                        {
+                            foreach (XElement subElement in element.Elements())
+                            {
+                                string id = element.GetAttributeString("identifier", null) ?? element.Name.ToString();
+                                if (!id.Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
+                                SerializableProperty.SerializeProperties(genParams, element, true);
+                            }
+                        }
+                        else
+                        {
+                            string id = element.GetAttributeString("identifier", null) ?? element.Name.ToString();
+                            if (!id.Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
+                            SerializableProperty.SerializeProperties(genParams, element, true);
+                        }
+                        break;
+                    }
+                }
+                using (var writer = XmlWriter.Create(configFile.Path, settings))
+                {
+                    doc.WriteTo(writer);
+                    writer.Flush();
+                }
+            }
+
+            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.CaveGenerationParameters))
+            {
+                XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
+                if (doc == null) { continue; }
+
+                foreach (CaveGenerationParams genParams in CaveGenerationParams.CaveParams)
+                {
+                    foreach (XElement element in doc.Root.Elements())
+                    {
                         if (element.IsOverride())
                         {
                             foreach (XElement subElement in element.Elements())
@@ -730,7 +917,8 @@ namespace Barotrauma
                 {
                     foreach (XElement element in doc.Root.Elements())
                     {
-                        if (!element.Name.ToString().Equals(levelObjPrefab.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
+                        string identifier = element.GetAttributeString("identifier", null);
+                        if (!identifier.Equals(levelObjPrefab.Identifier, StringComparison.OrdinalIgnoreCase)) { continue; }
                         levelObjPrefab.Save(element);
                         break;
                     }
@@ -846,7 +1034,7 @@ namespace Barotrauma
                         return false;
                     }
                     
-                    if (LevelObjectPrefab.List.Any(obj => obj.Name.ToLower() == nameBox.Text.ToLower()))
+                    if (LevelObjectPrefab.List.Any(obj => obj.Identifier.Equals(nameBox.Text, StringComparison.OrdinalIgnoreCase)))
                     {
                         nameBox.Flash(GUI.Style.Red);
                         GUI.AddMessage(TextManager.Get("leveleditor.levelobjnametaken"), GUI.Style.Red);
@@ -860,14 +1048,14 @@ namespace Barotrauma
                         return false;
                     }
 
-                    newPrefab.Name = nameBox.Text;
+                    newPrefab.Identifier = nameBox.Text;
 
                     System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings { Indent = true };
                     foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.LevelObjectPrefabs))
                     {
                         XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                         if (doc == null) { continue; }
-                        var newElement = new XElement(newPrefab.Name);
+                        var newElement = new XElement(newPrefab.Identifier);
                         newPrefab.Save(newElement);
                         newElement.Add(new XElement("Sprite", 
                             new XAttribute("texture", texturePathBox.Text), 

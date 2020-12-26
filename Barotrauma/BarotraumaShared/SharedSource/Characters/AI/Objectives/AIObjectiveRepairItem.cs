@@ -90,7 +90,12 @@ namespace Barotrauma
                     {
                         foreach (RelatedItem requiredItem in kvp.Value)
                         {
-                            subObjectives.Add(new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true));
+                            var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true);
+                            if (objectiveManager.IsCurrentOrder<AIObjectiveRepairItems>())
+                            {
+                                getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindrequireditemtorepair"), null, 0.0f, "dialogcannotfindrequireditemtorepair", 10.0f);
+                            }
+                            subObjectives.Add(getItemObjective);
                         }
                     }
                     return;

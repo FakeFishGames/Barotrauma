@@ -110,7 +110,7 @@ namespace Barotrauma
         private bool IsOffensiveOrArrest => initialMode == CombatMode.Offensive || initialMode == CombatMode.Arrest;
         private bool TargetEliminated => Enemy == null || Enemy.Removed || Enemy.IsUnconscious;
         private bool IsEnemyDisabled => Enemy == null || Enemy.Removed || Enemy.IsDead;
-        private bool EnemyIsClose() => Enemy != null && character.CurrentHull == Enemy.CurrentHull || Vector2.DistanceSquared(character.Position, Enemy.Position) < 500;
+        private bool EnemyIsClose() => Enemy != null && character.CurrentHull != null && character.CurrentHull == Enemy.CurrentHull || Vector2.DistanceSquared(character.Position, Enemy.Position) < 500;
 
         public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1, float coolDown = 10.0f) 
             : base(character, objectiveManager, priorityModifier)

@@ -11,15 +11,15 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
-        private static Dictionary<ISpatialEntity, int> orderIndicatorCount = new Dictionary<ISpatialEntity, int>();
+        private static readonly Dictionary<ISpatialEntity, int> orderIndicatorCount = new Dictionary<ISpatialEntity, int>();
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
         private static float focusedItemOverlayTimer;
         
-        private static List<Item> brokenItems = new List<Item>();
+        private static readonly List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
 
-        private static Dictionary<string, string> cachedHudTexts = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> cachedHudTexts = new Dictionary<string, string>();
 
         private static GUIFrame hudFrame;
         public static GUIFrame HUDFrame
@@ -126,6 +126,11 @@ namespace Barotrauma
                     {
                         character.Inventory.Update(deltaTime, cam);
                     }
+                    else
+                    {
+                        character.Inventory.ClearSubInventories();
+                    }
+
                     for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
                     {
                         var item = character.Inventory.Items[i];
@@ -199,9 +204,18 @@ namespace Barotrauma
             if (GameMain.GameSession?.CrewManager != null)
             {
                 orderIndicatorCount.Clear();
-                foreach (Pair<Order, float> timedOrder in GameMain.GameSession.CrewManager.ActiveOrders)
+                foreach (Pair<Order, float?> activeOrder in GameMain.GameSession.CrewManager.ActiveOrders)
                 {
-                    DrawOrderIndicator(spriteBatch, cam, character, timedOrder.First, MathHelper.Clamp(timedOrder.Second / 10.0f, 0.2f, 1.0f));
+                    if (activeOrder.Second.HasValue)
+                    {
+                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.First, iconAlpha: MathHelper.Clamp(activeOrder.Second.Value / 10.0f, 0.2f, 1.0f));
+                    }
+                    else
+                    {
+                        float iconAlpha = GetDistanceBasedIconAlpha(activeOrder.First.TargetSpatialEntity, maxDistance: 350.0f);
+                        if (iconAlpha <= 0.0f) { continue; }
+                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.First, iconAlpha: iconAlpha, createOffset: false, scaleMultiplier: 0.5f);
+                    }
                 }
 
                 if (character.CurrentOrder != null)
@@ -218,12 +232,16 @@ namespace Barotrauma
             foreach (Item brokenItem in brokenItems)
             {
                 if (brokenItem.NonInteractable) { continue; }
-                float dist = Vector2.Distance(character.WorldPosition, brokenItem.WorldPosition);
-                Vector2 drawPos = brokenItem.DrawPosition;
-                float alpha = Math.Min((1000.0f - dist) / 1000.0f * 2.0f, 1.0f);
+                float alpha = GetDistanceBasedIconAlpha(brokenItem);
                 if (alpha <= 0.0f) continue;
-                GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, GUI.BrokenIcon, 
+                GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUI.BrokenIcon, 
                     Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);                
+            }
+
+            float GetDistanceBasedIconAlpha(ISpatialEntity target, float maxDistance = 1000.0f)
+            {
+                float dist = Vector2.Distance(character.WorldPosition, target.WorldPosition);
+                return Math.Min((maxDistance - dist) / maxDistance * 2.0f, 1.0f);
             }
 
             if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen && (!character.IsKeyDown(InputType.Aim) || character.SelectedItems.Any(it => it?.GetComponent<Sprayer>() == null)))
@@ -362,8 +380,8 @@ namespace Barotrauma
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.X + HUDLayoutSettings.BottomRightInfoArea.Width * 0.05f),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Y + HUDLayoutSettings.BottomRightInfoArea.Height * 0.1f),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
-                                (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)));
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, 4 * GUI.Scale), targetWidth: HUDLayoutSettings.PortraitArea.Width, true);
+                                (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)), character.Info.IsDisguisedAsAnother);
+                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, 4 * GUI.Scale), targetWidth: HUDLayoutSettings.PortraitArea.Width, true, character.Info.IsDisguisedAsAnother);
                     }
                     mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
@@ -475,19 +493,12 @@ namespace Barotrauma
             return character.ShouldLockHud();
         }
 
-        private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f)
+        private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f, bool createOffset = true, float scaleMultiplier = 1.0f)
         {
             if (order?.SymbolSprite == null) { return; }
+            if (order.IsReport && order.OrderGiver != character && !order.HasAppropriateJob(character)) { return; }
 
-            if (order.TargetAllCharacters)
-            {
-                if (order.OrderGiver != character && !order.HasAppropriateJob(character))
-                {
-                    return;
-                }
-            }
-
-            ISpatialEntity target = order.ConnectedController != null ? order.ConnectedController.Item : order.TargetSpatialEntity;
+            ISpatialEntity target = order.ConnectedController?.Item ?? order.TargetSpatialEntity;
             if (target == null) { return; }
 
             //don't show the indicator if far away and not inside the same sub
@@ -503,7 +514,7 @@ namespace Barotrauma
             Vector2 drawPos = target is Entity ? (target as Entity).DrawPosition :
                 target.Submarine == null ? target.Position : target.Position + target.Submarine.DrawPosition;
             drawPos += Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
-            GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha);
+            GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha, createOffset: createOffset, scaleMultiplier: scaleMultiplier);
 
             orderIndicatorCount[target] = orderIndicatorCount[target] + 1;
         }        

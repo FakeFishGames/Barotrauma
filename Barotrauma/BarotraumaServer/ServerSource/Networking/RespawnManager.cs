@@ -275,7 +275,7 @@ namespace Barotrauma.Networking
                 characterInfos[i].CurrentOrder = null;
                 characterInfos[i].CurrentOrderOption = null;
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, !bot, bot);
+                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
                 character.TeamID = Character.TeamType.Team1;
 
                 if (bot)
@@ -341,7 +341,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    characterData.SpawnInventoryItems(character.Info, character.Inventory);
+                    characterData.SpawnInventoryItems(character, character.Inventory);
                     characterData.ApplyHealthData(character.Info, character);
                     character.GiveIdCardTags(mainSubSpawnPoints[i]);
                     characterData.HasSpawned = true;

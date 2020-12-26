@@ -30,6 +30,8 @@ namespace Barotrauma
         public readonly string Identifier;
         public readonly string Name;
 
+        public readonly float BeaconStationChance;
+
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
 
         public bool UseInMainMenu
@@ -74,6 +76,9 @@ namespace Barotrauma
         {
             Identifier = element.GetAttributeString("identifier", element.Name.ToString());
             Name = TextManager.Get("LocationName." + Identifier, fallBackTag: "unknown");
+
+            BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
+
             nameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
             UseInMainMenu = element.GetAttributeBool("useinmainmenu", false);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);

@@ -1708,14 +1708,15 @@ namespace Barotrauma
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
                     Vector2 explosionPos = cursorWorldPos;
-                    float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f; ;
+                    float range = 500, force = 10, damage = 50, structureDamage = 10, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                     if (args.Length > 0) float.TryParse(args[0], out range);
                     if (args.Length > 1) float.TryParse(args[1], out force);
                     if (args.Length > 2) float.TryParse(args[2], out damage);
                     if (args.Length > 3) float.TryParse(args[3], out structureDamage);
                     if (args.Length > 4) float.TryParse(args[4], out itemDamage);
                     if (args.Length > 5) float.TryParse(args[5], out empStrength);
-                    new Explosion(range, force, damage, structureDamage, itemDamage, empStrength).Explode(explosionPos, null);
+                    if (args.Length > 6) float.TryParse(args[6], out ballastFloraStrength);
+                    new Explosion(range, force, damage, structureDamage, itemDamage, empStrength, ballastFloraStrength).Explode(explosionPos, null);
                 }
             );
 
@@ -2152,6 +2153,43 @@ namespace Barotrauma
                     {
                         GameMain.Server.SendConsoleMessage($"{levelString} is not a valid level. Expected number or \"max\".", senderClient);
                     }                  
+                }
+            );
+
+            commands.Add(new Command("readycheck", "Commence a ready check.", (string[] args) =>
+            {
+                if (Screen.Selected == GameMain.GameScreen && GameMain.NetworkMember != null)
+                {
+                    CrewManager crewManager = GameMain.GameSession?.CrewManager;
+                    if (crewManager != null && crewManager.ActiveReadyCheck == null)
+                    {
+                        ReadyCheck.StartReadyCheck("");
+                        NewMessage("Attempted to commence a ready check.", Color.Green);
+                        return;
+                    }
+                    NewMessage("A ready check is already running.", Color.Red);
+                    return;
+                }
+                NewMessage("Ready checks cannot be commenced in the lobby.", Color.Red);
+            }));
+
+            AssignOnClientRequestExecute(
+                "readycheck",
+                (senderClient, cursorWorldPos, args) =>
+                {
+                    if (Screen.Selected == GameMain.GameScreen && GameMain.NetworkMember != null && !(GameMain.GameSession?.GameMode?.IsSinglePlayer ?? true))
+                    {
+                        CrewManager crewManager = GameMain.GameSession?.CrewManager;
+                        if (crewManager != null && crewManager.ActiveReadyCheck == null)
+                        {
+                            ReadyCheck.StartReadyCheck(senderClient.Name, senderClient);
+                            GameMain.Server.SendConsoleMessage("Attempted to commence a ready check.", senderClient);
+                            return;
+                        }
+                        GameMain.Server.SendConsoleMessage("A ready check is already running.", senderClient);
+                        return;
+                    }
+                    GameMain.Server.SendConsoleMessage("Ready checks cannot be commenced in the lobby.", senderClient);
                 }
             );
 

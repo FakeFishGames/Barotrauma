@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,7 +26,7 @@ namespace Barotrauma
         {
             // If the target was selected as a valid target, we'll have to accept it so that the objective can be completed.
             // The validity changes when a character picks the item up.
-            if (!IsValidTarget(target, character)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
+            if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
             if (target.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
@@ -55,15 +56,13 @@ namespace Barotrauma
             return true;
         }
 
-        public static bool IsValidTarget(Item item, Character character)
+        public static bool IsValidTarget(Item item, Character character, bool checkInventory)
         {
             if (item == null) { return false; }
+            if (item.IgnoreByAI) { return false; }
             if (item.NonInteractable) { return false; }
             if (item.ParentInventory != null) { return false; }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
-            //var rootContainer = item.GetRootContainer();
-            //// Only target items lying on the ground (= not inside a container) (do we need this check?)
-            //if (rootContainer != null) { return false; }
             var pickable = item.GetComponent<Pickable>();
             if (pickable == null) { return false; }
             if (pickable is Holdable h && h.Attachable && h.Attached) { return false; }
@@ -80,7 +79,39 @@ namespace Barotrauma
                     return false;
                 }
             }
-            return item.Prefab.PreferredContainers.Any();
+            if (item.Prefab.PreferredContainers.None())
+            {
+                return false;
+            }
+            if (!checkInventory)
+            {
+                return true;
+            }
+            bool canEquip = true;
+            if (!item.AllowedSlots.Contains(InvSlotType.Any))
+            {
+                canEquip = false;
+                var inv = character.Inventory;
+                foreach (var allowedSlot in item.AllowedSlots)
+                {
+                    foreach (var slotType in inv.SlotTypes)
+                    {
+                        if (allowedSlot.HasFlag(slotType))
+                        {
+                            for (int i = 0; i < inv.Capacity; i++)
+                            {
+                                canEquip = true;
+                                if (allowedSlot.HasFlag(inv.SlotTypes[i]) && inv.Items[i] != null)
+                                {
+                                    canEquip = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return canEquip;
         }
     }
 }

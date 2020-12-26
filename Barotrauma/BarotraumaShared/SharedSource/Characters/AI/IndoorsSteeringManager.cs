@@ -117,7 +117,7 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Seeks the ladder from the current and the next two nodes.
+        /// Seeks the ladder from the next and next + 1 nodes.
         /// </summary>
         public Ladder GetNextLadder()
         {
@@ -294,7 +294,13 @@ namespace Barotrauma
             bool isDiving = character.AnimController.InWater && character.AnimController.HeadInWater;
             // Only humanoids can climb ladders
             bool canClimb = character.AnimController is HumanoidAnimController && !character.LockHands;
-            var ladders = GetNextLadder();
+            Ladder currentLadder = currentPath.CurrentNode.Ladders;
+            if (currentLadder != null && currentLadder.Item.NonInteractable)
+            {
+                currentLadder = null;
+            }
+            Ladder nextLadder = GetNextLadder();
+            var ladders = currentLadder ?? nextLadder;
             if (canClimb && !isDiving && ladders != null && character.SelectedConstruction != ladders.Item)
             {
                 if (IsNextNodeLadder || currentPath.CurrentIndex == currentPath.Nodes.Count - 1)
@@ -325,7 +331,6 @@ namespace Barotrauma
             if (character.IsClimbing && !isDiving)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
-                Ladder nextLadder = GetNextLadder();
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
                 if (nextLadderSameAsCurrent)
                 {
@@ -341,8 +346,7 @@ namespace Barotrauma
                         diff.Y = Math.Max(diff.Y, 1.0f);
                     }
                     // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
-                    float margin = 0.1f;
-                    bool isAboveFloor = heightFromFloor > -margin && heightFromFloor < collider.height * 1.5f;
+                    bool isAboveFloor = heightFromFloor > -0.1f;
                     // If the next waypoint is horizontally far, we don't want to keep holding the ladders
                     if (isAboveFloor && (nextLadder == null || Math.Abs(currentPath.CurrentNode.WorldPosition.X - currentPath.NextNode.WorldPosition.X) > 50))
                     {
@@ -437,7 +441,7 @@ namespace Barotrauma
             if (door.IsOpen) { return true; }
             if (door.Item.NonInteractable) { return false; }
             if (CanBreakDoors) { return true; }
-            if (door.IsStuck) { return false; }
+            if (door.IsStuck || door.IsJammed) { return false; }
             if (!canOpenDoors || character.LockHands) { return false; }
             if (door.HasIntegratedButtons)
             {
@@ -719,7 +723,10 @@ namespace Barotrauma
             if (wander)
             {
                 SteeringWander();
-                SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance), 5);
+                if (inWater)
+                {
+                    SteeringAvoid(deltaTime, lookAheadDistance: ConvertUnits.ToSimUnits(wallAvoidDistance), 5);
+                }
             }
             if (!inWater)
             {

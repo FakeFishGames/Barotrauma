@@ -50,6 +50,9 @@ namespace Barotrauma
                 DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
             }
 
+            Event ev = (Event)instance;
+            if (!ev.LevelMeetsRequirements()) { return null; }
+
             return (Event)instance;
         }
     }

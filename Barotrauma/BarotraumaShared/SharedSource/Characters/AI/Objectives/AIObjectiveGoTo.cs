@@ -30,6 +30,8 @@ namespace Barotrauma
         public bool followControlledCharacter;
         public bool mimic;
 
+        public float extraDistanceWhileSwimming;
+        public float extraDistanceOutsideSub;
         private float _closeEnough = 50;
         private readonly float minDistance = 50;
         /// <summary>
@@ -37,7 +39,19 @@ namespace Barotrauma
         /// </summary>
         public float CloseEnough
         {
-            get { return _closeEnough; }
+            get
+            {
+                float dist = _closeEnough;
+                if (character.AnimController.InWater)
+                {
+                    dist += extraDistanceWhileSwimming;
+                }
+                if (character.CurrentHull == null)
+                {
+                    dist += extraDistanceOutsideSub;
+                }
+                return dist;
+            }
             set
             {
                 _closeEnough = Math.Max(minDistance, value);

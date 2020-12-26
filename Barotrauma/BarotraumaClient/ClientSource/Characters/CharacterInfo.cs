@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Xml.Linq;
+using System.IO;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
@@ -14,6 +16,12 @@ namespace Barotrauma
         private static Sprite infoAreaPortraitBG;
 
         public bool LastControlled;
+
+        private Sprite disguisedPortrait;
+        private List<WearableSprite> disguisedAttachmentSprites;
+        private Vector2? disguisedSheetIndex;
+        private Sprite disguisedJobIcon;
+        private Color disguisedJobColor;
 
         public static void Init()
         {
@@ -175,6 +183,199 @@ namespace Barotrauma
             }
         }
 
+        private void GetDisguisedSprites(IdCard idCard)
+        {
+            if (idCard.Item.Tags == string.Empty) return;
+
+            if (idCard.StoredJobPrefab == null || idCard.StoredPortrait == null)
+            {
+                string[] readTags = idCard.Item.Tags.Split(',');
+
+                if (readTags.Length == 0) return;
+
+                if (idCard.StoredJobPrefab == null)
+                {
+                    string jobIdTag = readTags.FirstOrDefault(s => s.StartsWith("jobid:"));
+
+                    if (jobIdTag != null && jobIdTag.Length > 6)
+                    {
+                        string jobId = jobIdTag.Substring(6);
+                        if (jobId != string.Empty)
+                        {
+                            idCard.StoredJobPrefab = JobPrefab.Get(jobId);
+                        }
+                    }
+                }
+
+                if (idCard.StoredPortrait == null)
+                {
+                    string disguisedGender = string.Empty;
+                    string disguisedRace = string.Empty;
+                    string disguisedHeadSpriteId = string.Empty;
+                    int disguisedHairIndex = -1;
+                    int disguisedBeardIndex = -1;
+                    int disguisedMoustacheIndex = -1;
+                    int disguisedFaceAttachmentIndex = -1;
+
+                    foreach (string tag in readTags)
+                    {
+                        string[] s = tag.Split(':');
+
+                        switch (s[0])
+                        {
+                            case "gender":
+                                disguisedGender = s[1];
+                                break;
+
+                            case "race":
+                                disguisedRace = s[1];
+                                break;
+
+                            case "headspriteid":
+                                disguisedHeadSpriteId = s[1];
+                                break;
+
+                            case "hairindex":
+                                disguisedHairIndex = int.Parse(s[1]);
+                                break;
+
+                            case "beardindex":
+                                disguisedBeardIndex = int.Parse(s[1]);
+                                break;
+
+                            case "moustacheindex":
+                                disguisedMoustacheIndex = int.Parse(s[1]);
+                                break;
+
+                            case "faceattachmentindex":
+                                disguisedFaceAttachmentIndex = int.Parse(s[1]);
+                                break;
+
+                            case "sheetindex":
+                                string[] vectorValues = s[1].Split(";");
+                                idCard.StoredSheetIndex = new Vector2(float.Parse(vectorValues[0]), float.Parse(vectorValues[1]));
+                                break;
+                        }
+                    }
+
+                    if (disguisedGender == string.Empty || disguisedRace == string.Empty || disguisedHeadSpriteId == string.Empty)
+                    {
+                        idCard.StoredPortrait = null;
+                        idCard.StoredAttachments = null;
+                        return;
+                    }
+
+                    foreach (XElement limbElement in Ragdoll.MainElement.Elements())
+                    {
+                        if (!limbElement.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                        XElement spriteElement = limbElement.Element("sprite");
+                        if (spriteElement == null) { continue; }
+
+                        string spritePath = spriteElement.Attribute("texture").Value;
+
+                        spritePath = spritePath.Replace("[GENDER]", disguisedGender);
+                        spritePath = spritePath.Replace("[RACE]", disguisedRace.ToLowerInvariant());
+                        spritePath = spritePath.Replace("[HEADID]", disguisedHeadSpriteId);
+
+                        string fileName = Path.GetFileNameWithoutExtension(spritePath);
+
+                        //go through the files in the directory to find a matching sprite
+                        foreach (string file in Directory.GetFiles(Path.GetDirectoryName(spritePath)))
+                        {
+                            if (!file.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+                            string fileWithoutTags = Path.GetFileNameWithoutExtension(file);
+                            fileWithoutTags = fileWithoutTags.Split('[', ']').First();
+                            if (fileWithoutTags != fileName) { continue; }
+                            idCard.StoredPortrait = new Sprite(spriteElement, "", file) { RelativeOrigin = Vector2.Zero };
+                            break;
+                        }
+
+                        break;
+                    }
+
+                    if (Wearables != null)
+                    {
+                        XElement disguisedHairElement, disguisedBeardElement, disguisedMoustacheElement, disguisedFaceAttachmentElement;
+                        List<XElement> disguisedHairs, disguisedBeards, disguisedMoustaches, disguisedFaceAttachments;
+
+                        Gender disguisedGenderEnum = disguisedGender == "female" ? Gender.Female : Gender.Male;
+                        Race disguisedRaceEnum = (Race)Enum.Parse(typeof(Race), disguisedRace);
+                        int headSpriteId = int.Parse(disguisedHeadSpriteId);
+
+                        float commonness = disguisedGenderEnum == Gender.Female ? 0.05f : 0.2f;
+                        disguisedHairs = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, disguisedGenderEnum, disguisedRaceEnum), WearableType.Hair, headSpriteId), WearableType.Hair, commonness);
+                        disguisedBeards = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, disguisedGenderEnum, disguisedRaceEnum), WearableType.Beard, headSpriteId), WearableType.Beard);
+                        disguisedMoustaches = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, disguisedGenderEnum, disguisedRaceEnum), WearableType.Moustache, headSpriteId), WearableType.Moustache);
+                        disguisedFaceAttachments = AddEmpty(FilterByTypeAndHeadID(FilterElementsByGenderAndRace(wearables, disguisedGenderEnum, disguisedRaceEnum), WearableType.FaceAttachment, headSpriteId), WearableType.FaceAttachment);
+
+                        if (IsValidIndex(disguisedHairIndex, disguisedHairs))
+                        {
+                            disguisedHairElement = disguisedHairs[disguisedHairIndex];
+                        }
+                        else
+                        {
+                            disguisedHairElement = GetRandomElement(disguisedHairs);
+                        }
+                        if (IsValidIndex(disguisedBeardIndex, disguisedBeards))
+                        {
+                            disguisedBeardElement = disguisedBeards[disguisedBeardIndex];
+                        }
+                        else
+                        {
+                            disguisedBeardElement = GetRandomElement(disguisedBeards);
+                        }
+
+                        if (IsValidIndex(disguisedMoustacheIndex, disguisedMoustaches))
+                        {
+                            disguisedMoustacheElement = disguisedMoustaches[disguisedMoustacheIndex];
+                        }
+                        else
+                        {
+                            disguisedMoustacheElement = GetRandomElement(disguisedMoustaches);
+                        }
+                        if (IsValidIndex(disguisedFaceAttachmentIndex, disguisedFaceAttachments))
+                        {
+                            disguisedFaceAttachmentElement = disguisedFaceAttachments[disguisedFaceAttachmentIndex];
+                        }
+                        else
+                        {
+                            disguisedFaceAttachmentElement = GetRandomElement(disguisedFaceAttachments);
+                        }
+
+                        idCard.StoredAttachments = new List<WearableSprite>();
+
+                        disguisedFaceAttachmentElement?.Elements("sprite").ForEach(s => idCard.StoredAttachments.Add(new WearableSprite(s, WearableType.FaceAttachment)));
+                        disguisedBeardElement?.Elements("sprite").ForEach(s => idCard.StoredAttachments.Add(new WearableSprite(s, WearableType.Beard)));
+                        disguisedMoustacheElement?.Elements("sprite").ForEach(s => idCard.StoredAttachments.Add(new WearableSprite(s, WearableType.Moustache)));
+                        disguisedHairElement?.Elements("sprite").ForEach(s => idCard.StoredAttachments.Add(new WearableSprite(s, WearableType.Hair)));
+
+                        if (OmitJobInPortraitClothing)
+                        {
+                            JobPrefab.NoJobElement?.Element("PortraitClothing")?.Elements("sprite").ForEach(s => idCard.StoredAttachments.Add(new WearableSprite(s, WearableType.JobIndicator)));
+                        }
+                        else
+                        {
+                            idCard.StoredJobPrefab?.ClothingElement?.Elements("sprite").ForEach(s => idCard.StoredAttachments.Add(new WearableSprite(s, WearableType.JobIndicator)));
+                        }
+                    }
+                }
+            }
+
+            if (idCard.StoredJobPrefab != null)
+            {
+                disguisedJobIcon = idCard.StoredJobPrefab.Icon;
+                disguisedJobColor = idCard.StoredJobPrefab.UIColor;
+            }
+
+            disguisedPortrait = idCard.StoredPortrait;
+            disguisedSheetIndex = idCard.StoredSheetIndex;
+            disguisedAttachmentSprites = idCard.StoredAttachments;
+        }
+
         partial void LoadAttachmentSprites(bool omitJob)
         {
             if (attachmentSprites == null)
@@ -219,23 +420,42 @@ namespace Barotrauma
                     HUDLayoutSettings.BottomRightInfoArea.Height / (float)infoAreaPortraitBG.SourceRect.Height));
         }
 
-        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 offset, float targetWidth, bool flip = false)
+        public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 offset, float targetWidth, bool flip = false, bool evaluateDisguise = false)
         {
-            if (Portrait != null)
+            if (evaluateDisguise && IsDisguised) return;
+
+            Vector2? sheetIndex;
+            Sprite portraitToDraw;
+            List<WearableSprite> attachmentsToDraw;
+
+            if (!IsDisguisedAsAnother || !evaluateDisguise)
+            {
+                sheetIndex = Head.SheetIndex;
+                portraitToDraw = Portrait;
+                attachmentsToDraw = AttachmentSprites;
+            }
+            else
+            {
+                sheetIndex = disguisedSheetIndex;
+                portraitToDraw = disguisedPortrait;
+                attachmentsToDraw = disguisedAttachmentSprites;
+            }
+
+            if (portraitToDraw != null)
             {
                 // Scale down the head sprite 10%
                 float scale = targetWidth * 0.9f / Portrait.size.X;
-                if (Head.SheetIndex.HasValue)
+                if (sheetIndex.HasValue)
                 {
-                    Portrait.SourceRect = new Rectangle(CalculateOffset(Portrait, Head.SheetIndex.Value.ToPoint()), Portrait.SourceRect.Size);
+                    portraitToDraw.SourceRect = new Rectangle(CalculateOffset(portraitToDraw, sheetIndex.Value.ToPoint()), portraitToDraw.SourceRect.Size);
                 }
-                Portrait.Draw(spriteBatch, screenPos + offset, Color.White, Portrait.Origin, scale: scale, spriteEffect: flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
-                if (AttachmentSprites != null)
+                portraitToDraw.Draw(spriteBatch, screenPos + offset, Color.White, portraitToDraw.Origin, scale: scale, spriteEffect: flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                if (attachmentsToDraw != null)
                 {
                     float depthStep = 0.000001f;
-                    foreach (var attachment in AttachmentSprites)
+                    foreach (var attachment in attachmentsToDraw)
                     {
-                        DrawAttachmentSprite(spriteBatch, attachment, Portrait, screenPos + offset, scale, depthStep, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+                        DrawAttachmentSprite(spriteBatch, attachment, portraitToDraw, sheetIndex, screenPos + offset, scale, depthStep, flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
                         depthStep += depthStep;
                     }
                 }
@@ -258,30 +478,34 @@ namespace Barotrauma
                     float depthStep = 0.000001f;
                     foreach (var attachment in AttachmentSprites)
                     {
-                        DrawAttachmentSprite(spriteBatch, attachment, headSprite, screenPos, scale, depthStep);
+                        DrawAttachmentSprite(spriteBatch, attachment, headSprite, Head.SheetIndex, screenPos, scale, depthStep);
                         depthStep += depthStep;
                     }
                 }
             }
         }
 
-        public void DrawJobIcon(SpriteBatch spriteBatch, Vector2 pos, float scale = 1.0f)
+        public void DrawJobIcon(SpriteBatch spriteBatch, Vector2 pos, float scale = 1.0f, bool evaluateDisguise = false)
         {
-            var icon = Job?.Prefab?.Icon;
+            if (evaluateDisguise && IsDisguised) return;
+            var icon = !IsDisguisedAsAnother || !evaluateDisguise ? Job?.Prefab?.Icon : disguisedJobIcon;
             if (icon == null) { return; }
-            icon.Draw(spriteBatch, pos, Job.Prefab.UIColor, scale: scale);
-        }
-        public void DrawJobIcon(SpriteBatch spriteBatch, Rectangle area)
-        {
-            var icon = Job?.Prefab?.Icon;
-            if (icon == null) { return; }
-            icon.Draw(spriteBatch,
-                area.Center.ToVector2(),
-                Job.Prefab.UIColor,
-                scale: Math.Min(area.Width / (float)icon.SourceRect.Width, area.Height / (float)icon.SourceRect.Height));
+            Color iconColor = !IsDisguisedAsAnother || !evaluateDisguise ? Job.Prefab.UIColor : disguisedJobColor;
+
+            icon.Draw(spriteBatch, pos, iconColor, scale: scale);
         }
 
-        private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
+        public void DrawJobIcon(SpriteBatch spriteBatch, Rectangle area, bool evaluateDisguise = false)
+        {
+            if (evaluateDisguise && IsDisguised) return;
+            var icon = !IsDisguisedAsAnother || !evaluateDisguise ? Job?.Prefab?.Icon : disguisedJobIcon;
+            if (icon == null) { return; }
+            Color iconColor = !IsDisguisedAsAnother || !evaluateDisguise ? Job.Prefab.UIColor : disguisedJobColor;
+
+            icon.Draw(spriteBatch, area.Center.ToVector2(), iconColor, scale: Math.Min(area.Width / (float)icon.SourceRect.Width, area.Height / (float)icon.SourceRect.Height));
+        }
+
+        private void DrawAttachmentSprite(SpriteBatch spriteBatch, WearableSprite attachment, Sprite head, Vector2? sheetIndex, Vector2 drawPos, float scale, float depthStep, SpriteEffects spriteEffects = SpriteEffects.None)
         {
             if (attachment.InheritSourceRect)
             {
@@ -289,9 +513,9 @@ namespace Barotrauma
                 {
                     attachment.Sprite.SourceRect = new Rectangle(CalculateOffset(head, attachment.SheetIndex.Value), head.SourceRect.Size);
                 }
-                else if (Head.SheetIndex.HasValue)
+                else if (sheetIndex.HasValue)
                 {
-                    attachment.Sprite.SourceRect = new Rectangle(CalculateOffset(head, Head.SheetIndex.Value.ToPoint()), head.SourceRect.Size);
+                    attachment.Sprite.SourceRect = new Rectangle(CalculateOffset(head, sheetIndex.Value.ToPoint()), head.SourceRect.Size);
                 }
                 else
                 {

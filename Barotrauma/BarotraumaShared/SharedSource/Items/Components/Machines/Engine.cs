@@ -113,7 +113,7 @@ namespace Barotrauma.Items.Components
                     forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
                 }
 
-                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage / MinVoltage, 1.0f);
+                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
                 Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
                 UpdatePropellerDamage(deltaTime);
                 float maxChangeSpeed = 0.5f;
                 float modifier = 2;
-                float noise = currForce.Length() * forceMultiplier * modifier / maxForce;
+                float noise = MathUtils.NearlyEqual(0.0f, maxForce) ? 0.0f : currForce.Length() * forceMultiplier * modifier / maxForce;
                 float min = Math.Max(1 - maxChangeSpeed, 0);
                 float max = 1 + maxChangeSpeed;
                 UpdateAITargets(Math.Clamp(noise, min, max), deltaTime);

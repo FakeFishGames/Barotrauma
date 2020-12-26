@@ -68,6 +68,9 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(false, true, description: "Should the AI ignore this item. This will prevent outpost NPCs cleaning up or otherwise using important items intended to be left for the players.")]
+        public bool IgnoreByAI { get; set; }
+
         private bool spawned;
         private Entity spawnedEntity;
 
@@ -123,7 +126,7 @@ namespace Barotrauma
                         var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
                         if (idleObjective != null)
                         {
-                            idleObjective.Behavior = humanPrefab.BehaviorType;
+                            idleObjective.Behavior = humanPrefab.Behavior;
                             foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
                             {
                                 idleObjective.PreferredOutpostModuleTypes.Add(moduleType); 
@@ -202,6 +205,7 @@ namespace Barotrauma
                             ParentEvent.AddTarget(TargetTag, newItem);
                         }
                         spawnedEntity = newItem;
+                        newItem?.SetIgnoreByAI(IgnoreByAI);
                     }
                 }
             }

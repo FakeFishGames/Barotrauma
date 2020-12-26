@@ -90,6 +90,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(AIObjectiveIdle.BehaviorType.Passive, false)]
+        public AIObjectiveIdle.BehaviorType IdleBehavior
+        {
+            get;
+            private set;
+        }
+
         public string OriginalName { get { return Identifier; } }
 
         public ContentPackage ContentPackage { get; private set; }

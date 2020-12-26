@@ -21,7 +21,8 @@ namespace Barotrauma
         //can either be a tag or an identifier
         public readonly string[] itemIdentifiers;
         public readonly ItemContainer container;
-        public readonly Item item;
+        private readonly Item item;
+        public Item ItemToContain { get; private set; }
 
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
@@ -30,7 +31,7 @@ namespace Barotrauma
 
         public bool AllowToFindDivingGear { get; set; } = true;
         public bool AllowDangerousPressure { get; set; }
-        public float ConditionLevel { get; set; }
+        public float ConditionLevel { get; set; } = 1;
         public bool Equip { get; set; }
         public bool RemoveEmpty { get; set; } = true;
 
@@ -59,7 +60,7 @@ namespace Barotrauma
         protected override bool Check()
         {
             if (IsCompleted) { return true; }
-            if (container == null)
+            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
             {
                 Abandon = true;
                 return false;
@@ -82,19 +83,24 @@ namespace Barotrauma
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage > ConditionLevel;
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel;
 
         protected override void Act(float deltaTime)
         {
-            if (container == null)
+            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
             {
                 Abandon = true;
                 return;
             }
-            Item itemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
-            if (itemToContain != null)
+            ItemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
+            if (ItemToContain != null)
             {
-                if (character.CanInteractWith(container.Item, out _, checkLinked: false))
+                if (!character.CanInteractWith(ItemToContain, checkLinked: false))
+                {
+                    Abandon = true;
+                    return;
+                }
+                if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
                     if (RemoveEmpty)
                     {
@@ -108,29 +114,29 @@ namespace Barotrauma
                         }
                     }
                     // Contain the item
-                    if (itemToContain.ParentInventory == character.Inventory)
+                    if (ItemToContain.ParentInventory == character.Inventory)
                     {
-                        if (!container.Inventory.CanBePut(itemToContain))
+                        if (!container.Inventory.CanBePut(ItemToContain))
                         {
                             Abandon = true;
                         }
                         else
                         {
-                            character.Inventory.RemoveItem(itemToContain);
-                            if (container.Inventory.TryPutItem(itemToContain, null))
+                            character.Inventory.RemoveItem(ItemToContain);
+                            if (container.Inventory.TryPutItem(ItemToContain, null))
                             {
                                 IsCompleted = true;
                             }
                             else
                             {
-                                itemToContain.Drop(character);
+                                ItemToContain.Drop(character);
                                 Abandon = true;
                             }
                         }
                     }
                     else
                     {
-                        if (container.Combine(itemToContain, character))
+                        if (container.Combine(ItemToContain, character))
                         {
                             IsCompleted = true;
                         }
@@ -142,11 +148,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // TODO: should we just use GetItem?
                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(container.Item, character, objectiveManager, getDivingGearIfNeeded: AllowToFindDivingGear)
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
-                        TargetName = container.Item.Name
+                        TargetName = container.Item.Name,
+                        abortCondition = () => !ItemToContain.IsOwnedBy(character)
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));

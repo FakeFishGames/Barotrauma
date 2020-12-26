@@ -240,7 +240,14 @@ namespace Barotrauma.Particles
             {
                 animState += deltaTime;
                 int frameCount = ((SpriteSheet)prefab.Sprites[spriteIndex]).FrameCount;
-                animFrame = (int)Math.Min(Math.Floor(animState / prefab.AnimDuration * frameCount), frameCount - 1);
+                if (prefab.LoopAnim)
+                {
+                    animFrame = (int)(Math.Floor(animState / prefab.AnimDuration * frameCount) % frameCount);
+                }
+                else
+                {
+                    animFrame = (int)Math.Min(Math.Floor(animState / prefab.AnimDuration * frameCount), frameCount - 1);
+                }
             }
             
             lifeTime -= deltaTime;

@@ -62,7 +62,7 @@ namespace Barotrauma.Networking
         public Submarine RespawnShuttle { get; private set; }
 
         public RespawnManager(NetworkMember networkMember, SubmarineInfo shuttleInfo)
-            : base(null)
+            : base(null, Entity.RespawnManagerID)
         {
             this.networkMember = networkMember;
 
@@ -265,7 +265,7 @@ namespace Barotrauma.Networking
 #endif
                 c.Kill(CauseOfDeathType.Unknown, null, true);
                 c.Enabled = false;
-                    
+                
                 Spawner.AddToRemoveQueue(c);
                 if (c.Inventory != null)
                 {

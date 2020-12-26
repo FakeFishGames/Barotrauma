@@ -71,6 +71,8 @@ namespace Barotrauma
         public static bool IsValidTarget(Gap gap, Character character)
         {
             if (gap == null) { return false; }
+            // Don't fix a leak on a wall section set to be ignored
+            if (gap.ConnectedWall?.Sections?.Any(s => s.gap == gap && s.IgnoreByAI) ?? false) { return false; } 
             if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }
             if (gap.Submarine == null || character.Submarine == null) { return false; }
             // Don't allow going into another sub, unless it's connected and of the same team and type.

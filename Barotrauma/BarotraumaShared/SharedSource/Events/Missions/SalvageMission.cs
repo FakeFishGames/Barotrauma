@@ -109,8 +109,8 @@ namespace Barotrauma
             item = null;
             if (!IsClient)
             {
-                //ruin/wreck items are allowed to spawn close to the sub
-                float minDistance = spawnPositionType == Level.PositionType.Ruin || spawnPositionType == Level.PositionType.Wreck ?
+                //ruin/cave/wreck items are allowed to spawn close to the sub
+                float minDistance = spawnPositionType == Level.PositionType.Ruin || spawnPositionType == Level.PositionType.Cave || spawnPositionType == Level.PositionType.Wreck ?
                     0.0f : Level.Loaded.Size.X * 0.3f;
                 Vector2 position = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
             
@@ -121,6 +121,7 @@ namespace Barotrauma
                     {
                         case Level.PositionType.Cave:
                         case Level.PositionType.MainPath:
+                        case Level.PositionType.SidePath:
                             item = suitableItems.FirstOrDefault(it => Vector2.DistanceSquared(it.WorldPosition, position) < 1000.0f);
                             break;
                         case Level.PositionType.Ruin:

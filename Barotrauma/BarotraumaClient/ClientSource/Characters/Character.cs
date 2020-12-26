@@ -520,7 +520,7 @@ namespace Barotrauma
 
             foreach (Character c in CharacterList)
             {
-                if (!CanInteractWith(c, checkVisibility: false)) continue;
+                if (!CanInteractWith(c, checkVisibility: false) || (c.AnimController?.SimplePhysicsEnabled ?? true)) { continue; }
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
                 if (dist < maxDist * maxDist && (closestCharacter == null || dist < closestDist))
@@ -686,7 +686,7 @@ namespace Barotrauma
         
         public virtual void DrawFront(SpriteBatch spriteBatch, Camera cam)
         {
-            if (!Enabled || InvisibleTimer > 0.0f) { return; }
+            if (!Enabled || InvisibleTimer > 0.0f || (AnimController?.SimplePhysicsEnabled ?? true)) { return; }
 
             if (GameMain.DebugDraw)
             {
@@ -810,7 +810,7 @@ namespace Barotrauma
                         var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
                         if (iconStyle != null)
                         {
-                            Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
+                            Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
                             Vector2 iconPos = headPos;
                             iconPos.Y = -iconPos.Y;
                             nameColor = iconStyle.Color;
@@ -835,7 +835,7 @@ namespace Barotrauma
                     var iconStyle = GUI.Style.GetComponentStyle("PetIcon." + petStatus);
                     if (iconStyle != null)
                     {
-                        Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.WorldPosition ?? WorldPosition + Vector2.UnitY * 100.0f;
+                        Vector2 headPos = AnimController.GetLimb(LimbType.Head)?.body?.DrawPosition ?? DrawPosition + Vector2.UnitY * 100.0f;
                         Vector2 iconPos = headPos;
                         iconPos.Y = -iconPos.Y;
                         var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();

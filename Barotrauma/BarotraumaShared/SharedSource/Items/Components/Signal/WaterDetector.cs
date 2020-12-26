@@ -1,4 +1,6 @@
-﻿using System.Xml.Linq;
+﻿using Microsoft.Xna.Framework;
+using System;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -58,6 +60,12 @@ namespace Barotrauma.Items.Components
             if (!string.IsNullOrEmpty(signalOut))
             {
                 item.SendSignal(0, signalOut, "signal_out", null);
+            }
+
+            if (item.CurrentHull != null)
+            {
+                int waterPercentage = MathHelper.Clamp((int)Math.Round(item.CurrentHull.WaterPercentage), 0, 100);
+                item.SendSignal(0, waterPercentage.ToString(), "water_%", null);
             }
         }
     }

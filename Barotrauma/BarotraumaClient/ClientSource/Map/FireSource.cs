@@ -36,8 +36,8 @@ namespace Barotrauma
                     Rand.Range(worldPosition.Y - size.Y, worldPosition.Y + 20.0f));
 
                 Vector2 particleVel = new Vector2(
-                    (particlePos.X - (worldPosition.X + size.X / 2.0f)),
-                    (float)Math.Sqrt(size.X) * Rand.Range(0.0f, 15.0f) * growModifier);
+                    particlePos.X - (worldPosition.X + size.X / 2.0f),
+                    Math.Max((float)Math.Sqrt(size.X) * Rand.Range(0.0f, 15.0f) * growModifier, 0.0f));
 
                 particleVel.X = MathHelper.Clamp(particleVel.X, -200.0f, 200.0f);
 

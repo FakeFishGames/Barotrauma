@@ -117,9 +117,9 @@ namespace Barotrauma.Items.Components
         {
             if (defaultWireSprite == null)
             {
-                defaultWireSprite = new Sprite("Content/Items/wireHorizontal.png", new Vector2(0.5f, 0.5f))
+                defaultWireSprite = new Sprite("Content/Items/Electricity/signalcomp.png", new Rectangle(970, 47, 14, 16), new Vector2(0.5f, 0.5f))
                 {
-                    Depth = 0.85f
+                    Depth = 0.855f
                 };
             }
 
@@ -156,7 +156,7 @@ namespace Barotrauma.Items.Components
                 drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
             }
 
-            float depth = item.IsSelected ? 0.0f : Screen.Selected is SubEditorScreen editor && editor.WiringMode ? 0.00002f : wireSprite.Depth + ((item.ID % 100) * 0.00001f);
+            float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : wireSprite.Depth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
 
             if (item.IsHighlighted)
             {
@@ -261,7 +261,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.0f);
+                    GUI.DrawRectangle(spriteBatch, drawPos + new Vector2(-3, -3), new Vector2(6, 6), item.Color, true, 0.015f);
                 }
             }
         }
