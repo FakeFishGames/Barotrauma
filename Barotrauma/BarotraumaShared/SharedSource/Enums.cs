@@ -12,7 +12,8 @@
 
     public enum ActionType
     {
-        Always, OnPicked, OnUse, OnSecondaryUse,
+        Always, OnPicked, OnUse, OnSecondaryUse, 
+        OnReload, OnRemoveMag,
         OnWearing, OnContaining, OnContained, OnNotContained,
         OnActive, OnFailure, OnBroken,
         OnFire, InWater, NotInWater,

@@ -236,10 +236,11 @@
       <RequiredItems items="revolverround" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="40" />
     </RangedWeapon>
-    <ItemContainer capacity="6" hideitems="true" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
+    <ItemContainer capacity="6" hideitems="true" playerreloadable="true" reloadbasetime="10.5" reloadunskilledextratime="1.5">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="revolverammo" />
       <RequiredSkill identifier="weapons" />
+      <Sound file="Content/Items/Weapons/RevolverReload.ogg" type="OnReload" range="500" />
     </ItemContainer>
     <aitarget sightrange="2000" soundrange="5000" fadeouttime="5" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -338,6 +339,8 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="smgammo" />
       <RequiredSkill identifier="weapons" />
+      <Sound file="Content/Items/Weapons/SMGRemoveMag.ogg" type="OnRemoveMag" range="500" />
+      <Sound file="Content/Items/Weapons/SMGReload.ogg" type="OnReload" range="500" />
     </ItemContainer>
     <aitarget sightrange="2000" soundrange="4000" fadeouttime="5" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -650,6 +653,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="grenade" />
       <RequiredSkill identifier="weapons" />
+      <Sound file="Content/Items/Weapons/GrenadeLauncherReload.ogg" type="OnReload" range="500" />
     </ItemContainer>
     <aitarget sightrange="500" soundrange="500" fadeouttime="3" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />
@@ -800,6 +804,7 @@
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="shotgunammo" />
       <RequiredSkill identifier="weapons" />
+      <Sound file="Content/Items/Weapons/ShotgunReload.ogg" type="OnReload" range="500" />
     </ItemContainer>
     <aitarget sightrange="3000" soundrange="5000" fadeouttime="5" />
     <Upgrade gameversion="0.10.0.0" scale="0.5" />

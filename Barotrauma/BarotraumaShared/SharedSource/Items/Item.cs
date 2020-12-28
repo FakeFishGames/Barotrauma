@@ -2145,7 +2145,7 @@ namespace Barotrauma
                 {
                     //ic.WasReloaded = true;
 #if CLIENT
-                    //ic.PlaySound(ActionType.OnReload, character);
+                    ic.PlaySound(ActionType.OnReload, character);
 #endif
                     //ic.ApplyStatusEffects(ActionType.OnReload, deltaTime, character, targetLimb);
                 }

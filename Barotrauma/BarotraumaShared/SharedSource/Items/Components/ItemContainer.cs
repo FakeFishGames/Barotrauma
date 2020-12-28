@@ -392,9 +392,9 @@ namespace Barotrauma.Items.Components
                     if (ammoInWorstCondition.ParentInventory.TryPutItem(ammoToLoad, ammoInWorstConditionInventoryPosition, true, false, character, true))
                     {
                         character.ReloadCooldown = UnloadBaseTime + UnloadUnskilledExtraTime * skillModifier + ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
-#if CLIENT
-                        GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
-#endif
+//#if CLIENT
+                        //GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
+//#endif
                         return true;
                     }
                 }
@@ -403,12 +403,13 @@ namespace Barotrauma.Items.Components
                     if (this.Inventory.TryPutItem(ammoToLoad, character))
                     {
                         character.ReloadCooldown = ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
-#if CLIENT
-                        GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
-#endif
+//#if CLIENT
+ //                       GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
+//#endif
                         return true;
                     }
                 }
+
             }
             return false;
         }
