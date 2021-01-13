@@ -210,15 +210,12 @@ namespace Barotrauma.Items.Components
                     GetLinkedHulls(hull, hullData.LinkedHulls);
                     hullDatas.Add(hull, hullData);
                 }
-                
+
                 Color neutralColor = Color.DarkCyan;
-                if (hull.RoomName != null)
+                if (hull.WetRoom)
                 {
-                    if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
-                        hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
-                    {
-                        neutralColor = new Color(9, 80, 159);
-                    }
+                    // Colour the room as "supposed to be wet/flooded"
+                    neutralColor = new Color(9, 80, 159);
                 }
 
                 if (hullData.Distort)

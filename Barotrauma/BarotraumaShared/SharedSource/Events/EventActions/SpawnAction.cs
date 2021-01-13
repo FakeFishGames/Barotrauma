@@ -306,10 +306,10 @@ namespace Barotrauma
             }
 
             //don't spawn in an airlock module if there are other options
-            var airlockSpawnPoints = validSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false);
-            if (airlockSpawnPoints.Count() < validSpawnPoints.Count())
+            var forbiddenSpawnpoints = validSpawnPoints.Where(wp => wp.CurrentHull?.IsForbidden ?? false);
+            if (forbiddenSpawnpoints.Count() < validSpawnPoints.Count())
             {
-                validSpawnPoints = validSpawnPoints.Except(airlockSpawnPoints);
+                validSpawnPoints = validSpawnPoints.Except(forbiddenSpawnpoints);
             }
 
             if (!validSpawnPoints.Any())

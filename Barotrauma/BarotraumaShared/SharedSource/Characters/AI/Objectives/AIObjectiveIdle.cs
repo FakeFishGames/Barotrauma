@@ -514,9 +514,7 @@ namespace Barotrauma
         public static bool IsForbidden(Hull hull)
         {
             if (hull == null) { return true; }
-            string hullName = hull.RoomName;
-            if (hullName == null) { return false; }
-            return hullName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || hullName.Contains("airlock", StringComparison.OrdinalIgnoreCase);
+            return hull.IsForbidden;
         }
 
         public override void Reset()

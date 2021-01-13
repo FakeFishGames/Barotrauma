@@ -189,6 +189,45 @@ namespace Barotrauma
                 if (roomName == value) { return; }
                 roomName = value;
                 DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+
+                // Rooms that are expected to be flooded:
+                if (roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) ||
+                    roomName.Contains("void", StringComparison.OrdinalIgnoreCase) ||
+                    roomName.Contains("bilge", StringComparison.OrdinalIgnoreCase) ||
+                    roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Only enable the wetRoom tag, if its already ON leave it as is.
+                    wetRoom = true;
+                }
+
+                if (roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) ||
+                    roomName.Contains("void", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Only add the forbidden tag, leave it alone if the user already enabled it
+                    isForbidden = true;
+                }
+            }
+        }
+
+        private bool isWetRoom;
+        [Editable, Serialize(false, true, description: "Marks a Hull that is supposed to be flooded, like ballast/airlock/bilge. Colours it specially in the minimal")]
+        public bool IsWetRoom
+        {
+            get { return isWetRoom; }
+            set
+            {
+                isWetRoom = value;
+            }
+        }
+
+        private bool isForbidden;
+        [Editable, Serialize(false, true, description: "Forbidden for Bots to enter this, usually denotes dangerous locations. Tried to prevent spawns here")]
+        public bool IsForbiden
+        {
+            get { return isForbidden; }
+            set
+            {
+                isForbidden = value;
             }
         }
 

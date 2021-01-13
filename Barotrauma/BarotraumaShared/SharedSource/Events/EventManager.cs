@@ -608,23 +608,25 @@ namespace Barotrauma
 
             float holeCount = 0.0f;
             float waterAmount = 0.0f;
-            float totalHullVolume = 0.0f;
+            float dryHullVolume = 0.0f;
             foreach (Hull hull in Hull.hullList)
             {
                 if (hull.Submarine == null || hull.Submarine.Info.Type != SubmarineType.Player) { continue; }
-                if (hull.RoomName != null && hull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                fireAmount += hull.FireSources.Sum(fs => fs.Size.X);
+
+                // Calculate water specific problems, ignore rooms that are fine to flood
+                if (hull.IsWetRoom) { continue; }
                 foreach (Gap gap in hull.ConnectedGaps)
                 {
                     if (!gap.IsRoomToRoom) holeCount += gap.Open;
                 }
                 waterAmount += hull.WaterVolume;
-                totalHullVolume += hull.Volume;
-                fireAmount += hull.FireSources.Sum(fs => fs.Size.X);
+                dryHullVolume += hull.Volume;
             }
-            if (totalHullVolume > 0)
-            {
-                floodingAmount = waterAmount / totalHullVolume;
-            }
+
+            // If everything is supposed to be flooded for some reason, or there is no hull
+            floodingAmount = (dryHullVolume > 0) ? (waterAmount / dryHullVolume) : 0;
 
             //hull integrity at 0.0 if there are 10 or more wide-open holes
             avgHullIntegrity = MathHelper.Clamp(1.0f - holeCount / 10.0f, 0.0f, 1.0f);
@@ -633,16 +635,7 @@ namespace Barotrauma
             //if the total width of the fires is 1000 or more, the fire amount is considered to be at 100%
             fireAmount = MathHelper.Clamp(fireAmount / 1000.0f, fireAmount > 0.0f ? 0.2f : 0.0f, 1.0f);
 
-            //flooding less than 10% of the sub is ignored 
-            //to prevent ballast tanks from affecting the intensity
-            if (floodingAmount < 0.1f) 
-            {
-                floodingAmount = 0.0f;
-            }
-            else 
-            {
-                floodingAmount *= 1.5f;
-            }
+            floodingAmount *= 1.5f;
 
             // calculate final intensity --------------------------------------------------------
 
