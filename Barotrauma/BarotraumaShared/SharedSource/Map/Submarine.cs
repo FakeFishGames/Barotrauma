@@ -298,11 +298,12 @@ namespace Barotrauma
             List<Pump> pumps = new List<Pump>();
             List<Item> allItems = GetItems(true);
 
-            bool anyHasTag = allItems.Any(i => i.HasTag("ballast"));
+            bool anyHasTag = allItems.Any(i => i.HasTag("ballast") || i.HasTag("infectablepump"));
 
             foreach (Item item in allItems)
             {
-                if ((!anyHasTag || item.HasTag("ballast")) && item.GetComponent<Pump>() is { } pump)
+                if (item.GetComponent<Pump>() is { } pump &&
+                    (!anyHasTag || item.HasTag("ballast") || item.HasTag("infectablepump")))
                 {
                     pumps.Add(pump);
                 }
