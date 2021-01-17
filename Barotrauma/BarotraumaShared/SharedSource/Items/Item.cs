@@ -520,6 +520,10 @@ namespace Barotrauma
                         tags.Add(string.Join(":", splitTag));
                     }
                 }
+
+                if (Tags.Contains("forbidden")) {
+                    IgnoreByAI = true;
+                }
             }
         }
 

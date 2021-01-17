@@ -517,6 +517,8 @@ namespace Barotrauma
                     bool canAccess = CanAccessDoor(door, button =>
                     {
                         if (currentWaypoint == null) { return true; }
+                        if (button.Item.IgnoreByAI) { return false; }
+
                         // Check that the button is on the right side of the door.
                         if (door.LinkedGap.IsHorizontal)
                         {
