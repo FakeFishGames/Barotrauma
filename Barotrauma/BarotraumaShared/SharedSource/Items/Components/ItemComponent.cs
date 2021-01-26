@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
                     IsActiveTimer = 0.0f;
                     if (isActive)
                     {
-                        StopSounds(ActionType.OnActive);
+                        StopLoopingSounds(ActionType.OnActive);
                     }
                 }
 #endif
@@ -403,7 +403,7 @@ namespace Barotrauma.Items.Components
         public virtual void UpdateBroken(float deltaTime, Camera cam)
         {
 #if CLIENT
-            StopSounds(ActionType.OnActive);
+            StopLoopingSounds(ActionType.OnActive);
 #endif
         }
 

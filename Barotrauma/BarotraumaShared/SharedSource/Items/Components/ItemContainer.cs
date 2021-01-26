@@ -375,6 +375,7 @@ namespace Barotrauma.Items.Components
             // Try to add ammo to the wapon/item if it's inventory is not full otherwise swap worst with a better one
             if (ammoToLoad != null)
             {
+                // Calculate additional time modifier (in percentage) for reloading based on the character's required skill levels
                 float skillModifier = 0f;
                 if (this.requiredSkills.Count >= 1)
                 {

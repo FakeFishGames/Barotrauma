@@ -62,8 +62,8 @@ namespace Barotrauma
         /// </summary>
         public bool IsRemotelyControlled
         {
-            get 
-            { 
+            get
+            {
                 if (GameMain.NetworkMember == null)
                 {
                     return false;
@@ -374,9 +374,18 @@ namespace Barotrauma
             }
         }
 
+        public bool IsReloading
+        {
+            get
+            {
+                if (ReloadCooldown <= 0.0f) { return false; }
+                return true;
+            }
+        }           
+
         public bool CanInteract
         {
-            get { return AllowInput && IsHumanoid && !LockHands && !Removed && !IsIncapacitated; }
+            get { return AllowInput && IsHumanoid && !LockHands && !Removed && !IsIncapacitated && !IsReloading; }
         }
 
         public Vector2 CursorPosition
@@ -1493,7 +1502,18 @@ namespace Barotrauma
                 }
             }
 #endif
-            if (ReloadCooldown > 0.0f) ReloadCooldown -= deltaTime;
+            if (ReloadCooldown > 0.0f)
+            {
+                if (LockHands || Removed || IsIncapacitated) { ReloadCooldown = 0.0f; }
+                else
+                {
+                    ReloadCooldown -= deltaTime;
+                    if (ReloadCooldown <= 0.0f)
+                    {
+                        // do the reload action in inventory;
+                    }
+                }
+            }
 
             if (attackCoolDown > 0.0f) attackCoolDown -= deltaTime;
 

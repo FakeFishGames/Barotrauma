@@ -76,6 +76,12 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
+        public TimeSpan TotalTime
+        {
+            get;
+            protected set;
+        }
+
         public bool IgnoreMuffling { get; set; }
 
         /// <summary>
