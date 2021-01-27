@@ -43,6 +43,13 @@ namespace Barotrauma
         private Dictionary<ulong, Steamworks.Ugc.Item?> pendingWorkshopDownloads = null;
         private string autoConnectName; private string autoConnectEndpoint;
 
+        private enum TernaryOption
+        {
+            Any,
+            Enabled,
+            Disabled
+        }
+
         private class FriendInfo
         {
             public UInt64 SteamID;
@@ -146,14 +153,16 @@ namespace Barotrauma
         private GUITickBox filterFull;
         private GUITickBox filterEmpty;
         private GUITickBox filterWhitelisted;
-        private GUITickBox filterFriendlyFire;
-        private GUITickBox filterKarma;
-        private GUITickBox filterTraitor;
-        private GUITickBox filterModded;
-        private GUITickBox filterVoip;
         private List<GUITickBox> playStyleTickBoxes;
         private List<GUITickBox> gameModeTickBoxes;
         private GUITickBox filterOffensive;
+
+        //GUIDropDown sends the OnSelected event before SelectedData is set, so we have to cache it manually.
+        private TernaryOption filterFriendlyFireValue = TernaryOption.Any;
+        private TernaryOption filterKarmaValue = TernaryOption.Any;
+        private TernaryOption filterTraitorValue = TernaryOption.Any;
+        private TernaryOption filterVoipValue = TernaryOption.Any;
+        private TernaryOption filterModdedValue = TernaryOption.Any;
 
         private string sortedBy;
         
@@ -170,6 +179,31 @@ namespace Barotrauma
         {
             GameMain.Instance.ResolutionChanged += CreateUI;
             CreateUI();
+        }
+
+        private void AddTernaryFilter(RectTransform parent, float elementHeight, string tag, Action<TernaryOption> valueSetter)
+        {
+            var filterLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, elementHeight), parent), isHorizontal: true);
+
+            var filterLabel = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), filterLayoutGroup.RectTransform, Anchor.CenterLeft), TextManager.Get("servertag." + tag + ".label"), textAlignment: Alignment.CenterLeft)
+            {
+                UserData = TextManager.Get("servertag." + tag + ".label")
+            };
+            //TODO: There's probably a better way to have the text styled the same as a GUITickBox than this.
+            GUI.Style.Apply(filterLabel, "GUITextBlock", filterSameVersion);
+            //TODO: This padding works, but might want to make it even with the TickBoxes or something which would need a different method.
+            filterLabel.Padding = new Vector4(30 * GUI.Scale, 0, 0, 0);
+
+            var dropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f), filterLayoutGroup.RectTransform, Anchor.CenterLeft), elementCount: 3);
+            dropDown.AddItem(TextManager.Get("any"), TernaryOption.Any);
+            dropDown.AddItem(TextManager.Get("servertag." + tag + ".true"), TernaryOption.Enabled, TextManager.Get("servertagdescription." + tag + ".true"));
+            dropDown.AddItem(TextManager.Get("servertag." + tag + ".false"), TernaryOption.Disabled, TextManager.Get("servertagdescription." + tag + ".false"));
+            dropDown.SelectItem(TernaryOption.Any);
+            dropDown.OnSelected = (_, data) => {
+                valueSetter((TernaryOption)data);
+                FilterServers();
+                return true;
+            };
         }
 
         private void CreateUI()
@@ -381,40 +415,12 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
-            filterKarma = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.karma.true"))
-            {
-                UserData = TextManager.Get("servertag.karma.true"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTextList.Add(filterKarma.TextBlock);
-
-            filterTraitor = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.traitors.true"))
-            {
-                UserData = TextManager.Get("servertag.traitors.true"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTextList.Add(filterTraitor.TextBlock);
-
-            filterFriendlyFire = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.friendlyfire.false"))
-            {
-                UserData = TextManager.Get("servertag.friendlyfire.false"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTextList.Add(filterFriendlyFire.TextBlock);
-
-            filterVoip = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.voip.false"))
-            {
-                UserData = TextManager.Get("servertag.voip.false"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTextList.Add(filterVoip.TextBlock);
-            
-            filterModded = new GUITickBox(new RectTransform(new Vector2(1.0f, elementHeight), filters.Content.RectTransform), TextManager.Get("servertag.modded.true"))
-            {
-                UserData = TextManager.Get("servertag.modded.true"),
-                OnSelected = (tickBox) => { FilterServers(); return true; }
-            };
-            filterTextList.Add(filterModded.TextBlock);
+            //TODO: None of the text for the ternary components are added to filterTextList, will this cause problems?
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "karma", (value) => { filterKarmaValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "traitors", (value) => { filterTraitorValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "friendlyfire", (value) => { filterFriendlyFireValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "voip", (value) => { filterVoipValue = value; });
+            AddTernaryFilter(filters.Content.RectTransform, elementHeight, "modded", (value) => { filterModdedValue = value; });
 
             // Play Style Selection
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), filters.Content.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUI.SubHeadingFont)
@@ -1063,6 +1069,12 @@ namespace Barotrauma
                         (!serverInfo.ContentPackageHashes.Any() && serverInfo.ContentPackagesMatch()) ||
                         (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
 
+                    var karmaFilterPassed = filterKarmaValue == TernaryOption.Any|| (filterKarmaValue == TernaryOption.Enabled) == serverInfo.KarmaEnabled;
+                    var friendlyFireFilterPassed = filterFriendlyFireValue == TernaryOption.Any || (filterFriendlyFireValue == TernaryOption.Enabled) == serverInfo.FriendlyFireEnabled;
+                    var traitorsFilterPassed = filterTraitorValue == TernaryOption.Any || (filterTraitorValue == TernaryOption.Enabled) == (serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe);
+                    var voipFilterPassed = filterVoipValue == TernaryOption.Any || (filterVoipValue == TernaryOption.Enabled) == serverInfo.VoipEnabled;
+                    var moddedFilterPassed = filterModdedValue == TernaryOption.Any || (filterModdedValue == TernaryOption.Enabled) == serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"));
+
                     child.Visible =
                         serverInfo.OwnerVerified &&
                         serverInfo.ServerName.Contains(searchBox.Text, StringComparison.OrdinalIgnoreCase) &&
@@ -1073,11 +1085,11 @@ namespace Barotrauma
                         (!filterEmpty.Selected || serverInfo.PlayerCount > 0) &&
                         (!filterWhitelisted.Selected || serverInfo.UsingWhiteList == true) &&
                         (!filterOffensive.Selected || !ForbiddenWordFilter.IsForbidden(serverInfo.ServerName)) &&
-                        (!filterKarma.Selected || serverInfo.KarmaEnabled == true) &&
-                        (!filterFriendlyFire.Selected || serverInfo.FriendlyFireEnabled == false) &&
-                        (!filterTraitor.Selected || serverInfo.TraitorsEnabled == YesNoMaybe.Yes || serverInfo.TraitorsEnabled == YesNoMaybe.Maybe) &&
-                        (!filterVoip.Selected || serverInfo.VoipEnabled == false) &&
-                        (!filterModded.Selected || serverInfo.GetPlayStyleTags().Any(t => t.Contains("modded.true"))) &&
+                        karmaFilterPassed &&
+                        friendlyFireFilterPassed &&
+                        traitorsFilterPassed &&
+                        voipFilterPassed &&
+                        moddedFilterPassed &&
                         ((selectedTab == ServerListTab.All && (serverInfo.LobbyID != 0 || !string.IsNullOrWhiteSpace(serverInfo.Port))) ||
                          (selectedTab == ServerListTab.Recent && serverInfo.Recent) ||
                          (selectedTab == ServerListTab.Favorites && serverInfo.Favorite));
