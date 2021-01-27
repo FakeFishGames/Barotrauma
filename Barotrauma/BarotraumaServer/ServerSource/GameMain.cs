@@ -361,7 +361,7 @@ namespace Barotrauma
                 }
 
 #if !DEBUG
-                if (Server?.OwnerConnection == null && !Console.IsOutputRedirected)
+                if (Server?.OwnerConnection == null)
                 {
                     DebugConsole.UpdateCommandLine((int)(Timing.Accumulator * 800));
                 }
