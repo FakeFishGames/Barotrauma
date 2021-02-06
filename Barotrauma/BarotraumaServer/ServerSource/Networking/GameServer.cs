@@ -2960,7 +2960,7 @@ namespace Barotrauma.Networking
             else if (type == ChatMessageType.Radio)
             {
                 //send to chat-linked wifi components
-                Signal s = new Signal(0, message, null, senderCharacter, senderRadio?.Item);
+                Signal s = new Signal(message, sender: senderCharacter, source: senderRadio?.Item);
                 senderRadio?.TransmitSignal(s, true);
             }
 

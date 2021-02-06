@@ -1909,7 +1909,7 @@ namespace Barotrauma
 
         public void SendSignal(int stepsTaken, string signal, Connection connection, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
-            SendSignal(new Signal(stepsTaken, signal, connection, sender, source, power, signalStrength));
+            SendSignal(new Signal(signal, stepsTaken, connection, sender, source, power, signalStrength));
         }
 
         private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)

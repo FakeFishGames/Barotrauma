@@ -199,7 +199,7 @@ namespace Barotrauma
                             var headset = GetHeadset(Character.Controlled, true);
                             if (headset != null && headset.CanTransmit())
                             {
-                                Signal s = new Signal(0, msg, null, Character.Controlled, headset.Item);
+                                Signal s = new Signal(msg, sender: Character.Controlled, source: headset.Item);
                                 headset.TransmitSignal(s, true);
                             }
                         }

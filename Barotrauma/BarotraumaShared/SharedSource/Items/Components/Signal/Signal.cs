@@ -2,32 +2,22 @@ namespace Barotrauma.Items.Components
 {
     public struct Signal
     {
-        internal int stepsTaken;
         internal string value;
+        internal int stepsTaken;
         internal Connection connection;
-        internal Item source;
         internal Character sender;
+        internal Item source;
         internal float power;
         internal float strength;
 
-        internal Signal(int stepsTaken, string value, Connection connection, Character sender, Item source = null, float power = 0.0f, float strength = 1.0f)
+        internal Signal(string value, int stepsTaken = 0, Connection connection = null, Character sender = null,
+                        Item source = null, float power = 0.0f, float strength = 1.0f)
         {
-            this.stepsTaken = stepsTaken;
             this.value = value;
+            this.stepsTaken = stepsTaken;
             this.connection = connection;
+            this.sender = sender;
             this.source = source;
-            this.sender = sender;
-            this.power = power;
-            this.strength = strength;
-        }
-
-        internal Signal(int stepsTaken, string value, Character sender = null, float power = 0.0f, float strength = 1.0f)
-        {
-            this.stepsTaken = stepsTaken;
-            this.value = value;
-            this.connection = null;
-            this.source = null;
-            this.sender = sender;
             this.power = power;
             this.strength = strength;
         }
