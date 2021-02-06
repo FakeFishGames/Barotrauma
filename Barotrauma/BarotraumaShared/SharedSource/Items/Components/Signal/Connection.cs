@@ -274,11 +274,6 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power, float signalStrength = 1.0f)
-        {
-            SendSignal(new Signal(signal, stepsTaken, null, sender, source, power, signalStrength));
-        }
-
         public void SendPowerProbeSignal(Item source, float power)
         {
             for (int i = 0; i < MaxLinked; i++)
