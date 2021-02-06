@@ -248,8 +248,8 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
-        
-        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power, float signalStrength = 1.0f)
+
+        public void SendSignal([NotNull] Signal signal)
         {
             for (int i = 0; i < MaxLinked; i++)
             {
@@ -257,15 +257,15 @@ namespace Barotrauma.Items.Components
 
                 Connection recipient = wires[i].OtherConnection(this);
                 if (recipient == null) { continue; }
-                if (recipient.item == this.item || recipient.item == source) { continue; }
+                if (recipient.item == this.item || recipient.item == signal.source) { continue; }
 
-                source?.LastSentSignalRecipients.Add(recipient.item);
+                signal.source?.LastSentSignalRecipients.Add(recipient.item);
 
-                Signal s = new Signal(stepsTaken, signal, recipient, sender, source, power, signalStrength);
+                signal.connection = recipient;
 
                 foreach (ItemComponent ic in recipient.item.Components)
                 {
-                    ic.ReceiveSignal(s);
+                    ic.ReceiveSignal(signal);
                 }
 
                 foreach (StatusEffect effect in recipient.Effects)
@@ -273,6 +273,11 @@ namespace Barotrauma.Items.Components
                     recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
                 }
             }
+        }
+        
+        public void SendSignal(int stepsTaken, string signal, Item source, Character sender, float power, float signalStrength = 1.0f)
+        {
+            SendSignal(new Signal(stepsTaken, signal, null, sender, source, power, signalStrength));
         }
 
         public void SendPowerProbeSignal(Item source, float power)

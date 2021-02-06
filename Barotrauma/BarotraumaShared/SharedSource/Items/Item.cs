@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -1873,29 +1874,44 @@ namespace Barotrauma
             SendSignal(stepsTaken, signal, c, sender, power, source, signalStrength);           
         }
 
-        public void SendSignal(int stepsTaken, string signal, Connection connection, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
+        public void SendSignal([NotNull] Signal signal, string conenctionName)
+        {
+            if (connections == null) { return; }
+            if (!connections.TryGetValue(conenctionName, out signal.connection)) { return; }
+
+            SendSignal(signal);
+        }
+
+        public void SendSignal([NotNull] Signal signal)
         {
             LastSentSignalRecipients.Clear();
-            if (connections == null || connection == null) { return; }
+            if (connections == null || signal.connection == null) { return; }
 
-            stepsTaken++;
+            signal.stepsTaken++;
             
-            if (stepsTaken > 10)
+            if (signal.stepsTaken > 10)
             {
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(SendSignal(signal, connection, sender, power, signalStrength));
+                CoroutineManager.StartCoroutine(SendSignal(signal.value, signal.connection, signal.sender, signal.power, signal.strength));
             }
             else
             {
-                foreach (StatusEffect effect in connection.Effects)
+                foreach (StatusEffect effect in signal.connection.Effects)
                 {
                     if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
-                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
+                    if (signal.value != "0" && !string.IsNullOrEmpty(signal.value)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
                 }
-                connection.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
+                signal.connection.SendSignal(signal);
             }
+
         }
+
+        public void SendSignal(int stepsTaken, string signal, Connection connection, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
+        {
+            SendSignal(new Signal(stepsTaken, signal, connection, sender, source, power, signalStrength));
+        }
+
         private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {
             //wait one frame
