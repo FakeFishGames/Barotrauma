@@ -20,5 +20,16 @@ namespace Barotrauma.Items.Components
             this.power = power;
             this.strength = strength;
         }
+
+        internal Signal(int stepsTaken, string value, Character sender = null, float power = 0.0f, float strength = 1.0f)
+        {
+            this.stepsTaken = stepsTaken;
+            this.value = value;
+            this.connection = null;
+            this.source = null;
+            this.sender = sender;
+            this.power = power;
+            this.strength = strength;
+        }
     }
 }
