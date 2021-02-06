@@ -53,7 +53,7 @@ namespace Barotrauma.Items.Components
 
         protected abstract string Calculate(string signal1, string signal2);
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             switch (signal.connection.Name)
             {

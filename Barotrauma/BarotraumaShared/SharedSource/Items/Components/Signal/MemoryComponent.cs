@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             switch (signal.connection.Name)
             {

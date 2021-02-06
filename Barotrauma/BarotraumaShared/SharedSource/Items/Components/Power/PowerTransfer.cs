@@ -343,7 +343,7 @@ namespace Barotrauma.Items.Components
             powerOut?.SendPowerProbeSignal(source, power);
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             Connection connection = signal.connection;
             if (item.Condition <= 0.0f || connection.IsPower) { return; }

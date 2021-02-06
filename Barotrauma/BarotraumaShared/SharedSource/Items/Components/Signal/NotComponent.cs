@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
         {
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             if (signal.connection.Name != "signal_in") return;
 

@@ -249,7 +249,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void SendSignal([NotNull] Signal signal)
+        public void SendSignal(Signal signal)
         {
             for (int i = 0; i < MaxLinked; i++)
             {

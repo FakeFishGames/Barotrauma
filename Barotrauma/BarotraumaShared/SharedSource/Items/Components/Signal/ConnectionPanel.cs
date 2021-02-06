@@ -333,7 +333,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             //do nothing
         }

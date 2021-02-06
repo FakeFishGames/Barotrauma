@@ -643,7 +643,7 @@ namespace Barotrauma.Items.Components
 
         partial void OnFailedToOpen();
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             if (IsStuck || IsJammed) { return; }
 

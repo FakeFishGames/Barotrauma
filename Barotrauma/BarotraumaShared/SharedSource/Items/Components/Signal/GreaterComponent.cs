@@ -32,7 +32,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             base.ReceiveSignal(signal);
             float.TryParse(receivedSignal[0], NumberStyles.Float, CultureInfo.InvariantCulture, out val1);

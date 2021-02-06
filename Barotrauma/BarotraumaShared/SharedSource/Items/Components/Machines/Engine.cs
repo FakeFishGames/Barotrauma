@@ -191,7 +191,7 @@ namespace Barotrauma.Items.Components
             PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y);
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             base.ReceiveSignal(signal);
 

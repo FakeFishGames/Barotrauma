@@ -1043,7 +1043,7 @@ namespace Barotrauma.Items.Components
             UpdateTransformedBarrelPos();
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             Character sender = signal.sender;
             switch (signal.connection.Name)

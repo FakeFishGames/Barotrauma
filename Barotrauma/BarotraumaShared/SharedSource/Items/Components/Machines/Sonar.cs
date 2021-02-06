@@ -322,7 +322,7 @@ namespace Barotrauma.Items.Components
             return transducerPosSum / connectedTransducers.Count;
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             base.ReceiveSignal(signal);
 

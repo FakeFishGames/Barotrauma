@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
             channelMemory[index] = MathHelper.Clamp(value, 0, 10000);
         }
 
-        public void TransmitSignal([NotNull] Signal signal, bool sentFromChat)
+        public void TransmitSignal(Signal signal, bool sentFromChat)
         {
             var senderComponent = signal.source?.GetComponent<WifiComponent>();
             if (senderComponent != null && !CanReceive(senderComponent)) { return; }
@@ -231,7 +231,7 @@ namespace Barotrauma.Items.Components
             prevSignal = signal.value;
         }
                 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             if (signal.connection == null) { return; }
 

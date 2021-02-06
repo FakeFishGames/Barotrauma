@@ -259,7 +259,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             if (signal.connection.IsPower) { return; }
 

@@ -29,7 +29,7 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             if (signal.connection.Name != "signal_in") return;
             if (!float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value)) return;

@@ -31,7 +31,7 @@ namespace Barotrauma.Items.Components
             output += "," + receivedSignal[3].ToString("G", CultureInfo.InvariantCulture);
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             switch (signal.connection.Name)
             {

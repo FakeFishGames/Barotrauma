@@ -140,7 +140,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
         
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             if (Hijacked) { return; }
 

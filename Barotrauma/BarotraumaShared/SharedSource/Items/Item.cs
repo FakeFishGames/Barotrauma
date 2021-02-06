@@ -1872,7 +1872,7 @@ namespace Barotrauma
             SendSignal(new Signal(signal), connectionName);
         }
 
-        public void SendSignal([NotNull] Signal signal, string conenctionName)
+        public void SendSignal(Signal signal, string conenctionName)
         {
             if (connections == null) { return; }
             if (!connections.TryGetValue(conenctionName, out signal.connection)) { return; }
@@ -1880,7 +1880,7 @@ namespace Barotrauma
             SendSignal(signal);
         }
 
-        public void SendSignal([NotNull] Signal signal)
+        public void SendSignal(Signal signal)
         {
             LastSentSignalRecipients.Clear();
             if (connections == null || signal.connection == null) { return; }
@@ -1907,7 +1907,7 @@ namespace Barotrauma
 
         }
 
-        private IEnumerable<object> DelaySignal([NotNull] Signal signal)
+        private IEnumerable<object> DelaySignal(Signal signal)
         {
             //wait one frame
             yield return CoroutineStatus.Running;

@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
             switch (Function)

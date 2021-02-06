@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal([NotNull] Signal signal)
+        public override void ReceiveSignal(Signal signal)
         {
             switch (signal.connection.Name)
             {
