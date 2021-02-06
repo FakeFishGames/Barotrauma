@@ -1867,6 +1867,11 @@ namespace Barotrauma
             return controller != null;
         }
 
+        public void SendSignal(string signal, string connectionName)
+        {
+            SendSignal(new Signal(signal), connectionName);
+        }
+
         public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
         {
             if (connections == null) { return; }
