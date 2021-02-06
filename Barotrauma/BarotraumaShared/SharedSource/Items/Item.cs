@@ -1900,6 +1900,8 @@ namespace Barotrauma
                     if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
                     if (signal.value != "0" && !string.IsNullOrEmpty(signal.value)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
                 }
+
+                signal.source ??= this;
                 signal.connection.SendSignal(signal);
             }
 
