@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -30,24 +31,24 @@ namespace Barotrauma.Items.Components
             output += "," + receivedSignal[3].ToString("G", CultureInfo.InvariantCulture);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "signal_r":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     UpdateOutput();
                     break;
                 case "signal_g":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
                     UpdateOutput();
                     break;
                 case "signal_b":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[2]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[2]);
                     UpdateOutput();
                     break;
                 case "signal_a":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[3]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[3]);
                     UpdateOutput();
                     break;
             }

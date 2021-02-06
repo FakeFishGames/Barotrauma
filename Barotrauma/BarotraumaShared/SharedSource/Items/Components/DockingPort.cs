@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -1051,39 +1052,39 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             bool wasDocked = docked;
             DockingPort prevDockingTarget = DockingTarget;
 
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "toggle":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
                         Docked = !docked;
                     }
                     break;
                 case "set_active":
                 case "set_state":
-                    Docked = signal != "0";
+                    Docked = signal.value != "0";
                     break;
             }
 
 #if SERVER
-            if (sender != null && docked != wasDocked)
+            if (signal.sender != null && docked != wasDocked)
             {
                 if (docked)
                 {
                     if (item.Submarine != null && DockingTarget?.item?.Submarine != null)
-                        GameServer.Log(GameServer.CharacterLogName(sender) + " docked " + item.Submarine.Info.Name + " to " + DockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(signal.sender) + " docked " + item.Submarine.Info.Name + " to " + DockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
                 else
                 {
                     if (item.Submarine != null && prevDockingTarget?.item?.Submarine != null)
-                        GameServer.Log(GameServer.CharacterLogName(sender) + " undocked " + item.Submarine.Info.Name + " from " + prevDockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(signal.sender) + " undocked " + item.Submarine.Info.Name + " from " + prevDockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
             }
 #endif

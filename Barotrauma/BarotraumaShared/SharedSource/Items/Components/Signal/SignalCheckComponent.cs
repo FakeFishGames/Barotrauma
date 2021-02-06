@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -17,22 +18,22 @@ namespace Barotrauma.Items.Components
         {
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "signal_in":
-                    string signalOut = (signal == TargetSignal) ? Output : FalseOutput;
+                    string signalOut = (signal.value == TargetSignal) ? Output : FalseOutput;
 
                     if (string.IsNullOrWhiteSpace(signalOut)) return;
-                    item.SendSignal(stepsTaken, signalOut, "signal_out", sender, signalStrength);
+                    item.SendSignal(signal.stepsTaken, signalOut, "signal_out", signal.sender, signal.strength);
 
                     break;
                 case "set_output":
-                    Output = signal;
+                    Output = signal.value;
                     break;
                 case "set_targetsignal":
-                    TargetSignal = signal;
+                    TargetSignal = signal.value;
                     break;
             }
         }

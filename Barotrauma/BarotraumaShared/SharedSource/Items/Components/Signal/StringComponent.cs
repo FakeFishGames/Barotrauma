@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -52,17 +53,17 @@ namespace Barotrauma.Items.Components
 
         protected abstract string Calculate(string signal1, string signal2);
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "signal_in1":
-                    receivedSignal[0] = signal;
+                    receivedSignal[0] = signal.value;
                     timeSinceReceived[0] = 0.0f;
                     IsActive = true;
                     break;
                 case "signal_in2":
-                    receivedSignal[1] = signal;
+                    receivedSignal[1] = signal.value;
                     timeSinceReceived[1] = 0.0f;
                     IsActive = true;
                     break;

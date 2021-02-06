@@ -4,6 +4,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -642,32 +643,32 @@ namespace Barotrauma.Items.Components
 
         partial void OnFailedToOpen();
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
             if (IsStuck || IsJammed) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             
-            if (connection.Name == "toggle")
+            if (signal.connection.Name == "toggle")
             {
-                if (signal == "0") { return; }
-                if (toggleCooldownTimer > 0.0f && sender != lastUser) { OnFailedToOpen(); return; }
+                if (signal.value == "0") { return; }
+                if (toggleCooldownTimer > 0.0f && signal.sender != lastUser) { OnFailedToOpen(); return; }
                 if (IsStuck) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
                 toggleCooldownTimer = ToggleCoolDown;
-                lastUser = sender;
+                lastUser = signal.sender;
                 SetState(!wasOpen, false, true, forcedOpen: false);
             }
-            else if (connection.Name == "set_state")
+            else if (signal.connection.Name == "set_state")
             {
-                bool signalOpen = signal != "0";
+                bool signalOpen = signal.value != "0";
                 if (IsStuck && signalOpen != wasOpen) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
                 SetState(signalOpen, false, true, forcedOpen: false);
             }
 
 #if SERVER
-            if (sender != null && wasOpen != isOpen)
+            if (signal.sender != null && wasOpen != isOpen)
             {
-                GameServer.Log(GameServer.CharacterLogName(sender) + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(GameServer.CharacterLogName(signal.sender) + (isOpen ? " opened " : " closed ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #endif
         }

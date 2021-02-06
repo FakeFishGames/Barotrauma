@@ -3,6 +3,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -332,7 +333,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
             //do nothing
         }

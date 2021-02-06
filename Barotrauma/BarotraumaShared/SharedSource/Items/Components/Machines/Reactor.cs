@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
@@ -685,9 +686,9 @@ namespace Barotrauma.Items.Components
             prevAvailableFuel = AvailableFuel;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "shutdown":
                     if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)
@@ -700,7 +701,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "set_fissionrate":
-                    if (PowerOn && float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
+                    if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
                         targetFissionRate = newFissionRate;
                         unsentChanges = true;
@@ -710,7 +711,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "set_turbineoutput":
-                    if (PowerOn && float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
+                    if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
                         targetTurbineOutput = newTurbineOutput;
                         unsentChanges = true;

@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -139,32 +140,32 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
             if (Hijacked) { return; }
 
-            if (connection.Name == "toggle")
+            if (signal.connection.Name == "toggle")
             {
                 IsActive = !IsActive;
                 isActiveLockTimer = 0.1f;
             }
-            else if (connection.Name == "set_active")
+            else if (signal.connection.Name == "set_active")
             {
-                IsActive = signal != "0";
+                IsActive = signal.value != "0";
                 isActiveLockTimer = 0.1f;
             }
-            else if (connection.Name == "set_speed")
+            else if (signal.connection.Name == "set_speed")
             {
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
+                if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
                     TargetLevel = null;
                     pumpSpeedLockTimer = 0.1f;
                 }
             }
-            else if (connection.Name == "set_targetlevel")
+            else if (signal.connection.Name == "set_targetlevel")
             {
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
+                if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
                     TargetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
                     pumpSpeedLockTimer = 0.1f;

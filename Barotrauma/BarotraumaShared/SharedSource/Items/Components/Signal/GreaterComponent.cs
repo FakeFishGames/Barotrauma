@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -31,9 +32,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+            base.ReceiveSignal(signal);
             float.TryParse(receivedSignal[0], NumberStyles.Float, CultureInfo.InvariantCulture, out val1);
             float.TryParse(receivedSignal[1], NumberStyles.Float, CultureInfo.InvariantCulture, out val2);
         }

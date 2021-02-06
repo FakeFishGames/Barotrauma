@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
@@ -74,14 +75,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "set_frequency":
                 case "frequency_in":
                     float newFrequency;
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
+                    if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out newFrequency))
                     {
                         Frequency = newFrequency;
                     }
@@ -90,7 +91,7 @@ namespace Barotrauma.Items.Components
                 case "set_outputtype":
                 case "set_wavetype":
                     WaveType newOutputType;
-                    if (Enum.TryParse(signal, out newOutputType))
+                    if (Enum.TryParse(signal.value, out newOutputType))
                     {
                         OutputType = newOutputType;
                     }

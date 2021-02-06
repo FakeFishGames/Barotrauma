@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -260,9 +261,11 @@ namespace Barotrauma.Items.Components
 
                 source?.LastSentSignalRecipients.Add(recipient.item);
 
+                Signal s = new Signal(stepsTaken, signal, recipient, sender, source, power, signalStrength);
+
                 foreach (ItemComponent ic in recipient.item.Components)
                 {
-                    ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, power, signalStrength);
+                    ic.ReceiveSignal(s);
                 }
 
                 foreach (StatusEffect effect in recipient.Effects)

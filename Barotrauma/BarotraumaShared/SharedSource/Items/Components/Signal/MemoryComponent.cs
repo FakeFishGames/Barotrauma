@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using System.Diagnostics.CodeAnalysis;
+using Barotrauma.Networking;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -36,20 +37,20 @@ namespace Barotrauma.Items.Components
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "signal_in":
                     if (writeable) 
                     {
-                        if (Value == signal) { return; }
-                        Value = signal;
+                        if (Value == signal.value) { return; }
+                        Value = signal.value;
                         OnStateChanged();
                     }
                     break;
                 case "signal_store":
-                    writeable = signal == "1";
+                    writeable = signal.value == "1";
                     break;
             }
         }

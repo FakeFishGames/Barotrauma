@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml.Linq;
 using Barotrauma.Networking;
@@ -190,17 +191,17 @@ namespace Barotrauma.Items.Components
             PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+            base.ReceiveSignal(signal);
 
-            if (connection.Name == "set_force")
+            if (signal.connection.Name == "set_force")
             {
-                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
+                if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
                     controlLockTimer = 0.1f;
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
-                    User = sender;
+                    User = signal.sender;
                 }
             }  
         }

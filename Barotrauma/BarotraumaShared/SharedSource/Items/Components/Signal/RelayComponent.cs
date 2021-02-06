@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -169,22 +170,22 @@ namespace Barotrauma.Items.Components
             
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            if (item.Condition <= 0.0f || connection.IsPower) { return; }
+            if (item.Condition <= 0.0f || signal.connection.IsPower) { return; }
 
-            if (connectionPairs.TryGetValue(connection.Name, out string outConnection))
+            if (connectionPairs.TryGetValue(signal.connection.Name, out string outConnection))
             {
                 if (!IsOn) { return; }
-                item.SendSignal(stepsTaken, signal, outConnection, sender, power, source, signalStrength);
+                item.SendSignal(signal.stepsTaken, signal.value, outConnection, signal.sender, signal.power, signal.source, signal.strength);
             }
-            else if (connection.Name == "toggle")
+            else if (signal.connection.Name == "toggle")
             {
                 SetState(!IsOn, false);
             }
-            else if (connection.Name == "set_state")
+            else if (signal.connection.Name == "set_state")
             {
-                SetState(signal != "0", false);
+                SetState(signal.value != "0", false);
             }
         }
 

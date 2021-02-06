@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -28,10 +29,10 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            if (connection.Name != "signal_in") return;
-            if (!float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value)) return;
+            if (signal.connection.Name != "signal_in") return;
+            if (!float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value)) return;
             switch (Function)
             {
                 case FunctionType.Round:

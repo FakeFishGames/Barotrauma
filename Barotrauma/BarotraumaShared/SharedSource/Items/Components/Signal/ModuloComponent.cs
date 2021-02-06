@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -21,17 +22,17 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            switch (signal.connection.Name)
             {
                 case "set_modulus":
                 case "modulus":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newModulus);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newModulus);
                     Modulus = newModulus;
                     break;
                 case "signal_in":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
                     item.SendSignal(0, (value % modulus).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
                     break;
             }

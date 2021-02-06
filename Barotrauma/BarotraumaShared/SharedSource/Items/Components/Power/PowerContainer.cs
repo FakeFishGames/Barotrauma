@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -258,13 +259,13 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            if (connection.IsPower) { return; }
+            if (signal.connection.IsPower) { return; }
 
-            if (connection.Name == "set_rate")
+            if (signal.connection.Name == "set_rate")
             {
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
+                if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     if (!MathUtils.IsValid(tempSpeed)) { return; }
 

@@ -3,6 +3,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Barotrauma.IO;
 using System.Linq;
@@ -1042,12 +1043,13 @@ namespace Barotrauma.Items.Components
             UpdateTransformedBarrelPos();
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            switch (connection.Name)
+            Character sender = signal.sender;
+            switch (signal.connection.Name)
             {
                 case "position_in":
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
+                    if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
                     {
                         if (!MathUtils.IsValid(newRotation)) { return; }
                         targetRotation = MathHelper.ToRadians(newRotation);
@@ -1068,7 +1070,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "toggle_light":
-                    if (lightComponent != null && signal != "0")
+                    if (lightComponent != null && signal.value != "0")
                     {
                         lightComponent.IsOn = !lightComponent.IsOn;
                     }
@@ -1076,7 +1078,7 @@ namespace Barotrauma.Items.Components
                 case "set_light":
                     if (lightComponent != null)
                     {
-                        lightComponent.IsOn = signal != "0";
+                        lightComponent.IsOn = signal.value != "0";
                     }
                     break;
             }

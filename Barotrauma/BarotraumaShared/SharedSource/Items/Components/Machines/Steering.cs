@@ -3,6 +3,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -662,15 +663,15 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            if (connection.Name == "velocity_in")
+            if (signal.connection.Name == "velocity_in")
             {
-                currVelocity = XMLExtensions.ParseVector2(signal, false);
+                currVelocity = XMLExtensions.ParseVector2(signal.value, false);
             }
             else
             {
-                base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+                base.ReceiveSignal(signal);
             }
         }
     }

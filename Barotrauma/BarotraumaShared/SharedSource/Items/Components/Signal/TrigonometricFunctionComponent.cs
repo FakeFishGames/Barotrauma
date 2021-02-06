@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -61,9 +62,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal([NotNull] Signal signal)
         {
-            float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
+            float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
             switch (Function)
             {
                 case FunctionType.Sin:
@@ -101,15 +102,15 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case FunctionType.Atan:                    
-                    if (connection.Name == "signal_in_x")
+                    if (signal.connection.Name == "signal_in_x")
                     {
                         timeSinceReceived[0] = 0.0f;
-                        float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                        float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     }
-                    else if (connection.Name == "signal_in_y")
+                    else if (signal.connection.Name == "signal_in_y")
                     {
                         timeSinceReceived[1] = 0.0f;
-                        float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                        float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
                     }
                     else
                     {

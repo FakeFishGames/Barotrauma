@@ -199,7 +199,8 @@ namespace Barotrauma
                             var headset = GetHeadset(Character.Controlled, true);
                             if (headset != null && headset.CanTransmit())
                             {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sentFromChat: true);
+                                Signal s = new Signal(0, msg, null, Character.Controlled, headset.Item);
+                                headset.TransmitSignal(s, true);
                             }
                         }
                         textbox.Deselect();
