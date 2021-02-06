@@ -1891,7 +1891,7 @@ namespace Barotrauma
             {
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(SendSignal(signal.value, signal.connection, signal.sender, signal.power, signal.strength));
+                CoroutineManager.StartCoroutine(DelaySignal(signal));
             }
             else
             {
@@ -1905,12 +1905,14 @@ namespace Barotrauma
 
         }
 
-        private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        private IEnumerable<object> DelaySignal([NotNull] Signal signal)
         {
             //wait one frame
             yield return CoroutineStatus.Running;
 
-            connection.SendSignal(0, signal, this, sender, power, signalStrength);
+            signal.stepsTaken = 0;
+            signal.source = this;
+            signal.connection.SendSignal(signal);
 
             yield return CoroutineStatus.Success;
         }
