@@ -328,12 +328,12 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            item.SendSignal(0, targetVelocity.X.ToString(CultureInfo.InvariantCulture), "velocity_x_out", user);
+            item.SendSignal(new Signal(targetVelocity.X.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_x_out");
 
             float targetLevel = -targetVelocity.Y;
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
 
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", user);
+            item.SendSignal(new Signal(targetLevel.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_y_out");
         }
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
@@ -632,7 +632,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {
@@ -647,7 +647,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {

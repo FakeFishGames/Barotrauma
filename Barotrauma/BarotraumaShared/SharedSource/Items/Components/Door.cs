@@ -400,7 +400,7 @@ namespace Barotrauma.Items.Components
 
             //don't use the predicted state here, because it might set
             //other items to an incorrect state if the prediction is wrong
-            item.SendSignal(0, isOpen ? "1" : "0", "state_out", null);
+            item.SendSignal(isOpen ? "1" : "0", "state_out");
         }
 
         partial void UpdateProjSpecific(float deltaTime);

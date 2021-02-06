@@ -60,17 +60,17 @@ namespace Barotrauma.Items.Components
                     float pulseInterval = 1.0f / frequency;
                     while (phase >= pulseInterval)
                     {
-                        item.SendSignal(0, "1", "signal_out", null);
+                        item.SendSignal("1", "signal_out");
                         phase -= pulseInterval;
                     }
                     break;
                 case WaveType.Square:
                     phase = (phase + deltaTime * frequency) % 1.0f;
-                    item.SendSignal(0, phase < 0.5f ? "0" : "1", "signal_out", null);
+                    item.SendSignal(phase < 0.5f ? "0" : "1", "signal_out");
                     break;
                 case WaveType.Sine:
                     phase = (phase + deltaTime * frequency) % 1.0f;
-                    item.SendSignal(0, Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out");
                     break;
             }
         }

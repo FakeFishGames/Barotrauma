@@ -14,9 +14,9 @@ namespace Barotrauma.Items.Components
         {
             if (signal.connection.Name != "signal_in") return;
 
-            // signal.value = signal.value == "0" ? "1" : "0";
+            signal.value = signal.value == "0" ? "1" : "0";
 
-            item.SendSignal(signal.stepsTaken, signal.value == "0" ? "1" : "0", "signal_out", signal.sender, 0.0f, signal.source, signal.strength);
+            item.SendSignal(signal, "signal_out");
         }
     }
 }

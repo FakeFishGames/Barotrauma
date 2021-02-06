@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.CurrentHull == null) return;
 
-            item.SendSignal(0, ((int)item.CurrentHull.OxygenPercentage).ToString(), "signal_out", null);            
+            item.SendSignal(((int)item.CurrentHull.OxygenPercentage).ToString(), "signal_out");            
         }
 
     }

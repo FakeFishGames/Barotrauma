@@ -57,7 +57,7 @@ namespace Barotrauma.Items.Components
             string signalOut = sendOutput ? output : falseOutput;
             if (string.IsNullOrEmpty(signalOut)) return;
 
-            item.SendSignal(0, signalOut, "signal_out", null);
+            item.SendSignal(signalOut, "signal_out");
         }
 
         public override void ReceiveSignal([NotNull] Signal signal)

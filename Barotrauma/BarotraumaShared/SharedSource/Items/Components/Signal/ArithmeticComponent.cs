@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
-                item.SendSignal(0, MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                item.SendSignal(MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out");
             }           
         }
 

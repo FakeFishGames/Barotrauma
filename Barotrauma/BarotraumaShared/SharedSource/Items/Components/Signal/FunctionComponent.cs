@@ -36,13 +36,13 @@ namespace Barotrauma.Items.Components
             switch (Function)
             {
                 case FunctionType.Round:
-                    item.SendSignal(0, Math.Round(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(Math.Round(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
                     break;
                 case FunctionType.Ceil:
-                    item.SendSignal(0, Math.Ceiling(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(Math.Ceiling(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
                     break;
                 case FunctionType.Floor:
-                    item.SendSignal(0, Math.Floor(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(Math.Floor(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
                     break;
                 case FunctionType.Factorial:
                     int intVal = (int)Math.Min(value, 20);
@@ -51,15 +51,15 @@ namespace Barotrauma.Items.Components
                     {
                         factorial *= (ulong)i;
                     }
-                    item.SendSignal(0, factorial.ToString(), "signal_out", null);
+                    item.SendSignal(factorial.ToString(), "signal_out");
                     break;
                 case FunctionType.AbsoluteValue:
-                    item.SendSignal(0, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
                     break;
                 case FunctionType.SquareRoot:
                     if (value > 0)
                     {
-                        item.SendSignal(0, Math.Sqrt(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                        item.SendSignal(Math.Sqrt(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
                     }
                     break;
                 default:

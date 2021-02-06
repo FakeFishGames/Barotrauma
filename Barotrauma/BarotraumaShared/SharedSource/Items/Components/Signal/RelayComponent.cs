@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
         {
             RefreshConnections();
 
-            item.SendSignal(0, IsOn ? "1" : "0", "state_out", null);
+            item.SendSignal(IsOn ? "1" : "0", "state_out");
 			
             if (!CanTransfer) { Voltage = 0.0f; return; }
 
@@ -177,7 +177,7 @@ namespace Barotrauma.Items.Components
             if (connectionPairs.TryGetValue(signal.connection.Name, out string outConnection))
             {
                 if (!IsOn) { return; }
-                item.SendSignal(signal.stepsTaken, signal.value, outConnection, signal.sender, signal.power, signal.source, signal.strength);
+                item.SendSignal(signal, outConnection);
             }
             else if (signal.connection.Name == "toggle")
             {

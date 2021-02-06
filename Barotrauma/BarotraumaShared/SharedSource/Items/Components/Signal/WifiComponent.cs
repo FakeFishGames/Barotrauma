@@ -168,7 +168,9 @@ namespace Barotrauma.Items.Components
                 //signal strength diminishes by distance
                 float sentSignalStrength = signal.strength *
                     MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
-                wifiComp.item.SendSignal(signal.stepsTaken, signal.value, "signal_out", signal.sender, 0, signal.source, sentSignalStrength);
+                Signal s = new Signal(signal.value, signal.stepsTaken, sender: signal.sender, source: signal.source,
+                                      power: 0.0f, strength: sentSignalStrength);
+                wifiComp.item.SendSignal(s, "signal_out");
                 
                 if (signal.source != null)
                 {

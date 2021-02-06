@@ -344,10 +344,10 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
-            item.SendSignal(0, ((int)-CurrPowerConsumption).ToString(), "power_value_out", null);
-            item.SendSignal(0, ((int)load).ToString(), "load_value_out", null);
-            item.SendSignal(0, ((int)AvailableFuel).ToString(), "fuel_out", null);
+            item.SendSignal(((int)(temperature * 100.0f)).ToString(), "temperature_out");
+            item.SendSignal(((int)-CurrPowerConsumption).ToString(), "power_value_out");
+            item.SendSignal(((int)load).ToString(), "load_value_out");
+            item.SendSignal(((int)AvailableFuel).ToString(), "fuel_out");
 
             UpdateFailures(deltaTime);
 #if CLIENT
@@ -429,7 +429,7 @@ namespace Barotrauma.Items.Components
         {
             if (temperature > allowedTemperature.Y)
             {
-                item.SendSignal(0, "1", "meltdown_warning", null);
+                item.SendSignal("1", "meltdown_warning");
                 //faster meltdown if the item is in a bad condition
                 meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
 
@@ -441,7 +441,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                item.SendSignal(0, "0", "meltdown_warning", null);
+                item.SendSignal("0", "meltdown_warning");
                 meltDownTimer = Math.Max(0.0f, meltDownTimer - deltaTime);
             }
 
@@ -511,7 +511,7 @@ namespace Barotrauma.Items.Components
         {
             base.UpdateBroken(deltaTime, cam);
 
-            item.SendSignal(0, ((int)(temperature * 100.0f)).ToString(), "temperature_out", null);
+            item.SendSignal(((int)(temperature * 100.0f)).ToString(), "temperature_out");
 
             currPowerConsumption = 0.0f;
             Temperature -= deltaTime * 1000.0f;

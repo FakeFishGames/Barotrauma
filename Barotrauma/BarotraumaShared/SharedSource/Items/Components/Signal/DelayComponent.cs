@@ -74,7 +74,7 @@ namespace Barotrauma.Items.Components
             {
                 var signalOut = signalQueue.Peek();
                 signalOut.SendDuration -= 1;
-                item.SendSignal(0, signalOut.Signal.value, "signal_out", null, signalStrength: signalOut.Signal.strength);
+                item.SendSignal(new Signal(signalOut.Signal.value, strength: signalOut.Signal.strength), "signal_out");
                 if (signalOut.SendDuration <= 0) { signalQueue.Dequeue(); } else { break; }
             }
         }

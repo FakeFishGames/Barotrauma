@@ -45,7 +45,7 @@ namespace Barotrauma.Items.Components
                 fireInRange = IsFireInRange();
                 fireCheckTimer = FireCheckInterval;
             }
-            item.SendSignal(0, fireInRange ? Output : FalseOutput, "signal_out", null);
+            item.SendSignal(fireInRange ? Output : FalseOutput, "signal_out");
         }
     }
 }

@@ -200,9 +200,9 @@ namespace Barotrauma.Items.Components
                 Charge -= CurrPowerOutput / 3600.0f;            
             }
 
-            item.SendSignal(0, ((int)Math.Round(Charge)).ToString(), "charge", null);
-            item.SendSignal(0, ((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%", null);
-            item.SendSignal(0, ((int)Math.Round(RechargeSpeed / maxRechargeSpeed * 100)).ToString(), "charge_rate", null);
+            item.SendSignal(((int)Math.Round(Charge)).ToString(), "charge");
+            item.SendSignal(((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%");
+            item.SendSignal(((int)Math.Round(RechargeSpeed / maxRechargeSpeed * 100)).ToString(), "charge_rate");
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)

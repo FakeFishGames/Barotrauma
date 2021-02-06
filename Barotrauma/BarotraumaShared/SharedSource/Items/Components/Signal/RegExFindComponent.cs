@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
 
                 catch
                 {
-                    item.SendSignal(0, "ERROR", "signal_out", null);
+                    item.SendSignal("ERROR", "signal_out");
                     return;
                 }
             }
@@ -75,7 +75,7 @@ namespace Barotrauma.Items.Components
                 }
                 catch
                 {
-                    item.SendSignal(0, "ERROR", "signal_out", null);
+                    item.SendSignal("ERROR", "signal_out");
                     previousResult = false;
                     return;
                 }
@@ -107,11 +107,11 @@ namespace Barotrauma.Items.Components
 
             if (ContinuousOutput)
             {
-                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
             }
             else if (!nonContinuousOutputSent)
             {
-                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(0, signalOut, "signal_out", null); }
+                if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(signalOut, "signal_out"); }
                 nonContinuousOutputSent = true;
             }
         }

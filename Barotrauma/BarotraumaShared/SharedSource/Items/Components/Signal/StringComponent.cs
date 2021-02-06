@@ -48,7 +48,7 @@ namespace Barotrauma.Items.Components
                 timeSinceReceived[i] += deltaTime;
             }
             string output = Calculate(receivedSignal[0], receivedSignal[1]);
-            item.SendSignal(0, output, "signal_out", null);
+            item.SendSignal(output, "signal_out");
         }
 
         protected abstract string Calculate(string signal1, string signal2);

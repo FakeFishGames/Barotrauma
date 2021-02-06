@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            item.SendSignal(0, output, "signal_out", null);
+            item.SendSignal(output, "signal_out");
         }
 
         private void UpdateOutput()

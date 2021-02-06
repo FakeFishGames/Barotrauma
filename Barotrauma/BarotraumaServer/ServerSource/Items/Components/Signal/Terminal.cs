@@ -20,7 +20,7 @@ namespace Barotrauma.Items.Components
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
                 ShowOnDisplay(newOutputValue);
-                item.SendSignal(0, newOutputValue, "signal_out", null);
+                item.SendSignal(newOutputValue, "signal_out");
                 item.CreateServerEvent(this);
             }
         }

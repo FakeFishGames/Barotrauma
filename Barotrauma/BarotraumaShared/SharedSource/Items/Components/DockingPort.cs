@@ -895,8 +895,8 @@ namespace Barotrauma.Items.Components
                 dockingState = MathHelper.Lerp(dockingState, 0.0f, deltaTime * 10.0f);
                 if (dockingState < 0.01f) docked = false;
 
-                item.SendSignal(0, "0", "state_out", null);
-                item.SendSignal(0, (FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor", null);
+                item.SendSignal("0", "state_out");
+                item.SendSignal((FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor");
 
             }
             else
@@ -909,7 +909,7 @@ namespace Barotrauma.Items.Components
 
                 if (joint is DistanceJoint)
                 {
-                    item.SendSignal(0, "0", "state_out", null);
+                    item.SendSignal("0", "state_out");
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
 
                     forceLockTimer += deltaTime;
@@ -956,7 +956,7 @@ namespace Barotrauma.Items.Components
                         doorBody.Enabled = DockingTarget.Door.Body.Enabled;
                     }
 
-                    item.SendSignal(0, "1", "state_out", null);
+                    item.SendSignal("1", "state_out");
 
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }
