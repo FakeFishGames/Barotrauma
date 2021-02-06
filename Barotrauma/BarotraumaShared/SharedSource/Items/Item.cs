@@ -1872,13 +1872,6 @@ namespace Barotrauma
             SendSignal(new Signal(signal), connectionName);
         }
 
-        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
-        {
-            if (connections == null) { return; }
-            if (!connections.TryGetValue(connectionName, out Connection c)) { return; }
-            SendSignal(stepsTaken, signal, c, sender, power, source, signalStrength);           
-        }
-
         public void SendSignal([NotNull] Signal signal, string conenctionName)
         {
             if (connections == null) { return; }
@@ -1910,11 +1903,6 @@ namespace Barotrauma
                 signal.connection.SendSignal(signal);
             }
 
-        }
-
-        public void SendSignal(int stepsTaken, string signal, Connection connection, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
-        {
-            SendSignal(new Signal(signal, stepsTaken, connection, sender, source, power, signalStrength));
         }
 
         private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
