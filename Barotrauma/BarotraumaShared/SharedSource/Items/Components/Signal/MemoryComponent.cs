@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components

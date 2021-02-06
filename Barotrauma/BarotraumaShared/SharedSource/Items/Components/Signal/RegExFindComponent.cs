@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components

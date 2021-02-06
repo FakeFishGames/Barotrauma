@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;

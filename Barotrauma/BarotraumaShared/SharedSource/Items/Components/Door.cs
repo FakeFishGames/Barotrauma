@@ -4,7 +4,6 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;

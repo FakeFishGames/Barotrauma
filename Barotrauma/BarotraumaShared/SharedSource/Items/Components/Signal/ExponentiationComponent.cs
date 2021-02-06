@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components

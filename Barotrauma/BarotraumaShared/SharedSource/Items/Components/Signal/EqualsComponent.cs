@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components

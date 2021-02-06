@@ -3,7 +3,6 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Barotrauma.IO;
 using System.Linq;
