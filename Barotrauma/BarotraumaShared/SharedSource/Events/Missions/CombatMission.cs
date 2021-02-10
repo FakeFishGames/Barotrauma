@@ -16,11 +16,11 @@ namespace Barotrauma
             get { return false; }
         }
 
-        private Character.TeamType Winner
+        private CharacterTeamType Winner
         {
             get
             {
-                if (GameMain.GameSession?.WinningTeam == null) { return Character.TeamType.None; } 
+                if (GameMain.GameSession?.WinningTeam == null) { return CharacterTeamType.None; } 
                 return GameMain.GameSession.WinningTeam.Value;
             }
         }
@@ -29,24 +29,19 @@ namespace Barotrauma
         {
             get 
             {
-                if (Winner == Character.TeamType.None || string.IsNullOrEmpty(base.SuccessMessage)) { return ""; }
+                if (Winner == CharacterTeamType.None || string.IsNullOrEmpty(base.SuccessMessage)) { return ""; }
 
                 //disable success message for now if it hasn't been translated
                 if (!TextManager.ContainsTag("MissionSuccess." + Prefab.TextIdentifier)) { return ""; }
 
-                var loser = Winner == Character.TeamType.Team1 ? 
-                    Character.TeamType.Team2 : 
-                    Character.TeamType.Team1;
+                var loser = Winner == CharacterTeamType.Team1 ? 
+                    CharacterTeamType.Team2 : 
+                    CharacterTeamType.Team1;
 
                 return base.SuccessMessage
                     .Replace("[loser]", GetTeamName(loser))
                     .Replace("[winner]", GetTeamName(Winner));
             }
-        }
-
-        public override int TeamCount
-        {
-            get { return 2; }
         }
 
         public CombatMission(MissionPrefab prefab, Location[] locations)
@@ -74,13 +69,13 @@ namespace Barotrauma
             };
         }
 
-        public static string GetTeamName(Character.TeamType teamID)
+        public static string GetTeamName(CharacterTeamType teamID)
         {
-            if (teamID == Character.TeamType.Team1)
+            if (teamID == CharacterTeamType.Team1)
             {
                 return teamNames.Length > 0 ? teamNames[0] : "Team 1";
             }
-            else if (teamID == Character.TeamType.Team2)
+            else if (teamID == CharacterTeamType.Team2)
             {
                 return teamNames.Length > 1 ? teamNames[1] : "Team 2";
             }
@@ -91,7 +86,7 @@ namespace Barotrauma
         public bool IsInWinningTeam(Character character)
         {
             return character != null && 
-                Winner != Character.TeamType.None &&
+                Winner != CharacterTeamType.None &&
                 Winner == character.TeamID;
         }
         
@@ -104,7 +99,7 @@ namespace Barotrauma
             }
             
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
-            subs[0].TeamID = Character.TeamType.Team1; subs[1].TeamID = Character.TeamType.Team2;
+            subs[0].TeamID = CharacterTeamType.Team1; subs[1].TeamID = CharacterTeamType.Team2;
             subs[0].NeutralizeBallast(); subs[1].NeutralizeBallast();
             subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
@@ -122,7 +117,7 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember == null) return;
 
-            if (Winner != Character.TeamType.None)
+            if (Winner != CharacterTeamType.None)
             {
                 GiveReward();
                 completed = true;

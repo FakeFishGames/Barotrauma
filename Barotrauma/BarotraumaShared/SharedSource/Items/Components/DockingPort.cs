@@ -13,7 +13,16 @@ namespace Barotrauma.Items.Components
 {
     partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
     {
-        private static List<DockingPort> list = new List<DockingPort>();
+        public enum DirectionType
+        {
+            None,
+            Top,
+            Bottom,
+            Left,
+            Right
+        }
+
+        private static readonly List<DockingPort> list = new List<DockingPort>();
         public static IEnumerable<DockingPort> List
         {
             get { return list; }
@@ -37,7 +46,7 @@ namespace Barotrauma.Items.Components
         //force the sub to the correct position
         const float ForceLockDelay = 1.0f;
 
-        public int DockingDir { get; private set; }
+        public int DockingDir { get; set; }
 
         [Serialize("32.0,32.0", false, description: "How close the docking port has to be to another port to dock.")]
         public Vector2 DistanceTolerance { get; set; }
@@ -63,6 +72,10 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(DirectionType.None, false, description: "Which direction the port is allowed to dock in. For example, \"Top\" would mean the port can dock to another port above it.\n"+
+            "Normally there's no need to touch this setting, but if you notice the docking position is incorrect (for example due to some unusual docking port configuration without hulls or doors), you can use this to enforce the direction.")]
+        public DirectionType ForceDockingDirection { get; set; }
+        
         public DockingPort DockingTarget { get; private set; }
 
         public Door Door { get; private set; }
@@ -87,6 +100,11 @@ namespace Barotrauma.Items.Components
                     Undock();
                 }
             }
+        }
+
+        public bool IsLocked
+        {
+            get { return joint is WeldJoint || DockingTarget?.joint is WeldJoint; }
         }
 
         /// <summary>
@@ -311,10 +329,10 @@ namespace Barotrauma.Items.Components
                 joint = null;
             }
 
-            Vector2 offset = (IsHorizontal ?
+            Vector2 offset = IsHorizontal ?
                 Vector2.UnitX * DockingDir :
-                Vector2.UnitY * DockingDir);
-            offset *= DockedDistance * 0.5f;
+                Vector2.UnitY * DockingDir;
+            offset *= DockedDistance * 0.5f * item.Scale;
             
             Vector2 pos1 = item.WorldPosition + offset;
 
@@ -346,6 +364,14 @@ namespace Barotrauma.Items.Components
 
         public int GetDir(DockingPort dockingTarget = null)
         {
+            int forcedDockingDir = GetForcedDockingDir();
+            if (forcedDockingDir != 0) { return forcedDockingDir; }
+            if (dockingTarget != null)
+            {
+                forcedDockingDir = -dockingTarget.GetForcedDockingDir();
+                if (forcedDockingDir != 0) { return forcedDockingDir; }
+            }
+
             if (DockingDir != 0) { return DockingDir; }
 
             if (Door != null && Door.LinkedGap.linkedTo.Count > 0)
@@ -390,9 +416,10 @@ namespace Barotrauma.Items.Components
             }
             if (dockingTarget != null)
             {
-                return IsHorizontal ?
+                int dir = IsHorizontal ?
                     Math.Sign(dockingTarget.item.WorldPosition.X - item.WorldPosition.X) :
                     Math.Sign(dockingTarget.item.WorldPosition.Y - item.WorldPosition.Y);
+                if (dir != 0) { return dir; }
             }
             if (item.Submarine != null)
             {
@@ -401,6 +428,22 @@ namespace Barotrauma.Items.Components
                     Math.Sign(item.WorldPosition.Y - item.Submarine.WorldPosition.Y);
             }
 
+            return 0;
+        }
+
+        private int GetForcedDockingDir()
+        {
+            switch (ForceDockingDirection)
+            {
+                case DirectionType.Left:
+                    return -1;
+                case DirectionType.Right:
+                    return 1;
+                case DirectionType.Top:
+                    return 1;
+                case DirectionType.Bottom:
+                    return -1;
+            }
             return 0;
         }
 
@@ -491,8 +534,9 @@ namespace Barotrauma.Items.Components
                     subs = new Submarine[] { DockingTarget.item.Submarine, item.Submarine };
                 }
 
-                hullRects[0] = new Rectangle(hullRects[0].Center.X, hullRects[0].Y, ((int)DockedDistance / 2), hullRects[0].Height);
-                hullRects[1] = new Rectangle(hullRects[1].Center.X - ((int)DockedDistance / 2), hullRects[1].Y, ((int)DockedDistance / 2), hullRects[1].Height);
+                int scaledDockedDistance = (int)(DockedDistance / 2 * item.Scale);
+                hullRects[0] = new Rectangle(hullRects[0].Center.X, hullRects[0].Y, scaledDockedDistance, hullRects[0].Height);
+                hullRects[1] = new Rectangle(hullRects[1].Center.X - scaledDockedDistance, hullRects[1].Y, scaledDockedDistance, hullRects[1].Height);
 
                 //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
                 int leftSubRightSide = int.MinValue, rightSubLeftSide = int.MaxValue;
@@ -588,8 +632,9 @@ namespace Barotrauma.Items.Components
                     subs = new Submarine[] { DockingTarget.item.Submarine, item.Submarine };
                 }
 
-                hullRects[0] = new Rectangle(hullRects[0].X, hullRects[0].Y + (int)(-hullRects[0].Height + DockedDistance) / 2, hullRects[0].Width, ((int)DockedDistance / 2));
-                hullRects[1] = new Rectangle(hullRects[1].X, hullRects[1].Y - hullRects[1].Height / 2, hullRects[1].Width, ((int)DockedDistance / 2));
+                int scaledDockedDistance = (int)(DockedDistance / 2 * item.Scale);
+                hullRects[0] = new Rectangle(hullRects[0].X, hullRects[0].Y - hullRects[0].Height / 2 + scaledDockedDistance, hullRects[0].Width, scaledDockedDistance);
+                hullRects[1] = new Rectangle(hullRects[1].X, hullRects[1].Y - hullRects[1].Height / 2, hullRects[1].Width, scaledDockedDistance);
 
                 //expand hulls if needed, so there's no empty space between the sub's hulls and docking port hulls
                 int upperSubBottom = int.MaxValue, lowerSubTop = int.MinValue;
@@ -908,7 +953,6 @@ namespace Barotrauma.Items.Components
 
                 if (joint is DistanceJoint)
                 {
-                    item.SendSignal(0, "0", "state_out", null);
                     dockingState = MathHelper.Lerp(dockingState, 0.5f, deltaTime * 10.0f);
 
                     forceLockTimer += deltaTime;
@@ -918,9 +962,7 @@ namespace Barotrauma.Items.Components
                     if (jointDiff.LengthSquared() > 0.04f * 0.04f && forceLockTimer < ForceLockDelay)
                     {
                         float totalMass = item.Submarine.PhysicsBody.Mass + DockingTarget.item.Submarine.PhysicsBody.Mass;
-                        float massRatio1 = 1.0f;
-                        float massRatio2 = 1.0f;
-
+                        float massRatio1, massRatio2;
                         if (item.Submarine.PhysicsBody.BodyType != BodyType.Dynamic)
                         {
                             massRatio1 = 0.0f;
@@ -954,11 +996,10 @@ namespace Barotrauma.Items.Components
                     {
                         doorBody.Enabled = DockingTarget.Door.Body.Enabled;
                     }
-
-                    item.SendSignal(0, "1", "state_out", null);
-
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }
+
+                item.SendSignal(0, IsLocked ? "1" : "0", "state_out", null);
             }
             if (!obstructedWayPointsDisabled && dockingState >= 0.99f)
             {
@@ -985,7 +1026,8 @@ namespace Barotrauma.Items.Components
             if (initialized) { return; }
             initialized = true;
 
-            float closestDist = 30.0f * 30.0f;
+            float maxXDist = (item.Prefab.sprite.size.X * item.Prefab.Scale) / 2;
+            float closestYDist = (item.Prefab.sprite.size.Y * item.Prefab.Scale) / 2;
             foreach (Item it in Item.ItemList)
             {
                 if (it.Submarine != item.Submarine) { continue; }
@@ -993,11 +1035,22 @@ namespace Barotrauma.Items.Components
                 var doorComponent = it.GetComponent<Door>();
                 if (doorComponent == null || doorComponent.IsHorizontal == IsHorizontal) { continue; }
 
-                float distSqr = Vector2.DistanceSquared(item.Position, it.Position);
-                if (distSqr < closestDist)
+                float yDist = Math.Abs(it.Position.Y - item.Position.Y);
+                if (item.linkedTo.Contains(it))
+                {
+                    // If there's a door linked to the docking port, always treat it close enough.
+                    yDist = Math.Min(closestYDist, yDist);
+                }
+                else if (Math.Abs(it.Position.X - item.Position.X) > maxXDist)
+                {
+                    // Too far left/right
+                    continue;
+                }
+
+                if (yDist <= closestYDist)
                 {
                     Door = doorComponent;
-                    closestDist = distSqr;
+                    closestYDist = yDist;
                 }
             }
 

@@ -1,10 +1,7 @@
 ﻿using Barotrauma.Networking;
-using FarseerPhysics;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -18,7 +15,7 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Connections.Count; i++)
             {
                 wires[i] = new List<Wire>();
-                for (int j = 0; j < Connection.MaxLinked; j++)
+                for (int j = 0; j < Connections[i].MaxWires; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -68,9 +65,9 @@ namespace Barotrauma.Items.Components
             {
                 item.CreateServerEvent(this);
                 c.Character.Inventory?.CreateNetworkEvent();
-                for (int i = 0; i < 2; i++)
+                foreach (Item heldItem in c.Character.HeldItems)
                 {
-                    var selectedWire = c.Character.SelectedItems[i]?.GetComponent<Wire>();
+                    var selectedWire = heldItem?.GetComponent<Wire>();
                     if (selectedWire == null) { continue; }
 
                     selectedWire.CreateNetworkEvent();

@@ -109,14 +109,14 @@ namespace Barotrauma
                 ISpatialEntity spawnPos = GetSpawnPos();
                 Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), onSpawn: newCharacter =>
                 {
-                    newCharacter.TeamID = Character.TeamType.FriendlyNPC;
+                    newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
                     newCharacter.EnableDespawn = false;
                     humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
                     if (LootingIsStealing)
                     {
-                        foreach (Item item in newCharacter.Inventory.Items)
+                        foreach (Item item in newCharacter.Inventory.AllItems)
                         {
-                            if (item != null) { item.SpawnedInOutpost = true; }
+                            item.SpawnedInOutpost = true;
                         }
                     }
                     newCharacter.CharacterHealth.MaxVitality *= humanPrefab.HealthMultiplier;
@@ -200,12 +200,18 @@ namespace Barotrauma
                     }
                     void onSpawned(Item newItem)
                     {
-                        if (!string.IsNullOrEmpty(TargetTag) && newItem != null)
+                        if (newItem != null)
                         {
-                            ParentEvent.AddTarget(TargetTag, newItem);
+                            if (!string.IsNullOrEmpty(TargetTag))
+                            {
+                                ParentEvent.AddTarget(TargetTag, newItem);
+                            }
+                            if (IgnoreByAI)
+                            {
+                                newItem.AddTag("ignorebyai");
+                            }
                         }
                         spawnedEntity = newItem;
-                        newItem?.SetIgnoreByAI(IgnoreByAI);
                     }
                 }
             }

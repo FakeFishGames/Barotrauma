@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
         public Character User;
 
         [Editable(0.0f, 10000000.0f), 
-        Serialize(2000.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
+        Serialize(500.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
             get { return maxForce; }
@@ -41,6 +41,13 @@ namespace Barotrauma.Items.Components
             description: "The position of the propeller as an offset from the item's center (in pixels)."+
             " Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.")]
         public Vector2 PropellerPos
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(false, true)]
+        public bool DisablePropellerDamage
         {
             get;
             set;
@@ -117,6 +124,7 @@ namespace Barotrauma.Items.Components
                 Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
+                if (item.Submarine.FlippedX) { currForce *= -1; }
                 item.Submarine.ApplyForce(currForce);
                 UpdatePropellerDamage(deltaTime);
                 float maxChangeSpeed = 0.5f;
@@ -130,7 +138,7 @@ namespace Barotrauma.Items.Components
                 if (particleTimer <= 0.0f)
                 {
                     Vector2 particleVel = -currForce.ClampLength(5000.0f) / 5.0f;
-                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos,
+                    GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos * item.Scale,
                         particleVel * Rand.Range(0.9f, 1.1f),
                         0.0f, item.CurrentHull);
                     particleTimer = 1.0f / particlesPerSec;
@@ -154,19 +162,22 @@ namespace Barotrauma.Items.Components
 
         private void UpdatePropellerDamage(float deltaTime)
         {
+            if (DisablePropellerDamage) { return; }
+
             damageTimer += deltaTime;
-            if (damageTimer < 0.5f) return;
+            if (damageTimer < 0.5f) { return; }
             damageTimer = 0.1f;
 
-            if (propellerDamage == null) return;
-            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos;
+            if (propellerDamage == null) { return; }
+
+            float scaledDamageRange = propellerDamage.DamageRange * item.Scale;
+
+            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.Submarine != null || !character.Enabled || character.Removed) continue;
-
-                float dist = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
-                if (dist > propellerDamage.DamageRange * propellerDamage.DamageRange) continue;
-
+                if (character.Submarine != null || !character.Enabled || character.Removed) { continue; }
+                float distSqr = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
+                if (distSqr > scaledDamageRange * scaledDamageRange) { continue; }
                 character.LastDamageSource = item;
                 propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
             }

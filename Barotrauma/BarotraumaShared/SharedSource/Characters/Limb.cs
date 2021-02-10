@@ -330,7 +330,7 @@ namespace Barotrauma
             }
         }
 
-        public Submarine Submarine => character.Submarine;
+        public Submarine Submarine => character?.Submarine;
 
         public bool Hidden
         {
@@ -340,7 +340,7 @@ namespace Barotrauma
 
         public Vector2 WorldPosition
         {
-            get { return character.Submarine == null ? Position : Position + character.Submarine.Position; }
+            get { return character?.Submarine == null ? Position : Position + character.Submarine.Position; }
         }
 
         public Vector2 Position
@@ -622,6 +622,14 @@ namespace Barotrauma
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
                         }
+                        if (character.VariantOf != null && character.Params.VariantFile != null)
+                        {
+                            var attackElement = character.Params.VariantFile.Root.GetChildElement("attack");
+                            if (attackElement != null)
+                            {
+                                attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
+                            }
+                        }
                         break;
                     case "damagemodifier":
                         DamageModifiers.Add(new DamageModifier(subElement, character.Name));
@@ -669,7 +677,7 @@ namespace Barotrauma
         private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
         private readonly List<DamageModifier> tempModifiers = new List<DamageModifier>();
         private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
-        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1)
         {
             appliedDamageModifiers.Clear();
             afflictionsCopy.Clear();
@@ -709,7 +717,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                float finalDamageModifier = 1.0f;
+                float finalDamageModifier = damageMultiplier;
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
                     finalDamageModifier *= damageModifier.DamageMultiplier;

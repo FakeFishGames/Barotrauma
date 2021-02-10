@@ -195,10 +195,11 @@ namespace Barotrauma.Networking
             {
                 foreach (var data in line.RichData)
                 {
-                    UInt64 id = 0;
-                    if (!UInt64.TryParse(data.Metadata, out id)) { return; }
-                    Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id);
-                    client ??= GameMain.Client.ConnectedClients.Find(c => c.ID == id);
+                    if (!UInt64.TryParse(data.Metadata, out ulong id)) { return; }
+                    Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
+                                ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
+                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
+                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
                     if (client != null && client.Karma < 40.0f)
                     {
                         textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
@@ -243,10 +244,11 @@ namespace Barotrauma.Networking
                         Data = data,
                         OnClick = (component, area) =>
                         {
-                            UInt64 id = 0;
-                            if (!UInt64.TryParse(area.Data.Metadata, out id)) { return; }
-                            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id);
-                            client ??= GameMain.Client.ConnectedClients.Find(c => c.ID == id);
+                            if (!UInt64.TryParse(area.Data.Metadata, out UInt64 id)) { return; }
+                            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
+                                ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
+                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
+                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
                             if (client == null) { return; }
                             GameMain.NetLobbyScreen.SelectPlayer(client);
                         }

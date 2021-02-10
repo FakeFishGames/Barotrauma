@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
                 if (body.UserData is Item item)
                 {
                     var door = item.GetComponent<Door>();
-                    if (door != null && door.IsOpen || door.IsBroken) continue;
+                    if (door != null && door.CanBeTraversed) { continue; }
                 }
 
                 targetHull = null;
@@ -239,7 +239,7 @@ namespace Barotrauma.Items.Components
         {
             if (targetSections.Count == 0) { return; }
 
-            Item liquidItem = liquidContainer?.Inventory.Items[0];
+            Item liquidItem = liquidContainer?.Inventory.FirstOrDefault();
             if (liquidItem == null) { return; }
 
             bool isCleaning = false;

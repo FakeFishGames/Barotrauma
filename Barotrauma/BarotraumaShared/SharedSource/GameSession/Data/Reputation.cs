@@ -7,6 +7,7 @@ namespace Barotrauma
         public const float HostileThreshold = 0.1f;
         public const float ReputationLossPerNPCDamage = 0.1f;
         public const float ReputationLossPerStolenItemPrice = 0.01f;
+        public const float ReputationLossPerWallDamage = 0.1f;
         public const float MinReputationLossPerStolenItem = 0.5f;
         public const float MaxReputationLossPerStolenItem = 10.0f;
 

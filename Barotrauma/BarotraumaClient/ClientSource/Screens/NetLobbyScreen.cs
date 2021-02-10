@@ -193,6 +193,12 @@ namespace Barotrauma
             private set;
         }
 
+        public GUIListBox TeamPreferenceListBox
+        {
+            get;
+            private set;
+        }
+
         public GUIButton StartButton
         {
             get;
@@ -1230,24 +1236,23 @@ namespace Barotrauma
             {
                 tickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             }
-            traitorProbabilityButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            traitorProbabilityButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            botCountButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            botSpawnModeButtons[0].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            botSpawnModeButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            levelDifficultyScrollBar.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled = 
+                !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            botSpawnModeButtons[0].Enabled = botSpawnModeButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+
             autoRestartBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            SeedBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
 
             SettingsButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SettingsButton.OnClicked = GameMain.Client.ServerSettings.ToggleSettingsFrame;
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !CampaignSetupFrame.Visible && !CampaignFrame.Visible;
             ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));
-            shuttleList.Enabled = shuttleTickBox.Enabled = !CampaignFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
+            shuttleTickBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));            
+            shuttleList.Enabled = shuttleList.ButtonEnabled = shuttleTickBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
@@ -1373,9 +1378,9 @@ namespace Barotrauma
                 };
             };
             
-            new GUICustomComponent(new RectTransform(new Vector2(0.6f, 0.18f), infoContainer.RectTransform, Anchor.TopCenter),
+            new GUICustomComponent(new RectTransform(new Vector2(0.6f, 0.16f), infoContainer.RectTransform, Anchor.TopCenter),
                 onDraw: (sb, component) => characterInfo.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()));
-            
+
             if (allowEditing)
             {
                 GUILayoutGroup characterInfoTabs = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), infoContainer.RectTransform), isHorizontal: true)
@@ -1486,6 +1491,78 @@ namespace Barotrauma
                         confirmation.Buttons[1].OnClicked += confirmation.Close;
                         return true;
                     }
+                };
+            }
+
+            TeamPreferenceListBox = null;
+            if (SelectedMode == GameModePreset.PvP)
+            {
+                TeamPreferenceListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.04f), infoContainer.RectTransform, anchor: Anchor.TopLeft, pivot: Pivot.TopLeft), isHorizontal: true, style: null)
+                {
+                    Enabled = true,
+                    KeepSpaceForScrollBar = false,
+                    ScrollBarEnabled = false,
+                    ScrollBarVisible = false
+                };
+
+                TeamPreferenceListBox.UpdateDimensions();
+
+                Color team1Color = new Color(0, 110, 150, 255);
+                var team1Option = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), TeamPreferenceListBox.Content.RectTransform), TextManager.Get("teampreference.team1"), textAlignment: Alignment.Center, style: null)
+                {
+                    UserData = CharacterTeamType.Team1,
+                    CanBeFocused = true,
+                    Padding = Vector4.One * 10.0f * GUI.Scale,
+                    Color = Color.Lerp(team1Color, Color.Black, 0.7f) * 0.7f,
+                    HoverColor = team1Color * 0.95f,
+                    SelectedColor = team1Color * 0.8f,
+                    OutlineColor = team1Color,
+                    TextColor = Color.White,
+                    HoverTextColor = Color.White,
+                    SelectedTextColor = Color.White
+                };
+
+                Color noPreferenceColor = new Color(100, 100, 100, 255);
+                var noPreferenceOption = new GUITextBlock(new RectTransform(new Vector2(0.4f, 1.0f), TeamPreferenceListBox.Content.RectTransform), TextManager.Get("teampreference.nopreference"), textAlignment: Alignment.Center, style: null)
+                {
+                    UserData = CharacterTeamType.None,
+                    CanBeFocused = true,
+                    Padding = Vector4.One * 10.0f * GUI.Scale,
+                    Color = Color.Lerp(noPreferenceColor, Color.Black, 0.7f) * 0.7f,
+                    HoverColor = noPreferenceColor * 0.95f,
+                    SelectedColor = noPreferenceColor * 0.8f,
+                    OutlineColor = noPreferenceColor,
+                    TextColor = Color.White,
+                    HoverTextColor = Color.White,
+                    SelectedTextColor = Color.White
+                };
+
+                Color team2Color = new Color(150, 110, 0, 255);
+                var team2Option = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1.0f), TeamPreferenceListBox.Content.RectTransform), TextManager.Get("teampreference.team2"), textAlignment: Alignment.Center, style: null)
+                {
+                    UserData = CharacterTeamType.Team2,
+                    CanBeFocused = true,
+                    Padding = Vector4.One * 10.0f * GUI.Scale,
+                    Color = Color.Lerp(team2Color, Color.Black, 0.7f) * 0.7f,
+                    HoverColor = team2Color * 0.95f,
+                    SelectedColor = team2Color * 0.8f,
+                    OutlineColor = team2Color,
+                    TextColor = Color.White,
+                    HoverTextColor = Color.White,
+                    SelectedTextColor = Color.White
+                };
+
+                TeamPreferenceListBox.Select(GameMain.Config.TeamPreference);
+
+                TeamPreferenceListBox.OnSelected += (component, obj) =>
+                {
+                    if ((CharacterTeamType)obj == GameMain.Config.TeamPreference) { return true; }
+
+                    GameMain.Config.TeamPreference = (CharacterTeamType)obj;
+                    GameMain.Client.ForceNameAndJobUpdate();
+                    GameMain.Config.SaveNewPlayerConfig();
+
+                    return true;
                 };
             }
         }
@@ -1749,6 +1826,15 @@ namespace Barotrauma
                         }
                         GameMain.Client.RequestSelectMode(component.Parent.GetChildIndex(component));
                         HighlightMode(SelectedModeIndex);
+
+                        if (presetName.Equals("multiplayercampaign", StringComparison.OrdinalIgnoreCase))
+                        {
+                            GUI.SetCursorWaiting(endCondition: () =>
+                            {
+                                return CampaignFrame.Visible || CampaignSetupFrame.Visible;
+                            });
+                        }
+
                         return !presetName.Equals("multiplayercampaign", StringComparison.OrdinalIgnoreCase);
                     }
                     return false;
@@ -1819,7 +1905,19 @@ namespace Barotrauma
             playerFrame.Text = client.Name;
             
             Color color = Color.White;
-            if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
+            if (SelectedMode == GameModePreset.PvP)
+            {
+                switch (client.PreferredTeam)
+                {
+                    case CharacterTeamType.Team1:
+                        color = new Color(0, 110, 150, 255);
+                        break;
+                    case CharacterTeamType.Team2:
+                        color = new Color(150, 110, 0, 255);
+                        break;
+                }
+            }
+            else if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
             {
                 color = JobPrefab.Prefabs[client.PreferredJob].UIColor;
             }
@@ -2104,42 +2202,44 @@ namespace Barotrauma
                     rangebanButton.OnClicked += ClosePlayerFrame;
                 }
 
-
-                if (GameMain.Client != null && GameMain.Client.ServerSettings.Voting.AllowVoteKick && 
-                    selectedClient != null && selectedClient.AllowKicking)
+                if (GameMain.Client != null && GameMain.Client.ConnectedClients.Contains(selectedClient))
                 {
-                    var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
-                        TextManager.Get("VoteToKick"))
+                    if (GameMain.Client.ServerSettings.Voting.AllowVoteKick && 
+                        selectedClient != null && selectedClient.AllowKicking)
                     {
-                        Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
-                        OnClicked = (btn, userdata) => { GameMain.Client.VoteForKick(selectedClient); btn.Enabled = false; return true; },
-                        UserData = selectedClient
-                    };
-                }
+                        var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
+                            TextManager.Get("VoteToKick"))
+                        {
+                            Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
+                            OnClicked = (btn, userdata) => { GameMain.Client.VoteForKick(selectedClient); btn.Enabled = false; return true; },
+                            UserData = selectedClient
+                        };
+                    }
 
-                if (GameMain.Client.HasPermission(ClientPermissions.Kick) &&
-                    selectedClient != null && selectedClient.AllowKicking)
-                {
-                    var kickButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
-                        TextManager.Get("Kick"))
+                    if (GameMain.Client.HasPermission(ClientPermissions.Kick) &&
+                        selectedClient != null && selectedClient.AllowKicking)
                     {
-                        UserData = selectedClient
+                        var kickButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
+                            TextManager.Get("Kick"))
+                        {
+                            UserData = selectedClient
+                        };
+                        kickButton.OnClicked = (bt, userdata) => { KickPlayer(selectedClient); return true; };
+                        kickButton.OnClicked += ClosePlayerFrame;
+                    }
+
+                    new GUITickBox(new RectTransform(new Vector2(0.175f, 1.0f), headerContainer.RectTransform, Anchor.TopRight),
+                        TextManager.Get("Mute"))
+                    {
+                        Selected = selectedClient.MutedLocally,
+                        OnSelected = (tickBox) => { selectedClient.MutedLocally = tickBox.Selected; return true; }
                     };
-                    kickButton.OnClicked = (bt, userdata) => { KickPlayer(selectedClient); return true; };
-                    kickButton.OnClicked += ClosePlayerFrame;
                 }
 
                 if (buttonAreaTop.CountChildren > 0)
                 {
                     GUITextBlock.AutoScaleAndNormalize(buttonAreaTop.Children.Select(c => ((GUIButton)c).TextBlock).Concat(buttonAreaLower.Children.Select(c => ((GUIButton)c).TextBlock)));
                 }
-
-                new GUITickBox(new RectTransform(new Vector2(0.175f, 1.0f), headerContainer.RectTransform, Anchor.TopRight),
-                    TextManager.Get("Mute"))
-                {
-                    Selected = selectedClient.MutedLocally,
-                    OnSelected = (tickBox) => { selectedClient.MutedLocally = tickBox.Selected; return true; }
-                };
             }
 
             if (selectedClient.SteamID != 0 && Steam.SteamManager.IsInitialized)
@@ -2983,9 +3083,17 @@ namespace Barotrauma
             {
                 ToggleCampaignMode(false);
             }
-            
+
+            var prevMode = modeList.Content.GetChild(selectedModeIndex).UserData as GameModePreset;
+
             if ((HighlightedModeIndex == selectedModeIndex || HighlightedModeIndex < 0) && modeList.SelectedIndex != modeIndex) { modeList.Select(modeIndex, true); }
             selectedModeIndex = modeIndex;
+
+            if ((prevMode == GameModePreset.PvP) != (SelectedMode == GameModePreset.PvP))
+            {
+                UpdatePlayerFrame(null);
+                GameMain.Client.ConnectedClients.ForEach(c => SetPlayerNameAndJobPreference(c));
+            }
 
             if (SelectedMode != GameModePreset.MultiPlayerCampaign && GameMain.GameSession?.GameMode is CampaignMode && Selected == this)
             {
@@ -2993,6 +3101,7 @@ namespace Barotrauma
             }
 
             RefreshGameModeContent();
+            RefreshEnabledElements();
         }
 
         public void HighlightMode(int modeIndex)
@@ -3001,6 +3110,7 @@ namespace Barotrauma
 
             HighlightedModeIndex = modeIndex;
             RefreshGameModeContent();
+            RefreshEnabledElements();
         }
 
         private void RefreshMissionTypes()
@@ -3047,7 +3157,13 @@ namespace Barotrauma
                 else
                 {
                     CampaignFrame.Visible = false;
-                    CampaignSetupFrame.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageCampaign);
+                    CampaignSetupFrame.Visible = true;
+                    if (!GameMain.Client.HasPermission(ClientPermissions.ManageCampaign))
+                    {
+                        CampaignSetupFrame.ClearChildren();
+                        new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.5f), CampaignSetupFrame.RectTransform, Anchor.Center),
+                            TextManager.Get("campaignstarting"), font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+                    }
                 }
             }
             else

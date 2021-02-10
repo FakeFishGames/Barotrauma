@@ -214,7 +214,10 @@ namespace Barotrauma.Items.Components
                             roundedGridPos += item.Submarine.Position;
                         }
 
-                        Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
+                        if (!SubEditorScreen.IsSubEditor() || !SubEditorScreen.ShouldDrawGrid)
+                        {
+                            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.25f);
+                        }
 
                         WireSection.Draw(
                             spriteBatch, this,
@@ -286,10 +289,8 @@ namespace Barotrauma.Items.Components
         public static void UpdateEditing(List<Wire> wires)
         {
             var doubleClicked = PlayerInput.DoubleClicked();
-            
-            Wire equippedWire =
-                Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
-                Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
+
+            Wire equippedWire = Character.Controlled.HeldItems.FirstOrDefault(it => it.GetComponent<Wire>() != null)?.GetComponent<Wire>();
             if (equippedWire != null && GUI.MouseOn == null)
             {
                 if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedConstruction == null)
@@ -329,6 +330,9 @@ namespace Barotrauma.Items.Components
                         nodeWorldPos = nodeWorldPos - sub.HiddenSubPosition - sub.Position;
                     }
 
+                    if (selectedNodeIndex.HasValue && selectedNodeIndex.Value >= draggingWire.nodes.Count) { selectedNodeIndex = null; }
+                    if (highlightedNodeIndex.HasValue && highlightedNodeIndex.Value >= draggingWire.nodes.Count) { highlightedNodeIndex = null; }
+
                     if (selectedNodeIndex.HasValue)
                     {
                         if (!PlayerInput.IsShiftDown())
@@ -342,13 +346,14 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        if ((highlightedNodeIndex.HasValue && Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) > Submarine.GridSize.X * Submarine.GridSize.X) || 
+                        float dragDistance = Submarine.GridSize.X * Submarine.GridSize.Y;
+                        dragDistance *= 0.5f;
+                        if ((highlightedNodeIndex.HasValue && Vector2.DistanceSquared(nodeWorldPos, draggingWire.nodes[(int)highlightedNodeIndex]) >= dragDistance) || 
                             PlayerInput.IsShiftDown())
                         {
                             selectedNodeIndex = highlightedNodeIndex;
                         }
                     }
-
 
                     MapEntity.SelectEntity(draggingWire.item);
                 }
@@ -396,6 +401,13 @@ namespace Barotrauma.Items.Components
                         if (closestIndex > -1)
                         {
                             highlightedNodeIndex = closestIndex;
+
+                            Vector2 nudge = MapEntity.GetNudgeAmount(doHold: false);
+                            if (nudge != Vector2.Zero && closestIndex < selectedWire.nodes.Count)
+                            {
+                                selectedWire.MoveNode(closestIndex, nudge);
+                            }
+
                             //start dragging the node
                             if (PlayerInput.PrimaryMouseButtonHeld())
                             {

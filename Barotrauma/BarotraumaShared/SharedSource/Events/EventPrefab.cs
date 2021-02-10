@@ -10,6 +10,7 @@ namespace Barotrauma
         public readonly Type EventType;      
         public readonly string MusicType;
         public readonly float SpawnProbability;
+        public readonly bool TriggerEventCooldown;
         public float Commonness;
         public string Identifier;
 
@@ -35,6 +36,7 @@ namespace Barotrauma
             Identifier = ConfigElement.GetAttributeString("identifier", string.Empty);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             SpawnProbability = Math.Clamp(element.GetAttributeFloat("spawnprobability", 1.0f), 0, 1);
+            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
         }
 
         public Event CreateInstance()

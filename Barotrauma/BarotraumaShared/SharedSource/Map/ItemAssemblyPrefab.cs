@@ -65,8 +65,21 @@ namespace Barotrauma
                 var containerElement = entityElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("itemcontainer", StringComparison.OrdinalIgnoreCase));
                 if (containerElement == null) { continue; }
 
-                var itemIds = containerElement.GetAttributeIntArray("contained", new int[0]);
-                containedItemIDs.AddRange(itemIds.Select(id => (ushort)id));
+                string containedString = containerElement.GetAttributeString("contained", "");
+                string[] itemIdStrings = containedString.Split(',');
+                var itemIds = new List<ushort>[itemIdStrings.Length];
+                for (int i = 0; i < itemIdStrings.Length; i++)
+                {
+                    itemIds[i] ??= new List<ushort>();
+                    foreach (string idStr in itemIdStrings[i].Split(';'))
+                    {
+                        if (int.TryParse(idStr, out int id)) 
+                        { 
+                            itemIds[i].Add((ushort)id);
+                            containedItemIDs.Add((ushort)id);
+                        }                        
+                    }
+                }
             }
 
             int minX = int.MaxValue, minY = int.MaxValue;
@@ -110,16 +123,18 @@ namespace Barotrauma
         
         protected override void CreateInstance(Rectangle rect)
         {
-            var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
 #if CLIENT
+            var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub, selectInstance: Screen.Selected == GameMain.SubEditorScreen);
             if (Screen.Selected is SubEditorScreen)
             {
                 SubEditorScreen.StoreCommand(new AddOrDeleteCommand(loaded, false, handleInventoryBehavior: false));
             }
+#else
+            var loaded = CreateInstance(rect.Location.ToVector2(), Submarine.MainSub);
 #endif
         }
 
-        public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectPrefabs = false)
+        public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectInstance = false)
         {
             int idOffset = Entity.FindFreeID(1);
             if (MapEntity.mapEntityList.Any()) { idOffset = MapEntity.mapEntityList.Max(e => e.ID); }
@@ -148,7 +163,7 @@ namespace Barotrauma
 
             MapEntity.MapLoaded(entities, true);
 #if CLIENT
-            if (Screen.Selected == GameMain.SubEditorScreen && selectPrefabs)
+            if (Screen.Selected == GameMain.SubEditorScreen && selectInstance)
             {
                 MapEntity.SelectedList.Clear();
                 entities.ForEach(MapEntity.AddSelection);

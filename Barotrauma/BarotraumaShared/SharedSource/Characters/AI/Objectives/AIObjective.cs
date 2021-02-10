@@ -220,7 +220,7 @@ namespace Barotrauma
             { 
                 if (!AllowOutsideSubmarine && character.Submarine == null) { return false; }
                 if (AllowInAnySub) { return true; }
-                if (AllowInFriendlySubs && character.Submarine.TeamID == Character.TeamType.FriendlyNPC) { return true; }
+                if (AllowInFriendlySubs && character.Submarine.TeamID == CharacterTeamType.FriendlyNPC) { return true; }
                 return character.Submarine.TeamID == character.TeamID || character.Submarine.DockedTo.Any(sub => sub.TeamID == character.TeamID);
             }
         }

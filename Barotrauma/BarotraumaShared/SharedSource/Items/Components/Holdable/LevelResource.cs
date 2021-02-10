@@ -58,6 +58,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(1.0f, false, description: "How much the position of the item can vary from the wall the item spawns on.")]
+        public float RandomOffsetFromWall
+        {
+            get;
+            set;
+        }
+
         public bool Attached
         {
             get { return holdable != null && holdable.Attached; }

@@ -24,14 +24,14 @@ namespace Barotrauma
 
         protected override void CalculateBackgroundFrame()
         {
-            var firstSlot = slots.FirstOrDefault();
+            var firstSlot = visualSlots.FirstOrDefault();
             if (firstSlot == null) { return; }
             Rectangle frame = firstSlot.Rect;
             frame.Location += firstSlot.DrawOffset.ToPoint();
             for (int i = 1; i < capacity; i++)
             {
-                Rectangle slotRect = slots[i].Rect;
-                slotRect.Location += slots[i].DrawOffset.ToPoint();
+                Rectangle slotRect = visualSlots[i].Rect;
+                slotRect.Location += visualSlots[i].DrawOffset.ToPoint();
                 frame = Rectangle.Union(frame, slotRect);
             }
             BackgroundFrame = new Rectangle(
@@ -43,7 +43,7 @@ namespace Barotrauma
 
         public override void Draw(SpriteBatch spriteBatch, bool subInventory = false)
         {
-            if (slots != null && slots.Length > 0)
+            if (visualSlots != null && visualSlots.Length > 0)
             {
                 CalculateBackgroundFrame();
                 if (container.InventoryBackSprite == null)
@@ -70,7 +70,7 @@ namespace Barotrauma
                 if (container.InventoryBottomSprite != null && !subInventory)
                 {
                     container.InventoryBottomSprite.Draw(spriteBatch, 
-                        new Vector2(BackgroundFrame.Center.X, BackgroundFrame.Bottom) + slots[0].DrawOffset, 
+                        new Vector2(BackgroundFrame.Center.X, BackgroundFrame.Bottom) + visualSlots[0].DrawOffset, 
                         0.0f, UIScale);
                 }
 

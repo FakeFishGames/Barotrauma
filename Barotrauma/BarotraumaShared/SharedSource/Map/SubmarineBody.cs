@@ -450,16 +450,19 @@ namespace Barotrauma
 #endif
             if (Level.Loaded == null) { return; }
             float submarineDepth = submarine.RealWorldDepth;
-            if (submarineDepth < Level.Loaded.RealWorldCrushDepth) { return; }
+            if (!Submarine.AtDamageDepth) { return; }
 
             depthDamageTimer -= deltaTime;
             if (depthDamageTimer > 0.0f) { return; }
 
             foreach (Structure wall in Structure.WallList)
             {
-                if (wall.Submarine != submarine || wall.CrushDepth > submarineDepth) { continue; }
+                if (wall.Submarine != submarine) { continue; }
 
-                float pastCrushDepth = submarineDepth - wall.CrushDepth;
+                float wallCrushDepth = wall.CrushDepth;
+                if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { wallCrushDepth *= 1.2f; }
+                float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
+                if (pastCrushDepth < 0) { return; }
                 Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
                 if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
                 {

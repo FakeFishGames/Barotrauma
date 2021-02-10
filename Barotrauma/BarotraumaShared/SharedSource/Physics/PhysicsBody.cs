@@ -749,15 +749,21 @@ namespace Barotrauma
 
         public void MoveToPos(Vector2 simPosition, float force, Vector2? pullPos = null)
         {
-            if (pullPos == null) pullPos = FarseerBody.Position;
+            if (pullPos == null) { pullPos = FarseerBody.Position; }
 
-            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) return;
-            if (!IsValidValue(force, "force")) return;
+            if (!IsValidValue(simPosition, "position", -1e10f, 1e10f)) { return; }
+            if (!IsValidValue(force, "force")) { return; }
 
             Vector2 vel = FarseerBody.LinearVelocity;
             Vector2 deltaPos = simPosition - (Vector2)pullPos;
+            if (deltaPos.LengthSquared() > 100.0f * 100.0f)
+            {
+#if DEBUG || UNSTABLE
+                DebugConsole.ThrowError("Attempted to move a physics body to an invalid position.\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+            }
             deltaPos *= force;
-            FarseerBody.ApplyLinearImpulse((deltaPos - vel * 0.5f) * FarseerBody.Mass, (Vector2)pullPos);
+            ApplyLinearImpulse((deltaPos - vel * 0.5f) * FarseerBody.Mass, (Vector2)pullPos);
         }
 
         /// <summary>

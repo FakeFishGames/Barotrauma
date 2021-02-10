@@ -324,7 +324,7 @@ namespace Barotrauma
             {
                 if (!path.EndsWith("/")) path += "/";
             }
-            FilePath = path + file;
+            FilePath = (path + file).CleanUpPathCrossPlatform(correctFilenameCase: true);
             if (!string.IsNullOrEmpty(FilePath))
             {
                 FullPath = Path.GetFullPath(FilePath);

@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -202,8 +203,9 @@ namespace Barotrauma
         private readonly List<ItemSpawnInfo> spawnItems;
         private readonly List<CharacterSpawnInfo> spawnCharacters;
 
-        private List<EventPrefab> triggeredEvents;
-        private string triggeredEventTag = "statuseffect";
+        private readonly List<EventPrefab> triggeredEvents;
+        private readonly string triggeredEventTargetTag = "statuseffecttarget", 
+                                triggeredEventEntityTag = "statuseffectentity";
 
         private Character user;
 
@@ -319,7 +321,7 @@ namespace Barotrauma
 
             foreach (XAttribute attribute in attributes)
             {
-                switch (attribute.Name.ToString())
+                switch (attribute.Name.ToString().ToLowerInvariant())
                 {
                     case "type":
                         if (!Enum.TryParse(attribute.Value, true, out type))
@@ -361,8 +363,11 @@ namespace Barotrauma
                         lifeTime = attribute.GetAttributeFloat(0);
                         lifeTimer = lifeTime;
                         break;
-                    case "eventtag":
-                        triggeredEventTag = attribute.Value;
+                    case "eventtargettag":
+                        triggeredEventTargetTag = attribute.Value;
+                        break;
+                    case "evententitytag":
+                        triggeredEventEntityTag = attribute.Value;
                         break;
                     case "checkconditionalalways":
                         CheckConditionalAlways = attribute.GetAttributeBool(false);
@@ -524,6 +529,12 @@ namespace Barotrauma
                                 triggeredEvents.Add(prefab);
                             }
                         }
+
+                        foreach (XElement eventElement in subElement.Elements())
+                        {
+                            if (!eventElement.Name.ToString().Equals("ScriptedEvent", StringComparison.OrdinalIgnoreCase)) { continue; }
+                            triggeredEvents.Add(new EventPrefab(eventElement));
+                        }
                         break;
                     case "spawncharacter":
                         var newSpawnCharacter = new CharacterSpawnInfo(subElement, parentDebugName);
@@ -627,25 +638,30 @@ namespace Barotrauma
 
         public bool HasRequiredConditions(IEnumerable<ISerializableEntity> targets)
         {
-            return HasRequiredConditions(targets, targetingContainer: false);
+            return HasRequiredConditions(targets, propertyConditionals);
         }
 
-        private bool HasRequiredConditions(IEnumerable<ISerializableEntity> targets, bool targetingContainer)
+        private bool HasRequiredConditions(IEnumerable<ISerializableEntity> targets, IEnumerable<PropertyConditional> conditionals, bool targetingContainer = false)
         {
-            if (!propertyConditionals.Any()) { return true; }
-            if (requiredItems.Any() && requiredItems.All(ri => ri.MatchOnEmpty) && !targets.Any()) { return true; }
+            if (conditionals.None()) { return true; }
+            if (requiredItems.Any() && requiredItems.All(ri => ri.MatchOnEmpty) && targets.None()) { return true; }
             switch (conditionalComparison)
             {
                 case PropertyConditional.Comparison.Or:
-                    foreach (PropertyConditional pc in propertyConditionals)
+                    foreach (PropertyConditional pc in conditionals)
                     {
                         if (pc.TargetContainer && !targetingContainer)
                         {
                             var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
                             var targetItem = target as Item ?? (target as ItemComponent)?.Item;
                             if (targetItem?.ParentInventory == null) { continue; }
-                            if (targetItem.ParentInventory.Owner is Item container && HasRequiredConditions(container.AllPropertyObjects, targetingContainer: true)) { return true; }
-                            if (targetItem.ParentInventory.Owner is Character character && HasRequiredConditions(character.ToEnumerable(), targetingContainer: true)) { return true; }
+                            var owner = targetItem.ParentInventory.Owner;
+                            if (pc.TargetGrandParent && owner is Item ownerItem)
+                            {
+                                owner = ownerItem.ParentInventory?.Owner;
+                            }
+                            if (owner is Item container && HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return true; }
+                            if (owner is Character character && HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }
                         }
                         else
                         {
@@ -664,15 +680,20 @@ namespace Barotrauma
                     }
                     return false;
                 case PropertyConditional.Comparison.And:
-                    foreach (PropertyConditional pc in propertyConditionals)
+                    foreach (PropertyConditional pc in conditionals)
                     {
                         if (pc.TargetContainer && !targetingContainer)
                         {
                             var target = targets.FirstOrDefault(t => t is Item || t is ItemComponent);
                             var targetItem = target as Item ?? (target as ItemComponent)?.Item;
                             if (targetItem?.ParentInventory == null) { return false; }
-                            if (targetItem.ParentInventory.Owner is Item container && !HasRequiredConditions(container.AllPropertyObjects, targetingContainer: true)) { return false; }
-                            if (targetItem.ParentInventory.Owner is Character character && !HasRequiredConditions(character.ToEnumerable(), targetingContainer: true)) { return false; }
+                            var owner = targetItem.ParentInventory.Owner;
+                            if (pc.TargetGrandParent && owner is Item ownerItem)
+                            {
+                                owner = ownerItem.ParentInventory?.Owner;
+                            }
+                            if (owner is Item container && !HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return false; }
+                            if (owner is Character character && !HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return false; }
                         }
                         else
                         {
@@ -685,8 +706,8 @@ namespace Barotrauma
                                         continue;
                                     }
                                 }
-                                if (!pc.Matches(target)) { return false; }
                             }
+                            if (targets.None(t => pc.Matches(t))) { return false; }
                         }
                     }
                     return true;
@@ -697,8 +718,6 @@ namespace Barotrauma
 
         protected bool IsValidTarget(ISerializableEntity entity)
         {
-            if (targetIdentifiers == null) { return true; }
-
             if (entity is Item item)
             {
                 return IsValidTarget(item);
@@ -709,6 +728,7 @@ namespace Barotrauma
             }
             else if (entity is Structure structure)
             {
+                if (targetIdentifiers == null) { return true; }
                 if (targetIdentifiers.Contains("structure")) { return true; }
                 if (targetIdentifiers.Any(id => id.Equals(structure.Prefab.Identifier, StringComparison.OrdinalIgnoreCase))) { return true; }
             }
@@ -716,7 +736,7 @@ namespace Barotrauma
             {
                 return IsValidTarget(character);
             }
-
+            if (targetIdentifiers == null) { return true; }
             return targetIdentifiers.Any(id => id.Equals(entity.Name, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -724,6 +744,7 @@ namespace Barotrauma
         {
             if (OnlyInside && itemComponent.Item.CurrentHull == null) { return false; }
             if (OnlyOutside && itemComponent.Item.CurrentHull != null) { return false; }
+            if (targetIdentifiers == null) { return true; }
             if (targetIdentifiers.Contains("itemcomponent")) { return true; }
             if (itemComponent.Item.HasTag(targetIdentifiers)) { return true; }
             return targetIdentifiers.Any(id => id.Equals(itemComponent.Item.Prefab.Identifier, StringComparison.OrdinalIgnoreCase));
@@ -761,7 +782,7 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
 
-            if (targetIdentifiers != null && !IsValidTarget(target)) { return; }
+            if (!IsValidTarget(target)) { return; }
 
             if (duration > 0.0f && !Stackable)
             {
@@ -786,11 +807,7 @@ namespace Barotrauma
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
             {
-                if (targetIdentifiers != null)
-                {
-                    //ignore invalid targets
-                    if (!IsValidTarget(target)) { continue; }
-                }
+                if (!IsValidTarget(target)) { continue; }
                 currentTargets.Add(target);
             }
 
@@ -943,9 +960,9 @@ namespace Barotrauma
                     {
                         if (targetEntity.Removed) { continue; }
                     }
-
-                    if (target is Limb limb)
+                    else if (target is Limb limb)
                     {
+                        if (limb.Removed) { continue; }
                         position = limb.WorldPosition + Offset;
                     }
 
@@ -967,6 +984,8 @@ namespace Barotrauma
 
             foreach (ISerializableEntity target in targets)
             {
+                //if the effect has a duration, these will be done in the UpdateAll method
+                if (duration > 0) { break; }
                 if (target == null) { continue; }
                 foreach (Affliction affliction in Afflictions)
                 {
@@ -1047,13 +1066,22 @@ namespace Barotrauma
                     Event ev = eventPrefab.CreateInstance();
                     if (ev == null) { continue; }
                     eventManager.QueuedEvents.Enqueue(ev);
-                    if (ev is ScriptedEvent scriptedEvent && !string.IsNullOrWhiteSpace(triggeredEventTag))
-                    {
-                        List<Entity> eventTargets = targets.Where(t => t is Entity).Cast<Entity>().ToList();
 
-                        if (eventTargets.Any())
+                    if (ev is ScriptedEvent scriptedEvent)
+                    {
+                        if (!string.IsNullOrWhiteSpace(triggeredEventTargetTag))
                         {
-                            scriptedEvent.Targets.Add(triggeredEventTag, eventTargets);
+                            List<Entity> eventTargets = targets.Where(t => t is Entity).Cast<Entity>().ToList();
+
+                            if (eventTargets.Any())
+                            {
+                                scriptedEvent.Targets.Add(triggeredEventTargetTag, eventTargets);
+                            }
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(triggeredEventEntityTag) && entity != null)
+                        {
+                            scriptedEvent.Targets.Add(triggeredEventEntityTag, new List<Entity> { entity });
                         }
                     }
                 }
@@ -1120,11 +1148,11 @@ namespace Barotrauma
                                             case ItemSpawnInfo.SpawnRotationType.MainLimb:
                                                 rotation = user.AnimController.MainLimb.body.TransformedRotation;
                                                 break;
-                                            default: 
+                                            default:
                                                 throw new NotImplementedException("Not implemented: " + itemSpawnInfo.RotationType);
                                         }
                                         rotation += MathHelper.ToRadians(itemSpawnInfo.Rotation * user.AnimController.Dir);
-                                        projectile.Shoot(user, sourceBody.SimPosition, sourceBody.SimPosition, rotation + spread, ignoredBodies: user.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
+                                        projectile.Shoot(user, ConvertUnits.ToSimUnits(worldPos), ConvertUnits.ToSimUnits(worldPos), rotation + spread, ignoredBodies: user.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
                                     }
                                     else
                                     {
@@ -1135,25 +1163,18 @@ namespace Barotrauma
                                 break;
                             case ItemSpawnInfo.SpawnPositionType.ThisInventory:
                                 {
+                                    Inventory inventory = null;
                                     if (entity is Character character && character.Inventory != null)
                                     {
-                                        int emptyCount = character.Inventory.Items.Count(it => it == null);
-                                        if (emptyCount - Entity.Spawner.CountSpawnQueue(spawnInfo => spawnInfo is EntitySpawner.ItemSpawnInfo itemSpawnInfo && itemSpawnInfo.Inventory == character.Inventory) > 0)
-                                        {
-                                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, character.Inventory);
-                                        }
+                                        inventory = character.Inventory;
                                     }
                                     else if (entity is Item item)
                                     {
-                                        var inventory = item?.GetComponent<ItemContainer>()?.Inventory;
-                                        if (inventory != null)
-                                        {
-                                            int emptyCount = inventory.Items.Count(it => it == null);
-                                            if (emptyCount - Entity.Spawner.CountSpawnQueue(spawnInfo => spawnInfo is EntitySpawner.ItemSpawnInfo itemSpawnInfo && itemSpawnInfo.Inventory == inventory) > 0)
-                                            {
-                                                Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory);
-                                            }
-                                        }
+                                        inventory = item?.GetComponent<ItemContainer>()?.Inventory;
+                                    }
+                                    if (inventory != null && inventory.CanBePut(itemSpawnInfo.ItemPrefab))
+                                    {
+                                        Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: false);                                        
                                     }
                                 }
                                 break;
@@ -1170,12 +1191,13 @@ namespace Barotrauma
                                     }
                                     if (thisInventory != null)
                                     {
-                                        foreach (Item item in thisInventory.Items)
+                                        foreach (Item item in thisInventory.AllItems)
                                         {
-                                            if (item == null) continue;
                                             Inventory containedInventory = item.GetComponent<ItemContainer>()?.Inventory;
-                                            if (containedInventory == null || !containedInventory.Items.Any(i => i == null)) continue;
-                                            Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory);
+                                            if (containedInventory != null && containedInventory.CanBePut(itemSpawnInfo.ItemPrefab))
+                                            {
+                                                Entity.Spawner.AddToSpawnQueue(itemSpawnInfo.ItemPrefab, containedInventory, spawnIfInventoryFull: false);
+                                            }
                                             break;
                                         }
                                     }

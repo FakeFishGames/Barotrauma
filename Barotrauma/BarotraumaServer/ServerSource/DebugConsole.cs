@@ -1333,7 +1333,15 @@ namespace Barotrauma
             commands.Add(new Command("startgame|startround|start", "start/startgame/startround: Start a new round.", (string[] args) =>
             {
                 if (Screen.Selected == GameMain.GameScreen) { return; }
-                if (!GameMain.Server.StartGame()) NewMessage("Failed to start a new round", Color.Yellow);
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign && 
+                    GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
+                {
+                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
+                }
+                else
+                {
+                    if (!GameMain.Server.StartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
+                }
             }));
 
             commands.Add(new Command("endgame|endround|end", "end/endgame/endround: End the current round.", (string[] args) =>

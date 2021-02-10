@@ -86,6 +86,11 @@ namespace Barotrauma
 
         private void ParseAfflictionTypes()
         {
+            if (string.IsNullOrWhiteSpace(rawAfflictionTypeString)) 
+            {
+                parsedAfflictionTypes = new string[0];
+                return;
+            }
             string[] splitValue = rawAfflictionTypeString.Split(',', '，');
             for (int i = 0; i < splitValue.Length; i++)
             {
@@ -96,6 +101,11 @@ namespace Barotrauma
 
         private void ParseAfflictionIdentifiers()
         {
+            if (string.IsNullOrWhiteSpace(rawAfflictionIdentifierString))
+            {
+                parsedAfflictionIdentifiers = new string[0];
+                return;
+            }
             string[] splitValue = rawAfflictionIdentifierString.Split(',', '，');
             for (int i = 0; i < splitValue.Length; i++)
             {

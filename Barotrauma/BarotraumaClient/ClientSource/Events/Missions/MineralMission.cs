@@ -12,6 +12,23 @@ namespace Barotrauma
     {
         public override void ClientReadInitial(IReadMessage msg)
         {
+            byte caveCount = msg.ReadByte();
+            for (int i = 0; i < caveCount; i++)
+            {
+                byte selectedCave = msg.ReadByte();
+                if (selectedCave < 255 && Level.Loaded != null)
+                {
+                    if (selectedCave < Level.Loaded.Caves.Count)
+                    {
+                        Level.Loaded.Caves[selectedCave].DisplayOnSonar = true;
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError($"Cave index out of bounds when reading nest mission data. Index: {selectedCave}, number of caves: {Level.Loaded.Caves.Count}");
+                    }
+                }
+            }
+
             for (int i = 0; i < ResourceClusters.Count; i++)
             {
                 var amount = msg.ReadByte();

@@ -411,7 +411,11 @@ namespace Barotrauma
                 if (animController.HeadInWater)
                 {
                     ambienceVolume = 1.0f;
-                    ambienceVolume += animController.Limbs[0].LinearVelocity.Length();
+                    float limbSpeed = animController.Limbs[0].LinearVelocity.Length();
+                    if (MathUtils.IsValid(limbSpeed))
+                    {
+                        ambienceVolume += limbSpeed;
+                    }
                 }
             }
 
@@ -455,6 +459,13 @@ namespace Barotrauma
                     GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.UpdateWaterAmbience:InvalidVolume", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     movementSoundVolume = 0.0f;
                 }
+                if (!MathUtils.IsValid(insideSubFactor))
+                {
+                    string errorMsg = "Failed to update water ambience volume - inside sub value invalid (" + insideSubFactor + ")";
+                    DebugConsole.Log(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("SoundPlayer.UpdateWaterAmbience:InvalidVolume", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    insideSubFactor = 0.0f;
+                }
             }
 
             for (int i = 0; i < 3; i++)
@@ -477,9 +488,10 @@ namespace Barotrauma
                         break;
                 }
 
-                // Consider the volume set in sounds.xml
-                if (sound != null) { volume *= sound.BaseGain; }
+                if (sound == null) { continue; }
 
+                // Consider the volume set in sounds.xml
+                volume *= sound.BaseGain;
                 if ((waterAmbienceChannels[i] == null || !waterAmbienceChannels[i].IsPlaying) && volume > 0.01f)
                 {
                     waterAmbienceChannels[i] = sound.Play(volume, "waterambience");
@@ -759,7 +771,7 @@ namespace Barotrauma
             return PlaySound(sound, position, volume ?? sound.BaseGain, range ?? sound.BaseFar, 1.0f, hullGuess);
         }
 
-        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, float? freqMult = null, Hull hullGuess = null)
+        public static SoundChannel PlaySound(Sound sound, Vector2 position, float? volume = null, float? range = null, float? freqMult = null, Hull hullGuess = null, bool ignoreMuffling = false)
         {
             if (sound == null)
             {
@@ -774,7 +786,7 @@ namespace Barotrauma
             {
                 return null;
             }
-            bool muffle = !sound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
+            bool muffle = !ignoreMuffling && ShouldMuffleSound(Character.Controlled, position, far, hullGuess);
             return sound.Play(volume ?? sound.BaseGain, far, freqMult ?? 1.0f, position, muffle: muffle);            
         }
 
@@ -959,7 +971,7 @@ namespace Barotrauma
                     return "wreck";
                 }
 
-                if (Level.IsLoadedOutpost && Character.Controlled.Submarine == Level.Loaded.StartOutpost)
+                if (Level.IsLoadedOutpost)
                 {
                     // Only return music type for location types which have music tracks defined
                     var locationType = Level.Loaded.StartLocation?.Type?.Identifier?.ToLowerInvariant();
@@ -1001,7 +1013,7 @@ namespace Barotrauma
             foreach (Character character in Character.CharacterList)
             {
                 if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
+                if (!(character.AIController is EnemyAIController enemyAI) || !enemyAI.Enabled || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
 
                 if (targetSubmarine != null)
                 {

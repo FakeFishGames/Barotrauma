@@ -222,7 +222,7 @@ namespace Barotrauma
             return !tileDiscovered[MathHelper.Clamp(x, 0, tileDiscovered.Length), MathHelper.Clamp(y, 0, tileDiscovered.Length)];
         }
 
-        partial void ChangeLocationType(Location location, string prevName, LocationTypeChange change)
+        partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change)
         {
             if (change.Messages.Any())
             {
@@ -383,11 +383,11 @@ namespace Barotrauma
                         Level.Loaded.DebugSetEndLocation(null);
 
                         CurrentLocation.Discovered = true;
-                        CurrentLocation.CreateStore();
                         OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
                         SelectLocation(-1);
                         if (GameMain.Client == null)
                         {
+                            CurrentLocation.CreateStore();
                             ProgressWorld();
                         }
                         else
@@ -550,7 +550,7 @@ namespace Barotrauma
 
                     location.Type.Sprite.Draw(spriteBatch, pos, color, 
                         scale: generationParams.LocationIconSize / location.Type.Sprite.size.X * iconScale * zoom);
-                    if (location.TypeChangeTimer <= 0 && !string.IsNullOrEmpty(location.LastTypeChangeMessage) && generationParams.TypeChangeIcon != null)
+                    if (location.TimeSinceLastTypeChange < 1 && !string.IsNullOrEmpty(location.LastTypeChangeMessage) && generationParams.TypeChangeIcon != null)
                     {
                         Vector2 typeChangeIconPos = pos + new Vector2(1.35f, -0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
                         float typeChangeIconScale = 18.0f / generationParams.TypeChangeIcon.SourceRect.Width;
@@ -610,7 +610,7 @@ namespace Barotrauma
                 Vector2 nameSize = GUI.LargeFont.MeasureString(HighlightedLocation.Name);
                 Vector2 typeSize = GUI.Font.MeasureString(HighlightedLocation.Type.Name);
                 Vector2 size = new Vector2(Math.Max(nameSize.X, typeSize.X), nameSize.Y + typeSize.Y);
-                bool showReputation = HighlightedLocation.Discovered && HighlightedLocation.Type.HasOutpost && HighlightedLocation.Reputation != null;
+                bool showReputation = hudVisibility > 0.0f && HighlightedLocation.Discovered && HighlightedLocation.Type.HasOutpost && HighlightedLocation.Reputation != null;
                 string repLabelText = null, repValueText = null;
                 Vector2 repLabelSize = Vector2.Zero, repBarSize = Vector2.Zero;
                 if (showReputation)

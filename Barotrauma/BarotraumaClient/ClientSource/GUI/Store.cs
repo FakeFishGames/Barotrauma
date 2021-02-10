@@ -24,9 +24,17 @@ namespace Barotrauma
         private int buyTotal, sellTotal;
 
         private GUITextBlock merchantBalanceBlock;
+        private GUILayoutGroup valueChangeGroup;
+        private GUITextBlock currentSellValueBlock, newSellValueBlock;
+        private GUIImage sellValueChangeArrow;
         private GUIDropDown sortingDropDown;
         private GUITextBox searchBox;
-        private GUIListBox storeDealsList, storeBuyList, storeSellList;
+        private GUIListBox storeBuyList, storeSellList;
+        /// <summary>
+        /// Can be null when there are no deals at the current location
+        /// </summary>
+        private GUILayoutGroup storeDailySpecialsGroup, storeRequestedGoodGroup;
+        private Color storeSpecialColor;
 
         private GUIListBox shoppingCrateBuyList, shoppingCrateSellList;
         private GUITextBlock shoppingCrateTotal;
@@ -49,7 +57,6 @@ namespace Barotrauma
 
         private enum StoreTab
         {
-            Deals,
             Buy,
             Sell
         }
@@ -78,19 +85,19 @@ namespace Barotrauma
                 CurrentLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
             }
             campaignUI.Campaign.CargoManager.OnItemsInBuyCrateChanged += () => { needsBuyingRefresh = true; };
-            campaignUI.Campaign.CargoManager.OnPurchasedItemsChanged += () => { needsBuyingRefresh = true; };
+            campaignUI.Campaign.CargoManager.OnPurchasedItemsChanged += () => { needsRefresh = true; };
             campaignUI.Campaign.CargoManager.OnItemsInSellCrateChanged += () => { needsSellingRefresh = true; };
             campaignUI.Campaign.CargoManager.OnSoldItemsChanged += () =>
             {
                 needsItemsToSellRefresh = true;
-                needsSellingRefresh = true;
+                needsRefresh = true;
             };
         }
 
-        public void Refresh()
+        public void Refresh(bool updateOwned = true)
         {
             hadPermissions = HasPermissions;
-            UpdateOwnedItems();
+            if (updateOwned) { UpdateOwnedItems(); }
             RefreshBuying(updateOwned: false);
             RefreshSelling(updateOwned: false);
             needsRefresh = false;
@@ -100,10 +107,8 @@ namespace Barotrauma
         {
             if (updateOwned) { UpdateOwnedItems(); }
             RefreshShoppingCrateBuyList();
-            //RefreshStoreDealsList();
             RefreshStoreBuyList();
             var hasPermissions = HasPermissions;
-            //storeDealsList.Enabled = hasPermissions;
             storeBuyList.Enabled = hasPermissions;
             shoppingCrateBuyList.Enabled = hasPermissions;
             needsBuyingRefresh = false;
@@ -166,7 +171,12 @@ namespace Barotrauma
             };
 
             // Merchant balance ------------------------------------------------
-            var merchantBalanceContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f / 14.0f), storeContent.RectTransform))
+            var balanceAndValueGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f / 14.0f), storeContent.RectTransform), isHorizontal: true)
+            {
+                RelativeSpacing = 0.005f
+            };
+
+            var merchantBalanceContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), balanceAndValueGroup.RectTransform))
             {
                 RelativeSpacing = 0.005f
             };
@@ -177,28 +187,110 @@ namespace Barotrauma
                 ForceUpperCase = true
             };
             merchantBalanceBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), merchantBalanceContainer.RectTransform),
-                "", font: GUI.SubHeadingFont, textAlignment: Alignment.TopLeft)
+                "", font: GUI.SubHeadingFont)
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
                 TextGetter = () =>
                 {
-                    var balance = CurrentLocation != null ? CurrentLocation.StoreCurrentBalance : 0;
-                    if (balance < (int)(0.25f * Location.StoreInitialBalance))
+                    if (CurrentLocation != null)
                     {
-                        merchantBalanceBlock.TextColor = Color.Red;
-                    }
-                    else if (balance < (int)(0.5f * Location.StoreInitialBalance))
-                    {
-                        merchantBalanceBlock.TextColor = Color.Orange;
+                        merchantBalanceBlock.TextColor = CurrentLocation.BalanceColor;
+                        return GetCurrencyFormatted(CurrentLocation.StoreCurrentBalance);
                     }
                     else
                     {
-                        merchantBalanceBlock.TextColor = Color.White;
+                        merchantBalanceBlock.TextColor = Color.Red;
+                        return GetCurrencyFormatted(0);
                     }
-                    return GetCurrencyFormatted(balance);
                 } 
             };
+
+            // Item sell value ------------------------------------------------
+            var sellValueContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), balanceAndValueGroup.RectTransform))
+            {
+                CanBeFocused = false,
+                RelativeSpacing = 0.005f
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform),
+                TextManager.Get("campaignstore.sellvalue"), font: GUI.Font, textAlignment: Alignment.BottomLeft)
+            {
+                AutoScaleVertical = true,
+                CanBeFocused = false,
+                ForceUpperCase = true
+            };
+
+            valueChangeGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                CanBeFocused = true,
+                RelativeSpacing = 0.02f
+            };
+            float blockWidth = GUI.IsFourByThree() ? 0.32f : 0.28f;
+            Point blockMaxSize = new Point((int)(GameSettings.TextScale * 60), valueChangeGroup.Rect.Height);
+            currentSellValueBlock = new GUITextBlock(new RectTransform(new Vector2(blockWidth, 1.0f), valueChangeGroup.RectTransform) { MaxSize = blockMaxSize },
+                "", font: GUI.SubHeadingFont)
+            {
+                AutoScaleVertical = true,
+                CanBeFocused = false,
+                TextScale = 1.1f,
+                TextGetter = () =>
+                {
+                    if (CurrentLocation != null)
+                    {
+                        int balanceAfterTransaction = IsBuying ?
+                            CurrentLocation.StoreCurrentBalance + buyTotal :
+                            CurrentLocation.StoreCurrentBalance - sellTotal;
+                        if (balanceAfterTransaction != CurrentLocation.StoreCurrentBalance)
+                        {
+                            var newStatus = Location.GetStoreBalanceStatus(balanceAfterTransaction);
+                            if (CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier != newStatus.SellPriceModifier)
+                            {
+                                string tooltipTag = newStatus.SellPriceModifier > CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier ?
+                                    "campaingstore.valueincreasetooltip" : "campaingstore.valuedecreasetooltip";
+                                valueChangeGroup.ToolTip = TextManager.Get(tooltipTag);
+                                currentSellValueBlock.TextColor = newStatus.Color;
+                                sellValueChangeArrow.Color = newStatus.Color;
+                                sellValueChangeArrow.Visible = true;
+                                newSellValueBlock.TextColor = newStatus.Color;
+                                newSellValueBlock.Text = $"{(newStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
+                                return $"{(CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
+                            }
+                        }
+                        valueChangeGroup.ToolTip = null;
+                        currentSellValueBlock.TextColor = CurrentLocation.BalanceColor;
+                        sellValueChangeArrow.Visible = false;
+                        newSellValueBlock.Text = null;
+                        return $"{(CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
+                    }
+                    else
+                    {
+                        valueChangeGroup.ToolTip = null;
+                        sellValueChangeArrow.Visible = false;
+                        newSellValueBlock.Text = null;
+                        return null;
+                    }
+                }
+            };
+            Vector4 newPadding = currentSellValueBlock.Padding;
+            newPadding.Z = 0;
+            currentSellValueBlock.Padding = newPadding;
+            float relativeHeight = 0.45f;
+            float relativeWidth = (relativeHeight * valueChangeGroup.Rect.Height) / valueChangeGroup.Rect.Width;
+            sellValueChangeArrow = new GUIImage(new RectTransform(new Vector2(relativeWidth, relativeHeight), valueChangeGroup.RectTransform), "StoreArrow", scaleToFit: true)
+            {
+                CanBeFocused = false,
+                Visible = false
+            };
+            newSellValueBlock = new GUITextBlock(new RectTransform(new Vector2(blockWidth, 1.0f), valueChangeGroup.RectTransform) { MaxSize = blockMaxSize },
+                "", font: GUI.SubHeadingFont)
+            {
+                AutoScaleVertical = true,
+                CanBeFocused = false,
+                TextScale = 1.1f
+            };
+            newPadding = newSellValueBlock.Padding;
+            newPadding.X = 0;
+            newSellValueBlock.Padding = newPadding;
 
             // Store mode buttons ------------------------------------------------
             var modeButtonFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f / 14.0f), storeContent.RectTransform), style: null);
@@ -209,8 +301,6 @@ namespace Barotrauma
             tabSortingMethods.Clear();
             foreach (StoreTab tab in tabs)
             {
-                // TODO: Remove the row below once the deal page is implemented
-                if (tab == StoreTab.Deals) { continue; }
                 var tabButton = new GUIButton(new RectTransform(new Vector2(1.0f / (tabs.Length + 1), 1.0f), modeButtonContainer.RectTransform),
                     text: TextManager.Get("campaignstoretab." + tab), style: "GUITabButton")
                 {
@@ -309,24 +399,22 @@ namespace Barotrauma
             searchBox.OnTextChanged += (textBox, text) => { FilterStoreItems(null, text); return true; };
 
             var storeItemListContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.92f), sortFilterListContainer.RectTransform), style: null);
-            storeDealsList = new GUIListBox(new RectTransform(Vector2.One, storeItemListContainer.RectTransform))
-            {
-                AutoHideScrollBar = false,
-                Visible = false
-            };
             tabLists.Clear();
-            tabLists.Add(StoreTab.Deals, storeDealsList);
+
             storeBuyList = new GUIListBox(new RectTransform(Vector2.One, storeItemListContainer.RectTransform))
             {
                 AutoHideScrollBar = false,
                 Visible = false
             };
+            storeDailySpecialsGroup = CreateDealsGroup(storeBuyList);
             tabLists.Add(StoreTab.Buy, storeBuyList);
+
             storeSellList = new GUIListBox(new RectTransform(Vector2.One, storeItemListContainer.RectTransform))
             {
                 AutoHideScrollBar = false,
                 Visible = false
             };
+            storeRequestedGoodGroup = CreateDealsGroup(storeSellList);
             tabLists.Add(StoreTab.Sell, storeSellList);
 
             // Shopping Crate ------------------------------------------------------------------------------------------------------------------------------------------
@@ -428,6 +516,26 @@ namespace Barotrauma
             resolutionWhenCreated = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
 
+        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList)
+        {
+            var elementHeight = (int)(GUI.yScale * 80);
+            var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, 4 * elementHeight + 3), parent: parentList.Content.RectTransform), style: null);
+            frame.UserData = "deals";
+            var dealsGroup = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter);
+            var dealsHeader = new GUILayoutGroup(new RectTransform(new Point((int)(0.95f * parentList.Content.Rect.Width), elementHeight), parent: dealsGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            dealsHeader.UserData = "header";
+            var iconWidth = (0.9f * dealsHeader.Rect.Height) / dealsHeader.Rect.Width;
+            var dealsIcon = new GUIImage(new RectTransform(new Vector2(iconWidth, 0.9f), dealsHeader.RectTransform), "StoreDealIcon", scaleToFit: true);
+            var text = TextManager.Get(parentList == storeBuyList ? "campaignstore.dailyspecials" : "campaignstore.requestedgoods");
+            var dealsText = new GUITextBlock(new RectTransform(new Vector2(1.0f - iconWidth, 0.9f), dealsHeader.RectTransform), text, font: GUI.LargeFont);
+            storeSpecialColor = dealsIcon.Color;
+            dealsText.TextColor = storeSpecialColor;
+            var divider = new GUIImage(new RectTransform(new Point(dealsGroup.Rect.Width, 3), dealsGroup.RectTransform), "HorizontalLine");
+            divider.UserData = "divider";
+            frame.CanBeFocused = dealsGroup.CanBeFocused = dealsHeader.CanBeFocused = dealsIcon.CanBeFocused = dealsText.CanBeFocused = divider.CanBeFocused = false;
+            return dealsGroup;
+        }
+
         private void UpdateLocation(Location prevLocation, Location newLocation)
         {
             if (prevLocation == newLocation) { return; }
@@ -464,17 +572,8 @@ namespace Barotrauma
             SetConfirmButtonBehavior();
             SetConfirmButtonStatus();
             FilterStoreItems();
-            if (tab == StoreTab.Deals)
+            if (tab == StoreTab.Buy)
             {
-                storeBuyList.Visible = false;
-                storeSellList.Visible = false;
-                storeDealsList.Visible = true;
-                shoppingCrateSellList.Visible = false;
-                shoppingCrateBuyList.Visible = true;
-            }
-            else if (tab == StoreTab.Buy)
-            {
-                storeDealsList.Visible = false;
                 storeSellList.Visible = false;
                 storeBuyList.Visible = true;
                 shoppingCrateSellList.Visible = false;
@@ -482,7 +581,6 @@ namespace Barotrauma
             }
             else if (tab == StoreTab.Sell)
             {
-                storeDealsList.Visible = false;
                 storeBuyList.Visible = false;
                 storeSellList.Visible = true;
                 shoppingCrateBuyList.Visible = false;
@@ -525,37 +623,71 @@ namespace Barotrauma
 
             bool hasPermissions = HasPermissions;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
+
+            if ((storeDailySpecialsGroup != null) != CurrentLocation.DailySpecials.Any())
+            {
+                if (storeDailySpecialsGroup == null)
+                {
+                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList);
+                    storeDailySpecialsGroup.Parent.SetAsFirstChild();
+                }
+                else
+                {
+                    storeBuyList.RemoveChild(storeDailySpecialsGroup.Parent);
+                    storeDailySpecialsGroup = null;
+                }
+                storeBuyList.RecalculateChildren();
+            }
+
             foreach (PurchasedItem item in CurrentLocation.StoreStock)
             {
-                if (item.ItemPrefab.CanBeBoughtAtLocation(CurrentLocation, out PriceInfo priceInfo))
+                CreateOrUpdateItemFrame(item.ItemPrefab, item.Quantity);
+            }
+
+            foreach (ItemPrefab itemPrefab in CurrentLocation.DailySpecials)
+            {
+                if (CurrentLocation.StoreStock.Any(pi => pi.ItemPrefab == itemPrefab)) { continue; }
+                CreateOrUpdateItemFrame(itemPrefab, 0);
+            }
+
+            void CreateOrUpdateItemFrame(ItemPrefab itemPrefab, int quantity)
+            {
+                if (itemPrefab.CanBeBoughtAtLocation(CurrentLocation, out PriceInfo priceInfo))
                 {
-                    var itemFrame = storeBuyList.Content.Children.FirstOrDefault(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == item.ItemPrefab);
-                    var quantity = item.Quantity;
-                    if (CargoManager.PurchasedItems.Find(i => i.ItemPrefab == item.ItemPrefab) is PurchasedItem purchasedItem)
+                    var isDailySpecial = CurrentLocation.DailySpecials.Contains(itemPrefab);
+                    var itemFrame = isDailySpecial ?
+                        storeDailySpecialsGroup.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab) :
+                        storeBuyList.Content.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab);
+                    if (CargoManager.PurchasedItems.Find(i => i.ItemPrefab == itemPrefab) is PurchasedItem purchasedItem)
                     {
                         quantity = Math.Max(quantity - purchasedItem.Quantity, 0);
                     }
-                    if (CargoManager.ItemsInBuyCrate.Find(i => i.ItemPrefab == item.ItemPrefab) is PurchasedItem itemInBuyCrate)
+                    if (CargoManager.ItemsInBuyCrate.Find(i => i.ItemPrefab == itemPrefab) is PurchasedItem itemInBuyCrate)
                     {
                         quantity = Math.Max(quantity - itemInBuyCrate.Quantity, 0);
                     }
                     if (itemFrame == null)
                     {
-                        itemFrame = CreateItemFrame(new PurchasedItem(item.ItemPrefab, quantity), priceInfo, storeBuyList, forceDisable: !hasPermissions);
+                        var parentComponent = isDailySpecial ? storeDailySpecialsGroup : storeBuyList as GUIComponent;
+                        itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, quantity), priceInfo, parentComponent, forceDisable: !hasPermissions);
                     }
                     else
                     {
                         (itemFrame.UserData as PurchasedItem).Quantity = quantity;
                         SetQuantityLabelText(StoreTab.Buy, itemFrame);
                         SetOwnedLabelText(itemFrame);
-                        SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
                     }
+                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
                     existingItemFrames.Add(itemFrame);
                 }
             }
 
-            var removedItemFrames = storeBuyList.Content.Children.Except(existingItemFrames).ToList();
-            removedItemFrames.ForEach(f => storeBuyList.Content.RemoveChild(f));
+            var removedItemFrames = storeBuyList.Content.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList();
+            if (storeDailySpecialsGroup != null)
+            {
+                removedItemFrames.AddRange(storeDailySpecialsGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
+            }
+            removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
             if (IsBuying) { FilterStoreItems(); }
             SortItems(StoreTab.Buy);
 
@@ -567,36 +699,72 @@ namespace Barotrauma
         {
             float prevSellListScroll = storeSellList.BarScroll;
             float prevShoppingCrateScroll = shoppingCrateSellList.BarScroll;
-
             bool hasPermissions = HasPermissions;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
-            foreach (PurchasedItem item in itemsToSell)
+
+            if ((storeRequestedGoodGroup != null) != CurrentLocation.RequestedGoods.Any())
             {
-                PriceInfo priceInfo = item.ItemPrefab.GetPriceInfo(CurrentLocation);
-                if (priceInfo == null) { continue; }
-                var itemFrame = storeSellList.Content.FindChild(c => c.UserData is PurchasedItem i && i.ItemPrefab == item.ItemPrefab);
-                var quantity = item.Quantity;
-                if (CargoManager.ItemsInSellCrate.Find(i => i.ItemPrefab == item.ItemPrefab) is PurchasedItem itemInSellCrate)
+                if (storeRequestedGoodGroup == null)
                 {
-                    quantity = Math.Max(quantity - itemInSellCrate.Quantity, 0);
-                }
-                if (itemFrame == null)
-                {
-                    itemFrame = CreateItemFrame(new PurchasedItem(item.ItemPrefab, quantity), priceInfo, storeSellList, forceDisable: !hasPermissions);
+                    storeRequestedGoodGroup = CreateDealsGroup(storeSellList);
+                    storeRequestedGoodGroup.Parent.SetAsFirstChild();
                 }
                 else
                 {
-                    (itemFrame.UserData as PurchasedItem).Quantity = quantity;
+                    storeSellList.RemoveChild(storeRequestedGoodGroup.Parent);
+                    storeRequestedGoodGroup = null;
+                }
+                storeSellList.RecalculateChildren();
+            }
+
+            foreach (PurchasedItem item in itemsToSell)
+            {
+                CreateOrUpdateItemFrame(item.ItemPrefab, item.Quantity);
+            }
+
+            foreach (var requestedGood in CurrentLocation.RequestedGoods)
+            {
+                if (itemsToSell.Any(pi => pi.ItemPrefab == requestedGood)) { continue; }
+                CreateOrUpdateItemFrame(requestedGood, 0);
+            }
+
+            void CreateOrUpdateItemFrame(ItemPrefab itemPrefab, int itemQuantity)
+            {
+                PriceInfo priceInfo = itemPrefab.GetPriceInfo(CurrentLocation);
+                if (priceInfo == null) { return; }
+                var isRequestedGood = CurrentLocation.RequestedGoods.Contains(itemPrefab);
+                var itemFrame = isRequestedGood ?
+                    storeRequestedGoodGroup.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab) :
+                    storeSellList.Content.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab);
+                if (CargoManager.ItemsInSellCrate.Find(i => i.ItemPrefab == itemPrefab) is PurchasedItem itemInSellCrate)
+                {
+                    itemQuantity = Math.Max(itemQuantity - itemInSellCrate.Quantity, 0);
+                }
+                if (itemFrame == null)
+                {
+                    var parentComponent = isRequestedGood ? storeRequestedGoodGroup : storeSellList as GUIComponent;
+                    itemFrame = CreateItemFrame(new PurchasedItem(itemPrefab, itemQuantity), priceInfo, parentComponent, forceDisable: !hasPermissions);
+                }
+                else
+                {
+                    (itemFrame.UserData as PurchasedItem).Quantity = itemQuantity;
                     SetQuantityLabelText(StoreTab.Sell, itemFrame);
                     SetOwnedLabelText(itemFrame);
-                    SetItemFrameStatus(itemFrame, hasPermissions);
                 }
-                if (quantity < 1) { itemFrame.Visible = false; }
+                SetItemFrameStatus(itemFrame, hasPermissions && itemQuantity > 0);
+                if (itemQuantity < 1 && !isRequestedGood)
+                {
+                    itemFrame.Visible = false;
+                }
                 existingItemFrames.Add(itemFrame);
             }
 
-            var removedItemFrames = storeSellList.Content.Children.Except(existingItemFrames).ToList();
-            removedItemFrames.ForEach(f => storeSellList.Content.RemoveChild(f));
+            var removedItemFrames = storeSellList.Content.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList();
+            if (storeRequestedGoodGroup != null)
+            {
+                removedItemFrames.AddRange(storeRequestedGoodGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
+            }
+            removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
             if (IsSelling) { FilterStoreItems(); }
             SortItems(StoreTab.Sell);
 
@@ -673,13 +841,10 @@ namespace Barotrauma
                 }
                 suppressBuySell = false;
 
-                if (priceInfo != null)
-                {
-                    var price = listBox == shoppingCrateBuyList ?
-                        CurrentLocation.GetAdjustedItemBuyPrice(priceInfo) :
-                        CurrentLocation.GetAdjustedItemSellPrice(priceInfo);
-                    totalPrice += item.Quantity * price;
-                }
+                var price = listBox == shoppingCrateBuyList ?
+                    CurrentLocation.GetAdjustedItemBuyPrice(item.ItemPrefab, priceInfo: priceInfo) :
+                    CurrentLocation.GetAdjustedItemSellPrice(item.ItemPrefab, priceInfo: priceInfo);
+                totalPrice += item.Quantity * price;
             }
 
             var removedItemFrames = listBox.Content.Children.Except(existingItemFrames).ToList();
@@ -711,32 +876,138 @@ namespace Barotrauma
 
             if (sortingMethod == SortingMethod.AlphabeticalAsc || sortingMethod == SortingMethod.AlphabeticalDesc)
             {
-                list.Content.RectTransform.SortChildren(
-                        (x, y) => (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Name));
-                if (sortingMethod == SortingMethod.AlphabeticalDesc) { list.Content.RectTransform.ReverseChildren(); }
+                list.Content.RectTransform.SortChildren(CompareByName);
+                if (GetSpecialsGroup() is GUILayoutGroup specialsGroup)
+                {
+                    specialsGroup.RectTransform.SortChildren(CompareByName);
+                    specialsGroup.Recalculate();
+                }
+
+                int CompareByName(RectTransform x, RectTransform y)
+                {
+                    if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
+                    {
+                        var sortResult = itemX.ItemPrefab.Name.CompareTo(itemY.ItemPrefab.Name);
+                        if (sortingMethod == SortingMethod.AlphabeticalDesc) { sortResult *= -1; }
+                        return sortResult;
+                    }
+                    else
+                    {
+                        return CompareByElement(x, y);
+                    }
+                }
             }
             else if (sortingMethod == SortingMethod.PriceAsc || sortingMethod == SortingMethod.PriceDesc)
             {
                 SortItems(list, SortingMethod.AlphabeticalAsc);
                 if (list == storeSellList || list == shoppingCrateSellList)
                 {
-                    list.Content.RectTransform.SortChildren(
-                        (x, y) => CurrentLocation.GetAdjustedItemSellPrice((x.GUIComponent.UserData as PurchasedItem).ItemPrefab).CompareTo(
-                            CurrentLocation.GetAdjustedItemSellPrice((y.GUIComponent.UserData as PurchasedItem).ItemPrefab)));
+                    list.Content.RectTransform.SortChildren(CompareBySellPrice);
+                    if (GetSpecialsGroup() is GUILayoutGroup specialsGroup)
+                    {
+                        specialsGroup.RectTransform.SortChildren(CompareBySellPrice);
+                        specialsGroup.Recalculate();
+                    }
+
+                    int CompareBySellPrice(RectTransform x, RectTransform y)
+                    {
+                        if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
+                        {
+                            var sortResult = CurrentLocation.GetAdjustedItemSellPrice(itemX.ItemPrefab).CompareTo(
+                                CurrentLocation.GetAdjustedItemSellPrice(itemY.ItemPrefab));
+                            if (sortingMethod == SortingMethod.PriceDesc) { sortResult *= -1; }
+                            return sortResult;
+                        }
+                        else
+                        {
+                            return CompareByElement(x, y);
+                        }
+                    }
                 }
                 else
                 {
-                    list.Content.RectTransform.SortChildren(
-                        (x, y) => CurrentLocation.GetAdjustedItemBuyPrice((x.GUIComponent.UserData as PurchasedItem).ItemPrefab).CompareTo(
-                            CurrentLocation.GetAdjustedItemBuyPrice((y.GUIComponent.UserData as PurchasedItem).ItemPrefab)));
+                    list.Content.RectTransform.SortChildren(CompareByBuyPrice);
+                    if (GetSpecialsGroup() is GUILayoutGroup specialsGroup)
+                    {
+                        specialsGroup.RectTransform.SortChildren(CompareByBuyPrice);
+                        specialsGroup.Recalculate();
+                    }
+
+                    int CompareByBuyPrice(RectTransform x, RectTransform y)
+                    {
+                        if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
+                        {
+                            var sortResult = CurrentLocation.GetAdjustedItemBuyPrice(itemX.ItemPrefab).CompareTo(
+                                CurrentLocation.GetAdjustedItemBuyPrice(itemY.ItemPrefab));
+                            if (sortingMethod == SortingMethod.PriceDesc) { sortResult *= -1; }
+                            return sortResult;
+                        }
+                        else
+                        {
+                            return CompareByElement(x, y);
+                        }
+                    }
                 }
-                if (sortingMethod == SortingMethod.PriceDesc) { list.Content.RectTransform.ReverseChildren(); }
             }
             else if (sortingMethod == SortingMethod.CategoryAsc)
             {
                 SortItems(list, SortingMethod.AlphabeticalAsc);
-                list.Content.RectTransform.SortChildren((x, y) =>
-                    (x.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category.CompareTo((y.GUIComponent.UserData as PurchasedItem).ItemPrefab.Category));
+                list.Content.RectTransform.SortChildren(CompareByCategory);
+                if (GetSpecialsGroup() is GUILayoutGroup specialsGroup)
+                {
+                    specialsGroup.RectTransform.SortChildren(CompareByCategory);
+                    specialsGroup.Recalculate();
+                }
+
+                static int CompareByCategory(RectTransform x, RectTransform y)
+                {
+                    if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
+                    {
+                        return itemX.ItemPrefab.Category.CompareTo(itemY.ItemPrefab.Category);
+                    }
+                    else
+                    {
+                        return CompareByElement(x, y);
+                    }
+                }
+            }
+
+            GUILayoutGroup GetSpecialsGroup()
+            {
+                if (list == storeBuyList)
+                {
+                    return storeDailySpecialsGroup;
+                }
+                else if (list == storeSellList)
+                {
+                    return storeRequestedGoodGroup;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            static int CompareByElement(RectTransform x, RectTransform y)
+            {
+                if (ShouldBeOnTop(x) || ShouldBeOnBottom(y))
+                {
+                    return -1;
+                }
+                else if (ShouldBeOnBottom(x) || ShouldBeOnTop(y))
+                {
+                    return 1;
+                }
+                else
+                {
+                    return 0;
+                }
+
+                static bool ShouldBeOnTop(RectTransform rt) =>
+                            rt.GUIComponent.UserData is string id && (id == "deals" || id == "header");
+
+                static bool ShouldBeOnBottom(RectTransform rt) =>
+                    rt.GUIComponent.UserData is string id && id == "divider";
             }
         }
 
@@ -750,7 +1021,7 @@ namespace Barotrauma
 
         private void SortActiveTabItems(SortingMethod sortingMethod) => SortItems(activeTab, sortingMethod);
 
-        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIListBox listBox, bool forceDisable = false)
+        private GUIComponent CreateItemFrame(PurchasedItem pi, PriceInfo priceInfo, GUIComponent parentComponent, bool forceDisable = false)
         {
             var tooltip = pi.ItemPrefab.Name;
             if (!string.IsNullOrWhiteSpace(pi.ItemPrefab.Description))
@@ -758,7 +1029,21 @@ namespace Barotrauma
                 tooltip += "\n" + pi.ItemPrefab.Description;
             }
 
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.yScale * 80)), parent: listBox.Content.RectTransform), style: "ListBoxElement")
+            GUIListBox parentListBox = parentComponent as GUIListBox;
+            int width = 0;
+            RectTransform parent = null;
+            if (parentListBox != null)
+            {
+                width = parentListBox.Content.Rect.Width;
+                parent = parentListBox.Content.RectTransform;
+            }
+            else
+            {
+                width = parentComponent.Rect.Width;
+                parent = parentComponent.RectTransform;
+            }
+
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(width, (int)(GUI.yScale * 80)), parent: parent), style: "ListBoxElement")
             {
                 ToolTip = tooltip,
                 UserData = pi
@@ -788,33 +1073,58 @@ namespace Barotrauma
                 img.RectTransform.MaxSize = img.Rect.Size;
             }
 
-            GUILayoutGroup nameAndQuantityGroup = new GUILayoutGroup(new RectTransform(new Vector2(nameAndIconRelativeWidth - iconRelativeWidth, 1.0f), mainGroup.RectTransform))
+            GUIFrame nameAndQuantityFrame = new GUIFrame(new RectTransform(new Vector2(nameAndIconRelativeWidth - iconRelativeWidth, 1.0f), mainGroup.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
+            GUILayoutGroup nameAndQuantityGroup = new GUILayoutGroup(new RectTransform(Vector2.One, nameAndQuantityFrame.RectTransform))
             {
                 CanBeFocused = false,
                 Stretch = true
             };
+            var isSellingRelatedList = parentComponent == storeSellList || parentComponent == storeRequestedGoodGroup || parentComponent == shoppingCrateSellList;
+            var locationHasDealOnItem = isSellingRelatedList ?
+                CurrentLocation.RequestedGoods.Contains(pi.ItemPrefab) : CurrentLocation.DailySpecials.Contains(pi.ItemPrefab);
             GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), nameAndQuantityGroup.RectTransform),
                 pi.ItemPrefab.Name, font: GUI.SubHeadingFont, textAlignment: Alignment.BottomLeft)
             {
                 CanBeFocused = false,
+                Shadow = locationHasDealOnItem,
                 TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
                 TextScale = 0.85f,
                 UserData = "name"
             };
+            if (locationHasDealOnItem)
+            {
+                var relativeWidth = (0.9f * nameAndQuantityFrame.Rect.Height) / nameAndQuantityFrame.Rect.Width;
+                var dealIcon = new GUIImage(
+                    new RectTransform(new Vector2(relativeWidth, 0.9f), nameAndQuantityFrame.RectTransform, anchor: Anchor.CenterLeft)
+                    {
+                        AbsoluteOffset = new Point((int)nameBlock.Padding.X, 0)
+                    },
+                    "StoreDealIcon", scaleToFit: true)
+                {
+                    CanBeFocused = false
+                };
+                dealIcon.SetAsFirstChild();
+            }
+            var isParentOnLeftSideOfInterface = parentComponent == storeBuyList || parentComponent == storeDailySpecialsGroup ||
+                parentComponent == storeSellList || parentComponent == storeRequestedGoodGroup;
             GUILayoutGroup shoppingCrateAmountGroup = null;
             GUINumberInput amountInput = null;
-            if (listBox == storeBuyList || listBox == storeSellList)
+            if (isParentOnLeftSideOfInterface)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), nameAndQuantityGroup.RectTransform),
-                    CreateQuantityLabelText(listBox == storeSellList ? StoreTab.Sell : StoreTab.Buy, pi.Quantity), font: GUI.Font, textAlignment: Alignment.BottomLeft)
+                    CreateQuantityLabelText(isSellingRelatedList ? StoreTab.Sell : StoreTab.Buy, pi.Quantity), font: GUI.Font, textAlignment: Alignment.BottomLeft)
                 {
                     CanBeFocused = false,
+                    Shadow = locationHasDealOnItem,
                     TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
                     TextScale = 0.85f,
                     UserData = "quantitylabel"
                 };
             }
-            else if (listBox == shoppingCrateBuyList || listBox == shoppingCrateSellList)
+            else if (!isParentOnLeftSideOfInterface)
             {
                 var relativePadding = nameBlock.Padding.X / nameBlock.Rect.Width;
                 shoppingCrateAmountGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - relativePadding, 0.6f), nameAndQuantityGroup.RectTransform) { RelativeOffset = new Vector2(relativePadding, 0) },
@@ -825,7 +1135,7 @@ namespace Barotrauma
                 amountInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), shoppingCrateAmountGroup.RectTransform), GUINumberInput.NumberType.Int)
                 {
                     MinValueInt = 0,
-                    MaxValueInt = GetMaxAvailable(pi.ItemPrefab, listBox == shoppingCrateBuyList ? StoreTab.Buy : StoreTab.Sell),
+                    MaxValueInt = GetMaxAvailable(pi.ItemPrefab, isSellingRelatedList ? StoreTab.Sell : StoreTab.Buy),
                     UserData = pi,
                     IntValue = pi.Quantity
                 };
@@ -856,6 +1166,7 @@ namespace Barotrauma
                 textAlignment: shoppingCrateAmountGroup == null ? Alignment.TopLeft : Alignment.CenterLeft)
             {
                 CanBeFocused = false,
+                Shadow = locationHasDealOnItem,
                 TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
                 TextScale = 0.85f,
                 UserData = "owned"
@@ -864,22 +1175,53 @@ namespace Barotrauma
 
             var buttonRelativeWidth = (0.9f * mainGroup.Rect.Height) / mainGroup.Rect.Width;
 
-            var priceBlock = new GUITextBlock(new RectTransform(new Vector2(priceAndButtonRelativeWidth - buttonRelativeWidth, 1.0f), mainGroup.RectTransform), "", font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
+            var priceFrame = new GUIFrame(new RectTransform(new Vector2(priceAndButtonRelativeWidth - buttonRelativeWidth, 1.0f), mainGroup.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
+            var priceBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), priceFrame.RectTransform, anchor: Anchor.Center),
+                "0 MK", font: GUI.SubHeadingFont, textAlignment: Alignment.Right)
             {
                 CanBeFocused = false,
-                TextColor = Color.White * (forceDisable ? 0.5f : 1.0f),
+                TextColor = locationHasDealOnItem ? storeSpecialColor : Color.White,
                 UserData = "price"
             };
-            if (listBox == storeSellList || listBox == shoppingCrateSellList)
+            priceBlock.Color *= (forceDisable ? 0.5f : 1.0f);
+            priceBlock.CalculateHeightFromText();
+            if (isSellingRelatedList)
             {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemSellPrice(priceInfo) ?? 0);
+                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, priceInfo: priceInfo) ?? 0);
             }
             else
             {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemBuyPrice(priceInfo) ?? 0);
+                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, priceInfo: priceInfo) ?? 0);
+            }
+            if (locationHasDealOnItem)
+            {
+                var undiscounterPriceBlock = new GUITextBlock(
+                    new RectTransform(new Vector2(1.0f, 0.25f), priceFrame.RectTransform, anchor: Anchor.Center)
+                    {
+                        AbsoluteOffset = new Point(0, priceBlock.RectTransform.ScaledSize.Y)
+                    }, "", font: GUI.SmallFont, textAlignment: Alignment.Center)
+                {
+                    CanBeFocused = false,
+                    Strikethrough = new GUITextBlock.StrikethroughSettings(color: priceBlock.TextColor, expand: 1),
+                    TextColor = priceBlock.TextColor,
+                    UserData = "undiscountedprice"
+                };
+                if (isSellingRelatedList)
+                {
+                    undiscounterPriceBlock.TextGetter = () => GetCurrencyFormatted(
+                        CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, priceInfo: priceInfo, considerRequestedGoods: false) ?? 0);
+                }
+                else
+                {
+                    undiscounterPriceBlock.TextGetter = () => GetCurrencyFormatted(
+                        CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, priceInfo: priceInfo, considerDailySpecials: false) ?? 0);
+                }
             }
 
-            if (listBox == storeDealsList || listBox == storeBuyList || listBox == storeSellList)
+            if (isParentOnLeftSideOfInterface)
             {
                 new GUIButton(new RectTransform(new Vector2(buttonRelativeWidth, 0.9f), mainGroup.RectTransform), style: "StoreAddToCrateButton")
                 {
@@ -902,7 +1244,14 @@ namespace Barotrauma
                 };
             }
 
-            listBox.RecalculateChildren();
+            if (parentListBox != null)
+            {
+                parentListBox.RecalculateChildren();
+            }
+            else if (parentComponent is GUILayoutGroup parentLayoutGroup)
+            {
+                parentLayoutGroup.Recalculate();
+            }
             mainGroup.Recalculate();
             mainGroup.RectTransform.RecalculateChildren(true, true);
             amountInput?.LayoutGroup.Recalculate();
@@ -923,14 +1272,19 @@ namespace Barotrauma
                 .ForEach(i => AddToOwnedItems(i.Prefab));
 
             // Add items in character inventories
-            foreach (Character c in GameMain.GameSession.CrewManager.GetCharacters())
+            foreach (var item in Item.ItemList)
             {
-                Item.ItemList.Where(i => i != null && i.GetRootInventoryOwner() == c)
-                    .ForEach(i => AddToOwnedItems(i.Prefab));
+                if (item == null || item.Removed) { continue; }
+                var rootInventoryOwner = item.GetRootInventoryOwner();
+                var ownedByCrewMember = GameMain.GameSession.CrewManager.GetCharacters().Any(c => c == rootInventoryOwner);
+                if (!ownedByCrewMember) { continue; }
+                AddToOwnedItems(item.Prefab);
             }
 
             // Add items already purchased
             CargoManager?.PurchasedItems?.ForEach(pi => AddToOwnedItems(pi.ItemPrefab, amount: pi.Quantity));
+
+            ownedItemsUpdateTimer = 0.0f;
 
             void AddToOwnedItems(ItemPrefab itemPrefab, int amount = 1)
             {
@@ -977,14 +1331,22 @@ namespace Barotrauma
                 numberInput.Enabled = enabled;
             }
 
-            if (itemFrame.FindChild("owned", recursive: true) is GUITextBlock owned)
+            if (itemFrame.FindChild("owned", recursive: true) is GUITextBlock ownedBlock)
             {
-                owned.TextColor = color;
+                ownedBlock.TextColor = color;
             }
 
-            if (itemFrame.FindChild("price", recursive: true) is GUITextBlock price)
+            var isDiscounted = false;
+            if (itemFrame.FindChild("undiscountedprice", recursive: true) is GUITextBlock undiscountedPriceBlock)
             {
-                price.TextColor = color;
+                undiscountedPriceBlock.TextColor = color;
+                undiscountedPriceBlock.Strikethrough.Color = color;
+                isDiscounted = true;
+            }
+
+            if (itemFrame.FindChild("price", recursive: true) is GUITextBlock priceBlock)
+            {
+                priceBlock.TextColor = isDiscounted ? storeSpecialColor * (enabled ? 1.0f : 0.5f) : color;
             }
 
             if (itemFrame.FindChild("addbutton", recursive: true) is GUIButton addButton)
@@ -1101,7 +1463,7 @@ namespace Barotrauma
                     itemsToRemove.Add(item);
                     continue;
                 }
-                totalPrice += item.Quantity * CurrentLocation.GetAdjustedItemBuyPrice(priceInfo);
+                totalPrice += item.Quantity * CurrentLocation.GetAdjustedItemBuyPrice(item.ItemPrefab, priceInfo: priceInfo);
             }
             itemsToRemove.ForEach(i => itemsToPurchase.Remove(i));
 
@@ -1135,7 +1497,7 @@ namespace Barotrauma
                 }
                 if (item.ItemPrefab.GetPriceInfo(CurrentLocation) is PriceInfo priceInfo)
                 {
-                    totalValue += item.Quantity * CurrentLocation.GetAdjustedItemSellPrice(priceInfo);
+                    totalValue += item.Quantity * CurrentLocation.GetAdjustedItemSellPrice(item.ItemPrefab, priceInfo: priceInfo);
                 }
                 else
                 {
@@ -1197,16 +1559,38 @@ namespace Barotrauma
         private void SetClearAllButtonStatus() => clearAllButton.Enabled =
             HasPermissions && ActiveShoppingCrateList.Content.RectTransform.Children.Any();
 
-        public void Update()
+        private float ownedItemsUpdateTimer = 0.0f;
+        private readonly float ownedItemsUpdateInterval = 1.5f;
+
+        public void Update(float deltaTime)
         {
             if (GameMain.GraphicsWidth != resolutionWhenCreated.X || GameMain.GraphicsHeight != resolutionWhenCreated.Y)
             {
                 CreateUI();
-                needsRefresh = false;
             }
-            if (needsRefresh || hadPermissions != HasPermissions) { Refresh(); }
-            if (needsBuyingRefresh) { RefreshBuying(); }
+            else
+            {
+                // Update the owned items at short intervals and check if the interface should be refreshed
+                ownedItemsUpdateTimer += deltaTime;
+                if (ownedItemsUpdateTimer >= ownedItemsUpdateInterval)
+                {
+                    var prevOwnedItems = new Dictionary<ItemPrefab, int>(OwnedItems);
+                    UpdateOwnedItems();
+                    var refresh = (prevOwnedItems.Count != OwnedItems.Count) ||
+                        (prevOwnedItems.Select(kvp => kvp.Value).Sum() != OwnedItems.Select(kvp => kvp.Value).Sum()) ||
+                        (OwnedItems.Any(kvp => kvp.Value > 0 && !prevOwnedItems.ContainsKey(kvp.Key)) ||
+                         prevOwnedItems.Any(kvp => !OwnedItems.TryGetValue(kvp.Key, out var itemCount) || kvp.Value != itemCount));
+                    if (refresh)
+                    {
+                        needsItemsToSellRefresh = true;
+                        needsRefresh = true;
+                    }
+                }
+            }
+
             if (needsItemsToSellRefresh) { RefreshItemsToSell(); }
+            if (needsRefresh || hadPermissions != HasPermissions) { Refresh(updateOwned: ownedItemsUpdateTimer > 0.0f); }
+            if (needsBuyingRefresh) { RefreshBuying(); }
             if (needsSellingRefresh) { RefreshSelling(); }
         }
     }

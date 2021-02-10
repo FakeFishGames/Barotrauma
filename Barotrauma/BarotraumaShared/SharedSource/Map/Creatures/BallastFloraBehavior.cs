@@ -91,6 +91,9 @@ namespace Barotrauma.MapCreatures.Behavior
         public List<Tuple<Vector2, Vector2>> debugSearchLines = new List<Tuple<Vector2, Vector2>>();
 #endif
 
+        private static List<BallastFloraBehavior> _entityList = new List<BallastFloraBehavior>();
+        public static IEnumerable<BallastFloraBehavior> EntityList => _entityList;
+
         public enum NetworkHeader
         {
             Spawn,
@@ -199,6 +202,9 @@ namespace Barotrauma.MapCreatures.Behavior
         [Serialize(5f, true, "How much damage is taken from open fires")]
         public float FireVulnerability { get; set; }
 
+        [Serialize(0.5f, true, "How much resistance against fire is gained while submerged.")]
+        public float SubmergedWaterResistance { get; set; }
+
         [Serialize(0.8f, true, "What depth the branches will be drawn on")]
         public float BranchDepth { get; set; }
         
@@ -295,6 +301,7 @@ namespace Barotrauma.MapCreatures.Behavior
             LoadPrefab(prefab.Element);
             StateMachine = new BallastFloraStateMachine(this);
             if (firstGrowth) { GenerateStem(); }
+            _entityList.Add(this);
         }
 
         partial void LoadPrefab(XElement element);
@@ -427,7 +434,8 @@ namespace Barotrauma.MapCreatures.Behavior
 
                         if (GameMain.DebugDraw)
                         {
-                            GUI.AddMessage($"{(int)branch.AccumulatedDamage}", GUI.Style.Red, GetWorldPosition() + branch.Position, Vector2.UnitY * 10.0f, 3f, playSound: false);
+                            var pos = (Parent?.Position ?? Vector2.Zero) + Offset + branch.Position;
+                            GUI.AddMessage($"{(int)branch.AccumulatedDamage}", GUI.Style.Red, pos, Vector2.UnitY * 10.0f, 3f, playSound: false, subId: Parent?.Submarine?.ID ?? -1);
                         }
 #elif SERVER
                         SendNetworkMessage(this, NetworkHeader.BranchDamage, branch, branch.AccumulatedDamage);
@@ -469,7 +477,7 @@ namespace Barotrauma.MapCreatures.Behavior
                     }
                 }
             }
-
+            
             UpdateSelfDamage(deltaTime);
 
             if (Anger > 1f)
@@ -862,6 +870,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
         public void DamageBranch(BallastFloraBranch branch, float amount, AttackType type, Character? attacker = null)
         {
+            float damage = amount;
             // damage is handled server side currently
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
@@ -875,7 +884,7 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 if (IsInWater(branch))
                 {
-                    return;
+                    damage *= 1f - SubmergedWaterResistance;
                 }
 
                 if (defenseCooldown <= 0)
@@ -883,24 +892,24 @@ namespace Barotrauma.MapCreatures.Behavior
                     if (!(StateMachine.State is DefendWithPumpState))
                     {
                         StateMachine.EnterState(new DefendWithPumpState(branch, ClaimedTargets, attacker));
-                        defenseCooldown = 60f;
+                        defenseCooldown = 180f;
                     }
 
                     defenseCooldown = 10f;
                 }
             }
 
-            branch.AccumulatedDamage += amount;
+            branch.AccumulatedDamage += damage;
 
-            branch.Health -= amount;
+            branch.Health -= damage;
 
             if (type != AttackType.Other)
             {
-                Anger += amount * 0.001f;
+                Anger += damage * 0.001f;
             }
 
 #if SERVER
-            GameMain.Server?.KarmaManager?.OnBallastFloraDamaged(attacker, amount);
+            GameMain.Server?.KarmaManager?.OnBallastFloraDamaged(attacker, damage);
 #endif
 
             if (branch.Health < 0)
@@ -923,6 +932,8 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 target.Infector = null;
             }
+
+            _entityList.Remove(this);
         }
 
         public void RemoveBranch(BallastFloraBranch branch)
@@ -1027,6 +1038,8 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 target.Infector = null;
             }
+
+            StateMachine?.State?.Exit();
 
             // clean up leftover (can probably be removed)
             foreach (Body body in bodies)

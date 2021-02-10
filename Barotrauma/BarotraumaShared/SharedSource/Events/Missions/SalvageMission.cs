@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -168,10 +169,11 @@ namespace Barotrauma
                 //try to find a container and place the item inside it
                 if (!string.IsNullOrEmpty(containerTag) && item.ParentInventory == null)
                 {
+                    List<ItemContainer> validContainers = new List<ItemContainer>();
                     foreach (Item it in Item.ItemList)
                     {
                         if (!it.HasTag(containerTag)) { continue; }
-                        if (it.NonInteractable) { continue; }
+                        if (!it.IsPlayerTeamInteractable) { continue; }
                         switch (spawnPositionType)
                         {
                             case Level.PositionType.Cave:
@@ -185,15 +187,18 @@ namespace Barotrauma
                                 if (it.Submarine == null || it.Submarine.Info.Type != SubmarineType.Wreck) { continue; }
                                 break;
                         }
-                        var itemContainer = it.GetComponent<Items.Components.ItemContainer>();
-                        if (itemContainer == null) { continue; }
-                        if (itemContainer.Combine(item, user: null)) 
+                        var itemContainer = it.GetComponent<ItemContainer>();
+                        if (itemContainer != null && itemContainer.Inventory.CanBePut(item)) { validContainers.Add(itemContainer); }
+                    }
+                    if (validContainers.Any())
+                    {
+                        var selectedContainer = validContainers.GetRandom();
+                        if (selectedContainer.Combine(item, user: null))
                         {
 #if SERVER
-                            originalInventoryID = it.ID;
-                            originalItemContainerIndex = (byte)it.GetComponentIndex(itemContainer);
+                            originalInventoryID = selectedContainer.Item.ID;
+                            originalItemContainerIndex = (byte)selectedContainer.Item.GetComponentIndex(selectedContainer);
 #endif
-                            break; 
                         } // Placement successful
                     }
                 }

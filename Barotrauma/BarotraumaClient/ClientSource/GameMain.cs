@@ -557,6 +557,7 @@ namespace Barotrauma
             
             GameModePreset.Init();
 
+            SaveUtil.DeleteDownloadedSubs();
             SubmarineInfo.RefreshSavedSubs();
 
             TitleScreen.LoadState = 65.0f;
@@ -1113,7 +1114,6 @@ namespace Barotrauma
             {
                 new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"), TextManager.Get("EditorDisclaimerWikiUrl")),
                 new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"), TextManager.Get("EditorDisclaimerDiscordUrl")),
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"), TextManager.Get("EditorDisclaimerForumUrl")),
             };
             foreach (var link in links)
             {

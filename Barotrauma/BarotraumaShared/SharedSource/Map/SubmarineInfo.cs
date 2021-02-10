@@ -108,14 +108,22 @@ namespace Barotrauma
             {
                 if (hash == null)
                 {
-                    XDocument doc = OpenFile(FilePath);
-                    StartHashDocTask(doc);
+                    if (hashTask == null)
+                    {
+                        XDocument doc = OpenFile(FilePath);
+                        StartHashDocTask(doc);
+                    }
                     hashTask.Wait();
                     hashTask = null;
                 }
 
                 return hash;
             }
+        }
+
+        public bool CalculatingHash
+        {
+            get { return hashTask != null && !hashTask.IsCompleted; }
         }
 
         public Vector2 Dimensions
@@ -373,6 +381,10 @@ namespace Barotrauma
 
         public void Dispose()
         {
+#if CLIENT
+            PreviewImage?.Remove();
+            PreviewImage = null;
+#endif
             if (savedSubmarines.Contains(this)) { savedSubmarines.Remove(this); }
         }
 
@@ -522,12 +534,13 @@ namespace Barotrauma
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {
-                if (File.Exists(savedSubmarines[i].FilePath) &&
-                    savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) &&
-                    (Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath) ||
-                    contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath())))
+                if (File.Exists(savedSubmarines[i].FilePath))
                 {
-                    continue;
+                    bool isDownloadedSub = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
+                    bool isInSubmarinesFolder = Path.GetFullPath(Path.GetDirectoryName(savedSubmarines[i].FilePath)) == Path.GetFullPath(SavePath);
+                    bool isInContentPackage = contentPackageSubs.Any(fp => Path.GetFullPath(fp.Path).CleanUpPath() == Path.GetFullPath(savedSubmarines[i].FilePath).CleanUpPath());
+                    if (isDownloadedSub) { continue; }
+                    if (savedSubmarines[i].LastModifiedTime == File.GetLastWriteTime(savedSubmarines[i].FilePath) && (isInSubmarinesFolder || isInContentPackage)) { continue; }
                 }
                 savedSubmarines[i].Dispose();
             }

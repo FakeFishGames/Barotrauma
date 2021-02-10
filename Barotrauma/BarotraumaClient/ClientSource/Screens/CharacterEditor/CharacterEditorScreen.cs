@@ -820,6 +820,7 @@ namespace Barotrauma.CharacterEditor
                     }
                 }
             }
+
             spriteBatch.End();
 
             // Lights
@@ -860,10 +861,7 @@ namespace Barotrauma.CharacterEditor
             }
             if (isDrawingLimb)
             {
-                if (spriteSheetRect.Contains(PlayerInput.MousePosition))
-                {
-                    GUI.DrawRectangle(spriteBatch, newLimbRect, Color.Yellow);
-                }
+                GUI.DrawRectangle(spriteBatch, newLimbRect, Color.Yellow);
             }
             if (jointCreationMode != JointCreationMode.None)
             {
@@ -1131,32 +1129,25 @@ namespace Barotrauma.CharacterEditor
             {
                 SetToggle(limbsToggle, true);
             }
-            if (spriteSheetRect.Contains(PlayerInput.MousePosition))
+            if (PlayerInput.PrimaryMouseButtonHeld())
             {
-                if (PlayerInput.PrimaryMouseButtonHeld())
+                if (newLimbRect == Rectangle.Empty)
                 {
-                    if (newLimbRect == Rectangle.Empty)
-                    {
-                        newLimbRect = new Rectangle((int)PlayerInput.MousePosition.X, (int)PlayerInput.MousePosition.Y, 0, 0);
-                    }
-                    else
-                    {
-                        newLimbRect.Size = new Point((int)PlayerInput.MousePosition.X - newLimbRect.X, (int)PlayerInput.MousePosition.Y - newLimbRect.Y);
-                    }
-                    newLimbRect.Size = new Point(Math.Max(newLimbRect.Width, 2), Math.Max(newLimbRect.Height, 2));
+                    newLimbRect = new Rectangle((int)PlayerInput.MousePosition.X, (int)PlayerInput.MousePosition.Y, 0, 0);
                 }
-                if (PlayerInput.PrimaryMouseButtonClicked())
+                else
                 {
-                    // Take the offset and the zoom into account
-                    newLimbRect.Location = new Point(newLimbRect.X - spriteSheetOffsetX, newLimbRect.Y - spriteSheetOffsetY);
-                    newLimbRect = newLimbRect.Divide(spriteSheetZoom);
-                    CreateNewLimb(newLimbRect);
-                    isDrawingLimb = false;
-                    newLimbRect = Rectangle.Empty;
+                    newLimbRect.Size = new Point((int)PlayerInput.MousePosition.X - newLimbRect.X, (int)PlayerInput.MousePosition.Y - newLimbRect.Y);
                 }
+                newLimbRect.Size = new Point(Math.Max(newLimbRect.Width, 2), Math.Max(newLimbRect.Height, 2));
             }
-            else
+            if (PlayerInput.PrimaryMouseButtonClicked())
             {
+                // Take the offset and the zoom into account
+                newLimbRect.Location = new Point(newLimbRect.X - spriteSheetOffsetX, newLimbRect.Y - spriteSheetOffsetY);
+                newLimbRect = newLimbRect.Divide(spriteSheetZoom);
+                CreateNewLimb(newLimbRect);
+                isDrawingLimb = false;
                 newLimbRect = Rectangle.Empty;
             }
         }
@@ -1449,7 +1440,11 @@ namespace Barotrauma.CharacterEditor
             {
                 if (allFiles == null)
                 {
+#if DEBUG
                     allFiles = CharacterPrefab.ConfigFilePaths.OrderBy(p => p).ToList();
+#else
+                    allFiles = CharacterPrefab.ConfigFilePaths.Where(p => !p.Contains("variant", StringComparison.OrdinalIgnoreCase)).OrderBy(p => p).ToList();
+#endif
                     allFiles.ForEach(f => DebugConsole.NewMessage(f, Color.White));
                 }
                 return allFiles;
@@ -1780,7 +1775,7 @@ namespace Barotrauma.CharacterEditor
 
             // Animations
             AnimationParams.ClearCache();
-            string animFolder = AnimationParams.GetFolder(name, contentPackage);
+            string animFolder = AnimationParams.GetFolder(name);
             if (animations != null)
             {
                 if (!Directory.Exists(animFolder))
@@ -1791,7 +1786,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     XElement element = animation.MainElement;
                     element.SetAttributeValue("type", name);
-                    string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType, contentPackage);
+                    string fullPath = AnimationParams.GetDefaultFile(name, animation.AnimationType);
                     element.Name = AnimationParams.GetDefaultFileName(name, animation.AnimationType);
 #if DEBUG
                     element.Save(fullPath);
@@ -1816,7 +1811,7 @@ namespace Barotrauma.CharacterEditor
                         default: continue;
                     }
                     Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
-                    string fullPath = AnimationParams.GetDefaultFile(name, animType, contentPackage);
+                    string fullPath = AnimationParams.GetDefaultFile(name, animType);
                     AnimationParams.Create(fullPath, name, animType, type);
                 }
             }
@@ -1836,9 +1831,8 @@ namespace Barotrauma.CharacterEditor
         private void ShowWearables()
         {
             if (character.Inventory == null) { return; }
-            foreach (var item in character.Inventory.Items)
+            foreach (var item in character.Inventory.AllItems)
             {
-                if (item == null) { continue; }
                 // Temp condition, todo: remove
                 if (item.AllowedSlots.Contains(InvSlotType.Head) || item.AllowedSlots.Contains(InvSlotType.Headset)) { continue; }
                 item.Equip(character);
@@ -1847,7 +1841,7 @@ namespace Barotrauma.CharacterEditor
 
         private void HideWearables()
         {
-            character.Inventory?.Items.ForEachMod(i => i?.Unequip(character));
+            character.Inventory?.AllItemsMod.ForEach(i => i.Unequip(character));
         }
 #endregion
 
@@ -2787,8 +2781,10 @@ namespace Barotrauma.CharacterEditor
                 }
                 return true;
             };
+
             // Spacing
             new GUIFrame(new RectTransform(buttonSize / 2, layoutGroup.RectTransform), style: null) { CanBeFocused = false };
+
             Vector2 messageBoxRelSize = new Vector2(0.5f, 0.7f);
             var saveRagdollButton = new GUIButton(new RectTransform(buttonSize, layoutGroup.RectTransform), GetCharacterEditorTranslation("SaveRagdoll"));
             saveRagdollButton.OnClicked += (button, userData) =>
@@ -3573,15 +3569,33 @@ namespace Barotrauma.CharacterEditor
             return rect;
         }
 
-        // TODO: refactor this so that it can be used in all cases
-        private void UpdateSourceRect(Limb limb, Rectangle newRect)
+        private void UpdateSourceRect(Limb limb, Rectangle newRect, bool resize)
         {
-            limb.ActiveSprite.SourceRect = newRect;
+            Sprite activeSprite = limb.ActiveSprite;
+            activeSprite.SourceRect = newRect;
             if (limb.DamagedSprite != null)
             {
-                limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                limb.DamagedSprite.SourceRect = activeSprite.SourceRect;
             }
-            RecalculateOrigin(limb);
+            Vector2 colliderSize = new Vector2(ConvertUnits.ToSimUnits(newRect.Width), ConvertUnits.ToSimUnits(newRect.Height));
+            if (resize)
+            {
+                if (recalculateCollider)
+                {
+                    RecalculateCollider(limb, colliderSize);
+                }
+            }
+            var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(activeSprite));
+            var originWidget = GetLimbEditWidget($"{limb.Params.ID}_origin", limb);
+            if (!resize && originWidget != null)
+            {
+                Vector2 newOrigin = (originWidget.DrawPos - spritePos - activeSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                RecalculateOrigin(limb, newOrigin);
+            }
+            else
+            {
+                RecalculateOrigin(limb);
+            }
             TryUpdateLimbParam(limb, "sourcerect", newRect);
             if (limbPairEditing)
             {
@@ -3592,30 +3606,25 @@ namespace Barotrauma.CharacterEditor
                     {
                         otherLimb.DamagedSprite.SourceRect = newRect;
                     }
+                    if (resize)
+                    {
+                        if (recalculateCollider)
+                        {
+                            RecalculateCollider(otherLimb, colliderSize);
+                        }
+                    }
+                    if (!resize && originWidget != null)
+                    {
+                        Vector2 newOrigin = (originWidget.DrawPos - spritePos - activeSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                        RecalculateOrigin(otherLimb, newOrigin);
+                    }
+                    else
+                    {
+                        RecalculateOrigin(otherLimb);
+                    }
                     TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
-                    RecalculateOrigin(otherLimb);
                 });
             };
-
-            void RecalculateOrigin(Limb l)
-            {
-                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
-
-                // TODO:
-                //if (lockSpriteOrigin)
-                //{
-                //    // Keeps the absolute origin unchanged. The relative origin will be recalculated.
-                //    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(l));
-                //    l.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - l.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
-                //    TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
-                //}
-                //else
-                //{
-                //    // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                //    l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
-                //}
-            }
         }
 
         private void CalculateSpritesheetZoom()
@@ -4765,7 +4774,7 @@ namespace Barotrauma.CharacterEditor
                                 w.refresh();
                                 w.MouseHeld += dTime =>
                                 {
-                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
+                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb.ActiveSprite));
                                     w.DrawPos = PlayerInput.MousePosition.Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
                                     sprite.Origin = (w.DrawPos - spritePos - sprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
                                     if (limb.DamagedSprite != null)
@@ -4796,14 +4805,14 @@ namespace Barotrauma.CharacterEditor
                                 };
                                 w.PreDraw += (sb, dTime) =>
                                 {
-                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb));
+                                    var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(limb.ActiveSprite));
                                     w.DrawPos = (spritePos + (sprite.Origin + sprite.SourceRect.Location.ToVector2()) * spriteSheetZoom)
                                         .Clamp(spritePos + GetTopLeft() * spriteSheetZoom, spritePos + GetBottomRight() * spriteSheetZoom);
                                     w.refresh();
                                 };
                             });
                             originWidget.Draw(spriteBatch, deltaTime);
-                            if (!lockSpritePosition)
+                            if (!lockSpritePosition && (limb.type != LimbType.Head || !character.IsHuman))
                             {
                                 var positionWidget = GetLimbEditWidget($"{limb.Params.ID}_position", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                                 {
@@ -4812,17 +4821,20 @@ namespace Barotrauma.CharacterEditor
                                     w.MouseHeld += dTime =>
                                     {
                                         w.DrawPos = PlayerInput.MousePosition;
-                                        var newRect = limb.ActiveSprite.SourceRect;
+                                        Sprite activeSprite = limb.ActiveSprite;
+                                        var newRect = activeSprite.SourceRect;
                                         newRect.Location = new Point(
                                             (int)((PlayerInput.MousePosition.X + halfSize - spriteSheetOffsetX) / spriteSheetZoom),
-                                            (int)((PlayerInput.MousePosition.Y + halfSize - GetOffsetY(limb)) / spriteSheetZoom));
-                                        limb.ActiveSprite.SourceRect = newRect;
+                                            (int)((PlayerInput.MousePosition.Y + halfSize - GetOffsetY(activeSprite)) / spriteSheetZoom));
+                                        activeSprite.SourceRect = newRect;
                                         if (limb.DamagedSprite != null)
                                         {
-                                            limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                            limb.DamagedSprite.SourceRect = activeSprite.SourceRect;
                                         }
-                                        RecalculateOrigin(limb);
                                         TryUpdateLimbParam(limb, "sourcerect", newRect);
+                                        var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(activeSprite));
+                                        Vector2 newOrigin = (originWidget.DrawPos - spritePos - activeSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
+                                        RecalculateOrigin(limb, newOrigin);
                                         if (limbPairEditing)
                                         {
                                             UpdateOtherLimbs(limb, otherLimb =>
@@ -4833,24 +4845,9 @@ namespace Barotrauma.CharacterEditor
                                                     otherLimb.DamagedSprite.SourceRect = newRect;
                                                 }
                                                 TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
-                                                RecalculateOrigin(otherLimb);
+                                                RecalculateOrigin(otherLimb, newOrigin);
                                             });
                                         };
-                                        void RecalculateOrigin(Limb l)
-                                        {
-                                            if (lockSpriteOrigin)
-                                            {
-                                                // Keeps the absolute origin unchanged. The relative origin will be recalculated.
-                                                var spritePos = new Vector2(spriteSheetOffsetX, GetOffsetY(l));
-                                                l.ActiveSprite.Origin = (originWidget.DrawPos - spritePos - l.ActiveSprite.SourceRect.Location.ToVector2() * spriteSheetZoom) / spriteSheetZoom;
-                                                TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
-                                            }
-                                            else
-                                            {
-                                                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                                                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
-                                            }
-                                        }
                                     };
                                     w.PreDraw += (sb, dTime) => w.refresh();
                                 });    
@@ -4860,7 +4857,7 @@ namespace Barotrauma.CharacterEditor
                                 }
                                 positionWidget.Draw(spriteBatch, deltaTime);
                             }
-                            if (!lockSpriteSize)
+                            if (!lockSpriteSize && (limb.type != LimbType.Head || !character.IsHuman))
                             {
                                 var sizeWidget = GetLimbEditWidget($"{limb.Params.ID}_size", limb, widgetSize, Widget.Shape.Rectangle, initMethod: w =>
                                 {
@@ -4869,22 +4866,24 @@ namespace Barotrauma.CharacterEditor
                                     w.MouseHeld += dTime =>
                                     {
                                         w.DrawPos = PlayerInput.MousePosition;
-                                        var newRect = limb.ActiveSprite.SourceRect;
-                                        float offset_y = limb.ActiveSprite.SourceRect.Y * spriteSheetZoom + GetOffsetY(limb);
-                                        float offset_x = limb.ActiveSprite.SourceRect.X * spriteSheetZoom + spriteSheetOffsetX;
+                                        Sprite activeSprite = limb.ActiveSprite;
+                                        Rectangle newRect = activeSprite.SourceRect;
+                                        float offset_y = activeSprite.SourceRect.Y * spriteSheetZoom + GetOffsetY(activeSprite);
+                                        float offset_x = activeSprite.SourceRect.X * spriteSheetZoom + spriteSheetOffsetX;
                                         int width = (int)((PlayerInput.MousePosition.X - halfSize - offset_x) / spriteSheetZoom);
                                         int height = (int)((PlayerInput.MousePosition.Y - halfSize - offset_y) / spriteSheetZoom);
                                         newRect.Size = new Point(width, height);
-                                        limb.ActiveSprite.SourceRect = newRect;
-                                        limb.ActiveSprite.size = new Vector2(width, height);
+                                        activeSprite.SourceRect = newRect;
+                                        activeSprite.size = new Vector2(width, height);
+                                        Vector2 colliderSize = new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height));
                                         if (recalculateCollider)
                                         {
-                                            RecalculateCollider(limb);
+                                            RecalculateCollider(limb, colliderSize);
                                         }
                                         RecalculateOrigin(limb);
                                         if (limb.DamagedSprite != null)
                                         {
-                                            limb.DamagedSprite.SourceRect = limb.ActiveSprite.SourceRect;
+                                            limb.DamagedSprite.SourceRect = activeSprite.SourceRect;
                                         }
                                         TryUpdateLimbParam(limb, "sourcerect", newRect);
                                         if (limbPairEditing)
@@ -4895,7 +4894,7 @@ namespace Barotrauma.CharacterEditor
                                                 RecalculateOrigin(otherLimb);
                                                 if (recalculateCollider)
                                                 {
-                                                    RecalculateCollider(otherLimb);
+                                                    RecalculateCollider(otherLimb, colliderSize);
                                                 }
                                                 if (otherLimb.DamagedSprite != null)
                                                 {
@@ -4904,29 +4903,6 @@ namespace Barotrauma.CharacterEditor
                                                 TryUpdateLimbParam(otherLimb, "sourcerect", newRect);
                                             });
                                         };
-                                        void RecalculateCollider(Limb l)
-                                        {
-                                            // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
-                                            float multiplier = 0.9f;
-                                            l.body.SetSize(new Vector2(ConvertUnits.ToSimUnits(width), ConvertUnits.ToSimUnits(height)) * l.Scale * RagdollParams.TextureScale * multiplier);
-                                            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
-                                            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
-                                            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
-                                        }
-                                        void RecalculateOrigin(Limb l)
-                                        {
-                                            if (lockSpriteOrigin)
-                                            {
-                                                // Keeps the absolute origin unchanged. The relative origin will be recalculated.
-                                                l.ActiveSprite.Origin = l.ActiveSprite.Origin;
-                                                TryUpdateLimbParam(l, "origin", l.ActiveSprite.RelativeOrigin);
-                                            }
-                                            else
-                                            {
-                                                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
-                                                l.ActiveSprite.RelativeOrigin = l.ActiveSprite.RelativeOrigin;
-                                            }
-                                        }
                                     };
                                     w.PreDraw += (sb, dTime) => w.refresh();
                                 });
@@ -4955,22 +4931,48 @@ namespace Barotrauma.CharacterEditor
                 }
                 offsetY += (int)(texture.Height * spriteSheetZoom);
             }
+        }
 
-            int GetTextureHeight(Limb limb)
+        private int GetTextureHeight(Sprite sprite)
+        {
+            int textureIndex = Textures.IndexOf(sprite.Texture);
+            int height = 0;
+            foreach (var t in Textures)
             {
-                int textureIndex = Textures.IndexOf(limb.ActiveSprite.Texture);
-                int height = 0;
-                foreach (var t in Textures)
+                if (Textures.IndexOf(t) < textureIndex)
                 {
-                    if (Textures.IndexOf(t) < textureIndex)
-                    {
-                        height += t.Height;
-                    }
+                    height += t.Height;
                 }
-                return (int)(height * spriteSheetZoom);
             }
+            return (int)(height * spriteSheetZoom);
+        }
 
-            int GetOffsetY(Limb limb) => spriteSheetOffsetY + GetTextureHeight(limb);
+        private int GetOffsetY(Sprite sprite) => spriteSheetOffsetY + GetTextureHeight(sprite);
+
+        private void RecalculateCollider(Limb l, Vector2 size)
+        {
+            // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
+            float multiplier = 0.9f;
+            l.body.SetSize(new Vector2(size.X, size.Y) * l.Scale * RagdollParams.TextureScale * multiplier);
+            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+        }
+
+        private void RecalculateOrigin(Limb l, Vector2? newOrigin = null)
+        {
+            Sprite activeSprite = l.ActiveSprite;
+            if (lockSpriteOrigin)
+            {
+                // Keeps the absolute origin unchanged. The relative origin will be recalculated.
+                activeSprite.Origin = newOrigin ?? activeSprite.Origin;
+                TryUpdateLimbParam(l, "origin", activeSprite.RelativeOrigin);
+            }
+            else
+            {
+                // Keeps the relative origin unchanged. The absolute origin will be recalculated.
+                activeSprite.RelativeOrigin = activeSprite.RelativeOrigin;
+            }
         }
 
         private void DrawSpritesheetJointEditor(SpriteBatch spriteBatch, float deltaTime, Limb limb, Vector2 limbScreenPos, float spriteRotation = 0)
@@ -5175,61 +5177,81 @@ namespace Barotrauma.CharacterEditor
                 case Keys.Left:
                     foreach (var limb in selectedLimbs)
                     {
+                        // Can't edit human heads
+                        if (limb.type == LimbType.Head && character.IsHuman) { continue; }
                         var newRect = limb.ActiveSprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        bool resize = PlayerInput.KeyDown(Keys.LeftControl);
+                        if (resize)
                         {
+                            if (lockSpriteSize) { return; }
                             newRect.Width--;
                         }
                         else
                         {
+                            if (lockSpritePosition) { return; }
                             newRect.X--;
                         }
-                        UpdateSourceRect(limb, newRect);
+                        UpdateSourceRect(limb, newRect, resize);
                     }
                     break;
                 case Keys.Right:
                     foreach (var limb in selectedLimbs)
                     {
+                        // Can't edit human heads
+                        if (limb.type == LimbType.Head && character.IsHuman) { continue; }
                         var newRect = limb.ActiveSprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        bool resize = PlayerInput.KeyDown(Keys.LeftControl);
+                        if (resize)
                         {
+                            if (lockSpriteSize) { return; }
                             newRect.Width++;
                         }
                         else
                         {
+                            if (lockSpritePosition) { return; }
                             newRect.X++;
                         }
-                        UpdateSourceRect(limb, newRect);
+                        UpdateSourceRect(limb, newRect, resize);
                     }
                     break;
                 case Keys.Down:
                     foreach (var limb in selectedLimbs)
                     {
+                        // Can't edit human heads
+                        if (limb.type == LimbType.Head && character.IsHuman) { continue; }
                         var newRect = limb.ActiveSprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        bool resize = PlayerInput.KeyDown(Keys.LeftControl);
+                        if (resize)
                         {
+                            if (lockSpriteSize) { return; }
                             newRect.Height++;
                         }
                         else
                         {
+                            if (lockSpritePosition) { return; }
                             newRect.Y++;
                         }
-                        UpdateSourceRect(limb, newRect);
+                        UpdateSourceRect(limb, newRect, resize);
                     }
                     break;
                 case Keys.Up:
                     foreach (var limb in selectedLimbs)
                     {
+                        // Can't edit human heads
+                        if (limb.type == LimbType.Head && character.IsHuman) { continue; }
                         var newRect = limb.ActiveSprite.SourceRect;
-                        if (PlayerInput.KeyDown(Keys.LeftControl))
+                        bool resize = PlayerInput.KeyDown(Keys.LeftControl);
+                        if (resize)
                         {
+                            if (lockSpriteSize) { return; }
                             newRect.Height--;
                         }
                         else
                         {
+                            if (lockSpritePosition) { return; }
                             newRect.Y--;
                         }
-                        UpdateSourceRect(limb, newRect);
+                        UpdateSourceRect(limb, newRect, resize);
                     }
                     break;
             }

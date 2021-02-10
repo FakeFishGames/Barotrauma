@@ -37,9 +37,16 @@ namespace Barotrauma.Items.Components
         public void SyncHistory()
         {
             //split too long messages to multiple parts
+            int msgIndex = 0;
             foreach (string str in messageHistory)
             {
                 string msgToSend = str;
+                if (string.IsNullOrEmpty(msgToSend))
+                {
+                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                    msgIndex++;
+                    continue;
+                }
                 if (msgToSend.Length > MaxMessageLength)
                 {
                     List<string> splitMessage = msgToSend.Split(' ').ToList();
@@ -62,20 +69,21 @@ namespace Barotrauma.Items.Components
                             if (!splitMessage.Any()) { break; }
                             tempMsg += " ";
                         } while (tempMsg.Length + splitMessage[0].Length < MaxMessageLength);
-                        item.CreateServerEvent(this, new string[] { msgToSend });
+                        item.CreateServerEvent(this, new object[] { msgIndex, tempMsg });
                         msgToSend = msgToSend.Remove(0, tempMsg.Length);
                     }
                 }
                 if (!string.IsNullOrEmpty(msgToSend))
                 {
-                    item.CreateServerEvent(this, new string[] { msgToSend });
-                }               
-            }            
+                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                }
+                msgIndex++;
+            }
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
-            if (extraData.Length > 2 && extraData[2] is string str)
+            if (extraData.Length > 3 && extraData[3] is string str)
             {
                 msg.Write(str);
             }

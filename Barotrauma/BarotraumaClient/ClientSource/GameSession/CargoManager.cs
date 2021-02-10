@@ -39,61 +39,37 @@ namespace Barotrauma
 
         private List<SoldEntity> SoldEntities { get; } = new List<SoldEntity>();
 
-        public List<Item> GetSellableItems(Character character)
+        public IEnumerable<Item> GetSellableItems(Character character)
         {
             if (character == null) { return new List<Item>(); }
-
             // Only consider items which have been:
             // a) sold in singleplayer or confirmed by server (SellStatus.Confirmed); or
             // b) sold locally in multiplayer (SellStatus.Local), but the client has not received a campaing state update yet after selling them
-            var soldEntities = SoldEntities.Where(se => se.Status != SoldEntity.SellStatus.Unconfirmed);
-
-            var sellables = Item.ItemList.FindAll(i => i?.Prefab != null && !i.Removed &&
-                i.GetRootInventoryOwner() == character &&
-                !i.SpawnedInOutpost &&
-                (i.ContainedItems == null || i.ContainedItems.None() || i.ContainedItems.All(ci => soldEntities.Any(se => se.Item == ci))) &&
-                (i.Condition >= 0.9f * i.MaxCondition || i.Prefab.AllowSellingWhenBroken) && soldEntities.None(se => se.Item == i));
-
-            // Prevent selling items in equipment slots
+            var confirmedSoldEntities = SoldEntities.Where(se => se.Status != SoldEntity.SellStatus.Unconfirmed);
+            // The bag slot is intentionally left out since we want to be able to sell items from there
             var equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
-            foreach (InvSlotType slot in equipmentSlots)
+            return character.Inventory.FindAllItems(item =>
             {
-                var index = character.Inventory.FindLimbSlot(slot);
-                if (character.Inventory.Items[index] is Item item)
-                {
-                    // Don't prevent selling of items which can only be put in equipment slots (like diving suits)
-                    if (item.AllowedSlots.Contains(InvSlotType.Any))
-                    {
-                        sellables.Remove(item);
-                    }
-                }
-            }
+                if (item.SpawnedInOutpost) { return false; }
+                if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
+                if (confirmedSoldEntities.Any(it => it.Item == item)) { return false; }
+                // There must be no contained items or the contained items must be confirmed as sold
+                if (!item.ContainedItems.All(it => confirmedSoldEntities.Any(se => se.Item == it))) { return false; }
+                // Item must be in a non-equipment slot if possible
+                if (!item.AllowedSlots.All(s => equipmentSlots.Contains(s)) && IsInEquipmentSlot(item)) { return false; }
+                // Item must not be contained inside an item in an equipment slot
+                if (item.GetRootContainer() is Item rootContainer && IsInEquipmentSlot(rootContainer)) { return false; }
+                return true;
+            }, recursive: true).Distinct();
 
-            // Prevent selling items contained inside equipped items
-            foreach (InvSlotType slot in equipmentSlots)
+            bool IsInEquipmentSlot(Item item)
             {
-                var index = character.Inventory.FindLimbSlot(slot);
-                if (character.Inventory.Items[index] is Item item &&
-                    item.ContainedItems != null && item.AllowedSlots.Contains(InvSlotType.Any))
+                foreach (InvSlotType slot in equipmentSlots)
                 {
-                    RemoveContainedFromSellables(item);
+                    if (character.Inventory.IsInLimbSlot(item, slot)) { return true; }
                 }
+                return false;
             }
-
-            void RemoveContainedFromSellables(Item item)
-            {
-                foreach (Item containedItem in item.ContainedItems)
-                {
-                    if (containedItem == null) { continue; }
-                    if (containedItem.ContainedItems != null)
-                    {
-                        RemoveContainedFromSellables(containedItem);
-                    }
-                    sellables.Remove(containedItem);
-                }
-            }
-
-            return sellables;
         }
 
         public void SetItemsInBuyCrate(List<PurchasedItem> items)
@@ -149,15 +125,20 @@ namespace Barotrauma
             var canAddToRemoveQueue = campaign.IsSinglePlayer && Entity.Spawner != null;
             var sellerId = GameMain.Client?.ID ?? 0;
 
+            // Check all the prices before starting the transaction
+            // to make sure the modifiers stay the same for the whole transaction
+            Dictionary<ItemPrefab, int> sellValues = GetSellValuesAtCurrentLocation(itemsToSell.Select(i => i.ItemPrefab));
+
             foreach (PurchasedItem item in itemsToSell)
             {
-                var itemValue = GetSellValueAtCurrentLocation(item.ItemPrefab, quantity: item.Quantity);
+                var itemValue = item.Quantity * sellValues[item.ItemPrefab];
 
                 // check if the store can afford the item
                 if (Location.StoreCurrentBalance < itemValue) { continue; }
 
-                var matchingItems = itemsInInventory.FindAll(i => i.Prefab == item.ItemPrefab);
-                if (matchingItems.Count <= item.Quantity)
+                // TODO: Write logic for prioritizing certain items over others (e.g. lone Battery Cell should be preferred over one inside a Stun Baton)
+                var matchingItems = itemsInInventory.Where(i => i.Prefab == item.ItemPrefab);
+                if (matchingItems.Count() <= item.Quantity)
                 {
                     foreach (Item i in matchingItems)
                     {
@@ -170,7 +151,7 @@ namespace Barotrauma
                 {
                     for (int i = 0; i < item.Quantity; i++)
                     {
-                        var matchingItem = matchingItems[i];
+                        var matchingItem = matchingItems.ElementAt(i);
                         SoldItems.Add(new SoldItem(matchingItem.Prefab, matchingItem.ID, canAddToRemoveQueue, sellerId));
                         SoldEntities.Add(campaign.IsSinglePlayer ? SoldEntity.CreateInSinglePlayer(matchingItem) : SoldEntity.CreateInMultiPlayer(matchingItem));
                         if (canAddToRemoveQueue) { Entity.Spawner.AddToRemoveQueue(matchingItem); }

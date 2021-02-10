@@ -758,11 +758,11 @@ namespace Barotrauma
                 limb.IsSevered = true;
                 if (limb.type == LimbType.RightHand)
                 {
-                    character.SelectedItems[0]?.Drop(character);
+                    character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand)?.Drop(character);
                 }
                 else if (limb.type == LimbType.LeftHand)
                 {
-                    character.SelectedItems[1]?.Drop(character);
+                    character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand)?.Drop(character);
                 }
             }
 

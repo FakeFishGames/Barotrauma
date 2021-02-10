@@ -326,7 +326,7 @@ namespace Barotrauma
                     break;
 
                 case CampaignMode.InteractionType.Store:
-                    Store?.Update();
+                    Store?.Update(deltaTime);
                     break;
             }
         }

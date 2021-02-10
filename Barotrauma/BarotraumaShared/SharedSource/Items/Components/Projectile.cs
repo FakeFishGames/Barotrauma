@@ -559,7 +559,7 @@ namespace Barotrauma.Items.Components
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
                     collisionCategory: Physics.CollisionWall);
-                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure structure &&
+                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure &&
                     //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
                     Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0) 
                 {
@@ -656,8 +656,14 @@ namespace Barotrauma.Items.Components
 
             if (character != null) { character.LastDamageSource = item; }
 
+            ActionType actionType = ActionType.OnUse;
+            if (_user != null && Rand.Range(0.0f, 0.5f) > DegreeOfSuccess(_user))
+            {
+                actionType = ActionType.OnFailure;
+            }
+
 #if CLIENT
-            PlaySound(ActionType.OnUse, user: _user);
+            PlaySound(actionType, user: _user);
             PlaySound(ActionType.OnImpact, user: _user);
 #endif
 
@@ -665,7 +671,7 @@ namespace Barotrauma.Items.Components
             {
                 if (target.Body.UserData is Limb targetLimb)
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb, user: _user);
+                    ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: _user);
                     ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: _user);
                     var attack = targetLimb.attack;
                     if (attack != null)
@@ -695,19 +701,19 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, actionType, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
                     }
 #endif
                 }
                 else
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
+                    ApplyStatusEffects(actionType, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
                     ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, actionType, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
                     }
 #endif
@@ -764,12 +770,11 @@ namespace Barotrauma.Items.Components
                 item.body.LinearVelocity *= 0.5f;
             }
 
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItems;
             if (containedItems != null)
             {
                 foreach (Item contained in containedItems)
                 {
-                    if (contained == null) { continue; }
                     if (contained.body != null)
                     {
                         contained.SetTransform(item.SimPosition, contained.body.Rotation);

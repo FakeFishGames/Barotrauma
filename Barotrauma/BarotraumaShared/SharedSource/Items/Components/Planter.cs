@@ -74,6 +74,8 @@ namespace Barotrauma.Items.Components
         [Serialize(100f, true, "How much fertilizer can the planter hold.")]
         public float FertilizerCapacity { get; set; }
 
+        public string LastAction { get; set; } = "";
+
         public Growable?[] GrowableSeeds = new Growable?[0];
 
         private readonly List<RelatedItem> SuitableFertilizer = new List<RelatedItem>();
@@ -168,6 +170,8 @@ namespace Barotrauma.Items.Components
             switch (plantItem.Type)
             {
                 case PlantItemType.Seed:
+                    LastAction = "PlantSeed";
+                    ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
                     return container.Inventory.TryPutItem(plantItem.Item, character, new List<InvSlotType> { InvSlotType.Any });
                 case PlantItemType.Fertilizer when plantItem.Item != null:
                     float canAdd = FertilizerCapacity - Fertilizer;
@@ -178,6 +182,8 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     character.UpdateHUDProgressBar(this, Item.DrawPosition, Fertilizer / FertilizerCapacity, Color.SaddleBrown, Color.SaddleBrown, "entityname.fertilizer");
 #endif
+                    LastAction = "ApplyFertilizer";
+                    ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
                     return false;
             }
 
@@ -203,6 +209,8 @@ namespace Barotrauma.Items.Components
                     container?.Inventory.RemoveItem(seed.Item);
                     Entity.Spawner?.AddToRemoveQueue(seed.Item);
                     GrowableSeeds[i] = null;
+                    LastAction = "Harvest";
+                    ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
                     return true;
                 }
             }
@@ -226,12 +234,11 @@ namespace Barotrauma.Items.Components
 
             if (container?.Inventory == null) { return; }
 
-            for (var i = 0; i < container.Inventory.Items.Length; i++)
+            for (var i = 0; i < container.Inventory.Capacity; i++)
             {
                 if (i < 0 || GrowableSeeds.Length <= i) { continue; }
 
-                Item containedItem = container.Inventory.Items[i];
-
+                Item containedItem = container.Inventory.GetItemAt(i);
                 Growable? growable = containedItem?.GetComponent<Growable>();
 
                 if (growable != null)
@@ -289,11 +296,9 @@ namespace Barotrauma.Items.Components
 
         private SuitablePlantItem GetSuitableItem(Character character)
         {
-            foreach (Item heldItem in character.SelectedItems)
+            foreach (Item heldItem in character.HeldItems)
             {
-                if (heldItem == null) { continue; }
-
-                if (container?.Inventory != null && !container.Inventory.IsFull())
+                if (container?.Inventory != null && container.Inventory.CanBePut(heldItem))
                 {
                     if (heldItem.GetComponent<Growable>() != null && SuitableSeeds.Any(ri => ri.MatchesItem(heldItem)))
                     {

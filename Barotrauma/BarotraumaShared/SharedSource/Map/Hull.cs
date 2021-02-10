@@ -397,7 +397,12 @@ namespace Barotrauma
         public Hull(MapEntityPrefab prefab, Rectangle rectangle)
             : this (prefab, rectangle, Submarine.MainSub)
         {
-
+#if CLIENT
+            if (SubEditorScreen.IsSubEditor())
+            {
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { this }, false));
+            }
+#endif
         }
 
         public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine, ushort id = Entity.NullEntityID)
@@ -791,7 +796,7 @@ namespace Barotrauma
             //make waves propagate through horizontal gaps
             foreach (Gap gap in ConnectedGaps)
             {
-                if (this != gap.linkedTo[0] as Hull)
+                if (this != gap.linkedTo.FirstOrDefault() as Hull)
                 {
                     //let the first linked hull handle the water propagation
                     continue;

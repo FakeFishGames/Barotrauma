@@ -64,7 +64,7 @@ namespace Barotrauma
             var weldingTool = character.Inventory.FindItemByTag("weldingequipment", true);
             if (weldingTool == null)
             {
-                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
+                TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
                     onAbandon: () =>
                     {
                         if (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>())
@@ -78,8 +78,7 @@ namespace Barotrauma
             }
             else
             {
-                var containedItems = weldingTool.OwnInventory?.Items;
-                if (containedItems == null)
+                if (weldingTool.OwnInventory == null)
                 {
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveFixLeak failed - the item \"" + weldingTool + "\" has no proper inventory");
@@ -88,17 +87,20 @@ namespace Barotrauma
                     return;
                 }
                 // Drop empty tanks
-                foreach (Item containedItem in containedItems)
+                if (weldingTool.OwnInventory.AllItems.Any(it => it.Condition <= 0.0f))
                 {
-                    if (containedItem == null) { continue; }
-                    if (containedItem.Condition <= 0.0f)
+                    foreach (Item containedItem in weldingTool.OwnInventory.AllItemsMod)
                     {
-                        containedItem.Drop(character);
+                        if (containedItem.Condition <= 0.0f)
+                        {
+                            containedItem.Drop(character);
+                        }
                     }
                 }
-                if (containedItems.None(i => i != null && i.HasTag("weldingfuel") && i.Condition > 0.0f))
+
+                if (weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
                         onAbandon: () => Abandon = true,
                         onCompleted: () => RemoveSubObjective(ref refuelObjective));
                     return;

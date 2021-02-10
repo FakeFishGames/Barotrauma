@@ -214,7 +214,7 @@ namespace Barotrauma
             InitProjSpecific(null, character);
         }
 
-        public CharacterHealth(XElement element, Character character)
+        public CharacterHealth(XElement element, Character character, XElement limbHealthElement = null)
         {
             this.Character = character;
             InitIrremovableAfflictions();
@@ -224,7 +224,8 @@ namespace Barotrauma
             minVitality = character.IsHuman ? -100.0f : 0.0f;
 
             limbHealths.Clear();
-            foreach (XElement subElement in element.Elements())
+            limbHealthElement ??= element;
+            foreach (XElement subElement in limbHealthElement.Elements())
             {
                 if (!subElement.Name.ToString().Equals("limb", StringComparison.OrdinalIgnoreCase)) { continue; }
                 limbHealths.Add(new LimbHealth(subElement, this));

@@ -38,12 +38,6 @@ namespace Barotrauma.Items.Components
             light.Color = LightColor.Multiply(brightness);
         }
 
-        public override void OnItemLoaded()
-        {
-            base.OnItemLoaded();
-            SetLightSourceState(IsActive, lightBrightness);
-        }
-
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
             if (light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn)
@@ -51,7 +45,7 @@ namespace Barotrauma.Items.Components
                 Vector2 origin = light.LightSprite.Origin;
                 if ((light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = light.LightSprite.SourceRect.Width - origin.X; }
                 if ((light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = light.LightSprite.SourceRect.Height - origin.Y; }
-                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, origin, -light.Rotation, item.Scale, light.LightSpriteEffect, item.SpriteDepth - 0.0001f);
+                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, origin, -light.Rotation, item.Scale, light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 

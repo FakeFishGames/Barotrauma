@@ -15,7 +15,8 @@ namespace Barotrauma.Items.Components
         Random,
         CharacterSpecific,
         ItemSpecific,
-        All
+        All,
+        Manual
     }
 
     class ItemSound
@@ -259,6 +260,7 @@ namespace Barotrauma.Items.Components
                     loopingSoundChannel = null;
                     loopingSound = null;
                 }
+
                 if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
                 {
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
@@ -271,6 +273,21 @@ namespace Barotrauma.Items.Components
                     loopingSoundChannel.Near = loopingSound.Range * 0.4f;
                     loopingSoundChannel.Far = loopingSound.Range;
                 }
+
+                // Looping sound with manual selection mode should be changed if value of ManuallySelectedSound has changed
+                // Otherwise the sound won't change until the sound condition (such as being active) is disabled and re-enabled
+                if (loopingSoundChannel != null && loopingSoundChannel.IsPlaying && soundSelectionModes[type] == SoundSelectionMode.Manual)
+                {
+                    var playingIndex = sounds[type].IndexOf(loopingSound);
+                    var shouldBePlayingIndex = Math.Clamp(ManuallySelectedSound, 0, sounds[type].Count);
+                    if (playingIndex != shouldBePlayingIndex)
+                    {
+                        loopingSoundChannel.FadeOutAndDispose();
+                        loopingSoundChannel = null;
+                        loopingSound = null;
+                    }
+                }
+
                 return;
             }
 
@@ -294,6 +311,10 @@ namespace Barotrauma.Items.Components
                         PlaySound(sound, item.WorldPosition);
                     }
                     return;
+                }
+                else if (soundSelectionMode == SoundSelectionMode.Manual)
+                {
+                    index = Math.Clamp(ManuallySelectedSound, 0, matchingSounds.Count);
                 }
                 else
                 {
@@ -335,7 +356,7 @@ namespace Barotrauma.Items.Components
             {
                 float volume = GetSoundVolume(itemSound);
                 if (volume <= 0.0001f) { return; }
-                var channel = SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, itemSound.RoundSound.GetRandomFrequencyMultiplier(), item.CurrentHull);
+                var channel = SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, itemSound.RoundSound.GetRandomFrequencyMultiplier(), item.CurrentHull, ignoreMuffling: itemSound.RoundSound.IgnoreMuffling);
                 if (channel != null) { playingOneshotSoundChannels.Add(channel); }
             }
         }
