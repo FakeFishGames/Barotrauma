@@ -335,11 +335,11 @@ namespace Barotrauma.Items.Components
 
             float targetLevel = targetVelocity.X;
             if (controlledSub != null && controlledSub.FlippedX) { targetLevel *= -1; }
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_x_out", user);
+            item.SendSignal(new Signal(targetLevel.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_x_out");
 
             targetLevel = -targetVelocity.Y;
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", user);
+            item.SendSignal(new Signal(targetLevel.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_y_out");
         }
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
@@ -661,7 +661,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {
@@ -676,7 +676,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {
@@ -696,15 +696,15 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal)
         {
-            if (connection.Name == "velocity_in")
+            if (signal.connection.Name == "velocity_in")
             {
-                TargetVelocity = XMLExtensions.ParseVector2(signal, errorMessages: false);
+                TargetVelocity = XMLExtensions.ParseVector2(signal.value, errorMessages: false);
             }
             else
             {
-                base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+                base.ReceiveSignal(signal);
             }
         }
     }

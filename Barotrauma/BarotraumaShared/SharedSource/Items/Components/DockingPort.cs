@@ -999,7 +999,7 @@ namespace Barotrauma.Items.Components
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }
 
-                item.SendSignal(0, IsLocked ? "1" : "0", "state_out", null);
+                item.SendSignal(IsLocked ? "1" : "0", "state_out");
             }
             if (!obstructedWayPointsDisabled && dockingState >= 0.99f)
             {

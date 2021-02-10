@@ -48,9 +48,7 @@ namespace Barotrauma.Items.Components
                         OnStateChanged();
                     }
                     break;
-                case "signal_store":
                 case "lock_state":
-                    writeable = signal == "1";
                     writeable = signal.value == "1";
                     break;
             }
