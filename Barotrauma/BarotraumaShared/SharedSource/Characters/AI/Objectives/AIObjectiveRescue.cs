@@ -85,7 +85,7 @@ namespace Barotrauma
                             Item suit = suits.FirstOrDefault();
                             if (suit != null)
                             {
-                                AIObjectiveFindDivingGear.DropEmptyTanks(character, suit, out _);
+                                AIObjectiveFindDivingGear.EjectEmptyTanks(character, suit, out _);
                             }
                         }
                         else if (HumanAIController.HasItem(targetCharacter, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out IEnumerable<Item> masks, requireEquipped: true))
@@ -93,7 +93,7 @@ namespace Barotrauma
                             Item mask = masks.FirstOrDefault();
                             if (mask != null)
                             {
-                                AIObjectiveFindDivingGear.DropEmptyTanks(character, mask, out _);
+                                AIObjectiveFindDivingGear.EjectEmptyTanks(character, mask, out _);
                             }
                         }
                         bool ShouldRemoveDivingSuit() => targetCharacter.OxygenAvailable < CharacterHealth.InsufficientOxygenThreshold && targetCharacter.CurrentHull?.LethalPressure <= 0;
@@ -101,7 +101,7 @@ namespace Barotrauma
                         {
                             suits.ForEach(suit => suit.Drop(character));
                         }
-                        else if (suits.Any() && suits.None(s => s.OwnInventory?.Items != null && s.OwnInventory.Items.Any(it => it != null && it.HasTag(AIObjectiveFindDivingGear.OXYGEN_SOURCE) && it.ConditionPercentage > 0)))
+                        else if (suits.Any() && suits.None(s => s.OwnInventory?.AllItems != null && s.OwnInventory.AllItems.Any(it => it.HasTag(AIObjectiveFindDivingGear.OXYGEN_SOURCE) && it.ConditionPercentage > 0)))
                         {
                             // The target has a suit equipped with an empty oxygen tank.
                             // Can't remove the suit, because the target needs it.
@@ -331,9 +331,13 @@ namespace Barotrauma
                         character.DeselectCharacter();
                         RemoveSubObjective(ref getItemObjective);
                         TryAddSubObjective(ref getItemObjective,
-                            constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC),
+                            constructor: () => new AIObjectiveGetItem(character, suitableItemIdentifiers.ToArray(), objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC),
                             onCompleted: () => RemoveSubObjective(ref getItemObjective),
-                            onAbandon: () => RemoveSubObjective(ref getItemObjective));
+                            onAbandon: () =>
+                            {
+                                Abandon = true;
+                                character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                            });
                     }
                 }
             }
@@ -427,6 +431,13 @@ namespace Barotrauma
             replaceOxygenObjective = null;
             safeHull = null;
             ignoreOxygen = false;
+            character.SelectedCharacter = null;
+        }
+
+        public override void OnDeselected()
+        {
+            character.SelectedCharacter = null;
+            base.OnDeselected();
         }
     }
 }

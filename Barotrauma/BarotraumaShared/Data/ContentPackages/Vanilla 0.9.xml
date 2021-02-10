@@ -64,15 +64,12 @@
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
-  <Character file="Content/Characters/Swarmcrawler/Swarmcrawler.xml" />
   <Character file="Content/Characters/Crawlerhusk/Crawlerhusk.xml" />
   <Character file="Content/Characters/Endworm/Endworm.xml" />
   <Character file="Content/Characters/Fractalguardian/Fractalguardian.xml" />
   <Character file="Content/Characters/Fractalguardian2/Fractalguardian2.xml" />
   <Character file="Content/Characters/Hammerhead/Hammerhead.xml" />
-  <Character file="Content/Characters/Hammerhead_m/Hammerhead_m.xml" />
   <Character file="Content/Characters/Hammerheadgold/Hammerheadgold.xml" />
-  <Character file="Content/Characters/Hammerheadgold_m/Hammerheadgold_m.xml" />
   <Character file="Content/Characters/Hammerheadmatriarch/Hammerheadmatriarch.xml" />
   <Character file="Content/Characters/Hammerheadspawn/Hammerheadspawn.xml" />
   <Character file="Content/Characters/Human/Human.xml" />
@@ -88,7 +85,6 @@
   <Character file="Content/Characters/Mudraptor_unarmored/Mudraptor_unarmored.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
   <Character file="Content/Characters/Moloch/Moloch.xml" />
-  <Character file="Content/Characters/Moloch_m/Moloch_m.xml" />
   <Character file="Content/Characters/Molochblack/Molochblack.xml" />
   <Character file="Content/Characters/Molochbaby/Molochbaby.xml" />
   <Character file="Content/Characters/Peanut/Peanut.xml" />
@@ -100,6 +96,13 @@
   <Character file="Content/Characters/Terminalcell/Terminalcell.xml" />
   <Character file="Content/Characters/Watcher/Watcher.xml" />
   <Character file="Content/Characters/Spineling/Spineling.xml" />
+  <Character file="Content/Characters/Variants/Swarmcrawler.xml" />
+  <Character file="Content/Characters/Variants/Moloch_m.xml" />
+  <Character file="Content/Characters/Variants/Hammerhead_m.xml" />
+  <Character file="Content/Characters/Variants/Hammerheadgold_m.xml" />
+  <Character file="Content/Characters/Variants/Crawler_hatchling/Crawler_hatchling.xml" />
+  <Character file="Content/Characters/Variants/Mudraptor_hatchling/Mudraptor_hatchling.xml" />
+  <Character file="Content/Characters/Variants/Tigerthresher_hatchling/Tigerthresher_hatchling.xml" />
   <MapCreature file="Content/Items/Gardening/ballastflora.xml" />
   <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
   <Wreck file="Content/Map/Wrecks/Kastrull_Wrecked.sub" />
@@ -161,7 +164,11 @@
   <LevelObjectPrefabs file="Content/Map/Biomes/RockCave/RockCaveObjects.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/MushroomCave/MushroomCaveObjects.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/CrystalCave/CrystalCaveObjects.xml" />
-  
+  <LevelObjectPrefabs file="Content/Map/Biomes/ForestCave/ForestCaveObjects.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/BioluminescentCave/BioluminescentCaveObject.xml" />
+  <LevelObjectPrefabs file="Content/Map/Biomes/NestObjects/NestObjects.xml" />
+
+
   <LevelGenerationParameters file="Content/Map/Biomes/AphoticPlateau/AphoticPlateau.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/AphoticPlateau/AphoticPlateauObjects.xml" />
   

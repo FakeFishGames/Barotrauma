@@ -102,7 +102,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null) { return; }      
 
-            float powerFactor = Math.Min(currPowerConsumption <= 0.0f ? 1.0f : Voltage, 1.0f);
+            float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, 1.0f);
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
             //less effective when in a bad condition
@@ -112,13 +112,16 @@ namespace Barotrauma.Items.Components
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
         }
 
-        public void InfectBallast(string identifier)
+        public void InfectBallast(string identifier, bool allowMultiplePerShip = false)
         {
             Hull hull = item.CurrentHull;
             if (hull == null) { return; }
 
-            // if the ship is already infected then do nothing
-            if (Hull.hullList.Where(h => h.Submarine == hull.Submarine).Any(h => h.BallastFlora != null)) { return; }
+            if (!allowMultiplePerShip)
+            {
+                // if the ship is already infected then do nothing
+                if (Hull.hullList.Where(h => h.Submarine == hull.Submarine).Any(h => h.BallastFlora != null)) { return; }
+            }
 
             if (hull.BallastFlora != null) { return; }
 

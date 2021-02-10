@@ -144,16 +144,15 @@ namespace Barotrauma.Items.Components
                 Vector2 drawPos = item.DrawPosition;
                 drawPos += PropellerPos;
                 drawPos.Y = -drawPos.Y;
-
                 propellerSprite.Draw(spriteBatch, (int)Math.Floor(spriteIndex), drawPos, Color.White, propellerSprite.Origin, 0.0f, Vector2.One);
             }
 
-            if (editing && !GUI.DisableHUD)
+            if (editing && !DisablePropellerDamage && propellerDamage != null && !GUI.DisableHUD)
             {
                 Vector2 drawPos = item.DrawPosition;
-                drawPos += PropellerPos;
+                drawPos += PropellerPos * item.Scale;
                 drawPos.Y = -drawPos.Y;
-                GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, GUI.Style.Red);
+                spriteBatch.DrawCircle(drawPos, propellerDamage.DamageRange * item.Scale, 16, GUI.Style.Red, thickness: 2);
             }
         }
 

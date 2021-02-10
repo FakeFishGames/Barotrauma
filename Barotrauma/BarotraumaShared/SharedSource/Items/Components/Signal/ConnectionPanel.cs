@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Networking;
-using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -111,7 +109,7 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
-            if (item.body != null)
+            if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
             {
                 var holdable = item.GetComponent<Holdable>();
                 if (holdable == null || !holdable.Attachable)
@@ -130,12 +128,12 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Wire wire in c.Wires)
                 {
-                    if (wire == null) continue;
+                    if (wire == null) { continue; }
 #if CLIENT
-                    if (wire.Item.IsSelected) continue;
+                    if (wire.Item.IsSelected) { continue; }
 #endif
                     var wireNodes = wire.GetNodes();
-                    if (wireNodes.Count == 0) continue;
+                    if (wireNodes.Count == 0) { continue; }
 
                     if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
                     {
@@ -184,7 +182,7 @@ namespace Barotrauma.Items.Components
         {
             //attaching wires to items with a body is not allowed
             //(signal items remove their bodies when attached to a wall)
-            if (item.body != null)
+            if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
             {
                 return false;
             }
@@ -247,10 +245,32 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
-                loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
+                if (loadedConnections[i].wireId.Length == Connections[i].wireId.Length)
+                {
+                    loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
+                }
+                else
+                {
+                    //backwards compatibility when maximum number of wires has changed                    
+                    foreach (ushort id in loadedConnections[i].wireId)
+                    {
+                        for (int j = 0; j < Connections[i].wireId.Length; j++)
+                        {
+                            if (Connections[i].wireId[j] == 0)
+                            {
+                                Connections[i].wireId[j] = id;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", new ushort[0]).ToList();
+            for (int i = 0; i < disconnectedWireIds.Count; i++)
+            {
+                disconnectedWireIds[i] = idRemap.GetOffsetId(disconnectedWireIds[i]);
+            }
         }
 
         public override XElement Save(XElement parentElement)

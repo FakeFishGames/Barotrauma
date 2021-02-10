@@ -510,10 +510,10 @@ namespace Barotrauma
             for (int i = 0; i < Content.CountChildren; i++)
             {
                 var child = Content.RectTransform.GetChild(i)?.GUIComponent;
-                if (child == null) continue;
+                if (child == null || !child.Visible) { continue; }
 
                 // selecting
-                if (Enabled && CanBeFocused && child.CanBeFocused && (GUI.IsMouseOn(child)) && child.Rect.Contains(PlayerInput.MousePosition))
+                if (Enabled && CanBeFocused && child.CanBeFocused && child.Rect.Contains(PlayerInput.MousePosition) && GUI.IsMouseOn(child))
                 {
                     child.State = ComponentState.Hover;
 

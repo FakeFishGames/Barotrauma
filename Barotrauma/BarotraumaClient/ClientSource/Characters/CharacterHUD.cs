@@ -57,7 +57,7 @@ namespace Barotrauma
                 !ConversationAction.FadeScreenToBlack;
         }
 
-        private static string GetCachedHudText(string textTag, string keyBind)
+        public static string GetCachedHudText(string textTag, string keyBind)
         {
             if (cachedHudTexts.TryGetValue(textTag + keyBind, out string text))
             {
@@ -76,10 +76,10 @@ namespace Barotrauma
             {
                 if (character.Inventory != null)
                 {
-                    for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
+                    for (int i = 0; i < character.Inventory.Capacity; i++)
                     {
-                        var item = character.Inventory.Items[i];
-                        if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
+                        var item = character.Inventory.GetItemAt(i);
+                        if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
 
                         foreach (ItemComponent ic in item.Components)
                         {
@@ -131,10 +131,10 @@ namespace Barotrauma
                         character.Inventory.ClearSubInventories();
                     }
 
-                    for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
+                    for (int i = 0; i < character.Inventory.Capacity; i++)
                     {
-                        var item = character.Inventory.Items[i];
-                        if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
+                        var item = character.Inventory.GetItemAt(i);
+                        if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
 
                         foreach (ItemComponent ic in item.Components)
                         {
@@ -206,22 +206,31 @@ namespace Barotrauma
                 orderIndicatorCount.Clear();
                 foreach (Pair<Order, float?> activeOrder in GameMain.GameSession.CrewManager.ActiveOrders)
                 {
+                    if (!DrawIcon(activeOrder.First)) { continue; }
+
                     if (activeOrder.Second.HasValue)
                     {
                         DrawOrderIndicator(spriteBatch, cam, character, activeOrder.First, iconAlpha: MathHelper.Clamp(activeOrder.Second.Value / 10.0f, 0.2f, 1.0f));
                     }
                     else
                     {
-                        float iconAlpha = GetDistanceBasedIconAlpha(activeOrder.First.TargetSpatialEntity, maxDistance: 350.0f);
+                        float iconAlpha = GetDistanceBasedIconAlpha(activeOrder.First.TargetSpatialEntity, maxDistance: 450.0f);
                         if (iconAlpha <= 0.0f) { continue; }
-                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.First, iconAlpha: iconAlpha, createOffset: false, scaleMultiplier: 0.5f);
+                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.First,
+                            iconAlpha: iconAlpha, createOffset: false, scaleMultiplier: 0.5f, overrideAlpha: true);
                     }
                 }
 
-                if (character.CurrentOrder != null)
+                if (DrawIcon(character.CurrentOrder))
                 {
                     DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
                 }                
+
+                static bool DrawIcon(Order o) =>
+                    o != null &&
+                    (!(o.TargetEntity is Item i) ||
+                     o.DrawIconWhenContained ||
+                     i.GetRootInventoryOwner() == i);
             }
 
             foreach (Character.ObjectiveEntity objectiveEntity in character.ActiveObjectiveEntities)
@@ -231,7 +240,7 @@ namespace Barotrauma
 
             foreach (Item brokenItem in brokenItems)
             {
-                if (brokenItem.NonInteractable) { continue; }
+                if (!brokenItem.IsInteractable(character)) { continue; }
                 float alpha = GetDistanceBasedIconAlpha(brokenItem);
                 if (alpha <= 0.0f) continue;
                 GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUI.BrokenIcon, 
@@ -244,7 +253,7 @@ namespace Barotrauma
                 return Math.Min((maxDistance - dist) / maxDistance * 2.0f, 1.0f);
             }
 
-            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen && (!character.IsKeyDown(InputType.Aim) || character.SelectedItems.Any(it => it?.GetComponent<Sprayer>() == null)))
+            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen && (!character.IsKeyDown(InputType.Aim) || character.HeldItems.Any(it => it?.GetComponent<Sprayer>() == null)))
             {
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {
@@ -281,7 +290,7 @@ namespace Barotrauma
                     if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
                         bool shiftDown = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
-                        if(shouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
+                        if (shouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
                         {
                             shouldRecreateHudTexts = true;
                             heldDownShiftWhenGotHudTexts = shiftDown;
@@ -291,8 +300,8 @@ namespace Barotrauma
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
 
-                        Vector2 textSize = GUI.Font.MeasureString(focusedItem.Name);
-                        Vector2 largeTextSize = GUI.SubHeadingFont.MeasureString(focusedItem.Name);
+                        Vector2 textSize = GUI.Font.MeasureString(hudTexts.First().Text);
+                        Vector2 largeTextSize = GUI.SubHeadingFont.MeasureString(hudTexts.First().Text);
 
                         Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
                         startPos.Y -= (hudTexts.Count + 1) * textSize.Y;
@@ -307,11 +316,11 @@ namespace Barotrauma
 
                         float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
 
-                        GUI.DrawString(spriteBatch, textPos, focusedItem.Name, GUI.Style.TextColor * alpha, Color.Black * alpha * 0.7f, 2, font: GUI.SubHeadingFont);
+                        GUI.DrawString(spriteBatch, textPos, hudTexts.First().Text, hudTexts.First().Color * alpha, Color.Black * alpha * 0.7f, 2, font: GUI.SubHeadingFont);
                         startPos.X += dir * 10.0f * GUI.Scale;
                         textPos.X += dir * 10.0f * GUI.Scale;
                         textPos.Y += largeTextSize.Y;
-                        foreach (ColoredText coloredText in hudTexts)
+                        foreach (ColoredText coloredText in hudTexts.Skip(1))
                         {
                             if (dir == -1) textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X);
                             GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
@@ -341,9 +350,8 @@ namespace Barotrauma
             }
             if (Character.Controlled.Inventory != null)
             {
-                foreach (Item item in Character.Controlled.Inventory.Items)
+                foreach (Item item in Character.Controlled.Inventory.AllItems)
                 {
-                    if (item == null) { continue; }
                     if (Character.Controlled.HasEquippedItem(item))
                     {
                         item.DrawHUD(spriteBatch, cam, Character.Controlled);
@@ -355,10 +363,10 @@ namespace Barotrauma
 
             if (character.Inventory != null)
             {
-                for (int i = 0; i < character.Inventory.Items.Length - 1; i++)
+                for (int i = 0; i < character.Inventory.Capacity; i++)
                 {
-                    var item = character.Inventory.Items[i];
-                    if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) continue;
+                    var item = character.Inventory.GetItemAt(i);
+                    if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
 
                     foreach (ItemComponent ic in item.Components)
                     {
@@ -432,12 +440,16 @@ namespace Barotrauma
 
         private static void DrawCharacterHoverTexts(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            foreach (Item item in character.Inventory.Items)
+            var allItems = character.Inventory?.AllItems;
+            if (allItems != null)
             {
-                var statusHUD = item?.GetComponent<StatusHUD>();
-                if (statusHUD != null && statusHUD.IsActive && statusHUD.VisibleCharacters.Contains(character.FocusedCharacter))
+                foreach (Item item in allItems)
                 {
-                    return;
+                    var statusHUD = item?.GetComponent<StatusHUD>();
+                    if (statusHUD != null && statusHUD.IsActive && statusHUD.VisibleCharacters.Contains(character.FocusedCharacter))
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -454,7 +466,7 @@ namespace Barotrauma
             Color nameColor = GUI.Style.TextColor;
             if (character.TeamID != character.FocusedCharacter.TeamID)
             {
-                nameColor = character.FocusedCharacter.TeamID == Character.TeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+                nameColor = character.FocusedCharacter.TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
             }
 
             GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUI.SubHeadingFont);
@@ -493,7 +505,9 @@ namespace Barotrauma
             return character.ShouldLockHud();
         }
 
-        private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order, float iconAlpha = 1.0f, bool createOffset = true, float scaleMultiplier = 1.0f)
+        /// <param name="overrideAlpha">Override the distance-based alpha value with the iconAlpha parameter value</param>
+        private static void DrawOrderIndicator(SpriteBatch spriteBatch, Camera cam, Character character, Order order,
+            float iconAlpha = 1.0f, bool createOffset = true, float scaleMultiplier = 1.0f, bool overrideAlpha = false)
         {
             if (order?.SymbolSprite == null) { return; }
             if (order.IsReport && order.OrderGiver != character && !order.HasAppropriateJob(character)) { return; }
@@ -514,7 +528,8 @@ namespace Barotrauma
             Vector2 drawPos = target is Entity ? (target as Entity).DrawPosition :
                 target.Submarine == null ? target.Position : target.Position + target.Submarine.DrawPosition;
             drawPos += Vector2.UnitX * order.SymbolSprite.size.X * 1.5f * orderIndicatorCount[target];
-            GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha, createOffset: createOffset, scaleMultiplier: scaleMultiplier);
+            GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, order.SymbolSprite, order.Color * iconAlpha,
+                createOffset: createOffset, scaleMultiplier: scaleMultiplier, overrideAlpha: overrideAlpha ? (float?)iconAlpha : null);
 
             orderIndicatorCount[target] = orderIndicatorCount[target] + 1;
         }        

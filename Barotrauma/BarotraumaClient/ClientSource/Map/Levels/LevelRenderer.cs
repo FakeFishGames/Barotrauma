@@ -220,7 +220,7 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
                 cam.Transform);            
 
-            backgroundSpriteManager?.DrawObjects(spriteBatch, cam, drawFront: false);
+            backgroundSpriteManager?.DrawObjectsBack(spriteBatch, cam);
             if (cam.Zoom > 0.05f)
             {
                 backgroundCreatureManager?.Draw(spriteBatch, cam);
@@ -262,8 +262,6 @@ namespace Barotrauma
                         color: Color.White * alpha, textureScale: new Vector2(texScale));                    
                 }
             }
-
-
             spriteBatch.End();
 
             RenderWalls(GameMain.Instance.GraphicsDevice, cam);
@@ -272,11 +270,21 @@ namespace Barotrauma
                 BlendState.NonPremultiplied,
                 SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: true);
+            backgroundSpriteManager?.DrawObjectsMid(spriteBatch, cam);
             spriteBatch.End();
         }
 
-        public void Draw(SpriteBatch spriteBatch, Camera cam)
+        public void DrawForeground(SpriteBatch spriteBatch, Camera cam, LevelObjectManager backgroundSpriteManager = null)
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
+                SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
+                cam.Transform);
+            backgroundSpriteManager?.DrawObjectsFront(spriteBatch, cam);
+            spriteBatch.End();
+        }
+
+        public void DrawDebugOverlay(SpriteBatch spriteBatch, Camera cam)
         {
             if (GameMain.DebugDraw && cam.Zoom > 0.1f)
             {

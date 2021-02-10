@@ -140,7 +140,7 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (character.TeamID == Character.TeamType.FriendlyNPC && Enemy != null)
+            if (character.TeamID == CharacterTeamType.FriendlyNPC && Enemy != null)
             {
                 if (Enemy.Submarine == null || (Enemy.Submarine.TeamID != character.TeamID && Enemy.Submarine != character.Submarine))
                 {
@@ -238,7 +238,9 @@ namespace Barotrauma
             }
         }
 
-        private bool IsLoaded(ItemComponent weapon) => weapon.HasRequiredContainedItems(character, addMessage: false);
+        private bool IsLoaded(ItemComponent weapon, bool checkContainedItems = true) => 
+            weapon.HasRequiredContainedItems(character, addMessage: false) &&
+            (!checkContainedItems || weapon.Item.OwnInventory == null || weapon.Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
 
         private bool TryArm()
         {
@@ -260,21 +262,21 @@ namespace Barotrauma
                         // No weapons
                         break;
                     }
-                    if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
+                    if (!character.Inventory.Contains(Weapon) || WeaponComponent == null)
                     {
                         // Not in the inventory anymore or cannot find the weapon component
                         allWeapons.Remove(WeaponComponent);
                         Weapon = null;
                         continue;
                     }
-                    if (IsLoaded(WeaponComponent))
+                    if (IsLoaded(WeaponComponent, checkContainedItems: true))
                     {
                         // All good, the weapon is loaded
                         break;
                     }
                     if (Reload(seekAmmo: false))
                     {
-                        // All good, reloading successful
+                        // All good, we can use the weapon.
                         break;
                     }
                     else
@@ -304,7 +306,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                bool isAllowedToSeekWeapons = !EnemyIsClose() && character.TeamID != Character.TeamType.FriendlyNPC && IsOffensiveOrArrest;
+                bool isAllowedToSeekWeapons = !EnemyIsClose() && character.TeamID != CharacterTeamType.FriendlyNPC && IsOffensiveOrArrest;
                 if (!isAllowedToSeekWeapons)
                 {
                     if (WeaponComponent == null)
@@ -369,7 +371,7 @@ namespace Barotrauma
 
             bool CheckWeapon(bool seekAmmo)
             {
-                if (!character.Inventory.Items.Contains(Weapon) || WeaponComponent == null)
+                if (!character.Inventory.Contains(Weapon) || WeaponComponent == null)
                 {
                     // Not in the inventory anymore or cannot find the weapon component
                     return false;
@@ -564,21 +566,20 @@ namespace Barotrauma
                     container.ContainableItems.Any(containable => containable.Identifiers.Any(id => id.Equals(mobileBatteryTag))));
                 // If there's no such container, assume that the melee weapon can stun without a battery.
                 return containers.None() || containers.Any(container =>
-                    (container as ItemContainer)?.Inventory.Items.Any(i => i != null && i.HasTag(mobileBatteryTag) && i.Condition > 0.0f) ?? false);
+                    (container as ItemContainer)?.Inventory.AllItems.Any(i => i != null && i.HasTag(mobileBatteryTag) && i.Condition > 0.0f) ?? false);
             }
         }
 
         private HashSet<ItemComponent> FindWeaponsFromInventory()
         {
             weapons.Clear();
-            foreach (var item in character.Inventory.Items)
+            foreach (var item in character.Inventory.AllItems)
             {
-                if (item == null) { continue; }
                 if (ignoredWeapons.Contains(item)) { continue; }
                 GetWeapons(item, weapons);
                 if (item.OwnInventory != null)
                 {
-                    item.OwnInventory.Items.ForEach(i => GetWeapons(i, weapons));
+                    item.OwnInventory.AllItems.ForEach(i => GetWeapons(i, weapons));
                 }
             }
             return weapons;
@@ -598,7 +599,7 @@ namespace Barotrauma
 
         private void Unequip()
         {
-            if (!character.LockHands && character.SelectedItems.Contains(Weapon))
+            if (!character.LockHands && character.HeldItems.Contains(Weapon))
             {
                 if (!Weapon.AllowedSlots.Contains(InvSlotType.Any) || !character.Inventory.TryPutItem(Weapon, character, new List<InvSlotType>() { InvSlotType.Any }))
                 {
@@ -617,7 +618,7 @@ namespace Barotrauma
             if (!character.HasEquippedItem(Weapon))
             {
                 Weapon.TryInteract(character, forceSelectKey: true);
-                var slots = Weapon.AllowedSlots.FindAll(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
+                var slots = Weapon.AllowedSlots.Where(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
                     aimTimer = Rand.Range(0.5f, 1f);
@@ -651,7 +652,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls, allowChangingTheSubmarine: character.TeamID != Character.TeamType.FriendlyNPC);
+                    retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls, allowChangingTheSubmarine: character.TeamID != CharacterTeamType.FriendlyNPC);
                     findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
                 }
             }
@@ -724,7 +725,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (character.TeamID == Character.TeamType.FriendlyNPC)
+                    if (character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
                         ItemPrefab prefab = ItemPrefab.Find(null, "handcuffs");
                         if (prefab != null)
@@ -769,9 +770,9 @@ namespace Barotrauma
 #endif
                 }
                 // Confiscate stolen goods.
-                foreach (var item in Enemy.Inventory.Items)
+                foreach (var item in Enemy.Inventory.AllItemsMod)
                 {
-                    if (item == null || item == handCuffs) { continue; }
+                    if (item == handCuffs) { continue; }
                     if (item.StolenDuringRound)
                     {
                         item.Drop(character);
@@ -814,33 +815,50 @@ namespace Barotrauma
         /// </summary>
         private bool Reload(bool seekAmmo)
         {
-            if (WeaponComponent == null) { return false; }
-            if (!WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained)) { return false; }
-            var containedItems = Weapon.OwnInventory?.Items;
-            if (containedItems == null) { return true; }
-            // Drop empty ammo
-            foreach (Item containedItem in containedItems)
+            if (WeaponComponent == null) { return false; }        
+            if (Weapon.OwnInventory == null) { return true; }
+            // Eject empty ammo
+            if (Weapon.OwnInventory.AllItems.Any(it => it.Condition <= 0.0f))
             {
-                if (containedItem == null) { continue; }
-                if (containedItem.Condition <= 0)
+                foreach (Item containedItem in Weapon.OwnInventory.AllItemsMod)
                 {
-                    containedItem.Drop(character);
+                    if (containedItem.Condition <= 0)
+                    {
+                        if (character.Submarine == null)
+                        {
+                            // If we are outside of main sub, try to put the ammo in the inventory instead dropping it in the sea.
+                            if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
+                            {
+                                continue;
+                            }
+                        }
+                        containedItem.Drop(character);
+                    }
                 }
             }
+
             RelatedItem item = null;
             Item ammunition = null;
             string[] ammunitionIdentifiers = null;
-            foreach (RelatedItem requiredItem in WeaponComponent.requiredItems[RelatedItem.RelationType.Contained])
+            if (WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
             {
-                ammunition = containedItems.FirstOrDefault(it => it != null && it.Condition > 0 && requiredItem.MatchesItem(it));
-                if (ammunition != null)
+                foreach (RelatedItem requiredItem in WeaponComponent.requiredItems[RelatedItem.RelationType.Contained])
                 {
-                    // Ammunition still remaining
-                    return true;
+                    ammunition = Weapon.OwnInventory.AllItems.FirstOrDefault(it => it.Condition > 0 && requiredItem.MatchesItem(it));
+                    if (ammunition != null)
+                    {
+                        // Ammunition still remaining
+                        return true;
+                    }
+                    item = requiredItem;
+                    ammunitionIdentifiers = requiredItem.Identifiers;
                 }
-                item = requiredItem;
-                ammunitionIdentifiers = requiredItem.Identifiers;
             }
+            else if (WeaponComponent is MeleeWeapon meleeWeapon)
+            {
+                ammunitionIdentifiers = meleeWeapon.PreferredContainedItems;
+            }
+
             // No ammo
             if (ammunition == null)
             {

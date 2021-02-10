@@ -52,7 +52,11 @@ namespace Barotrauma
 
         public Sprite Sprite
         {
-            get { return spriteIndex < 0 || Prefab.Sprites.Count == 0 ? null : Prefab.Sprites[spriteIndex % Prefab.Sprites.Count]; }
+            get 
+            {
+                var prefab = ActivePrefab?.Sprites.Count > 0 ? ActivePrefab : Prefab;
+                return spriteIndex < 0 || prefab.Sprites.Count == 0 ? null : prefab.Sprites[spriteIndex % prefab.Sprites.Count]; 
+            }
         }
 
         Vector2 ISpatialEntity.Position => new Vector2(Position.X, Position.Y);
@@ -62,6 +66,8 @@ namespace Barotrauma
         public Vector2 SimPosition => ConvertUnits.ToSimUnits(WorldPosition);
 
         public Submarine Submarine => null;
+
+        public Level.Cave ParentCave;
 
         public LevelObject(LevelObjectPrefab prefab, Vector3 position, float scale, float rotation = 0.0f)
         {
@@ -108,6 +114,19 @@ namespace Barotrauma
                 int parentTriggerIndex = prefab.LevelTriggerElements.IndexOf(triggerElement.Parent);
                 if (parentTriggerIndex > -1) { newTrigger.ParentTrigger = Triggers[parentTriggerIndex]; }
                 Triggers.Add(newTrigger);
+            }
+
+            if (spriteIndex == -1)
+            {
+                foreach (var overrideProperties in prefab.OverrideProperties)
+                {
+                    if (overrideProperties == null) { continue; }
+                    if (overrideProperties.Sprites.Count > 0)
+                    {
+                        spriteIndex = Rand.Int(overrideProperties.Sprites.Count, Rand.RandSync.Server);
+                        break;
+                    }
+                }
             }
 
             NeedsUpdate = NeedsNetworkSyncing || (Triggers != null && Triggers.Any()) || Prefab.PhysicsBodyTriggerIndex > -1;

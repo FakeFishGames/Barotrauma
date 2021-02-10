@@ -155,11 +155,17 @@ namespace Barotrauma.Networking
                     switch (orderTargetType)
                     {
                         case Order.OrderTargetType.Entity:
-                            (orderTargetEntity as MapEntity)?.SetIgnoreByAI(orderMsg.Order.Identifier == "ignorethis");
+                            if (orderTargetEntity is IIgnorable ignorableEntity)
+                            {
+                                ignorableEntity.OrderedToBeIgnored = orderMsg.Order.Identifier == "ignorethis";
+                            }
                             break;
                         case Order.OrderTargetType.WallSection:
                             if (!wallSectionIndex.HasValue) { break; }
-                            (orderTargetEntity as Structure)?.GetSection(wallSectionIndex.Value)?.SetIgnoreByAI(orderMsg.Order.Identifier == "ignorethis");
+                            if (orderTargetEntity is Structure s && s.GetSection(wallSectionIndex.Value) is IIgnorable ignorableWall)
+                            {
+                                ignorableWall.OrderedToBeIgnored = orderMsg.Order.Identifier == "ignorethis";
+                            }
                             break;
                     }
                 }

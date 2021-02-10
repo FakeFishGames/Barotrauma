@@ -14,7 +14,7 @@ namespace Barotrauma
         {
             try
             {
-                forbiddenWords = File.ReadAllLines(fileListPath).ToHashSet();
+                forbiddenWords = File.ReadAllLines(fileListPath).Select(s => s.ToLowerInvariant()).ToHashSet();
             }
             catch (IOException e)
             {
@@ -42,16 +42,28 @@ namespace Barotrauma
             {
                 foreach (string word in text.Split(delimiter))
                 {
-                    words.Add(word);
+                    words.Add(word.ToLowerInvariant());
                 }
             }
 
-            foreach (string word in words)
+            text = text.ToLowerInvariant();
+            foreach (string forbidden in forbiddenWords)
             {
-                if (forbiddenWords.Any(w => Homoglyphs.Compare(word, w)))
+                if (forbidden.Contains(' '))
                 {
-                    forbiddenWord = word;
-                    return true;
+                    if (words.Contains(forbidden.Trim()))
+                    {
+                        forbiddenWord = forbidden.Trim();
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (text.Contains(forbidden))
+                    {
+                        forbiddenWord = forbidden.Trim();
+                        return true;
+                    }
                 }
             }
             return false;

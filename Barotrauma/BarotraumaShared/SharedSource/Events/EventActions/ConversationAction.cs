@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -40,8 +41,14 @@ namespace Barotrauma
         [Serialize(true, true)]
         public bool WaitForInteraction { get; set; }
 
+        [Serialize("", true, "Tag to assign to whoever invokes the conversation")]
+        public string InvokerTag { get; set; }
+
         [Serialize(false, true)]
         public bool FadeToBlack { get; set; }
+
+        [Serialize(true, true, "Should the event end if the conversations is interrupted (e.g. if the speaker dies or falls unconscious mid-conversation). Defaults to true.")]
+        public bool EndEventIfInterrupted { get; set; }
 
         [Serialize("", true)]
         public string EventSprite { get; set; }
@@ -104,19 +111,26 @@ namespace Barotrauma
                 {
 #if CLIENT
                     dialogBox?.Close();
+                    GUIMessageBox.MessageBoxes.ForEachMod(mb => 
+                    { 
+                        if (mb.UserData as string == "ConversationAction")
+                        {
+                            (mb as GUIMessageBox)?.Close();
+                        }
+                    });
 #else
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
                         if (c.InGame && c.Character != null) { ServerWrite(speaker, c); }
                     }
-# endif
+#endif
                     ResetSpeaker();
                     dialogOpened = false;
                 }
 
                 if (Interrupted == null)
                 {
-                    goTo = "_end";
+                    if (EndEventIfInterrupted) { goTo = "_end"; }
                     return true;
                 }
                 else
@@ -171,7 +185,7 @@ namespace Barotrauma
             GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
 #endif
             var humanAI = speaker.AIController as HumanAIController;
-            if (humanAI != null)
+            if (humanAI != null && !speaker.IsDead && !speaker.Removed)
             {
                 if (prevSpeakerOrder != null)
                 {
@@ -255,7 +269,12 @@ namespace Barotrauma
             }
             else
             {
-                if (Options.Any())
+                if (ShouldInterrupt())
+                {
+                    ResetSpeaker();
+                    interrupt = true;
+                }
+                else if (Options.Any())
                 {
                     Options[selectedOption].Update(deltaTime);
                 }
@@ -335,6 +354,11 @@ namespace Barotrauma
                 }
             }
 
+            if (targetCharacter != null && !string.IsNullOrWhiteSpace(InvokerTag))
+            {
+                ParentEvent.AddTarget(InvokerTag, targetCharacter);
+            }
+            
             ShowDialog(speaker, targetCharacter);
 
             dialogOpened = true;

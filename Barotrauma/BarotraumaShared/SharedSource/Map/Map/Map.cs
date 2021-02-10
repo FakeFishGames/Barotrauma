@@ -96,6 +96,7 @@ namespace Barotrauma
                 {
                     case "connection":
                         Point locationIndices = subElement.GetAttributePoint("locations", new Point(0, 1));
+                        if (locationIndices.X == locationIndices.Y) { continue; }
                         var connection = new LocationConnection(Locations[locationIndices.X], Locations[locationIndices.Y])
                         {
                             Passed = subElement.GetAttributeBool("passed", false),
@@ -185,8 +186,8 @@ namespace Barotrauma
             }
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
-            CurrentLocation.CreateStore();
             CurrentLocation.Discovered = true;
+            CurrentLocation.CreateStore();
 
             InitProjectSpecific();
         }
@@ -247,7 +248,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < 2; i++)
                 {
-                    if (newLocations[i] != null) continue;
+                    if (newLocations[i] != null) { continue; }
 
                     Vector2[] points = new Vector2[] { edge.Point1, edge.Point2 };
 
@@ -320,7 +321,15 @@ namespace Barotrauma
                         {
                             connection.Locations[1] = Locations[i];
                         }
-                        Locations[i].Connections.Add(connection);
+
+                        if (connection.Locations[0] != connection.Locations[1])
+                        {
+                            Locations[i].Connections.Add(connection);
+                        }
+                        else
+                        {
+                            Connections.Remove(connection);
+                        }
                     }
                     Locations[i].Connections.RemoveAll(c => c.OtherLocation(Locations[i]) == Locations[j]);
                     Locations.RemoveAt(j);
@@ -548,6 +557,12 @@ namespace Barotrauma
 
             CurrentLocation.CreateStore();
             OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
+
+            if (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.CampaignMetadata is { } metadata)
+            {
+                metadata.SetValue("campaign.location.id", CurrentLocationIndex);
+                metadata.SetValue("campaign.location.name", CurrentLocation.Name);
+            }
         }
 
         public void SetLocation(int index)
@@ -678,92 +693,105 @@ namespace Barotrauma
         {
             foreach (Location location in Locations)
             {
-                if (furthestDiscoveredLocation == null || 
-                    location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                if (location.Discovered)
                 {
-                    furthestDiscoveredLocation = location;
+                    if (furthestDiscoveredLocation == null || 
+                        location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                    {
+                        furthestDiscoveredLocation = location;
+                    }
                 }
             }
 
             foreach (Location location in Locations)
             {
-                if (location.MapPosition.X < furthestDiscoveredLocation.MapPosition.X)
+                if (location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                 {
-                    furthestDiscoveredLocation = location;
+                    continue;
                 }
 
                 if (location == CurrentLocation || location == SelectedLocation) { continue; }
 
-                //find which types of locations this one can change to
-                var cct = location.Type.CanChangeTo;
-                List<LocationTypeChange> allowedTypeChanges = new List<LocationTypeChange>();
-                List<int> readyTypeChanges = new List<int>();
-                for (int i = 0; i < cct.Count; i++)
+                ProgressLocationTypeChanges(location);
+
+                if (location.Discovered)
                 {
-                    LocationTypeChange typeChange = cct[i];
-                    if (typeChange.RequireDiscovered && !location.Discovered) { continue; }
-                    //check if there are any adjacent locations that would prevent the change
-                    bool disallowedFound = false;
-                    foreach (string disallowedLocationName in typeChange.DisallowedAdjacentLocations)
-                    {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.Equals(disallowedLocationName, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            disallowedFound = true;
-                            break;
-                        }
-                    }
-                    if (disallowedFound) { continue; }
-
-                    //check that there's a required adjacent location present
-                    bool requiredFound = false;
-                    foreach (string requiredLocationName in typeChange.RequiredAdjacentLocations)
-                    {
-                        if (location.Connections.Any(c => c.OtherLocation(location).Type.Identifier.Equals(requiredLocationName, StringComparison.OrdinalIgnoreCase)))
-                        {
-                            requiredFound = true;
-                            break;
-                        }
-                    }
-                    if (!requiredFound && typeChange.RequiredAdjacentLocations.Count > 0) { continue; }
-
-                    allowedTypeChanges.Add(typeChange);
-
-                    if (location.TypeChangeTimer >= typeChange.RequiredDuration)
-                    {
-                        readyTypeChanges.Add(i);
-                    }
+                    location.UpdateStore();
                 }
+            }
+        }
 
-                List<float> readyTypeProbabilities = readyTypeChanges.Select(i => cct[i].DetermineProbability(location)).ToList();
-                //select a random type change
-                if (Rand.Range(0.0f, 1.0f) < readyTypeChanges.Sum(i => readyTypeProbabilities[i]))
+        private void ProgressLocationTypeChanges(Location location)
+        {
+            location.TimeSinceLastTypeChange++;
+
+            if (location.PendingLocationTypeChange != null)
+            {
+                if (location.PendingLocationTypeChange.First.DetermineProbability(location) <= 0.0f)
                 {
-                    var selectedTypeChangeIndex = 
-                        ToolBox.SelectWeightedRandom(
-                            readyTypeChanges,
-                            readyTypeChanges.Select(i => readyTypeProbabilities[i]).ToList(),
-                            Rand.RandSync.Unsynced);
-                    var selectedTypeChange = cct[selectedTypeChangeIndex];
-                    if (selectedTypeChange != null)
-                    {
-                        string prevName = location.Name;
-                        location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(selectedTypeChange.ChangeToType, StringComparison.OrdinalIgnoreCase)));
-                        ChangeLocationType(location, prevName, selectedTypeChange);
-                        location.TypeChangeTimer = -1;
-                    }
-                }
-                
-                if (allowedTypeChanges.Count > 0)
-                {
-                    location.TypeChangeTimer++;
+                    //remove pending type change if it's no longer allowed
+                    location.PendingLocationTypeChange = null;
                 }
                 else
                 {
-                    location.TypeChangeTimer = 0;
+                    location.PendingLocationTypeChange.Second--;
+                    if (location.PendingLocationTypeChange.Second <= 0)
+                    {
+                        ChangeLocationType(location, location.PendingLocationTypeChange.First);
+                    }
+                    return;
                 }
-
-                location.UpdateStore();
             }
+
+            //find which types of locations this one can change to
+            Dictionary<LocationTypeChange, float> allowedTypeChanges = new Dictionary<LocationTypeChange, float>();
+            foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
+            {
+                float probability = typeChange.DetermineProbability(location);
+                if (probability <= 0.0f) { continue; }
+                allowedTypeChanges.Add(typeChange, probability);
+            }
+
+            //select a random type change
+            if (Rand.Range(0.0f, 1.0f) < allowedTypeChanges.Sum(change => change.Value))
+            {
+                var selectedTypeChange =
+                    ToolBox.SelectWeightedRandom(
+                        allowedTypeChanges.Keys.ToList(),
+                        allowedTypeChanges.Values.ToList(),
+                        Rand.RandSync.Unsynced);
+                if (selectedTypeChange != null)
+                {
+                    if (selectedTypeChange.RequiredDurationRange.X > 0)
+                    {
+                        location.PendingLocationTypeChange = new Pair<LocationTypeChange, int>(
+                            selectedTypeChange,
+                            Rand.Range(selectedTypeChange.RequiredDurationRange.X, selectedTypeChange.RequiredDurationRange.Y));
+                    }
+                    else
+                    {
+                        ChangeLocationType(location, selectedTypeChange);
+                    }
+                    return;
+                }
+            }
+
+            foreach (LocationTypeChange typeChange in location.Type.CanChangeTo)
+            {
+                if (typeChange.AnyWithinDistance(
+                    location,
+                    typeChange.RequiredProximityForProbabilityIncrease,
+                    (otherLocation) => { return typeChange.RequiredLocations.Contains(otherLocation.Type.Identifier); }))
+                {
+                    if (!location.ProximityTimer.ContainsKey(typeChange)) { location.ProximityTimer[typeChange] = 0; }
+                    location.ProximityTimer[typeChange] += 1;
+                }
+                else
+                {
+                    location.ProximityTimer.Remove(typeChange);
+                }
+            }
+
         }
 
         public int DistanceToClosestLocationWithOutpost(Location startingLocation, out Location endingLocation)
@@ -811,7 +839,18 @@ namespace Barotrauma
             return distance;
         }
 
-        partial void ChangeLocationType(Location location, string prevName, LocationTypeChange change);
+        private void ChangeLocationType(Location location, LocationTypeChange change)
+        {
+            string prevName = location.Name;
+            location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase)));
+            ChangeLocationTypeProjSpecific(location, prevName, change);
+            location.ProximityTimer.Remove(change);
+            location.TimeSinceLastTypeChange = 0;
+            location.PendingLocationTypeChange = null;
+        }
+
+        partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change);
+
         partial void ClearAnimQueue();
 
         /// <summary>
@@ -847,8 +886,19 @@ namespace Barotrauma
                 {
                     case "location":
                         Location location = Locations[subElement.GetAttributeInt("i", 0)];
-
-                        location.TypeChangeTimer = subElement.GetAttributeInt("changetimer", 0);
+                        location.ProximityTimer.Clear();
+                        for (int i = 0; i < location.Type.CanChangeTo.Count; i++)
+                        {
+                            location.ProximityTimer.Add(location.Type.CanChangeTo[i], subElement.GetAttributeInt("changetimer" + i, 0));
+                        }
+                        int locationTypeChangeIndex = subElement.GetAttributeInt("pendinglocationtypechange", -1);
+                        if (locationTypeChangeIndex > 0 && locationTypeChangeIndex < location.Type.CanChangeTo.Count - 1)
+                        {
+                            location.PendingLocationTypeChange = new Pair<LocationTypeChange, int>(
+                                location.Type.CanChangeTo[locationTypeChangeIndex],
+                                subElement.GetAttributeInt("pendinglocationtypechangetimer", 0));
+                        }
+                        location.TimeSinceLastTypeChange = subElement.GetAttributeInt("timesincelasttypechange", 0);
                         location.Discovered = subElement.GetAttributeBool("discovered", false);
                         if (location.Discovered)
                         {
@@ -861,7 +911,6 @@ namespace Barotrauma
                             }
                         }
 
-
                         string locationType = subElement.GetAttributeString("type", "");
                         string prevLocationName = location.Name;
                         LocationType prevLocationType = location.Type;
@@ -872,10 +921,14 @@ namespace Barotrauma
                             var change = prevLocationType.CanChangeTo.Find(c => c.ChangeToType.Equals(location.Type.Identifier, StringComparison.OrdinalIgnoreCase));
                             if (change != null)
                             {
-                                ChangeLocationType(location, prevLocationName, change);
+                                ChangeLocationTypeProjSpecific(location, prevLocationName, change);
+                                location.TimeSinceLastTypeChange = 0;
                             }
                         }
+
+                        location.LoadStore(subElement);
                         location.LoadMissions(subElement);
+
                         break;
                     case "connection":
                         int connectionIndex = subElement.GetAttributeInt("i", 0);

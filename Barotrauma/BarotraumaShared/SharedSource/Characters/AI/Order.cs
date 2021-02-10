@@ -59,6 +59,10 @@ namespace Barotrauma
         public Order Prefab { get; private set; }
 
         public readonly string Name;
+        /// <summary>
+        /// Name that can be used with the contextual version of the order
+        /// </summary>
+        public readonly string ContextualName;
 
         public readonly Sprite SymbolSprite;
 
@@ -97,7 +101,6 @@ namespace Barotrauma
         public bool TargetAllCharacters { get; }
         public bool IsReport => TargetAllCharacters && !MustSetTarget;
 
-
         public readonly float FadeOutTime;
 
         public Entity TargetEntity;
@@ -119,9 +122,9 @@ namespace Barotrauma
         private readonly Dictionary<string, Sprite> minimapIcons;
         public Dictionary<string, Sprite> MinimapIcons => IsPrefab ? minimapIcons : Prefab.minimapIcons;
 
-        public readonly float Weight;
         public readonly bool MustSetTarget;
         public readonly string AppropriateSkill;
+        public readonly bool Hidden;
 
         public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
@@ -158,6 +161,11 @@ namespace Barotrauma
         public OrderTargetType TargetType { get; }
         public int? WallSectionIndex { get; }
         public bool IsIgnoreOrder { get; }
+
+        /// <summary>
+        /// Should the order icon be drawn when the order target is inside a container
+        /// </summary>
+        public bool DrawIconWhenContained { get; }
 
         public static void Init()
         {
@@ -239,7 +247,8 @@ namespace Barotrauma
         private Order(XElement orderElement)
         {
             Identifier = orderElement.GetAttributeString("identifier", "");
-            Name = TextManager.Get("OrderName." + Identifier, true) ?? "Name not found";
+            Name = TextManager.Get("OrderName." + Identifier, returnNull: true) ?? "Name not found";
+            ContextualName = TextManager.Get("OrderNameContextual." + Identifier, returnNull: true) ?? Name;
 
             string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
             if (!string.IsNullOrWhiteSpace(targetItemType))
@@ -267,6 +276,7 @@ namespace Barotrauma
             if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
             AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
+            Hidden = orderElement.GetAttributeBool("hidden", false);
 
             var optionNames = TextManager.Get("OrderOptions." + Identifier, true)?.Split(',', '，') ??
                 orderElement.GetAttributeStringArray("optionnames", new string[0]);
@@ -315,6 +325,7 @@ namespace Barotrauma
             IsPrefab = true;
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
             IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
+            DrawIconWhenContained = orderElement.GetAttributeBool("displayiconwhencontained", false);
         }
 
         /// <summary>
@@ -324,23 +335,26 @@ namespace Barotrauma
         {
             Prefab = prefab.Prefab ?? prefab;
 
-            Name                = prefab.Name;
-            Identifier          = prefab.Identifier;
-            ItemComponentType   = prefab.ItemComponentType;
-            CanTypeBeSubclass   = prefab.CanTypeBeSubclass;
-            TargetItems         = prefab.TargetItems;
-            Options             = prefab.Options;
-            SymbolSprite        = prefab.SymbolSprite;
-            Color               = prefab.Color;
-            UseController       = prefab.UseController;
-            TargetAllCharacters = prefab.TargetAllCharacters;
-            AppropriateJobs     = prefab.AppropriateJobs;
-            FadeOutTime         = prefab.FadeOutTime;
-            MustSetTarget       = prefab.MustSetTarget;
-            AppropriateSkill    = prefab.AppropriateSkill;
-            Category            = prefab.Category;
-            MustManuallyAssign  = prefab.MustManuallyAssign;
-            IsIgnoreOrder       = prefab.IsIgnoreOrder;
+            Name                  = prefab.Name;
+            ContextualName        = prefab.ContextualName;
+            Identifier            = prefab.Identifier;
+            ItemComponentType     = prefab.ItemComponentType;
+            CanTypeBeSubclass     = prefab.CanTypeBeSubclass;
+            TargetItems           = prefab.TargetItems;
+            Options               = prefab.Options;
+            SymbolSprite          = prefab.SymbolSprite;
+            Color                 = prefab.Color;
+            UseController         = prefab.UseController;
+            TargetAllCharacters   = prefab.TargetAllCharacters;
+            AppropriateJobs       = prefab.AppropriateJobs;
+            FadeOutTime           = prefab.FadeOutTime;
+            MustSetTarget         = prefab.MustSetTarget;
+            AppropriateSkill      = prefab.AppropriateSkill;
+            Category              = prefab.Category;
+            MustManuallyAssign    = prefab.MustManuallyAssign;
+            IsIgnoreOrder         = prefab.IsIgnoreOrder;
+            DrawIconWhenContained = prefab.DrawIconWhenContained;
+            Hidden                = prefab.Hidden;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;
@@ -351,9 +365,7 @@ namespace Barotrauma
                     ConnectedController = targetItem.Item?.FindController();
                     if (ConnectedController == null)
                     {
-#if DEBUG
-                        throw new Exception("Tried to use controller, but couldn't find one");
-#endif
+                        DebugConsole.AddWarning("AI: Tried to use a controller for operating an item, but couldn't find any.");
                         UseController = false;
                     }
                 }
@@ -433,7 +445,8 @@ namespace Barotrauma
             return firstMatchingComponent != null;
         }
 
-        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, Character.TeamType? requiredTeam = null)
+        /// <param name="interactableFor">Only returns items which are interactable for this character</param>
+        public List<Item> GetMatchingItems(Submarine submarine, bool mustBelongToPlayerSub, CharacterTeamType? requiredTeam = null, Character interactableFor = null)
         {
             List<Item> matchingItems = new List<Item>();
             if (submarine == null) { return matchingItems; }
@@ -456,16 +469,23 @@ namespace Barotrauma
                 {
                     matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType) && !i.TryFindController(out _));
                 }
+                if (interactableFor != null)
+                {
+                    matchingItems.RemoveAll(it => !it.IsInteractable(interactableFor) ||
+                        (UseController && it.FindController() is Controller c && !c.Item.IsInteractable(interactableFor)));
+                }
             }
             return matchingItems;
         }
 
-        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub)
+
+        /// <param name="interactableFor">Only returns items which are interactable for this character</param>
+        public List<Item> GetMatchingItems(bool mustBelongToPlayerSub, Character interactableFor = null)
         {
-            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == Character.TeamType.Team2 && Submarine.MainSubs.Length > 1 ?
+            Submarine submarine = Character.Controlled != null && Character.Controlled.TeamID == CharacterTeamType.Team2 && Submarine.MainSubs.Length > 1 ?
                 Submarine.MainSubs[1] :
                 Submarine.MainSub;
-            return GetMatchingItems(submarine, mustBelongToPlayerSub);
+            return GetMatchingItems(submarine, mustBelongToPlayerSub, interactableFor: interactableFor);
         }
 
         public string GetOptionName(string id)

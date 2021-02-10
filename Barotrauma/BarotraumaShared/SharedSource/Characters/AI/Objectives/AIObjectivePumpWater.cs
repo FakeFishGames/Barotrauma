@@ -28,7 +28,7 @@ namespace Barotrauma
         {
             if (pump == null) { return false; }
             if (pump.Item.IgnoreByAI) { return false; }
-            if (pump.Item.NonInteractable) { return false; }
+            if (!pump.Item.IsInteractable(character)) { return false; }
             if (pump.Item.HasTag("ballast")) { return false; }
             if (pump.Item.Submarine == null) { return false; }
             if (pump.Item.CurrentHull == null) { return false; }

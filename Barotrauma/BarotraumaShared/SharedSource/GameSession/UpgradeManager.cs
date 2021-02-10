@@ -531,7 +531,7 @@ namespace Barotrauma
                 List<int> levels = new List<int>();
                 foreach (XElement subElement in elements)
                 {
-                    if (!category.CanBeApplied(subElement)) { continue; }
+                    if (!category.CanBeApplied(subElement, prefab)) { continue; }
 
                     foreach (XElement component in subElement.Elements())
                     {

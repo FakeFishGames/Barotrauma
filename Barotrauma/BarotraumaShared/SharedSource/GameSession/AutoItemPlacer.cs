@@ -196,11 +196,12 @@ namespace Barotrauma
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1, Rand.RandSync.Server);
             for (int i = 0; i < amount; i++)
             {
-                if (validContainer.Key.Inventory.IsFull())
+                if (validContainer.Key.Inventory.IsFull(takeStacksIntoAccount: true))
                 {
                     containers.Remove(validContainer.Key);
                     break;
                 }
+                if (!validContainer.Key.Inventory.CanBePut(itemPrefab)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine)
                 {
                     SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,

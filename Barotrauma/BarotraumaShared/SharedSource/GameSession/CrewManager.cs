@@ -48,20 +48,43 @@ namespace Barotrauma
                 return false;
             }
 
-            Pair<Order, float?> existingOrder =
-                ActiveOrders.Find(o => o.First.Prefab == order.Prefab && o.First.TargetEntity == order.TargetEntity &&
-                                       (o.First.TargetType != Order.OrderTargetType.WallSection || o.First.WallSectionIndex == order.WallSectionIndex));
-            
+            // Ignore orders work a bit differently since the "unignore" order counters the "ignore" order
+            var isUnignoreOrder = order.Identifier == "unignorethis";
+            var orderPrefab = !isUnignoreOrder ? order.Prefab : Order.GetPrefab("ignorethis");
+            Pair<Order, float?> existingOrder = ActiveOrders.Find(o =>
+                    o.First.Prefab == orderPrefab && MatchesTarget(o.First.TargetEntity, order.TargetEntity) &&
+                    (o.First.TargetType != Order.OrderTargetType.WallSection || o.First.WallSectionIndex == order.WallSectionIndex));
+
             if (existingOrder != null)
             {
-                existingOrder.Second = fadeOutTime;
-                return false;
+                if (!isUnignoreOrder)
+                {
+                    existingOrder.Second = fadeOutTime;
+                    return false;
+                }
+                else
+                {
+                    ActiveOrders.Remove(existingOrder);
+                    return true;
+                }
             }
-            else
+            else if (!isUnignoreOrder)
             {
                 ActiveOrders.Add(new Pair<Order, float?>(order, fadeOutTime));
                 return true;
             }
+
+            bool MatchesTarget(Entity existingTarget, Entity newTarget)
+            {
+                if (existingTarget == newTarget) { return true; }
+                if (existingTarget is Hull existingHullTarget && newTarget is Hull newHullTarget)
+                {
+                    return existingHullTarget.linkedTo.Contains(newHullTarget);
+                }
+                return false;
+            }
+
+            return false;
         }
 
         public void AddCharacterElements(XElement element)
@@ -124,12 +147,14 @@ namespace Barotrauma
             AddCharacterToCrewList(character);
             AddCurrentOrderIcon(character, character.CurrentOrder, character.CurrentOrderOption);
 #endif
-            var idleObjective = character.AIController?.ObjectiveManager?.GetObjective<AIObjectiveIdle>();
-            if (idleObjective != null)
+            if (character.AIController is HumanAIController humanAI)
             {
-                idleObjective.Behavior = character.Info.Job.Prefab.IdleBehavior;
-            }
-            
+                var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
+                if (idleObjective != null)
+                {
+                    idleObjective.Behavior = character.Info.Job.Prefab.IdleBehavior;
+                }
+            }            
         }
 
         public void AddCharacterInfo(CharacterInfo characterInfo)
@@ -177,7 +202,7 @@ namespace Barotrauma
             for (int i = 0; i < spawnWaypoints.Count; i++)
             {
                 var info = characterInfos[i];
-                info.TeamID = Character.TeamType.Team1;
+                info.TeamID = CharacterTeamType.Team1;
                 Character character = Character.Create(info, spawnWaypoints[i].WorldPosition, info.Name);
                 if (character.Info != null)
                 {
@@ -262,8 +287,8 @@ namespace Barotrauma
             {
                 foreach (Character npc in Character.CharacterList)
                 {
-                    if (npc.TeamID != Character.TeamType.FriendlyNPC || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
-                    if (npc.AIController?.ObjectiveManager != null && (npc.AIController.ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() || npc.AIController.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()))
+                    if (npc.TeamID != CharacterTeamType.FriendlyNPC || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
+                    if (npc.AIController is HumanAIController humanAI && (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() || humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()))
                     {
                         continue;
                     }

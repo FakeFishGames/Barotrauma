@@ -27,8 +27,14 @@ namespace Barotrauma
 
     class ContainedItemSprite
     {
+        public enum DecorativeSpriteBehaviorType
+        {
+            None, HideWhenVisible, HideWhenNotVisible
+        }
+
         public readonly Sprite Sprite;
         public readonly bool UseWhenAttached;
+        public readonly DecorativeSpriteBehaviorType DecorativeSpriteBehavior;
         public readonly string[] AllowedContainerIdentifiers;
         public readonly string[] AllowedContainerTags;
 
@@ -36,6 +42,7 @@ namespace Barotrauma
         {
             Sprite = new Sprite(element, path, lazyLoad: lazyLoad);
             UseWhenAttached = element.GetAttributeBool("usewhenattached", false);
+            Enum.TryParse(element.GetAttributeString("decorativespritebehavior", "None"), ignoreCase: true, out DecorativeSpriteBehavior);
             AllowedContainerIdentifiers = element.GetAttributeStringArray("allowedcontaineridentifiers", new string[0], convertToLowerInvariant: true);
             AllowedContainerTags = element.GetAttributeStringArray("allowedcontainertags", new string[0], convertToLowerInvariant: true);
         }

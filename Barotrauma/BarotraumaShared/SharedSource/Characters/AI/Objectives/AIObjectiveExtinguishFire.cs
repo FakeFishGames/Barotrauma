@@ -111,9 +111,10 @@ namespace Barotrauma
                     float xDist = Math.Abs(character.WorldPosition.X - fs.WorldPosition.X) - fs.DamageRange;
                     float yDist = Math.Abs(character.WorldPosition.Y - fs.WorldPosition.Y);
                     bool inRange = xDist + yDist < extinguisher.Range;
-                    bool canSee = HumanAIController.VisibleHulls.Contains(fs.Hull) || character.CanSeeTarget(fs);
-                    bool move = !inRange || !canSee;
-                    if ((inRange && canSee) || useExtinquisherTimer > 0)
+                    // Use the hull position, because the fire x pos is sometimes inside a wall -> the bot can't ever see it and continues running towards the wall.
+                    ISpatialEntity lookTarget = character.CurrentHull == targetHull || character.CurrentHull.linkedTo.Contains(targetHull) ? targetHull : fs as ISpatialEntity;
+                    bool move = !inRange || !character.CanSeeTarget(lookTarget);
+                    if ((inRange && character.CanSeeTarget(lookTarget)) || useExtinquisherTimer > 0)
                     {
                         useExtinquisherTimer += deltaTime;
                         if (useExtinquisherTimer > 2.0f)
@@ -148,7 +149,7 @@ namespace Barotrauma
                                 onAbandon: () =>  Abandon = true, 
                                 onCompleted: () => RemoveSubObjective(ref gotoObjective)))
                         {
-                            gotoObjective.requiredCondition = () => HumanAIController.VisibleHulls.Contains(fs.Hull);
+                            gotoObjective.requiredCondition = () => targetHull == null || character.CanSeeTarget(targetHull);
                         }
                     }
                     else

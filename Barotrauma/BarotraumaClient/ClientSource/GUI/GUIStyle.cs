@@ -70,6 +70,7 @@ namespace Barotrauma
         public Color ColorInventoryHalf { get; private set; } = Color.Orange;
         public Color ColorInventoryFull { get; private set; } = Color.LightGreen;
         public Color ColorInventoryBackground { get; private set; } = Color.Gray;
+        public Color ColorInventoryEmptyOverlay { get; private set; } = Color.Red;
 
         public Color TextColor { get; private set; } = Color.White * 0.8f;
         public Color TextColorBright { get; private set; } = Color.White * 0.9f;
@@ -149,6 +150,9 @@ namespace Barotrauma
                         break;
                     case "colorinventorybackground":
                         ColorInventoryBackground = subElement.GetAttributeColor("color", ColorInventoryBackground);
+                        break;
+                    case "colorinventoryemptyoverlay":
+                        ColorInventoryEmptyOverlay = subElement.GetAttributeColor("color", ColorInventoryEmptyOverlay);
                         break;
                     case "textcolordark":
                         TextColorDark = subElement.GetAttributeColor("color", TextColorDark);
@@ -344,7 +348,7 @@ namespace Barotrauma
                 if (GameMain.Config.Language.Equals(subElement.GetAttributeString("language", ""), StringComparison.OrdinalIgnoreCase))
                 {
                     uint overrideFontSize = GetFontSize(subElement, 0);
-                    if (overrideFontSize > 0) { return overrideFontSize; }
+                    if (overrideFontSize > 0) { return (uint)Math.Round(overrideFontSize * GameSettings.TextScale); }
                 }
             }
 
@@ -354,10 +358,10 @@ namespace Barotrauma
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
                 if (GameMain.GraphicsWidth <= maxResolution.X && GameMain.GraphicsHeight <= maxResolution.Y)
                 {
-                    return (uint)subElement.GetAttributeInt("size", 14);
+                    return (uint)Math.Round(subElement.GetAttributeInt("size", 14) * GameSettings.TextScale);
                 }
             }
-            return defaultSize;
+            return (uint)Math.Round(defaultSize * GameSettings.TextScale);
         }
 
         private string GetFontFilePath(XElement element)

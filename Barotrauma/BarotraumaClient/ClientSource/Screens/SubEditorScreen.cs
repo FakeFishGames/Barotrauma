@@ -129,6 +129,10 @@ namespace Barotrauma
 
         public static List<WarningType> SuppressedWarnings = new List<WarningType>();
 
+        public static readonly EditorImageManager ImageManager = new EditorImageManager();
+
+        public static bool ShouldDrawGrid = false;
+
         //a Character used for picking up and manipulating items
         private Character dummyCharacter;
         
@@ -173,7 +177,9 @@ namespace Barotrauma
         private Mode mode;
 
         private Color backgroundColor = GameSettings.SubEditorBackgroundColor;
-        
+
+        private Vector2 MeasurePositionStart = Vector2.Zero;
+
         // Prevent the mode from changing
         private bool lockMode;
 
@@ -230,7 +236,10 @@ namespace Barotrauma
 
         public SubEditorScreen()
         {
-            cam = new Camera();
+            cam = new Camera
+            {
+                MaxZoom = 10f
+            };
             WayPoint.ShowWayPoints = false;
             WayPoint.ShowSpawnPoints = false;
             Hull.ShowHulls = false;
@@ -535,7 +544,6 @@ namespace Barotrauma
                                 lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
                                     Color.Transparent :
                                     lightComponent.LightColor;
-                                lightComponent.Light.Rotation = (-lightComponent.Rotation - MathHelper.ToRadians(lightComponent.Item.Rotation));
                                 lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
                             }
                         }
@@ -560,6 +568,12 @@ namespace Barotrauma
                 UserData = "item",
                 Selected = Item.ShowItems,
                 OnSelected = (GUITickBox obj) => { Item.ShowItems = obj.Selected; return true; }
+            };
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedShowEntitiesPanel.RectTransform), TextManager.Get("ShowWires"))
+            {
+                UserData = "wire",
+                Selected = Item.ShowWires,
+                OnSelected = (GUITickBox obj) => { Item.ShowWires = obj.Selected; return true; }
             };
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedShowEntitiesPanel.RectTransform), TextManager.Get("ShowWaypoints"))
             {
@@ -1045,6 +1059,10 @@ namespace Barotrauma
             if (backedUpSubInfo != null)
             {
                 Submarine.MainSub = new Submarine(backedUpSubInfo);
+                if (previewImage != null && backedUpSubInfo.PreviewImage?.Texture != null && !backedUpSubInfo.PreviewImage.Texture.IsDisposed)
+                {
+                    previewImage.Sprite = backedUpSubInfo.PreviewImage;
+                }
                 backedUpSubInfo = null;
             }
             else if (Submarine.MainSub == null)
@@ -1059,10 +1077,12 @@ namespace Barotrauma
             GameMain.SoundManager.SetCategoryGainMultiplier("default", 0.0f);
             GameMain.SoundManager.SetCategoryGainMultiplier("waterambience", 0.0f);
 
+            string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
             linkedSubBox.ClearChildren();
             foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
             {
                 if (sub.Type != SubmarineType.Player) { continue; }
+                if (Path.GetDirectoryName(Path.GetFullPath(sub.FilePath)) == downloadFolder) { continue; }
                 linkedSubBox.AddItem(sub.Name, sub);
             }
 
@@ -1074,6 +1094,8 @@ namespace Barotrauma
             {
                 CoroutineManager.StartCoroutine(AutoSaveCoroutine(), "SubEditorAutoSave");
             }
+            
+            ImageManager.OnEditorSelected();
             
             GameAnalyticsManager.SetCustomDimension01("editor");
             if (!GameMain.Config.EditorDisclaimerShown)
@@ -1089,7 +1111,7 @@ namespace Barotrauma
         /// <returns></returns>
         private static IEnumerable<object> AutoSaveCoroutine()
         {
-            DateTime target = DateTime.Now.AddMinutes(5);
+            DateTime target = DateTime.Now.AddMinutes(GameSettings.AutoSaveIntervalSeconds);
             DateTime tempTarget = DateTime.Now;
 
             bool wasPaused = false;
@@ -1159,7 +1181,20 @@ namespace Barotrauma
                 dummyCharacter = null;
                 GameMain.World.ProcessChanges();
             }
+            
+            GUIMessageBox.MessageBoxes.ForEachMod(component =>
+            {
+                if (component is GUIMessageBox { Closed: false, UserData: "colorpicker" } msgBox)
+                {
+                    foreach (GUIColorPicker colorPicker in msgBox.GetAllChildren<GUIColorPicker>())
+                    {
+                        colorPicker.DisposeTextures();
+                    }
 
+                    msgBox.Close();
+                }
+            });
+            
             ClearFilter();
         }
 
@@ -1167,7 +1202,7 @@ namespace Barotrauma
         {
             if (dummyCharacter != null) RemoveDummyCharacter();
 
-            dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.RespawnManagerID, hasAi: false);
+            dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
             dummyCharacter.Info.Name = "Galldren";
 
             //make space for the entity menu
@@ -1485,7 +1520,7 @@ namespace Barotrauma
             if (Submarine.MainSub != null)
             {
                 Barotrauma.IO.Validation.DevException = true;
-                if (previewImage?.Sprite?.Texture != null && Submarine.MainSub.Info.Type != SubmarineType.OutpostModule)
+                if (previewImage?.Sprite?.Texture != null && !previewImage.Sprite.Texture.IsDisposed && Submarine.MainSub.Info.Type != SubmarineType.OutpostModule)
                 {
                     bool savePreviewImage = true;
                     using System.IO.MemoryStream imgStream = new System.IO.MemoryStream();
@@ -1513,10 +1548,12 @@ namespace Barotrauma
                 SubmarineInfo.RefreshSavedSub(savePath);
                 if (prevSavePath != null && prevSavePath != savePath) { SubmarineInfo.RefreshSavedSub(prevSavePath); }
 
+                string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
                 linkedSubBox.ClearChildren();
                 foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines) 
                 { 
                     if (sub.Type != SubmarineType.Player) { continue; }
+                    if (Path.GetDirectoryName(Path.GetFullPath(sub.FilePath)) == downloadFolder) { continue; }
                     linkedSubBox.AddItem(sub.Name, sub); 
                 }
                 subNameLabel.Text = ToolBox.LimitString(Submarine.MainSub.Info.Name, subNameLabel.Font, subNameLabel.Rect.Width);
@@ -1719,7 +1756,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), locationTypeGroup.RectTransform), TextManager.Get("outpostmoduleallowedlocationtypes"), textAlignment: Alignment.CenterLeft);
             HashSet<string> availableLocationTypes = new HashSet<string> { "any" };
-            foreach (LocationType locationType in LocationType.List) { availableLocationTypes.Add(locationType.Identifier); }
+            foreach (LocationType locationType in LocationType.List) { availableLocationTypes.Add(locationType.Identifier.ToLowerInvariant()); }
 
             var locationTypeDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), locationTypeGroup.RectTransform),
                 text: string.Join(", ", Submarine.MainSub?.Info?.OutpostModuleInfo?.AllowedLocationTypes.Select(lt => TextManager.Capitalize(lt)) ?? "any".ToEnumerable()), selectMultiple: true);
@@ -1814,7 +1851,7 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), commonnessGroup.RectTransform),
                 TextManager.Get("subeditor.outpostcommonness"), textAlignment: Alignment.CenterLeft, wrap: true);
-            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), commonnessGroup.RectTransform), GUINumberInput.NumberType.Int)
+            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), commonnessGroup.RectTransform), GUINumberInput.NumberType.Float)
             {
                 FloatValue = Submarine.MainSub?.Info?.OutpostModuleInfo?.Commonness ?? 10,
                 MinValueFloat = 0,
@@ -2349,7 +2386,8 @@ namespace Barotrauma
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
             searchBox.OnTextChanged += (textBox, text) => { FilterSubs(subList, text); return true; };
 
-            List<SubmarineInfo> sortedSubs = new List<SubmarineInfo>(SubmarineInfo.SavedSubmarines);
+            string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
+            List<SubmarineInfo> sortedSubs = new List<SubmarineInfo>(SubmarineInfo.SavedSubmarines.Where(s => Path.GetDirectoryName(Path.GetFullPath(s.FilePath)) != downloadFolder));
             sortedSubs.Sort((s1, s2) => { return s1.Type.CompareTo(s2.Type) * 100 + s1.Name.CompareTo(s2.Name); });
 
             SubmarineInfo prevSub = null;
@@ -2759,11 +2797,7 @@ namespace Barotrauma
         {
             if (dummyCharacter == null || dummyCharacter.Removed) { return; }
 
-            foreach (Item item in dummyCharacter.Inventory.Items)
-            {
-                item?.Remove();
-            }
-
+            dummyCharacter.Inventory.AllItems.ForEachMod(it => it.Remove());
             dummyCharacter.Remove();
             dummyCharacter = null;            
         }
@@ -2806,12 +2840,29 @@ namespace Barotrauma
                 {
                     UserData = "transparency"
                 };
+                new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
+                    TextManager.Get("SubEditor.ToggleGrid"), font: GUI.SmallFont)
+                {
+                    UserData = "togglegrid"
+                };
 
                 new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
                     TextManager.Get("editor.selectsame"), font: GUI.SmallFont)
                 {
                     UserData = "selectsame",
                     Enabled = targets.Count > 0
+                };
+
+                new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
+                    TextManager.Get("SubEditor.AddImage"), font: GUI.SmallFont)
+                {
+                    UserData = "addimage"
+                };
+
+                new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
+                    TextManager.Get("SubEditor.ToggleImageEditing"), font: GUI.SmallFont)
+                {
+                    UserData = "editimages"
                 };
             }
             else
@@ -2882,11 +2933,21 @@ namespace Barotrauma
                     case "bgcolor":
                         CreateBackgroundColorPicker();
                         break;
+                    case "togglegrid":
+                        ShouldDrawGrid = !ShouldDrawGrid;
+                        break;
+                    case "addimage":
+                        ImageManager.CreateImageWizard(PlayerInput.MousePosition);
+                        break;
+                    case "editimages":
+                        ImageManager.EditorMode = !ImageManager.EditorMode;
+                        if (!ImageManager.EditorMode) { GameMain.Config.SaveNewPlayerConfig(); }
+                        break;
                     case "transparency":
                         TransparentWiringMode = !TransparentWiringMode;
                         break;
                     case "selectsame":
-                        IEnumerable<MapEntity> matching = MapEntity.mapEntityList.Where(e => e.prefab != null && targets.Any(t => t.prefab.Identifier == e.prefab.Identifier) && !MapEntity.SelectedList.Contains(e));
+                        IEnumerable<MapEntity> matching = MapEntity.mapEntityList.Where(e => e.prefab != null && targets.Any(t => t.prefab?.Identifier == e.prefab.Identifier) && !MapEntity.SelectedList.Contains(e));
                         MapEntity.SelectedList.AddRange(matching);
                         break;
                     case "copy":
@@ -2909,6 +2970,214 @@ namespace Barotrauma
                 contextMenu = null;
                 return true;
             };
+        }
+
+        public static GUIMessageBox CreatePropertyColorPicker(Color originalColor, SerializableProperty property, ISerializableEntity entity)
+        {
+            bool setValues = true;
+            object sliderMutex     = new object(),
+                   sliderTextMutex = new object(),
+                   pickerMutex     = new object(),
+                   hexMutex        = new object();
+
+            Vector2 relativeSize = new Vector2(GUI.IsFourByThree() ? 0.4f : 0.3f, 0.3f);
+
+            GUIMessageBox msgBox = new GUIMessageBox(string.Empty, string.Empty, Array.Empty<string>(), relativeSize, type: GUIMessageBox.Type.Vote)
+            {
+                UserData = "colorpicker",
+                Draggable = true
+            };
+
+            GUILayoutGroup contentLayout = new GUILayoutGroup(new RectTransform(Vector2.One, msgBox.Content.RectTransform));
+            GUITextBlock headerText = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), contentLayout.RectTransform), property.Name, font: GUI.SubHeadingFont, textAlignment: Alignment.TopCenter)
+            {
+                AutoScaleVertical = true
+            };
+
+            GUILayoutGroup colorLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.7f), contentLayout.RectTransform), isHorizontal: true);
+
+            GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), contentLayout.RectTransform), childAnchor: Anchor.BottomLeft, isHorizontal: true)
+            {
+                RelativeSpacing = 0.1f,
+                Stretch = true
+            };
+
+            GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), buttonLayout.RectTransform), TextManager.Get("OK"), textAlignment: Alignment.Center);
+            GUIButton cancelButton = new GUIButton(new RectTransform(new Vector2(0.5f, 1f), buttonLayout.RectTransform), TextManager.Get("Cancel"), textAlignment: Alignment.Center);
+
+            contentLayout.Recalculate();
+            colorLayout.Recalculate();
+
+            GUIColorPicker colorPicker = new GUIColorPicker(new RectTransform(new Point(colorLayout.Rect.Height), colorLayout.RectTransform));
+            var (h, s, v) = ToolBox.RGBToHSV(originalColor);
+            colorPicker.SelectedHue = float.IsNaN(h) ? 0f : h;
+            colorPicker.SelectedSaturation = s;
+            colorPicker.SelectedValue = v;
+
+            colorLayout.Recalculate();
+
+            GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - colorPicker.RectTransform.RelativeSize.X, 1f), colorLayout.RectTransform), childAnchor: Anchor.TopRight);
+
+            float currentHue = colorPicker.SelectedHue / 360f;
+            GUILayoutGroup hueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), hueSliderLayout.RectTransform), text: "H:", font: GUI.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Hue" };
+            GUIScrollBar hueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), hueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = currentHue };
+            GUINumberInput hueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), hueSliderLayout.RectTransform), inputType: GUINumberInput.NumberType.Float) { FloatValue = currentHue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+
+            GUILayoutGroup satSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), satSliderLayout.RectTransform), text: "S:", font: GUI.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Saturation"};
+            GUIScrollBar satScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), satSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedSaturation };
+            GUINumberInput satTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), satSliderLayout.RectTransform), inputType: GUINumberInput.NumberType.Float) { FloatValue = colorPicker.SelectedSaturation, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+
+            GUILayoutGroup valueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), valueSliderLayout.RectTransform), text: "V:", font: GUI.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Value"};
+            GUIScrollBar valueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), valueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedValue };
+            GUINumberInput valueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), valueSliderLayout.RectTransform), inputType: GUINumberInput.NumberType.Float) { FloatValue = colorPicker.SelectedValue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+
+            GUILayoutGroup colorInfoLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), sliderLayout.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true) { RelativeSpacing = 0.15f };
+
+            new GUICustomComponent(new RectTransform(new Vector2(0.4f, 0.8f), colorInfoLayout.RectTransform), (batch, component) =>
+            {
+                Rectangle rect = component.Rect;
+                Point areaSize = new Point(rect.Width, rect.Height / 2);
+                Rectangle newColorRect = new Rectangle(rect.Location, areaSize);
+                Rectangle oldColorRect = new Rectangle(new Point(newColorRect.Left, newColorRect.Bottom), areaSize);
+            
+                GUI.DrawRectangle(batch, newColorRect, ToolBox.HSVToRGB(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue), isFilled: true);
+                GUI.DrawRectangle(batch, oldColorRect, originalColor, isFilled: true);
+                GUI.DrawRectangle(batch, rect, Color.Black, isFilled: false);
+            });
+
+            GUITextBox hexValueBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1f), colorInfoLayout.RectTransform), text: ColorToHex(originalColor), createPenIcon: false) { OverflowClip = true };
+
+            hueScrollBar.OnMoved = (bar, scroll) => { SetColor(sliderMutex); return true; };
+            hueTextBox.OnValueChanged = input => { SetColor(sliderTextMutex); };
+            
+            satScrollBar.OnMoved = (bar, scroll) => { SetColor(sliderMutex); return true; };
+            satTextBox.OnValueChanged = input => { SetColor(sliderTextMutex); };
+            
+            valueScrollBar.OnMoved = (bar, scroll) => { SetColor(sliderMutex); return true; };
+            valueTextBox.OnValueChanged = input => { SetColor(sliderTextMutex); };
+
+            colorPicker.OnColorSelected = (component, color) => { SetColor(pickerMutex); return true; };
+
+            hexValueBox.OnEnterPressed = (box, text) => { SetColor(hexMutex); return true; };
+            hexValueBox.OnDeselected += (sender, key) => { SetColor(hexMutex); };
+
+            closeButton.OnClicked = (button, o) =>
+            {
+                colorPicker.DisposeTextures();
+                msgBox.Close();
+
+                if (entity is MapEntity { Removed: true } me) { return true; }
+                Color newColor = SetColor(null);
+                StoreCommand(new PropertyCommand(entity, property.Name, newColor, originalColor));
+
+                if (MapEntity.EditingHUD != null && (MapEntity.EditingHUD.UserData == entity || (!(entity is ItemComponent ic) || MapEntity.EditingHUD.UserData == ic.Item)))
+                {
+                    GUIListBox list = MapEntity.EditingHUD.GetChild<GUIListBox>();
+                    if (list != null)
+                    {
+                        IEnumerable<SerializableEntityEditor> editors = list.Content.FindChildren(comp => comp is SerializableEntityEditor).Cast<SerializableEntityEditor>();
+                        SerializableEntityEditor.LockEditing = true;
+                        foreach (SerializableEntityEditor editor in editors)
+                        {
+                            if (editor.UserData == entity && editor.Fields.TryGetValue(property.Name, out GUIComponent[] _))
+                            {
+                                editor.UpdateValue(property, newColor, flash: false);
+                            }
+                        }
+                        SerializableEntityEditor.LockEditing = false;
+                    }
+                }
+                return true;
+            };
+            
+            cancelButton.OnClicked = (button, o) =>
+            {
+                colorPicker.DisposeTextures();
+                msgBox.Close();
+                if (entity is MapEntity { Removed: true } me) { return true; }
+                property.SetValue(entity, originalColor);
+                return true;
+            };
+
+            return msgBox;
+
+            Color SetColor(object source)
+            {
+                if (setValues)
+                {
+                    setValues = false;
+
+                    if (source == sliderMutex)
+                    {
+                        Vector3 hsv = new Vector3(hueScrollBar.BarScroll * 360f, satScrollBar.BarScroll, valueScrollBar.BarScroll);
+                        SetSliderTexts(hsv);
+                        SetColorPicker(hsv);
+                        SetHex(hsv);
+                    } 
+                    else if (source == sliderTextMutex)
+                    {
+                        Vector3 hsv = new Vector3(hueTextBox.FloatValue * 360f, satTextBox.FloatValue, valueTextBox.FloatValue);
+                        SetSliders(hsv);
+                        SetColorPicker(hsv);
+                        SetHex(hsv);
+                    }
+                    else if (source == pickerMutex)
+                    {
+                        Vector3 hsv = new Vector3(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue);
+                        SetSliders(hsv);
+                        SetSliderTexts(hsv);
+                        SetHex(hsv);
+                    } 
+                    else if (source == hexMutex)
+                    {
+                        Vector3 hsv = ToolBox.RGBToHSV(XMLExtensions.ParseColor(hexValueBox.Text, errorMessages: false));
+                        if (float.IsNaN(hsv.X)) { hsv.X = 0f; }
+                        SetSliders(hsv);
+                        SetSliderTexts(hsv);
+                        SetColorPicker(hsv);
+                        SetHex(hsv);
+                    }
+
+                    setValues = true;
+                }
+
+                Color color = ToolBox.HSVToRGB(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue);
+                color.A = originalColor.A;
+                property.TrySetValue(entity, color);
+                return color;
+
+                void SetSliders(Vector3 hsv)
+                {
+                    hueScrollBar.BarScroll = hsv.X / 360f;
+                    satScrollBar.BarScroll = hsv.Y;
+                    valueScrollBar.BarScroll = hsv.Z;
+                }
+
+                void SetSliderTexts(Vector3 hsv)
+                {
+                    hueTextBox.FloatValue = hsv.X / 360f;
+                    satTextBox.FloatValue = hsv.Y;
+                    valueTextBox.FloatValue = hsv.Z;
+                }
+
+                void SetColorPicker(Vector3 hsv)
+                {
+                    colorPicker.SelectedHue = hsv.X;
+                    colorPicker.SelectedSaturation = hsv.Y;
+                    colorPicker.SelectedValue = hsv.Z;
+                }
+
+                void SetHex(Vector3 hsv)
+                {
+                    Color hexColor = ToolBox.HSVToRGB(hsv.X, hsv.Y, hsv.Z);
+                    hexValueBox!.Text = ColorToHex(hexColor);
+                }
+            }
+
+            static string ColorToHex(Color color) => $"#{(color.R << 16 | color.G << 8 | color.B):X6}";
         }
 
         /// <summary>
@@ -3005,7 +3274,7 @@ namespace Barotrauma
             if (dummyCharacter == null) return false;
 
             //if the same type of wire has already been selected, deselect it and return
-            Item existingWire = dummyCharacter.SelectedItems.FirstOrDefault(i => i != null && i.Prefab == userData as ItemPrefab);
+            Item existingWire = dummyCharacter.HeldItems.FirstOrDefault(i => i.Prefab == userData as ItemPrefab);
             if (existingWire != null)
             {
                 existingWire.Drop(null);
@@ -3018,7 +3287,7 @@ namespace Barotrauma
             int slotIndex = dummyCharacter.Inventory.FindLimbSlot(InvSlotType.LeftHand);
 
             //if there's some other type of wire in the inventory, remove it
-            existingWire = dummyCharacter.Inventory.Items[slotIndex];
+            existingWire = dummyCharacter.Inventory.GetItemAt(slotIndex);
             if (existingWire != null && existingWire.Prefab != userData as ItemPrefab)
             {
                 existingWire.Drop(null);
@@ -3749,6 +4018,8 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
+            ImageManager.Update((float) deltaTime);
+
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
             {
                 saveFrame = null;
@@ -3760,9 +4031,8 @@ namespace Barotrauma
 
             if (WiringMode && dummyCharacter != null)
             {
-                Wire equippedWire =
-                    Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
-                    Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>() ??
+                Wire equippedWire = 
+                    Character.Controlled?.HeldItems.FirstOrDefault(it => it.GetComponent<Wire>() != null)?.GetComponent<Wire>() ??
                     Wire.DraggingWire;
 
                 if (equippedWire == null)
@@ -3845,6 +4115,25 @@ namespace Barotrauma
                     if (PlayerInput.KeyHit(Keys.Y))
                     {
                         Redo(1);
+                    }
+                }
+            }
+
+            if (WiringMode && dummyCharacter != null)
+            {
+                if (wiringToolPanel.GetChild<GUIListBox>() is { } listBox)
+                {
+                    if (!dummyCharacter.HeldItems.Any(it => it.HasTag("wire")))
+                    {
+                        listBox.Deselect();
+                    }
+
+                    List<Keys> numberKeys = PlayerInput.NumberKeys;
+                    if (numberKeys.Find(PlayerInput.KeyHit) is { } key)
+                    {
+                        // treat 0 as the last key instead of first
+                        int index = key == Keys.D0 ? numberKeys.Count : numberKeys.IndexOf(key) - 1;
+                        listBox.Select(index, force: false, autoScroll: true, takeKeyBoardFocus: false);
                     }
                 }
             }
@@ -4012,7 +4301,7 @@ namespace Barotrauma
                 {
                     // Move all of our slots on top center of the entity list
                     // We use the slots to open item inventories and we want the position of them to be consisent
-                    dummyCharacter.Inventory.slots.ForEach(slot =>
+                    dummyCharacter.Inventory.visualSlots.ForEach(slot =>
                     {
                         slot.Rect.Y = EntityMenu.Rect.Top;
                         slot.Rect.X = EntityMenu.Rect.X + (EntityMenu.Rect.Width / 2) - (slot.Rect.Width /2);
@@ -4024,9 +4313,7 @@ namespace Barotrauma
                 {
                     if (WiringMode && PlayerInput.IsShiftDown())
                     {
-                        Wire equippedWire =
-                            Character.Controlled?.SelectedItems[0]?.GetComponent<Wire>() ??
-                            Character.Controlled?.SelectedItems[1]?.GetComponent<Wire>();
+                        Wire equippedWire = Character.Controlled?.HeldItems.FirstOrDefault(i => i.GetComponent<Wire>() != null)?.GetComponent<Wire>();
                         if (equippedWire != null && equippedWire.GetNodes().Count > 0)
                         {
                             Vector2 lastNode = equippedWire.GetNodes().Last();
@@ -4072,12 +4359,12 @@ namespace Barotrauma
 
             // Deposit item from our "infinite stack" into inventory slots
             var inv = dummyCharacter?.SelectedConstruction?.OwnInventory;
-            if (inv?.slots != null && !PlayerInput.IsCtrlDown())
+            if (inv?.visualSlots != null && !PlayerInput.IsCtrlDown())
             {
                 var dragginMouse = MouseDragStart != Vector2.Zero && Vector2.Distance(PlayerInput.MousePosition, MouseDragStart) >= GUI.Scale * 20;
                 
                 // So we don't accidentally drag inventory items while doing this
-                if (DraggedItemPrefab != null) { Inventory.draggingItem = null; }
+                if (DraggedItemPrefab != null) { Inventory.DraggingItems.Clear(); }
                 
                 switch (DraggedItemPrefab) 
                 {
@@ -4085,17 +4372,17 @@ namespace Barotrauma
                     case ItemPrefab itemPrefab when PlayerInput.PrimaryMouseButtonClicked() || dragginMouse: 
                     {
                         bool spawnedItem = false;
-                        for (var i = 0; i < inv.slots.Length; i++)
+                        for (var i = 0; i < inv.Capacity; i++)
                         {
-                            var slot = inv.slots[i];
-                            var itemContainer = inv?.Items[i]?.GetComponent<ItemContainer>();
+                            var slot = inv.visualSlots[i];
+                            var itemContainer = inv.GetItemAt(i)?.GetComponent<ItemContainer>();
                             
                             // check if the slot is empty or if we can place the item into a container, for example an oxygen tank into a diving suit
                             if (Inventory.IsMouseOnSlot(slot))
                             {
                                 var newItem = new Item(itemPrefab, Vector2.Zero, Submarine.MainSub);
                                 
-                                if (inv.Items[i] == null)
+                                if (inv.CanBePut(itemPrefab, i))
                                 {
                                     bool placedItem = inv.TryPutItem(newItem, i, false, true, dummyCharacter);
                                     spawnedItem |= placedItem;
@@ -4105,8 +4392,7 @@ namespace Barotrauma
                                         newItem.Remove();
                                     }
                                 }
-                                else if (itemContainer != null && itemContainer.CanBeContained(itemPrefab) && 
-                                        (itemContainer.Inventory?.Items.Any(item => item == null) ?? false))
+                                else if (itemContainer != null && itemContainer.Inventory.CanBePut(itemPrefab))
                                 {
                                     bool placedItem = itemContainer.Inventory.TryPutItem(newItem, dummyCharacter);
                                     spawnedItem |= placedItem;
@@ -4124,6 +4410,7 @@ namespace Barotrauma
                                 else
                                 {
                                     newItem.Remove();
+                                    slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
                                 }
 
                                 if (!newItem.Removed)
@@ -4144,11 +4431,12 @@ namespace Barotrauma
                     case ItemAssemblyPrefab assemblyPrefab when PlayerInput.PrimaryMouseButtonClicked():
                     {
                         bool spawnedItems = false;
-                        for (var i = 0; i < inv.slots.Length; i++)
+                        for (var i = 0; i < inv.visualSlots.Length; i++)
                         {
-                            var slot = inv.slots[i];
-                            var itemContainer = inv?.Items[i]?.GetComponent<ItemContainer>();
-                            if (inv.Items[i] == null && Inventory.IsMouseOnSlot(slot))
+                            var slot = inv.visualSlots[i];
+                            var item = inv?.GetItemAt(i);
+                            var itemContainer = item?.GetComponent<ItemContainer>();
+                            if (item == null && Inventory.IsMouseOnSlot(slot))
                             {
                                 // load the items
                                 var itemInstance = LoadItemAssemblyInventorySafe(assemblyPrefab);
@@ -4162,14 +4450,14 @@ namespace Barotrauma
                                     var newSpot = i + j - failedCount;
                                     
                                     // try to find a valid slot to put the items
-                                    while (inv.slots.Length > newSpot) 
+                                    while (inv.visualSlots.Length > newSpot) 
                                     {
-                                        if (inv.Items[newSpot] == null) { break; }
+                                        if (inv.GetItemAt(newSpot) == null) { break; }
                                         newSpot++;
                                     }
                                     
                                     // valid slot found
-                                    if (inv.slots.Length > newSpot)
+                                    if (inv.visualSlots.Length > newSpot)
                                     {
                                         var placedItem = inv.TryPutItem(newItem, newSpot, false, true, dummyCharacter);
                                         spawnedItems |= placedItem;
@@ -4239,6 +4527,19 @@ namespace Barotrauma
             {
                 MapEntity.UpdateSelecting(cam);
             }
+
+            if (!PlayerInput.PrimaryMouseButtonHeld())
+            {
+                MeasurePositionStart = Vector2.Zero;
+            }
+
+            if (PlayerInput.KeyDown(Keys.LeftAlt) || PlayerInput.KeyDown(Keys.RightAlt))
+            {
+                if (PlayerInput.PrimaryMouseButtonDown())
+                {
+                    MeasurePositionStart = cam.ScreenToWorld(PlayerInput.MousePosition);
+                }
+            }
             
             if (!WiringMode)
             {
@@ -4280,14 +4581,6 @@ namespace Barotrauma
 
             EntityMenu.RectTransform.ScreenSpaceOffset = Vector2.Lerp(new Vector2(0.0f, EntityMenu.Rect.Height - 10), Vector2.Zero, entityMenuOpenState).ToPoint();
 
-            if (WiringMode && dummyCharacter != null)
-            {
-                if (!dummyCharacter.SelectedItems.Any(it => it != null && it.HasTag("wire")))
-                {
-                    wiringToolPanel.GetChild<GUIListBox>().Deselect();
-                }
-            }
-
             if (PlayerInput.PrimaryMouseButtonClicked() && !GUI.IsMouseOn(entityFilterBox))
             {
                 entityFilterBox.Deselect();
@@ -4312,10 +4605,8 @@ namespace Barotrauma
             {
                 dummyCharacter.AnimController.FindHull(dummyCharacter.CursorWorldPosition, false);
 
-                foreach (Item item in dummyCharacter.Inventory.Items)
+                foreach (Item item in dummyCharacter.Inventory.AllItems)
                 {
-                    if (item == null) continue;
-
                     item.SetTransform(dummyCharacter.SimPosition, 0.0f);
                     item.UpdateTransform();
                     item.SetTransform(item.body.SimPosition, 0.0f);
@@ -4363,8 +4654,11 @@ namespace Barotrauma
                 sub.UpdateTransform();
             }
 
-            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
             graphics.Clear(backgroundColor);
+            ImageManager.Draw(spriteBatch, cam);
+
+            spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
+
             if (GameMain.DebugDraw)
             {
                 GUI.DrawLine(spriteBatch, new Vector2(Submarine.MainSub.HiddenSubPosition.X, -cam.WorldView.Y), new Vector2(Submarine.MainSub.HiddenSubPosition.X, -(cam.WorldView.Y - cam.WorldView.Height)), Color.White * 0.5f, 1.0f, (int)(2.0f / cam.Zoom));
@@ -4409,14 +4703,16 @@ namespace Barotrauma
             }
             if (dummyCharacter != null && WiringMode)
             {
-                for (int i = 0; i < dummyCharacter.SelectedItems.Length; i++)
+                foreach (Item heldItem in dummyCharacter.HeldItems)
                 {
-                    if (dummyCharacter.SelectedItems[i] == null) { continue; }
-                    if (i > 0 && dummyCharacter.SelectedItems[0] == dummyCharacter.SelectedItems[i]) { continue; }
-                    dummyCharacter.SelectedItems[i].Draw(spriteBatch, editing: false, back: true);
+                    heldItem.Draw(spriteBatch, editing: false, back: true);
                 }
             }
+
+            DrawGrid(spriteBatch);
             spriteBatch.End();
+
+            ImageManager.DrawEditing(spriteBatch, cam);
 
             if (GameMain.LightManager.LightingEnabled && lightingEnabled)
             {
@@ -4429,7 +4725,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);
 
-            if (Submarine.MainSub != null)
+            if (Submarine.MainSub != null && cam.Zoom < 5f)
             {
                 Vector2 position = Submarine.MainSub.SubBody != null ? Submarine.MainSub.WorldPosition : Submarine.MainSub.HiddenSubPosition;
 
@@ -4467,6 +4763,31 @@ namespace Barotrauma
             MapEntity.DrawEditor(spriteBatch, cam);
 
             GUI.Draw(Cam, spriteBatch);
+
+            if (MeasurePositionStart != Vector2.Zero)
+            {
+                Vector2 startPos = MeasurePositionStart;
+                Vector2 mouseWorldPos = cam.ScreenToWorld(PlayerInput.MousePosition);
+                if (PlayerInput.IsShiftDown())
+                {
+                    startPos = RoundToGrid(startPos);
+                    mouseWorldPos = RoundToGrid(mouseWorldPos);
+
+                    static Vector2 RoundToGrid(Vector2 position)
+                    {
+                        position.X = (float) Math.Round(position.X / Submarine.GridSize.X) * Submarine.GridSize.X;
+                        position.Y = (float) Math.Round(position.Y / Submarine.GridSize.Y) * Submarine.GridSize.Y;
+                        return position;
+                    }
+                }
+
+                GUI.DrawLine(spriteBatch, cam.WorldToScreen(startPos), cam.WorldToScreen(mouseWorldPos), GUI.Style.Green, width: 4);
+
+                decimal realWorldDistance = decimal.Round((decimal) (Vector2.Distance(startPos, mouseWorldPos) * Physics.DisplayToRealWorldRatio), 2);
+
+                Vector2 offset = new Vector2(GUI.IntScale(24));
+                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + offset, $"{realWorldDistance}m", GUI.Style.TextColor, font: GUI.SubHeadingFont, backgroundColor: Color.Black, backgroundPadding: 4);
+            }
                                               
             spriteBatch.End();
         }
@@ -4513,6 +4834,42 @@ namespace Barotrauma
             //for some reason setting the rendertarget changes the size of the viewport 
             //but it doesn't change back to default when setting it back to null
             GameMain.Instance.ResetViewPort();
+        }
+
+        private static readonly Color gridBaseColor = Color.White * 0.1f;
+
+        private void DrawGrid(SpriteBatch spriteBatch)
+        {
+            // don't render at high zoom levels because it would just turn the screen white
+            if (cam.Zoom < 0.5f || !ShouldDrawGrid) { return; }
+
+            var (gridX, gridY) = Submarine.GridSize;
+
+            int scale = Math.Max(1, GUI.IntScale(1));
+            float zoom = cam.Zoom / 2f; // Don't ask
+            float lineThickness = Math.Max(1, scale / zoom);
+
+            Color gridColor = gridBaseColor;
+            if (cam.Zoom < 1.0f)
+            {
+                // fade the grid when zooming out
+                gridColor *= Math.Max(0, (cam.Zoom - 0.5f) * 2f);
+            }
+
+            Rectangle camRect = cam.WorldView;
+
+            for (float x = snapX(camRect.X); x < snapX(camRect.X + camRect.Width) + gridX; x += gridX)
+            {
+                spriteBatch.DrawLine(new Vector2(x, -camRect.Y), new Vector2(x, -(camRect.Y - camRect.Height)), gridColor, thickness: lineThickness);
+            }
+
+            for (float y = snapY(camRect.Y); y >= snapY(camRect.Y - camRect.Height) - gridY; y -= Submarine.GridSize.Y)
+            {
+                spriteBatch.DrawLine(new Vector2(camRect.X, -y), new Vector2(camRect.Right, -y), gridColor, thickness: lineThickness);
+            }
+
+            float snapX(int x) => (float) Math.Floor(x / gridX) * gridX;
+            float snapY(int y) => (float) Math.Ceiling(y / gridY) * gridY;
         }
 
         public void SaveScreenShot(int width, int height, string filePath)

@@ -44,7 +44,8 @@ namespace Barotrauma.Networking
                     continue;
                 }
 
-                if (msg.LengthBytes + tempBuffer.LengthBytes + tempEventBuffer.LengthBytes > MaxEventBufferLength)
+                if (eventCount > 0 &&
+                    msg.LengthBytes + tempBuffer.LengthBytes + tempEventBuffer.LengthBytes > MaxEventBufferLength)
                 {
                     //no more room in this packet
                     break;

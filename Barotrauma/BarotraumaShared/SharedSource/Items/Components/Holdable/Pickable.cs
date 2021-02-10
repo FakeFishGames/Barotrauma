@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -91,7 +92,7 @@ namespace Barotrauma.Items.Components
         {
             if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots))
             {
-                if (!picker.HasSelectedItem(item) && item.body != null) item.body.Enabled = false;
+                if (!picker.HeldItems.Contains(item) && item.body != null) { item.body.Enabled = false; }
                 this.picker = picker;
 
                 for (int i = item.linkedTo.Count - 1; i >= 0; i--)

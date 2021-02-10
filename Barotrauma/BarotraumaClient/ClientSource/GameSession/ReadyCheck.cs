@@ -33,6 +33,8 @@ namespace Barotrauma
 
         public static DateTime lastReadyCheck = DateTime.MinValue;
 
+        public static bool IsReadyCheck(GUIComponent? msgBox) => msgBox?.UserData as string == PromptData || msgBox?.UserData as string == ResultData;
+
         private void CreateMessageBox(string author)
         {
             Vector2 relativeSize = new Vector2(GUI.IsFourByThree() ? 0.3f : 0.2f, 0.15f);
@@ -120,7 +122,10 @@ namespace Barotrauma
             int second = (int) Math.Ceiling(time);
             if (second < lastSecond)
             {
-                SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
+                if (msgBox != null && !msgBox.Closed)
+                {
+                    SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
+                }
                 lastSecond = second;
             }
         }

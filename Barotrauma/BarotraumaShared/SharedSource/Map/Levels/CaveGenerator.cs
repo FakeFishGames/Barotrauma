@@ -169,14 +169,16 @@ namespace Barotrauma
             sw2.Start();
 
             List<VoronoiCell> pathCells = new List<VoronoiCell>();
-            
+
+            if (targetCells.Count == 0) { return pathCells; }
+
             VoronoiCell currentCell = targetCells[0];
             currentCell.CellType = CellType.Path;
             pathCells.Add(currentCell);
 
             int currentTargetIndex = 0;
 
-            int iterationsLeft = cells.Count;
+            int iterationsLeft = cells.Count / 2;
 
             do
             {
@@ -189,10 +191,14 @@ namespace Barotrauma
                     if (adjacentCell == null) { continue; }
                     double dist = MathUtils.Distance(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y, targetCells[currentTargetIndex].Site.Coord.X, targetCells[currentTargetIndex].Site.Coord.Y);
                     dist += MathUtils.Distance(adjacentCell.Site.Coord.X, adjacentCell.Site.Coord.Y, currentCell.Site.Coord.X, currentCell.Site.Coord.Y) * 0.5f;
-                    //disfavor small edges to prevent generating a very small passage
-                    if (Vector2.Distance(currentCell.Edges[i].Point1, currentCell.Edges[i].Point2) < 200.0f)
+                      
+                    //disfavor short edges to prevent generating a very small passage
+                    if (Vector2.DistanceSquared(currentCell.Edges[i].Point1, currentCell.Edges[i].Point2) < 150.0f * 150.0f)
                     {
-                        dist += 1000000;
+                        //divide by the number of times the current cell has been used
+                        //  prevents the path from getting "stuck" (jumping back and forth between adjacent cells) 
+                        //  if there's no other way to the destination than going through a short edge
+                        dist *= 10.0f / Math.Max(pathCells.Count(c => c == currentCell), 1.0f);
                     }
                     if (dist < smallestDist)
                     {

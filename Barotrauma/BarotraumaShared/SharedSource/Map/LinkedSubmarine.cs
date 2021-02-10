@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.IO;
 
 namespace Barotrauma
 {
@@ -98,6 +99,8 @@ namespace Barotrauma
 
             LinkedSubmarine sl = CreateDummy(mainSub, doc.Root, position);
             sl.filePath = filePath;
+            sl.saveElement = doc.Root;
+            sl.saveElement.Name = "LinkedSubmarine";
 
             return sl;
         }
@@ -132,7 +135,11 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return CreateDummy(Submarine, filePath, Position);
+            XElement cloneElement = new XElement(saveElement);
+            LinkedSubmarine sl = CreateDummy(Submarine, cloneElement, Position);
+            sl.saveElement = cloneElement;
+            sl.filePath = filePath;
+            return sl;
         }
 
         private void GenerateWallVertices(XElement rootElement)
@@ -232,6 +239,7 @@ namespace Barotrauma
 
             IdRemap parentRemap = new IdRemap(Submarine.Info.SubmarineElement, Submarine.IdOffset);
             sub = Submarine.Load(info, false, parentRemap);
+            sub.Info.SubmarineClass = Submarine.Info.SubmarineClass;
 
             IdRemap childRemap = new IdRemap(saveElement, sub.IdOffset);
 
@@ -290,6 +298,7 @@ namespace Barotrauma
                 originalMyPortID = myPort.Item.ID;
 
                 myPort.Undock();
+                myPort.DockingDir = 0;
 
                 //something else is already docked to the port this sub should be docked to
                 //may happen if a shuttle is lost, another vehicle docked to where the shuttle used to be,
@@ -324,7 +333,7 @@ namespace Barotrauma
                     if (wall.Submarine != sub) { continue; }
                     for (int i = 0; i < wall.SectionCount; i++)
                     {
-                        wall.AddDamage(i, -wall.MaxHealth);
+                        wall.SetDamage(i, 0, createNetworkEvent: false);
                     }                    
                 }
                 foreach (Hull hull in Hull.hullList)
@@ -349,15 +358,15 @@ namespace Barotrauma
                 {
                     var doc = SubmarineInfo.OpenFile(filePath);
                     saveElement = doc.Root;
-                    saveElement.Name = "LinkedSubmarine";
                     saveElement.Add(new XAttribute("filepath", filePath));
                 }
                 else
                 {
                     saveElement = this.saveElement;
                 }
+                saveElement.Name = "LinkedSubmarine";
 
-                if (saveElement.Attribute("pos") != null) saveElement.Attribute("pos").Remove();
+                if (saveElement.Attribute("pos") != null) { saveElement.Attribute("pos").Remove(); }
                 saveElement.Add(new XAttribute("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition)));
 
                 var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);

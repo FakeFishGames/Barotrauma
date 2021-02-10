@@ -343,6 +343,14 @@ namespace Barotrauma
                 }
             }
 
+            if (variableValue == null)
+            {
+                variableValue = "null";
+#if DEBUG
+                throw new ArgumentException($"Variable value \"{variableTag}\" was null.");
+#endif
+            }
+
             if (formatCapitals && !GameMain.Config.Language.Contains("Chinese"))
             {
                 variableValue = HandleVariableCapitalization(text, variableTag, variableValue);

@@ -18,7 +18,7 @@ namespace Barotrauma.Items.Components
         protected Vector2[] handlePos;
         private readonly Vector2[] scaledHandlePos;
 
-        private InputType prevPickKey;
+        private readonly InputType prevPickKey;
         private string prevMsg;
         private Dictionary<RelatedItem.RelationType, List<RelatedItem>> prevRequiredItems;
 
@@ -28,6 +28,8 @@ namespace Barotrauma.Items.Components
         protected Vector2 aimPos;
 
         private float swingState;
+
+        private Character prevEquipper;
 
         private bool attachable, attached, attachedByDefault;
         private Voronoi2.VoronoiCell attachTargetCell;
@@ -301,11 +303,9 @@ namespace Barotrauma.Items.Components
                     {
                         item.SetTransform(picker.SimPosition, 0.0f);
                     }     
-                }
-           
+                }           
             }
 
-            picker.DeselectItem(item);
             picker.Inventory.RemoveItem(item);
             picker = null;
         }
@@ -340,34 +340,33 @@ namespace Barotrauma.Items.Components
             }
 
             bool alreadyEquipped = character.HasEquippedItem(item);
-            bool canSelect = picker.TrySelectItem(item);
-
-            if (canSelect || picker.HasEquippedItem(item))
+            if (picker.HasEquippedItem(item))
             {
-                if (!canSelect)
-                {
-                    character.DeselectItem(item);
-                }
-
                 item.body.Enabled = true;
                 item.body.PhysEnabled = false;
                 IsActive = true;
 
 #if SERVER
-                if (!alreadyEquipped) GameServer.Log(GameServer.CharacterLogName(character) + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (picker != prevEquipper) { GameServer.Log(GameServer.CharacterLogName(character) + " equipped " + item.Name, ServerLog.MessageType.ItemInteraction); }
 #endif
+                prevEquipper = picker;
+            }
+            else
+            {
+                prevEquipper = null;
             }
         }
 
         public override void Unequip(Character character)
         {
-            if (picker == null) { return; }
-
-            picker.DeselectItem(item);
 #if SERVER
-            GameServer.Log(GameServer.CharacterLogName(character) + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+            if (prevEquipper != null)
+            {
+                GameServer.Log(GameServer.CharacterLogName(character) + " unequipped " + item.Name, ServerLog.MessageType.ItemInteraction);
+            }
 #endif
-
+            prevEquipper = null;
+            if (picker == null) { return; }
             item.body.PhysEnabled = true;
             item.body.Enabled = false;
             IsActive = false;
@@ -488,13 +487,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItems;
             if (containedItems != null)
             {
                 foreach (Item contained in containedItems)
                 {
-                    if (contained == null) { continue; }
-                    if (contained.body == null) { continue; }
+                    if (contained?.body == null) { continue; }
                     contained.SetTransform(item.SimPosition, contained.body.Rotation);
                 }
             }
@@ -673,7 +671,7 @@ namespace Barotrauma.Items.Components
 
             item.Submarine = picker.Submarine;
             
-            if (picker.HasSelectedItem(item))
+            if (picker.HeldItems.Contains(item))
             {
                 scaledHandlePos[0] = handlePos[0] * item.Scale;
                 scaledHandlePos[1] = handlePos[1] * item.Scale;

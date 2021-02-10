@@ -90,6 +90,13 @@ namespace Barotrauma.Items.Components
         [Serialize(UseEnvironment.Both, false, description: "Can the item be selected in air, underwater or both.")]
         public UseEnvironment UsableIn { get; set; }
 
+        [Serialize(false, false, description: "Should the character using the item be drawn behind the item.")]
+        public bool DrawUserBehind
+        {
+            get;
+            set;
+        }
+
         public bool ControlCharacterPose
         {
             get { return limbPositions.Count > 0; }
@@ -236,12 +243,12 @@ namespace Barotrauma.Items.Components
                         case LimbType.RightHand:
                         case LimbType.RightForearm:
                         case LimbType.RightArm:
-                            if (user.SelectedItems[0] != null) { continue; }
+                            if (user.Inventory.GetItemInLimbSlot(InvSlotType.RightHand) != null) { continue; }
                             break;
                         case LimbType.LeftHand:
                         case LimbType.LeftForearm:
                         case LimbType.LeftArm:
-                            if ( user.SelectedItems[1] != null) { continue; }
+                            if (user.Inventory.GetItemInLimbSlot(InvSlotType.LeftHand) != null) { continue; }
                             break;
                     }
                 }
@@ -388,6 +395,12 @@ namespace Barotrauma.Items.Components
                 limb.PullJointEnabled = false;
             }
 
+            //disable flipping for 0.5 seconds, because flipping the character when it's in a weird pose (e.g. lying in bed) can mess up the ragdoll
+            if (character.AnimController is HumanoidAnimController humanoidAnim)
+            {
+                humanoidAnim.LockFlippingUntil = (float)Timing.TotalTime + 0.5f;
+            }
+
             if (character.SelectedConstruction == this.item) { character.SelectedConstruction = null; }
 
             character.AnimController.Anim = AnimController.Animation.None;
@@ -468,6 +481,12 @@ namespace Barotrauma.Items.Components
                         item.Rect.Center.Y - diff - item.Rect.Y);
                 limbPositions[i] = new LimbPos(limbPositions[i].LimbType, flippedPos, limbPositions[i].AllowUsingLimb);
             }
+        }
+
+        public override bool HasAccess(Character character)
+        {
+            if (!item.IsInteractable(character)) { return false; }
+            return base.HasAccess(character);
         }
 
         partial void HideHUDs(bool value);

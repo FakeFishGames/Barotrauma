@@ -35,10 +35,10 @@ namespace Barotrauma.Networking
 
         public bool SubmarineSwitchLoad = false;
 
-        private List<Client> connectedClients = new List<Client>();
+        private readonly List<Client> connectedClients = new List<Client>();
 
         //for keeping track of disconnected clients in case the reconnect shortly after
-        private List<Client> disconnectedClients = new List<Client>();
+        private readonly List<Client> disconnectedClients = new List<Client>();
 
         //keeps track of players who've previously been playing on the server
         //so kick votes persist during the session and the server can let the clients know what name this client used previously
@@ -1247,22 +1247,30 @@ namespace Barotrauma.Networking
                     bool range = inc.ReadBoolean();
                     double durationSeconds = inc.ReadDouble();
 
+                    TimeSpan? banDuration = null;
+                    if (durationSeconds > 0) { banDuration = TimeSpan.FromSeconds(durationSeconds); }
+
                     var bannedClient = connectedClients.Find(cl => cl != sender && cl.Name.Equals(bannedName, StringComparison.OrdinalIgnoreCase) && cl.Connection != OwnerConnection);
                     if (bannedClient != null)
                     {
                         Log("Client \"" + ClientLogName(sender) + "\" banned \"" + ClientLogName(bannedClient) + "\".", ServerLog.MessageType.ServerMessage);
                         if (durationSeconds > 0)
                         {
-                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, TimeSpan.FromSeconds(durationSeconds));
-                        }
-                        else
-                        {
-                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range);
+                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, banDuration);
                         }
                     }
                     else
                     {
-                        SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={bannedName}"), sender, ChatMessageType.Console);
+                        var bannedPreviousClient = previousPlayers.Find(p => p.Name.Equals(bannedName, StringComparison.OrdinalIgnoreCase));
+                        if (bannedPreviousClient != null)
+                        {
+                            Log("Client \"" + ClientLogName(sender) + "\" banned \"" + bannedPreviousClient.Name + "\".", ServerLog.MessageType.ServerMessage);
+                            BanPreviousPlayer(bannedPreviousClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, banDuration);
+                        }
+                        else
+                        {
+                            SendDirectChatMessage(TextManager.GetServerMessage($"ServerMessage.PlayerNotFound~[player]={bannedName}"), sender, ChatMessageType.Console);
+                        }
                     }
                     break;
                 case ClientPermissions.Unban:
@@ -1646,6 +1654,7 @@ namespace Barotrauma.Networking
 
                 IWriteMessage tempBuffer = new ReadWriteMessage();
                 tempBuffer.Write((byte)ServerNetObject.ENTITY_POSITION);
+                tempBuffer.Write(entity is Item);
                 if (entity is Item)
                 {
                     ((Item)entity).ServerWritePosition(tempBuffer, c);
@@ -1742,6 +1751,7 @@ namespace Barotrauma.Networking
                 outmsg.Write(client.NameID);
                 outmsg.Write(client.Name);
                 outmsg.Write(client.Character?.Info?.Job != null && gameStarted ? client.Character.Info.Job.Prefab.Identifier : (client.PreferredJob ?? ""));
+                outmsg.Write((byte)client.PreferredTeam);
                 outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
                 if (c.HasPermission(ClientPermissions.ServerLog))
                 {
@@ -2068,14 +2078,14 @@ namespace Barotrauma.Networking
             //always allow the server owner to spectate even if it's disallowed in server settings
             playingClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
 
-            if (GameMain.GameSession.GameMode.Mission != null)
+            if (GameMain.GameSession.GameMode is PvPMode pvpMode)
             {
-                GameMain.GameSession.GameMode.Mission.AssignTeamIDs(playingClients);
-                teamCount = GameMain.GameSession.GameMode.Mission.TeamCount;
+                pvpMode.AssignTeamIDs(playingClients);
+                teamCount = 2;
             }
             else
             {
-                connectedClients.ForEach(c => c.TeamID = Character.TeamType.Team1);
+                connectedClients.ForEach(c => c.TeamID = CharacterTeamType.Team1);
             }
 
             if (campaign != null)
@@ -2147,7 +2157,7 @@ namespace Barotrauma.Networking
             //assign jobs and spawnpoints separately for each team
             for (int n = 0; n < teamCount; n++)
             {
-                var teamID = n == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
+                var teamID = n == 0 ? CharacterTeamType.Team1 : CharacterTeamType.Team2;
 
                 Submarine.MainSubs[n].TeamID = teamID;
                 foreach (Item item in Item.ItemList)
@@ -2174,7 +2184,7 @@ namespace Barotrauma.Networking
                 //always allow the server owner to spectate even if it's disallowed in server settings
                 teamClients.RemoveAll(c => c.Connection == OwnerConnection && c.SpectateOnly);
 
-                if (!teamClients.Any() && n > 0) { continue; }
+                //if (!teamClients.Any() && n > 0) { continue; }
 
                 AssignJobs(teamClients);
 
@@ -2192,6 +2202,10 @@ namespace Barotrauma.Networking
                     if (client.CharacterInfo == null)
                     {
                         client.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, client.Name);
+                    }
+                    else
+                    {
+                        client.CharacterInfo.ResetCurrentOrder();
                     }
                     characterInfos.Add(client.CharacterInfo);
                     if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob.First)
@@ -2518,6 +2532,7 @@ namespace Barotrauma.Networking
                 foreach (Client client in connectedClients)
                 {
                     serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
+                    client.Character?.ResetCurrentOrder();
                     client.Character = null;
                     client.HasSpawned = false;
                     client.InGame = false;
@@ -2554,13 +2569,15 @@ namespace Barotrauma.Networking
             UInt16 nameId = inc.ReadUInt16();
             string newName = inc.ReadString();
             string newJob = inc.ReadString();
+            CharacterTeamType newTeam = (CharacterTeamType)inc.ReadByte();
 
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
 
             c.NameID = nameId;
             newName = Client.SanitizeName(newName);
-            if (newName == c.Name && newJob == c.PreferredJob) { return false; }
+            if (newName == c.Name && newJob == c.PreferredJob && newTeam == c.PreferredTeam) { return false; }
             c.PreferredJob = newJob;
+            c.PreferredTeam = newTeam;
 
             //update client list even if the name cannot be changed to the one sent by the client,
             //so the client will be informed what their actual name is
@@ -2674,13 +2691,38 @@ namespace Barotrauma.Networking
                 lidgrenConn.IPEndPoint.Address.MapToIPv4NoThrow().ToString() :
                 lidgrenConn.IPEndPoint.Address.ToString();
                 if (range) { ip = BanList.ToRange(ip); }
-
                 serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);
             }
             if (client.SteamID > 0)
             {
                 serverSettings.BanList.BanPlayer(client.Name, client.SteamID, reason, duration);
             }
+        }
+
+        public void BanPreviousPlayer(PreviousPlayer previousPlayer, string reason, bool range = false, TimeSpan? duration = null)
+        {
+            if (previousPlayer == null) { return; }
+
+            //reset karma to a neutral value, so if/when the ban is revoked the client wont get immediately punished by low karma again
+            previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
+            
+            if (!string.IsNullOrEmpty(previousPlayer.EndPoint) && (previousPlayer.SteamID == 0 || range))
+            {
+                string ip = previousPlayer.EndPoint;
+                if (range) { ip = BanList.ToRange(ip); }
+                serverSettings.BanList.BanPlayer(previousPlayer.Name, ip, reason, duration);
+            }
+            if (previousPlayer.SteamID > 0)
+            {
+                serverSettings.BanList.BanPlayer(previousPlayer.Name, previousPlayer.SteamID, reason, duration);
+            }
+
+            string msg = $"ServerMessage.BannedFromServer~[client]={previousPlayer.Name}";
+            if (!string.IsNullOrWhiteSpace(reason))
+            {
+                msg += $"/ /ServerMessage.Reason/: /{reason}";
+            }
+            SendChatMessage(msg, ChatMessageType.Server, changeType: PlayerConnectionChangeType.Banned);
         }
 
         public override void UnbanPlayer(string playerName, string playerEndPoint)
@@ -2723,8 +2765,8 @@ namespace Barotrauma.Networking
             client.HasSpawned = false;
             client.InGame = false;
 
-            if (string.IsNullOrWhiteSpace(msg)) msg = $"ServerMessage.ClientLeftServer~[client]={client.Name}";
-            if (string.IsNullOrWhiteSpace(targetmsg)) targetmsg = "ServerMessage.YouLeftServer";
+            if (string.IsNullOrWhiteSpace(msg)) { msg = $"ServerMessage.ClientLeftServer~[client]={client.Name}"; }
+            if (string.IsNullOrWhiteSpace(targetmsg)) { targetmsg = "ServerMessage.YouLeftServer"; }
             if (!string.IsNullOrWhiteSpace(reason))
             {
                 msg += $"/ /ServerMessage.Reason/: /{reason}";
@@ -2934,14 +2976,14 @@ namespace Barotrauma.Networking
             {
                 case ChatMessageType.Radio:
                 case ChatMessageType.Order:
-                    if (senderCharacter == null) return;
+                    if (senderCharacter == null) { return; }
 
                     //return if senderCharacter doesn't have a working radio
-                    var radio = senderCharacter.Inventory?.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
-                    if (radio == null || !senderCharacter.HasEquippedItem(radio)) return;
+                    var radio = senderCharacter.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
+                    if (radio == null || !senderCharacter.HasEquippedItem(radio)) { return; }
 
                     senderRadio = radio.GetComponent<WifiComponent>();
-                    if (!senderRadio.CanTransmit()) return;
+                    if (!senderRadio.CanTransmit()) { return; }
                     break;
                 case ChatMessageType.Dead:
                     //character still alive and capable of speaking -> dead chat not allowed
@@ -3157,8 +3199,8 @@ namespace Barotrauma.Networking
 
             if (voteType != VoteType.PurchaseSub)
             {
-                GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee);
-                GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(targetSubmarine, true);
+                SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee);
+                GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(newSub, true);
             }
 
             serverSettings.Voting.StopSubmarineVote(true);
@@ -3386,7 +3428,7 @@ namespace Barotrauma.Networking
                 assignedClientCount.Add(jp, 0);
             }
 
-            Character.TeamType teamID = Character.TeamType.None;
+            CharacterTeamType teamID = CharacterTeamType.None;
             if (unassigned.Count > 0) { teamID = unassigned[0].TeamID; }
 
             //if we're playing a multiplayer campaign, check which clients already have a character and a job
@@ -3548,7 +3590,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void AssignBotJobs(List<CharacterInfo> bots, Character.TeamType teamID)
+        public void AssignBotJobs(List<CharacterInfo> bots, CharacterTeamType teamID)
         {
             Dictionary<JobPrefab, int> assignedPlayerCount = new Dictionary<JobPrefab, int>();
             foreach (JobPrefab jp in JobPrefab.Prefabs)
@@ -3665,7 +3707,7 @@ namespace Barotrauma.Networking
             {
                 retVal += "color:#ff9900;";
             }
-            retVal += "metadata:" + (client.SteamID!=0 ? client.SteamID.ToString() : client.ID.ToString()) + "‖" + (name ?? client.Name) + "‖end‖";
+            retVal += "metadata:" + (client.SteamID != 0 ? client.SteamID.ToString() : client.ID.ToString()) + "‖" + (name ?? client.Name) + "‖end‖";
             return retVal;
         }
 

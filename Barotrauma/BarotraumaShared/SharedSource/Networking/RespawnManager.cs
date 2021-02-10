@@ -79,7 +79,7 @@ namespace Barotrauma.Networking
                 }
                 foreach (WifiComponent wifiComponent in wifiComponents)
                 {
-                    wifiComponent.TeamID = Character.TeamType.FriendlyNPC;
+                    wifiComponent.TeamID = CharacterTeamType.FriendlyNPC;
                 }
 
                 ResetShuttle();
@@ -222,7 +222,7 @@ namespace Barotrauma.Networking
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != RespawnShuttle) continue;
+                if (item.Submarine != RespawnShuttle) { continue; }
                 
                 //remove respawn items that have been left in the shuttle
                 if (respawnItems.Contains(item))
@@ -238,6 +238,19 @@ namespace Barotrauma.Networking
                 if (powerContainer != null)
                 {
                     powerContainer.Charge = powerContainer.Capacity;
+                }
+
+                var door = item.GetComponent<Door>();
+                if (door != null) { door.Stuck = 0.0f; }
+
+                var steering = item.GetComponent<Steering>();
+                if (steering != null)
+                {
+                    steering.MaintainPos = true;
+                    steering.AutoPilot = true;
+#if SERVER
+                    steering.UnsentChanges = true;
+#endif
                 }
             }
 
@@ -269,9 +282,8 @@ namespace Barotrauma.Networking
                 Spawner.AddToRemoveQueue(c);
                 if (c.Inventory != null)
                 {
-                    foreach (Item item in c.Inventory.Items)
+                    foreach (Item item in c.Inventory.AllItems)
                     {
-                        if (item == null) continue;
                         Spawner.AddToRemoveQueue(item);
                     }
                 }

@@ -216,7 +216,7 @@ namespace Barotrauma.Items.Components
                 if (LastAIUser.SelectedConstruction != item && LastAIUser.CanInteractWith(item))
                 {
                     AutoTemp = true;
-                    unsentChanges = true;
+                    if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
                     LastAIUser = null;
                 }
             }
@@ -313,12 +313,11 @@ namespace Barotrauma.Items.Components
 
             if (fissionRate > 0.0f)
             {
-                var containedItems = item.OwnInventory?.Items;
+                var containedItems = item.OwnInventory?.AllItems;
                 if (containedItems != null)
                 {
                     foreach (Item item in containedItems)
                     {
-                        if (item == null) { continue; }
                         if (!item.HasTag("reactorfuel")) { continue; }
                         item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
                     }
@@ -414,8 +413,8 @@ namespace Barotrauma.Items.Components
 
         private bool TooMuchFuel()
         {
-            var containedItems = item.OwnInventory?.Items;
-            if (containedItems != null && containedItems.Count(i => i != null) <= 1) { return false; }
+            var containedItems = item.OwnInventory?.AllItems;
+            if (containedItems != null && containedItems.Count() <= 1) { return false; }
 
             //get the amount of heat we'd generate if the fission rate was at the low end of the optimal range
             float minimumHeat = GetGeneratedHeat(optimalFissionRate.X);
@@ -532,12 +531,11 @@ namespace Barotrauma.Items.Components
             fireTimer = 0.0f;
             meltDownTimer = 0.0f;
 
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItems;
             if (containedItems != null)
             {
                 foreach (Item containedItem in containedItems)
                 {
-                    if (containedItem == null) { continue; }
                     containedItem.Condition = 0.0f;
                 }
             }
@@ -559,55 +557,58 @@ namespace Barotrauma.Items.Components
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+            bool shutDown = objective.Option.Equals("shutdown", StringComparison.OrdinalIgnoreCase);
 
             IsActive = true;
 
-            float degreeOfSuccess = DegreeOfSuccess(character);
-            float refuelLimit = 0.3f;
-            //characters with insufficient skill levels don't refuel the reactor
-            if (degreeOfSuccess > refuelLimit)
+            if (!shutDown)
             {
-                if (objective.SubObjectives.None())
+                float degreeOfSuccess = DegreeOfSuccess(character);
+                float refuelLimit = 0.3f;
+                //characters with insufficient skill levels don't refuel the reactor
+                if (degreeOfSuccess > refuelLimit)
                 {
-                    if (!AIDecontainEmptyItems(character, objective, equip: false))
-                    {
-                        return false;
-                    }
-                }
-
-                if (aiUpdateTimer > 0.0f)
-                {
-                    aiUpdateTimer -= deltaTime;
-                    return false;
-                }
-                aiUpdateTimer = AIUpdateInterval;
-
-                // load more fuel if the current maximum output is only 50% of the current load
-                // or if the fuel rod is (almost) deplenished 
-                float minCondition = fuelConsumptionRate * MathUtils.Pow((degreeOfSuccess - refuelLimit) * 2, 2);
-                if (NeedMoreFuel(minimumOutputRatio: 0.5f, minCondition: minCondition))
-                {
-                    var container = item.GetComponent<ItemContainer>();
                     if (objective.SubObjectives.None())
                     {
-                        int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
-                        AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC, dropItemOnDeselected: true);
-                        character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
-                    }
-                    return false;
-                }
-                else if (TooMuchFuel())
-                {
-                    var container = item.GetComponent<ItemContainer>();
-                    var containedItems = item.OwnInventory?.Items;
-                    if (containedItems != null)
-                    {
-                        foreach (Item item in containedItems)
+                        if (!AIDecontainEmptyItems(character, objective, equip: false))
                         {
-                            if (item != null && container.ContainableItems.Any(ri => ri.MatchesItem(item)))
+                            return false;
+                        }
+                    }
+
+                    if (aiUpdateTimer > 0.0f)
+                    {
+                        aiUpdateTimer -= deltaTime;
+                        return false;
+                    }
+                    aiUpdateTimer = AIUpdateInterval;
+
+                    // load more fuel if the current maximum output is only 50% of the current load
+                    // or if the fuel rod is (almost) deplenished 
+                    float minCondition = fuelConsumptionRate * MathUtils.Pow((degreeOfSuccess - refuelLimit) * 2, 2);
+                    if (NeedMoreFuel(minimumOutputRatio: 0.5f, minCondition: minCondition))
+                    {
+                        var container = item.GetComponent<ItemContainer>();
+                        if (objective.SubObjectives.None())
+                        {
+                            int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
+                            AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC, dropItemOnDeselected: true);
+                            character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
+                        }
+                        return false;
+                    }
+                    else if (TooMuchFuel())
+                    {
+                        if (item.OwnInventory?.AllItems != null)
+                        {
+                            var container = item.GetComponent<ItemContainer>();
+                            foreach (Item item in item.OwnInventory.AllItemsMod)
                             {
-                                item.Drop(character);
-                                break;
+                                if (container.ContainableItems.Any(ri => ri.MatchesItem(item)))
+                                {
+                                    item.Drop(character);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -624,7 +625,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            else if (LastUserWasPlayer)
+            else if (LastUserWasPlayer && lastUser != null && lastUser.TeamID == character.TeamID)
             {
                 return true;
             }
@@ -636,48 +637,45 @@ namespace Barotrauma.Items.Components
             float prevFissionRate = targetFissionRate;
             float prevTurbineOutput = targetTurbineOutput;
 
-            switch (objective.Option.ToLowerInvariant())
+            if (shutDown)
             {
-                case "powerup":
-                    PowerOn = true;
-                    if (objective.Override || !autoTemp)
-                    {
-                        //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
-                        if (degreeOfSuccess < 0.5f)
-                        {
-                            AutoTemp = true;
-                        }
-                        else
-                        {
-                            AutoTemp = false;
-                            UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
-                        }
-                    }
-#if CLIENT
-                    FissionRateScrollBar.BarScroll = FissionRate / 100.0f;
-                    TurbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
-#endif
-                    break;
-                case "shutdown":
-                    PowerOn = false;
-                    AutoTemp = false;
-                    targetFissionRate = 0.0f;
-                    targetTurbineOutput = 0.0f;
-                    unsentChanges = true;
-                    return true;
-            }
-
-            if (autoTemp != prevAutoTemp ||
-                prevPowerOn != _powerOn ||
-                Math.Abs(prevFissionRate - targetFissionRate) > 1.0f || 
-                Math.Abs(prevTurbineOutput - targetTurbineOutput) > 1.0f)
-            {
+                PowerOn = false;
+                AutoTemp = false;
+                targetFissionRate = 0.0f;
+                targetTurbineOutput = 0.0f;
                 unsentChanges = true;
+                return true;
             }
-
-            aiUpdateTimer = AIUpdateInterval;
-
-            return false;
+            else
+            {
+                PowerOn = true;
+                if (objective.Override || !autoTemp)
+                {
+                    //characters with insufficient skill levels simply set the autotemp on instead of trying to adjust the temperature manually
+                    if (degreeOfSuccess < 0.5f)
+                    {
+                        AutoTemp = true;
+                    }
+                    else
+                    {
+                        AutoTemp = false;
+                        UpdateAutoTemp(MathHelper.Lerp(0.5f, 2.0f, degreeOfSuccess), 1.0f);
+                    }
+                }
+#if CLIENT
+                FissionRateScrollBar.BarScroll = FissionRate / 100.0f;
+                TurbineOutputScrollBar.BarScroll = TurbineOutput / 100.0f;
+#endif
+                if (autoTemp != prevAutoTemp ||
+                    prevPowerOn != _powerOn ||
+                    Math.Abs(prevFissionRate - targetFissionRate) > 1.0f ||
+                    Math.Abs(prevTurbineOutput - targetTurbineOutput) > 1.0f)
+                {
+                    unsentChanges = true;
+                }
+                aiUpdateTimer = AIUpdateInterval;
+                return false;
+            }
         }
 
         public override void OnMapLoaded()
@@ -696,14 +694,14 @@ namespace Barotrauma.Items.Components
                         AutoTemp = false;
                         targetFissionRate = 0.0f;
                         targetTurbineOutput = 0.0f;
-                        unsentChanges = true;
+                        if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
                     }
                     break;
                 case "set_fissionrate":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
                         targetFissionRate = newFissionRate;
-                        unsentChanges = true;
+                        if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
 #if CLIENT
                         FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
 #endif
@@ -713,7 +711,7 @@ namespace Barotrauma.Items.Components
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
                         targetTurbineOutput = newTurbineOutput;
-                        unsentChanges = true;
+                        if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }                       
 #if CLIENT
                         TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;
 #endif

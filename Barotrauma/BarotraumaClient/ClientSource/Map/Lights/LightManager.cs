@@ -391,7 +391,7 @@ namespace Barotrauma.Lights
             if (GUI.DisableItemHighlights) { return false; }
 
             highlightedEntities.Clear();
-            if (Character.Controlled != null && (!Character.Controlled.IsKeyDown(InputType.Aim) || Character.Controlled.SelectedItems.Any(it => it?.GetComponent<Sprayer>() == null)))
+            if (Character.Controlled != null && (!Character.Controlled.IsKeyDown(InputType.Aim) || Character.Controlled.HeldItems.Any(it => it.GetComponent<Sprayer>() == null)))
             {
                 if (Character.Controlled.FocusedItem != null)
                 {
