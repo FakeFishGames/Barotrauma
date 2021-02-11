@@ -68,7 +68,6 @@ namespace Barotrauma.Items.Components
             if (MathUtils.IsValid(output))
             {
                 item.SendSignal(MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out");
-                item.SendSignal(null, "");
             }           
         }
 
