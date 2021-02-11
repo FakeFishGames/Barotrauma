@@ -1895,10 +1895,10 @@ namespace Barotrauma
             SendSignal(new Signal(signal), connectionName);
         }
 
-        public void SendSignal(Signal signal, string conenctionName)
+        public void SendSignal(Signal signal, string connectionName)
         {
             if (connections == null) { return; }
-            if (!connections.TryGetValue(conenctionName, out signal.connection)) { return; }
+            if (!connections.TryGetValue(connectionName, out signal.connection)) { return; }
 
             SendSignal(signal);
         }
