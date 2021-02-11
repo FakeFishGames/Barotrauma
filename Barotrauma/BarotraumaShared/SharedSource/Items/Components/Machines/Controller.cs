@@ -277,7 +277,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            item.SendSignal("1", "trigger_out");
+            item.SendSignal(new Signal("1", sender: user), "trigger_out");
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
