@@ -422,9 +422,19 @@ namespace Barotrauma.Items.Components
 
         //called when the item is equipped and the "Reload" key is pressed
         //returns true if the item was reloaded succesfully
-        public virtual bool Reload(float deltaTime, Character character = null)
+        public virtual float StartReload(Character character = null)
+        {
+            return -1f;
+        }
+
+        public virtual bool FinalizeReload(Character character = null)
         {
             return false;
+        }
+
+        public virtual void AbortReload(Character character = null)
+        {
+            return;
         }
 
         //called when the item is placed in a "limbslot"

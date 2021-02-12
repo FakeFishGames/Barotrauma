@@ -15,6 +15,12 @@ namespace Barotrauma.Items.Components
         
         private ushort[] itemIds;
 
+        private class reloadItems
+        {
+            public Item WorstAmmoInWeapon;
+            public Item ReplacementAmmo;
+        }
+
         //how many items can be contained
         private int capacity;
         [Serialize(5, false, description: "How many items can be contained inside this item.")]
@@ -311,13 +317,16 @@ namespace Barotrauma.Items.Components
 
             return false;
         }
-        public override bool Reload(float deltaTime, Character character = null)
-        {
 
-            if (!this.PlayerReloadable) return false;
+        private reloadItems CheckReload(Character character)
+        {
+            // The properties of ri are null by default which is interpreted in the code as item can't be reloaded or no ammo to use
+            reloadItems ri = new reloadItems();
+
+            if (!this.PlayerReloadable) return ri;
 
             // Return if item's inventory is full and all itmes in it are in perfect condition.
-            if (this.Inventory.IsFull() && this.Inventory.Items.All(i => i.Condition == 100)) return false;
+            if (this.Inventory.IsFull() && this.Inventory.Items.All(i => i.Condition == 100)) return ri;
 
             // Get the type of items storable in the item
             List<string> containableId = new List<string>();
@@ -328,29 +337,26 @@ namespace Barotrauma.Items.Components
                     containableId.Add(itemId);
                 }
             }
-            if (containableId.Count == 0) return false;
-
-            Item ammoToLoad = null;
-            Item ammoInWorstCondition = null;
+            if (containableId.Count == 0) return ri;
 
             // If the weapon/item is full then look for ammo that is in better condition
             if (this.Inventory.IsFull())
             {
                 // get the item in the worst condition from the weapon's inventory
-                ammoInWorstCondition = this.Inventory.Items.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
+                ri.WorstAmmoInWeapon = this.Inventory.Items.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
                 // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
                 if (character.SelectedConstruction != null && character.SelectedConstruction.OwnInventory != null)
                 {
-                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier
-                                                                                            && i.Condition > ammoInWorstCondition.Condition, true);
+                    ri.ReplacementAmmo = character.SelectedConstruction.OwnInventory.FindItem(i => ri.WorstAmmoInWeapon.Prefab.Identifier == i.Prefab.Identifier
+                                                                                            && i.Condition > ri.WorstAmmoInWeapon.Condition, true);
                 }
-                if (ammoToLoad == null)
+                if (ri.ReplacementAmmo == null)
                 {   // get the first suitable item from the inventory
-                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                    ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
                                                                 && character.HeadsetSlotItem != i.ParentInventory.Owner
                                                                 && character.HeadSlotItem != i.ParentInventory.Owner
-                                                                && ammoInWorstCondition.Prefab.Identifier == i.Prefab.Identifier
-                                                                && i.Condition > ammoInWorstCondition.Condition, true);
+                                                                && ri.WorstAmmoInWeapon.Prefab.Identifier == i.Prefab.Identifier
+                                                                && i.Condition > ri.WorstAmmoInWeapon.Condition, true);
                 }
             }
             // If the weapon/item is not full then look for any suitable ammo
@@ -359,62 +365,87 @@ namespace Barotrauma.Items.Components
                 // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
                 if (character.SelectedConstruction != null && character.SelectedConstruction.OwnInventory != null)
                 {
-                    ammoToLoad = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id))
+                    ri.ReplacementAmmo = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id))
                                                                                             && i.Condition > 0, true);
                 }
                 else
-                //if (ammoToLoad == null) 
+                //if (ri.ReplacementAmmo == null) 
                 {   // get the first suitable item from the inventory
-                    ammoToLoad = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                    ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
                                                                 && character.HeadsetSlotItem != i.ParentInventory.Owner
                                                                 && character.HeadSlotItem != i.ParentInventory.Owner
                                                                 && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
                 }
             }
+            return ri;
+        }
 
-            // Try to add ammo to the wapon/item if it's inventory is not full otherwise swap worst with a better one
-            if (ammoToLoad != null)
+        public override float StartReload(Character character)
+        {
+            // -1 means no reloading
+            float reloadCooldown = -1f;
+
+            reloadItems ri = CheckReload(character);
+
+            // No reloading if item is not reloadable or there is no ammo to use
+            if (ri.ReplacementAmmo == null) return reloadCooldown;
+                       
+
+            // Calculate additional time modifier (in percentage) for reloading based on the character's required skill levels
+            float skillModifier = 0f;
+            if (this.requiredSkills.Count >= 1)
             {
-                // Calculate additional time modifier (in percentage) for reloading based on the character's required skill levels
-                float skillModifier = 0f;
-                if (this.requiredSkills.Count >= 1)
+                float charSkillSum = 0f;
+                foreach (Skill requiredSkill in this.requiredSkills)
                 {
-                    float charSkillSum = 0f;
-                    foreach (Skill requiredSkill in this.requiredSkills)
-                    {
-                        charSkillSum += character.GetSkillLevel(requiredSkill.Identifier);
-                    }
-                    skillModifier = (100f - charSkillSum / this.requiredSkills.Count) / 100f;
+                    charSkillSum += character.GetSkillLevel(requiredSkill.Identifier);
                 }
-                
-                if (ammoInWorstCondition != null)
-                {
-                    var ammoInWorstConditionInventoryPosition = ammoInWorstCondition.ParentInventory.FindIndex(ammoInWorstCondition);
-                    if (ammoInWorstCondition.ParentInventory.TryPutItem(ammoToLoad, ammoInWorstConditionInventoryPosition, true, false, character, true))
-                    {
-                        character.ReloadCooldown = UnloadBaseTime + UnloadUnskilledExtraTime * skillModifier + ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
-//#if CLIENT
-                        //GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
-//#endif
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (this.Inventory.TryPutItem(ammoToLoad, character))
-                    {
-                        character.ReloadCooldown = ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
-//#if CLIENT
- //                       GUI.AddMessage($"ReloadTime: {character.ReloadCooldown} SkillMod: {skillModifier}", Color.Blue);
-//#endif
-                        return true;
-                    }
-                }
+                skillModifier = (100f - charSkillSum / this.requiredSkills.Count) / 100f;
+            }
 
+            // If there is ammo in the weapon and no empty slot
+            if (ri.WorstAmmoInWeapon != null)
+            {
+                reloadCooldown = UnloadBaseTime + UnloadUnskilledExtraTime * skillModifier + ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
+            }
+            else
+            {
+                reloadCooldown = ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
+            }
+#if CLIENT
+            PlaySound(ActionType.OnReload, character);
+#endif
+            return reloadCooldown;
+        }
+
+        public override bool FinalizeReload(Character character)
+        {
+            reloadItems ri = CheckReload(character);
+
+            // If there is ammo in the weapon and no empty slot
+            if (ri.WorstAmmoInWeapon != null)
+            {
+                var worstAmmoInWeaponInventoryPosition = ri.WorstAmmoInWeapon.ParentInventory.FindIndex(ri.WorstAmmoInWeapon);
+                if (ri.WorstAmmoInWeapon.ParentInventory.TryPutItem(ri.ReplacementAmmo, worstAmmoInWeaponInventoryPosition, true, false, character, true))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (this.Inventory.TryPutItem(ri.ReplacementAmmo, character))
+                {
+                    return true;
+                }
             }
             return false;
         }
 
+        public override void AbortReload(Character character)
+        {
+            // stop reload sound
+            return;
+        }
         public override void Drop(Character dropper)
         {
             IsActive = true;

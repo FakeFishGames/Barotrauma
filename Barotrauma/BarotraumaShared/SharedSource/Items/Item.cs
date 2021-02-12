@@ -2133,27 +2133,6 @@ namespace Barotrauma
             }
         }
 
-        public void Reload(float deltaTime, Character character = null)
-        {
-            foreach (ItemComponent ic in components)
-            {
-                bool isControlled = false;
-#if CLIENT
-                isControlled = character == Character.Controlled;
-#endif
-                if (ic.Reload(deltaTime, character))
-                {
-                    //ic.WasReloaded = true;
-#if CLIENT
-                    ic.PlaySound(ActionType.OnReload, character);
-#endif
-                    //ic.ApplyStatusEffects(ActionType.OnReload, deltaTime, character, targetLimb);
-                }
-            }
-            return;
-        }
-
-
         public void ApplyTreatment(Character user, Character character, Limb targetLimb)
         {
             //can't apply treatment to dead characters

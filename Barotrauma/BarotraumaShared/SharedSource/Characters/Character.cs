@@ -189,7 +189,18 @@ namespace Barotrauma
         public bool IsMale => Info != null && Info.HasGenders && Info.Gender == Gender.Male;
         public bool IsFemale => Info != null && Info.HasGenders && Info.Gender == Gender.Female;
 
-        public float ReloadCooldown { get; set; }
+        private float reloadCooldown = -1f;
+
+        private Item itemToReload;
+
+        public bool IsReloading
+        {
+            get
+            {
+                if (reloadCooldown >= 0.0f) { return true; }
+                return false;
+            }
+        }
 
         private float attackCoolDown;
 
@@ -372,16 +383,7 @@ namespace Barotrauma
                 if (!AllowInput) { return false; }
                 return true;
             }
-        }
-
-        public bool IsReloading
-        {
-            get
-            {
-                if (ReloadCooldown <= 0.0f) { return false; }
-                return true;
-            }
-        }           
+        }   
 
         public bool CanInteract
         {
@@ -1502,22 +1504,9 @@ namespace Barotrauma
                 }
             }
 #endif
-            if (ReloadCooldown > 0.0f)
-            {
-                if (LockHands || Removed || IsIncapacitated) { ReloadCooldown = 0.0f; }
-                else
-                {
-                    ReloadCooldown -= deltaTime;
-                    if (ReloadCooldown <= 0.0f)
-                    {
-                        // do the reload action in inventory;
-                    }
-                }
-            }
-
             if (attackCoolDown > 0.0f) attackCoolDown -= deltaTime;
 
-            if (attackCoolDown <= 0.0f && ReloadCooldown <= 0.0f && IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
+            if (attackCoolDown <= 0.0f && !IsReloading && IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
                 Vector2 attackPos = SimPosition + ConvertUnits.ToSimUnits(cursorPosition - Position);
                 List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
@@ -1593,19 +1582,28 @@ namespace Barotrauma
                 }
             }
 
-            if (ReloadCooldown <= 0.0f && IsKeyDown(InputType.Reload) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
+            if (IsKeyDown(InputType.Reload) && !IsReloading && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {
-                for (int i = 0; i < selectedItems.Length && ReloadCooldown <= 0.0f; i++)
+                if (Character.Controlled.SelectedConstruction?.GetComponent<Ladder>() != null)
                 {
-                    if (selectedItems[i] == null) { continue; }
-                    if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
-                    var item = selectedItems[i];
-                    if (item == null) { continue; }
-                    item.Reload(deltaTime, this);
+#if CLIENT
+                    GUI.AddMessage("Not on a ladder", Color.Red);
+#endif
+                }
+                else
+                {
+                    for (int i = 0; i < selectedItems.Length; i++)
+                    {
+                        if (selectedItems[i] == null) { continue; }
+                        if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
+                        var item = selectedItems[i];
+                        if (item == null) { continue; }
+                        StartReload(item);
+                    }
                 }
             }
             
-            if (ReloadCooldown <= 0.0f && (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected))
+            if (!IsReloading && (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected))
             {
                 for (int i = 0; i < selectedItems.Length; i++)
                 {
@@ -1671,6 +1669,55 @@ namespace Barotrauma
                     key.ResetHit();
                 }
             }
+        }
+
+        private void StartReload(Item item)
+        {
+            // Check if item can be reloaded (has container which is Player reloadable)
+            // Check if item should be reloaded / is not full
+            // Check if there's anything worth reloading it with
+            // Start reload timer/sound/animation
+            // Block Inventory and selection to be changed 
+            float reloadtime = -1f;
+            float reloadtimeMax = -1f; 
+            foreach (ItemComponent ic in item.Components)
+            {
+                reloadtime = ic.StartReload(this);
+                if (reloadtime > reloadtimeMax) { reloadtimeMax = reloadtime; }
+            }
+
+            if (reloadtimeMax >= 0)
+            {
+                itemToReload = item;
+                reloadCooldown = reloadtimeMax;
+            }
+            //ic.ApplyStatusEffects(ActionType.OnReload, deltaTime, character, targetLimb);
+            return;
+        }
+
+        // Add to update function: Update timer and check if expired then call FinalizeReload. Check if character state prevents Reload to continue and call AbortReload passed and 
+
+        private void FinalizeReload()
+        {
+            foreach (ItemComponent ic in itemToReload.Components)
+            {
+                ic.FinalizeReload(this);
+            }
+            itemToReload = null;
+            reloadCooldown = -1f;
+            return;
+        }
+
+        private void AbortReload()
+        {
+            // Stop animation and sound prematurely
+            foreach (ItemComponent ic in itemToReload.Components)
+            {
+                ic.AbortReload(this);
+            }
+            itemToReload = null;
+            reloadCooldown = -1f;
+            return;
         }
 
         public bool CanSeeCharacter(Character target)
@@ -2372,6 +2419,23 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime, Camera cam)
         {
+            if (IsReloading)
+            {
+                if (LockHands || Removed || IsIncapacitated || IsRagdolled || itemToReload.ParentInventory != this.Inventory)
+                {
+                    AbortReload();
+                }
+                else
+                {
+                    reloadCooldown -= deltaTime;
+                    // If reload cooldown expired
+                    if (!IsReloading)
+                    {
+                        FinalizeReload();
+                    }
+                }
+            }
+
             UpdateProjSpecific(deltaTime, cam);
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) { return; }

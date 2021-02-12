@@ -572,7 +572,7 @@
         <RequiredItem items="fulguriumbatterycell" type="Contained" msg="ItemMsgBatteryCellRequired" />
       </StatusEffect>
     </MeleeWeapon>
-    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" unloadbasetime="0.5" unloadunskilledextratime="1.5" reloadbasetime="0.5" reloadunskilledextratime="1.5">
+    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" reloadbasetime="1" reloadunskilledextratime="3">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="1,70,107,31" />
       <Containable items="mobilebattery" />
       <RequiredSkill identifier="weapons" />
@@ -649,7 +649,7 @@
       <RequiredSkill identifier="weapons" level="60" />
     </RangedWeapon>
     <!--Holds one grenade at a time-->
-    <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true" playerreloadable="true" reloadbasetime="0.5" reloadunskilledextratime="1.5">
+    <ItemContainer capacity="1" itempos="27,10" iteminterval="0,-4" hideitems="true" playerreloadable="true" reloadbasetime="0.7" reloadunskilledextratime="2">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="grenade" />
       <RequiredSkill identifier="weapons" />
@@ -1167,7 +1167,7 @@
       <RequiredItems items="smgmagazine" type="Contained" msg="ItemMsgAmmoRequired" />
       <RequiredSkill identifier="weapons" level="50" />
     </RangedWeapon>
-    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" unloadbasetime="0.5" unloadunskilledextratime="1.5" reloadbasetime="0.5" reloadunskilledextratime="1.5">
+    <ItemContainer capacity="1" hideitems="true" playerreloadable="true" reloadbasetime="1" reloadunskilledextratime="3">
       <ContainedStateIndicator texture="Content/UI/ContainerIndicators.png" sourcerect="2,121,53,22" />
       <Containable items="smgammo" />
       <RequiredSkill identifier="weapons" />

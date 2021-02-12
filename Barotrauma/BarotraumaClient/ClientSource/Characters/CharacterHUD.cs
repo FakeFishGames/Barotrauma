@@ -229,7 +229,7 @@ namespace Barotrauma
                 DrawObjectiveIndicator(spriteBatch, cam, character, objectiveEntity, 1.0f);
             }
 
-            if (character.ReloadCooldown > 0.0f)
+            if (character.IsReloading)
             {
                 Vector2 bulletSpriteSize = GUI.Style.ReloadIndicatorBullet.Sprite.size;
                 int reloadIndicatorCenterX = GUI.Canvas.NonScaledSize.X/2;
@@ -499,7 +499,7 @@ namespace Barotrauma
 
         private static bool LockInventory(Character character)
         {
-            if (character?.Inventory == null || !character.AllowInput || character.LockHands || IsCampaignInterfaceOpen) { return true; }
+            if (character?.Inventory == null || !character.AllowInput || character.LockHands || IsCampaignInterfaceOpen || character.IsReloading) { return true; }
             return character.ShouldLockHud();
         }
 
