@@ -344,38 +344,21 @@ namespace Barotrauma.Items.Components
             {
                 // get the item in the worst condition from the weapon's inventory
                 ri.WorstAmmoInWeapon = this.Inventory.Items.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
-                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
-                if (character.SelectedConstruction != null && character.SelectedConstruction.OwnInventory != null)
-                {
-                    ri.ReplacementAmmo = character.SelectedConstruction.OwnInventory.FindItem(i => ri.WorstAmmoInWeapon.Prefab.Identifier == i.Prefab.Identifier
-                                                                                            && i.Condition > ri.WorstAmmoInWeapon.Condition, true);
-                }
-                if (ri.ReplacementAmmo == null)
-                {   // get the first suitable item from the inventory
-                    ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                // get the first suitable item from the inventory
+                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
                                                                 && character.HeadsetSlotItem != i.ParentInventory.Owner
                                                                 && character.HeadSlotItem != i.ParentInventory.Owner
                                                                 && ri.WorstAmmoInWeapon.Prefab.Identifier == i.Prefab.Identifier
                                                                 && i.Condition > ri.WorstAmmoInWeapon.Condition, true);
-                }
             }
             // If the weapon/item is not full then look for any suitable ammo
             else
             {
-                // get the first suitable item from the selected construction(ie. cabinet)'s inventory  
-                if (character.SelectedConstruction != null && character.SelectedConstruction.OwnInventory != null)
-                {
-                    ri.ReplacementAmmo = character.SelectedConstruction.OwnInventory.FindItem(i => containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id))
-                                                                                            && i.Condition > 0, true);
-                }
-                else
-                //if (ri.ReplacementAmmo == null) 
-                {   // get the first suitable item from the inventory
-                    ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                // get the first suitable item from the inventory
+                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
                                                                 && character.HeadsetSlotItem != i.ParentInventory.Owner
                                                                 && character.HeadSlotItem != i.ParentInventory.Owner
                                                                 && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
-                }
             }
             return ri;
         }
