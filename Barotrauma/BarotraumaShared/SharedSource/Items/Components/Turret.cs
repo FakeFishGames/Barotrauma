@@ -812,10 +812,12 @@ namespace Barotrauma.Items.Components
                 if (e is Item projectileContainer)
                 {
                     var container = projectileContainer.GetComponent<ItemContainer>();
-                    maxProjectileCount += container.Capacity;
-
-                    int projectiles = projectileContainer.ContainedItems.Count(it => it.Condition > 0.0f);
-                    usableProjectileCount += projectiles;                    
+                    if (container != null)
+                    {
+                        maxProjectileCount += container.Capacity;
+                        int projectiles = projectileContainer.ContainedItems.Count(it => it.Condition > 0.0f);
+                        usableProjectileCount += projectiles;   
+                    }                 
                 }
             }
 

@@ -1254,10 +1254,7 @@ namespace Barotrauma.Networking
                     if (bannedClient != null)
                     {
                         Log("Client \"" + ClientLogName(sender) + "\" banned \"" + ClientLogName(bannedClient) + "\".", ServerLog.MessageType.ServerMessage);
-                        if (durationSeconds > 0)
-                        {
-                            BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, banDuration);
-                        }
+                        BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, banDuration);
                     }
                     else
                     {

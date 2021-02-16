@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------------
+v0.12.0.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed inability to permanently ban players who are currently in the server.
+- Fixed scrap items failing to load in saves done prior to v0.12.
+- Fixed bandage/plastiseal crafting exploit.
+- Fixed crashing if a bot tries to operate a turret that's linked to some other item than a loader.
+
+---------------------------------------------------------------------------------------------------------
 v0.12.0.2
 ---------------------------------------------------------------------------------------------------------
 
