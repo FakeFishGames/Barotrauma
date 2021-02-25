@@ -1905,6 +1905,7 @@ namespace Barotrauma
             if (connections == null) { return; }
             if (!connections.TryGetValue(connectionName, out Connection connection)) { return; }
 
+            signal.source ??= this;
             SendSignal(signal, connection);
         }
 
