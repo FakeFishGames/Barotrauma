@@ -59,9 +59,9 @@ namespace Barotrauma.Items.Components
             item.SendSignal(signalOut, "signal_out");
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "signal_in1":
                     if (signal.value == "0") return;

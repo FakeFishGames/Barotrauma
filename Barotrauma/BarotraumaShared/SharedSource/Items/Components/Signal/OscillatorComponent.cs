@@ -74,9 +74,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "set_frequency":
                 case "frequency_in":

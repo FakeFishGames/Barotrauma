@@ -308,9 +308,9 @@ namespace Barotrauma.Items.Components
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "toggle":
                     if (signal.value != "0")

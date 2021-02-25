@@ -651,13 +651,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (IsStuck || IsJammed) { return; }
 
             bool wasOpen = PredictedState == null ? isOpen : PredictedState.Value;
             
-            if (signal.connection.Name == "toggle")
+            if (connection.Name == "toggle")
             {
                 if (signal.value == "0") { return; }
                 if (toggleCooldownTimer > 0.0f && signal.sender != lastUser) { OnFailedToOpen(); return; }
@@ -666,7 +666,7 @@ namespace Barotrauma.Items.Components
                 lastUser = signal.sender;
                 SetState(!wasOpen, false, true, forcedOpen: false);
             }
-            else if (signal.connection.Name == "set_state")
+            else if (connection.Name == "set_state")
             {
                 bool signalOpen = signal.value != "0";
                 if (IsStuck && signalOpen != wasOpen) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }

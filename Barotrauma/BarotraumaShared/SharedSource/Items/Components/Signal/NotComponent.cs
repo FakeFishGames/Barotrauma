@@ -29,13 +29,13 @@ namespace Barotrauma.Items.Components
             signalReceived = false;
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (signal.connection.Name != "signal_in") { return; }
+            if (connection.Name != "signal_in") { return; }
 
             signal.value = signal.value == "0" || string.IsNullOrEmpty(signal.value) ? "1" : "0";
             signal.power = 0.0f;
-            item.SendSignal(signal);
+            item.SendSignal(signal, "signal_out");
             signalReceived = true;
         }
     }

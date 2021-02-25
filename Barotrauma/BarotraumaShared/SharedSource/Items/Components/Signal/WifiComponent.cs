@@ -230,11 +230,11 @@ namespace Barotrauma.Items.Components
             prevSignal = signal.value;
         }
                 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (signal.connection == null) { return; }
+            if (connection == null) { return; }
 
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "signal_in":
                     TransmitSignal(signal, false);

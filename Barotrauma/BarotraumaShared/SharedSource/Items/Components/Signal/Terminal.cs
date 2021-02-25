@@ -44,9 +44,9 @@ namespace Barotrauma.Items.Components
 
         partial void ShowOnDisplay(string input);
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (signal.connection.Name != "signal_in") { return; }
+            if (connection.Name != "signal_in") { return; }
             if (signal.value.Length > MaxMessageLength)
             {
                 signal.value = signal.value.Substring(0, MaxMessageLength);

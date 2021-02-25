@@ -169,21 +169,21 @@ namespace Barotrauma.Items.Components
             
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (item.Condition <= 0.0f || signal.connection.IsPower) { return; }
+            if (item.Condition <= 0.0f || connection.IsPower) { return; }
 
-            if (connectionPairs.TryGetValue(signal.connection.Name, out string outConnection))
+            if (connectionPairs.TryGetValue(connection.Name, out string outConnection))
             {
                 if (!IsOn) { return; }
                 item.SendSignal(signal, outConnection);
             }
-            else if (signal.connection.Name == "toggle")
+            else if (connection.Name == "toggle")
             {
                 if (signal.value == "0") { return; }
                 SetState(!IsOn, false);
             }
-            else if (signal.connection.Name == "set_state")
+            else if (connection.Name == "set_state")
             {
                 SetState(signal.value != "0", false);
             }

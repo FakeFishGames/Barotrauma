@@ -1106,7 +1106,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
@@ -1115,7 +1115,7 @@ namespace Barotrauma.Items.Components
             bool wasDocked = docked;
             DockingPort prevDockingTarget = DockingTarget;
 
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "toggle":
                     if (signal.value != "0")

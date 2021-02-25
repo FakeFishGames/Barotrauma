@@ -263,11 +263,11 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (signal.connection.IsPower) { return; }
+            if (connection.IsPower) { return; }
 
-            if (signal.connection.Name == "set_rate")
+            if (connection.Name == "set_rate")
             {
                 if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {

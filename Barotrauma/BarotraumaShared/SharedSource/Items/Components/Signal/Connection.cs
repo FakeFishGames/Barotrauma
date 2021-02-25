@@ -264,14 +264,14 @@ namespace Barotrauma.Items.Components
 
                 signal.source?.LastSentSignalRecipients.Add(recipient.item);
 
-                signal.connection = recipient;
+                Connection connection = recipient;
 
                 foreach (ItemComponent ic in recipient.item.Components)
                 {
-                    ic.ReceiveSignal(signal);
+                    ic.ReceiveSignal(signal, connection);
                 }
 
-                if (signal != "0")
+                if (signal.value != "0")
                 {
                     foreach (StatusEffect effect in recipient.Effects)
                     {

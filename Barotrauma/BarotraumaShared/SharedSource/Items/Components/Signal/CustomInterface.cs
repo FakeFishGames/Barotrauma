@@ -244,7 +244,7 @@ namespace Barotrauma.Items.Components
             if (btnElement == null) return;
             if (btnElement.Connection != null)
             {
-                item.SendSignal(new Signal(btnElement.Signal, 0, btnElement.Connection, null, item));
+                item.SendSignal(new Signal(btnElement.Signal, 0, null, item), btnElement.Connection);
             }
             foreach (StatusEffect effect in btnElement.StatusEffects)
             {
@@ -303,7 +303,7 @@ namespace Barotrauma.Items.Components
                 //TODO: allow changing output when a tickbox is not selected
                 if (!string.IsNullOrEmpty(ciElement.Signal) && ciElement.Connection != null)
                 {
-                    item.SendSignal(new Signal(ciElement.State ? ciElement.Signal : "0", connection: ciElement.Connection, source: item));
+                    item.SendSignal(new Signal(ciElement.State ? ciElement.Signal : "0", source: item), ciElement.Connection);
                 }
 
                 foreach (StatusEffect effect in ciElement.StatusEffects)

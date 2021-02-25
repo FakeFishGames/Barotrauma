@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             Item source = signal.source;
             if (source == null || source.CurrentHull == null) { return; }
@@ -101,7 +101,7 @@ namespace Barotrauma.Items.Components
 
             if (hullData.Distort) return;
 
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "water_data_in":
                     //cheating a bit because water detectors don't actually send the water level

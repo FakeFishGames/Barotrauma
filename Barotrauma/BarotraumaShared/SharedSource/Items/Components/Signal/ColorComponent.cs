@@ -30,9 +30,9 @@ namespace Barotrauma.Items.Components
             output += "," + receivedSignal[3].ToString("G", CultureInfo.InvariantCulture);
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "signal_r":
                     float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);

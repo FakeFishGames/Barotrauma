@@ -693,9 +693,9 @@ namespace Barotrauma.Items.Components
             prevAvailableFuel = AvailableFuel;
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "shutdown":
                     if (targetFissionRate > 0.0f || targetTurbineOutput > 0.0f)

@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
             switch (Function)
@@ -101,12 +101,12 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case FunctionType.Atan:                    
-                    if (signal.connection.Name == "signal_in_x")
+                    if (connection.Name == "signal_in_x")
                     {
                         timeSinceReceived[0] = 0.0f;
                         float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     }
-                    else if (signal.connection.Name == "signal_in_y")
+                    else if (connection.Name == "signal_in_y")
                     {
                         timeSinceReceived[1] = 0.0f;
                         float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);

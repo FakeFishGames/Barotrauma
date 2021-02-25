@@ -142,21 +142,21 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
         
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (Hijacked) { return; }
 
-            if (signal.connection.Name == "toggle")
+            if (connection.Name == "toggle")
             {
                 IsActive = !IsActive;
                 isActiveLockTimer = 0.1f;
             }
-            else if (signal.connection.Name == "set_active")
+            else if (connection.Name == "set_active")
             {
                 IsActive = signal.value != "0";
                 isActiveLockTimer = 0.1f;
             }
-            else if (signal.connection.Name == "set_speed")
+            else if (connection.Name == "set_speed")
             {
                 if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
@@ -165,7 +165,7 @@ namespace Barotrauma.Items.Components
                     pumpSpeedLockTimer = 0.1f;
                 }
             }
-            else if (signal.connection.Name == "set_targetlevel")
+            else if (connection.Name == "set_targetlevel")
             {
                 if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {

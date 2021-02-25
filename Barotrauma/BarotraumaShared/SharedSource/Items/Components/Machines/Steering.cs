@@ -696,15 +696,15 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (signal.connection.Name == "velocity_in")
+            if (connection.Name == "velocity_in")
             {
                 TargetVelocity = XMLExtensions.ParseVector2(signal.value, errorMessages: false);
             }
             else
             {
-                base.ReceiveSignal(signal);
+                base.ReceiveSignal(signal, connection);
             }
         }
     }

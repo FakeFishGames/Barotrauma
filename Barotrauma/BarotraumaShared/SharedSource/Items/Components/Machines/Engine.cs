@@ -201,11 +201,11 @@ namespace Barotrauma.Items.Components
             PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y);
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            base.ReceiveSignal(signal);
+            base.ReceiveSignal(signal, connection);
 
-            if (signal.connection.Name == "set_force")
+            if (connection.Name == "set_force")
             {
                 if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {

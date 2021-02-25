@@ -1188,10 +1188,10 @@ namespace Barotrauma.Items.Components
             UpdateTransformedBarrelPos();
         }
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             Character sender = signal.sender;
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "position_in":
                     if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
@@ -1204,7 +1204,7 @@ namespace Barotrauma.Items.Components
                     resetUserTimer = 10.0f;
                     break;
                 case "trigger_in":
-                    if (signal == "0") { return; }                    
+                    if (signal.value == "0") { return; }                    
                     lightComponent.IsOn = !lightComponent.IsOn;                    
                     item.Use((float)Timing.Step, sender);
                     user = sender;

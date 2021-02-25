@@ -73,9 +73,9 @@ namespace Barotrauma.Items.Components
 
         protected abstract float Calculate(float signal1, float signal2);
 
-        public override void ReceiveSignal(Signal signal)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            switch (signal.connection.Name)
+            switch (connection.Name)
             {
                 case "signal_in1":
                     float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
