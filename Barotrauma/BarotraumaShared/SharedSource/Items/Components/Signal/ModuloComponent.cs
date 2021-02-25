@@ -32,7 +32,8 @@ namespace Barotrauma.Items.Components
                     break;
                 case "signal_in":
                     float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
-                    item.SendSignal((value % modulus).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                    signal.value = (value % modulus).ToString("G", CultureInfo.InvariantCulture);
+                    item.SendSignal(signal, "signal_out");
                     break;
             }
                 

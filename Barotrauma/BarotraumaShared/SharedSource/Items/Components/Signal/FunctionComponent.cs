@@ -35,13 +35,13 @@ namespace Barotrauma.Items.Components
             switch (Function)
             {
                 case FunctionType.Round:
-                    item.SendSignal(Math.Round(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                    value = MathF.Round(value);
                     break;
                 case FunctionType.Ceil:
-                    item.SendSignal(Math.Ceiling(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                    value = MathF.Ceiling(value);
                     break;
                 case FunctionType.Floor:
-                    item.SendSignal(Math.Floor(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                    value = MathF.Floor(value);
                     break;
                 case FunctionType.Factorial:
                     int intVal = (int)Math.Min(value, 20);
@@ -50,20 +50,25 @@ namespace Barotrauma.Items.Components
                     {
                         factorial *= (ulong)i;
                     }
-                    item.SendSignal(factorial.ToString(), "signal_out");
+                    value = factorial;
                     break;
                 case FunctionType.AbsoluteValue:
-                    item.SendSignal(Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                    value = MathF.Abs(value);
                     break;
                 case FunctionType.SquareRoot:
-                    if (value > 0)
+                    if (value < 0)
                     {
-                        item.SendSignal(Math.Sqrt(value).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                        return;
                     }
-                    break;
+                    value = MathF.Sqrt(value);
+
+                        break;
                 default:
                     throw new NotImplementedException($"Function {Function} has not been implemented.");
             }
+
+            signal.value = value.ToString("G", CultureInfo.InvariantCulture);
+            item.SendSignal(signal, "signal_out");
         }
     }
 }
