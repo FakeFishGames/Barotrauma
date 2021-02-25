@@ -58,7 +58,8 @@ namespace Barotrauma
         public DestructibleLevelWall(List<Vector2> vertices, Color color, Level level, float? health = null, bool giftWrap = false)
             : base (vertices, color, level, giftWrap)
         {
-            MaxHealth = health ?? MathHelper.Clamp(Body.Mass, 100.0f, 1000.0f);
+            MaxHealth = health ?? MathHelper.Clamp(Body.Mass * 0.5f, 50.0f, 1000.0f);
+            Cells.ForEach(c => c.IsDestructible = true);
         }
 
         public override void Update(float deltaTime)
@@ -201,6 +202,10 @@ namespace Barotrauma
             if (Destroyed) { return; }
             Destroyed = true;
             level?.UnsyncedExtraWalls?.Remove(this);
+            foreach (var cell in Cells)
+            {
+                cell.CellType = CellType.Removed;
+            }
             GameMain.World.Remove(Body);
             Dispose();
         }

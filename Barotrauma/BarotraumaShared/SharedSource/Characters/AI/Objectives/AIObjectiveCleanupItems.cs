@@ -12,21 +12,30 @@ namespace Barotrauma
         public override bool AllowAutomaticItemUnequipping => false;
         public override bool ForceOrderPriority => false;
 
-        public readonly Item prioritizedItem;
+        public readonly List<Item> prioritizedItems = new List<Item>();
 
-        public AIObjectiveCleanupItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Item prioritizedItem = null)
+        public AIObjectiveCleanupItems(Character character, AIObjectiveManager objectiveManager, Item prioritizedItem = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier)
         {
-            this.prioritizedItem = prioritizedItem;
+            if (prioritizedItem != null)
+            {
+                prioritizedItems.Add(prioritizedItem);
+            }
         }
 
-        protected override float TargetEvaluation() => Targets.Any() ? AIObjectiveManager.RunPriority - 1 : 0;
+        public AIObjectiveCleanupItems(Character character, AIObjectiveManager objectiveManager, IEnumerable<Item> prioritizedItems, float priorityModifier = 1)
+            : base(character, objectiveManager, priorityModifier)
+        {
+            this.prioritizedItems.AddRange(prioritizedItems.Where(i => i != null));
+        }
+
+        protected override float TargetEvaluation() => Targets.Any() ? (objectiveManager.IsOrder(this) ? objectiveManager.GetOrderPriority(this) : AIObjectiveManager.RunPriority - 1) : 0;
 
         protected override bool Filter(Item target)
         {
             // If the target was selected as a valid target, we'll have to accept it so that the objective can be completed.
             // The validity changes when a character picks the item up.
-            if (!IsValidTarget(target, character)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
+            if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
             if (target.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
@@ -38,7 +47,7 @@ namespace Barotrauma
         protected override AIObjective ObjectiveConstructor(Item item)
             => new AIObjectiveCleanupItem(item, character, objectiveManager, priorityModifier: PriorityModifier)
             {
-                IsPriority = prioritizedItem == item
+                IsPriority = prioritizedItems.Contains(item)
             };
 
         protected override void OnObjectiveCompleted(AIObjective objective, Item target)
@@ -56,12 +65,19 @@ namespace Barotrauma
             return true;
         }
 
-        public static bool IsValidTarget(Item item, Character character)
+        public static bool IsValidContainer(Item item, Character character) =>
+            !item.IgnoreByAI && item.IsInteractable(character) && item.HasTag("allowcleanup") && item.ParentInventory == null && item.OwnInventory != null && item.OwnInventory.AllItems.Any() && IsItemInsideValidSubmarine(item, character);
+
+        public static bool IsValidTarget(Item item, Character character, bool checkInventory)
         {
             if (item == null) { return false; }
             if (item.IgnoreByAI) { return false; }
-            if (item.NonInteractable) { return false; }
-            if (item.ParentInventory != null) { return false; }
+            if (!item.IsInteractable(character)) { return false; }
+            if (item.SpawnedInOutpost) { return false; }
+            if (item.ParentInventory != null)
+            {
+                if (item.Container == null || !IsValidContainer(item.Container, character)) { return false; }
+            }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
             var pickable = item.GetComponent<Pickable>();
             if (pickable == null) { return false; }
@@ -83,20 +99,29 @@ namespace Barotrauma
             {
                 return false;
             }
+            if (!checkInventory)
+            {
+                return true;
+            }
             bool canEquip = true;
             if (!item.AllowedSlots.Contains(InvSlotType.Any))
             {
                 canEquip = false;
+                var inv = character.Inventory;
                 foreach (var allowedSlot in item.AllowedSlots)
                 {
-                    int slot = character.Inventory.FindLimbSlot(allowedSlot);
-                    if (slot > -1)
+                    foreach (var slotType in inv.SlotTypes)
                     {
-                        if (character.Inventory.Items[slot] == null)
+                        if (!allowedSlot.HasFlag(slotType)) { continue; }                        
+                        for (int i = 0; i < inv.Capacity; i++)
                         {
                             canEquip = true;
-                            break;
-                        }
+                            if (allowedSlot.HasFlag(inv.SlotTypes[i]) && inv.GetItemAt(i) != null)
+                            {
+                                canEquip = false;
+                                break;
+                            }
+                        }                        
                     }
                 }
             }

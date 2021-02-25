@@ -32,6 +32,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
+        public Vector4 Padding
+        {
+            get;
+            set;
+        }
+
         public override void Move(Vector2 amount)
         {
             //do nothing

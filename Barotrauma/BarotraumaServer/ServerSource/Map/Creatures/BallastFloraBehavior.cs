@@ -58,10 +58,14 @@ namespace Barotrauma.MapCreatures.Behavior
             msg.Write(branch.Health);
         }
         
-        public void ServerWriteInfect(IWriteMessage msg, UInt16 itemID, bool infect)
+        public void ServerWriteInfect(IWriteMessage msg, UInt16 itemID, bool infect, BallastFloraBranch infector = null)
         {
             msg.Write(itemID);
             msg.Write(infect);
+            if (infect)
+            {
+                msg.Write(infector?.ID ?? -1);
+            }
         }
 
         public void ServerWriteBranchRemove(IWriteMessage msg, BallastFloraBranch branch)

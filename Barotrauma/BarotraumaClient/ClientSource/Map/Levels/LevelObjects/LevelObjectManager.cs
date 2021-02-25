@@ -10,6 +10,7 @@ namespace Barotrauma
     partial class LevelObjectManager
     {
         private readonly List<LevelObject> visibleObjectsBack = new List<LevelObject>();
+        private readonly List<LevelObject> visibleObjectsMid = new List<LevelObject>();
         private readonly List<LevelObject> visibleObjectsFront = new List<LevelObject>();
 
         private double NextRefreshTime;
@@ -26,6 +27,10 @@ namespace Barotrauma
             {
                 obj.Update(deltaTime);
             }
+            foreach (LevelObject obj in visibleObjectsMid)
+            {
+                obj.Update(deltaTime);
+            }
             foreach (LevelObject obj in visibleObjectsFront)
             {
                 obj.Update(deltaTime);
@@ -34,7 +39,7 @@ namespace Barotrauma
         
         public IEnumerable<LevelObject> GetVisibleObjects()
         {
-            return visibleObjectsBack.Union(visibleObjectsFront);
+            return visibleObjectsBack.Union(visibleObjectsMid).Union(visibleObjectsFront);
         }
 
         /// <summary>
@@ -43,6 +48,7 @@ namespace Barotrauma
         private void RefreshVisibleObjects(Rectangle currentIndices, float zoom)
         {
             visibleObjectsBack.Clear();
+            visibleObjectsMid.Clear();
             visibleObjectsFront.Clear();
 
             float minSizeToDraw = MathHelper.Lerp(10.0f, 5.0f, Math.Min(zoom * 20.0f, 1.0f));
@@ -70,7 +76,10 @@ namespace Barotrauma
                             }
                         }
 
-                        var objectList = obj.Position.Z >= 0 ? visibleObjectsBack : visibleObjectsFront;
+                        var objectList = 
+                            obj.Position.Z >= 0 ? 
+                                visibleObjectsBack : 
+                                (obj.Position.Z < -1 ? visibleObjectsFront : visibleObjectsMid);
                         int drawOrderIndex = 0;
                         for (int i = 0; i < objectList.Count; i++)
                         {
@@ -102,8 +111,31 @@ namespace Barotrauma
             currentGridIndices = currentIndices;
         }
 
+        /// <summary>
+        /// Draw the objects behind the level walls
+        /// </summary>
+        public void DrawObjectsBack(SpriteBatch spriteBatch, Camera cam)
+        {
+            DrawObjects(spriteBatch, cam, visibleObjectsBack);
+        }
 
-        public void DrawObjects(SpriteBatch spriteBatch, Camera cam, bool drawFront)
+        /// <summary>
+        /// Draw the objects in front of the level walls, but behind characters
+        /// </summary>
+        public void DrawObjectsMid(SpriteBatch spriteBatch, Camera cam)
+        {
+            DrawObjects(spriteBatch, cam, visibleObjectsMid);
+        }
+
+        /// <summary>
+        /// Draw the objects in front of the level walls and characters
+        /// </summary>
+        public void DrawObjectsFront(SpriteBatch spriteBatch, Camera cam)
+        {
+            DrawObjects(spriteBatch, cam, visibleObjectsFront);
+        }
+
+        private void DrawObjects(SpriteBatch spriteBatch, Camera cam, List<LevelObject> objectList)
         {
             Rectangle indices = Rectangle.Empty;
             indices.X = (int)Math.Floor(cam.WorldView.X / (float)GridSize);
@@ -132,7 +164,6 @@ namespace Barotrauma
                 }
             }
 
-            var objectList = drawFront ? visibleObjectsFront : visibleObjectsBack;
             foreach (LevelObject obj in objectList)
             {              
                 Vector2 camDiff = new Vector2(obj.Position.X, obj.Position.Y) - cam.WorldViewCenter;

@@ -94,7 +94,10 @@ namespace Barotrauma
                 cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.Server),
                 cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
 
-            var item = new Item(itemPrefab, position, cargoRoom.Submarine);
+            var item = new Item(itemPrefab, position, cargoRoom.Submarine)
+            {
+                SpawnedInOutpost = true
+            };
             item.FindHull();
             items.Add(item);
 
@@ -115,7 +118,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
             items.Clear();
             parentInventoryIDs.Clear();
@@ -135,6 +138,10 @@ namespace Barotrauma
                 {
                     GiveReward();
                     completed = true;
+                    if (Prefab.LocationTypeChangeOnCompleted != null)
+                    {
+                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                    }
                 }
             }
 

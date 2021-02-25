@@ -2,9 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Barotrauma.Items.Components
 {
@@ -17,7 +14,11 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled) { return; }
+            if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled)
+            {
+                Drawable = false;
+                return;
+            }
 
             Vector2 gridPos = picker.Position;
             Vector2 roundedGridPos = new Vector2(
@@ -46,7 +47,7 @@ namespace Barotrauma.Items.Components
                 attachPos += item.Submarine.Position;
             }
 
-            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
+            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.4f);
 
             item.Sprite.Draw(
                 spriteBatch,

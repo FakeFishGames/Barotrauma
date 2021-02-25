@@ -139,13 +139,13 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (objectiveManager.CurrentOrder == this)
+                    if (objectiveManager.IsOrder(this))
                     {
-                        Priority = ForceOrderPriority ? AIObjectiveManager.OrderPriority : targetValue;
+                        Priority = ForceOrderPriority ? objectiveManager.GetOrderPriority(this) : targetValue;
                     }
                     else
                     {
-                        float max = MathHelper.Min(AIObjectiveManager.OrderPriority - 1, 90);
+                        float max = AIObjectiveManager.LowestOrderPriority - 1;
                         float value = MathHelper.Clamp((CumulatedDevotion + (targetValue * PriorityModifier)) / 100, 0, 1);
                         Priority = MathHelper.Lerp(0, max, value);
                     }
@@ -167,7 +167,7 @@ namespace Barotrauma
             foreach (T target in GetList())
             {
                 // The bots always find targets when the objective is an order.
-                if (objectiveManager.CurrentOrder != this)
+                if (!objectiveManager.IsOrder(this))
                 {
                     // Battery or pump states cannot currently be reported (not implemented) and therefore we must ignore them -> the bots always know if they require attention.
                     bool ignore = this is AIObjectiveChargeBatteries || this is AIObjectivePumpWater;

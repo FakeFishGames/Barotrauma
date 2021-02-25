@@ -58,6 +58,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize(1.0f, false, description: "How much the position of the item can vary from the wall the item spawns on.")]
+        public float RandomOffsetFromWall
+        {
+            get;
+            set;
+        }
+
         public bool Attached
         {
             get { return holdable != null && holdable.Attached; }
@@ -77,7 +84,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                if (Vector2.DistanceSquared(item.SimPosition, trigger.SimPosition) > 0.01f)
+                if (trigger != null && Vector2.DistanceSquared(item.SimPosition, trigger.SimPosition) > 0.01f)
                 {
                     trigger.SetTransform(item.SimPosition, 0.0f);
                 }

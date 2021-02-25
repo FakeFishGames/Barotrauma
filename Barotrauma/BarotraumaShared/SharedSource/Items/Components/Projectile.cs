@@ -213,12 +213,15 @@ namespace Barotrauma.Items.Components
 
         private void Launch(Character user, Vector2 simPosition, float rotation)
         {
-            //User = user;
             Item.body.ResetDynamics();
             Item.SetTransform(simPosition, rotation);
-            Use();
-            if (Item.Removed) { return; }
+            // Set user for hitscan projectiles to work properly.
             User = user;
+            // Need to set null for non-characterusable items.
+            Use(character: null);
+            // Set user for normal projectiles to work properly.
+            User = user;
+            if (Item.Removed) { return; }
             launchPos = simPosition;
             //set the rotation of the projectile again because dropping the projectile resets the rotation
             Item.SetTransform(simPosition, rotation + (Item.body.Dir * LaunchRotationRadians));
@@ -328,21 +331,21 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             Vector2 rayStart = simPositon;
-            Vector2 rayEnd = simPositon + dir * 1000.0f;
+            Vector2 rayEnd = simPositon + dir * 500.0f;
 
             List<HitscanResult> hits = new List<HitscanResult>();
 
-            hits.AddRange(DoRayCast(rayStart, rayEnd));
+            hits.AddRange(DoRayCast(rayStart, rayEnd, submarine: item.Submarine));
 
             if (item.Submarine != null)
             {
                 //shooting indoors, do a hitscan outside as well
-                hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition));
+                hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition, submarine: null));
                 //also in the coordinate space of docked subs
                 foreach (Submarine dockedSub in item.Submarine.DockedTo)
                 {
                     if (dockedSub == item.Submarine) { continue; }
-                    hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition - dockedSub.SimPosition, rayEnd + item.Submarine.SimPosition - dockedSub.SimPosition));
+                    hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition - dockedSub.SimPosition, rayEnd + item.Submarine.SimPosition - dockedSub.SimPosition, dockedSub));
                 }
             }
             else
@@ -350,7 +353,7 @@ namespace Barotrauma.Items.Components
                 //shooting outdoors, see if we can hit anything inside a sub
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    var inSubHits = DoRayCast(rayStart - submarine.SimPosition, rayEnd - submarine.SimPosition);
+                    var inSubHits = DoRayCast(rayStart - submarine.SimPosition, rayEnd - submarine.SimPosition, submarine);
                     //transform back to world coordinates
                     for (int i = 0; i < inSubHits.Count; i++)
                     {
@@ -386,12 +389,20 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    Entity.Spawner.AddToRemoveQueue(item);
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                    {
+                        //clients aren't allowed to remove items by themselves, so lets hide the projectile until the server tells us to remove it
+                        item.HiddenInGame = Hitscan;
+                    }
+                    else
+                    {
+                        Entity.Spawner.AddToRemoveQueue(item);
+                    }
                 }
             }
         }
         
-        private List<HitscanResult> DoRayCast(Vector2 rayStart, Vector2 rayEnd)
+        private List<HitscanResult> DoRayCast(Vector2 rayStart, Vector2 rayEnd, Submarine submarine)
         {
             List<HitscanResult> hits = new List<HitscanResult>();
 
@@ -406,14 +417,20 @@ namespace Barotrauma.Items.Components
                 if (fixture?.Body == null || fixture.IsSensor) { return true; }
                 if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return true; }
-                if (fixture.Body?.UserData as string == "ruinroom") { return true; }
+                if (fixture.Body.UserData as string == "ruinroom") { return true; }
+
+                //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
+                if (submarine != null)
+                {
+                    if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return true; }
+                }
 
                 //ignore everything else than characters, sub walls and level walls
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return true; }
 
-                if (fixture.Body.UserData is VoronoiCell && this.item.Submarine != null) { return true; }
+                if (fixture.Body.UserData is VoronoiCell && (this.item.Submarine != null || submarine != null)) { return true; }
 
                 fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
                 if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
@@ -436,7 +453,13 @@ namespace Barotrauma.Items.Components
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
                     !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
 
-                //ignore level cells if the item the point of impact are inside a sub
+                //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
+                if (submarine != null)
+                {
+                    if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return -1; }
+                }
+
+                //ignore level cells if the item and the point of impact are inside a sub
                 if (fixture.Body.UserData is VoronoiCell && this.item.Submarine != null) 
                 { 
                     if (Hull.FindHull(ConvertUnits.ToDisplayUnits(point), this.item.CurrentHull) != null)
@@ -536,7 +559,7 @@ namespace Barotrauma.Items.Components
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
                     collisionCategory: Physics.CollisionWall);
-                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure structure &&
+                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure &&
                     //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
                     Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0) 
                 {
@@ -623,7 +646,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Attack != null) { attackResult = Attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }
             }
-            else if (target.Body.UserData is VoronoiCell voronoiCell && Attack != null && Math.Abs(Attack.StructureDamage) > 0.0f)
+            else if (target.Body.UserData is VoronoiCell voronoiCell && voronoiCell.IsDestructible && Attack != null && Math.Abs(Attack.StructureDamage) > 0.0f)
             {
                 if (Level.Loaded?.ExtraWalls.Find(w => w.Body == target.Body) is DestructibleLevelWall destructibleWall)
                 {
@@ -633,8 +656,14 @@ namespace Barotrauma.Items.Components
 
             if (character != null) { character.LastDamageSource = item; }
 
+            ActionType actionType = ActionType.OnUse;
+            if (_user != null && Rand.Range(0.0f, 0.5f) > DegreeOfSuccess(_user))
+            {
+                actionType = ActionType.OnFailure;
+            }
+
 #if CLIENT
-            PlaySound(ActionType.OnUse, user: _user);
+            PlaySound(actionType, user: _user);
             PlaySound(ActionType.OnImpact, user: _user);
 #endif
 
@@ -642,7 +671,7 @@ namespace Barotrauma.Items.Components
             {
                 if (target.Body.UserData is Limb targetLimb)
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb, user: _user);
+                    ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: _user);
                     ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: _user);
                     var attack = targetLimb.attack;
                     if (attack != null)
@@ -672,19 +701,19 @@ namespace Barotrauma.Items.Components
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, actionType, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, targetLimb.character.ID, targetLimb, (ushort)0, item.WorldPosition });
                     }
 #endif
                 }
                 else
                 {
-                    ApplyStatusEffects(ActionType.OnUse, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
+                    ApplyStatusEffects(actionType, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
                     ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
 #if SERVER
                     if (GameMain.NetworkMember.IsServer)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnUse, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
+                        GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, actionType, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnImpact, this, (ushort)0, null, (target.Body.UserData as Entity)?.ID ?? 0, item.WorldPosition });
                     }
 #endif
@@ -741,12 +770,11 @@ namespace Barotrauma.Items.Components
                 item.body.LinearVelocity *= 0.5f;
             }
 
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItems;
             if (containedItems != null)
             {
                 foreach (Item contained in containedItems)
                 {
-                    if (contained == null) { continue; }
                     if (contained.body != null)
                     {
                         contained.SetTransform(item.SimPosition, contained.body.Rotation);
@@ -756,7 +784,15 @@ namespace Barotrauma.Items.Components
 
             if (RemoveOnHit)
             {
-                Entity.Spawner?.AddToRemoveQueue(item);
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                {
+                    //clients aren't allowed to remove items by themselves, so lets hide the projectile until the server tells us to remove it
+                    item.HiddenInGame = Hitscan;
+                }
+                else
+                {
+                    Entity.Spawner?.AddToRemoveQueue(item);
+                }
             }
 
             return true;
@@ -786,7 +822,8 @@ namespace Barotrauma.Items.Components
             {
                 MotorEnabled = true,
                 MaxMotorForce = 30.0f,
-                LimitEnabled = true
+                LimitEnabled = true,
+                Breakpoint = 1000.0f
             };
 
             if (StickPermanently)

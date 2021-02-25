@@ -95,11 +95,11 @@ namespace Barotrauma.Items.Components
             // TODO, This works fine as of now but if GUI.PreventElementOverlap ever gets fixed this block of code may become obsolete or detrimental.
             // Only do this if there's only one linked component. If you link more containers then may
             // GUI.PreventElementOverlap have mercy on your HUD layout
-            if (GuiFrame != null && item.linkedTo.Count(entity => entity is Item item && item.DisplaySideBySideWhenLinked) == 1)
+            if (GuiFrame != null && item.linkedTo.Count(entity => entity is Item { DisplaySideBySideWhenLinked: true }) == 1)
             {
                 foreach (MapEntity linkedTo in item.linkedTo)
                 {
-                    if (!(linkedTo is Item linkedItem) || !linkedItem.DisplaySideBySideWhenLinked) { continue; }
+                    if (!(linkedTo is Item { DisplaySideBySideWhenLinked: true } linkedItem)) { continue; }
                     if (!linkedItem.Components.Any()) { continue; }
                 
                     var itemContainer = linkedItem.GetComponent<ItemContainer>();
@@ -108,8 +108,8 @@ namespace Barotrauma.Items.Components
                     // how much spacing do we want between the components
                     var padding = (int) (8 * GUI.Scale);
                     // Move the linked container to the right and move the deconstructor to the left
-                    itemContainer.GuiFrame.RectTransform.AbsoluteOffset = new Point(100, 0);
-                    GuiFrame.RectTransform.AbsoluteOffset = new Point(-100, 0);
+                    itemContainer.GuiFrame.RectTransform.AbsoluteOffset = new Point(GuiFrame.Rect.Width / -2 - padding, 0);
+                    GuiFrame.RectTransform.AbsoluteOffset = new Point(itemContainer.GuiFrame.Rect.Width / 2 + padding, 0);
                 }
             }
             return base.Select(character);
@@ -126,7 +126,7 @@ namespace Barotrauma.Items.Components
         private void DrawOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
-            var lastSlot = inputContainer.Inventory.slots.Last();
+            var lastSlot = inputContainer.Inventory.visualSlots.Last();
 
             GUI.DrawRectangle(spriteBatch, 
                 new Rectangle(

@@ -2,15 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
-using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
+using Vector4 = Microsoft.Xna.Framework.Vector4;
 
 namespace Barotrauma.Items.Components
 {
@@ -286,8 +285,19 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            int value = pool[Growable.RandomInt(0, possible, random)];
+            int value;
+            if (Parent == null)
+            {
+                value = pool[Growable.RandomInt(0, possible, random)];
+            }
+            else
+            {
+                var (x, y, z, w) = Parent.GrowthWeights;
+                float[] weights = { x, y, z, w };
 
+                value = pool.RandomElementByWeight(i => weights[i]);
+            }
+            
             return (TileSide) (1 << value);
         }
 
@@ -382,6 +392,12 @@ namespace Barotrauma.Items.Components
         [Serialize("0.26,0.27,0.29,1.0", true, "Tint of a dead plant.")]
         public Color DeadTint { get; set; }
 
+        [Serialize("1,1,1,1", true, "Probability for the plant to grow in a direction.")]
+        public Vector4 GrowthWeights { get; set; }
+
+        [Serialize(0.0f, true, "How much damage is taken from fires.")]
+        public float FireVulnerability { get; set; }
+
         private const float increasedDeathSpeed = 10f;
         private bool accelerateDeath;
         private float health;
@@ -405,6 +421,7 @@ namespace Barotrauma.Items.Components
 
         private int productDelay;
         private int vineDelay;
+        private float fireCheckCooldown;
 
         public readonly List<ProducedItem> ProducedItems = new List<ProducedItem>();
         public readonly List<VineTile> Vines = new List<VineTile>();
@@ -476,11 +493,15 @@ namespace Barotrauma.Items.Components
             if (Health > 0)
             {
                 GrowVines(planter, slot);
-                Health -= accelerateDeath ? Hardiness * increasedDeathSpeed : Hardiness;
+
+                // fertilizer makes the plant tick faster, compensate by halving water requirement
+                float multipler = planter.Fertilizer > 0 ? 0.5f : 1f;
+
+                Health -= (accelerateDeath ? Hardiness * increasedDeathSpeed : Hardiness) * multipler;
 
                 if (planter.Item.InWater)
                 {
-                    Health -= FloodTolerance;
+                    Health -= FloodTolerance * multipler;
                 }
 #if SERVER
                 if (FullyGrown)
@@ -617,6 +638,8 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
 
+            UpdateFires(deltaTime);
+
 #if CLIENT
             foreach (VineTile vine in Vines)
             {
@@ -625,6 +648,29 @@ namespace Barotrauma.Items.Components
 #endif
 
             CheckPlantState();
+        }
+
+        private void UpdateFires(float deltaTime)
+        {
+            if (!Decayed && item.CurrentHull?.FireSources is { } fireSources && FireVulnerability > 0f)
+            {
+                if (fireCheckCooldown <= 0)
+                {
+                    foreach (FireSource source in fireSources)
+                    {
+                        if (source.IsInDamageRange(item.WorldPosition, source.DamageRange))
+                        {
+                            Health -= FireVulnerability;
+                        }
+                    }
+
+                    fireCheckCooldown = 5f;
+                }
+                else
+                {
+                    fireCheckCooldown -= deltaTime;
+                }
+            }
         }
 
         private void GrowVines(Planter planter, PlantSlot slot)
@@ -677,7 +723,23 @@ namespace Barotrauma.Items.Components
 
                 TileSide side = oldVines.GetRandomFreeSide(random);
 
-                if (side == TileSide.None) { continue; }
+                if (side == TileSide.None)
+                {
+                    oldVines.FailedGrowthAttempts++;
+                    continue;
+                }
+
+                if (GrowthWeights != Vector4.One)
+                {
+                    var (x, y, z, w) = GrowthWeights;
+                    float[] weights = { x, y, z, w };
+                    int index = (int) Math.Log2((int) side);
+                    if (MathUtils.NearlyEqual(weights[index], 0f))
+                    {
+                        oldVines.FailedGrowthAttempts++;
+                        continue;
+                    }
+                }
 
                 Vector2 pos = oldVines.AdjacentPositions[side];
                 Rectangle rect = VineTile.CreatePlantRect(pos);

@@ -12,8 +12,9 @@ namespace Barotrauma
         public const ushort NullEntityID = 0;
         public const ushort EntitySpawnerID = ushort.MaxValue;
         public const ushort RespawnManagerID = ushort.MaxValue - 1;
+        public const ushort DummyID = ushort.MaxValue - 2;
 
-        public const ushort ReservedIDStart = ushort.MaxValue - 2;
+        public const ushort ReservedIDStart = ushort.MaxValue - 3;
 
         private static Dictionary<ushort, Entity> dictionary = new Dictionary<ushort, Entity>();
         public static IEnumerable<Entity> GetEntities()

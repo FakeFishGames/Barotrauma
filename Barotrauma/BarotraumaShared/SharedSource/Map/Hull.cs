@@ -397,7 +397,12 @@ namespace Barotrauma
         public Hull(MapEntityPrefab prefab, Rectangle rectangle)
             : this (prefab, rectangle, Submarine.MainSub)
         {
-
+#if CLIENT
+            if (SubEditorScreen.IsSubEditor())
+            {
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { this }, false));
+            }
+#endif
         }
 
         public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine, ushort id = Entity.NullEntityID)
@@ -791,7 +796,7 @@ namespace Barotrauma
             //make waves propagate through horizontal gaps
             foreach (Gap gap in ConnectedGaps)
             {
-                if (this != gap.linkedTo[0] as Hull)
+                if (this != gap.linkedTo.FirstOrDefault() as Hull)
                 {
                     //let the first linked hull handle the water propagation
                     continue;
@@ -934,14 +939,14 @@ namespace Barotrauma
         /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
         /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
         /// </summary>
-        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance)
+        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0)
         {
-            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance);
+            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance, distanceMultiplierPerClosedDoor);
         }
 
-        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
+        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance, float distanceMultiplierFromDoors = 0)
         {
-            if (distance >= maxDistance) return float.MaxValue;
+            if (distance >= maxDistance) { return float.MaxValue; }
             if (this == target)
             {
                 return distance + Vector2.Distance(startPos, endPos);
@@ -951,12 +956,17 @@ namespace Barotrauma
 
             foreach (Gap g in ConnectedGaps)
             {
+                float distanceMultiplier = 1;
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
                     //gap blocked if the door is not open or the predicted state is not open
                     if ((!g.ConnectedDoor.IsOpen && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                     {
-                        if (g.ConnectedDoor.OpenState < 0.1f) continue;
+                        if (g.ConnectedDoor.OpenState < 0.1f)
+                        {
+                            if (distanceMultiplierFromDoors <= 0) { continue; }
+                            distanceMultiplier *= distanceMultiplierFromDoors;
+                        }
                     }
                 }
                 else if (g.Open <= 0.0f)
@@ -968,8 +978,11 @@ namespace Barotrauma
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position), maxDistance);
-                        if (dist < float.MaxValue) { return dist; }
+                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position) * distanceMultiplier, maxDistance);
+                        if (dist < float.MaxValue)
+                        {
+                            return dist;
+                        }
                     }
                 }
             }

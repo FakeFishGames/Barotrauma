@@ -59,13 +59,16 @@ namespace Barotrauma
 
         public override void ShowStartMessage()
         {
-            if (Mission == null) return;
-
-            new GUIMessageBox(Mission.Name, Mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: Mission.Prefab.Icon)
+            foreach (Mission mission in Missions)
             {
-                IconColor = Mission.Prefab.IconColor,
-                UserData = "missionstartmessage"
-            };
+                new GUIMessageBox(
+                    mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name, 
+                    mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon)
+                {
+                    IconColor = mission.Prefab.IconColor,
+                    UserData = "missionstartmessage"
+                };
+            }
         }
 
         /// <summary>
@@ -158,7 +161,8 @@ namespace Barotrauma
                 case TransitionType.ProgressToNextEmptyLocation:
                     if (Level.Loaded.EndOutpost == null || !Level.Loaded.EndOutpost.DockedTo.Contains(leavingSub))
                     {
-                        buttonText = TextManager.GetWithVariable("EnterLocation", "[locationname]", Level.Loaded.EndLocation?.Name ?? "[ERROR]");
+                        string textTag = availableTransition == TransitionType.ProgressToNextLocation ? "EnterLocation" : "EnterEmptyLocation";
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.EndLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
                     }
                     break;
@@ -170,7 +174,8 @@ namespace Barotrauma
                 case TransitionType.ReturnToPreviousEmptyLocation:
                     if (Level.Loaded.StartOutpost == null || !Level.Loaded.StartOutpost.DockedTo.Contains(leavingSub))
                     {
-                        buttonText = TextManager.GetWithVariable("EnterLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
+                        string textTag = availableTransition == TransitionType.ReturnToPreviousLocation ? "EnterLocation" : "EnterEmptyLocation";
+                        buttonText = TextManager.GetWithVariable(textTag, "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
                     }
 

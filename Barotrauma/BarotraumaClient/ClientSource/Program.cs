@@ -218,9 +218,12 @@ namespace Barotrauma
                 sb.AppendLine("Target site: " + exception.TargetSite.ToString());
             }
 
-            sb.AppendLine("Stack trace: ");
-            sb.AppendLine(exception.StackTrace.CleanupStackTrace());
-            sb.AppendLine("\n");
+            if (exception.StackTrace != null)
+            {
+                sb.AppendLine("Stack trace: ");
+                sb.AppendLine(exception.StackTrace.CleanupStackTrace());
+                sb.AppendLine("\n");
+            }
 
             if (exception.InnerException != null)
             {
@@ -229,8 +232,11 @@ namespace Barotrauma
                 {
                     sb.AppendLine("Target site: " + exception.InnerException.TargetSite.ToString());
                 }
-                sb.AppendLine("Stack trace: ");
-                sb.AppendLine(exception.InnerException.StackTrace.CleanupStackTrace());
+                if (exception.InnerException.StackTrace != null)
+                {
+                    sb.AppendLine("Stack trace: ");
+                    sb.AppendLine(exception.InnerException.StackTrace.CleanupStackTrace());
+                }
             }
 
             sb.AppendLine("Last debug messages:");

@@ -31,20 +31,6 @@ namespace Barotrauma.Items.Components
 
         private float pumpSpeedLockTimer, isActiveLockTimer;
 
-        private bool infected;
-
-        [Serialize(false, true, description: "Whether or not the pump is infected with ballast flora spores.")]
-        public bool Infected
-        {
-            get => infected;
-            set
-            {
-                infected = value;
-            }
-        }
-
-        public string InfectIdentifier;
-
         [Serialize(0.0f, true, description: "How fast the item is currently pumping water (-100 = full speed out, 100 = full speed in). Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public float FlowPercentage
         {
@@ -116,35 +102,38 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null) { return; }      
 
-            float powerFactor = Math.Min(currPowerConsumption <= 0.0f ? 1.0f : Voltage, 1.0f);
+            float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, 1.0f);
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
-
-            if (currFlow < 0 && Infected)
-            {
-                InfectBallast(InfectIdentifier);
-            }
-            Infected = false;
-
             item.CurrentHull.WaterVolume += currFlow;
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 0.5f; }
         }
 
-        public void InfectBallast(string identifier)
+        public void InfectBallast(string identifier, bool allowMultiplePerShip = false)
         {
             Hull hull = item.CurrentHull;
             if (hull == null) { return; }
 
-            // if the ship is already infected then do nothing
-            if (Hull.hullList.Where(h => h.Submarine == hull.Submarine).Any(h => h.BallastFlora != null)) { return; }
+            if (!allowMultiplePerShip)
+            {
+                // if the ship is already infected then do nothing
+                if (Hull.hullList.Where(h => h.Submarine == hull.Submarine).Any(h => h.BallastFlora != null)) { return; }
+            }
 
             if (hull.BallastFlora != null) { return; }
 
+            var ballastFloraPrefab = BallastFloraPrefab.Find(identifier);
+            if (ballastFloraPrefab == null)
+            {
+                DebugConsole.ThrowError($"Failed to infect a ballast pump (could not find a ballast flora prefab with the identifier \"{identifier}\").\n" + Environment.StackTrace);
+                return;
+            }
+
             Vector2 offset = item.WorldPosition - hull.WorldPosition;
-            hull.BallastFlora = new BallastFloraBehavior(hull, BallastFloraPrefab.Find(identifier), offset, firstGrowth: true);
+            hull.BallastFlora = new BallastFloraBehavior(hull, ballastFloraPrefab, offset, firstGrowth: true);
 
 #if SERVER
             hull.BallastFlora.SendNetworkMessage(hull.BallastFlora, BallastFloraBehavior.NetworkHeader.Spawn);
@@ -180,7 +169,7 @@ namespace Barotrauma.Items.Components
             {
                 if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    TargetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
+                    TargetLevel = MathUtils.InverseLerp(-100.0f, 100.0f, tempTarget) * 100.0f;
                     pumpSpeedLockTimer = 0.1f;
                 }
             }

@@ -62,7 +62,7 @@ namespace Barotrauma.Tutorials
 
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefab: null);
+            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefabs: null);
             (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
 
             if (generationParams != null)
@@ -122,7 +122,7 @@ namespace Barotrauma.Tutorials
             }
 
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", isRemotePlayer: false, hasAi: false);
-            character.TeamID = Character.TeamType.Team1;
+            character.TeamID = CharacterTeamType.Team1;
             Character.Controlled = character;
             character.GiveJobItems(null);
 
@@ -182,7 +182,8 @@ namespace Barotrauma.Tutorials
 
         protected bool HasOrder(Character character, string identifier, string option = null)
         {
-            if (character.CurrentOrder?.Identifier == identifier)
+            var currentOrderInfo = character.GetCurrentOrderWithTopPriority();
+            if (currentOrderInfo?.Order?.Identifier == identifier)
             {
                 if (option == null)
                 {
@@ -190,8 +191,7 @@ namespace Barotrauma.Tutorials
                 }
                 else
                 {
-                    HumanAIController humanAI = character.AIController as HumanAIController;
-                    return humanAI.CurrentOrderOption == option;
+                    return currentOrderInfo?.OrderOption == option;
                 }
             }
 

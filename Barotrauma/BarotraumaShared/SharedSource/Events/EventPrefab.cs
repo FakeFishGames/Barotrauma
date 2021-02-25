@@ -7,9 +7,9 @@ namespace Barotrauma
     class EventPrefab
     {
         public readonly XElement ConfigElement;    
-        public readonly Type EventType;      
-        public readonly string MusicType;
+        public readonly Type EventType;
         public readonly float SpawnProbability;
+        public readonly bool TriggerEventCooldown;
         public float Commonness;
         public string Identifier;
 
@@ -17,8 +17,6 @@ namespace Barotrauma
         {
             ConfigElement = element;
          
-            MusicType = element.GetAttributeString("musictype", "default");
-
             try
             {
                 EventType = Type.GetType("Barotrauma." + ConfigElement.Name, true, true);
@@ -35,6 +33,7 @@ namespace Barotrauma
             Identifier = ConfigElement.GetAttributeString("identifier", string.Empty);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             SpawnProbability = Math.Clamp(element.GetAttributeFloat("spawnprobability", 1.0f), 0, 1);
+            TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
         }
 
         public Event CreateInstance()
@@ -49,6 +48,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(ex.InnerException != null ? ex.InnerException.ToString() : ex.ToString());
             }
+
+            Event ev = (Event)instance;
+            if (!ev.LevelMeetsRequirements()) { return null; }
 
             return (Event)instance;
         }

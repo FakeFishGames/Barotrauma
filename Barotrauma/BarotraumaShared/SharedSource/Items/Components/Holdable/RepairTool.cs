@@ -87,6 +87,13 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false, description: "Can the item repair things through holes in walls.")]
         public bool RepairThroughHoles { get; set; }
 
+
+        [Serialize(100.0f, false, description: "How far two walls need to not be considered overlapping and to stop the ray.")]
+        public float MaxOverlappingWallDist
+        {
+            get; set;
+        }
+
         [Serialize(true, false, description: "Can the item hit broken doors.")]
         public bool HitItems { get; set; }
 
@@ -109,10 +116,11 @@ namespace Barotrauma.Items.Components
         {
             get
             {
+                if (item.body == null) { return BarrelPos; }
                 Matrix bodyTransform = Matrix.CreateRotationZ(item.body.Rotation + MathHelper.ToRadians(BarrelRotation));
                 Vector2 flippedPos = BarrelPos;
                 if (item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
-                return (Vector2.Transform(flippedPos, bodyTransform));
+                return Vector2.Transform(flippedPos, bodyTransform);
             }
         }
 
@@ -228,11 +236,15 @@ namespace Barotrauma.Items.Components
             }
 
             float spread = MathHelper.ToRadians(MathHelper.Lerp(UnskilledSpread, Spread, degreeOfSuccess));
-            float angle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + spread * Rand.Range(-0.5f, 0.5f);
-            Vector2 rayEnd = rayStartWorld + 
-                ConvertUnits.ToSimUnits(new Vector2(
-                    (float)Math.Cos(angle),
-                    (float)Math.Sin(angle)) * Range * item.body.Dir);
+
+            float angle = MathHelper.ToRadians(BarrelRotation) + spread * Rand.Range(-0.5f, 0.5f);
+            float dir = 1;
+            if (item.body != null)
+            {
+                angle += item.body.Rotation;
+                dir = item.body.Dir;
+            }
+            Vector2 rayEnd = rayStartWorld + ConvertUnits.ToSimUnits(new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Range * dir);
 
             ignoredBodies.Clear();
             if (character != null)
@@ -315,9 +327,14 @@ namespace Barotrauma.Items.Components
             {
                 var bodies = Submarine.PickBodies(rayStart, rayEnd, ignoredBodies, collisionCategories,
                     ignoreSensors: false,
-                    customPredicate: (Fixture f) => 
+                    customPredicate: (Fixture f) =>
                     {
-                        if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure || (f.Body?.UserData is Item it && it.GetComponent<Planter>() != null)) { return false; }
+                        if (f.IsSensor)
+                        {
+                            if (RepairThroughHoles && f.Body?.UserData is Structure) { return false; }
+                            if (f.Body?.UserData is PhysicsBody) { return false; }
+                        }
+                        if (f.Body?.UserData is Item it && it.GetComponent<Planter>() != null) { return false; }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
                         if (f.Body?.UserData is VineTile && !(FireDamage > 0)) { return false; }
                         return true;
@@ -356,12 +373,13 @@ namespace Barotrauma.Items.Components
                     }
 
                     //if repairing through walls is not allowed and the next wall is more than 100 pixels away from the previous one, stop here
-                    //(= repairing multiple overlapping walls is allowed as long as the edges of the walls are less than 100 pixels apart)
+                    //(= repairing multiple overlapping walls is allowed as long as the edges of the walls are less than MaxOverlappingWallDist pixels apart)
                     float thisBodyFraction = Submarine.LastPickedBodyDist(body);
-                    if (!RepairThroughWalls && lastHitType == typeof(Structure) && Range * (thisBodyFraction - lastPickedFraction) > 100.0f)
+                    if (!RepairThroughWalls && lastHitType == typeof(Structure) && Range * (thisBodyFraction - lastPickedFraction) > MaxOverlappingWallDist)
                     {
                         break;
                     }
+                    pickedPosition = rayStart + (rayEnd - rayStart) * thisBodyFraction;
                     if (FixBody(user, deltaTime, degreeOfSuccess, body))
                     {
                         lastPickedFraction = thisBodyFraction;
@@ -371,13 +389,16 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                FixBody(user, deltaTime, degreeOfSuccess, 
-                    Submarine.PickBody(rayStart, rayEnd, 
-                    ignoredBodies, collisionCategories, 
+                var pickedBody = Submarine.PickBody(rayStart, rayEnd,
+                    ignoredBodies, collisionCategories,
                     ignoreSensors: false,
-                    customPredicate: (Fixture f) => 
+                    customPredicate: (Fixture f) =>
                     {
-                        if (RepairThroughHoles && f.IsSensor && f.Body?.UserData is Structure) { return false; }
+                        if (f.IsSensor)
+                        {
+                            if (RepairThroughHoles && f.Body?.UserData is Structure) { return false; }
+                            if (f.Body?.UserData is PhysicsBody) { return false; }
+                        }
                         if (f.Body?.UserData as string == "ruinroom") { return false; }
                         if (f.Body?.UserData is VineTile && !(FireDamage > 0)) { return false; }
 
@@ -393,9 +414,11 @@ namespace Barotrauma.Items.Components
                                 if (targetItem.Condition <= 0) { return false; }
                             }
                         }
-                        return f.Body?.UserData != null; 
+                        return f.Body?.UserData != null;
                     },
-                    allowInsideFixture: true));
+                    allowInsideFixture: true);
+                pickedPosition = Submarine.LastPickedPosition;
+                FixBody(user, deltaTime, degreeOfSuccess, pickedBody);                    
                 lastPickedFraction = Submarine.LastPickedFraction;
             }
             
@@ -438,7 +461,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (WaterAmount > 0.0f && item.CurrentHull?.Submarine != null)
+            if (WaterAmount > 0.0f && item.Submarine != null)
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(rayStart + item.Submarine.SimPosition);
 
@@ -466,7 +489,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                                     float barOffset = 10f * GUI.Scale;
                                     Vector2 offset = planter.PlantSlots.ContainsKey(i) ? planter.PlantSlots[i].Offset : Vector2.Zero;
-                                    user.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUI.Style.Blue, GUI.Style.Blue, "progressbar.watering");
+                                    user?.UpdateHUDProgressBar(planter, planter.Item.DrawPosition + new Vector2(barOffset, 0) + offset, seed.Health / seed.MaxHealth, GUI.Style.Blue, GUI.Style.Blue, "progressbar.watering");
 #endif
                                 }
                             }
@@ -489,8 +512,6 @@ namespace Barotrauma.Items.Components
         private bool FixBody(Character user, float deltaTime, float degreeOfSuccess, Body targetBody)
         {
             if (targetBody?.UserData == null) { return false; }
-
-            pickedPosition = Submarine.LastPickedPosition;
 
             if (targetBody.UserData is Structure targetStructure)
             {
@@ -519,10 +540,9 @@ namespace Barotrauma.Items.Components
                 }
                 return true;
             }
-            else if (targetBody.UserData is Voronoi2.VoronoiCell cell)
+            else if (targetBody.UserData is Voronoi2.VoronoiCell cell && cell.IsDestructible)
             {
-                var levelWall = Level.Loaded?.ExtraWalls.Find(w => w.Body == cell.Body) as DestructibleLevelWall;
-                if (levelWall != null)
+                if (Level.Loaded?.ExtraWalls.Find(w => w.Body == cell.Body) is DestructibleLevelWall levelWall)
                 {
                     levelWall.AddDamage(-LevelWallFixAmount * deltaTime, item.WorldPosition);
                 }
@@ -574,7 +594,7 @@ namespace Barotrauma.Items.Components
             }
             else if (targetBody.UserData is Item targetItem)
             {
-                if (!HitItems || targetItem.NonInteractable) { return false; }
+                if (!HitItems || !targetItem.IsInteractable(user)) { return false; }
 
                 var levelResource = targetItem.GetComponent<LevelResource>();
                 if (levelResource != null && levelResource.Attached &&
@@ -589,7 +609,7 @@ namespace Barotrauma.Items.Components
                         levelResource.DeattachTimer / levelResource.DeattachDuration,
                         GUI.Style.Red, GUI.Style.Green, "progressbar.deattaching");
 #endif
-                    FixItemProjSpecific(user, deltaTime, targetItem);
+                    FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: false);
                     return true;
                 }
                 
@@ -615,7 +635,7 @@ namespace Barotrauma.Items.Components
                     targetItem.body.ApplyForce(dir * TargetForce, maxVelocity: 10.0f);
                 }
 
-                FixItemProjSpecific(user, deltaTime, targetItem);
+                FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: true);
                 return true;
             }
             else if (targetBody.UserData is BallastFloraBranch branch)
@@ -630,7 +650,7 @@ namespace Barotrauma.Items.Components
     
         partial void FixStructureProjSpecific(Character user, float deltaTime, Structure targetStructure, int sectionIndex);
         partial void FixCharacterProjSpecific(Character user, float deltaTime, Character targetCharacter);
-        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem);
+        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, bool showProgressBar);
 
         private float sinTime;
         private float repairTimer;
@@ -638,74 +658,71 @@ namespace Barotrauma.Items.Components
         private readonly float repairTimeOut = 5;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (!(objective.OperateTarget is Gap leak)) { return true; }
-            if (leak.Submarine == null) { return true; }
+            if (!(objective.OperateTarget is Gap leak))
+            {
+                Reset();
+                return true;
+            }
+            if (leak.Submarine == null)
+            {
+                Reset();
+                return true;
+            }
             if (leak != previousGap)
             {
-                sinTime = 0;
-                repairTimer = 0;
+                Reset();
                 previousGap = leak;
             }
             Vector2 fromCharacterToLeak = leak.WorldPosition - character.WorldPosition;
             float dist = fromCharacterToLeak.Length();
             float reach = AIObjectiveFixLeak.CalculateReach(this, character);
 
-            //too far away -> consider this done and hope the AI is smart enough to move closer
-            if (dist > reach * 2) { return true; }
-            character.AIController.SteeringManager.Reset();
-            //steer closer if almost in range
-            if (dist > reach)
+            if (dist > reach * 3)
             {
-                if (character.AnimController.InWater)
+                // Too far away -> consider this done and hope the AI is smart enough to move closer
+                Reset();
+                return true;
+            }
+            character.AIController.SteeringManager.Reset();
+            if (!character.AnimController.InWater)
+            {
+                // TODO: use the collider size?
+                if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
+                    Math.Abs(fromCharacterToLeak.X) < 100.0f && fromCharacterToLeak.Y < 0.0f && fromCharacterToLeak.Y > -150.0f)
                 {
-                    if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                    ((HumanoidAnimController)character.AnimController).Crouching = true;
+                }
+            }
+            if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.inWater))
+            {
+                // Steer closer
+                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                {
+                    // Swimming inside the sub
+                    if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && (indoorSteering.CurrentPath.Unreachable || indoorSteering.CurrentPath.Finished))
                     {
-                        // Swimming inside the sub
-                        if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && indoorSteering.CurrentPath.Unreachable)
-                        {
-                            Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
-                            character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
-                        }
-                        else
-                        {
-                            character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
-                        }
+                        Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
+                        character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
                     }
                     else
                     {
-                        // Swimming outside the sub
                         character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
                     }
                 }
                 else
                 {
-                    // TODO: use the collider size?
-                    if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
-                        Math.Abs(fromCharacterToLeak.X) < 100.0f && fromCharacterToLeak.Y < 0.0f && fromCharacterToLeak.Y > -150.0f)
-                    {
-                        ((HumanoidAnimController)character.AnimController).Crouching = true;
-                    }
-                    Vector2 standPos = new Vector2(Math.Sign(-fromCharacterToLeak.X), Math.Sign(-fromCharacterToLeak.Y)) / 2;
-                    if (leak.IsHorizontal)
-                    {
-                        standPos.X *= 2;
-                        standPos.Y = 0;
-                    }
-                    else
-                    {
-                        standPos.X = 0;
-                    }
-                    character.AIController.SteeringManager.SteeringSeek(standPos);
+                    // Swimming outside the sub
+                    character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
                 }
             }
-            if (dist < reach / 2)
+            else if (dist < reach * 0.25f)
             {
                 // Too close -> steer away
                 character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
             }
-            else if (dist < reach * 2)
+            if (dist <= reach)
             {
-                // In or almost in range
+                // In range
                 character.CursorPosition = leak.WorldPosition;
                 if (character.Submarine != null)
                 {
@@ -729,51 +746,57 @@ namespace Barotrauma.Items.Components
                         character.AIController.SteeringManager.SteeringManual(deltaTime, moveDir);
                     }
                 }
-            }
-            if (item.RequireAimToUse)
-            {
-                character.SetInput(InputType.Aim, false, true);
-                sinTime += deltaTime * 5;
-            }
-            // Press the trigger only when the tool is approximately facing the target.
-            Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
-            var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
-            if (angle < MathHelper.PiOver4)
-            {
-                if (Submarine.PickBody(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionWall, allowInsideFixture: true)?.UserData is Item i)
+                if (item.RequireAimToUse)
                 {
-                    var door = i.GetComponent<Door>();
-                    // Hit a door, abandon so that we don't weld it shut.
-                    return door != null && !door.IsOpen && !door.IsBroken;
+                    character.SetInput(InputType.Aim, false, true);
+                    sinTime += deltaTime * 5;
                 }
-                // Check that we don't hit any friendlies
-                if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
+                // Press the trigger only when the tool is approximately facing the target.
+                Vector2 fromItemToLeak = leak.WorldPosition - item.WorldPosition;
+                var angle = VectorExtensions.Angle(VectorExtensions.Forward(item.body.TransformedRotation), fromItemToLeak);
+                if (angle < MathHelper.PiOver4)
                 {
-                    if (hit.UserData is Character c)
+                    if (Submarine.PickBody(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionWall, allowInsideFixture: true)?.UserData is Item i)
                     {
-                        if (c == character) { return false; }
-                        return HumanAIController.IsFriendly(character, c);
+                        var door = i.GetComponent<Door>();
+                        // Hit a door, abandon so that we don't weld it shut.
+                        return door != null && !door.CanBeTraversed;
                     }
-                    return false;  
-                }))
-                {
-                    character.SetInput(InputType.Shoot, false, true);
-                    Use(deltaTime, character);
-                    repairTimer += deltaTime;
-                    if (repairTimer > repairTimeOut)
+                    // Check that we don't hit any friendlies
+                    if (Submarine.PickBodies(item.SimPosition, leak.SimPosition, collisionCategory: Physics.CollisionCharacter).None(hit =>
                     {
+                        if (hit.UserData is Character c)
+                        {
+                            if (c == character) { return false; }
+                            return HumanAIController.IsFriendly(character, c);
+                        }
+                        return false;
+                    }))
+                    {
+                        character.SetInput(InputType.Shoot, false, true);
+                        Use(deltaTime, character);
+                        repairTimer += deltaTime;
+                        if (repairTimer > repairTimeOut)
+                        {
 #if DEBUG
-                        DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
+                            DebugConsole.NewMessage($"{character.Name}: timed out while welding a leak in {leak.FlowTargetHull.DisplayName}.", color: Color.Yellow);
 #endif
-                        return true;
+                            Reset();
+                            return true;
+                        }
                     }
                 }
+            }
+            else
+            {
+                // Reset the timer so that we don't time out if the water forces push us away
+                repairTimer = 0;
             }
 
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
                 (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Average(s => s.damage) < 1);
 
-            if (leakFixed && leak.FlowTargetHull?.DisplayName != null)
+            if (leakFixed && leak.FlowTargetHull?.DisplayName != null && character.IsOnPlayerTeam)
             {
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
                 {                    
@@ -786,6 +809,12 @@ namespace Barotrauma.Items.Components
             }
 
             return leakFixed;
+
+            void Reset()
+            {
+                sinTime = 0;
+                repairTimer = 0;
+            }
         }
 
         private void ApplyStatusEffectsOnTarget(Character user, float deltaTime, ActionType actionType, IEnumerable<ISerializableEntity> targets)
@@ -816,7 +845,7 @@ namespace Barotrauma.Items.Components
                 foreach (ISerializableEntity target in targets)
                 {
                     if (!(target is Door door)) { continue; }                    
-                    if (!door.CanBeWelded || door.Item.NonInteractable) { continue; }
+                    if (!door.CanBeWelded || !door.Item.IsInteractable(user)) { continue; }
                     for (int i = 0; i < effect.propertyNames.Length; i++)
                     {
                         string propertyName = effect.propertyNames[i];

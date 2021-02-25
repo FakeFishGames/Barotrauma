@@ -45,7 +45,10 @@ namespace Barotrauma
                 {
                     CreateInstance(newRect);
                     placePosition = Vector2.Zero;
-                    selected = null;
+                    if (!PlayerInput.IsShiftDown())
+                    {
+                        selected = null;
+                    }
                 }
 
                 newRect.Y = -newRect.Y;

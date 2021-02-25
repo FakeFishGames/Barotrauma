@@ -228,6 +228,14 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                if (fields.FirstOrDefault() is { } comp && comp.Parent?.Parent?.Parent is { } parent)
+                {
+                    if (parent.FindChild("colorpreview", true) is GUIButton preview)
+                    {
+                        preview.Color = preview.HoverColor = preview.PressedColor = preview.SelectedTextColor = c;
+                    }
+                }
             }
             else if (newValue is Rectangle r)
             {
@@ -927,7 +935,18 @@ namespace Barotrauma
             {
                 AbsoluteOffset = new Point(label.Rect.Width, 0)
             }, color: Color.Black, style: null);
-            var colorBox = new GUIFrame(new RectTransform(new Vector2(largeInputFieldWidth, 0.9f), colorBoxBack.RectTransform, Anchor.Center), style: null);
+            var colorBox = new GUIButton(new RectTransform(new Vector2(largeInputFieldWidth, 0.9f), colorBoxBack.RectTransform, Anchor.Center), style: null)
+            {
+                UserData = "colorpreview",
+                OnClicked = (component, data) =>
+                {
+                    if (!SubEditorScreen.IsSubEditor()) { return false; }
+                    if (GUIMessageBox.MessageBoxes.Any(msgBox => msgBox is GUIMessageBox { Closed: false, UserData: "colorpicker" })) { return false; }
+
+                    GUIMessageBox msgBox = SubEditorScreen.CreatePropertyColorPicker((Color) property.GetValue(entity), property, entity);
+                    return true;
+                }
+            };
             var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(Math.Max((frame.Rect.Width - label.Rect.Width - colorBoxBack.Rect.Width) / (float)frame.Rect.Width, 0.5f), 1), frame.RectTransform, Anchor.TopRight), isHorizontal: true, childAnchor: Anchor.CenterRight)
             {
                 Stretch = true,
@@ -976,10 +995,10 @@ namespace Barotrauma
                     if (SetPropertyValue(property, entity, newVal))
                     {
                         TrySendNetworkUpdate(entity, property);
-                        colorBox.Color = newVal;
+                        colorBox.Color = colorBox.HoverColor = colorBox.PressedColor = colorBox.SelectedTextColor = newVal;
                     }
                 };
-                colorBox.Color = (Color)property.GetValue(entity);
+                colorBox.Color = colorBox.HoverColor = colorBox.PressedColor = colorBox.SelectedTextColor = (Color)property.GetValue(entity);
                 fields[i] = numberInput;
             }
             frame.RectTransform.MinSize = new Point(0, frame.RectTransform.Children.Max(c => c.MinSize.Y));
@@ -1111,7 +1130,7 @@ namespace Barotrauma
                 List<ISerializableEntity> entities = new List<ISerializableEntity> { sEntity };
                 Dictionary<ISerializableEntity, object> affected = MultiSetProperties(property, entity, value);
 
-                Dictionary<object, List<ISerializableEntity>> oldValues = new Dictionary<object, List<ISerializableEntity>> {{ oldData, new List<ISerializableEntity> { sEntity }}};
+                Dictionary<object, List<ISerializableEntity>> oldValues = new Dictionary<object, List<ISerializableEntity>> {{ oldData!, new List<ISerializableEntity> { sEntity }}};
 
                 affected.ForEach(aEntity =>
                 {
@@ -1186,7 +1205,7 @@ namespace Barotrauma
                     case Item _:
                         if (entity.GetType() == parentObject.GetType())
                         {
-                            affected.Add((ISerializableEntity) entity, property.GetValue(entity));
+                            SafeAdd((ISerializableEntity) entity, property);
                             property.PropertyInfo.SetValue(entity, value);
                         } 
                         else if (entity is ISerializableEntity sEntity && sEntity.SerializableProperties != null)
@@ -1195,7 +1214,7 @@ namespace Barotrauma
 
                             if (props.TryGetValue(property.NameToLowerInvariant, out SerializableProperty foundProp))
                             {
-                                affected.Add(sEntity, foundProp.GetValue(sEntity));
+                                SafeAdd(sEntity, foundProp);
                                 foundProp.PropertyInfo.SetValue(entity, value);
                             }
                         }
@@ -1205,7 +1224,7 @@ namespace Barotrauma
                         {
                             if (component.GetType() == parentObject.GetType() && component != parentObject)
                             {
-                                affected.Add(component, property.GetValue(component));
+                                SafeAdd(component, property);
                                 property.PropertyInfo.SetValue(component, value);
                             }
                         }
@@ -1214,6 +1233,13 @@ namespace Barotrauma
             }
 
             return affected;
+
+            void SafeAdd(ISerializableEntity entity, SerializableProperty prop)
+            {
+                object obj = prop.GetValue(entity);
+                if (prop.PropertyType == typeof(string) && obj == null) { obj = string.Empty; }
+                affected.Add(entity, obj);
+            }
         }
     }
 }

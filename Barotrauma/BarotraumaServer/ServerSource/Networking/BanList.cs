@@ -320,7 +320,17 @@ namespace Barotrauma.Networking
 
                     outMsg.Write(bannedPlayer.Name);
                     outMsg.Write(bannedPlayer.UniqueIdentifier);
-                    outMsg.Write(bannedPlayer.IsRangeBan); outMsg.WritePadBits();
+                    outMsg.Write(bannedPlayer.IsRangeBan);
+                    outMsg.Write(bannedPlayer.ExpirationTime != null);
+                    outMsg.WritePadBits();
+                    if (bannedPlayer.ExpirationTime != null)
+                    {
+                        double hoursFromNow = (bannedPlayer.ExpirationTime.Value - DateTime.Now).TotalHours;
+                        outMsg.Write(hoursFromNow);
+                    }
+
+                    outMsg.Write(bannedPlayer.Reason ?? "");
+
                     if (c.Connection == GameMain.Server.OwnerConnection)
                     {
                         outMsg.Write(bannedPlayer.EndPoint);

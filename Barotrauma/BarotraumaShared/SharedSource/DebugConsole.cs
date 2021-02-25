@@ -733,6 +733,11 @@ namespace Barotrauma
                     if (newEvent != null)
                     {
                         var @event = newEvent.CreateInstance();
+                        if (newEvent == null)
+                        {
+                            NewMessage($"Could not initialize event {args[0]} because level did not meet requirements");
+                            return;
+                        }
                         GameMain.GameSession.EventManager.ActiveEvents.Add(@event);
                         @event.Init(true);
                         NewMessage($"Initialized event {newEvent.Identifier}", Color.Aqua);
@@ -816,7 +821,7 @@ namespace Barotrauma
                 NewMessage(Hull.EditFire ? "Fire spawning on" : "Fire spawning off", Color.White);                
             }, isCheat: true));
 
-            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [item damage] [emp strength]: Creates an explosion at the position of the cursor.", null, isCheat: true));
+            commands.Add(new Command("explosion", "explosion [range] [force] [damage] [structuredamage] [item damage] [emp strength] [ballast flora strength]: Creates an explosion at the position of the cursor.", null, isCheat: true));
 
             commands.Add(new Command("showseed|showlevelseed", "showseed: Show the seed of the current level.", (string[] args) =>
             {
@@ -827,6 +832,8 @@ namespace Barotrauma
                 else
                 {
                     NewMessage("Level seed: " + Level.Loaded.Seed);
+                    NewMessage("Level size: " + Level.Loaded.Size.X+"x"+ Level.Loaded.Size.Y);
+                    NewMessage("Minimum main path width: " + (Level.Loaded.LevelData?.MinMainPathWidth?.ToString() ?? "unknown"));
                 }
             },null));
             
@@ -1166,6 +1173,14 @@ namespace Barotrauma
                         c.SetAllDamage(200.0f, 0.0f, 0.0f);
                     }
                 }
+                foreach (Hull hull in Hull.hullList)
+                {
+                    hull.BallastFlora?.Kill();
+                }
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    sub.WreckAI?.Kill();
+                }
             }, null, isCheat: true));
 
             commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] [character name]: Gives the client control of the specified character.", null,
@@ -1287,6 +1302,7 @@ namespace Barotrauma
                     {
                         if (item.CurrentHull != null && item.HasTag("ballast") && item.GetComponent<Pump>() is { } pump)
                         {
+                            if (item.CurrentHull.BallastFlora != null) { continue; }
                             pumps.Add(pump);
                         }
                     }
@@ -1301,8 +1317,8 @@ namespace Barotrauma
                         }
 
                         Pump random = pumps.GetRandom();
-                        random.InfectBallast(prefab.Identifier);
-                        NewMessage($"Infected {random.Name} with {prefab.Identifier}.", Color.Green);
+                        random.InfectBallast(prefab.Identifier, allowMultiplePerShip: true);
+                        NewMessage($"Infected {random.Name} with {prefab.Identifier} in {random.Item.CurrentHull.DisplayName}.", Color.Green);
                         return;
                     }
 
@@ -1448,6 +1464,28 @@ namespace Barotrauma
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
 
+#if DEBUG
+            commands.Add(new Command("storeinfo", "", (string[] args) =>
+            {
+                if (GameMain.GameSession?.Map?.CurrentLocation is Location location)
+                {
+
+                    var msg = "--- Location: " + location.Name + " ---";
+                    msg += "\nBalance: " + location.StoreCurrentBalance;
+                    msg += "\nPrice modifier: " + location.StorePriceModifier + "%";
+                    msg +=  "\nDaily specials:";
+                    location.DailySpecials.ForEach(i => msg += "\n   - " + i.Name);
+                    msg += "\nRequested goods:";
+                    location.RequestedGoods.ForEach(i => msg += "\n   - " + i.Name);
+                    NewMessage(msg);
+                }
+                else
+                {
+                    NewMessage("No current location set, can't show store info.");
+                }
+            }));
+#endif
+
             //"dummy commands" that only exist so that the server can give clients permissions to use them
             //TODO: alphabetical order?
             commands.Add(new Command("control", "control [character name]: Start controlling the specified character (client-only).", null, () =>
@@ -1458,6 +1496,7 @@ namespace Barotrauma
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("togglevoicechatfilters", "Toggle the radio/muffle filters in the voice chat (client-only).", null, isCheat: false));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
             commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
             commands.Add(new Command("toggleitemhighlights", "Toggle the item highlight effect on/off (client-only).", null));
@@ -1755,7 +1794,7 @@ namespace Barotrauma
                 if (GameMain.GameSession != null)
                 {
                     //TODO: a way to select which team to spawn to?
-                    spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : Character.TeamType.Team1;                    
+                    spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;                    
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif
@@ -1971,13 +2010,21 @@ namespace Barotrauma
         {
             if (e != null)
             {
-                error += " {" + e.Message + "}\n" + e.StackTrace.CleanupStackTrace();
+                error += " {" + e.Message + "}\n";
+                if (e.StackTrace != null)
+                {
+                    error += e.StackTrace.CleanupStackTrace(); 
+                }
                 if (e.InnerException != null)
                 {
-                    error += "\n\nInner exception: " + e.InnerException.Message + "\n" + e.InnerException.StackTrace.CleanupStackTrace();
+                    error += "\n\nInner exception: " + e.InnerException.Message + "\n";
+                    if (e.InnerException.StackTrace != null)
+                    {
+                        error += e.InnerException.StackTrace.CleanupStackTrace(); ;
+                    }
                 }
             }
-            else if (appendStackTrace)
+            else if (appendStackTrace && Environment.StackTrace != null)
             {
                 error += "\n" + Environment.StackTrace.CleanupStackTrace();
             }

@@ -20,7 +20,9 @@ namespace Barotrauma.Networking
 
         public string PreferredJob;
 
-        public Character.TeamType TeamID;
+        public CharacterTeamType TeamID;
+
+        public CharacterTeamType PreferredTeam;
 
         private Character character;
         public Character Character

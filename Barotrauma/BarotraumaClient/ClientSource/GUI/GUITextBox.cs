@@ -251,7 +251,7 @@ namespace Barotrauma
         public bool Readonly { get; set; }
 
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, ScalableFont font = null,
-                          Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false)
+                          Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
         {
             HoverCursor = CursorState.IBeam;
@@ -283,7 +283,7 @@ namespace Barotrauma
                 clearButtonWidth = (int)(clearButton.Rect.Width * 1.2f);
             }
 
-            if (this.style != null && this.style.ChildStyles.ContainsKey("textboxicon"))
+            if (this.style != null && this.style.ChildStyles.ContainsKey("textboxicon") && createPenIcon)
             {
                 icon = new GUIImage(new RectTransform(new Vector2(0.6f, 0.6f), frame.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5 + clearButtonWidth, 0) }, null, scaleToFit: true);
                 icon.ApplyStyle(this.style.ChildStyles["textboxicon"]);
@@ -455,6 +455,11 @@ namespace Barotrauma
             if (!isSelecting)
             {
                 isSelecting = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
+            }
+
+            if (mouseHeldInside && !PlayerInput.PrimaryMouseButtonHeld())
+            {
+                mouseHeldInside = false;
             }
 
             if (CaretEnabled)

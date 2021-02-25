@@ -51,6 +51,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 if (pump.Item.CurrentHull == targetBranch.CurrentHull)
                 {
                     targetPumps.Add(pump);
+                    SetPump(pump);
                     pump.Hijacked = true;
                 }
             }
@@ -90,18 +91,23 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
+        private void SetPump(Pump pump)
+        {
+            if (pump.TargetLevel != null)
+            {
+                pump.TargetLevel = 100f;
+            }
+            else
+            {
+                pump.FlowPercentage = 100f;
+            }
+        }
+
         public void Update(float deltaTime)
         {
             foreach (Pump pump in targetPumps)
             {
-                if (pump.TargetLevel != null)
-                {
-                    pump.TargetLevel = 100f;
-                }
-                else
-                {
-                    pump.FlowPercentage = 100f;
-                }
+                SetPump(pump);
             }
 
             if (tryDrown && !filled)

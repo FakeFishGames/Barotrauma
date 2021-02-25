@@ -23,13 +23,13 @@ namespace Barotrauma.SpriteDeformations
         /// <summary>
         /// How fast the sprite reacts to being stretched
         /// </summary>
-        [Serialize(1.0f, true, description: "How fast the sprite reacts to being stretched"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(10.0f, true, description: "How fast the sprite reacts to being stretched"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float ReactionSpeed { get; set; }
 
         /// <summary>
         /// How fast the sprite returns back to normal after stretching ends
         /// </summary>
-        [Serialize(0.1f, true, description: "How fast the sprite returns back to normal after stretching ends"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(0.05f, true, description: "How fast the sprite returns back to normal after stretching ends"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float RecoverSpeed { get; set; }
 
         public PositionalDeformationParams(XElement element) : base(element)
@@ -56,13 +56,13 @@ namespace Barotrauma.SpriteDeformations
 
         public override void Update(float deltaTime)
         {
-            if (positionalDeformationParams.RecoverSpeed <= 0.0f) return;
+            if (positionalDeformationParams.RecoverSpeed <= 0.0f) { return; }
 
             for (int x = 0; x < Resolution.X; x++)
             {
                 for (int y = 0; y < Resolution.Y; y++)
                 {
-                    if (Deformation[x,y].LengthSquared() < 0.0001f)
+                    if (Deformation[x,y].LengthSquared() < 0.000001f)
                     {
                         Deformation[x, y] = Vector2.Zero;
                         continue;
@@ -78,9 +78,9 @@ namespace Barotrauma.SpriteDeformations
         {
             Vector2 pos = Vector2.Transform(worldPosition, transformMatrix);
             Point deformIndex = new Point((int)(pos.X * (Resolution.X - 1)), (int)(pos.Y * (Resolution.Y - 1)));
-            
-            if (deformIndex.X < 0 || deformIndex.Y < 0) return;
-            if (deformIndex.X >= Resolution.X || deformIndex.Y >= Resolution.Y) return;
+
+            if (deformIndex.X < 0 || deformIndex.Y < 0) { return; }
+            if (deformIndex.X >= Resolution.X || deformIndex.Y >= Resolution.Y) { return; }
 
             amount = amount.ClampLength(positionalDeformationParams.MaxDeformation);
 

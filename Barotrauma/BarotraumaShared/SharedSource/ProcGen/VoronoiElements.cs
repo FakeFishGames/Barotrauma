@@ -153,6 +153,9 @@ namespace Voronoi2
 
         public bool Island;
 
+        public bool IsDestructible;
+        public bool DoesDamage;
+
         public Vector2 Center
         {
             get { return new Vector2((float)Site.Coord.X, (float)Site.Coord.Y) + Translation; }

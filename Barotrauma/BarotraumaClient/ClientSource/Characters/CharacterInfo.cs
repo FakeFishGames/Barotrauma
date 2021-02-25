@@ -152,48 +152,37 @@ namespace Barotrauma
 
         partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
         {
-            if (TeamID == Character.TeamType.FriendlyNPC) { return; }
+            if (TeamID == CharacterTeamType.FriendlyNPC) { return; }
             if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
-
-            if (newLevel - prevLevel > 0.1f)
-            {
-                GUI.AddMessage(
-                    "+" + ((int)((newLevel - prevLevel) * 100.0f)).ToString() + " XP",
-                    GUI.Style.Green,
-                    textPopupPos,
-                    Vector2.UnitY * 10.0f,
-                    playSound: false);
-            }
-            else if (prevLevel % 0.1f > 0.05f && newLevel % 0.1f < 0.05f)
-            {
-                GUI.AddMessage(
-                    "+10 XP",
-                    GUI.Style.Green,
-                    textPopupPos,
-                    Vector2.UnitY * 10.0f,
-                    playSound: false);
-            }
 
             if ((int)newLevel > (int)prevLevel)
             {
+                int increase = Math.Max((int)newLevel - (int)prevLevel, 1);
                 GUI.AddMessage(
-                    TextManager.GetWithVariables("SkillIncreased", new string[3] { "[name]", "[skillname]", "[newlevel]" },
-                    new string[3] { Name, TextManager.Get("SkillName." + skillIdentifier), ((int)newLevel).ToString() },
-                    new bool[3] { false, true, false }), GUI.Style.Green);
+                    string.Format("+{0} {1}", increase, TextManager.Get("SkillName." + skillIdentifier)), 
+                    GUI.Style.Green,
+                    textPopupPos,
+                    Vector2.UnitY * 10.0f,
+                    playSound: false,
+                    subId: Character?.Submarine?.ID ?? -1);
             }
         }
 
         private void GetDisguisedSprites(IdCard idCard)
         {
+            if (idCard.Item.Tags == string.Empty) return;
+
             if (idCard.StoredJobPrefab == null || idCard.StoredPortrait == null)
             {
                 string[] readTags = idCard.Item.Tags.Split(',');
 
+                if (readTags.Length == 0) return;
+
                 if (idCard.StoredJobPrefab == null)
                 {
-                    string jobIdTag = readTags.First(s => s.StartsWith("jobid:"));
+                    string jobIdTag = readTags.FirstOrDefault(s => s.StartsWith("jobid:"));
 
-                    if (jobIdTag != string.Empty && jobIdTag.Length > 6)
+                    if (jobIdTag != null && jobIdTag.Length > 6)
                     {
                         string jobId = jobIdTag.Substring(6);
                         if (jobId != string.Empty)

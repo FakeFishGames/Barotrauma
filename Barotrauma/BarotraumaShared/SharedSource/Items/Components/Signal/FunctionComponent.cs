@@ -31,17 +31,17 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
         {
             if (connection.Name != "signal_in") return;
-            if (!float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value)) return;
+            if (!float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value)) { return; }
             switch (Function)
             {
                 case FunctionType.Round:
-                    item.SendSignal(0, Math.Round(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(stepsTaken, Math.Round(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", sender, source: source);
                     break;
                 case FunctionType.Ceil:
-                    item.SendSignal(0, Math.Ceiling(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(stepsTaken, Math.Ceiling(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", sender, source: source);
                     break;
                 case FunctionType.Floor:
-                    item.SendSignal(0, Math.Floor(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(stepsTaken, Math.Floor(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", sender, source: source);
                     break;
                 case FunctionType.Factorial:
                     int intVal = (int)Math.Min(value, 20);
@@ -50,15 +50,15 @@ namespace Barotrauma.Items.Components
                     {
                         factorial *= (ulong)i;
                     }
-                    item.SendSignal(0, factorial.ToString(), "signal_out", null);
+                    item.SendSignal(stepsTaken, factorial.ToString(), "signal_out", sender, source: source);
                     break;
                 case FunctionType.AbsoluteValue:
-                    item.SendSignal(0, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    item.SendSignal(stepsTaken, Math.Abs(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", sender, source: source);
                     break;
                 case FunctionType.SquareRoot:
                     if (value > 0)
                     {
-                        item.SendSignal(0, Math.Sqrt(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                        item.SendSignal(stepsTaken, Math.Sqrt(value).ToString("G", CultureInfo.InvariantCulture), "signal_out", sender, source: source);
                     }
                     break;
                 default:

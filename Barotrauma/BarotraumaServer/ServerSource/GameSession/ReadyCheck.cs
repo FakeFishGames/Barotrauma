@@ -64,6 +64,7 @@ namespace Barotrauma
 
         partial void EndReadyCheck()
         {
+            if (IsFinished) { return; }
             IsFinished = true;
             foreach (Client client in ActivePlayers)
             {

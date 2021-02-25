@@ -110,7 +110,7 @@ namespace Barotrauma
             {
                 folder = Path.Combine(Path.GetDirectoryName(filePath), "Ragdolls") + Path.DirectorySeparatorChar;
             }
-            return folder;
+            return folder.CleanUpPathCrossPlatform(correctFilenameCase: true);
         }
 
         public static T GetDefaultRagdollParams<T>(string speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
@@ -136,7 +136,7 @@ namespace Barotrauma
                 string folder = GetFolder(speciesName);
                 if (Directory.Exists(folder))
                 {
-                    var files = Directory.GetFiles(folder);
+                    List<string> files = Directory.GetFiles(folder).ToList();
                     if (files.None())
                     {
                         DebugConsole.ThrowError($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.");
@@ -364,6 +364,21 @@ namespace Barotrauma
             }
         }
 #endif
+
+        private bool variantScaleApplied;
+        public void ApplyVariantScale(XDocument variantFile)
+        {
+            if (variantScaleApplied) { return; }
+            if (variantFile == null) { return; }
+            var scaleMultiplier = variantFile.Root.GetChildElement("ragdoll")?.GetAttributeFloat("scalemultiplier", 1f);
+            if (scaleMultiplier.HasValue)
+            {
+                JointScale *= scaleMultiplier.Value;
+                LimbScale *= scaleMultiplier.Value;
+            }
+            variantScaleApplied = true;
+        }
+
         #endregion
 
         #region Memento
@@ -584,7 +599,7 @@ namespace Barotrauma
             [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0, MaxValueFloat = 100, DecimalCount = 2)]
             public float Density { get; set; }
 
             [Serialize(false, true), Editable]

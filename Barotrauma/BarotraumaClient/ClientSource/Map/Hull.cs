@@ -336,6 +336,7 @@ namespace Barotrauma
 
         public void DrawSectionColors(SpriteBatch spriteBatch)
         {
+            if (BackgroundSections == null || BackgroundSections.Count == 0) { return; }
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
             Point sectionSize = BackgroundSections[0].Rect.Size;
             Vector2 drawPos = drawOffset + new Vector2(rect.Location.X + sectionSize.X / 2, rect.Location.Y - sectionSize.Y / 2);

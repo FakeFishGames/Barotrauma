@@ -33,10 +33,14 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (!IsAllowed)
+            if (!IsAllowed || Item.IgnoreByAI)
             {
                 Priority = 0;
                 Abandon = true;
+                if (IsRepairing())
+                {
+                    Item.Repairables.ForEach(r => r.StopRepairing(character));
+                }
                 return Priority;
             }
             // TODO: priority list?
@@ -55,13 +59,13 @@ namespace Barotrauma
                     float dist = Math.Abs(character.WorldPosition.X - Item.WorldPosition.X) + yDist;
                     distanceFactor = MathHelper.Lerp(1, 0.25f, MathUtils.InverseLerp(0, 4000, dist));
                 }
-                float requiredSuccessFactor = objectiveManager.IsCurrentOrder<AIObjectiveRepairItems>() ? 0 : AIObjectiveRepairItems.RequiredSuccessFactor;
+                float requiredSuccessFactor = objectiveManager.HasOrder<AIObjectiveRepairItems>() ? 0 : AIObjectiveRepairItems.RequiredSuccessFactor;
                 float severity = isPriority ? 1 : AIObjectiveRepairItems.GetTargetPriority(Item, character, requiredSuccessFactor) / 100;
                 bool isSelected = IsRepairing();
                 float selectedBonus = isSelected ? 100 - MaxDevotion : 0;
                 float devotion = (CumulatedDevotion + selectedBonus) / 100;
                 float reduction = isPriority ? 1 : isSelected ? 2 : 3;
-                float max = MathHelper.Min(AIObjectiveManager.OrderPriority - reduction, 90);
+                float max = AIObjectiveManager.LowestOrderPriority - reduction;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
             }
             return Priority;
@@ -70,7 +74,7 @@ namespace Barotrauma
         protected override bool Check()
         {
             IsCompleted = Item.IsFullCondition;
-            if (IsCompleted && IsRepairing())
+            if (character.IsOnPlayerTeam && IsCompleted && IsRepairing())
             {
                 character.Speak(TextManager.GetWithVariable("DialogItemRepaired", "[itemname]", Item.Name, true), null, 0.0f, "itemrepaired", 10.0f);
             }
@@ -93,7 +97,10 @@ namespace Barotrauma
                             var getItemObjective = new AIObjectiveGetItem(character, requiredItem.Identifiers, objectiveManager, true);
                             if (objectiveManager.IsCurrentOrder<AIObjectiveRepairItems>())
                             {
-                                getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindrequireditemtorepair"), null, 0.0f, "dialogcannotfindrequireditemtorepair", 10.0f);
+                                if (character.IsOnPlayerTeam)
+                                {
+                                    getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindrequireditemtorepair"), null, 0.0f, "dialogcannotfindrequireditemtorepair", 10.0f);
+                                }
                             }
                             subObjectives.Add(getItemObjective);
                         }
@@ -107,8 +114,7 @@ namespace Barotrauma
             }
             if (repairTool != null)
             {
-                var containedItems = repairTool.Item.OwnInventory?.Items;
-                if (containedItems == null)
+                if (repairTool.Item.OwnInventory == null)
                 {
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveRepairItem failed - the item \"" + repairTool + "\" has no proper inventory");
@@ -116,27 +122,20 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                // Drop empty tanks
-                foreach (Item containedItem in containedItems)
-                {
-                    if (containedItem == null) { continue; }
-                    if (containedItem.Condition <= 0.0f)
-                    {
-                        containedItem.Drop(character);
-                    }
-                }
+                // Eject empty tanks
+                HumanAIController.UnequipEmptyItems(repairTool.Item);
                 RelatedItem item = null;
                 Item fuel = null;
                 foreach (RelatedItem requiredItem in repairTool.requiredItems[RelatedItem.RelationType.Contained])
                 {
                     item = requiredItem;
-                    fuel = containedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                    fuel = repairTool.Item.OwnInventory.AllItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
                     if (fuel != null) { break; }
                 }
                 if (fuel == null)
                 {
                     RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
                         onCompleted: () => RemoveSubObjective(ref refuelObjective),
                         onAbandon: () => Abandon = true);
                     return;
@@ -178,7 +177,7 @@ namespace Barotrauma
                     }
                     if (Abandon)
                     {
-                        if (IsRepairing())
+                        if (character.IsOnPlayerTeam && IsRepairing())
                         {
                             character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
                         }
@@ -213,7 +212,7 @@ namespace Barotrauma
                     onAbandon: () =>
                     {
                         Abandon = true;
-                        if (IsRepairing())
+                        if (character.IsOnPlayerTeam && IsRepairing())
                         {
                             character.Speak(TextManager.GetWithVariable("DialogCannotRepair", "[itemname]", Item.Name, true), null, 0.0f, "cannotrepair", 10.0f);
                         }
@@ -229,7 +228,7 @@ namespace Barotrauma
                 {
                     foreach (RelatedItem requiredItem in kvp.Value)
                     {
-                        foreach (var item in character.Inventory.Items)
+                        foreach (var item in character.Inventory.AllItems)
                         {
                             if (requiredItem.MatchesItem(item))
                             {

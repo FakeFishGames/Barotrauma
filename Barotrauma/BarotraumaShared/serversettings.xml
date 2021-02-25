@@ -41,7 +41,7 @@
   modeselectionmode="Manual"
   endvoterequiredratio="0.6"
   kickvoterequiredratio="0.6"
-  killdisconnectedtime="120"
+  killdisconnectedtime="300"
   kickafktime="600"
   traitoruseratio="True"
   traitorratio="0.2"

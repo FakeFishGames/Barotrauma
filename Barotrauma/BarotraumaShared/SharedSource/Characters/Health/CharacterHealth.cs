@@ -214,7 +214,7 @@ namespace Barotrauma
             InitProjSpecific(null, character);
         }
 
-        public CharacterHealth(XElement element, Character character)
+        public CharacterHealth(XElement element, Character character, XElement limbHealthElement = null)
         {
             this.Character = character;
             InitIrremovableAfflictions();
@@ -224,7 +224,8 @@ namespace Barotrauma
             minVitality = character.IsHuman ? -100.0f : 0.0f;
 
             limbHealths.Clear();
-            foreach (XElement subElement in element.Elements())
+            limbHealthElement ??= element;
+            foreach (XElement subElement in limbHealthElement.Elements())
             {
                 if (!subElement.Name.ToString().Equals("limb", StringComparison.OrdinalIgnoreCase)) { continue; }
                 limbHealths.Add(new LimbHealth(subElement, this));
@@ -685,12 +686,12 @@ namespace Barotrauma
                 for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
                 {
                     var affliction = limbHealths[i].Afflictions[j];
-                    Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
+                    Limb targetLimb = Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == i);
                     affliction.Update(this, targetLimb, deltaTime);
                     affliction.DamagePerSecondTimer += deltaTime;
-                    if (affliction is AfflictionBleeding)
+                    if (affliction is AfflictionBleeding bleeding)
                     {
-                        UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
+                        UpdateBleedingProjSpecific(bleeding, targetLimb, deltaTime);
                     }
                     Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
                 }

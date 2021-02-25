@@ -62,7 +62,11 @@ namespace Barotrauma
                     };
                     
                     SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { structure }, false));
-                    selected = null;
+                    placePosition = Vector2.Zero;
+                    if (!PlayerInput.IsShiftDown())
+                    {
+                        selected = null;
+                    }
                     return;
                 }
             }

@@ -104,7 +104,8 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(false, false, description: "Does the sonar have mineral scanning mode?")]
+        [Editable, Serialize(false, false, description: "Does the sonar have mineral scanning mode. " +
+            "Only available in-game when the Item has no Steering component.")]
         public bool HasMineralScanner { get; set; }
 
         public float Zoom
@@ -251,9 +252,10 @@ namespace Barotrauma.Items.Components
             }
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null || !c.Enabled) continue;
-                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) continue;
-                if (Vector2.DistanceSquared(c.WorldPosition, item.WorldPosition) > range * range) continue;
+                if (c.IsDead || c.Removed || !c.Enabled) { continue; }
+                if (c.AnimController.CurrentHull != null || c.Params.HideInSonar) { continue; }
+                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
+                if (Vector2.DistanceSquared(c.WorldPosition, item.WorldPosition) > range * range) { continue; }
 
                 string directionName = GetDirectionName(c.WorldPosition - item.WorldPosition);
                 if (!targetGroups.ContainsKey(directionName))
@@ -276,9 +278,12 @@ namespace Barotrauma.Items.Components
                     dialogTag = "DialogSonarTargetLarge";
                 }
 
-                character.Speak(TextManager.GetWithVariables(dialogTag, new string[2] { "[direction]", "[count]" }, 
-                    new string[2] { targetGroup.Key.ToString(), targetGroup.Value.Count.ToString() },
-                    new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 60);
+                if (character.IsOnPlayerTeam)
+                {
+                    character.Speak(TextManager.GetWithVariables(dialogTag, new string[2] { "[direction]", "[count]" },
+                        new string[2] { targetGroup.Key.ToString(), targetGroup.Value.Count.ToString() },
+                        new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 60);
+                }
 
                 //prevent the character from reporting other targets in the group
                 for (int i = 1; i < targetGroup.Value.Count; i++)

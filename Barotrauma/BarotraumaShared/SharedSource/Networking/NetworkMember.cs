@@ -226,13 +226,13 @@ namespace Barotrauma.Networking
 
         public bool CanUseRadio(Character sender)
         {
-            if (sender == null) return false;
+            if (sender == null) { return false; }
 
-            var radio = sender.Inventory.Items.FirstOrDefault(i => i != null && i.GetComponent<WifiComponent>() != null);
-            if (radio == null || !sender.HasEquippedItem(radio)) return false;
+            var radio = sender.Inventory.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
+            if (radio == null || !sender.HasEquippedItem(radio)) { return false; }
                        
             var radioComponent = radio.GetComponent<WifiComponent>();
-            if (radioComponent == null) return false;
+            if (radioComponent == null) { return false; }
             return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 

@@ -351,28 +351,48 @@ namespace Barotrauma
 
             void LoadSprites(XElement element)
             {
-                element.Elements("sprite").ForEach(s => CreateSprite(s));
-                element.Elements("Sprite").ForEach(s => CreateSprite(s));
-                element.Elements("backgroundsprite").ForEach(s => CreateSprite(s));
-                element.Elements("BackgroundSprite").ForEach(s => CreateSprite(s));
-                element.Elements("brokensprite").ForEach(s => CreateSprite(s));
-                element.Elements("BrokenSprite").ForEach(s => CreateSprite(s));
-                element.Elements("containedsprite").ForEach(s => CreateSprite(s));
-                element.Elements("ContainedSprite").ForEach(s => CreateSprite(s));
-                element.Elements("inventoryicon").ForEach(s => CreateSprite(s));
-                element.Elements("InventoryIcon").ForEach(s => CreateSprite(s));
-                element.Elements("icon").ForEach(s => CreateSprite(s));
-                element.Elements("Icon").ForEach(s => CreateSprite(s));
-                //decorativesprites don't necessarily have textures (can be used to hide/disable other sprites)
-                element.Elements("decorativesprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });
-                element.Elements("DecorativeSprite").ForEach(s => { if (s.Attribute("texture") != null) CreateSprite(s); });
+                string[] spriteElementNames = new string[]
+                {
+                    "Sprite",
+                    "DeformableSprite",
+                    "BackgroundSprite",
+                    "BrokenSprite",
+                    "ContainedSprite",
+                    "InventoryIcon",
+                    "Icon",
+                    "VineSprite",
+                    "LeafSprite",
+                    "FlowerSprite",
+                    "DecorativeSprite"
+                };
+
+                foreach (string spriteElementName in spriteElementNames)
+                {
+                    element.Elements(spriteElementName).ForEach(s => CreateSprite(s));
+                    element.Elements(spriteElementName.ToLowerInvariant()).ForEach(s => CreateSprite(s));
+                }
+
                 element.Elements().ForEach(e => LoadSprites(e));
             }
 
             void CreateSprite(XElement element)
             {
                 string spriteFolder = "";
-                string textureElement = element.GetAttributeString("texture", "");
+                string textureElement = "";
+                
+                if (element.Attribute("texture") != null)
+                {
+                    textureElement = element.GetAttributeString("texture", "");
+                }
+                else
+                {
+                    if (element.Name.ToString().ToLower() == "vinesprite")
+                    {
+                        textureElement = element.Parent.GetAttributeString("vineatlas", "");
+                    }
+                }
+                if (string.IsNullOrEmpty(textureElement)) { return; }
+
                 // TODO: parse and create?
                 if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]") || textureElement.Contains("[VARIANT]")) { return; }
                 if (!textureElement.Contains("/"))
@@ -386,7 +406,7 @@ namespace Barotrauma
                 //{
                 //    loadedSprites.Add(new Sprite(element, spriteFolder));
                 //}
-                loadedSprites.Add(new Sprite(element, spriteFolder));
+                loadedSprites.Add(new Sprite(element, spriteFolder, textureElement));
             }
         }
 

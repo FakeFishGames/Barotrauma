@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -32,6 +33,12 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public Sprite ContainedStateIndicatorEmpty
+        {
+            get;
+            private set;
+        }
+
 #if DEBUG
         [Editable]
 #endif
@@ -54,6 +61,11 @@ namespace Barotrauma.Items.Components
 
         [Serialize(null, false, description: "An optional text displayed above the item's inventory.")]
         public string UILabel { get; set; }
+
+        public GUIComponentStyle IndicatorStyle { get; set; }
+
+        [Serialize(null, false)]
+        public string ContainedStateIndicatorStyle { get; set; }
 
         [Serialize(true, false, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
             "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
@@ -98,6 +110,26 @@ namespace Barotrauma.Items.Components
                     case "containedstateindicator":
                         ContainedStateIndicator = new Sprite(subElement);
                         break;
+                    case "containedstateindicatorempty":
+                        ContainedStateIndicatorEmpty = new Sprite(subElement);
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(ContainedStateIndicatorStyle))
+            {
+                //if neither a style or a custom sprite is defined, use default style
+                if (ContainedStateIndicator == null)
+                {
+                    IndicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator.Default");
+                }
+            }
+            else
+            {
+                IndicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator." + ContainedStateIndicatorStyle);
+                if (ContainedStateIndicator != null || ContainedStateIndicatorEmpty != null)
+                {
+                    DebugConsole.AddWarning($"Item \"{item.Name}\" defines both a contained state indicator style and a custom indicator sprite. Will use the custom sprite...");
                 }
             }
             if (GuiFrame == null)
@@ -147,6 +179,23 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
+
+            // Expand the frame vertically if it's too small to fit the text
+            if (label != null && label.RectTransform.RelativeSize.Y > 0.5f)
+            {
+                int newHeight = (int)(GuiFrame.Rect.Height + (2 * (label.RectTransform.RelativeSize.Y - 0.5f) * content.Rect.Height));
+                if (newHeight > GuiFrame.RectTransform.MaxSize.Y)
+                {
+                    Point newMaxSize = GuiFrame.RectTransform.MaxSize;
+                    newMaxSize.Y = newHeight;
+                    GuiFrame.RectTransform.MaxSize = newMaxSize;
+                }
+                GuiFrame.RectTransform.Resize(new Point(GuiFrame.Rect.Width, newHeight));
+                content.RectTransform.Resize(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin);
+                label.CalculateHeightFromText();
+                guiCustomComponent.RectTransform.Resize(new Vector2(1.0f, Math.Max(1.0f - label.RectTransform.RelativeSize.Y, minInventoryAreaSize)));
+            }
+
             Inventory.RectTransform = guiCustomComponent.RectTransform;
         }
 
@@ -173,15 +222,9 @@ namespace Barotrauma.Items.Components
             }
 
             //if holding 2 different "always open" items in different hands, don't force them to stay open
-            if (character.SelectedItems[0] != null &&
-                character.SelectedItems[1] != null &&
-                character.SelectedItems[0] != character.SelectedItems[1])
+            if (character.HeldItems.Count() > 1 && character.HeldItems.All(it => it.GetComponent<ItemContainer>()?.KeepOpenWhenEquipped ?? false))
             {
-                if ((character.SelectedItems[0].GetComponent<ItemContainer>()?.KeepOpenWhenEquipped ?? false) &&
-                    (character.SelectedItems[1].GetComponent<ItemContainer>()?.KeepOpenWhenEquipped ?? false))
-                {
-                    return false;
-                }
+                return false;
             }
 
             return true;
@@ -257,13 +300,11 @@ namespace Barotrauma.Items.Components
                 spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
             }
 
-            bool isWiringMode = SubEditorScreen.IsWiringMode();
+            bool isWiringMode = SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
 
             int i = 0;
-            foreach (Item containedItem in Inventory.Items)
+            foreach (Item containedItem in Inventory.AllItems)
             {
-                if (containedItem == null) continue;
-
                 if (AutoInteractWithContained)
                 {
                     containedItem.IsHighlighted = item.IsHighlighted;
@@ -313,7 +354,7 @@ namespace Barotrauma.Items.Components
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (item.NonInteractable) { return; }
+            if (!item.IsInteractable(character)) { return; }
             if (Inventory.RectTransform != null)
             {
                 guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;

@@ -220,7 +220,7 @@ namespace Barotrauma
                 SamplerState.LinearWrap, DepthStencilState.DepthRead, null, null,
                 cam.Transform);            
 
-            backgroundSpriteManager?.DrawObjects(spriteBatch, cam, drawFront: false);
+            backgroundSpriteManager?.DrawObjectsBack(spriteBatch, cam);
             if (cam.Zoom > 0.05f)
             {
                 backgroundCreatureManager?.Draw(spriteBatch, cam);
@@ -262,8 +262,6 @@ namespace Barotrauma
                         color: Color.White * alpha, textureScale: new Vector2(texScale));                    
                 }
             }
-
-
             spriteBatch.End();
 
             RenderWalls(GameMain.Instance.GraphicsDevice, cam);
@@ -272,11 +270,21 @@ namespace Barotrauma
                 BlendState.NonPremultiplied,
                 SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
                 cam.Transform);
-            if (backgroundSpriteManager != null) backgroundSpriteManager.DrawObjects(spriteBatch, cam, drawFront: true);
+            backgroundSpriteManager?.DrawObjectsMid(spriteBatch, cam);
             spriteBatch.End();
         }
 
-        public void Draw(SpriteBatch spriteBatch, Camera cam)
+        public void DrawForeground(SpriteBatch spriteBatch, Camera cam, LevelObjectManager backgroundSpriteManager = null)
+        {
+            spriteBatch.Begin(SpriteSortMode.Deferred,
+                BlendState.NonPremultiplied,
+                SamplerState.LinearClamp, DepthStencilState.DepthRead, null, null,
+                cam.Transform);
+            backgroundSpriteManager?.DrawObjectsFront(spriteBatch, cam);
+            spriteBatch.End();
+        }
+
+        public void DrawDebugOverlay(SpriteBatch spriteBatch, Camera cam)
         {
             if (GameMain.DebugDraw && cam.Zoom > 0.1f)
             {
@@ -294,7 +302,7 @@ namespace Barotrauma
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
                             new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), edge.NextToCave ? Color.Red : (cell.Body == null ? Color.Cyan * 0.5f : (edge.IsSolid ? Color.White : Color.Gray)),
-                            width: edge.NextToCave ? 8 :1);
+                            width: edge.NextToCave ? 8 : 1);
                     }
 
                     foreach (Vector2 point in cell.BodyVertices)
@@ -313,6 +321,11 @@ namespace Barotrauma
                             Color.Lerp(Color.Yellow, GUI.Style.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }*/
+
+                foreach (var abyssIsland in level.AbyssIslands)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Vector2(abyssIsland.Area.X, -abyssIsland.Area.Y - abyssIsland.Area.Height), abyssIsland.Area.Size.ToVector2(), Color.Cyan, thickness: 5);
+                }
 
                 foreach (var ruin in level.Ruins)
                 {
@@ -395,17 +408,17 @@ namespace Barotrauma
                     graphicsDevice.SetVertexBuffer(wall.WallBuffer);
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallBuffer.VertexCount / 3.0f));
 
+                    if (destructibleWall.Damage > 0.0f)
+                    {
+                        wallCenterEffect.Texture = level.GenerationParams.WallSpriteDestroyed.Texture;
+                        wallCenterEffect.Alpha = MathHelper.Lerp(0.2f, 1.0f, destructibleWall.Damage / destructibleWall.MaxHealth) * wall.Alpha;
+                        wallCenterEffect.CurrentTechnique.Passes[0].Apply();
+                        graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallEdgeBuffer.VertexCount / 3.0f));
+                    }
+
                     wallEdgeEffect.Texture = level.GenerationParams.DestructibleWallEdgeSprite?.Texture ?? level.GenerationParams.WallEdgeSprite.Texture;
                     wallEdgeEffect.World = wall.GetTransform() * transformMatrix;
                     wallEdgeEffect.Alpha = wall.Alpha;
-                    wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
-                    graphicsDevice.SetVertexBuffer(wall.WallEdgeBuffer);
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallEdgeBuffer.VertexCount / 3.0f));
-
-                    if (destructibleWall.Damage <= 0.0f) { continue; }
-                    wallEdgeEffect.Texture = level.GenerationParams.WallSpriteDestroyed.Texture;
-                    wallEdgeEffect.Alpha = MathHelper.Lerp(0.2f, 1.0f, destructibleWall.Damage / destructibleWall.MaxHealth) * wall.Alpha;
-                    wallEdgeEffect.World = wall.GetTransform() * transformMatrix;
                     wallEdgeEffect.CurrentTechnique.Passes[0].Apply();
                     graphicsDevice.SetVertexBuffer(wall.WallEdgeBuffer);
                     graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, (int)Math.Floor(wall.WallEdgeBuffer.VertexCount / 3.0f));

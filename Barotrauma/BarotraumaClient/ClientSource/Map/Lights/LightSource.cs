@@ -470,37 +470,29 @@ namespace Barotrauma.Lights
 
         public void Update(float deltaTime)
         {
+            float brightness = 1.0f;
             if (lightSourceParams.BlinkFrequency > 0.0f)
             {
                 blinkTimer = (blinkTimer + deltaTime * lightSourceParams.BlinkFrequency) % 1.0f;
+                if (blinkTimer > 0.5f)
+                {
+                    CurrentBrightness = 0.0f;
+                    return;
+                }
             }
-
-            if (lightSourceParams.PulseFrequency > 0.0f)
+            if (lightSourceParams.PulseFrequency > 0.0f && lightSourceParams.PulseAmount > 0.0f)
             {
                 pulseState = (pulseState + deltaTime * lightSourceParams.PulseFrequency) % 1.0f;
+                //oscillate between 0-1
+                brightness *= 1.0f - (float)(Math.Sin(pulseState * MathHelper.TwoPi) + 1.0f) / 2.0f * lightSourceParams.PulseAmount;
             }
-
-            if (blinkTimer > 0.5f)
+            if (lightSourceParams.Flicker > 0.0f)
             {
-                CurrentBrightness = 0.0f;
+                flickerState += deltaTime * lightSourceParams.FlickerSpeed;
+                flickerState %= 255;
+                brightness *= 1.0f - PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * lightSourceParams.Flicker;
             }
-            else
-            {
-                float flicker = 0.0f;
-                float pulse = 0.0f;
-                if (lightSourceParams.Flicker > 0.0f)
-                {
-                    flickerState += deltaTime * lightSourceParams.FlickerSpeed;
-                    flickerState %= 255;
-                    flicker = PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * lightSourceParams.Flicker;
-                }
-                if (lightSourceParams.PulseFrequency > 0.0f && lightSourceParams.PulseAmount > 0.0f)
-                {
-                    //oscillate between 0-1
-                    pulse = (float)(Math.Sin(pulseState * MathHelper.TwoPi) + 1.0f) / 2.0f * lightSourceParams.PulseAmount;
-                }
-                CurrentBrightness = (1.0f - flicker) * (1.0f - pulse);
-            }
+            CurrentBrightness = brightness;
         }
         
         /// <summary>

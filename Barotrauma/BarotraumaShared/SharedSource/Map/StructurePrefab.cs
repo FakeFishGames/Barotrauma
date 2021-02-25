@@ -360,7 +360,8 @@ namespace Barotrauma
                 }
             }
 
-            if (!Enum.TryParse(element.GetAttributeString("category", "Structure"), true, out MapEntityCategory category))
+            string categoryStr = element.GetAttributeString("category", "Structure");
+            if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Structure; 
             }
@@ -417,6 +418,13 @@ namespace Barotrauma
                     sp.size.X = element.GetAttributeFloat("width", 0.0f);
                     sp.size.Y = element.GetAttributeFloat("height", 0.0f);
                 }
+            }
+
+            //backwards compatibility
+            if (categoryStr.Equals("Thalamus", StringComparison.OrdinalIgnoreCase))
+            {
+                sp.Category = MapEntityCategory.Wrecked;
+                sp.Subcategory = "Thalamus";
             }
 
             if (string.IsNullOrEmpty(sp.identifier))

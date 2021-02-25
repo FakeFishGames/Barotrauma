@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
+        public const int MinimumInitialMoney = 500;
+
         private UInt16 lastUpdateID;
         public UInt16 LastUpdateID
         {
@@ -57,7 +59,7 @@ namespace Barotrauma
             InitCampaignData();
         }
 
-        public static MultiPlayerCampaign StartNew(string mapSeed)
+        public static MultiPlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub)
         {
             MultiPlayerCampaign campaign = new MultiPlayerCampaign();
             //only the server generates the map, the clients load it from a save file
@@ -96,6 +98,9 @@ namespace Barotrauma
         private void Load(XElement element)
         {
             Money = element.GetAttributeInt("money", 0);
+            PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
+            PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
+            PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {

@@ -31,11 +31,20 @@ namespace Barotrauma
             List<VertexPositionTexture> vertices = new List<VertexPositionTexture>();
             foreach (VoronoiCell cell in cells)
             {
+                Vector2 minVert = cell.Edges[0].Point1;
+                Vector2 maxVert = cell.Edges[0].Point1;
                 float circumference = 0.0f;
                 foreach (GraphEdge edge in cell.Edges)
                 {
                     circumference += Vector2.Distance(edge.Point1, edge.Point2);
+                    minVert = new Vector2(
+                        Math.Min(minVert.X, edge.Point1.X),
+                        Math.Min(minVert.Y, edge.Point1.Y));
+                    maxVert = new Vector2(
+                        Math.Max(maxVert.X, edge.Point1.X),
+                        Math.Max(maxVert.Y, edge.Point1.Y));
                 }
+                Vector2 center = (minVert + maxVert) / 2;
                 foreach (GraphEdge edge in cell.Edges)
                 {
                     if (!edge.IsSolid) { continue; }
@@ -130,8 +139,8 @@ namespace Barotrauma
                         break;
                     }
 
-                    float point1UV = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(edge.Point1 - cell.Center));
-                    float point2UV = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(edge.Point2 - cell.Center));
+                    float point1UV = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(edge.Point1 - center));
+                    float point2UV = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(edge.Point2 - center));
                     //handle wrapping around 0/360
                     if (point1UV - point2UV > MathHelper.Pi) 
                     { 

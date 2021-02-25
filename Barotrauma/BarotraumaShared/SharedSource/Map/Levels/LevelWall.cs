@@ -36,7 +36,16 @@ namespace Barotrauma
             }
         }
 
-        public float WallDamageOnTouch;
+        private float wallDamageOnTouch;
+        public float WallDamageOnTouch
+        {
+            get { return wallDamageOnTouch; }
+            set 
+            {
+                Cells.ForEach(c => c.DoesDamage = !MathUtils.NearlyEqual(value, 0.0f));
+                wallDamageOnTouch = value; 
+            }
+        }
 
         public float MoveSpeed;
 

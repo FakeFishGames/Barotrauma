@@ -56,7 +56,7 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.FirstOrDefault() == target)) { return; }
-            if (targetIdentifiers != null && !IsValidTarget(target)) { return; }
+            if (!IsValidTarget(target)) { return; }
             if (!HasRequiredConditions(target.ToEnumerable())) { return; }
 
             switch (delayType)
@@ -87,16 +87,12 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.SequenceEqual(targets))) { return; }
-            if (delayType == DelayTypes.ReachCursor && Character.Controlled == null) return;
+            if (delayType == DelayTypes.ReachCursor && Character.Controlled == null) { return; }
 
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
             {
-                if (targetIdentifiers != null)
-                {
-                    //ignore invalid targets
-                    if (!IsValidTarget(target)) { continue; }
-                }
+                if (!IsValidTarget(target)) { continue; }
                 currentTargets.Add(target);
             }
 
@@ -148,7 +144,7 @@ namespace Barotrauma
                         if (element.Delay > 0.0f) { continue; }
                         break;
                     case DelayTypes.ReachCursor:
-                        if (Vector2.Distance(element.Entity.WorldPosition, element.StartPosition.Value) < element.Delay) continue;
+                        if (Vector2.Distance(element.Entity.WorldPosition, element.StartPosition.Value) < element.Delay) { continue; }
                         break;
                 }
 

@@ -254,11 +254,8 @@ namespace Barotrauma
         {
             if (AiController.Character.Inventory != null)
             {
-                var items = AiController.Character.Inventory.Items;
-                for (int i = 0; i < items.Length; i++)
+                foreach (Item item in AiController.Character.Inventory.AllItems)
                 {
-                    var item = items[i];
-                    if (item == null) { continue; }
                     var tag = item.GetComponent<NameTag>();
                     if (tag != null && !string.IsNullOrWhiteSpace(tag.WrittenName))
                     {
@@ -358,7 +355,7 @@ namespace Barotrauma
 
                 XElement petElement = new XElement("pet", 
                     new XAttribute("speciesname", c.SpeciesName), 
-                    new XAttribute("ownerid", petBehavior.Owner?.ID ?? Entity.NullEntityID),
+                    new XAttribute("ownerhash", petBehavior.Owner?.Info?.GetIdentifier() ?? 0),
                     new XAttribute("seed", c.Seed));
 
                 var petBehaviorElement = new XElement("petbehavior",
@@ -387,16 +384,19 @@ namespace Barotrauma
             {
                 string speciesName = subElement.GetAttributeString("speciesname", "");
                 string seed = subElement.GetAttributeString("seed", "123");
-                ushort ownerID = (ushort)subElement.GetAttributeInt("ownerid", 0);
+                int ownerHash = subElement.GetAttributeInt("ownerhash", 0);
                 Vector2 spawnPos = Vector2.Zero;
-                Character owner = Entity.FindEntityByID(ownerID) as Character;
-                if (owner != null)
+                Character owner = Character.CharacterList.Find(c => c.Info?.GetIdentifier() == ownerHash);
+                if (owner != null && owner.Submarine?.Info.Type == SubmarineType.Player)
                 {
                     spawnPos = owner.WorldPosition;
                 }
                 else
                 {
-                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandom();
+                    //try to find a spawnpoint in the main sub
+                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandom();
+                    //if not found, try any player sub (shuttle/drone etc)
+                    spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandom();
                     spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
                 }
                 var pet = Character.Create(speciesName, spawnPos, seed);

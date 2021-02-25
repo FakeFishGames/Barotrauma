@@ -240,20 +240,20 @@ namespace Barotrauma
 
         public class StrikethroughSettings
         {
-            private Color color = GUI.Style.Red;
+            public Color Color { get; set; } = GUI.Style.Red;
             private int thickness;
             private int expand;
 
             public StrikethroughSettings(Color? color = null, int thickness = 1, int expand = 0)
             {
-                if (color != null) this.color = color.Value;
+                if (color != null) { Color = color.Value; }
                 this.thickness = thickness;
                 this.expand = expand;
             }
 
             public void Draw(SpriteBatch spriteBatch, float textSizeHalf, float xPos, float yPos)
             {
-                ShapeExtensions.DrawLine(spriteBatch, new Vector2(xPos - textSizeHalf - expand, yPos), new Vector2(xPos + textSizeHalf + expand, yPos), color, thickness);
+                ShapeExtensions.DrawLine(spriteBatch, new Vector2(xPos - textSizeHalf - expand, yPos), new Vector2(xPos + textSizeHalf + expand, yPos), Color, thickness);
             }
         }
 

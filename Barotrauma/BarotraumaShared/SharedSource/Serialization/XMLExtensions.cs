@@ -242,7 +242,7 @@ namespace Barotrauma
 
             try
             {
-                val = Int32.Parse(element.Attribute(name).Value);
+                val = Int32.Parse(element.Attribute(name).Value, CultureInfo.InvariantCulture);
             }
             catch (Exception e)
             {
@@ -660,8 +660,13 @@ namespace Barotrauma
         }
 
         public static bool IsOverride(this XElement element) => element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase);
+        public static bool IsCharacterVariant(this XElement element) => element.Name.ToString().Equals("charactervariant", StringComparison.OrdinalIgnoreCase);
 
         public static XElement FirstElement(this XElement element) => element.Elements().FirstOrDefault();
+
+        public static XAttribute GetAttribute(this XElement element, string name, StringComparison comparisonMethod = StringComparison.OrdinalIgnoreCase) => element.GetAttribute(a => a.Name.ToString().Equals(name, comparisonMethod));
+
+        public static XAttribute GetAttribute(this XElement element, Func<XAttribute, bool> predicate) => element.Attributes().FirstOrDefault(predicate);
 
         /// <summary>
         /// Returns the first child element that matches the name using the provided comparison method.

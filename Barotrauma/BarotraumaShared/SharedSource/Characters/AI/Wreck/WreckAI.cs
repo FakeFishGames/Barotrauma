@@ -35,7 +35,7 @@ namespace Barotrauma
 
         private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, string tag) => MapEntity.mapEntityList.Where(e => e.Submarine == wreck && e.prefab != null && IsThalamus(e.prefab, tag));
 
-        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.Category == MapEntityCategory.Thalamus || entityPrefab.Tags.Contains(tag);
+        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
 
         public WreckAI(Submarine wreck)
         {
@@ -131,7 +131,7 @@ namespace Barotrauma
                             if (container == null) { continue; }
                             for (int i = 0; i < container.Inventory.Capacity; i++)
                             {
-                                if (container.Inventory.Items[i] != null) { continue; }
+                                if (container.Inventory.GetItemAt(i) != null) { continue; }
                                 if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab i && container.CanBeContained(i) && 
                                         Config.ForbiddenAmmunition.None(id => id.Equals(i.Identifier, StringComparison.OrdinalIgnoreCase)), Rand.RandSync.Server) is ItemPrefab ammoPrefab)
                                 {
@@ -246,7 +246,7 @@ namespace Barotrauma
             initialCellsSpawned = true;
         }
 
-        private void Kill()
+        public void Kill()
         {
             thalamusItems.ForEach(i => i.Condition = 0);
             foreach (var turret in turrets)
@@ -319,25 +319,33 @@ namespace Barotrauma
         private readonly List<Hull> populatedHulls = new List<Hull>();
         private float cellSpawnTimer;
 
-        private float CellSpawnTime => Config.AgentSpawnDelay;
-        private float CellSpawnRandomFactor => Config.AgentSpawnDelayRandomFactor;
-        private int MinCellsPerBrainRoom => Config.MinAgentsPerBrainRoom;
-        private int MaxCellsPerRoom => Config.MaxAgentsPerRoom;
-        private int MinCellsOutside => Config.MinAgentsOutside;
-        private int MaxCellsOutside => Config.MaxAgentsOutside;
-        private int MinCellsInside => Config.MinAgentsInside;
-        private int MaxCellsInside => Config.MaxAgentsInside;
-        private int MaxCellCount => Config.MaxAgentCount;
+        private int MinCellsPerBrainRoom => CalculateCellCount(0, Config.MinAgentsPerBrainRoom);
+        private int MaxCellsPerRoom => CalculateCellCount(1, Config.MaxAgentsPerRoom);
+        private int MinCellsOutside => CalculateCellCount(0, Config.MinAgentsOutside);
+        private int MaxCellsOutside => CalculateCellCount(0, Config.MaxAgentsOutside);
+        private int MinCellsInside => CalculateCellCount(2, Config.MinAgentsInside);
+        private int MaxCellsInside => CalculateCellCount(3, Config.MaxAgentsInside);
+        private int MaxCellCount => CalculateCellCount(5, Config.MaxAgentCount);
         private float MinWaterLevel => Config.MinWaterLevel;
+
+        private int CalculateCellCount(int minValue, int maxValue)
+        {
+            if (maxValue == 0) { return 0; }
+            return (int)Math.Round(MathHelper.Lerp(minValue, maxValue, Level.Loaded.Difficulty * 0.01f * Config.AgentSpawnCountDifficultyMultiplier));
+        }
+
+        private float GetSpawnTime() => 
+            Math.Max(Config.AgentSpawnDelay * Rand.Range(Config.AgentSpawnDelayRandomFactor, 1 + Config.AgentSpawnDelayRandomFactor) 
+            / (Math.Max(Level.Loaded.Difficulty, 1) * 0.01f * Config.AgentSpawnDelayDifficultyMultiplier), Config.AgentSpawnDelay);
 
         void UpdateReinforcements(float deltaTime)
         {
-            if (protectiveCells.Count >= MaxCellCount || spawnOrgans.Count == 0) { return; }
+            if (spawnOrgans.Count == 0) { return; }
             cellSpawnTimer -= deltaTime;
             if (cellSpawnTimer < 0)
             {
                 TrySpawnCell(out _, spawnOrgans.GetRandom());
-                cellSpawnTimer = CellSpawnTime * Rand.Range(CellSpawnRandomFactor, 1 + CellSpawnRandomFactor);
+                cellSpawnTimer = GetSpawnTime();
             }
         }
 
@@ -364,7 +372,7 @@ namespace Barotrauma
             cell = Character.Create(Config.DefensiveAgent, targetEntity.WorldPosition, ToolBox.RandomSeed(8), hasAi: true, createNetworkEvent: true);
             protectiveCells.Add(cell);
             cell.OnDeath += OnCellDeath;
-            cellSpawnTimer = CellSpawnTime * Rand.Range(CellSpawnRandomFactor, 1 + CellSpawnRandomFactor);
+            cellSpawnTimer = GetSpawnTime();
             return true;
         }
         

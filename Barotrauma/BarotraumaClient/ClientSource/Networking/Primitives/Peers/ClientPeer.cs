@@ -168,7 +168,19 @@ namespace Barotrauma.Networking
                         {
                             Close(disableReconnect: true);
 
-                            string missingModNames = "\n- " + string.Join("\n\n- ", missingPackages.Select(p => GetPackageStr(p))) + "\n\n";
+                            string missingModNames = "\n";
+                            int displayedModCount = 0;
+                            foreach (ServerContentPackage missingPackage in missingPackages)
+                            {
+                                missingModNames += "\n- " + GetPackageStr(missingPackage);
+                                displayedModCount++;
+                                if (GUI.Font.MeasureString(missingModNames).Y > GameMain.GraphicsHeight * 0.5f)
+                                {
+                                    missingModNames += "\n\n" + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (missingPackages.Count - displayedModCount).ToString());
+                                    break;
+                                }
+                            }
+                            missingModNames += "\n\n";
 
                             var msgBox = new GUIMessageBox(
                                 TextManager.Get("WorkshopItemDownloadTitle"),
@@ -189,6 +201,7 @@ namespace Barotrauma.Networking
 
                     if (!contentPackageOrderReceived)
                     {
+                        GameMain.Config.BackUpModOrder();
                         GameMain.Config.SwapPackages(corePackage.CorePackage, regularPackages.Select(p => p.RegularPackage).ToList());
                         contentPackageOrderReceived = true;
                     }

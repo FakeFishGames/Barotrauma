@@ -21,7 +21,7 @@ namespace Barotrauma
             if (battery == null) { return false; }
             var item = battery.Item;
             if (item.IgnoreByAI) { return false; }
-            if (item.NonInteractable) { return false; }
+            if (!item.IsInteractable(character)) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }
@@ -64,7 +64,7 @@ namespace Barotrauma
 
         private bool IsReady(PowerContainer battery)
         {
-            if (battery.HasBeenTuned && character.CurrentOrder == null) { return true; }
+            if (battery.HasBeenTuned && character.IsDismissed) { return true; }
             if (Option == "charge")
             {
                 return battery.RechargeRatio >= PowerContainer.aiRechargeTargetRatio;
@@ -79,7 +79,7 @@ namespace Barotrauma
             new AIObjectiveOperateItem(battery, character, objectiveManager, Option, false, priorityModifier: PriorityModifier)
             {
                 IsLoop = false,
-                Override = character.CurrentOrder != null,
+                Override = !character.IsDismissed,
                 completionCondition = () => IsReady(battery)
             };
 
