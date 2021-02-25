@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
             if (!signalReceived)
             {
-                item.SendSignal(new Signal("1", power: 0.0f), "signal_out");
+                item.SendSignal("1", "signal_out");
             }
             signalReceived = false;
         }
