@@ -526,6 +526,29 @@ namespace Microsoft.Xna.Framework
             result.Width = Math.Max(value1.Right, value2.Right) - result.X;
             result.Height = Math.Max(value1.Bottom, value2.Bottom) - result.Y;
         }
+
+        public void AddPoint(Point point)
+        {
+            if (point.X < X)
+            {
+                Width += X - point.X;
+                X = point.X;
+            }
+            else if (point.X > Right)
+            {
+                Width += point.X - Right;
+            }
+
+            if (point.Y < Y)
+            {
+                Height += Y - point.Y;
+                Y = point.Y;
+            }
+            else if (point.Y > Bottom)
+            {
+                Height += point.Y - Bottom;
+            }
+        }
                 
         #endregion
     }
