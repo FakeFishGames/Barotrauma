@@ -711,13 +711,20 @@ namespace Barotrauma
                             DebugConsole.ThrowError($"Error when receiving campaign data from the server: mission prefab \"{availableMission.First}\" not found.");
                             continue;
                         }
-                        if (availableMission.Second < 0 || availableMission.Second >= campaign.Map.CurrentLocation.Connections.Count)
+                        if (availableMission.Second == 255)
                         {
-                            DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.First}\" out of range (index: {availableMission.Second}, current location: {campaign.Map.CurrentLocation.Name}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
-                            continue;
+                            campaign.Map.CurrentLocation.UnlockMission(missionPrefab);
                         }
-                        LocationConnection connection = campaign.Map.CurrentLocation.Connections[availableMission.Second];
-                        campaign.Map.CurrentLocation.UnlockMission(missionPrefab, connection);
+                        else
+                        {
+                            if (availableMission.Second < 0 || availableMission.Second >= campaign.Map.CurrentLocation.Connections.Count)
+                            {
+                                DebugConsole.ThrowError($"Error when receiving campaign data from the server: connection index for mission \"{availableMission.First}\" out of range (index: {availableMission.Second}, current location: {campaign.Map.CurrentLocation.Name}, connections: {campaign.Map.CurrentLocation.Connections.Count}).");
+                                continue;
+                            }
+                            LocationConnection connection = campaign.Map.CurrentLocation.Connections[availableMission.Second];
+                            campaign.Map.CurrentLocation.UnlockMission(missionPrefab, connection);
+                        }
                     }
 
                     GameMain.NetLobbyScreen.ToggleCampaignMode(true);

@@ -297,7 +297,7 @@ namespace Barotrauma
             {
                 originalMyPortID = myPort.Item.ID;
 
-                myPort.Undock();
+                myPort.Undock(applyEffects: false);
                 myPort.DockingDir = 0;
 
                 //something else is already docked to the port this sub should be docked to
@@ -322,7 +322,7 @@ namespace Barotrauma
                     sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
 
                     myPort.Dock(linkedPort);   
-                    myPort.Lock(true);
+                    myPort.Lock(true, applyEffects: false);
                 }
             }
 
@@ -365,6 +365,11 @@ namespace Barotrauma
                     saveElement = this.saveElement;
                 }
                 saveElement.Name = "LinkedSubmarine";
+
+                if (saveElement.Attribute("previewimage") != null)
+                {
+                    saveElement.Attribute("previewimage").Remove();
+                }
 
                 if (saveElement.Attribute("pos") != null) { saveElement.Attribute("pos").Remove(); }
                 saveElement.Add(new XAttribute("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition)));

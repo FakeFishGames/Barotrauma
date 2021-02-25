@@ -1,9 +1,7 @@
-﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Barotrauma
 {
@@ -11,6 +9,9 @@ namespace Barotrauma
     {
         public readonly MissionPrefab Prefab;
         protected bool completed, failed;
+
+        protected Level level;
+
         protected int state;
         public int State
         {
@@ -21,7 +22,7 @@ namespace Barotrauma
                 {
                     state = value;
 #if SERVER
-                    GameMain.Server?.UpdateMissionState(state);
+                    GameMain.Server?.UpdateMissionState(this, state);
 #endif
                     ShowMessage(State);
                 }
@@ -175,7 +176,20 @@ namespace Barotrauma
             return null;
         }
 
-        public virtual void Start(Level level) { }
+        public void Start(Level level)
+        {
+            foreach (string categoryToShow in Prefab.UnhideEntitySubCategories)
+            {
+                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.prefab.HasSubCategory(categoryToShow)))
+                {
+                    entityToShow.HiddenInGame = false;
+                }
+            }
+            this.level = level;
+            StartMissionSpecific(level);
+        }
+
+        protected virtual void StartMissionSpecific(Level level) { }
 
         public virtual void Update(float deltaTime) { }
 
@@ -192,7 +206,10 @@ namespace Barotrauma
         public virtual void End()
         {
             completed = true;
-
+            if (Prefab.LocationTypeChangeOnCompleted != null)
+            {
+                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+            }
             GiveReward();
         }
 
@@ -224,22 +241,32 @@ namespace Barotrauma
             }
         }
 
-        protected void ChangeLocationType(string from, string to)
+        protected void ChangeLocationType(LocationTypeChange change)
         {
+            if (change == null) { throw new ArgumentException(); }
             if (GameMain.GameSession.GameMode is CampaignMode && !IsClient)
             {
                 int srcIndex = -1;
                 for (int i = 0; i < Locations.Length; i++)
                 {
-                    if (Locations[i].Type.Identifier.Equals(from, StringComparison.OrdinalIgnoreCase))
+                    if (Locations[i].Type.Identifier.Equals(change.CurrentType, StringComparison.OrdinalIgnoreCase))
                     {
                         srcIndex = i;
                         break;
                     }
                 }
                 if (srcIndex == -1) { return; }
-                var upgradeLocation = Locations[srcIndex];
-                upgradeLocation.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(to, StringComparison.OrdinalIgnoreCase)));
+                var location = Locations[srcIndex];
+
+                if (change.RequiredDurationRange.X > 0)
+                {
+                    location.PendingLocationTypeChange = (change, Rand.Range(change.RequiredDurationRange.X, change.RequiredDurationRange.Y), Prefab);
+                }
+                else
+                {
+                    location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase)));
+                    location.LocationTypeChangeCooldown = change.CooldownAfterChange;
+                }
             }
         }
 

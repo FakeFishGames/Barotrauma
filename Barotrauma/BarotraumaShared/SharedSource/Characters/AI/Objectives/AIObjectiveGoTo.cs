@@ -23,13 +23,14 @@ namespace Barotrauma
         /// <summary>
         /// Aborts the objective when this condition is true
         /// </summary>
-        public Func<bool> abortCondition;
+        public Func<AIObjectiveGoTo, bool> abortCondition;
         public Func<PathNode, bool> endNodeFilter;
 
         public Func<float> priorityGetter;
 
         public bool followControlledCharacter;
         public bool mimic;
+        public bool speakIfFails = true;
 
         public float extraDistanceWhileSwimming;
         public float extraDistanceOutsideSub;
@@ -80,7 +81,7 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            bool isOrder = objectiveManager.CurrentOrder == this;
+            bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed)
             {
                 Priority = 0;
@@ -114,7 +115,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Priority = isOrder ? AIObjectiveManager.OrderPriority : 10;
+                    Priority = isOrder ? objectiveManager.GetOrderPriority(this) : 10;
                 }
             }
             return Priority;
@@ -146,10 +147,11 @@ namespace Barotrauma
 
         private void SpeakCannotReach()
         {
+            if (!character.IsOnPlayerTeam) { return; }
 #if DEBUG
             DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
 #endif
-            if (objectiveManager.CurrentOrder != null && DialogueIdentifier != null)
+            if (objectiveManager.HasOrders() && DialogueIdentifier != null && speakIfFails)
             {
                 string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
                 if (msg != null)
@@ -163,10 +165,9 @@ namespace Barotrauma
         {
             if (followControlledCharacter)
             {
-                if (Character.Controlled == null)
+                if (Character.Controlled == null || !HumanAIController.IsFriendly(Character.Controlled))
                 {
                     Abandon = true;
-                    SteeringManager.Reset();
                     return;
                 }
                 Target = Character.Controlled;
@@ -187,7 +188,6 @@ namespace Barotrauma
                 if (e.Removed)
                 {
                     Abandon = true;
-                    SteeringManager.Reset();
                     return;
                 }
                 else
@@ -199,7 +199,7 @@ namespace Barotrauma
             if (!followControlledCharacter)
             {
                 // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
-                bool containsUnsafeNodes = HumanAIController.CurrentOrder == null && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
+                bool containsUnsafeNodes = character.IsDismissed && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
                     && PathSteering != null && PathSteering.CurrentPath != null
                     && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
                 if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
@@ -249,13 +249,14 @@ namespace Barotrauma
                         }
                     }
                     bool needsEquipment = false;
+                    float minOxygen = character.Submarine == null ? 0 : AIObjectiveFindDivingGear.MIN_OXYGEN;
                     if (needsDivingSuit)
                     {
-                        needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                        needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen);
                     }
                     else if (needsDivingGear)
                     {
-                        needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                        needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
                     }
                     if (needsEquipment)
                     {
@@ -569,7 +570,7 @@ namespace Barotrauma
                 Abandon = true;
                 return false;
             }
-            if (abortCondition != null && abortCondition())
+            if (abortCondition != null && abortCondition(this))
             {
                 Abandon = true;
                 return false;
@@ -617,7 +618,7 @@ namespace Barotrauma
 
         private void StopMovement()
         {
-            character.AIController.SteeringManager.Reset();
+            SteeringManager.Reset();
             if (Target != null)
             {
                 character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;

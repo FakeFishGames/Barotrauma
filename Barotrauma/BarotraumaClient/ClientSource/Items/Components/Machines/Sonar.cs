@@ -828,8 +828,8 @@ namespace Barotrauma.Items.Components
             float directionalPingVisibility = useDirectionalPing && currentMode == Mode.Active ? 1.0f : showDirectionalIndicatorTimer;
             if (directionalPingVisibility > 0.0f)
             {
-                Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, DirectionalPingSector * 0.5f);
-                Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, -DirectionalPingSector * 0.5f);
+                Vector2 sector1 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, MathHelper.ToRadians(DirectionalPingSector * 0.5f));
+                Vector2 sector2 = MathUtils.RotatePointAroundTarget(pingDirection * DisplayRadius, Vector2.Zero, MathHelper.ToRadians(-DirectionalPingSector * 0.5f));
                 DrawLine(spriteBatch, Vector2.Zero, sector1, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
                 DrawLine(spriteBatch, Vector2.Zero, sector2, Color.LightCyan * 0.2f * directionalPingVisibility, width: 3);
             }
@@ -862,7 +862,7 @@ namespace Barotrauma.Items.Components
             {
                 DrawMarker(spriteBatch,
                     Level.Loaded.StartLocation.Name,
-                    "outpost",
+                    Level.Loaded.StartOutpost != null ? "outpost" : "location",
                     Level.Loaded.StartLocation.Name,
                     Level.Loaded.StartPosition, transducerCenter,
                     displayScale, center, DisplayRadius);
@@ -872,7 +872,7 @@ namespace Barotrauma.Items.Components
             {
                 DrawMarker(spriteBatch,
                     Level.Loaded.EndLocation.Name,
-                    "outpost",
+                    Level.Loaded.EndOutpost != null ? "outpost" : "location",
                     Level.Loaded.EndLocation.Name,
                     Level.Loaded.EndPosition, transducerCenter,
                     displayScale, center, DisplayRadius);
@@ -906,10 +906,8 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            if (GameMain.GameSession.Mission != null)
+            foreach (Mission mission in GameMain.GameSession.Missions)
             {
-                var mission = GameMain.GameSession.Mission;
-
                 if (!string.IsNullOrWhiteSpace(mission.SonarLabel))
                 {
                     foreach (Vector2 sonarPosition in mission.SonarPositions)
@@ -1644,7 +1642,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (string.IsNullOrEmpty(iconIdentifier) || !targetIcons.ContainsKey(iconIdentifier))
+            if (iconIdentifier == null || !targetIcons.ContainsKey(iconIdentifier))
             {
                 GUI.DrawRectangle(spriteBatch, new Rectangle((int)markerPos.X - 3, (int)markerPos.Y - 3, 6, 6), markerColor, thickness: 2);
             }

@@ -136,12 +136,17 @@ namespace Barotrauma
 
         public List<MapEntity> CreateInstance(Vector2 position, Submarine sub, bool selectInstance = false)
         {
+            return PasteEntities(position, sub, configElement, FilePath, selectInstance);
+        }
+
+        public static List<MapEntity> PasteEntities(Vector2 position, Submarine sub, XElement configElement, string filePath = null, bool selectInstance = false)
+        {
             int idOffset = Entity.FindFreeID(1);
             if (MapEntity.mapEntityList.Any()) { idOffset = MapEntity.mapEntityList.Max(e => e.ID); }
-            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, FilePath, idOffset);
+            List<MapEntity> entities = MapEntity.LoadAll(sub, configElement, filePath, idOffset);
             if (entities.Count == 0) { return entities; }
 
-            Vector2 offset = sub == null ? Vector2.Zero : sub.HiddenSubPosition;
+            Vector2 offset = sub?.HiddenSubPosition ?? Vector2.Zero;
 
             foreach (MapEntity me in entities)
             {
@@ -168,9 +173,8 @@ namespace Barotrauma
                 MapEntity.SelectedList.Clear();
                 entities.ForEach(MapEntity.AddSelection);
             }
-#endif   
+#endif
             return entities;
-
         }
         
         public void Delete()

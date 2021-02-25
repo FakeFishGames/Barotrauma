@@ -16,6 +16,7 @@ namespace Barotrauma
 
         private readonly float maxSonarMarkerDistance = 10000.0f;
 
+        private readonly Level.PositionType spawnPosType;
 
         public override IEnumerable<Vector2> SonarPositions
         {
@@ -52,6 +53,13 @@ namespace Barotrauma
 
             maxSonarMarkerDistance = prefab.ConfigElement.GetAttributeFloat("maxsonarmarkerdistance", 10000.0f);
 
+            var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
+            if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
+                !Enum.TryParse(spawnPosTypeStr, true, out spawnPosType))
+            {
+                spawnPosType = Level.PositionType.MainPath | Level.PositionType.SidePath;
+            }
+
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
                 speciesName = monsterElement.GetAttributeString("character", string.Empty);
@@ -81,8 +89,8 @@ namespace Barotrauma
                     TextManager.Get("character." + characterParams.SpeciesName));
             }
         }
-        
-        public override void Start(Level level)
+
+        protected override void StartMissionSpecific(Level level)
         {
             if (monsters.Count > 0)
             {
@@ -106,7 +114,7 @@ namespace Barotrauma
 
             if (!IsClient)
             {
-                Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
+                Level.Loaded.TryGetInterestingPosition(true, spawnPosType, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
                 foreach (var monster in monsterPrefabs)
                 {
                     int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);
@@ -213,9 +221,17 @@ namespace Barotrauma
             tempSonarPositions.Clear();
             monsters.Clear();
             if (State < 1) { return; }
-            
+
+            if (Prefab.LocationTypeChangeOnCompleted != null)
+            {
+                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+            }
             GiveReward();
             completed = true;
+            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase)))
+            {
+                level.LevelData.HasHuntingGrounds = false;
+            }
         }
 
         public bool IsEliminated(Character enemy) =>

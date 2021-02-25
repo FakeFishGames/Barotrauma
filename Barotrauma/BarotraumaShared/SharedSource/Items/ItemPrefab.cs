@@ -195,7 +195,7 @@ namespace Barotrauma
         }
     }
 
-    partial class ItemPrefab : MapEntityPrefab
+    partial class ItemPrefab : MapEntityPrefab, IHasUintIdentifier
     {
         private readonly string name;
         public override string Name => name;
@@ -215,7 +215,7 @@ namespace Barotrauma
         protected Vector2 size;                
 
         private float impactTolerance;
-        private readonly PriceInfo defaultPrice;
+        public readonly PriceInfo DefaultPrice;
         private readonly Dictionary<string, PriceInfo> locationPrices;
 
         /// <summary>
@@ -517,16 +517,18 @@ namespace Barotrauma
 
         public Vector2 Size => size;
 
-        public bool CanBeBought => (defaultPrice != null && defaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
+        public bool CanBeBought => (DefaultPrice != null && DefaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
 
         /// <summary>
         /// Any item with a Price element in the definition can be sold everywhere.
         /// </summary>
-        public bool CanBeSold => defaultPrice != null;
+        public bool CanBeSold => DefaultPrice != null;
 
         public bool RandomDeconstructionOutput { get; }
 
         public int RandomDeconstructionOutputAmount { get; }
+
+        public uint UIntIdentifier { get; set; }
 
         public static void RemoveByFile(string filePath) => Prefabs.RemoveByFile(filePath);
 
@@ -642,11 +644,13 @@ namespace Barotrauma
             originalName = element.GetAttributeString("name", "");
             name = originalName;
             identifier = element.GetAttributeString("identifier", "");
-            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
+
+            string categoryStr = element.GetAttributeString("category", "Misc");
+            if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Misc;
             }
-            Category = category;
+            Category = category;            
 
             var parentType = element.Parent?.GetAttributeString("itemtype", "") ?? string.Empty;
 
@@ -770,7 +774,7 @@ namespace Barotrauma
                         if (locationPrices == null) { locationPrices = new Dictionary<string, PriceInfo>(); }
                         if (subElement.Attribute("baseprice") != null)
                         {
-                            foreach (Tuple<string, PriceInfo> priceInfo in PriceInfo.CreatePriceInfos(subElement, out defaultPrice))
+                            foreach (Tuple<string, PriceInfo> priceInfo in PriceInfo.CreatePriceInfos(subElement, out DefaultPrice))
                             {
                                 if (priceInfo == null) { continue; }
                                 locationPrices.Add(priceInfo.Item1, priceInfo.Item2);
@@ -985,7 +989,14 @@ namespace Barotrauma
             // with separate Price elements and there is no default price explicitly set
             if (locationPrices != null && locationPrices.Any())
             {
-                defaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
+                DefaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
+            }
+
+            //backwards compatibility
+            if (categoryStr.Equals("Thalamus", StringComparison.OrdinalIgnoreCase))
+            {
+                Category = MapEntityCategory.Wrecked;
+                Subcategory = "Thalamus";
             }
 
             if (sprite == null)
@@ -1023,6 +1034,7 @@ namespace Barotrauma
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
             Prefabs.Add(this, allowOverriding);
+            this.CalculatePrefabUIntIdentifier(Prefabs);
         }
 
         public float GetTreatmentSuitability(string treatmentIdentifier)
@@ -1040,7 +1052,7 @@ namespace Barotrauma
             }
             else
             {
-                return defaultPrice;
+                return DefaultPrice;
             }
         }
 
@@ -1085,9 +1097,9 @@ namespace Barotrauma
             int? minPrice = locationPrices != null && locationPrices.Values.Any() ? locationPrices?.Values.Min(p => p.Price) : null;
             if (minPrice.HasValue)
             {
-                if (defaultPrice != null)
+                if (DefaultPrice != null)
                 {
-                    return minPrice < defaultPrice.Price ? minPrice : defaultPrice.Price;
+                    return minPrice < DefaultPrice.Price ? minPrice : DefaultPrice.Price;
                 }
                 else
                 {
@@ -1096,7 +1108,7 @@ namespace Barotrauma
             }
             else
             {
-                return defaultPrice?.Price;
+                return DefaultPrice?.Price;
             }
         }
 

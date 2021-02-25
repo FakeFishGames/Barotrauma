@@ -857,12 +857,25 @@ namespace Barotrauma.Networking
                     string endMessage = string.Empty;
 
                     endMessage = inc.ReadString();
-                    bool missionSuccessful = inc.ReadBoolean();
+                    byte missionCount = inc.ReadByte();
+                    for (int i = 0; i < missionCount; i++)
+                    {
+                        bool missionSuccessful = inc.ReadBoolean();
+                        var mission = GameMain.GameSession?.GetMission(i);
+                        if (mission != null)
+                        {
+                            mission.Completed = missionSuccessful;
+                        }
+                    }
                     CharacterTeamType winningTeam = (CharacterTeamType)inc.ReadByte();
-                    if (missionSuccessful && GameMain.GameSession?.Mission != null)
+                    if (winningTeam != CharacterTeamType.None)
                     {
                         GameMain.GameSession.WinningTeam = winningTeam;
-                        GameMain.GameSession.Mission.Completed = true;
+                        var combatMission = GameMain.GameSession.Missions.FirstOrDefault(m => m is CombatMission);
+                        if (combatMission != null)
+                        {
+                            combatMission.Completed = true;
+                        }
                     }
 
                     byte traitorCount = inc.ReadByte();
@@ -928,7 +941,11 @@ namespace Barotrauma.Networking
                     ReadTraitorMessage(inc);
                     break;
                 case ServerPacketHeader.MISSION:
-                    GameMain.GameSession?.Mission?.ClientRead(inc);
+                    {
+                        int missionIndex = inc.ReadByte();
+                        Mission mission = GameMain.GameSession?.GetMission(missionIndex);
+                        mission?.ClientRead(inc);
+                    }
                     break;
                 case ServerPacketHeader.EVENTACTION:
                     GameMain.GameSession?.EventManager.ClientRead(inc);
@@ -959,17 +976,26 @@ namespace Barotrauma.Networking
                 throw new Exception(errorMsg);
             }
 
-            string missionIdentifier = inc.ReadString() ?? "";
-            if (missionIdentifier != (GameMain.GameSession.Mission?.Prefab.Identifier ?? ""))
+            byte missionCount = inc.ReadByte();
+            if (missionCount != GameMain.GameSession.Missions.Count())
             {
-                string errorMsg = $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server (server: {missionIdentifier ?? "null"}, client: {GameMain.GameSession.Mission?.Prefab.Identifier ?? ""})";
-                GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                string errorMsg = $"Mission equality check failed. Mission count doesn't match the server (server: {missionCount}, client: {GameMain.GameSession.Missions.Count()})";
                 throw new Exception(errorMsg);
+            }
+            foreach (Mission mission in GameMain.GameSession.Missions)
+            {
+                string missionIdentifier = inc.ReadString() ?? "";
+                if (missionIdentifier != mission.Prefab.Identifier)
+                {
+                    string errorMsg = $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server (server: {missionIdentifier ?? "null"}, client: {mission.Prefab.Identifier})";
+                    GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    throw new Exception(errorMsg);
+                }
             }
 
             byte equalityCheckValueCount = inc.ReadByte();
             List<int> levelEqualityCheckValues = new List<int>();
-            for (int i = 0; i<equalityCheckValueCount; i++)
+            for (int i = 0; i < equalityCheckValueCount; i++)
             {
                 levelEqualityCheckValues.Add(inc.ReadInt32());
             }
@@ -1004,7 +1030,10 @@ namespace Barotrauma.Networking
                 }
             }
 
-            GameMain.GameSession.Mission?.ClientReadInitial(inc);
+            foreach (Mission mission in GameMain.GameSession.Missions)
+            {
+                mission.ClientReadInitial(inc);
+            }
 
             roundInitStatus = RoundInitStatus.Started;
         }
@@ -1432,7 +1461,12 @@ namespace Barotrauma.Networking
                 string subHash = inc.ReadString();
                 string shuttleName = inc.ReadString();
                 string shuttleHash = inc.ReadString();
-                int missionIndex = inc.ReadInt16();
+                List<int> missionIndices = new List<int>();
+                int missionCount = inc.ReadByte();
+                for (int i = 0; i < missionCount; i++)
+                {
+                    missionIndices.Add(inc.ReadInt16());
+                }
                 if (!GameMain.NetLobbyScreen.TrySelectSub(subName, subHash, GameMain.NetLobbyScreen.SubList))
                 {
                     roundInitStatus = RoundInitStatus.Interrupted;
@@ -1486,7 +1520,9 @@ namespace Barotrauma.Networking
                     yield return CoroutineStatus.Failure;
                 }
 
-                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, gameMode, missionPrefab: missionIndex < 0 ? null : MissionPrefab.List[missionIndex]);
+                var selectedMissions = missionIndices.Select(i => MissionPrefab.List[i]);
+
+                GameMain.GameSession = new GameSession(GameMain.NetLobbyScreen.SelectedSub, gameMode, missionPrefabs: selectedMissions);
                 GameMain.GameSession.StartRound(levelSeed, levelDifficulty);
             }
             else
@@ -1712,7 +1748,7 @@ namespace Barotrauma.Networking
                 // Enable characters near the main sub for the endCinematic
                 foreach (Character c in Character.CharacterList)
                 {
-                    if (Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < NetConfig.EnableCharacterDistSqr)
+                    if (Vector2.DistanceSquared(Submarine.MainSub.WorldPosition, c.WorldPosition) < MathUtils.Pow2(c.Params.DisableDistance))
                     {
                         c.Enabled = true;
                     }
@@ -2325,7 +2361,7 @@ namespace Barotrauma.Networking
 
             if (outmsg.LengthBytes > MsgConstants.MTU)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU);
+                DebugConsole.ThrowError($"Maximum packet size exceeded ({outmsg.LengthBytes} > {MsgConstants.MTU})");
             }
 
             clientPeer.Send(outmsg, DeliveryMethod.Unreliable);
@@ -2376,7 +2412,7 @@ namespace Barotrauma.Networking
 
             if (outmsg.LengthBytes > MsgConstants.MTU)
             {
-                DebugConsole.ThrowError("Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU);
+                DebugConsole.ThrowError($"Maximum packet size exceeded ({outmsg.LengthBytes} > {MsgConstants.MTU})");
             }
 
             clientPeer.Send(outmsg, DeliveryMethod.Unreliable);
@@ -3367,9 +3403,12 @@ namespace Barotrauma.Networking
         {
             var banReasonPrompt = new GUIMessageBox(
                 TextManager.Get(ban ? "BanReasonPrompt" : "KickReasonPrompt"),
-                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, new Vector2(0.25f, 0.22f), new Point(400, 220));
+                "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") }, new Vector2(0.25f, 0.25f), new Point(400, 260));
 
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center));
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.6f), banReasonPrompt.InnerFrame.RectTransform, Anchor.Center))
+            {
+                AbsoluteSpacing = GUI.IntScale(5)
+            };
             var banReasonBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), content.RectTransform))
             {
                 Wrap = true,
@@ -3380,10 +3419,9 @@ namespace Barotrauma.Networking
             GUITickBox permaBanTickBox = null;
 
             if (ban)
-            {
-                
+            {                
                 var labelContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), content.RectTransform), isHorizontal: false);
-                new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), labelContainer.RectTransform), TextManager.Get("BanDuration")) { Padding = Vector4.Zero };
+                new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), labelContainer.RectTransform), TextManager.Get("BanDuration"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
                 var buttonContent = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), labelContainer.RectTransform), isHorizontal: true);
                 permaBanTickBox = new GUITickBox(new RectTransform(new Vector2(0.4f, 0.15f), buttonContent.RectTransform), TextManager.Get("BanPermanent"))
                 {
@@ -3494,7 +3532,10 @@ namespace Barotrauma.Networking
                     errorLines.Add("Campaign ID: " + campaign.CampaignID);
                     errorLines.Add("Campaign save ID: " + campaign.LastSaveID + "(pending: " + campaign.PendingSaveID + ")");
                 }
-                errorLines.Add("Mission: " + (GameMain.GameSession?.Mission?.Prefab.Identifier ?? "none"));                
+                foreach (Mission mission in GameMain.GameSession.Missions)
+                {
+                    errorLines.Add("Mission: " + mission.Prefab.Identifier);
+                }
             }
             if (GameMain.GameSession?.Submarine != null)
             {

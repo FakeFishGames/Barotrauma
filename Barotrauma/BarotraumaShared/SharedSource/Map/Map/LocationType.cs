@@ -13,17 +13,12 @@ namespace Barotrauma
     class LocationType
     {
         public static readonly List<LocationType> List = new List<LocationType>();
-        
-        private readonly List<string> nameFormats;
         private readonly List<string> names;
-
-        private readonly Sprite symbolSprite;
-
         private readonly List<Sprite> portraits = new List<Sprite>();
 
         //<name, commonness>
-        private List<Tuple<JobPrefab, float>> hireableJobs;
-        private float totalHireableWeight;
+        private readonly List<Tuple<JobPrefab, float>> hireableJobs;
+        private readonly float totalHireableWeight;
         
         public Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
 
@@ -34,16 +29,20 @@ namespace Barotrauma
 
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
 
+        public readonly List<string> MissionIdentifiers = new List<string>();
+        public readonly List<string> MissionTags = new List<string>();
+
+        public readonly List<string> HideEntitySubcategories = new List<string>();
+
+        public bool IsEnterable { get; private set; }
+
         public bool UseInMainMenu
         {
             get;
             private set;
         }
-        
-        public List<string> NameFormats
-        {
-            get { return nameFormats; }
-        }
+
+        public List<string> NameFormats { get; private set; }
 
         public bool HasHireableCharacters
         {
@@ -56,10 +55,7 @@ namespace Barotrauma
             private set;
         }
 
-        public Sprite Sprite
-        {
-            get { return symbolSprite; }
-        }
+        public Sprite Sprite { get; private set; }
 
         public Color SpriteColor
         {
@@ -79,9 +75,15 @@ namespace Barotrauma
 
             BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
 
-            nameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
+            NameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
             UseInMainMenu = element.GetAttributeBool("useinmainmenu", false);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
+            IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
+
+            MissionIdentifiers = element.GetAttributeStringArray("missionidentifiers", new string[0]).ToList();
+            MissionTags = element.GetAttributeStringArray("missiontags", new string[0]).ToList();
+
+            HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", new string[0]).ToList();
 
             string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
             try
@@ -135,11 +137,11 @@ namespace Barotrauma
                         hireableJobs.Add(hireableJob);
                         break;
                     case "symbol":
-                        symbolSprite = new Sprite(subElement, lazyLoad: true);
+                        Sprite = new Sprite(subElement, lazyLoad: true);
                         SpriteColor = subElement.GetAttributeColor("color", Color.White);
                         break;
                     case "changeto":
-                        CanChangeTo.Add(new LocationTypeChange(Identifier, subElement));
+                        CanChangeTo.Add(new LocationTypeChange(Identifier, subElement, requireChangeMessages: true));
                         break;
                     case "portrait":
                         var portrait = new Sprite(subElement, lazyLoad: true);

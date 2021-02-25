@@ -169,6 +169,7 @@ namespace Barotrauma
                     Type = SubmarineType.Outpost
                 };
                 generationFailed = false;
+                outpostInfo.OutpostGenerationParams = generationParams;
                 sub = new Submarine(outpostInfo, loadEntities: loadEntities);
                 sub.Info.OutpostGenerationParams = generationParams;
                 if (!generationFailed)
@@ -669,10 +670,15 @@ namespace Barotrauma
 
             if (availableModules.Count() == 0) { return null; }
 
-            var modulesSuitableForLocationType = 
-                availableModules.Where(m =>
-                    !m.OutpostModuleInfo.AllowedLocationTypes.Any() ||
-                    m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+            //try to search for modules made specifically for this location type first
+            var modulesSuitableForLocationType =
+                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+
+            //if not found, search for modules suitable for any location type
+            if (!modulesSuitableForLocationType.Any())
+            {
+                modulesSuitableForLocationType = availableModules.Where(m => !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+            }
 
             if (!modulesSuitableForLocationType.Any())
             {
@@ -705,10 +711,15 @@ namespace Barotrauma
 
             if (availableModules.Count() == 0) { return null; }
 
+            //try to search for modules made specifically for this location type first
             var modulesSuitableForLocationType =
-                availableModules.Where(m =>
-                    !m.OutpostModuleInfo.AllowedLocationTypes.Any() ||
-                    m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+
+            //if not found, search for modules suitable for any location type
+            if (!modulesSuitableForLocationType.Any())
+            {
+                modulesSuitableForLocationType = availableModules.Where(m => !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+            }
 
             if (!modulesSuitableForLocationType.Any())
             {
@@ -1381,7 +1392,6 @@ namespace Barotrauma
                 Rand.SetSyncedSeed(ToolBox.StringToInt(characterInfo.Name));
 
                 ISpatialEntity gotoTarget = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Human, humanPrefab.GetModuleFlags(), humanPrefab.GetSpawnPointTags());
-
                 if (gotoTarget == null)
                 {
                     gotoTarget = outpost.GetHulls(true).GetRandom();
@@ -1406,27 +1416,10 @@ namespace Barotrauma
                 humanPrefab.GiveItems(npc, outpost, Rand.RandSync.Server);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
-                    item.SpawnedInOutpost = true;
+                    item.SpawnedInOutpost = !outpost.Info.OutpostGenerationParams.AllowStealing;
                 }
                 npc.GiveIdCardTags(gotoTarget as WayPoint);
-                if (npc.AIController is HumanAIController humanAI) 
-                {
-                    var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
-                    if (humanPrefab.CampaignInteractionType != CampaignMode.InteractionType.None)
-                    {
-                        idleObjective.Behavior = AIObjectiveIdle.BehaviorType.StayInHull;
-                        idleObjective.TargetHull = AIObjectiveGoTo.GetTargetHull(gotoTarget);
-                        (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, humanPrefab.CampaignInteractionType);
-                    }
-                    else
-                    {
-                        idleObjective.Behavior = humanPrefab.Behavior;
-                        foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
-                        {
-                            idleObjective.PreferredOutpostModuleTypes.Add(moduleType);
-                        }
-                    }
-                }
+                humanPrefab.InitializeCharacter(npc, gotoTarget);
             }
         }
     }

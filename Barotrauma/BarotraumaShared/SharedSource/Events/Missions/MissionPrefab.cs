@@ -18,7 +18,9 @@ namespace Barotrauma
         Nest = 0x10,
         Mineral = 0x20,
         Combat = 0x40,
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat
+        AbandonedOutpost = 0x80,
+
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | AbandonedOutpost
     }
 
     partial class MissionPrefab
@@ -33,6 +35,7 @@ namespace Barotrauma
             { MissionType.Beacon, typeof(BeaconMission) },
             { MissionType.Nest, typeof(NestMission) },
             { MissionType.Mineral, typeof(MineralMission) },
+            { MissionType.AbandonedOutpost, typeof(AbandonedOutpostMission) },
         };
         public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
         {
@@ -73,8 +76,26 @@ namespace Barotrauma
         public readonly List<string> Headers;
         public readonly List<string> Messages;
 
-        //the mission can only be received when travelling from Pair.First to Pair.Second
-        public readonly List<Pair<string, string>> AllowedLocationTypes;
+        public readonly bool AllowRetry;
+
+        public readonly bool IsSideObjective;
+
+        /// <summary>
+        /// The mission can only be received when travelling from Pair.First to Pair.Second
+        /// </summary>
+        public readonly List<Pair<string, string>> AllowedConnectionTypes;
+
+        /// <summary>
+        /// The mission can only be received in these location types
+        /// </summary>
+        public readonly List<string> AllowedLocationTypes = new List<string>();
+
+        /// <summary>
+        /// Show entities belonging to these sub categories when the mission starts
+        /// </summary>
+        public readonly List<string> UnhideEntitySubCategories = new List<string>();
+
+        public LocationTypeChange LocationTypeChangeOnCompleted;
 
         public readonly XElement ConfigElement;
 
@@ -130,7 +151,8 @@ namespace Barotrauma
             Name        = TextManager.Get("MissionName." + TextIdentifier, true) ?? element.GetAttributeString("name", "");
             Description = TextManager.Get("MissionDescription." + TextIdentifier, true) ?? element.GetAttributeString("description", "");
             Reward      = element.GetAttributeInt("reward", 1);
-
+            AllowRetry  = element.GetAttributeBool("allowretry", false);
+            IsSideObjective = element.GetAttributeBool("sideobjective", false);
             Commonness  = element.GetAttributeInt("commonness", 1);
 
             SuccessMessage  = TextManager.Get("MissionSuccess." + TextIdentifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
@@ -152,9 +174,11 @@ namespace Barotrauma
 
             AchievementIdentifier = element.GetAttributeString("achievementidentifier", "");
 
+            UnhideEntitySubCategories = element.GetAttributeStringArray("unhideentitysubcategories", new string[0]).ToList();
+
             Headers = new List<string>();
             Messages = new List<string>();
-            AllowedLocationTypes = new List<Pair<string, string>>();
+            AllowedConnectionTypes = new List<Pair<string, string>>();
 
             for (int i = 0; i < 100; i++)
             {
@@ -183,9 +207,20 @@ namespace Barotrauma
                         messageIndex++;
                         break;
                     case "locationtype":
-                        AllowedLocationTypes.Add(new Pair<string, string>(
-                            subElement.GetAttributeString("from", ""),
-                            subElement.GetAttributeString("to", "")));
+                    case "connectiontype":
+                        if (subElement.Attribute("identifier") != null)
+                        {
+                            AllowedLocationTypes.Add(subElement.GetAttributeString("identifier", ""));
+                        }
+                        else
+                        {
+                            AllowedConnectionTypes.Add(new Pair<string, string>(
+                                subElement.GetAttributeString("from", ""),
+                                subElement.GetAttributeString("to", "")));
+                        }
+                        break;
+                    case "locationtypechange":
+                        LocationTypeChangeOnCompleted = new LocationTypeChange(subElement.GetAttributeString("from", ""), subElement, requireChangeMessages: false, defaultProbability: 1.0f);
                         break;
                     case "reputation":
                     case "reputationreward":
@@ -257,17 +292,30 @@ namespace Barotrauma
 
         public bool IsAllowed(Location from, Location to)
         {
-            foreach (Pair<string, string> allowedLocationType in AllowedLocationTypes)
+            if (from == to)
             {
-                if (allowedLocationType.First.Equals("any", StringComparison.OrdinalIgnoreCase) ||
-                    allowedLocationType.First.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase))
+                return 
+                    AllowedLocationTypes.Any(lt => lt.Equals("any", StringComparison.OrdinalIgnoreCase)) ||
+                    AllowedLocationTypes.Any(lt => lt.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase));
+            }
+
+            foreach (Pair<string, string> allowedConnectionType in AllowedConnectionTypes)
+            {
+                if (allowedConnectionType.First.Equals("any", StringComparison.OrdinalIgnoreCase) ||
+                    allowedConnectionType.First.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (allowedLocationType.Second.Equals("any", StringComparison.OrdinalIgnoreCase) ||
-                        allowedLocationType.Second.Equals(to.Type.Identifier, StringComparison.OrdinalIgnoreCase))
+                    if (allowedConnectionType.Second.Equals("any", StringComparison.OrdinalIgnoreCase) ||
+                        allowedConnectionType.Second.Equals(to.Type.Identifier, StringComparison.OrdinalIgnoreCase))
                     {
                         return true;
                     }
                 }
+            }
+
+            if (Type == MissionType.Beacon)
+            {
+                var connection = from.Connections.Find(c => c.Locations.Contains(from) && c.Locations.Contains(to));
+                if (connection?.LevelData == null || !connection.LevelData.HasBeaconStation || connection.LevelData.IsBeaconActive) { return false; }
             }
 
             return false;

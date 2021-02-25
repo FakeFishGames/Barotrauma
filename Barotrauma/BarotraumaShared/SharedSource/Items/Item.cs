@@ -874,7 +874,7 @@ namespace Barotrauma
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
 
-            if (Components.Any() && Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
+            if (Components.Any(ic => ic is Wire) && Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
             if (HasTag("logic")) { isLogic = true; }
         }
 
@@ -1712,6 +1712,11 @@ namespace Barotrauma
                 flippedX = false;
                 return; 
             }
+
+            if (Prefab.AllowRotatingInEditor)
+            {
+                rotationRad = MathUtils.WrapAngleTwoPi(-rotationRad);
+            }
 #if CLIENT
             if (Prefab.CanSpriteFlipX)
             {
@@ -1912,6 +1917,14 @@ namespace Barotrauma
             
             if (signal.stepsTaken > 10)
             {
+                //if the signal has been passed through this item multiple times already, interrupt it to prevent infinite loops
+                if (source != null)
+                {
+                    if (source.LastSentSignalRecipients.Count(recipient => recipient == this) > 2)
+                    {
+                        return;
+                    }
+                }
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
                 CoroutineManager.StartCoroutine(DelaySignal(signal));

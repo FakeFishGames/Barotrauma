@@ -322,7 +322,7 @@ namespace Barotrauma
                         {
                             itemListStr = string.Join(" or ", string.Join(", ", itemNameList.Take(itemNameList.Count - 1)), itemNameList.Last());
                         }
-                        if (targetCharacter != character)
+                        if (targetCharacter != character && character.IsOnPlayerTeam)
                         {
                             character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments", new string[2] { "[targetname]", "[treatmentlist]" },
                                 new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
@@ -336,7 +336,10 @@ namespace Barotrauma
                             onAbandon: () =>
                             {
                                 Abandon = true;
-                                character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                                if (character != targetCharacter && character.IsOnPlayerTeam)
+                                {
+                                    character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                                }
                             });
                     }
                 }
@@ -384,7 +387,7 @@ namespace Barotrauma
                 return false;
             }
             bool isCompleted = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, targetCharacter);
-            if (isCompleted && targetCharacter != character)
+            if (isCompleted && targetCharacter != character && character.IsOnPlayerTeam)
             {                
                 character.Speak(TextManager.GetWithVariable("DialogTargetHealed", "[targetname]", targetCharacter.Name),
                     null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);

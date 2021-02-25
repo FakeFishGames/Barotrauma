@@ -38,6 +38,8 @@ namespace Barotrauma.Items.Components
         private Fixture outsideBlocker;
         private Body doorBody;
 
+        private float dockingCooldown;
+
         private bool docked;
         private bool obstructedWayPointsDisabled;
 
@@ -147,20 +149,12 @@ namespace Barotrauma.Items.Components
                     DockingDir = GetDir(DockingTarget);  
                     DockingTarget.DockingDir = -DockingDir;
                 }
-                if (joint != null)
-                {
-                    CreateJoint(joint is WeldJoint);
-                    LinkHullsToGaps();
-                }
-                else if (DockingTarget.joint != null)
-                {
-                    if (!GameMain.World.BodyList.Contains(DockingTarget.joint.BodyA) ||
-                        !GameMain.World.BodyList.Contains(DockingTarget.joint.BodyB))
-                    {
-                        DockingTarget.CreateJoint(DockingTarget.joint is WeldJoint);
-                    }
-                    DockingTarget.LinkHullsToGaps();
-                }
+
+                //undock and redock to recreate the hulls, gaps and physics bodies
+                var prevDockingTarget = DockingTarget;
+                Undock(applyEffects: false);
+                Dock(prevDockingTarget);
+                Lock(true, applyEffects: false);
             }
         }
 
@@ -187,15 +181,15 @@ namespace Barotrauma.Items.Components
         private void AttemptDock()
         {
             var adjacentPort = FindAdjacentPort();
-
-            if (adjacentPort != null) Dock(adjacentPort);
+            if (adjacentPort != null) { Dock(adjacentPort); }
         }
 
         public void Dock(DockingPort target)
         {
-            if (item.Submarine.DockedTo.Contains(target.item.Submarine)) return;
+            if (item.Submarine.DockedTo.Contains(target.item.Submarine)) { return; }
 
             forceLockTimer = 0.0f;
+            dockingCooldown = 0.1f;
 
             if (DockingTarget != null)
             {
@@ -237,7 +231,6 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
             {
-                originalDockingTargetID = DockingTarget.item.ID;
                 item.CreateServerEvent(this);
             }
 #endif
@@ -247,7 +240,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void Lock(bool isNetworkMessage, bool forcePosition = false)
+        public void Lock(bool isNetworkMessage, bool forcePosition = false, bool applyEffects = true)
         {
 #if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) { return; }
@@ -264,18 +257,24 @@ namespace Barotrauma.Items.Components
                 DockingDir = GetDir(DockingTarget);
                 DockingTarget.DockingDir = -DockingDir;
 
-                ApplyStatusEffects(ActionType.OnUse, 1.0f);
-
-                Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
-                if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
-                    DockingTarget.item.Submarine.Info.IsOutpost)
+                if (applyEffects)
                 {
-                    item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
+                    ApplyStatusEffects(ActionType.OnUse, 1.0f);
                 }
-                else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
-                   item.Submarine.Info.IsOutpost)
+
+                if (forcePosition)
                 {
-                    DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                    Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
+                    if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
+                        DockingTarget.item.Submarine.Info.IsOutpost)
+                    {
+                        item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
+                    }
+                    else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
+                       item.Submarine.Info.IsOutpost)
+                    {
+                        DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                    }
                 }
 
                 ConnectWireBetweenPorts();
@@ -284,7 +283,6 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
                 {
-                    originalDockingTargetID = DockingTarget.item.ID;
                     item.CreateServerEvent(this);
                 }
 #else
@@ -846,13 +844,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void Undock()
+        public void Undock(bool applyEffects = true)
         {
-            if (DockingTarget == null || !docked) return;
+            if (DockingTarget == null || !docked) { return; }
             
             forceLockTimer = 0.0f;
+            dockingCooldown = 0.1f;
 
-            ApplyStatusEffects(ActionType.OnSecondaryUse, 1.0f);
+            if (applyEffects)
+            {
+                ApplyStatusEffects(ActionType.OnSecondaryUse, 1.0f);
+            }
 
             DockingTarget.item.Submarine.ConnectedDockingPorts.Remove(item.Submarine);
             item.Submarine.ConnectedDockingPorts.Remove(DockingTarget.item.Submarine);
@@ -924,7 +926,6 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (GameMain.Server != null && (!item.Submarine?.Loading ?? true))
             {
-                originalDockingTargetID = Entity.NullEntityID;
                 item.CreateServerEvent(this);
             }
 #endif
@@ -934,6 +935,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            dockingCooldown -= deltaTime;
             if (DockingTarget == null)
             {
                 dockingState = MathHelper.Lerp(dockingState, 0.0f, deltaTime * 10.0f);
@@ -1107,6 +1109,8 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(Signal signal)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
+            if (dockingCooldown > 0.0f) { return; }
 
             bool wasDocked = docked;
             DockingPort prevDockingTarget = DockingTarget;

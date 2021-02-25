@@ -568,14 +568,6 @@ namespace Barotrauma.Items.Components
                 //characters with insufficient skill levels don't refuel the reactor
                 if (degreeOfSuccess > refuelLimit)
                 {
-                    if (objective.SubObjectives.None())
-                    {
-                        if (!AIDecontainEmptyItems(character, objective, equip: false))
-                        {
-                            return false;
-                        }
-                    }
-
                     if (aiUpdateTimer > 0.0f)
                     {
                         aiUpdateTimer -= deltaTime;
@@ -588,14 +580,32 @@ namespace Barotrauma.Items.Components
                     float minCondition = fuelConsumptionRate * MathUtils.Pow((degreeOfSuccess - refuelLimit) * 2, 2);
                     if (NeedMoreFuel(minimumOutputRatio: 0.5f, minCondition: minCondition))
                     {
+                        bool outOfFuel = false;
                         var container = item.GetComponent<ItemContainer>();
                         if (objective.SubObjectives.None())
                         {
                             int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
-                            AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC, dropItemOnDeselected: true);
+                            var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC, dropItemOnDeselected: true);
+                            containObjective.Completed += ReportFuelRodCount;
+                            containObjective.Abandoned += ReportFuelRodCount;
                             character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
+
+                            void ReportFuelRodCount()
+                            {
+                                if (!character.IsOnPlayerTeam) { return; }
+                                int remainingFuelRods = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("reactorfuel") && i.Condition > 1);
+                                if (remainingFuelRods == 0)
+                                {
+                                    character.Speak(TextManager.Get("DialogOutOfFuelRods"), null, 0.0f, "outoffuelrods", 30.0f);
+                                    outOfFuel = true;
+                                }
+                                else if (remainingFuelRods < 3)
+                                {
+                                    character.Speak(TextManager.Get("DialogLowOnFuelRods"), null, 0.0f, "lowonfuelrods", 30.0f);
+                                }
+                            }
                         }
-                        return false;
+                        return outOfFuel;
                     }
                     else if (TooMuchFuel())
                     {
@@ -619,7 +629,7 @@ namespace Barotrauma.Items.Components
             {
                 if (lastUser != null && lastUser != character && lastUser != LastAIUser)
                 {
-                    if (lastUser.SelectedConstruction == item)
+                    if (lastUser.SelectedConstruction == item && character.IsOnPlayerTeam)
                     {
                         character.Speak(TextManager.Get("DialogReactorTaken"), null, 0.0f, "reactortaken", 10.0f);
                     }

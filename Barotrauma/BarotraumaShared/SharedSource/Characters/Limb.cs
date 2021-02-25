@@ -203,7 +203,7 @@ namespace Barotrauma
     partial class Limb : ISerializableEntity, ISpatialEntity
     {
         //how long it takes for severed limbs to fade out
-        public float SeveredFadeOutTime => Params.SeveredFadeOutTime;
+        public float SeveredFadeOutTime { get; private set; } = 10;
 
         public readonly Character character;
         /// <summary>
@@ -308,6 +308,12 @@ namespace Barotrauma
             set
             {
                 if (isSevered == value) { return; }
+                if (value == true)
+                {
+                    // If any of the connected limbs have a longer fade out time, use that
+                    var connectedLimbs = GetConnectedLimbs();
+                    SeveredFadeOutTime = Math.Max(Params.SeveredFadeOutTime, connectedLimbs.Any() ? connectedLimbs.Max(l => l.SeveredFadeOutTime) : 0);
+                }
                 isSevered = value;
                 if (isSevered)
                 {
@@ -861,6 +867,23 @@ namespace Barotrauma
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
             attack.UpdateAttackTimer(deltaTime, character);
+            if (attack.Blink)
+            {
+                if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Any())
+                {
+                    foreach (int limbIndex in attack.ForceOnLimbIndices)
+                    {
+                        if (limbIndex < 0 || limbIndex >= character.AnimController.Limbs.Length) { continue; }
+                        Limb limb = character.AnimController.Limbs[limbIndex];
+                        if (limb.IsSevered) { continue; }
+                        limb.Blink();
+                    }
+                }
+                else
+                {
+                    Blink();
+                }
+            }
 
             bool wasHit = false;
             Body structureBody = null;
@@ -1103,7 +1126,7 @@ namespace Barotrauma
                 {
                     targets.Clear();
                     statusEffect.GetNearbyTargets(WorldPosition, targets);
-                    statusEffect.Apply(ActionType.OnActive, deltaTime, character, targets);
+                    statusEffect.Apply(actionType, deltaTime, character, targets);
                 }
                 else
                 {
@@ -1111,7 +1134,40 @@ namespace Barotrauma
                     {
                         statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
                     }
-                    statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
+                    else if (statusEffect.targetLimbs != null)
+                    {
+                        foreach (var limbType in statusEffect.targetLimbs)
+                        {
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                            {
+                                // Target all matching limbs
+                                foreach (var limb in ragdoll.Limbs)
+                                {
+                                    if (limb.IsSevered) { continue; }
+                                    if (limb.type == limbType)
+                                    {
+                                        statusEffect.Apply(actionType, deltaTime, character, limb);
+                                    }
+                                }
+                            }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                            {
+                                // Target just the first matching limb
+                                Limb limb = ragdoll.GetLimb(limbType);
+                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                            }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                            {
+                                // Target just the last matching limb
+                                Limb limb = ragdoll.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                                statusEffect.Apply(actionType, deltaTime, character, limb);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        statusEffect.Apply(actionType, deltaTime, character, this, WorldPosition);
+                    }
                 }
             }
         }
@@ -1121,7 +1177,12 @@ namespace Barotrauma
 
         private float TotalBlinkDurationOut => Params.BlinkDurationOut + Params.BlinkHoldTime;
 
-        public void Blink(float deltaTime, float referenceRotation)
+        public void Blink()
+        {
+            blinkTimer = -TotalBlinkDurationOut;
+        }
+
+        public void UpdateBlink(float deltaTime, float referenceRotation)
         {
             if (blinkTimer > -TotalBlinkDurationOut)
             {
@@ -1153,6 +1214,26 @@ namespace Barotrauma
                 blinkPhase = Params.BlinkDurationIn;
                 body.SmoothRotate(referenceRotation + MathHelper.ToRadians(Params.BlinkRotationOut) * Dir, Mass * Params.BlinkForce, wrapAngle: true);
             }
+        }
+
+        public IEnumerable<LimbJoint> GetConnectedJoints() => ragdoll.LimbJoints.Where(j => !j.IsSevered && (j.LimbA == this || j.LimbB == this));
+
+        public IEnumerable<Limb> GetConnectedLimbs()
+        {
+            var connectedJoints = GetConnectedJoints();
+            var connectedLimbs = new HashSet<Limb>();
+            foreach (Limb limb in ragdoll.Limbs)
+            {
+                var otherJoints = limb.GetConnectedJoints();
+                foreach (LimbJoint connectedJoint in connectedJoints)
+                {
+                    if (otherJoints.Contains(connectedJoint))
+                    {
+                        connectedLimbs.Add(limb);
+                    }
+                }
+            }
+            return connectedLimbs;
         }
 
         public void Remove()

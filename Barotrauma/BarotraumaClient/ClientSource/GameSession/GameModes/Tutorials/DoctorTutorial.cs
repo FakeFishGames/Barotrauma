@@ -283,7 +283,7 @@ namespace Barotrauma.Tutorials
             doctor.RemoveActiveObjectiveEntity(patient1);
             TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Command)); // Get the patient to medbay
 
-            while (patient1.CurrentOrder == null || patient1.CurrentOrder.Identifier != "follow")
+            while (patient1.GetCurrentOrderWithTopPriority()?.Order?.Identifier != "follow")
             {
                 // TODO: Rework order highlighting for new command UI
                 // GameMain.GameSession.CrewManager.HighlightOrderButton(patient1, "follow", highlightColor, new Vector2(5, 5));

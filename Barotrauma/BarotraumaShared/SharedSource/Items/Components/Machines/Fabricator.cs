@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -96,6 +97,12 @@ namespace Barotrauma.Items.Components
                     fabricationRecipes.Add(recipe);
                 }
             }
+            fabricationRecipes.Sort((r1, r2) =>
+            {
+                int hash1 = (int)r1.TargetItem.UIntIdentifier;
+                int hash2 = (int)r2.TargetItem.UIntIdentifier;
+                return hash1 - hash2;
+            });
 
             state = FabricatorState.Stopped;
 

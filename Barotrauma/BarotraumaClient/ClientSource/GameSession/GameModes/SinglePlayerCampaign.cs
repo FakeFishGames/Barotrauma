@@ -22,7 +22,7 @@ namespace Barotrauma
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
 
-            if (PlayerInput.RightButtonClicked() ||
+            if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {
                 ShowCampaignUI = false;
@@ -372,9 +372,6 @@ namespace Barotrauma
             SoundPlayer.OverrideMusicDuration = 18.0f;
             crewDead = false;
 
-            LevelData lvlData = GameMain.GameSession.LevelData;
-            bool beaconActive = GameMain.GameSession.Level.CheckBeaconActive();
-
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
@@ -459,8 +456,6 @@ namespace Barotrauma
                     }
                 }
 
-                lvlData.IsBeaconActive = beaconActive;
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
@@ -530,6 +525,8 @@ namespace Barotrauma
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
 
             base.Update(deltaTime);
+            
+            Map?.Radiation.UpdateRadiation(deltaTime);
 
             if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))

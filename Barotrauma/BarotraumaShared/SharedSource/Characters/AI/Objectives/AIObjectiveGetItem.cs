@@ -44,6 +44,8 @@ namespace Barotrauma
         /// </summary>
         public bool AllowStealing { get; set; }
 
+        public bool TakeWholeStack { get; set; }
+
         public AIObjectiveGetItem(Character character, Item targetItem, AIObjectiveManager objectiveManager, bool equip = true, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
         {
@@ -191,8 +193,20 @@ namespace Barotrauma
                     return;
                 }
 
+                Inventory itemInventory = targetItem.ParentInventory;
+                var slots = itemInventory?.FindIndices(targetItem);
                 if (HumanAIController.TakeItem(targetItem, character.Inventory, equip, storeUnequipped: true))
                 {
+                    if (TakeWholeStack && slots != null)
+                    {
+                        foreach (int slot in slots)
+                        {
+                            foreach (Item item in itemInventory.GetItemsAt(slot).ToList())
+                            {
+                                HumanAIController.TakeItem(item, character.Inventory, equip: false, storeUnequipped: true);
+                            }
+                        }
+                    }
                     IsCompleted = true;
                 }
                 else
@@ -211,7 +225,16 @@ namespace Barotrauma
                         return new AIObjectiveGoTo(moveToTarget, character, objectiveManager, repeat: false, getDivingGearIfNeeded: AllowToFindDivingGear, closeEnough: DefaultReach)
                         {
                             // If the root container changes, the item is no longer where it was (taken by someone -> need to find another item)
-                            abortCondition = () => targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget,
+                            abortCondition = obj =>
+                            {
+                                bool abort = targetItem == null || targetItem.GetRootInventoryOwner() != moveToTarget;
+                                if (abort)
+                                {
+                                    // Fail silently if someone takes the suit.
+                                    obj.speakIfFails = false;
+                                }
+                                return abort;
+                            },
                             DialogueIdentifier = "dialogcannotreachtarget",
                             TargetName = (moveToTarget as MapEntity)?.Name ?? (moveToTarget as Character)?.Name ?? moveToTarget.ToString()
                         };

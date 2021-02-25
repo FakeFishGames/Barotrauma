@@ -676,6 +676,7 @@ namespace Barotrauma
                         (itemFrame.UserData as PurchasedItem).Quantity = quantity;
                         SetQuantityLabelText(StoreTab.Buy, itemFrame);
                         SetOwnedLabelText(itemFrame);
+                        SetPriceGetters(itemFrame, true);
                     }
                     SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
                     existingItemFrames.Add(itemFrame);
@@ -750,6 +751,7 @@ namespace Barotrauma
                     (itemFrame.UserData as PurchasedItem).Quantity = itemQuantity;
                     SetQuantityLabelText(StoreTab.Sell, itemFrame);
                     SetOwnedLabelText(itemFrame);
+                    SetPriceGetters(itemFrame, false);
                 }
                 SetItemFrameStatus(itemFrame, hasPermissions && itemQuantity > 0);
                 if (itemQuantity < 1 && !isRequestedGood)
@@ -770,6 +772,37 @@ namespace Barotrauma
 
             storeSellList.BarScroll = prevSellListScroll;
             shoppingCrateSellList.BarScroll = prevShoppingCrateScroll;
+        }
+
+        private void SetPriceGetters(GUIComponent itemFrame, bool buying)
+        {
+            if (itemFrame == null || !(itemFrame.UserData is PurchasedItem pi)) { return; }
+
+            if (itemFrame.FindChild("undiscountedprice", recursive: true) is GUITextBlock undiscountedPriceBlock)
+            {
+                if (buying)
+                {
+                    undiscountedPriceBlock.TextGetter = () => GetCurrencyFormatted(
+                         CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, considerDailySpecials: false) ?? 0);
+                }
+                else
+                {
+                    undiscountedPriceBlock.TextGetter = () => GetCurrencyFormatted(
+                       CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, considerRequestedGoods: false) ?? 0);
+                }
+            }
+
+            if (itemFrame.FindChild("price", recursive: true) is GUITextBlock priceBlock)
+            {
+                if (buying)
+                {
+                    priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab) ?? 0);
+                }
+                else
+                {
+                    priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab) ?? 0);
+                }
+            }
         }
 
         public void RefreshItemsToSell()
@@ -1188,14 +1221,6 @@ namespace Barotrauma
             };
             priceBlock.Color *= (forceDisable ? 0.5f : 1.0f);
             priceBlock.CalculateHeightFromText();
-            if (isSellingRelatedList)
-            {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, priceInfo: priceInfo) ?? 0);
-            }
-            else
-            {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, priceInfo: priceInfo) ?? 0);
-            }
             if (locationHasDealOnItem)
             {
                 var undiscounterPriceBlock = new GUITextBlock(
@@ -1209,17 +1234,8 @@ namespace Barotrauma
                     TextColor = priceBlock.TextColor,
                     UserData = "undiscountedprice"
                 };
-                if (isSellingRelatedList)
-                {
-                    undiscounterPriceBlock.TextGetter = () => GetCurrencyFormatted(
-                        CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, priceInfo: priceInfo, considerRequestedGoods: false) ?? 0);
-                }
-                else
-                {
-                    undiscounterPriceBlock.TextGetter = () => GetCurrencyFormatted(
-                        CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, priceInfo: priceInfo, considerDailySpecials: false) ?? 0);
-                }
             }
+            SetPriceGetters(frame, !isSellingRelatedList);
 
             if (isParentOnLeftSideOfInterface)
             {

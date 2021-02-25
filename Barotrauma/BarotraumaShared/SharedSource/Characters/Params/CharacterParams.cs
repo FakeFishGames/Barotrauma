@@ -64,6 +64,9 @@ namespace Barotrauma
         [Serialize("waterblood", true), Editable]
         public string BleedParticleWater { get; private set; }
 
+        [Serialize(1f, true), Editable]
+        public float BleedParticleMultiplier { get; private set; }
+
         [Serialize(10f, true, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
 
@@ -75,6 +78,9 @@ namespace Barotrauma
 
         [Serialize(0f, true), Editable]
         public float SonarDisruption { get; set; }
+
+        [Serialize(25000f, true, "If the character is farther than this (in pixels) from the sub and the players, it will be disabled. The halved value is used for triggering simple physics where the ragdoll is disabled and only the main collider is updated."), Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
+        public float DisableDistance { get; set; }
 
         public readonly string File;
 
@@ -118,10 +124,11 @@ namespace Barotrauma
                         // TODO: Make recursive? In practice we don't have to go deeper than this, but the implementation would be a lot cleaner with recursion.
                         foreach (XElement subSubElement in subElement.Elements())
                         {
-                            matchingParams = matchingParams.SubParams.FirstOrDefault(p => p.Name.Equals(subSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase));
-                            if (matchingParams != null)
+                            if (subSubElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
+                            var matchingSubParams = matchingParams.SubParams.FirstOrDefault(p => p.Name.Equals(subSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                            if (matchingSubParams != null)
                             {
-                                TryLoadOverride(matchingParams, subSubElement, matchingParams.SerializableProperties);
+                                TryLoadOverride(matchingSubParams, subSubElement, matchingSubParams.SerializableProperties);
                             }
                         }
                     }
@@ -522,20 +529,35 @@ namespace Barotrauma
             [Serialize(20f, true, description: "How long the creature flees before returning to normal state. When the creature sees the target or is being chased, it will always flee, if it's in the flee state."), Editable(minValue: 0f, maxValue: 100f)]
             public float MinFleeTime { get; private set; }
 
-            [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable()]
+            [Serialize(false, true, description: "Does the character try to break inside the sub?"), Editable]
             public bool AggressiveBoarding { get; private set; }
 
-            [Serialize(true, true, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission."), Editable()]
+            [Serialize(true, true, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission."), Editable]
             public bool EnforceAggressiveBehaviorForMissions { get; private set; }
 
-            [Serialize(true, true, description: "Should the character target or ignore walls when it's outside the submarine."), Editable()]
+            [Serialize(true, true, description: "Should the character target or ignore walls when it's outside the submarine."), Editable]
             public bool TargetOuterWalls { get; private set; }
 
-            [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable()]
+            [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable]
             public bool RandomAttack { get; private set; }
 
-            [Serialize(false, true, description:"Can the character open doors and hatches without a proper id card? Only applies on humanoids.")]
+            [Serialize(false, true, description:"Can the character open doors and hatches without a proper id card? Only applies on humanoids."), Editable]
             public bool Infiltrate { get; private set; }
+
+            [Serialize(true, true, "Is the creature allowed to navigate from and into the depths of the abyss? When enabled, the creatures will try to avoid the depths."), Editable]
+            public bool AvoidAbyss { get; set; }
+
+            [Serialize(true, true, "Does the creature try to keep in the abyss? Has effect only when AvoidAbyss is false."), Editable]
+            public bool StayInAbyss { get; set; }
+
+            [Serialize(0f, true, description: ""), Editable]
+            public float StartAggression { get; private set; }
+
+            [Serialize(100f, true, description: ""), Editable]
+            public float MaxAggression { get; private set; }
+
+            [Serialize(0f, true, description: ""), Editable]
+            public float AggressionCumulation { get; private set; }
 
             public IEnumerable<TargetParams> Targets => targets;
             protected readonly List<TargetParams> targets = new List<TargetParams>();
@@ -639,9 +661,19 @@ namespace Barotrauma
             [Serialize(false, true, description: "Should the target be ignored while the creature is outside. Doesn't matter where the target is."), Editable]
             public bool IgnoreOutside { get; set; }
 
-            [Serialize(false, true)]
+            [Serialize(false, true, description: "Should the target be ignored if it's inside a different submarine than us? Normally only some targets are ignored when they are not inside the same sub."), Editable]
+            public bool IgnoreIfNotInSameSub { get; set; }
+
+            [Serialize(false, true), Editable]
             public bool IgnoreIncapacitated { get; set; }
 
+            [Serialize(0f, true, description: "How much damage the protected target should take from an attacker before the creature starts defending it."), Editable]
+            public float DamageThreshold { get; private set; }
+
+            [Serialize(AttackPattern.Straight, true), Editable]
+            public AttackPattern AttackPattern { get; set; }
+
+            #region Sweep
             [Serialize(0f, true, description: "Use to define a distance at which the creature starts the sweeping movement."), Editable(MinValueFloat = 0, MaxValueFloat = 10000, ValueStep = 1, DecimalCount = 0)]
             public float SweepDistance { get; private set; }
 
@@ -650,9 +682,21 @@ namespace Barotrauma
 
             [Serialize(1f, true, description: "How quickly the sweep direction changes. Uses the sine wave pattern."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
             public float SweepSpeed { get; private set; }
+            #endregion
 
-            [Serialize(0f, true, description: "How much damage the protected target should take from an attacker before the creature starts defending it.")]
-            public float Threshold { get; private set; }
+            #region Circle
+            [Serialize(5000f, true), Editable(MinValueFloat = 0f, MaxValueFloat = 20000f)]
+            public float CircleStartDistance { get; private set; }
+
+            [Serialize(1f, true), Editable(MinValueFloat = 0.5f, MaxValueFloat = 2f)]
+            public float CircleRotationSpeed { get; private set; }
+
+            [Serialize(5f, true), Editable(MinValueFloat = 1f, MaxValueFloat = 10f)]
+            public float CircleStrikeDistanceMultiplier { get; private set; }
+
+            [Serialize(0f, true), Editable(MinValueFloat = 0f, MaxValueFloat = 50f)]
+            public float CircleMaxRandomOffset { get; private set; }
+            #endregion
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 

@@ -138,6 +138,10 @@ namespace Barotrauma.Items.Components
             {
                 if (IgnoreDead && c.IsDead) { continue; }
 
+                //ignore characters that have spawned a second or less ago
+                //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
+                if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
+
                 switch (Target)
                 {
                     case TargetType.Human:

@@ -61,7 +61,6 @@ namespace Barotrauma
 
         private Character speaker;
 
-        private OrderInfo? prevSpeakerOrder;
         private AIObjective prevIdleObjective, prevGotoObjective;
 
         public List<SubactionGroup> Options { get; private set; }
@@ -187,14 +186,7 @@ namespace Barotrauma
             var humanAI = speaker.AIController as HumanAIController;
             if (humanAI != null && !speaker.IsDead && !speaker.Removed)
             {
-                if (prevSpeakerOrder != null)
-                {
-                    humanAI.SetOrder(prevSpeakerOrder.Value.Order, prevSpeakerOrder.Value.OrderOption, orderGiver: null, speak: false);
-                }
-                else
-                {
-                    humanAI.SetOrder(null, string.Empty, orderGiver: null, speak: false);
-                }
+                humanAI.ClearForcedOrder();
                 if (prevIdleObjective != null) { humanAI.ObjectiveManager.AddObjective(prevIdleObjective); }
                 if (prevGotoObjective != null) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
             }
@@ -324,16 +316,11 @@ namespace Barotrauma
 
             if (speaker?.AIController is HumanAIController humanAI)
             {
-                prevSpeakerOrder = null;
-                if (humanAI.CurrentOrder != null)
-                {
-                    prevSpeakerOrder = new OrderInfo(humanAI.CurrentOrder, humanAI.CurrentOrderOption);
-                }
                 prevIdleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
                 prevGotoObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveGoTo>();
-                humanAI.SetOrder(
-                    Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)), 
-                    option: string.Empty, orderGiver: null, speak: false);
+                humanAI.SetForcedOrder(
+                    Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)),
+                    option: string.Empty, orderGiver: null);
                 if (targets.Any()) 
                 {
                     Entity closestTarget = null;

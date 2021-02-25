@@ -24,7 +24,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!GameMain.SubEditorScreen.ShowThalamus && prefab.Category.HasFlag(MapEntityCategory.Thalamus))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
                 {
                     return false;
                 }

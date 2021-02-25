@@ -52,7 +52,7 @@ namespace Barotrauma
                 float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
                 float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
                 float reduction = isPriority ? 1 : 2;
-                float max = MathHelper.Min(AIObjectiveManager.OrderPriority - reduction, 90);
+                float max = AIObjectiveManager.LowestOrderPriority - reduction;
                 float devotion = CumulatedDevotion / 100;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
             }
@@ -67,7 +67,7 @@ namespace Barotrauma
                 TryAddSubObjective(ref getWeldingTool, () => new AIObjectiveGetItem(character, "weldingequipment", objectiveManager, equip: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
                     onAbandon: () =>
                     {
-                        if (objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>())
+                        if (character.IsOnPlayerTeam && objectiveManager.IsCurrentOrder<AIObjectiveFixLeaks>())
                         {
                             character.Speak(TextManager.Get("dialogcannotfindweldingequipment"), null, 0.0f, "dialogcannotfindweldingequipment", 10.0f);
                         }
@@ -87,22 +87,34 @@ namespace Barotrauma
                     return;
                 }
                 // Drop empty tanks
-                if (weldingTool.OwnInventory.AllItems.Any(it => it.Condition <= 0.0f))
-                {
-                    foreach (Item containedItem in weldingTool.OwnInventory.AllItemsMod)
-                    {
-                        if (containedItem.Condition <= 0.0f)
-                        {
-                            containedItem.Drop(character);
-                        }
-                    }
-                }
+                HumanAIController.UnequipEmptyItems(weldingTool);
 
                 if (weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
-                        onAbandon: () => Abandon = true,
-                        onCompleted: () => RemoveSubObjective(ref refuelObjective));
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC),
+                        onAbandon: () =>
+                        {
+                            Abandon = true;
+                            ReportWeldingFuelTankCount();
+                        },
+                        onCompleted: () => 
+                        {
+                            RemoveSubObjective(ref refuelObjective);
+                            ReportWeldingFuelTankCount();
+                        });
+
+                    void ReportWeldingFuelTankCount()
+                    {
+                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("weldingfuel") && i.Condition > 1);
+                        if (remainingOxygenTanks == 0)
+                        {
+                            character.Speak(TextManager.Get("DialogOutOfWeldingFuel"), null, 0.0f, "outofweldingfuel", 30.0f);
+                        }
+                        else if (remainingOxygenTanks < 4)
+                        {
+                            character.Speak(TextManager.Get("DialogLowOnWeldingFuel"), null, 0.0f, "lowonweldingfuel", 30.0f);
+                        }
+                    }
                     return;
                 }
             }

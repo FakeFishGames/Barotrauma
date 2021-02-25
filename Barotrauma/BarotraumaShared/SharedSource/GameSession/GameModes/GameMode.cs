@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -16,9 +17,9 @@ namespace Barotrauma
             get { return GameMain.GameSession?.CrewManager; }
         }
 
-        public virtual Mission Mission
+        public virtual IEnumerable<Mission> Missions
         {
-            get { return null; }
+            get { return Enumerable.Empty<Mission>(); }
         }
 
         public bool IsSinglePlayer
@@ -54,6 +55,8 @@ namespace Barotrauma
         }
 
         public virtual void ShowStartMessage() { }
+
+        public virtual void AddExtraMissions(LevelData levelData) { }
         
         public virtual void AddToGUIUpdateList()
         {

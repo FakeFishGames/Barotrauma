@@ -7,8 +7,7 @@ namespace Barotrauma
     class EventPrefab
     {
         public readonly XElement ConfigElement;    
-        public readonly Type EventType;      
-        public readonly string MusicType;
+        public readonly Type EventType;
         public readonly float SpawnProbability;
         public readonly bool TriggerEventCooldown;
         public float Commonness;
@@ -18,8 +17,6 @@ namespace Barotrauma
         {
             ConfigElement = element;
          
-            MusicType = element.GetAttributeString("musictype", "default");
-
             try
             {
                 EventType = Type.GetType("Barotrauma." + ConfigElement.Name, true, true);

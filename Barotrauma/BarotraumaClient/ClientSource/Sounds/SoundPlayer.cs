@@ -195,13 +195,20 @@ namespace Barotrauma
                     {
                         case "music":
                             var newMusicClip = new BackgroundMusic(soundElement);
-                            musicClips.AddIfNotNull(newMusicClip);
-                            if (loadedSoundElements != null)
+                            if (File.Exists(newMusicClip.File))
                             {
-                                if (newMusicClip.Type.Equals("menu", StringComparison.OrdinalIgnoreCase))
+                                musicClips.AddIfNotNull(newMusicClip);
+                                if (loadedSoundElements != null)
                                 {
-                                    targetMusic[0] = newMusicClip;
+                                    if (newMusicClip.Type.Equals("menu", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        targetMusic[0] = newMusicClip;
+                                    }
                                 }
+                            }
+                            else
+                            {
+                                DebugConsole.NewMessage($"Music file \"{newMusicClip.File}\" not found.");
                             }
                             break;
                         case "splash":
@@ -887,7 +894,17 @@ namespace Barotrauma
                     if (currentMusic[i] == null || (musicChannel[i] == null || !musicChannel[i].IsPlaying))
                     {
                         DisposeMusicChannel(i);
-                        currentMusic[i] = GameMain.SoundManager.LoadSound(targetMusic[i].File, true);
+                        try
+                        {
+                            currentMusic[i] = GameMain.SoundManager.LoadSound(targetMusic[i].File, true);
+                        }
+                        catch (System.IO.InvalidDataException e)
+                        {
+                            DebugConsole.ThrowError($"Failed to load the music clip \"{targetMusic[i].File}\".", e);
+                            musicClips.Remove(targetMusic[i]);
+                            targetMusic[i] = null;
+                            break;
+                        }
                         musicChannel[i] = currentMusic[i].Play(0.0f, "music");
                         if (targetMusic[i].ContinueFromPreviousTime)
                         {
@@ -983,13 +1000,17 @@ namespace Barotrauma
             }
 
             Submarine targetSubmarine = Character.Controlled?.Submarine;
-            if ((targetSubmarine != null && targetSubmarine.AtDamageDepth) ||
-                (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && Level.Loaded != null && Level.Loaded.GetRealWorldDepth(GameMain.GameScreen.Cam.Position.Y) > Level.Loaded.RealWorldCrushDepth))
+            if (targetSubmarine != null && targetSubmarine.AtDamageDepth)
+            {
+                return "deep";
+            }
+            if (GameMain.GameScreen != null && Screen.Selected == GameMain.GameScreen && Submarine.MainSub != null &&
+                Level.Loaded != null && Level.Loaded.GetRealWorldDepth(GameMain.GameScreen.Cam.Position.Y) > Submarine.MainSub.RealWorldCrushDepth)
             {
                 return "deep";
             }
 
-            if (targetSubmarine != null)
+                if (targetSubmarine != null)
             {                
                 float floodedArea = 0.0f;
                 float totalArea = 0.0f;

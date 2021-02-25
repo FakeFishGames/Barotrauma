@@ -706,9 +706,11 @@ namespace Barotrauma.Sounds
         }
 
         bool areStreamsPlaying = false;
+        ManualResetEvent streamMre = null;
 
         void UpdateStreaming()
         {
+            streamMre = new ManualResetEvent(false);
             bool killThread = false;
             while (!killThread)
             {
@@ -745,12 +747,18 @@ namespace Barotrauma.Sounds
                         }
                     }
                 }
+                streamMre.WaitOne(10);
+                streamMre.Reset();
                 lock (threadDeathMutex)
                 {
                     areStreamsPlaying = !killThread;
                 }
-                Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
+        }
+
+        public void ForceStreamUpdate()
+        {
+            streamMre?.Set();
         }
 
         private void ReloadSounds()

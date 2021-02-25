@@ -53,7 +53,8 @@ namespace Barotrauma
             UseTarget = 64,
             Hull = 128,
             Limb = 256,
-            AllLimbs = 512
+            AllLimbs = 512,
+            LastLimb = 1024
         }
 
         class ItemSpawnInfo
@@ -198,7 +199,7 @@ namespace Barotrauma
 
         public readonly ActionType type = ActionType.OnActive;
 
-        private readonly List<Explosion> explosions;
+        public readonly List<Explosion> Explosions;
 
         private readonly List<ItemSpawnInfo> spawnItems;
         private readonly List<CharacterSpawnInfo> spawnCharacters;
@@ -236,7 +237,9 @@ namespace Barotrauma
             get { return spawnCharacters; }
         }
 
-        private readonly List<Pair<string, float>> reduceAffliction;
+        public readonly List<Pair<string, float>> ReduceAffliction;
+
+        public float Duration => duration;
 
         //only applicable if targeting NearbyCharacters or NearbyItems
         public float Range
@@ -280,9 +283,9 @@ namespace Barotrauma
             spawnItems = new List<ItemSpawnInfo>();
             spawnCharacters = new List<CharacterSpawnInfo>();
             Afflictions = new List<Affliction>();
-            explosions = new List<Explosion>();
+            Explosions = new List<Explosion>();
             triggeredEvents = new List<EventPrefab>();
-            reduceAffliction = new List<Pair<string, float>>();
+            ReduceAffliction = new List<Pair<string, float>>();
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
@@ -295,7 +298,7 @@ namespace Barotrauma
                 List<LimbType> targetLimbs = new List<LimbType>();
                 foreach (string targetLimbName in targetLimbNames)
                 {
-                    if (Enum.TryParse(targetLimbName, out LimbType targetLimb)) { targetLimbs.Add(targetLimb); }
+                    if (Enum.TryParse(targetLimbName, ignoreCase: true, out LimbType targetLimb)) { targetLimbs.Add(targetLimb); }
                 }
                 if (targetLimbs.Count > 0) { this.targetLimbs = targetLimbs.ToArray(); }
             }
@@ -419,7 +422,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "explosion":
-                        explosions.Add(new Explosion(subElement, parentDebugName));
+                        Explosions.Add(new Explosion(subElement, parentDebugName));
                         break;
                     case "fire":
                         FireSize = subElement.GetAttributeFloat("size", 10.0f);
@@ -494,7 +497,7 @@ namespace Barotrauma
                         if (subElement.Attribute("name") != null)
                         {
                             DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
-                            reduceAffliction.Add(new Pair<string, float>(
+                            ReduceAffliction.Add(new Pair<string, float>(
                                 subElement.GetAttributeString("name", "").ToLowerInvariant(),
                                 subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
                         }
@@ -505,7 +508,7 @@ namespace Barotrauma
 
                             if (AfflictionPrefab.List.Any(ap => ap.Identifier == name || ap.AfflictionType == name))
                             {
-                                reduceAffliction.Add(new Pair<string, float>(
+                                ReduceAffliction.Add(new Pair<string, float>(
                                     name,
                                     subElement.GetAttributeFloat(1.0f, "amount", "strength", "reduceamount")));
                             }
@@ -977,7 +980,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Explosion explosion in explosions)
+            foreach (Explosion explosion in Explosions)
             {
                 explosion.Explode(position, damageSource: entity, attacker: user);
             }
@@ -1020,7 +1023,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (Pair<string, float> reduceAffliction in reduceAffliction)
+                foreach (Pair<string, float> reduceAffliction in ReduceAffliction)
                 {
                     float reduceAmount = disableDeltaTime ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
                     Limb targetLimb = null;
@@ -1304,7 +1307,7 @@ namespace Barotrauma
                         }
                     }
 
-                    foreach (Pair<string, float> reduceAffliction in element.Parent.reduceAffliction)
+                    foreach (Pair<string, float> reduceAffliction in element.Parent.ReduceAffliction)
                     {
                         Limb targetLimb = null;
                         Character targetCharacter = null;

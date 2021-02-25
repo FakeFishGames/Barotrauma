@@ -11,7 +11,6 @@ namespace Barotrauma
         private bool swarmSpawned;
         private readonly string monsterSpeciesName;
         private Point monsterCountRange;
-        private Level level;
         private readonly string sonarLabel;
 
         public BeaconMission(MissionPrefab prefab, Location[] locations) : base(prefab, locations)
@@ -46,13 +45,12 @@ namespace Barotrauma
         {
             get
             {
-                yield return level.BeaconStation.WorldPosition;
+                if (level.BeaconStation == null)
+                {
+                    yield break;
+                }
+                yield return level.BeaconStation.WorldPosition;                
             }
-        }
-
-        public override void Start(Level level)
-        {
-            this.level = level;
         }
 
         public override void Update(float deltaTime)
@@ -109,8 +107,15 @@ namespace Barotrauma
             completed = level.CheckBeaconActive();
             if (completed)
             {
-                ChangeLocationType("None", "Explored");
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
                 GiveReward();
+                if (level?.LevelData != null)
+                {
+                    level.LevelData.IsBeaconActive = true;
+                }
             }
         }
 

@@ -1177,13 +1177,14 @@ namespace Barotrauma
                 style: "GUISlider", barSize: 0.05f)
             {
                 UserData = micVolumeText,
-                Range = new Vector2(0,540),
-                Step = 1.0f / 9.0f
+                Range = new Vector2(0, ((float)VoipConfig.BUFFER_SIZE / (float)VoipConfig.FREQUENCY) * 1000.0f * 25.0f),
+                Step = 1.0f / 25.0f
             };
             cutoffPreventionSlider.BarScrollValue = VoiceChatCutoffPrevention;
             cutoffPreventionSlider.OnMoved = (scrollBar, scroll) =>
             {
-                VoiceChatCutoffPrevention = (int)scrollBar.BarScrollValue;
+                int bufferMsLength = (int)(((float)VoipConfig.BUFFER_SIZE / (float)VoipConfig.FREQUENCY) * 1000.0f);
+                VoiceChatCutoffPrevention = (int)Math.Round(scrollBar.BarScrollValue / bufferMsLength) * bufferMsLength;
                 cutoffPreventionText.Text = TextManager.Get("CutoffPrevention") +
                     " " + TextManager.GetWithVariable("timeformatmilliseconds", "[milliseconds]", VoiceChatCutoffPrevention.ToString());
                 return true;

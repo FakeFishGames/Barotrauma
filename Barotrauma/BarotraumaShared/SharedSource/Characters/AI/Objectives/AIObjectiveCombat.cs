@@ -79,10 +79,16 @@ namespace Barotrauma
         private float coolDownTimer;
         private IEnumerable<Body> myBodies;
         private float aimTimer;
+        private float spreadTimer;
 
         private bool canSeeTarget;
         private float visibilityCheckTimer;
         private readonly float visibilityCheckInterval = 0.2f;
+
+        private float sqrDistance;
+        private readonly float maxDistance = 2000;
+        private readonly float distanceCheckInterval = 0.2f;
+        private float distanceTimer;
 
         /// <summary>
         /// Aborts the objective when this condition is true
@@ -108,8 +114,12 @@ namespace Barotrauma
         public CombatMode Mode { get; private set; }
 
         private bool IsOffensiveOrArrest => initialMode == CombatMode.Offensive || initialMode == CombatMode.Arrest;
-        private bool TargetEliminated => Enemy == null || Enemy.Removed || Enemy.IsUnconscious;
+        private bool TargetEliminated => IsEnemyDisabled || Enemy.IsUnconscious;
         private bool IsEnemyDisabled => Enemy == null || Enemy.Removed || Enemy.IsDead;
+
+        private float AimSpeed => HumanAIController.AimSpeed;
+        private float AimAccuracy => HumanAIController.AimAccuracy;
+
         private bool EnemyIsClose() => Enemy != null && character.CurrentHull != null && character.CurrentHull == Enemy.CurrentHull || Vector2.DistanceSquared(character.Position, Enemy.Position) < 500;
 
         public AIObjectiveCombat(Character character, Character enemy, CombatMode mode, AIObjectiveManager objectiveManager, float priorityModifier = 1, float coolDown = 10.0f) 
@@ -136,6 +146,7 @@ namespace Barotrauma
             {
                 Mode = CombatMode.Retreat;
             }
+            spreadTimer = Rand.Range(-10, 10);
         }
 
         public override float GetPriority()
@@ -168,6 +179,12 @@ namespace Barotrauma
             {
                 findSafety.Priority = 0;
             }
+            distanceTimer -= deltaTime;
+            if (distanceTimer < 0)
+            {
+                distanceTimer = distanceCheckInterval;
+                sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
+            }
         }
 
         protected override bool Check()
@@ -175,8 +192,12 @@ namespace Barotrauma
             if (IsOffensiveOrArrest && Mode != initialMode)
             {
                 Abandon = true;
-                SteeringManager.Reset();
                 return false;
+            }
+            if (sqrDistance > maxDistance * maxDistance)
+            {
+                // The target escaped from us.
+                return true;
             }
             return IsEnemyDisabled || (!IsOffensiveOrArrest && coolDownTimer <= 0);
         }
@@ -186,7 +207,6 @@ namespace Barotrauma
             if (abortCondition != null && abortCondition())
             {
                 Abandon = true;
-                SteeringManager.Reset();
                 return;
             }
             if (!IsOffensiveOrArrest)
@@ -621,7 +641,7 @@ namespace Barotrauma
                 var slots = Weapon.AllowedSlots.Where(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
-                    aimTimer = Rand.Range(0.5f, 1f);
+                    aimTimer = Rand.Range(1f, 1.5f) / AimSpeed;
                 }
                 else
                 {
@@ -706,11 +726,7 @@ namespace Barotrauma
                     DialogueIdentifier = "dialogcannotreachtarget",
                     TargetName = Enemy.DisplayName
                 },
-                onAbandon: () =>
-                {
-                    Abandon = true;
-                    SteeringManager.Reset();
-                });
+                onAbandon: () => Abandon = true);
             if (followTargetObjective == null) { return; }
             if (Mode == CombatMode.Arrest && Enemy.Stun > 2)
             {
@@ -818,25 +834,7 @@ namespace Barotrauma
             if (WeaponComponent == null) { return false; }        
             if (Weapon.OwnInventory == null) { return true; }
             // Eject empty ammo
-            if (Weapon.OwnInventory.AllItems.Any(it => it.Condition <= 0.0f))
-            {
-                foreach (Item containedItem in Weapon.OwnInventory.AllItemsMod)
-                {
-                    if (containedItem.Condition <= 0)
-                    {
-                        if (character.Submarine == null)
-                        {
-                            // If we are outside of main sub, try to put the ammo in the inventory instead dropping it in the sea.
-                            if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
-                            {
-                                continue;
-                            }
-                        }
-                        containedItem.Drop(character);
-                    }
-                }
-            }
-
+            HumanAIController.UnequipEmptyItems(Weapon);
             RelatedItem item = null;
             Item ammunition = null;
             string[] ammunitionIdentifiers = null;
@@ -869,21 +867,12 @@ namespace Barotrauma
                     if (ammunition != null)
                     {
                         var container = Weapon.GetComponent<ItemContainer>();
-                        if (container.Item.ParentInventory == character.Inventory)
+                        if (!container.Inventory.TryPutItem(ammunition, null))
                         {
-                            if (!container.Inventory.CanBePut(ammunition))
-                            {
-                                return false;
-                            }
-                            character.Inventory.RemoveItem(ammunition);
-                            if (!container.Inventory.TryPutItem(ammunition, null))
+                            if (ammunition.ParentInventory == character.Inventory)
                             {
                                 ammunition.Drop(character);
                             }
-                        }
-                        else
-                        {
-                            container.Combine(ammunition, character);
                         }
                     }
                 }
@@ -902,6 +891,15 @@ namespace Barotrauma
         private void Attack(float deltaTime)
         {
             character.CursorPosition = Enemy.WorldPosition;
+            if (AimAccuracy < 1)
+            {
+                spreadTimer += deltaTime * Rand.Range(0.01f, 1f);
+                float shake = Rand.Range(0.95f, 1.05f);
+                float offsetAmount = (1 - AimAccuracy) * Rand.Range(300f, 500f);
+                float distanceFactor = MathUtils.InverseLerp(0, 1000 * 1000, sqrDistance);
+                float offset = (float)Math.Sin(spreadTimer * shake) * offsetAmount * distanceFactor;
+                character.CursorPosition += new Vector2(0, offset);
+            }
             if (character.Submarine != null)
             {
                 character.CursorPosition -= character.Submarine.Position;
@@ -912,7 +910,11 @@ namespace Barotrauma
                 canSeeTarget = character.CanSeeTarget(Enemy);
                 visibilityCheckTimer = visibilityCheckInterval;
             }
-            if (!canSeeTarget) { return; }
+            if (!canSeeTarget)
+            {
+                aimTimer = Rand.Range(0.2f, 1f) / AimSpeed;
+                return;
+            }
             if (Weapon.RequireAimToUse)
             {
                 character.SetInput(InputType.Aim, false, true);
@@ -963,14 +965,12 @@ namespace Barotrauma
                 }
                 if (closeEnough)
                 {
-                    SteeringManager.Reset();
-                    character.SetInput(InputType.Shoot, false, true);
-                    Weapon.Use(deltaTime, character);
+                    UseWeapon(deltaTime);
                 }
                 else if (!character.IsFacing(Enemy.WorldPosition))
                 {
                     // Don't do the facing check if we are close to the target, because it easily causes the character to get stuck here when it flips around.
-                    aimTimer = Rand.Range(1f, 1.5f);
+                    aimTimer = Rand.Range(1f, 1.5f) / AimSpeed;
                 }
             }
             else
@@ -979,14 +979,15 @@ namespace Barotrauma
                 {
                     if (sqrDist > repairTool.Range * repairTool.Range) { return; }
                 }
-                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - Weapon.Position) < MathHelper.PiOver4)
+                float aimFactor = MathHelper.PiOver2 * (1 - AimAccuracy);
+                if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - Weapon.Position) < MathHelper.PiOver4 + aimFactor)
                 {
                     if (myBodies == null)
                     {
                         myBodies = character.AnimController.Limbs.Select(l => l.body.FarseerBody);
                     }
                     var collisionCategories = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel;
-                    var pickedBody = Submarine.PickBody(Weapon.SimPosition, Enemy.SimPosition, myBodies, collisionCategories);
+                    var pickedBody = Submarine.PickBody(Weapon.SimPosition, Enemy.SimPosition, myBodies, collisionCategories, allowInsideFixture: true);
                     if (pickedBody != null)
                     {
                         Character target = null;
@@ -1000,22 +1001,27 @@ namespace Barotrauma
                         }
                         if (target != null && (target == Enemy || !HumanAIController.IsFriendly(target)))
                         {
-                            character.SetInput(InputType.Shoot, false, true);
-                            Weapon.Use(deltaTime, character);
-                            float reloadTime = 0;
-                            if (WeaponComponent is RangedWeapon rangedWeapon)
-                            {
-                                reloadTime = rangedWeapon.Reload;
-                            }
-                            if (WeaponComponent is MeleeWeapon mw)
-                            {
-                                reloadTime = mw.Reload;
-                            }
-                            aimTimer = reloadTime * Rand.Range(1f, 1.5f);
+                            UseWeapon(deltaTime);
                         }
                     }
                 }
             }
+        }
+
+        private void UseWeapon(float deltaTime)
+        {
+            character.SetInput(InputType.Shoot, false, true);
+            Weapon.Use(deltaTime, character);
+            float reloadTime = 0;
+            if (WeaponComponent is RangedWeapon rangedWeapon)
+            {
+                reloadTime = rangedWeapon.Reload;
+            }
+            if (WeaponComponent is MeleeWeapon mw)
+            {
+                reloadTime = mw.Reload;
+            }
+            aimTimer = Math.Max(reloadTime, reloadTime * Rand.Range(1f, 1.5f) / AimSpeed);
         }
 
         protected override void OnCompleted()
@@ -1024,6 +1030,23 @@ namespace Barotrauma
             if (Weapon != null)
             {
                 Unequip();
+            }
+            if (!HoldPosition)
+            {
+                SteeringManager.Reset();
+            }
+        }
+
+        protected override void OnAbandon()
+        {
+            base.OnAbandon();
+            if (Weapon != null)
+            {
+                Unequip();
+            }
+            if (!HoldPosition)
+            {
+                SteeringManager.Reset();
             }
         }
 

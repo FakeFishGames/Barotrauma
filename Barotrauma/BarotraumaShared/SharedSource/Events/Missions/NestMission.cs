@@ -90,7 +90,7 @@ namespace Barotrauma
 
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
             if (items.Any())
             {
@@ -309,7 +309,10 @@ namespace Barotrauma
                 completed = true;
                 if (completed)
                 {
-                    ChangeLocationType("None", "Explored");
+                    if (Prefab.LocationTypeChangeOnCompleted != null)
+                    {
+                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                    }
                 }
             }
             foreach (Item item in items)

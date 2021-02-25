@@ -626,7 +626,7 @@ namespace Barotrauma.Items.Components
         {
             if (objective.Override)
             {
-                if (user != character && user != null && user.SelectedConstruction == item)
+                if (user != character && user != null && user.SelectedConstruction == item && character.IsOnPlayerTeam)
                 {
                     character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
                 }
@@ -689,7 +689,7 @@ namespace Barotrauma.Items.Components
                     break;
             }
             sonar?.AIOperate(deltaTime, character, objective);
-            if (!MaintainPos && showIceSpireWarning)
+            if (!MaintainPos && showIceSpireWarning && character.IsOnPlayerTeam)
             {
                 character.Speak(TextManager.Get("dialogicespirespottedsonar"), null, 0.0f, "icespirespottedsonar", 60.0f);
             }

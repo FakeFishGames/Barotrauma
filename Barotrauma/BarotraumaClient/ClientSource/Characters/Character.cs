@@ -634,9 +634,9 @@ namespace Barotrauma
             }
         }
 
-        partial void SetOrderProjSpecific(Order order, string orderOption)
+        partial void SetOrderProjSpecific(Order order, string orderOption, int priority)
         {
-            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption);
+            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption, priority);
         }
 
         public static void AddAllToGUIUpdateList()
@@ -815,7 +815,7 @@ namespace Barotrauma
                             iconPos.Y = -iconPos.Y;
                             nameColor = iconStyle.Color;
                             var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
-                            float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;                 
+                            float iconScale = (30.0f / icon.Sprite.size.X / cam.Zoom) * GUI.Scale;
                             icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
                         }
                     }

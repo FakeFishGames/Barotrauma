@@ -449,6 +449,7 @@ namespace Barotrauma
 
             return key;
         }
+
         /// <summary>
         /// Returns a new instance of the class with all properties and fields copied.
         /// </summary>

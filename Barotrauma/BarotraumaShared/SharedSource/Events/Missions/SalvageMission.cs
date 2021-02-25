@@ -102,7 +102,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
 #if SERVER
             originalInventoryID = Entity.NullEntityID;
@@ -251,6 +251,11 @@ namespace Barotrauma
             if (root.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndPosition && !root.CurrentHull.Submarine.AtStartPosition) || item.Removed) 
             { 
                 return; 
+            }
+
+            if (Prefab.LocationTypeChangeOnCompleted != null)
+            {
+                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
             }
 
             item?.Remove();

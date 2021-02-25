@@ -317,7 +317,8 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster("hammerhead", officer_hammerheadSpawnPos);
-            ((EnemyAIController)officer_hammerhead.AIController).StayInsideLevel = false;
+            officer_hammerhead.Params.AI.AvoidAbyss = false;
+            officer_hammerhead.Params.AI.StayInAbyss = false;
             officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
             SetHighlight(officer_coilgunPeriscope, true);
             float originalDistance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerheadSpawnPos);

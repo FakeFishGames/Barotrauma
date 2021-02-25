@@ -668,12 +668,17 @@ namespace Barotrauma
             bloodParticleTimer -= deltaTime * (affliction.Strength / 10.0f);
             if (bloodParticleTimer <= 0.0f)
             {
+                var emitter = Character.BloodEmitters.FirstOrDefault();
+                float particleMinScale = emitter != null ? emitter.Prefab.ScaleMin : 0.5f;
+                float particleMaxScale = emitter != null ? emitter.Prefab.ScaleMax : 1;
+                float severity = Math.Min(affliction.Strength / affliction.Prefab.MaxStrength * Character.Params.BleedParticleMultiplier, 1);
+                float bloodParticleSize = MathHelper.Lerp(particleMinScale, particleMaxScale, severity);
                 bool inWater = Character.AnimController.InWater;
-                float bloodParticleSize = MathHelper.Lerp(0.5f, 1.0f, affliction.Strength / 100.0f);
                 if (!inWater)
                 {
                     bloodParticleSize *= 2.0f;
                 }
+
                 var blood = GameMain.ParticleManager.CreateParticle(
                     inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
                     targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, Character.AnimController.CurrentHull);
@@ -682,7 +687,7 @@ namespace Barotrauma
                 {
                     blood.Size *= bloodParticleSize;
                 }
-                bloodParticleTimer = 1.0f;
+                bloodParticleTimer = MathHelper.Lerp(2, 0.5f, severity);
             }
         }
 

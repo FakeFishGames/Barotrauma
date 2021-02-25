@@ -18,7 +18,8 @@ namespace Barotrauma.Networking
             Combine,
             ExecuteAttack,
             Upgrade,
-            AssignCampaignInteraction
+            AssignCampaignInteraction,
+            ObjectiveManagerOrderState,
         }
 
         public readonly Entity Entity;

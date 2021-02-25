@@ -599,7 +599,7 @@ namespace Barotrauma
             [Serialize(0f, true, description: "Width of the collider."), Editable(MinValueFloat = 0, MaxValueFloat = 1000)]
             public float Width { get; set; }
 
-            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+            [Serialize(10f, true, description: "The more the density the heavier the limb is."), Editable(MinValueFloat = 0, MaxValueFloat = 100, DecimalCount = 2)]
             public float Density { get; set; }
 
             [Serialize(false, true), Editable]

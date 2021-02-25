@@ -394,6 +394,42 @@ namespace Barotrauma
                 var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContent.RectTransform),
                     TextManager.Get("LevelDifficulty"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), difficultyLabel.RectTransform), ((int)connection.LevelData.Difficulty) + " %", textAlignment: Alignment.CenterRight);
+            
+                if (connection.LevelData.HasBeaconStation)
+                {
+                    var beaconStationContent = new GUILayoutGroup(new RectTransform(biomeLabel.RectTransform.NonScaledSize, textContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                    string style = connection.LevelData.IsBeaconActive ? "BeaconStationActive" : "BeaconStationInactive";
+                    var icon = new GUIImage(new RectTransform(new Point((int)(beaconStationContent.Rect.Height * 1.2f)), beaconStationContent.RectTransform),
+                        style, scaleToFit: true)
+                    {
+                        Color = MapGenerationParams.Instance.IndicatorColor,
+                        HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f),
+                        ToolTip = TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip")
+                    };
+                    new GUITextBlock(new RectTransform(Vector2.One, beaconStationContent.RectTransform),
+                        TextManager.Get("submarinetype.beaconstation"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                    {
+                        Padding = Vector4.Zero,
+                        ToolTip = icon.ToolTip
+                    };
+                }
+                if (connection.LevelData.HasHuntingGrounds)
+                {
+                    var huntingGroundsContent = new GUILayoutGroup(new RectTransform(biomeLabel.RectTransform.NonScaledSize, textContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+                    var icon = new GUIImage(new RectTransform(new Point((int)(huntingGroundsContent.Rect.Height * 1.5f)), huntingGroundsContent.RectTransform),
+                        "HuntingGrounds", scaleToFit: true)
+                    {
+                        Color = MapGenerationParams.Instance.IndicatorColor,
+                        HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f),
+                        ToolTip = TextManager.Get("HuntingGroundsTooltip")
+                    };
+                    new GUITextBlock(new RectTransform(Vector2.One, huntingGroundsContent.RectTransform),
+                        TextManager.Get("missionname.huntinggrounds"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                    {
+                        Padding = Vector4.Zero,
+                        ToolTip = icon.ToolTip
+                    };
+                }
             }
 
             missionList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), content.RectTransform))
@@ -439,8 +475,9 @@ namespace Barotrauma
                             };
                             missionName.Padding = new Vector4(missionName.Padding.X + icon.Rect.Width * 1.5f, missionName.Padding.Y, missionName.Padding.Z, missionName.Padding.W);
                         }
+                        string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward));
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), 
-                            TextManager.GetWithVariable("missionreward", "[reward]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward)), wrap: true);
+                            TextManager.GetWithVariable("missionreward", "[reward]", rewardText), wrap: true);
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.Description, wrap: true);
                     }
                     missionPanel.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Children.Sum(c => c.Rect.Height) / missionTextContent.RectTransform.RelativeSize.Y) + GUI.IntScale(20));
@@ -491,7 +528,25 @@ namespace Barotrauma
             StartButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), content.RectTransform),
                 TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
             {
-                OnClicked = (GUIButton btn, object obj) => { StartRound?.Invoke(); return true; },
+                OnClicked = (GUIButton btn, object obj) =>
+                {
+                    if (missionList.Content.Children.Any(c => c.UserData is Mission) && !(missionList.SelectedData is Mission))
+                    {
+                        var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                        noMissionVerification.Buttons[0].OnClicked = (btn, userdata) =>
+                        {
+                            StartRound?.Invoke();
+                            noMissionVerification.Close();
+                            return true;
+                        };
+                        noMissionVerification.Buttons[1].OnClicked = noMissionVerification.Close;
+                    }
+                    else
+                    {
+                        StartRound?.Invoke();
+                    }
+                    return true;
+                },
                 Enabled = true,
                 Visible = Campaign.AllowedToEndRound()
             };

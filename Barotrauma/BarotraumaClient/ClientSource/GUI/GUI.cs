@@ -855,6 +855,7 @@ namespace Barotrauma
             lock (mutex)
             {
                 GUIMessageBox.AddActiveToGUIUpdateList();
+                GUIContextMenu.AddActiveToGUIUpdateList();
 
                 if (pauseMenuOpen)
                 {
@@ -921,6 +922,7 @@ namespace Barotrauma
                             if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
                             {
                                 MouseOn = c;
+                                var sakdjfnsjkd = c.MouseRect;
                             }
                             break;
                         }
@@ -1278,7 +1280,7 @@ namespace Barotrauma
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
-            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier;
+            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier * Scale;
 
             if (overrideAlpha.HasValue || dist > hideDist)
             {

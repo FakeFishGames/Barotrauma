@@ -46,19 +46,24 @@ namespace Barotrauma
             }
             if (character.CurrentHull == null)
             {
-                Priority = (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.Objectives.Any(o => o is AIObjectiveCombat)) && HumanAIController.HasDivingSuit(character) ? 0 : 100;
+                Priority = (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.HasActiveObjective<AIObjectiveCombat>()) && HumanAIController.HasDivingSuit(character) ? 0 : 100;
             }
             else
             {
-                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character))
+                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN))
                 {
                     Priority = 100;
+                }
+                else if (objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() && character.Submarine != null && !HumanAIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
+                {
+                    // Ordered to follow/hold position inside a hostile sub -> ignore find safety unless we need to find a diving gear
+                    Priority = 0;
                 }
                 Priority = MathHelper.Clamp(Priority, 0, 100);
                 if (divingGearObjective != null && !divingGearObjective.IsCompleted && divingGearObjective.CanBeCompleted)
                 {
                     // Boost the priority while seeking the diving gear
-                    Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.OrderPriority + 20, 100));
+                    Priority = Math.Max(Priority, Math.Min(AIObjectiveManager.HighestOrderPriority + 20, 100));
                 }
             }
             return Priority;

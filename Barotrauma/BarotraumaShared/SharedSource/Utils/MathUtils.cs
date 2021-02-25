@@ -723,7 +723,7 @@ namespace Barotrauma
             return wrappedPoints;
         }
 
-        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int iterations, float offsetAmount)
+        public static List<Vector2[]> GenerateJaggedLine(Vector2 start, Vector2 end, int iterations, float offsetAmount, Rectangle? bounds = null)
         {
             List<Vector2[]> segments = new List<Vector2[]>
             {
@@ -744,6 +744,26 @@ namespace Barotrauma
                     Vector2 normal = Vector2.Normalize(endSegment - startSegment);
                     normal = new Vector2(-normal.Y, normal.X);
                     midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, Rand.RandSync.Server);
+
+                    if (bounds.HasValue)
+                    {
+                        if (midPoint.X < bounds.Value.X)
+                        {
+                            midPoint.X = bounds.Value.X + (bounds.Value.X - midPoint.X);
+                        }
+                        else if (midPoint.X > bounds.Value.Right)
+                        {
+                            midPoint.X = bounds.Value.Right - (midPoint.X - bounds.Value.Right);
+                        }
+                        if (midPoint.Y < bounds.Value.Y)
+                        {
+                            midPoint.Y = bounds.Value.Y + (bounds.Value.Y - midPoint.Y);
+                        }
+                        else if (midPoint.Y > bounds.Value.Bottom)
+                        {
+                            midPoint.Y = bounds.Value.Bottom - (midPoint.Y - bounds.Value.Bottom);
+                        }
+                    }
 
                     segments.Insert(i, new Vector2[] { startSegment, midPoint });
                     segments.Insert(i + 1, new Vector2[] { midPoint, endSegment });
@@ -900,6 +920,8 @@ namespace Barotrauma
             return (float)Math.Pow(f, p);
         }
 
+        public static float Pow2(float f) => f * f;
+
         /// <summary>
         /// Converts the alignment to a vector where -1,-1 is the top-left corner, 0,0 the center and 1,1 bottom-right
         /// </summary>
@@ -930,12 +952,10 @@ namespace Barotrauma
         /// Modified from:
         /// http://www.gamefromscratch.com/post/2012/11/24/GameDev-math-recipes-Rotating-one-point-around-another-point.aspx
         /// </summary>
-        public static Vector2 RotatePointAroundTarget(Vector2 point, Vector2 target, float degrees, bool clockWise = true)
+        public static Vector2 RotatePointAroundTarget(Vector2 point, Vector2 target, float radians, bool clockWise = true)
         {
-            // (Math.PI / 180) * degrees
-            var angle = MathHelper.ToRadians(degrees);
-            var sin = Math.Sin(angle);
-            var cos = Math.Cos(angle);
+            var sin = Math.Sin(radians);
+            var cos = Math.Cos(radians);
             if (!clockWise)
             {
                 sin = -sin;

@@ -32,6 +32,16 @@ namespace Barotrauma
             private set;
         }
 
+        private readonly List<Mission> availableMissions = new List<Mission>();
+        public IEnumerable<Mission> AvailableMissions
+        {
+            get
+            {
+                availableMissions.RemoveAll(m => m.Completed || (m.Failed && m.Prefab.AllowRetry));
+                return availableMissions;
+            }
+        }
+
         public LocationConnection(Location location1, Location location2)
         {
             if (location1 == null)

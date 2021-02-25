@@ -119,28 +119,7 @@ namespace Barotrauma
                             item.SpawnedInOutpost = true;
                         }
                     }
-                    newCharacter.CharacterHealth.MaxVitality *= humanPrefab.HealthMultiplier;
-                    var humanAI = newCharacter.AIController as HumanAIController;
-                    if (humanAI != null) 
-                    { 
-                        var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
-                        if (idleObjective != null)
-                        {
-                            idleObjective.Behavior = humanPrefab.Behavior;
-                            foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
-                            {
-                                idleObjective.PreferredOutpostModuleTypes.Add(moduleType); 
-                            }
-                        }
-                    }
-                    if (humanPrefab.CampaignInteractionType != CampaignMode.InteractionType.None)
-                    {
-                        (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(newCharacter, humanPrefab.CampaignInteractionType);
-                        if (spawnPos != null && humanAI != null)
-                        {
-                            humanAI.ObjectiveManager.SetOrder(new AIObjectiveGoTo(spawnPos, newCharacter, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200));
-                        }
-                    }
+                    humanPrefab.InitializeCharacter(newCharacter, spawnPos);
                     if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
                     {
                         ParentEvent.AddTarget(TargetTag, newCharacter);

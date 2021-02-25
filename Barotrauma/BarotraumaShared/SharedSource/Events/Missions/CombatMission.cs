@@ -89,8 +89,8 @@ namespace Barotrauma
                 Winner != CharacterTeamType.None &&
                 Winner == character.TeamID;
         }
-        
-        public override void Start(Level level)
+
+        protected override void StartMissionSpecific(Level level)
         {
             if (GameMain.NetworkMember == null)
             {
@@ -115,7 +115,7 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (GameMain.NetworkMember == null) return;
+            if (GameMain.NetworkMember == null) { return; }
 
             if (Winner != CharacterTeamType.None)
             {

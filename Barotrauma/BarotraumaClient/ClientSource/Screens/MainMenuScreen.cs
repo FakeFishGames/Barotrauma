@@ -709,7 +709,7 @@ namespace Barotrauma
             var gamesession = new GameSession(
                 selectedSub,
                 GameModePreset.DevSandbox,
-                missionPrefab: null);
+                missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
             gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty: 40);
             GameMain.GameScreen.Select();

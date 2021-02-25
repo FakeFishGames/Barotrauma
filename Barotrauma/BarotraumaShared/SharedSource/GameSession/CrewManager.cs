@@ -145,7 +145,13 @@ namespace Barotrauma
             }
 #if CLIENT
             AddCharacterToCrewList(character);
-            AddCurrentOrderIcon(character, character.CurrentOrder, character.CurrentOrderOption);
+            if (character.CurrentOrders != null)
+            {
+                foreach (var order in character.CurrentOrders)
+                {
+                    AddCurrentOrderIcon(character, order);
+                }
+            }
 #endif
             if (character.AIController is HumanAIController humanAI)
             {
@@ -175,7 +181,7 @@ namespace Barotrauma
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
 
-            if (Level.IsLoadedOutpost)
+            if (Level.IsLoadedOutpost && Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
             {
                 spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
                     wp.SpawnType == SpawnType.Human &&
@@ -247,7 +253,8 @@ namespace Barotrauma
             {
                 if (order.Second.HasValue) { order.Second -= deltaTime; }
             }
-            ActiveOrders.RemoveAll(o => o.Second.HasValue && o.Second <= 0.0f);
+            ActiveOrders.RemoveAll(o => (o.Second.HasValue && o.Second <= 0.0f) ||
+                (o.First.TargetEntity != null && o.First.TargetEntity.Removed));
 
             UpdateConversations(deltaTime);
             UpdateProjectSpecific(deltaTime);

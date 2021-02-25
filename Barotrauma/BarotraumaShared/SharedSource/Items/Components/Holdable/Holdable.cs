@@ -39,6 +39,12 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
+        [Serialize(true, true, description: "Is the item currently able to push characters around? True by default. Only valid if blocksplayers is set to true.")]
+        public bool CanPush
+        {
+            get;
+            set;
+        }
 
         //the angle in which the Character holds the item
         protected float holdAngle;
@@ -208,6 +214,7 @@ namespace Barotrauma.Items.Components
             if (other.Body.UserData is Character character)
             {
                 if (!IsActive) { return false; }
+                if (!CanPush) { return false; }
                 return character != picker;
             }
             else

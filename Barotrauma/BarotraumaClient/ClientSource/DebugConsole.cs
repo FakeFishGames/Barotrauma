@@ -299,7 +299,12 @@ namespace Barotrauma
                 {
                     var textContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform), style: "InnerFrame", color: Color.White)
                     {
-                        CanBeFocused = false
+                        CanBeFocused = true,
+                        OnSecondaryClicked = (component, data) =>
+                        {
+                            GUIContextMenu.CreateContextMenu(new ContextMenuOption("editor.copytoclipboard", true, () => { Clipboard.SetText(msg.Text); }));
+                            return true;
+                        }
                     };
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
                         msg.Text, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
@@ -480,7 +485,7 @@ namespace Barotrauma
                     var subInfo = new SubmarineInfo(string.Join(" ", args));
                     Submarine.MainSub = Submarine.Load(subInfo, true);
                 }
-                GameMain.SubEditorScreen.Select();
+                GameMain.SubEditorScreen.Select(enableAutoSave: Screen.Selected != GameMain.GameScreen);
             }, isCheat: true));
 
             commands.Add(new Command("editparticles|particleeditor", "editparticles/particleeditor: Switch to the Particle Editor to edit particle effects.", (string[] args) =>
@@ -620,6 +625,11 @@ namespace Barotrauma
                 NewMessage(SubEditorScreen.ShouldDrawGrid ? "Enabled submarine grid." : "Disabled submarine grid.", GUI.Style.Green);
             }));
 
+            commands.Add(new Command("spreadsheetexport", "Export items in format recognized by the spreadsheet importer.", (string[] args) =>
+            {
+                SpreadsheetExport.Export();
+            }));
+
             commands.Add(new Command("wikiimage_character", "Save an image of the currently controlled character with a transparent background.", (string[] args) =>
             {
                 if (Character.Controlled == null) { return; }
@@ -649,6 +659,7 @@ namespace Barotrauma
             AssignRelayToServer("bindkey", false);
             AssignRelayToServer("unbindkey", false);
             AssignRelayToServer("savebinds", false);
+            AssignRelayToServer("spreadsheetexport", false);
 #if DEBUG
             AssignRelayToServer("crash", false);
             AssignRelayToServer("showballastflorasprite", false);
@@ -2000,6 +2011,11 @@ namespace Barotrauma
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
 #if DEBUG
+            commands.Add(new Command("playovervc", "Plays a sound over voice chat.", (args) =>
+            {
+                VoipCapture.Instance?.SetOverrideSound(args.Length > 0 ? args[0] : null);
+            }));
+
             commands.Add(new Command("querylobbies", "Queries all SteamP2P lobbies", (args) =>
             {
                 TaskPool.Add("DebugQueryLobbies",

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Collision;
@@ -558,19 +559,29 @@ namespace Barotrauma
         {
             if (limb?.body?.FarseerBody == null || limb.character == null) { return; }
 
-            if (limb.Mass > MinImpactLimbMass)
+            float impactMass = limb.Mass;
+            var enemyAI = limb.character.AIController as EnemyAIController;
+            float attackMultiplier = 1.0f;
+            if (enemyAI?.ActiveAttack != null)
+            {
+                impactMass = Math.Max(Math.Max(limb.Mass, limb.character.AnimController.MainLimb.Mass), limb.character.AnimController.Collider.Mass);
+                attackMultiplier = enemyAI.ActiveAttack.SubmarineImpactMultiplier;
+            }
+
+            if (impactMass * attackMultiplier > MinImpactLimbMass)
             {
                 Vector2 normal = 
                     Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?
                     Vector2.UnitY :
                     Vector2.Normalize(Body.SimPosition - limb.SimPosition);
 
-                float impact = Math.Min(Vector2.Dot(collision.Velocity, -normal), 50.0f) * Math.Min(limb.Mass / 100.0f, 1);
+                float impact = Math.Min(Vector2.Dot(collision.Velocity, -normal), 50.0f) * Math.Min(impactMass / 300.0f, 1);
+                impact *= attackMultiplier;                
 
-                ApplyImpact(impact, -normal, collision.ImpactPos, applyDamage: false);
+                ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
                 foreach (Submarine dockedSub in submarine.DockedTo)
                 {
-                    dockedSub.SubBody.ApplyImpact(impact, -normal, collision.ImpactPos, applyDamage: false);
+                    dockedSub.SubBody.ApplyImpact(impact, normal, collision.ImpactPos, applyDamage: false);
                 }
             }
 
@@ -803,7 +814,7 @@ namespace Barotrauma
 #if CLIENT
             if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
             {
-                GameMain.GameScreen.Cam.Shake = impact * 2.0f;
+                GameMain.GameScreen.Cam.Shake = impact * 10.0f;
                 if (submarine.Info.Type == SubmarineType.Player && !submarine.DockedTo.Any(s => s.Info.Type != SubmarineType.Player))
                 {
                     float angularVelocity = 
@@ -817,25 +828,32 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Submarine != submarine) { continue; }
-                
+                if (c.KnockbackCooldownTimer > 0.0f) { continue; }
+
+                c.KnockbackCooldownTimer = Character.KnockbackCooldown;
+
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (limb.IsSevered) { continue; }
                     limb.body.ApplyLinearImpulse(limb.Mass * impulse, 10.0f);
                 }
-                c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
 
                 bool holdingOntoSomething = false;
                 if (c.SelectedConstruction != null)
                 {
-                    var controller = c.SelectedConstruction.GetComponent<Items.Components.Controller>();
-                    holdingOntoSomething = controller != null && controller.LimbPositions.Any();
+                    holdingOntoSomething =
+                        c.SelectedConstruction.GetComponent<Ladder>() != null ||
+                        (c.SelectedConstruction.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
                 }
 
-                //stun for up to 1 second if the impact equal or higher to the maximum impact
-                if (impact >= MaxCollisionImpact && !holdingOntoSomething)
+                if (!holdingOntoSomething)
                 {
-                    c.SetStun(Math.Min(impulse.Length() * 0.2f, 1.0f));
+                    c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);
+                    //stun for up to 2 second if the impact equal or higher to the maximum impact
+                    if (impact >= MaxCollisionImpact)
+                    {
+                        c.AddDamage(impactPos, AfflictionPrefab.ImpactDamage.Instantiate(3.0f).ToEnumerable(), stun: Math.Min(impulse.Length() * 0.2f, 2.0f), playSound: true);
+                    }
                 }
             }
 

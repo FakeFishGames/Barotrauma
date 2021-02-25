@@ -40,7 +40,7 @@ namespace Barotrauma
         protected override float TargetEvaluation()
         {
             if (Targets.None()) { return 100; }
-            if (objectiveManager.CurrentOrder != this)
+            if (!objectiveManager.IsOrder(this))
             {
                 if (!character.IsMedic && HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsMedic && !c.Character.IsUnconscious))
                 {

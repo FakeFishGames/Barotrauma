@@ -271,9 +271,12 @@ namespace Barotrauma.Items.Components
                     ic.ReceiveSignal(signal);
                 }
 
-                foreach (StatusEffect effect in recipient.Effects)
+                if (signal != "0")
                 {
-                    recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
+                    foreach (StatusEffect effect in recipient.Effects)
+                    {
+                        recipient.Item.ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step);
+                    }
                 }
             }
         }

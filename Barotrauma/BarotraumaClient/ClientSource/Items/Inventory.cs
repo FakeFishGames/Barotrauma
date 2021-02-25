@@ -1241,9 +1241,11 @@ namespace Barotrauma
                     if (selectedSlot.ParentInventory?.Owner != Character.Controlled &&
                        selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedCharacter &&
                        selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedConstruction &&
+                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(selectedSlot.ParentInventory?.Owner) ?? false) &&
                        rootOwner != Character.Controlled &&
                        rootOwner != Character.Controlled.SelectedCharacter &&
-                       rootOwner != Character.Controlled.SelectedConstruction)
+                       rootOwner != Character.Controlled.SelectedConstruction &&
+                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(rootOwner) ?? false))
                     {
                         selectedSlot = null;
                     }
@@ -1559,7 +1561,7 @@ namespace Barotrauma
                 {
                     maxStackSize = Math.Min(maxStackSize, item.Container.GetComponent<ItemContainer>()?.MaxStackSize ?? maxStackSize);
                 }
-                if (maxStackSize > 1)
+                if (maxStackSize > 1 && inventory != null)
                 {
                     int itemCount = slot.MouseOn() ? inventory.slots[slotIndex].ItemCount : inventory.slots[slotIndex].Items.Where(it => !DraggingItems.Contains(it)).Count();
                     if (item.IsFullCondition || MathUtils.NearlyEqual(item.Condition, 0.0f) || itemCount > 1)

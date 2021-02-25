@@ -16,8 +16,6 @@ namespace Barotrauma
         private readonly float scatter;
         private readonly float offset;
 
-        private readonly bool spawnDeep;
-
         private Vector2? spawnPos;
 
         private readonly bool disallowed;
@@ -73,14 +71,18 @@ namespace Barotrauma
             maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
 
             var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
-
             if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
                 !Enum.TryParse(spawnPosTypeStr, true, out spawnPosType))
             {
                 spawnPosType = Level.PositionType.MainPath;
             }
 
-            spawnDeep = prefab.ConfigElement.GetAttributeBool("spawndeep", false);
+            //backwards compatibility
+            if (prefab.ConfigElement.GetAttributeBool("spawndeep", false))
+            {
+                spawnPosType = Level.PositionType.Abyss;
+            }
+
             offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
             scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 1000), 0, 3000);
 
@@ -163,15 +165,6 @@ namespace Barotrauma
                 {
                     removals.Add(position);
                 }
-                if (spawnDeep)
-                {
-                    for (int i = 0; i < availablePositions.Count; i++)
-                    {
-                        var pos = availablePositions[i].Position;
-                        pos = new Point(pos.X, pos.Y - Level.Loaded.Size.Y);
-                        availablePositions[i] = new Level.InterestingPosition(pos, availablePositions[i].PositionType);
-                    }
-                }
                 if (position.Position.Y < Level.Loaded.GetBottomPosition(position.Position.X).Y)
                 {
                     removals.Add(position);
@@ -196,7 +189,7 @@ namespace Barotrauma
             var availablePositions = GetAvailableSpawnPositions();
             var chosenPosition = new Level.InterestingPosition(Point.Zero, Level.PositionType.MainPath, isValid: false);
             bool isSubOrWreck = spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Wreck;
-            if (affectSubImmediately && !isSubOrWreck)
+            if (affectSubImmediately && !isSubOrWreck && spawnPosType != Level.PositionType.Abyss)
             {
                 if (availablePositions.None())
                 {
@@ -276,6 +269,7 @@ namespace Barotrauma
                     {
                         for (int i = 1; i < Submarine.MainSubs.Length; i++)
                         {
+                            if (Submarine.MainSubs[i] == null) { continue; }
                             availablePositions.RemoveAll(p => Vector2.DistanceSquared(Submarine.MainSubs[i].WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
                         }
                     }
@@ -361,7 +355,7 @@ namespace Barotrauma
             if (spawnPending)
             {
                 //wait until there are no submarines at the spawnpos
-                if (spawnPosType == Level.PositionType.MainPath)
+                if (spawnPosType == Level.PositionType.MainPath || spawnPosType == Level.PositionType.SidePath || spawnPosType == Level.PositionType.Abyss)
                 {
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
@@ -400,6 +394,19 @@ namespace Barotrauma
                     if (!someoneNearby) { return; }
                 }
 
+
+                if (spawnPosType == Level.PositionType.Abyss || spawnPosType == Level.PositionType.AbyssCave)
+                {
+                    foreach (Submarine submarine in Submarine.Loaded)
+                    {
+                        if (submarine.Info.Type != SubmarineType.Player) { continue; }
+                        if (submarine.WorldPosition.Y > Level.Loaded.AbyssStart)
+                        {
+                            return;
+                        }
+                    }
+                }
+
                 spawnPending = false;
 
                 //+1 because Range returns an integer less than the max value
@@ -431,7 +438,16 @@ namespace Barotrauma
                             }
                         }
 
-                        monsters.Add(Character.Create(speciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true));
+                        Character createdCharacter = Character.Create(speciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true);
+                        if (GameMain.GameSession.IsCurrentLocationRadiated())
+                        {
+                            AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
+                            Affliction affliction = new Affliction(radiationPrefab, radiationPrefab.MaxStrength);
+                            createdCharacter?.CharacterHealth.ApplyAffliction(null, affliction);
+                            // TODO test multiplayer
+                            createdCharacter?.Kill(CauseOfDeathType.Affliction, affliction, log: false);
+                        }
+                        monsters.Add(createdCharacter);
 
                         if (monsters.Count == amount)
                         {
@@ -440,7 +456,7 @@ namespace Barotrauma
                             //otherwise it'll make the spawned characters act as a swarm
                             SwarmBehavior.CreateSwarm(monsters.Cast<AICharacter>());
                         }
-                    }, Rand.Range(0f, amount / 2));
+                    }, Rand.Range(0f, amount / 2f));
                 }
             }
 

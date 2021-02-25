@@ -637,7 +637,7 @@ namespace Barotrauma
 
                 Vector2 bodyPos = WorldPosition + BodyOffset;
 
-                Vector2 transformedMousePos = MathUtils.RotatePointAroundTarget(position, bodyPos, MathHelper.ToDegrees(BodyRotation));
+                Vector2 transformedMousePos = MathUtils.RotatePointAroundTarget(position, bodyPos, BodyRotation);
 
                 return 
                     Math.Abs(transformedMousePos.X - bodyPos.X) < rectSize.X / 2.0f && 

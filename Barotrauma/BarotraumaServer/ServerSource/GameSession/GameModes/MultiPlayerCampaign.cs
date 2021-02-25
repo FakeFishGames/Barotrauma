@@ -367,6 +367,8 @@ namespace Barotrauma
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition")) { return; }
 
+            Map?.Radiation.UpdateRadiation(deltaTime);
+
             base.Update(deltaTime);
             if (Level.Loaded != null)
             {
@@ -441,9 +443,16 @@ namespace Barotrauma
                 foreach (Mission mission in map.CurrentLocation.AvailableMissions)
                 {
                     msg.Write(mission.Prefab.Identifier);
-                    Location missionDestination = mission.Locations[0] == map.CurrentLocation ? mission.Locations[1] : mission.Locations[0];
-                    LocationConnection connection = map.CurrentLocation.Connections.Find(c => c.OtherLocation(map.CurrentLocation) == missionDestination);
-                    msg.Write((byte)map.CurrentLocation.Connections.IndexOf(connection));
+                    if (mission.Locations[0] == mission.Locations[1])
+                    {
+                        msg.Write((byte)255);
+                    }
+                    else
+                    {
+                        Location missionDestination = mission.Locations[0] == map.CurrentLocation ? mission.Locations[1] : mission.Locations[0];
+                        LocationConnection connection = map.CurrentLocation.Connections.Find(c => c.OtherLocation(map.CurrentLocation) == missionDestination);
+                        msg.Write((byte)map.CurrentLocation.Connections.IndexOf(connection));
+                    }
                 }
 
                 // Store balance

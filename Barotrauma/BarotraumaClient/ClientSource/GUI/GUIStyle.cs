@@ -34,6 +34,8 @@ namespace Barotrauma
 
         public readonly Sprite[] CursorSprite = new Sprite[7];
 
+        public UISprite RadiationSprite { get; private set; }
+
         public UISprite UIGlow { get; private set; }
         public UISprite UIGlowCircular { get; private set; }
 
@@ -208,6 +210,9 @@ namespace Barotrauma
                         break;
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
+                        break;
+                    case "radiation":
+                        RadiationSprite = new UISprite(subElement);
                         break;
                     case "uiglowcircular":
                         UIGlowCircular = new UISprite(subElement);

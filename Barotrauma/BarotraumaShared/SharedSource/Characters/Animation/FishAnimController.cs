@@ -423,23 +423,26 @@ namespace Barotrauma
             if (CurrentSwimParams == null) { return; }
             movement = TargetMovement;
             bool isMoving = movement.LengthSquared() > 0.00001f;
+            var mainLimb = MainLimb;
             if (isMoving)
             {
                 float t = 0.5f;
-                if (CurrentSwimParams.RotateTowardsMovement && VectorExtensions.Angle(VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2), movement) > MathHelper.PiOver2)
+                if (!SimplePhysicsEnabled && CurrentSwimParams.RotateTowardsMovement)
                 {
-                    // Reduce the linear movement speed when not facing the movement direction
-                    t /= 5;
+                    float offset = mainLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
+                    Vector2 forward = VectorExtensions.Forward(mainLimb.body.TransformedRotation - offset * Character.AnimController.Dir);
+                    float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
+                    if (dot < 0)
+                    {
+                        // Reduce the linear movement speed when not facing the movement direction
+                        t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
+                    }
                 }
                 Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
             }
-
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
-            var mainLimb = MainLimb;
             mainLimb.PullJointEnabled = true;
-            //mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
-
             if (!isMoving)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
@@ -645,7 +648,7 @@ namespace Barotrauma
                 }
                 if (limb.Params.BlinkFrequency > 0)
                 {
-                    limb.Blink(deltaTime, MainLimb.Rotation);
+                    limb.UpdateBlink(deltaTime, MainLimb.Rotation);
                 }
             }
 
@@ -787,7 +790,7 @@ namespace Barotrauma
                 }
                 if (limb.Params.BlinkFrequency > 0)
                 {
-                    limb.Blink(deltaTime, MainLimb.Rotation);
+                    limb.UpdateBlink(deltaTime, MainLimb.Rotation);
                 }
                 switch (limb.type)
                 {

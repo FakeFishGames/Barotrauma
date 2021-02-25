@@ -349,9 +349,9 @@ namespace Barotrauma
 
         private readonly NPCPersonalityTrait personalityTrait;
 
-        public Order CurrentOrder { get; set; }
-        public string CurrentOrderOption { get; set; }
-        public bool IsDismissed => CurrentOrder == null || CurrentOrder.Identifier.Equals("dismissed", StringComparison.OrdinalIgnoreCase);
+        public const int MaxCurrentOrders = 3;
+        public static int HighestManualOrderPriority => MaxCurrentOrders;
+        public List<OrderInfo> CurrentOrders { get; } = new List<OrderInfo>();
 
         //unique ID given to character infos in MP
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary
@@ -1004,13 +1004,9 @@ namespace Barotrauma
             faceAttachments = null;
         }
 
-        /// <summary>
-        /// Reset order data so it doesn't carry into further rounds, as the AI is "recreated" always in between rounds anyway.
-        /// </summary>
-        public void ResetCurrentOrder()
+        public void ClearCurrentOrders()
         {
-            CurrentOrder = null;
-            CurrentOrderOption = "";
+            CurrentOrders.Clear();
         }
 
         public void Remove()

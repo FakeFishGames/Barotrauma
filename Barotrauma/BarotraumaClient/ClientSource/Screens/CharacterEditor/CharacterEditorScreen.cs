@@ -766,7 +766,7 @@ namespace Barotrauma.CharacterEditor
                 if (editLimbs && !spriteSheetRect.Contains(PlayerInput.MousePosition) &&
                     MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition)) { return CursorState.Hand; }
                 // spritesheet
-                if (GetLimbSpritesheetRect(limb).Contains(PlayerInput.MousePosition)) { return CursorState.Hand; }
+                if (showSpritesheet && GetLimbSpritesheetRect(limb).Contains(PlayerInput.MousePosition)) { return CursorState.Hand; }
             }
             return CursorState.Default;
         }

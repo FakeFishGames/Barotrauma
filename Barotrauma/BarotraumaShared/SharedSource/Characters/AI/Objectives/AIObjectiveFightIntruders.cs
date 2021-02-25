@@ -50,14 +50,11 @@ namespace Barotrauma
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
             if (target == character) { return false; }
-            if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (target.Submarine == null) { return false; }
-            if (target.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine == null) { return false; }
             if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
-            }
+            if (HumanAIController.IsFriendly(character, target)) { return false; }
+            if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
             return true;
         }
     }

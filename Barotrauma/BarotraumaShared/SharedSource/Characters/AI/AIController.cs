@@ -265,6 +265,31 @@ namespace Barotrauma
             }
         }
 
+        public void UnequipEmptyItems(Item item, bool avoidDroppingInSea = true) => UnequipEmptyItems(Character, item, avoidDroppingInSea);
+
+        public static void UnequipEmptyItems(Character character, Item item, bool avoidDroppingInSea = true)
+        {
+            if (item.OwnInventory.AllItems.Any(it => it.Condition <= 0.0f))
+            {
+                foreach (Item containedItem in item.OwnInventory.AllItemsMod)
+                {
+                    if (containedItem == null) { continue; }
+                    if (containedItem.Condition <= 0.0f)
+                    {
+                        if (character.Submarine == null && avoidDroppingInSea)
+                        {
+                            // If we are outside of main sub, try to put the item in the inventory instead dropping it in the sea.
+                            if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
+                            {
+                                continue;
+                            }
+                        }
+                        containedItem.Drop(character);
+                    }
+                }
+            }
+        }
+
         public void ReequipUnequipped()
         {
             foreach (var item in unequippedItems)

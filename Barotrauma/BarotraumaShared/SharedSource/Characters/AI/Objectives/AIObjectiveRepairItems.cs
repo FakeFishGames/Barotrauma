@@ -104,7 +104,7 @@ namespace Barotrauma
             }
             bool anyFixers = otherFixers > 0;
             float ratio = anyFixers ? items / (float)otherFixers : 1;
-            if (objectiveManager.CurrentOrder == this)
+            if (objectiveManager.IsOrder(this))
             {
                 return Targets.Sum(t => 100 - t.ConditionPercentage);
             }

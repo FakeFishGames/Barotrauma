@@ -102,7 +102,7 @@ namespace Barotrauma
 
         private void ApplyDamage(float deltaTime, bool applyForce)
         {
-            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered);
+            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered && !l.Hidden);
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.IsSevered) { continue; }
@@ -170,16 +170,19 @@ namespace Barotrauma
                 }
             }
 
-            //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
-            // -> don't spawn the AI husk
-            if (Entity.Spawner.IsInRemoveQueue(character)) { return; }
-
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
             CoroutineManager.StartCoroutine(CreateAIHusk());
         }
 
         private IEnumerable<object> CreateAIHusk()
         {
+            //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
+            // -> don't spawn the AI husk
+            if (Entity.Spawner.IsInRemoveQueue(character))
+            {
+                yield return CoroutineStatus.Success;
+            }
+
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 

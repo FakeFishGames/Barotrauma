@@ -587,6 +587,7 @@ namespace Barotrauma
             {
                 if (e is Item item)
                 {
+                    if (item.GetComponent<Turret>() != null) { return false; }
                     if (item.body != null && !item.body.Enabled) { return true; }
                 }
                 return false;
@@ -599,6 +600,17 @@ namespace Barotrauma
 
             for (int i = 1; i < entities.Count; i++)
             {
+                if (entities[i] is Item item)
+                {
+                    var turret = item.GetComponent<Turret>();
+                    if (turret != null)
+                    {
+                        minX = Math.Min(minX, entities[i].Rect.X + turret.TransformedBarrelPos.X * 2f);
+                        minY = Math.Min(minY, entities[i].Rect.Y - entities[i].Rect.Height - turret.TransformedBarrelPos.Y * 2f);
+                        maxX = Math.Max(maxX, entities[i].Rect.Right + turret.TransformedBarrelPos.X * 2f);
+                        maxY = Math.Max(maxY, entities[i].Rect.Y - turret.TransformedBarrelPos.Y * 2f);
+                    }
+                }
                 minX = Math.Min(minX, entities[i].Rect.X);
                 minY = Math.Min(minY, entities[i].Rect.Y - entities[i].Rect.Height);
                 maxX = Math.Max(maxX, entities[i].Rect.Right);
@@ -1137,7 +1149,7 @@ namespace Barotrauma
                 {
                     if (ConnectedDockingPorts.TryGetValue(dockedSub, out DockingPort port))
                     {
-                        port.Undock();
+                        port.Undock(applyEffects: false);
                         continue;
                     }
                 }
@@ -1334,14 +1346,18 @@ namespace Barotrauma
                     PhysicsBody.FarseerBody.BodyType = BodyType.Static;
                     TeamID = CharacterTeamType.FriendlyNPC;
 
+                    bool indestructible = 
+                        GameMain.NetworkMember != null && 
+                        !GameMain.NetworkMember.ServerSettings.DestructibleOutposts && 
+                        !(info.OutpostGenerationParams?.AlwaysDestructible ?? false);
+
                     foreach (MapEntity me in MapEntity.mapEntityList)
                     {
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInOutpost = true;
-                            if (item.GetComponent<Repairable>() != null && 
-                                (GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.DestructibleOutposts))
+                            item.SpawnedInOutpost = !info.OutpostGenerationParams.AllowStealing;
+                            if (item.GetComponent<Repairable>() != null && indestructible)
                             {
                                 item.Indestructible = true;
                             }
@@ -1350,7 +1366,10 @@ namespace Barotrauma
                                 if (ic is ConnectionPanel connectionPanel)
                                 {
                                     //prevent rewiring
-                                    connectionPanel.Locked = true;
+                                    if (!info.OutpostGenerationParams.AlwaysRewireable)
+                                    {
+                                        connectionPanel.Locked = true;
+                                    }
                                 }
                                 else if (ic is Holdable holdable && holdable.Attached && item.GetComponent<LevelResource>() == null)
                                 {
@@ -1363,9 +1382,9 @@ namespace Barotrauma
                                 }
                             }
                         }
-                        else if (me is Structure structure && structure.Prefab.IndestructibleInOutposts)
+                        else if (me is Structure structure && structure.Prefab.IndestructibleInOutposts && indestructible)
                         {
-                            structure.Indestructible = GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.DestructibleOutposts;
+                            structure.Indestructible = true;
                         }
                     }
                 }

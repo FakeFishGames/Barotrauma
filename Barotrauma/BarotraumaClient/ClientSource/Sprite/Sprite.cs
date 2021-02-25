@@ -214,7 +214,7 @@ namespace Barotrauma
         {
             if (Texture == null) { return; }
             //Init optional values
-            Vector2 drawOffset = startOffset.HasValue ? startOffset.Value : Vector2.Zero;
+            Vector2 drawOffset = startOffset ?? Vector2.Zero;
             Vector2 scale = textureScale ?? Vector2.One;
             Color drawColor = color ?? Color.White;
 
@@ -224,17 +224,20 @@ namespace Barotrauma
             //wrap the drawOffset inside the sourceRect
             drawOffset.X = (drawOffset.X / scale.X) % sourceRect.Width;
             drawOffset.Y = (drawOffset.Y / scale.Y) % sourceRect.Height;
+
+            Vector2 flippedDrawOffset = Vector2.Zero;
             if (flipHorizontal)
             {
-                float diff =  targetSize.X % (sourceRect.Width * scale.X);
-                drawOffset.X += (sourceRect.Width * scale.X - diff) / scale.X;
+                float diff = targetSize.X % (sourceRect.Width * scale.X);
+                flippedDrawOffset.X = (int)((sourceRect.Width * scale.X - diff) / scale.X);
             }
             if (flipVertical)
             {
                 float diff = targetSize.Y % (sourceRect.Height * scale.Y);
-                drawOffset.Y += (sourceRect.Height * scale.Y - diff) / scale.Y;
+                flippedDrawOffset.Y = (int)((sourceRect.Height * scale.Y - diff) / scale.Y);
             }
-            
+            drawOffset += flippedDrawOffset;
+
             //how many times the texture needs to be drawn on the x-axis
             int xTiles = (int)Math.Ceiling((targetSize.X + drawOffset.X * scale.X) / (sourceRect.Width * scale.X));
             //how many times the texture needs to be drawn on the y-axis
@@ -262,6 +265,10 @@ namespace Barotrauma
                     {
                         texPerspective.X += (int)diff;
                     }
+                    if (!flipVertical)
+                    {
+                        texPerspective.Y += (int)diff;
+                    }
                 }
                 //drawing an offset flipped sprite, need to draw an extra slice to the left side
                 if (currDrawPosition.X > position.X && x == 0)
@@ -278,7 +285,7 @@ namespace Barotrauma
                         
                         if (flipVertical)
                         {
-                            slicePos.Y += size.Y;
+                            slicePos.Y += flippedDrawOffset.Y;
                         }
                         
                         spriteBatch.Draw(texture, slicePos, sliceRect, drawColor, rotation, Vector2.Zero, scale, effects, depth ?? this.depth);                        

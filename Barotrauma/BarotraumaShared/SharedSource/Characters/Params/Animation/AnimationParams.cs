@@ -54,7 +54,7 @@ namespace Barotrauma
 
     abstract class SwimParams : AnimationParams
     {
-        [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 500, ValueStep = 1)]
+        [Serialize(25.0f, true, description: "Turning speed (or rather a force applied on the main collider to make it turn). Note that you can set a limb-specific steering forces too (additional)."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
         public float SteerTorque { get; set; }
     }
 

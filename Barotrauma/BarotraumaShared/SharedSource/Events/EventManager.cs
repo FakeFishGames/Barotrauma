@@ -93,6 +93,8 @@ namespace Barotrauma
 
         public void StartRound(Level level)
         {
+            this.level = level;
+
             if (isClient) { return; }
 
             pendingEventSets.Clear();
@@ -107,7 +109,6 @@ namespace Barotrauma
                 totalPathLength = steeringPath.TotalLength;
             }
 
-            this.level = level;
             SelectSettings();
 
             var initialEventSet = SelectRandomEvents(EventSet.List);
@@ -430,10 +431,11 @@ namespace Barotrauma
 
             var allowedEventSets = 
                 eventSets.Where(es => level.Difficulty >= es.MinLevelDifficulty && level.Difficulty <= es.MaxLevelDifficulty && level.LevelData.Type == es.LevelType);
-            
-            if (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.Map?.CurrentLocation?.Type != null)
+
+            LocationType locationType = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation?.Type ?? level?.StartLocation?.Type;
+            if (locationType != null)
             {
-                allowedEventSets = allowedEventSets.Where(set => set.LocationTypeIdentifiers == null || set.LocationTypeIdentifiers.Any(identifier => string.Equals(identifier, campaign.Map.CurrentLocation.Type.Identifier, StringComparison.OrdinalIgnoreCase)));
+                allowedEventSets = allowedEventSets.Where(set => set.LocationTypeIdentifiers == null || set.LocationTypeIdentifiers.Any(identifier => string.Equals(identifier, locationType.Identifier, StringComparison.OrdinalIgnoreCase)));
             }
 
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));

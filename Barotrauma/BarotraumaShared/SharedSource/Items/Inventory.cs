@@ -773,12 +773,12 @@ namespace Barotrauma
             return match;
         }
 
-        public List<Item> FindAllItems(Func<Item, bool> predicate, bool recursive = false, List<Item> list = null)
+        public List<Item> FindAllItems(Func<Item, bool> predicate = null, bool recursive = false, List<Item> list = null)
         {
             list ??= new List<Item>();
             foreach (var item in AllItems)
             {
-                if (predicate(item))
+                if (predicate == null || predicate(item))
                 {
                     list.Add(item);
                 }

@@ -686,12 +686,12 @@ namespace Barotrauma
                 for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
                 {
                     var affliction = limbHealths[i].Afflictions[j];
-                    Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == i);
+                    Limb targetLimb = Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == i);
                     affliction.Update(this, targetLimb, deltaTime);
                     affliction.DamagePerSecondTimer += deltaTime;
-                    if (affliction is AfflictionBleeding)
+                    if (affliction is AfflictionBleeding bleeding)
                     {
-                        UpdateBleedingProjSpecific((AfflictionBleeding)affliction, targetLimb, deltaTime);
+                        UpdateBleedingProjSpecific(bleeding, targetLimb, deltaTime);
                     }
                     Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
                 }

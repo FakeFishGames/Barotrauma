@@ -639,7 +639,7 @@ namespace Barotrauma
                 foreach (Item doubleClickedItem in doubleClickedItems)
                 {
                     QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: doubleClickedItem == doubleClickedItems.First());
-                    if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)
+                    if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment || !IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                     {
                         break;
                     }

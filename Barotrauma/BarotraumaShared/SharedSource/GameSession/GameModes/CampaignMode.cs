@@ -31,6 +31,8 @@ namespace Barotrauma
 
         protected XElement petsElement;
 
+        private List<Mission> extraMissions = new List<Mission>();
+
         public enum TransitionType
         {
             None,
@@ -74,11 +76,18 @@ namespace Barotrauma
             get { return map; }
         }
 
-        public override Mission Mission
+        public override IEnumerable<Mission> Missions
         {
             get
             {
-                return Map.CurrentLocation?.SelectedMission;
+                if (Map.CurrentLocation?.SelectedMission != null)
+                {
+                    yield return Map.CurrentLocation.SelectedMission;
+                }
+                foreach (Mission mission in extraMissions)
+                {
+                    yield return mission;
+                }
             }
         }
 
@@ -185,6 +194,53 @@ namespace Barotrauma
         /// </summary>
         public event Action BeforeLevelLoading;
 
+
+        public override void AddExtraMissions(LevelData levelData)
+        {
+            extraMissions.Clear();
+
+            var currentLocation = Map.CurrentLocation;
+            if (levelData.Type == LevelData.LevelType.Outpost)
+            {
+                //if there's an available mission that takes place in the outpost, select it
+                var availableMissionsInLocation = currentLocation.AvailableMissions.Where(m => m.Locations[0] == currentLocation && m.Locations[1] == currentLocation);
+                if (availableMissionsInLocation.Any())
+                {
+                    currentLocation.SelectedMission = availableMissionsInLocation.FirstOrDefault();
+                }
+                else
+                {
+                    currentLocation.SelectedMission = null;
+                }
+            }
+            else
+            {
+                //if we had selected a mission that takes place in the outpost, deselect it when leaving the outpost
+                if (currentLocation.SelectedMission?.Locations[0] == currentLocation &&
+                    currentLocation.SelectedMission?.Locations[1] == currentLocation)
+                {
+                    currentLocation.SelectedMission = null;
+                }
+
+                if (levelData.HasBeaconStation && !levelData.IsBeaconActive)
+                {
+                    var beaconMissionPrefab = MissionPrefab.List.Find(m => m.Identifier.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase));
+                    if (beaconMissionPrefab != null && !Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
+                    {
+                        extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                    }
+                }
+                if (levelData.HasHuntingGrounds)
+                {
+                    var huntingGroundsMissionPrefab = MissionPrefab.List.Find(m => m.Identifier.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase));
+                    if (huntingGroundsMissionPrefab != null && !Missions.Any(m => m.Prefab.Type == huntingGroundsMissionPrefab.Type))
+                    {
+                        extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                    }
+                }
+            }
+        }
+
         public void LoadNewLevel()
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) 
@@ -286,7 +342,7 @@ namespace Barotrauma
                         nextLevel = map.StartLocation.LevelData;
                         return TransitionType.End;
                     }
-                    if (Level.Loaded.EndLocation != null && Level.Loaded.EndLocation.Type.HasOutpost && Level.Loaded.EndOutpost != null)
+                    if (Level.Loaded.EndLocation != null && Level.Loaded.EndLocation.HasOutpost() && Level.Loaded.EndOutpost != null)
                     {
                         nextLevel = Level.Loaded.EndLocation.LevelData;
                         return TransitionType.ProgressToNextLocation;
@@ -305,13 +361,13 @@ namespace Barotrauma
                 }
                 else if (leavingSub.AtStartPosition)
                 {
-                    if (map.CurrentLocation.Type.HasOutpost && Level.Loaded.StartOutpost != null)
+                    if (map.CurrentLocation.HasOutpost() && Level.Loaded.StartOutpost != null)
                     {
                         nextLevel = map.CurrentLocation.LevelData;
                         return TransitionType.ReturnToPreviousLocation;
                     }
-                    else if (map.SelectedLocation != null && map.SelectedLocation != map.CurrentLocation && !map.CurrentLocation.Type.HasOutpost && 
-                        (Level.Loaded.LevelData != map.SelectedConnection.LevelData))
+                    else if (map.SelectedLocation != null && map.SelectedLocation != map.CurrentLocation && !map.CurrentLocation.HasOutpost() &&
+                            map.SelectedConnection != null && Level.Loaded.LevelData != map.SelectedConnection.LevelData)
                     {
                         nextLevel = map.SelectedConnection.LevelData;
                         return TransitionType.LeaveLocation;
@@ -480,7 +536,7 @@ namespace Barotrauma
                 {
                     CrewManager.RemoveCharacterInfo(ci);
                 }
-                ci?.ResetCurrentOrder();
+                ci?.ClearCurrentOrders();
             }
 
             foreach (DockingPort port in DockingPort.List)
@@ -510,6 +566,11 @@ namespace Barotrauma
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
+            Map.Radiation.Amount = Map.Radiation.Params.StartingRadiation;
+            foreach (Location location in Map.Locations)
+            {
+                location.TurnsInRadiation = 0;
+            }
             EndCampaignProjSpecific();
 
             if (CampaignMetadata != null)
@@ -552,18 +613,14 @@ namespace Barotrauma
             HumanAIController humanAI = npc.AIController as HumanAIController;
             if (humanAI == null) { yield return CoroutineStatus.Failure; }
 
-            OrderInfo? prevSpeakerOrder = null;
-            if (humanAI.CurrentOrder != null)
-            {
-                prevSpeakerOrder = new OrderInfo(humanAI.CurrentOrder, humanAI.CurrentOrderOption);
-            }
             var waitOrder = Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase));
-            humanAI.SetOrder(waitOrder, option: string.Empty, orderGiver: null, speak: false);
+            humanAI.SetForcedOrder(waitOrder, string.Empty, null);
+            var waitObjective = humanAI.ObjectiveManager.ForcedOrder;
             humanAI.FaceTarget(interactor);
             
             while (!npc.Removed && !interactor.Removed &&
                 Vector2.DistanceSquared(npc.WorldPosition, interactor.WorldPosition) < 300.0f * 300.0f &&
-                humanAI.CurrentOrder == waitOrder &&
+                humanAI.ObjectiveManager.ForcedOrder == waitObjective &&
                 humanAI.AllowCampaignInteraction() &&
                 !interactor.IsIncapacitated)
             {
@@ -574,17 +631,7 @@ namespace Barotrauma
             ShowCampaignUI = false;
 #endif
 
-            if (humanAI.CurrentOrder == waitOrder)
-            {
-                if (prevSpeakerOrder != null)
-                {
-                    humanAI.SetOrder(prevSpeakerOrder.Value.Order, prevSpeakerOrder.Value.OrderOption, orderGiver: null, speak: false);
-                }
-                else
-                {
-                    humanAI.SetOrder(null, string.Empty, orderGiver: null, speak: false);
-                }
-            }
+            humanAI.ClearForcedOrder();
             yield return CoroutineStatus.Success;
         }
 

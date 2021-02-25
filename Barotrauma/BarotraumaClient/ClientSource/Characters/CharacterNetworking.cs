@@ -292,7 +292,7 @@ namespace Barotrauma
                     break;
                 case ServerNetObject.ENTITY_EVENT:
 
-                    int eventType = msg.ReadRangedInteger(0, 5);
+                    int eventType = msg.ReadRangedInteger(0, 6);
                     switch (eventType)
                     {
                         case 0: //NetEntityEvent.Type.InventoryState
@@ -390,6 +390,19 @@ namespace Barotrauma
                             byte campaignInteractionType = msg.ReadByte();
                             (GameMain.GameSession?.GameMode as CampaignMode)?.AssignNPCMenuInteraction(this, (CampaignMode.InteractionType)campaignInteractionType);
                             break;
+                        case 6: //NetEntityEvent.Type.ObjectiveManagerOrderState
+                            bool properData = msg.ReadBoolean();
+                            if (!properData) { break; }
+                            int orderIndex = msg.ReadRangedInteger(0, Order.PrefabList.Count);
+                            var orderPrefab = Order.PrefabList[orderIndex];
+                            string option = null;
+                            if (orderPrefab.HasOptions)
+                            {
+                                int optionIndex = msg.ReadRangedInteger(0, orderPrefab.Options.Length);
+                                option = orderPrefab.Options[optionIndex];
+                            }
+                            GameMain.GameSession.CrewManager.SetHighlightedOrderIcon(this, orderPrefab.Identifier, option);
+                            break;
                     }
                     msg.ReadPadBits();
                     break;
@@ -441,13 +454,15 @@ namespace Barotrauma
                     (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(character, character.CampaignInteractionType);
                 }
 
-                // Check if the character has a current order
-                if (inc.ReadBoolean())
+                // Check if the character has current orders
+                int orderCount = inc.ReadByte();
+                for (int i = 0; i < orderCount; i++)
                 {
                     int orderPrefabIndex = inc.ReadByte();
                     Entity targetEntity = FindEntityByID(inc.ReadUInt16());
                     Character orderGiver = inc.ReadBoolean() ? FindEntityByID(inc.ReadUInt16()) as Character : null;
                     int orderOptionIndex = inc.ReadByte();
+                    int orderPriority = inc.ReadByte();
                     OrderTarget targetPosition = null;
                     if (inc.ReadBoolean())
                     {
@@ -468,7 +483,7 @@ namespace Barotrauma
                                 new Order(orderPrefab, targetPosition, orderGiver: orderGiver);
                             character.SetOrder(order,
                                 orderOptionIndex >= 0 && orderOptionIndex < orderPrefab.Options.Length ? orderPrefab.Options[orderOptionIndex] : null,
-                                orderGiver, speak: false);
+                                orderPriority, orderGiver, speak: false);
                         }
                         else
                         {
@@ -487,7 +502,7 @@ namespace Barotrauma
                     character.ReadStatus(inc);
                 }
 
-                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsDead)
+                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && character.TeamID != CharacterTeamType.None && !character.IsDead)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);

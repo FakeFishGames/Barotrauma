@@ -118,7 +118,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
             items.Clear();
             parentInventoryIDs.Clear();
@@ -138,6 +138,10 @@ namespace Barotrauma
                 {
                     GiveReward();
                     completed = true;
+                    if (Prefab.LocationTypeChangeOnCompleted != null)
+                    {
+                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                    }
                 }
             }
 

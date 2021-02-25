@@ -123,7 +123,16 @@ namespace Barotrauma
 
         public override bool CanBePut(Item item, int i)
         {
-            return base.CanBePut(item, i) && item.AllowedSlots.Contains(SlotTypes[i]);
+            return 
+                base.CanBePut(item, i) && item.AllowedSlots.Contains(SlotTypes[i]) && 
+                (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
+        }
+
+        public override bool CanBePut(ItemPrefab itemPrefab, int i)
+        {
+            return 
+                base.CanBePut(itemPrefab, i) &&
+                (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 
         public bool CanBeAutoMovedToCorrectSlots(Item item)

@@ -1298,7 +1298,7 @@ namespace Barotrauma
         public void CreatePlayerFrame(GUIComponent parent)
         {
             UpdatePlayerFrame(
-                playerInfoContainer.Children?.First().UserData as CharacterInfo, 
+                Character.Controlled?.Info ?? playerInfoContainer.Children?.First().UserData as CharacterInfo, 
                 allowEditing: campaignCharacterInfo == null,
                 parent: parent);
         }

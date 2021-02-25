@@ -796,7 +796,7 @@ namespace Barotrauma.Items.Components
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
                 (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Average(s => s.damage) < 1);
 
-            if (leakFixed && leak.FlowTargetHull?.DisplayName != null)
+            if (leakFixed && leak.FlowTargetHull?.DisplayName != null && character.IsOnPlayerTeam)
             {
                 if (!leak.FlowTargetHull.ConnectedGaps.Any(g => !g.IsRoomToRoom && g.Open > 0.0f))
                 {                    

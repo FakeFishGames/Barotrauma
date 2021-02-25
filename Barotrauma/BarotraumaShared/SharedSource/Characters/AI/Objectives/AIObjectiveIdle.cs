@@ -21,9 +21,9 @@ namespace Barotrauma
             set
             {
                 behavior = value;
-                if (behavior == BehaviorType.StayInHull && character.TeamID != CharacterTeamType.FriendlyNPC)
+                if (behavior == BehaviorType.StayInHull && TargetHull == null)
                 {
-                    DebugConsole.NewMessage($"AIObjectiveIdle.BehaviorType.StayInHull is implemented only for outpost NPCs. Using passive behavior for {character.Name} ({character.Info.Job.Prefab.Identifier})", color: Color.Red);
+                    DebugConsole.AddWarning($"Trying to set a character's behavior type to StayInHull, but target hull is not set. {character.Name} ({character.Info.Job.Prefab.Identifier})");
                     behavior = BehaviorType.Passive;
                 }
                 switch (behavior)

@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
             {
                 if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    TargetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
+                    TargetLevel = MathUtils.InverseLerp(-100.0f, 100.0f, tempTarget) * 100.0f;
                     pumpSpeedLockTimer = 0.1f;
                 }
             }

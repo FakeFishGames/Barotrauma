@@ -1173,10 +1173,13 @@ namespace Barotrauma
                         c.SetAllDamage(200.0f, 0.0f, 0.0f);
                     }
                 }
-
                 foreach (Hull hull in Hull.hullList)
                 {
                     hull.BallastFlora?.Kill();
+                }
+                foreach (Submarine sub in Submarine.Loaded)
+                {
+                    sub.WreckAI?.Kill();
                 }
             }, null, isCheat: true));
 

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.IO;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
@@ -35,14 +36,15 @@ namespace Barotrauma.Sounds
         public float Near { get; private set; }
         public float Far { get; private set; }
 
-        private static BiQuad[] muffleFilters = new BiQuad[]
+        private BiQuad[] muffleFilters = new BiQuad[]
         {
             new LowpassFilter(VoipConfig.FREQUENCY, 800)
         };
-        private static BiQuad[] radioFilters = new BiQuad[]
+        private BiQuad[] radioFilters = new BiQuad[]
         {
             new BandpassFilter(VoipConfig.FREQUENCY, 2000)
         };
+        private const float PostRadioFilterBoost = 1.2f;
 
         private float gain;
         public float Gain
@@ -104,7 +106,7 @@ namespace Barotrauma.Sounds
 
                 if (gain * GameMain.Config.VoiceChatVolume > 1.0f) //TODO: take distance into account?
                 {
-                    fVal = Math.Clamp(fVal * gain * GameMain.Config.VoiceChatVolume, -1.0f, 1.0f);
+                    fVal = Math.Clamp(fVal * gain * GameMain.Config.VoiceChatVolume, -1f, 1f);
                 }
 
                 if (UseMuffleFilter)
@@ -118,7 +120,7 @@ namespace Barotrauma.Sounds
                 {
                     foreach (var filter in radioFilters)
                     {
-                        fVal = filter.Process(fVal);
+                        fVal = Math.Clamp(filter.Process(fVal) * PostRadioFilterBoost, -1f, 1f);
                     }
                 }
                 buffer[i] = FloatToShort(fVal);
@@ -154,7 +156,7 @@ namespace Barotrauma.Sounds
                 {
                     VoipConfig.Decoder.Decode(compressedBuffer, 0, compressedSize, buffer, 0, VoipConfig.BUFFER_SIZE);
                     bufferID++;
-                    return VoipConfig.BUFFER_SIZE * 2;
+                    return VoipConfig.BUFFER_SIZE;
                 }
                 if (bufferID < queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1)) bufferID = queue.LatestBufferID - (VoipQueue.BUFFER_COUNT - 1);
             }

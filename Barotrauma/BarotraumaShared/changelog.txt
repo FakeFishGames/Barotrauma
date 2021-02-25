@@ -1,4 +1,79 @@
 ---------------------------------------------------------------------------------------------------------
+v0.12.X.X
+---------------------------------------------------------------------------------------------------------
+
+Campaign changes:
+- Replaced "Lair" locations with "hunting grounds" in the connections between levels. Inhabited locations next to hunting grounds have a chance of getting abandoned and habitation can't spread through those levels to adjacent locations. The hunting grounds can be cleared by killing a boss monster in the level.
+- Beacon stations are shown on the campaign map.
+- Visual changes to the map to make it a bit more intuitive.
+- When you enter a level with a beacon station, you always get an optional side objective to restore it even if you haven't selected a beacon mission.
+- Added radiation on the campaign map: the instensity of the radiation around Jupiter is slowly increasing, which is forcing Europans to delve deeper under the ice. In practice, the radiation gradually destroys the outposts starting from the left side of the map, making it more dangerous and costly to stay in these areas. The intention behind this is to prevent players from farming resources indefinitely in the low-difficulty areas of the game before proceeding further. 
+
+Abyss:
+- Reintroduced Endworms.
+- Added floating islands that contain caves and rare minerals to the Abyss.
+- Multiple current orders: you can assign up to three simultaneous orders for characters and drag the icons to change their priority.
+
+Changes:
+- Added abandoned outposts and a new abandoned outpost mission type.
+- Added entity subcategories to the submarine editor (note that most of the vanilla items/structures aren't categorized yet in this build).
+- Reworked attacks and effects for the following creatures: Moloch, Black Moloch, Hammerhead, Hammerhead Matriarch, and Golden Hammerhead. They now have bigger impact on the sub when they hit it. Black Moloch's emp damage is halved.
+- Moloch's shell now always breaks when shot with a railgun.
+- Recreated waypoints for the vanilla subs.
+- Added EMP effect to nuclear shells.
+- Added a right click context menu option to copy debug console errors to clipboard.
+- Railgun shells now explode instead of piercing armor. Physicorium shells still go through armor.
+
+Fixes:
+- Major improvements to the voice chat: higher audio quality, less intrusive radio effect, fixed clicks/distortion.
+- Fixed clients' class preferences not being respected in all cases where they should, resulting some client getting a class that should be give to another client.
+- Items can't be stacked in the equip slots (e.g. you can't hold and throw a stack of grenades).
+- Trying to pick up a stack of items with a full inventory doesn't pick up the item in both hand slots.
+- Fixed turrets getting cropped by the "wikiimage" console command.
+- Fixed items with nothing but a holdable component (e.g. medical items) being hidden when hiding wires in the sub editor.
+- Fixed ban list not displaying ban reasons or the duration of the ban.
+- Fixed items appearing misplaced when switching to the sub editor mid-round with console commands.
+- Fixed shuttles spawning undocked in certain custom subs (e.g. DOMA Prototype Mk 8).
+- Fixed "tried to add a dead character to CrewManager" console error when reviving a character who died of high pressure.
+- Fixed skill levels not getting updated in the "my character" tab mid-round.
+- Fixed clients not calculating eventmanager intensity, preventing any high-intensity tracks from playing in multiplayer.
+- Fixed campaign map being closed with RMB even if the user has inverted their mouse buttons.
+- Fixed damage sometimes desyncing when the sub hits walls/spires: happened because damage was also applied client-side, which sometimes caused the clients to damage walls that weren't actually hit server-side.
+- Fixed physics bodies between docking ports not getting mirrored in mirrored subs, sometimes causing impassable areas in spots where the docking port used to be.
+- Fixed status monitor in a docked shuttle sometimes not displaying the main sub.
+- Fixed campaign stores sometimes displaying prices for a previous location.
+- Fixed various scaling issues on higher resolutions.
+
+Bots:
+- Bots now warn when you are running low / out of oxygen or welding fuel tanks, turret ammunition, or reactor fuel.
+- Bots no longer report dead monsters on the sonar.
+- Disabled the dialogue lines about not finding any targets for the given order, since they don't really improve the feedback. Instead they can give a wrong impression that the bot is not following the order when they actually are.
+- Bots no longer speak about not being able to reach the diving suit when they fail to get it because it was taken by someone else. They will target another suit like they used to.
+- Bots don't extinguish fires when there's ballast flora in the hull.
+- Bots only speak about getting attacked when attacked by players. Fixes security bots throwing ultimatums on other bots that accidentally damage them (e.g. while welding).
+- Bots that operate an item (reactor/turret) now drop the empty items on the floor instead of placing them back to a container. This saves time and the empty items should be taken care of by the idle bots.
+- Fixed bots not seeking more oxygen before the remaining oxygen level drops to zero when they already have diving gear equipped and when they are staying stationary, leading to suffocation when the bot is repairing/operating while already wearing the diving gear and running out of oxygen tanks.
+- Fixed bots trying to swap the oxygen tank too early when they are outside of the sub, which in some cases might lead to bugs where they try to get back inside the submarine.
+- Improved the feedback by adding dialogues for swapping the oxygen and for not being able to find more oxygen.
+- Fixed bots trying to return the diving suit when it's not a reasonable thing to do, but when they actually don't need it.
+- Fixed bots failing to swap an oxygen tank from a diving mask to a diving suit when both items are equipped.
+- Fixed bots getting confused when they have a mask without a valid oxygen tank inside it and when there's not enough oxygen in the room to be without the mask.
+
+Modding:
+- Explosions now have three new parameters: ignorecover, onlyinside, and onlyoutside.
+- Fixed crashing when attempting to play a music clip that isn't a valid ogg file or if the file is not found.
+- Fixed crashing when trying to spawn a character variant with custom inventory contents.
+
+---------------------------------------------------------------------------------------------------------
+v0.12.0.3
+---------------------------------------------------------------------------------------------------------
+
+- Fixed inability to permanently ban players who are currently in the server.
+- Fixed scrap items failing to load in saves done prior to v0.12.
+- Fixed bandage/plastiseal crafting exploit.
+- Fixed crashing if a bot tries to operate a turret that's linked to some other item than a loader.
+
+---------------------------------------------------------------------------------------------------------
 v0.12.0.2
 ---------------------------------------------------------------------------------------------------------
 

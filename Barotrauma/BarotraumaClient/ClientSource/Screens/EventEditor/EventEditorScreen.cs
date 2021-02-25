@@ -17,8 +17,6 @@ namespace Barotrauma
     {
         private GUIFrame GuiFrame = null!;
 
-        private GUIListBox? contextMenu;
-
         public override Camera Cam { get; }
         public static string? DrawnTooltip { get; set; }
 
@@ -538,7 +536,6 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
-            contextMenu?.AddToGUIUpdateList();
         }
 
         private XElement? ExportXML()
@@ -597,7 +594,7 @@ namespace Barotrauma
             foreach (var (node, text, end) in options)
             {
                 XElement optionElement = new XElement("Option");
-                optionElement.Add(new XAttribute("text", text));
+                optionElement.Add(new XAttribute("text", text ?? ""));
                 if (end) { optionElement.Add(new XAttribute("endconversation", true)); }
 
                 if (node is EventNode eventNode)
@@ -674,82 +671,37 @@ namespace Barotrauma
 
         private void CreateContextMenu(EditorNode node, NodeConnection? connection = null)
         {
-            contextMenu = new GUIListBox(new RectTransform(new Vector2(0.1f, 0.1f), GUI.Canvas) { ScreenSpaceOffset = PlayerInput.MousePosition.ToPoint() }, style: "GUIToolTip") { Padding = new Vector4(5) };
+            if (GUIContextMenu.CurrentContextMenu != null) { return; }
 
-            new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
-                TextManager.Get("EventEditor.Edit"), font: GUI.SmallFont) { UserData = "edit", Enabled = node is ValueNode || connection?.Type == NodeConnectionType.Value || connection?.Type == NodeConnectionType.Option };
-
-            new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
-                TextManager.Get("EventEditor.MarkEnding"), font: GUI.SmallFont) { UserData = "markend", Enabled = connection != null && connection.Type == NodeConnectionType.Option };
-            
-            new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
-                TextManager.Get("EventEditor.RemoveConnection"), font: GUI.SmallFont) { UserData = "remcon", Enabled = connection != null };
-
-            new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
-                TextManager.Get("EventEditor.AddOption"), font: GUI.SmallFont) { UserData = "addoption", Enabled = node.CanAddConnections };
-
-            new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
-                TextManager.Get("EventEditor.RemoveOption"), font: GUI.SmallFont) { UserData = "removeoption", Enabled = connection != null && node.RemovableTypes.Contains(connection.Type) };
-
-            new GUITextBlock(new RectTransform(Point.Zero, contextMenu.Content.RectTransform),
-                TextManager.Get("EventEditor.Delete"), font: GUI.SmallFont) { UserData = "delete", Enabled = true };
-
-            foreach (var guiComponent in contextMenu.Content.Children)
-            {
-                if (guiComponent is GUITextBlock child)
+            GUIContextMenu.CreateContextMenu(
+                new ContextMenuOption("EventEditor.Edit", isEnabled: node is ValueNode || connection?.Type == NodeConnectionType.Value || connection?.Type == NodeConnectionType.Option, onSelected: delegate
                 {
-                    if (!child.Enabled)
-                    {
-                        child.TextColor *= 0.5f;
-                    }
-                }
-            }
-
-            foreach (GUIComponent c in contextMenu.Content.Children)
-            {
-                if (c is GUITextBlock block)
+                    CreateEditMenu(node as ValueNode, connection);
+                }),
+                new ContextMenuOption("EventEditor.MarkEnding", isEnabled: connection != null && connection.Type == NodeConnectionType.Option, onSelected: delegate
                 {
-                    block.RectTransform.NonScaledSize = new Point((int) (block.TextSize.X + block.Padding.X * 2), (int) (18 * GUI.Scale));
-                }
-            }
+                    if (connection == null) { return; }
 
-            int biggestSize = contextMenu.Content.Children.Max(c => c.Rect.Width + (int) contextMenu.Padding.X * 2);
-            contextMenu.Content.Children.ForEach(c => c.RectTransform.MinSize = new Point(biggestSize, c.Rect.Height));
-            contextMenu.RectTransform.NonScaledSize = new Point(biggestSize, (int) (contextMenu.Content.Children.Sum(c => c.Rect.Height) + (contextMenu.Padding.X * 2)));
-
-            contextMenu.OnSelected = (component, obj) =>
-            {
-                if (!component.Enabled) { return false; }
-
-                switch (obj as string)
+                    connection.EndConversation = !connection.EndConversation;
+                }),
+                new ContextMenuOption("EventEditor.RemoveConnection", isEnabled: connection != null, onSelected: delegate
                 {
-                    case "edit":
-                        CreateEditMenu(node as ValueNode, connection);
-                        break;
-                    case "markend" when connection != null:
-                        connection.EndConversation = !connection.EndConversation;
-                        break;
-                    case "remcon" when connection != null:
-                        connection.ClearConnections();
-                        connection.OverrideValue = null;
-                        connection.OptionText = connection.OptionText;
-                        break;
-                    case "addoption":
-                        node.AddOption();
-                        break;
-                    case "removeoption":
-                        connection?.Parent.RemoveOption(connection);
-                        break;
-                    case "delete":
-                        nodeList.Remove(node);
-                        node.ClearConnections();
+                    if (connection == null) { return; }
 
-                        break;
-                }
-
-                contextMenu = null;
-                return true;
-            };
+                    connection.ClearConnections();
+                    connection.OverrideValue = null;
+                    connection.OptionText = connection.OptionText;
+                }),
+                new ContextMenuOption("EventEditor.AddOption", isEnabled: node.CanAddConnections, onSelected: node.AddOption),
+                new ContextMenuOption("EventEditor.RemoveOption", isEnabled: connection != null && node.RemovableTypes.Contains(connection.Type), onSelected: delegate
+                {
+                    connection?.Parent.RemoveOption(connection);
+                }),
+                new ContextMenuOption("EventEditor.Delete", isEnabled: true, onSelected: delegate
+                {
+                    nodeList.Remove(node);
+                    node.ClearConnections();
+                }));
         }
         
         private bool CreateTestSetupMenu()
@@ -1140,16 +1092,6 @@ namespace Barotrauma
             else
             {
                 DraggingPosition = Vector2.Zero;
-            }
-
-            if (contextMenu != null)
-            {
-                Rectangle expandedRect = contextMenu.Rect;
-                expandedRect.Inflate(20, 20);
-                if (!expandedRect.Contains(PlayerInput.MousePosition))
-                {
-                    contextMenu = null;
-                }
             }
 
             if (PlayerInput.MidButtonHeld())

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -130,17 +131,6 @@ namespace Barotrauma
                     {
                         character.Inventory.ClearSubInventories();
                     }
-
-                    for (int i = 0; i < character.Inventory.Capacity; i++)
-                    {
-                        var item = character.Inventory.GetItemAt(i);
-                        if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
-
-                        foreach (ItemComponent ic in item.Components)
-                        {
-                            if (ic.DrawHudWhenEquipped) ic.UpdateHUD(character, deltaTime, cam);
-                        }
-                    }
                 }
 
                 if (character.IsHumanoid && character.SelectedCharacter != null && character.SelectedCharacter.Inventory != null)
@@ -221,10 +211,10 @@ namespace Barotrauma
                     }
                 }
 
-                if (DrawIcon(character.CurrentOrder))
+                if (character.GetCurrentOrderWithTopPriority()?.Order is Order currentOrder && DrawIcon(currentOrder))
                 {
-                    DrawOrderIndicator(spriteBatch, cam, character, character.CurrentOrder, 1.0f);                    
-                }                
+                    DrawOrderIndicator(spriteBatch, cam, character, currentOrder, 1.0f);
+                }
 
                 static bool DrawIcon(Order o) =>
                     o != null &&
@@ -253,7 +243,7 @@ namespace Barotrauma
                 return Math.Min((maxDistance - dist) / maxDistance * 2.0f, 1.0f);
             }
 
-            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen && (!character.IsKeyDown(InputType.Aim) || character.HeldItems.Any(it => it?.GetComponent<Sprayer>() == null)))
+            if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen && (!character.IsKeyDown(InputType.Aim) || character.HeldItems.None(it => it?.GetComponent<Sprayer>() != null)))
             {
                 if (character.FocusedCharacter != null && character.FocusedCharacter.CanBeSelected)
                 {

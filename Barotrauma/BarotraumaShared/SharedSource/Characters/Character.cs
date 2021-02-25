@@ -207,31 +207,8 @@ namespace Barotrauma
 
         private float attackCoolDown;
 
-        public Order CurrentOrder
-        {
-            get
-            {
-                return Info?.CurrentOrder;
-            }
-            private set
-            {
-                if (Info != null) { Info.CurrentOrder = value; }
-            }
-        }
-
-        public string CurrentOrderOption
-        {
-            get
-            {
-                return Info?.CurrentOrderOption;
-            }
-            private set
-            {
-                if (Info != null) { Info.CurrentOrderOption = value; }
-            }
-        }
-
-        public bool IsDismissed => Info != null && Info.IsDismissed;
+        public List<OrderInfo> CurrentOrders => Info?.CurrentOrders;
+        public bool IsDismissed => !GetCurrentOrderWithTopPriority().HasValue;
 
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
@@ -492,6 +469,9 @@ namespace Barotrauma
                 pressureProtection = MathHelper.Clamp(value, 0.0f, 100.0f);
             }
         }
+
+        public const float KnockbackCooldown = 30.0f;
+        public float KnockbackCooldownTimer;
 
         private float ragdollingLockTimer;
         public bool IsRagdolled;
@@ -837,21 +817,21 @@ namespace Barotrauma
             Character newCharacter = null;
             if (!speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
-                var aiCharacter = new AICharacter(prefab, speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(prefab, speciesName, position, seed, characterInfo, id, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, seed);
                 aiCharacter.SetAI(ai);
                 newCharacter = aiCharacter;
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(prefab, speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(prefab, speciesName, position, seed, characterInfo, id, isRemotePlayer, ragdoll);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
                 newCharacter = aiCharacter;
             }
             else
             {
-                newCharacter = new Character(prefab, speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isRemotePlayer, ragdollParams: ragdoll);
+                newCharacter = new Character(prefab, speciesName, position, seed, characterInfo, id, isRemotePlayer, ragdoll);
             }
 
             float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
@@ -2336,7 +2316,7 @@ namespace Barotrauma
                         else
                         {
                             float closestPlayerDist = c.GetDistanceToClosestPlayer();
-                            if (closestPlayerDist > NetConfig.DisableCharacterDist)
+                            if (closestPlayerDist > c.Params.DisableDistance)
                             {
                                 c.Enabled = false;
                                 if (c.IsDead && c.AIController is EnemyAIController)
@@ -2344,7 +2324,7 @@ namespace Barotrauma
                                     Spawner?.AddToRemoveQueue(c);
                                 }
                             }
-                            else if (closestPlayerDist < NetConfig.EnableCharacterDist)
+                            else if (closestPlayerDist < c.Params.DisableDistance * 0.9f)
                             {
                                 c.Enabled = true;
                             }
@@ -2363,7 +2343,7 @@ namespace Barotrauma
                             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.GetPosition(), c.WorldPosition));
                         }
 
-                        if (distSqr > NetConfig.DisableCharacterDistSqr)
+                        if (distSqr > MathUtils.Pow2(c.Params.DisableDistance))
                         {
                             c.Enabled = false;
                             if (c.IsDead && c.AIController is EnemyAIController)
@@ -2371,7 +2351,7 @@ namespace Barotrauma
                                 Entity.Spawner?.AddToRemoveQueue(c);
                             }
                         }
-                        else if (distSqr < NetConfig.EnableCharacterDistSqr)
+                        else if (distSqr < MathUtils.Pow2(c.Params.DisableDistance * 0.9f))
                         {
                             c.Enabled = true;
                         }
@@ -2388,6 +2368,8 @@ namespace Barotrauma
         public virtual void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime, cam);
+
+            KnockbackCooldownTimer -= deltaTime;
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) { return; }
 
@@ -2585,7 +2567,7 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam);
 
-        partial void SetOrderProjSpecific(Order order, string orderOption);
+        partial void SetOrderProjSpecific(Order order, string orderOption, int priority);
 
 
         public void AddAttacker(Character character, float damage)
@@ -2739,7 +2721,7 @@ namespace Barotrauma
             }
 
             float distToClosestPlayer = GetDistanceToClosestPlayer();
-            if (distToClosestPlayer > NetConfig.DisableCharacterDist)
+            if (distToClosestPlayer > Params.DisableDistance)
             {
                 //despawn in 1 minute if very far from all human players
                 despawnTimer = Math.Max(despawnTimer, GameMain.Config.CorpseDespawnDelay - 60.0f);
@@ -2863,7 +2845,7 @@ namespace Barotrauma
             return !string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, speaker, this));
         }
 
-        public void SetOrder(Order order, string orderOption, Character orderGiver, bool speak = true)
+        public void SetOrder(Order order, string orderOption, int priority, Character orderGiver, bool speak = true)
         {
             //set the character order only if the character is close enough to hear the message
             if (orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
@@ -2871,25 +2853,137 @@ namespace Barotrauma
             // If there's another character operating the same device, make them dismiss themself
             if (order != null && order.Category == OrderCategory.Operate && order.TargetEntity != null)
             {
-                CharacterList.FindAll(c => c != this && c.TeamID == TeamID && c.CurrentOrder is Order characterOrder && characterOrder.Category == OrderCategory.Operate &&
-                                           characterOrder.Identifier.Equals(order.Identifier) && characterOrder.TargetEntity == order.TargetEntity)?
-                    .ForEach(c => c.SetOrder(Order.GetPrefab("dismissed"), null, c, speak: true));
+                foreach (var character in CharacterList)
+                {
+                    if (character == this) { continue; }
+                    if (character.TeamID != TeamID) { continue; }
+                    foreach (var currentOrder in character.CurrentOrders)
+                    {
+                        if (currentOrder.Order == null) { continue; }
+                        if (currentOrder.Order.Category != OrderCategory.Operate) { continue; }
+                        if (currentOrder.Order.Identifier != order.Identifier) { continue; }
+                        if (currentOrder.Order.TargetEntity != order.TargetEntity) { continue; }
+                        character.SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character);
+                        break;
+                    }
+                }
             }
 
+            // Prevent adding duplicate orders (same identifier and same option)
+            RemoveDuplicateOrders(order, orderOption);
+
+            OrderInfo newOrderInfo = new OrderInfo(order, orderOption, priority);
+            AddCurrentOrder(newOrderInfo);
             if (AIController is HumanAIController humanAI)
             {
-                humanAI.SetOrder(order, orderOption, orderGiver, speak);
+                humanAI.SetOrder(order, orderOption, priority, orderGiver, speak);
             }
-
-            SetOrderProjSpecific(order, orderOption);
-            CurrentOrder = order;
-            CurrentOrderOption = orderOption;
+            SetOrderProjSpecific(order, orderOption, priority);
         }
 
-        /// <summary>
-        /// Reset order data so it doesn't carry into further rounds, as the AI is "recreated" always in between rounds anyway.
-        /// </summary>
-        public void ResetCurrentOrder() => Info?.ResetCurrentOrder();
+        private void AddCurrentOrder(OrderInfo newOrder)
+        {
+            if (newOrder.Order == null || newOrder.Order.Identifier == "dismissed")
+            {
+                if (!string.IsNullOrEmpty(newOrder.OrderOption))
+                {
+                    if (CurrentOrders.Any(o => o.MatchesDismissedOrder(newOrder.OrderOption)))
+                    {
+                        var dismissedOrderInfo = CurrentOrders.First(o => o.MatchesDismissedOrder(newOrder.OrderOption));
+                        int dismissedOrderPriority = dismissedOrderInfo.ManualPriority;
+                        CurrentOrders.Remove(dismissedOrderInfo);
+                        for (int i = 0; i < CurrentOrders.Count; i++)
+                        {
+                            var orderInfo = CurrentOrders[i];
+                            if (orderInfo.ManualPriority < dismissedOrderPriority)
+                            {
+                                CurrentOrders[i] = new OrderInfo(orderInfo, orderInfo.ManualPriority + 1);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    CurrentOrders.Clear();
+                }
+            }
+            else
+            {
+                for (int i = 0; i < CurrentOrders.Count; i++)
+                {
+                    var orderInfo = CurrentOrders[i];
+                    if (orderInfo.ManualPriority <= newOrder.ManualPriority)
+                    {
+                        CurrentOrders[i] = new OrderInfo(orderInfo, orderInfo.ManualPriority - 1);
+                    }
+                }
+                CurrentOrders.RemoveAll(order => order.ManualPriority <= 0);
+                CurrentOrders.Add(newOrder);
+                // Sort the current orders so the one with the highest priority comes first
+                CurrentOrders.Sort((x, y) => y.ManualPriority.CompareTo(x.ManualPriority));
+            }
+        }
+
+        private void RemoveDuplicateOrders(Order order, string option)
+        {
+            int? priorityOfRemoved = null;
+            for (int i = CurrentOrders.Count - 1; i >= 0; i--)
+            {
+                var orderInfo = CurrentOrders[i];
+                if (orderInfo.MatchesOrder(order, option))
+                {
+                    priorityOfRemoved = orderInfo.ManualPriority;
+                    CurrentOrders.RemoveAt(i);
+                    break;
+                }
+            }
+
+            if (!priorityOfRemoved.HasValue) { return; }
+
+            for (int i = 0; i < CurrentOrders.Count; i++)
+            {
+                var orderInfo = CurrentOrders[i];
+                if (orderInfo.ManualPriority < priorityOfRemoved.Value)
+                {
+                    CurrentOrders[i] = new OrderInfo(orderInfo, orderInfo.ManualPriority + 1);
+                }
+            }
+
+            CurrentOrders.RemoveAll(order => order.ManualPriority <= 0);
+            // Sort the current orders so the one with the highest priority comes first
+            CurrentOrders.Sort((x, y) => y.ManualPriority.CompareTo(x.ManualPriority));
+        }
+
+        public OrderInfo? GetCurrentOrderWithTopPriority()
+        {
+            return GetCurrentOrder(orderInfo =>
+            {
+                if (orderInfo.Order == null) { return false; }
+                if (orderInfo.Order.Identifier == "dismissed") { return false; }
+                if (orderInfo.ManualPriority < 1) { return false; }
+                return true;
+            });
+        }
+
+        public OrderInfo? GetCurrentOrder(Order order, string option)
+        {
+            return GetCurrentOrder(orderInfo =>
+            {
+                return orderInfo.MatchesOrder(order, option);
+            });
+        }
+
+        private OrderInfo? GetCurrentOrder(Func<OrderInfo, bool> predicate)
+        {
+            if (CurrentOrders != null && CurrentOrders.Any(predicate))
+            {
+                return CurrentOrders.First(predicate);
+            }
+            else
+            {
+                return null;
+            }
+        }
 
         private readonly List<AIChatMessage> aiChatMessageQueue = new List<AIChatMessage>();
 
@@ -3099,7 +3193,6 @@ namespace Barotrauma
                     otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);             
                     ApplyStatusEffects(ActionType.OnSevered, 1.0f);
                     targetLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
-                    otherLimb.ApplyStatusEffects(ActionType.OnSevered, 1.0f);
                 }
             }
             if (wasSevered && targetLimb.character.AIController is EnemyAIController enemyAI)
@@ -3308,6 +3401,12 @@ namespace Barotrauma
                                 Limb limb = AnimController.GetLimb(limbType);
                                 statusEffect.Apply(actionType, deltaTime, this, limb);
                             }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                            {
+                                // Target just the last matching limb
+                                Limb limb = AnimController.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                                statusEffect.Apply(actionType, deltaTime, this, limb);
+                            }
                         }
                     }
                 }
@@ -3460,16 +3559,18 @@ namespace Barotrauma
                 return;
             }
 
-            isDead = false;
-
             if (aiTarget != null)
             {
                 aiTarget.Remove();
             }
 
             aiTarget = new AITarget(this);
-            SetAllDamage(0.0f, 0.0f, 0.0f);
             CharacterHealth.RemoveAllAfflictions();
+            SetAllDamage(0.0f, 0.0f, 0.0f);
+            Oxygen = 100.0f;
+            Bloodloss = 0.0f;
+            SetStun(0.0f, true);
+            isDead = false;
 
             foreach (LimbJoint joint in AnimController.LimbJoints)
             {
@@ -3703,7 +3804,6 @@ namespace Barotrauma
                 }
             }
         }
-
 
         private readonly HashSet<AttackContext> currentContexts = new HashSet<AttackContext>();
 

@@ -904,7 +904,9 @@ namespace Barotrauma
                     }
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !Paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
+                    if (NetworkMember == null && !WindowActive && !Paused && true && Config.PauseOnFocusLost &&
+                        Screen.Selected != MainMenuScreen && Screen.Selected != ServerListScreen && Screen.Selected != NetLobbyScreen &&
+                        Screen.Selected != SubEditorScreen && Screen.Selected != LevelEditorScreen)
                     {
                         GUI.TogglePauseMenu();
                         Paused = true;
@@ -1073,13 +1075,6 @@ namespace Barotrauma
                 if (Tutorial.Initialized)
                 {
                     ((TutorialMode)GameSession.GameMode).Tutorial?.Stop();
-                }
-
-                if (GameSettings.SendUserStatistics)
-                {
-                    Mission mission = GameSession.Mission;
-                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
-                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
                 }
             }
             GUIMessageBox.CloseAll();

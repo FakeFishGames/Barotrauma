@@ -44,7 +44,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
             if (SpawnedResources.Any())
             {
@@ -135,6 +135,10 @@ namespace Barotrauma
         {
             if (EnoughHaveBeenCollected())
             {
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
                 GiveReward();
                 completed = true;
             }

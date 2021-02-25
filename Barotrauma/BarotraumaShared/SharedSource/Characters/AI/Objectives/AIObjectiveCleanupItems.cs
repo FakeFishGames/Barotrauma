@@ -29,7 +29,7 @@ namespace Barotrauma
             this.prioritizedItems.AddRange(prioritizedItems.Where(i => i != null));
         }
 
-        protected override float TargetEvaluation() => Targets.Any() ? (objectiveManager.CurrentOrder == this ? AIObjectiveManager.OrderPriority : AIObjectiveManager.RunPriority - 1) : 0;
+        protected override float TargetEvaluation() => Targets.Any() ? (objectiveManager.IsOrder(this) ? objectiveManager.GetOrderPriority(this) : AIObjectiveManager.RunPriority - 1) : 0;
 
         protected override bool Filter(Item target)
         {
