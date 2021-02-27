@@ -101,7 +101,7 @@ namespace Barotrauma.Tutorials
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
             var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("medicaldoctor"));
             captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
-            captain_medic.TeamID = Character.TeamType.Team1;
+            captain_medic.TeamID = CharacterTeamType.Team1;
             captain_medic.GiveJobItems(null);
             captain_medic.CanSpeak = captain_medic.AIController.Enabled = false;
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
@@ -124,17 +124,17 @@ namespace Barotrauma.Tutorials
 
             var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("mechanic"));
             captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "mechanic");
-            captain_mechanic.TeamID = Character.TeamType.Team1;
+            captain_mechanic.TeamID = CharacterTeamType.Team1;
             captain_mechanic.GiveJobItems();
 
             var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("securityofficer"));
             captain_security = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "securityofficer");
-            captain_security.TeamID = Character.TeamType.Team1;
+            captain_security.TeamID = CharacterTeamType.Team1;
             captain_security.GiveJobItems();
 
             var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("engineer"));
             captain_engineer = Character.Create(engineerInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "engineer");
-            captain_engineer.TeamID = Character.TeamType.Team1;
+            captain_engineer.TeamID = CharacterTeamType.Team1;
             captain_engineer.GiveJobItems();
 
             captain_mechanic.CanSpeak = captain_security.CanSpeak = captain_engineer.CanSpeak = false;

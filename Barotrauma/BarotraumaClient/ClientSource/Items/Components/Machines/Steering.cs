@@ -34,7 +34,7 @@ namespace Barotrauma.Items.Components
 
         private GUIComponent steerArea;
 
-        private GUITextBlock pressureWarningText;
+        private GUITextBlock pressureWarningText, iceSpireWarningText;
 
         private GUITextBlock tipContainer;
 
@@ -311,6 +311,7 @@ namespace Barotrauma.Items.Components
                         {
                             Vector2 vel = controlledSub == null ? Vector2.Zero : controlledSub.Velocity;
                             var realWorldVel = ConvertUnits.ToDisplayUnits(vel.X * Physics.DisplayToRealWorldRatio) * 3.6f;
+                            if (controlledSub != null && controlledSub.FlippedX) { realWorldVel *= -1; }
                             return ((int)realWorldVel).ToString();
                         };
                         break;
@@ -440,8 +441,13 @@ namespace Barotrauma.Items.Components
                 (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); }, null);
             steerRadius = steerArea.Rect.Width / 2;
 
-            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), steerArea.RectTransform, Anchor.Center, Pivot.TopCenter), 
-                TextManager.Get("SteeringDepthWarning"), Color.Red, GUI.LargeFont, Alignment.Center)
+            iceSpireWarningText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.25f), steerArea.RectTransform, Anchor.Center, Pivot.TopCenter),
+                TextManager.Get("NavTerminalIceSpireWarning"), GUI.Style.Red, GUI.SubHeadingFont, Alignment.Center, color: Color.Black * 0.8f, wrap: true)
+            {
+                Visible = false
+            };
+            pressureWarningText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.25f), steerArea.RectTransform, Anchor.Center, Pivot.TopCenter), 
+                TextManager.Get("SteeringDepthWarning"), GUI.Style.Red, GUI.SubHeadingFont, Alignment.Center, color: Color.Black * 0.8f)
             {
                 Visible = false
             };
@@ -471,7 +477,11 @@ namespace Barotrauma.Items.Components
         public void AttachToSonarHUD(GUICustomComponent sonarView)
         {
             steerArea.Visible = false;
-            sonarView.OnDraw += (spriteBatch, guiCustomComponent) => { DrawHUD(spriteBatch, guiCustomComponent.Rect); };
+            sonarView.OnDraw += (spriteBatch, guiCustomComponent) => 
+            { 
+                DrawHUD(spriteBatch, guiCustomComponent.Rect);
+                steerArea.DrawChildren(spriteBatch, recursive: true);
+            };
         }
 
         public void DrawHUD(SpriteBatch spriteBatch, Rectangle rect)
@@ -712,12 +722,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.5f;
+            pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.8f;
+            iceSpireWarningText.Visible = item.Submarine != null && !pressureWarningText.Visible && showIceSpireWarning && Timing.TotalTime % 1.0f < 0.8f;
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
                 if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsTabMenuOpen && 
-                    (!GameMain.GameSession?.Campaign?.ShowCampaignUI ?? true) && !GUIMessageBox.MessageBoxes.Any())
+                    (!GameMain.GameSession?.Campaign?.ShowCampaignUI ?? true) && !GUIMessageBox.MessageBoxes.Any(msgBox => msgBox is GUIMessageBox { MessageBoxType: GUIMessageBox.Type.Default }))
                 {
                     Vector2 inputPos = PlayerInput.MousePosition - steerArea.Rect.Center.ToVector2();
                     inputPos.Y = -inputPos.Y;

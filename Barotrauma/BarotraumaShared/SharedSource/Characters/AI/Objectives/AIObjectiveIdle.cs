@@ -21,7 +21,7 @@ namespace Barotrauma
             set
             {
                 behavior = value;
-                if (behavior == BehaviorType.StayInHull && character.TeamID != Character.TeamType.FriendlyNPC)
+                if (behavior == BehaviorType.StayInHull && character.TeamID != CharacterTeamType.FriendlyNPC)
                 {
                     DebugConsole.NewMessage($"AIObjectiveIdle.BehaviorType.StayInHull is implemented only for outpost NPCs. Using passive behavior for {character.Name} ({character.Info.Job.Prefab.Identifier})", color: Color.Red);
                     behavior = BehaviorType.Passive;
@@ -203,7 +203,7 @@ namespace Barotrauma
 
                 if (currentTarget != null && !currentTargetIsInvalid)
                 {
-                    if (character.TeamID == Character.TeamType.FriendlyNPC)
+                    if (character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
                         if (currentTarget.Submarine.TeamID != character.TeamID)
                         {
@@ -260,7 +260,7 @@ namespace Barotrauma
                     {
                         //choose a random available hull
                         currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-                        bool isInWrongSub = character.TeamID == Character.TeamType.FriendlyNPC && character.Submarine.TeamID != character.TeamID;
+                        bool isInWrongSub = character.TeamID == CharacterTeamType.FriendlyNPC && character.Submarine.TeamID != character.TeamID;
                         bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
                         var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: $"AIObjectiveIdle {character.DisplayName}", nodeFilter: node =>
                         {
@@ -402,6 +402,14 @@ namespace Barotrauma
             PathSteering.Wander(deltaTime);
         }
 
+        public void FaceTargetAndWait(ISpatialEntity target, float waitTime)
+        {
+            standStillTimer = waitTime;
+            HumanAIController.FaceTarget(target);
+            currentTarget = null;
+            SetTargetTimerHigh();
+        }
+
         private void FindTargetHulls()
         {
             targetHulls.Clear();
@@ -411,7 +419,7 @@ namespace Barotrauma
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
                 if (character.Submarine == null) { break; }
-                if (character.TeamID == Character.TeamType.FriendlyNPC)
+                if (character.TeamID == CharacterTeamType.FriendlyNPC)
                 {
                     if (hull.Submarine.TeamID != character.TeamID)
                     {

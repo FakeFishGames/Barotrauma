@@ -269,14 +269,13 @@ namespace Barotrauma.Steam
                 }
             }
 
-            //TODO: find a better strategy to fetch all lobbies, this is gonna take forever if we actually have 10000 lobbies
-            Steamworks.Data.LobbyQuery lobbyQuery = Steamworks.SteamMatchmaking.CreateLobbyQuery().FilterDistanceWorldwide().WithMaxResults(10000);
 
             Steamworks.Dispatch.OnDebugCallback = (callbackType, contents, isServer) =>
             {
                 DebugConsole.NewMessage($"{callbackType}: " + contents, Color.Yellow);
             };
-            TaskPool.Add("LobbyQueryRequest", lobbyQuery.RequestAsync(),
+
+            TaskPool.Add("LobbyQueryRequest", LobbyQueryRequest(),
             (t) =>
             {
                 Steamworks.Dispatch.OnDebugCallback = null;
@@ -286,7 +285,7 @@ namespace Barotrauma.Steam
                     taskDone();
                     return;
                 }
-                var lobbies = ((Task<Steamworks.Data.Lobby[]>)t).Result;
+                var lobbies = ((Task<List<Steamworks.Data.Lobby>>)t).Result;
                 if (lobbies != null)
                 {
                     foreach (var lobby in lobbies)
@@ -371,6 +370,32 @@ namespace Barotrauma.Steam
             });
 
             return true;
+        }
+
+        public static async Task<List<Steamworks.Data.Lobby>> LobbyQueryRequest()
+        {
+            List<Steamworks.Data.Lobby> allLobbies = new List<Steamworks.Data.Lobby>();
+            Steamworks.Data.LobbyQuery lobbyQuery = Steamworks.SteamMatchmaking.CreateLobbyQuery()
+                    .FilterDistanceWorldwide()
+                    .WithMaxResults(50);
+            //steamworks seems to unable to retrieve more than 50
+            //lobbies per request; to work around this, we'll make
+            //up to 10 requests, asking to ignore all previous results
+            //in each subsequent request
+            for (int i = 0; i < 10; i++)
+            {
+                Steamworks.Data.Lobby[] lobbies = await lobbyQuery.RequestAsync();
+                if (lobbies == null) { break; }
+                foreach (var l in lobbies)
+                {
+                    lobbyQuery = lobbyQuery
+                        .WithoutKeyValue("lobbyowner", l.GetData("lobbyowner"));
+                }
+                allLobbies.AddRange(lobbies);
+            }
+
+            //make sure all returned lobbies are distinct, don't want any duplicates here
+            return allLobbies.Select(l => l.Id).Distinct().Select(i => allLobbies.Find(l => l.Id == i)).ToList();
         }
 
         public static void AssignLobbyDataToServerInfo(Steamworks.Data.Lobby lobby, ServerInfo serverInfo)
@@ -1173,7 +1198,7 @@ namespace Barotrauma.Steam
 
             foreach (ContentFile contentFile in contentPackage.Files)
             {
-                contentFile.Path = contentFile.Path.CleanUpPath();
+                contentFile.Path = contentFile.Path.CleanUpPathCrossPlatform(correctFilenameCase: true, item?.Directory);
                 string sourceFile = Path.Combine(item?.Directory, contentFile.Path);
                 if (!File.Exists(sourceFile))
                 {

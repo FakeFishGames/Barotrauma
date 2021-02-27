@@ -69,7 +69,7 @@ namespace Barotrauma
                 {
                     if (!isOrder)
                     {
-                        if (reactor.LastUserWasPlayer && character.TeamID != Character.TeamType.FriendlyNPC ||
+                        if (reactor.LastUserWasPlayer && character.TeamID != CharacterTeamType.FriendlyNPC ||
                             HumanAIController.IsTrueForAnyCrewMember(c =>
                                 c.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.GetTarget() == target))
                         {
@@ -101,7 +101,8 @@ namespace Barotrauma
                     targetItem.Submarine != character.Submarine && !isOrder ||
                     targetItem.CurrentHull.FireSources.Any() ||
                     HumanAIController.IsItemOperatedByAnother(target, out _) ||
-                    Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
+                    Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))
+                    || component.Item.IgnoreByAI || (useController && controller.Item.IgnoreByAI))
                 {
                     Priority = 0;
                 }
@@ -137,7 +138,7 @@ namespace Barotrauma
                 throw new Exception("target null");
 #endif
             }
-            else if (target.Item.NonInteractable)
+            else if (!target.Item.IsInteractable(character))
             {
                 Abandon = true;
             }
@@ -156,21 +157,6 @@ namespace Barotrauma
                 character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
                 Abandon = true;
                 return;
-            }
-            // If this is not an order...
-            if (objectiveManager.CurrentOrder != this)
-            {
-                // Don't allow to operate an item that someone with a better skills already operates
-                if (HumanAIController.IsItemOperatedByAnother(target, out _))
-                {
-                    // Don't abandon
-                    return;
-                }
-                if (component.Item.IgnoreByAI || (useController && controller.Item.IgnoreByAI))
-                {
-                    Abandon = true;
-                    return;
-                }
             }
             if (operateTarget != null)
             {
@@ -215,7 +201,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                else if (!character.Inventory.Items.Contains(component.Item))
+                else if (!character.Inventory.Contains(component.Item))
                 {
                     TryAddSubObjective(ref getItemObjective, () => new AIObjectiveGetItem(character, component.Item, objectiveManager, equip: true),
                         onAbandon: () => Abandon = true,
@@ -241,13 +227,14 @@ namespace Barotrauma
                                 continue;
                             }
                             //equip slot already taken
-                            if (character.Inventory.Items[i] != null)
+                            var existingItem = character.Inventory.GetItemAt(i);
+                            if (existingItem != null)
                             {
                                 //try to put the item in an Any slot, and drop it if that fails
-                                if (!character.Inventory.Items[i].AllowedSlots.Contains(InvSlotType.Any) ||
-                                    !character.Inventory.TryPutItem(character.Inventory.Items[i], character, new List<InvSlotType>() { InvSlotType.Any }))
+                                if (!existingItem.AllowedSlots.Contains(InvSlotType.Any) ||
+                                    !character.Inventory.TryPutItem(existingItem, character, new List<InvSlotType>() { InvSlotType.Any }))
                                 {
-                                    character.Inventory.Items[i].Drop(character);
+                                    existingItem.Drop(character);
                                 }
                             }
                             if (character.Inventory.TryPutItem(component.Item, i, true, false, character))

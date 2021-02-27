@@ -21,7 +21,7 @@ namespace Barotrauma
             if (battery == null) { return false; }
             var item = battery.Item;
             if (item.IgnoreByAI) { return false; }
-            if (item.NonInteractable) { return false; }
+            if (!item.IsInteractable(character)) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine.TeamID != character.TeamID) { return false; }

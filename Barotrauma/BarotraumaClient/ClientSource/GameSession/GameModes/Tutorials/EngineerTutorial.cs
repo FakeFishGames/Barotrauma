@@ -247,30 +247,30 @@ namespace Barotrauma.Tutorials
                     if (!firstSlotRemoved)
                     {
                         HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 0, highlightColor, .5f, .5f, 0f);
-                        if (engineer_equipmentCabinet.Inventory.Items[0] == null) firstSlotRemoved = true;
+                        if (engineer_equipmentCabinet.Inventory.GetItemAt(0) == null) { firstSlotRemoved = true; }
                     }
 
                     if (!secondSlotRemoved)
                     {
                         HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 1, highlightColor, .5f, .5f, 0f);
-                        if (engineer_equipmentCabinet.Inventory.Items[1] == null) secondSlotRemoved = true;
+                        if (engineer_equipmentCabinet.Inventory.GetItemAt(1) == null) { secondSlotRemoved = true; }
                     }
 
                     if (!thirdSlotRemoved)
                     {
                         HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 2, highlightColor, .5f, .5f, 0f);
-                        if (engineer_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
+                        if (engineer_equipmentCabinet.Inventory.GetItemAt(2) == null) { thirdSlotRemoved = true; }
                     }
 
                     if (!fourthSlotRemoved)
                     {
                         HighlightInventorySlot(engineer_equipmentCabinet.Inventory, 3, highlightColor, .5f, .5f, 0f);
-                        if (engineer_equipmentCabinet.Inventory.Items[2] == null) fourthSlotRemoved = true;
+                        if (engineer_equipmentCabinet.Inventory.GetItemAt(2) == null) { fourthSlotRemoved = true; }
                     }
 
-                    for (int i = 0; i < engineer.Inventory.slots.Length; i++)
+                    for (int i = 0; i < engineer.Inventory.visualSlots.Length; i++)
                     {
-                        if (engineer.Inventory.Items[i] == null) HighlightInventorySlot(engineer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        if (engineer.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(engineer.Inventory, i, highlightColor, .5f, .5f, 0f); }
                     }
                 }
 
@@ -299,12 +299,12 @@ namespace Barotrauma.Tutorials
             } while (!engineer_reactor.PowerOn);
             do
             {
-                if (IsSelectedItem(engineer_reactor.Item) && engineer_reactor.Item.OwnInventory.slots != null)
+                if (IsSelectedItem(engineer_reactor.Item) && engineer_reactor.Item.OwnInventory.visualSlots != null)
                 {
                     engineer_reactor.AutoTemp = false;
                     HighlightInventorySlot(engineer.Inventory, "fuelrod", highlightColor, 0.5f, 0.5f, 0f);
 
-                    for (int i = 0; i < engineer_reactor.Item.OwnInventory.slots.Length; i++)
+                    for (int i = 0; i < engineer_reactor.Item.OwnInventory.visualSlots.Length; i++)
                     {
                         HighlightInventorySlot(engineer_reactor.Item.OwnInventory, i, highlightColor, 0.5f, 0.5f, 0f);
                     }

@@ -108,7 +108,7 @@ namespace Barotrauma
                     }
 
                     //achievement for descending ridiculously deep
-                    float realWorldDepth = Math.Abs(sub.Position.Y - Level.Loaded.Size.Y) * Physics.DisplayToRealWorldRatio;
+                    float realWorldDepth = sub.RealWorldDepth;
                     if (realWorldDepth > 5000.0f && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
                     {
                         //all conscious characters inside the sub get an achievement
@@ -380,7 +380,7 @@ namespace Barotrauma
 #endif
                 var charactersInSub = Character.CharacterList.FindAll(c => 
                     !c.IsDead && 
-                    c.TeamID != Character.TeamType.FriendlyNPC &&
+                    c.TeamID != CharacterTeamType.FriendlyNPC &&
                     !(c.AIController is EnemyAIController) &&
                     (c.Submarine == gameSession.Submarine || (Level.Loaded?.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost)));
 

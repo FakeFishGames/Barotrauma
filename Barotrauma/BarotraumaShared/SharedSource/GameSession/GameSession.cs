@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public Mission Mission { get; private set; }
 
-        public Character.TeamType? WinningTeam;
+        public CharacterTeamType? WinningTeam;
 
         public bool IsRunning { get; private set; }
 
@@ -107,7 +107,7 @@ namespace Barotrauma
         {
             this.SavePath = savePath;
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-            GameMode = InstantiateGameMode(gameModePreset, seed, missionType: missionType);
+            GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, missionType: missionType);
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Barotrauma
             : this(submarineInfo)
         {
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-            GameMode = InstantiateGameMode(gameModePreset, seed, missionPrefab: missionPrefab);
+            GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, missionPrefab: missionPrefab);
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace Barotrauma
             }
         }
 
-        private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, MissionPrefab missionPrefab = null, MissionType missionType = MissionType.None)
+        private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, SubmarineInfo selectedSub, MissionPrefab missionPrefab = null, MissionType missionType = MissionType.None)
         {
             if (gameModePreset.GameModeType == typeof(CoOpMode))
             {
@@ -174,12 +174,22 @@ namespace Barotrauma
             }
             else if (gameModePreset.GameModeType == typeof(MultiPlayerCampaign))
             {
-                return MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8));
+                var campaign = MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub);
+                if (campaign != null && selectedSub != null)
+                {
+                    campaign.Money = Math.Max(MultiPlayerCampaign.MinimumInitialMoney, campaign.Money - selectedSub.Price);
+                }
+                return campaign;
             }
 #if CLIENT
             else if (gameModePreset.GameModeType == typeof(SinglePlayerCampaign))
             {
-                return SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8));
+                var campaign = SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub);
+                if (campaign != null && selectedSub != null)
+                {
+                    campaign.Money = Math.Max(SinglePlayerCampaign.MinimumInitialMoney, campaign.Money - selectedSub.Price);
+                }
+                return campaign;
             }
             else if (gameModePreset.GameModeType == typeof(TutorialMode))
             {
@@ -230,7 +240,7 @@ namespace Barotrauma
         /// <summary>
         /// Switch to another submarine. The sub is loaded when the next round starts.
         /// </summary>
-        public void SwitchSubmarine(SubmarineInfo newSubmarine, int cost)
+        public SubmarineInfo SwitchSubmarine(SubmarineInfo newSubmarine, int cost)
         {
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
@@ -252,6 +262,7 @@ namespace Barotrauma
             Campaign.Money -= cost;
 
             ((CampaignMode)GameMode).PendingSubmarineSwitch = newSubmarine;
+            return newSubmarine;
         }
 
         public void PurchaseSubmarine(SubmarineInfo newSubmarine)
@@ -306,7 +317,7 @@ namespace Barotrauma
             Submarine = Submarine.MainSub = new Submarine(SubmarineInfo);
             foreach (Submarine sub in Submarine.GetConnectedSubs())
             {
-                sub.TeamID = Character.TeamType.Team1;
+                sub.TeamID = CharacterTeamType.Team1;
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Submarine != sub) { continue; }
@@ -316,7 +327,7 @@ namespace Barotrauma
                     }
                 }
             }
-            if (GameMode.Mission != null && GameMode.Mission.TeamCount > 1 && Submarine.MainSubs[1] == null)
+            if (GameMode is PvPMode && Submarine.MainSubs[1] == null)
             {
                 Submarine.MainSubs[1] = new Submarine(SubmarineInfo, true);
             }
@@ -437,6 +448,8 @@ namespace Barotrauma
                     Submarine.WarmStartPower();
                 }
             }
+
+            GameMain.Config.RecentlyEncounteredCreatures.Clear();
 
             GameMain.GameScreen.Cam.Position = Character.Controlled?.WorldPosition ?? Submarine.MainSub.WorldPosition;
             RoundStartTime = Timing.TotalTime;
@@ -573,7 +586,7 @@ namespace Barotrauma
 
             if (GameMain.NetLobbyScreen != null) GameMain.NetLobbyScreen.OnRoundEnded();
             TabMenu.OnRoundEnded();
-            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction");
+            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
 #endif
             SteamAchievementManager.OnRoundEnded(this);
 

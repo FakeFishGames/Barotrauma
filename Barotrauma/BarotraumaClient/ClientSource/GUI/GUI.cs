@@ -287,6 +287,7 @@ namespace Barotrauma
         {
             lock (mutex)
             {
+                usedIndicatorAngles.Clear();
 
                 if (ScreenChanged)
                 {
@@ -1117,15 +1118,26 @@ namespace Barotrauma
         /// Set the cursor to an hourglass.
         /// Will automatically revert after 10 seconds or when <see cref="ClearCursorWait"/> is called.
         /// </summary>
-        public static void SetCursorWaiting()
+        public static void SetCursorWaiting(int waitSeconds = 10, Func<bool> endCondition = null)
         {
             CoroutineManager.StartCoroutine(WaitCursorCoroutine(), "WaitCursorTimeout");
 
-            static IEnumerable<object> WaitCursorCoroutine()
+            IEnumerable<object> WaitCursorCoroutine()
             {
                 MouseCursor = CursorState.Waiting;
-                var timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-                while (DateTime.Now < timeOut) { yield return CoroutineStatus.Running; }
+                var timeOut = DateTime.Now + new TimeSpan(0, 0, waitSeconds);
+                while (DateTime.Now < timeOut) 
+                { 
+                    if (endCondition != null)
+                    {
+                        try
+                        {
+                            if (endCondition.Invoke()) { break; }
+                        }
+                        catch { break; }
+                    }
+                    yield return CoroutineStatus.Running; 
+                }
                 if (MouseCursor == CursorState.Waiting) { MouseCursor = CursorState.Default; }
                 yield return CoroutineStatus.Success;
             }
@@ -1219,7 +1231,7 @@ namespace Barotrauma
             {
                 foreach (GUIMessage msg in messages)
                 {
-                    if (msg.WorldSpace) continue;
+                    if (msg.WorldSpace) { continue; }
                     msg.Timer -= deltaTime;
 
                     if (msg.Size.X > HUDLayoutSettings.MessageAreaTop.Width)
@@ -1244,7 +1256,7 @@ namespace Barotrauma
             
                 foreach (GUIMessage msg in messages)
                 {
-                    if (!msg.WorldSpace) continue;
+                    if (!msg.WorldSpace) { continue; }
                     msg.Timer -= deltaTime;                
                     msg.Pos += msg.Velocity * deltaTime;                
                 }
@@ -1256,18 +1268,21 @@ namespace Barotrauma
 
         #region Element drawing
 
+        private static List<float> usedIndicatorAngles = new List<float>();
 
         /// <param name="createOffset">Should the indicator move based on the camera position?</param>
-        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color, bool createOffset = true, float scaleMultiplier = 1.0f)
+        /// <param name="overrideAlpha">Override the distance-based alpha value with the specified alpha value</param>
+        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color,
+            bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
             float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier;
 
-            if (dist > hideDist)
+            if (overrideAlpha.HasValue || dist > hideDist)
             {
-                float alpha = Math.Min((dist - hideDist) / 100.0f, 1.0f);
+                float alpha = overrideAlpha ?? Math.Min((dist - hideDist) / 100.0f, 1.0f);
                 Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);
 
                 if (!createOffset)
@@ -1278,6 +1293,28 @@ namespace Barotrauma
 
                 float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
                 float angle = MathUtils.VectorToAngle(diff);
+
+                float minAngleDiff = 0.05f;
+                bool overlapFound = true;
+                int iterations = 0;
+                while (overlapFound && iterations < 10)
+                {
+                    overlapFound = false;
+                    foreach (float usedIndicatorAngle in usedIndicatorAngles)
+                    {
+                        float shortestAngle = MathUtils.GetShortestAngle(angle, usedIndicatorAngle);
+                        if (MathUtils.NearlyEqual(shortestAngle, 0.0f)) { shortestAngle = 0.01f; }
+                        if (Math.Abs(shortestAngle) < minAngleDiff)
+                        {
+                            angle -= Math.Sign(shortestAngle) * (minAngleDiff - Math.Abs(shortestAngle));
+                            overlapFound = true;
+                            break;
+                        }
+                    }
+                    iterations++;
+                }
+
+                usedIndicatorAngles.Add(angle);
 
                 Vector2 unclampedDiff = new Vector2(
                     (float)Math.Cos(angle) * screenDist,
@@ -1489,12 +1526,12 @@ namespace Barotrauma
 
             foreach (GUIMessage msg in messages)
             {
-                if (msg.WorldSpace) continue;
+                if (msg.WorldSpace) { continue; }
 
                 Vector2 drawPos = new Vector2(HUDLayoutSettings.MessageAreaTop.Right, HUDLayoutSettings.MessageAreaTop.Center.Y);
 
-                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos + Vector2.One, Color.Black, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
-                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.Pos, msg.Color, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.DrawPos + Vector2.One, Color.Black, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
+                msg.Font.DrawString(spriteBatch, msg.Text, drawPos + msg.DrawPos, msg.Color, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
                 break;                
             }
 
@@ -1507,14 +1544,14 @@ namespace Barotrauma
             
             foreach (GUIMessage msg in messages)
             {
-                if (!msg.WorldSpace) continue;
+                if (!msg.WorldSpace) { continue; }
                 
                 if (cam != null)
                 {
                     float alpha = 1.0f;
-                    if (msg.Timer < 1.0f) alpha -= 1.0f - msg.Timer;                    
+                    if (msg.Timer < 1.0f) { alpha -= 1.0f - msg.Timer; }
 
-                    Vector2 drawPos = cam.WorldToScreen(msg.Pos);
+                    Vector2 drawPos = cam.WorldToScreen(msg.DrawPos);
                     msg.Font.DrawString(spriteBatch, msg.Text, drawPos + Vector2.One, Color.Black * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
                     msg.Font.DrawString(spriteBatch, msg.Text, drawPos, msg.Color * alpha, 0, msg.Origin, 1.0f, SpriteEffects.None, 0);
                 }                
@@ -1608,7 +1645,8 @@ namespace Barotrauma
 
         public static Texture2D CreateCapsule(int radius, int height)
         {
-            int textureWidth = radius * 2, textureHeight = height + radius * 2;
+            int textureWidth = Math.Max(radius * 2, 1);
+            int textureHeight = Math.Max(height + radius * 2, 1);
             
             Color[] data = new Color[textureWidth * textureHeight];
 
@@ -2079,7 +2117,7 @@ namespace Barotrauma
 
             if (pauseMenuOpen)
             {
-                Inventory.draggingItem = null;
+                Inventory.DraggingItems.Clear();
                 Inventory.DraggingInventory = null;
 
                 PauseMenu = new GUIFrame(new RectTransform(Vector2.One, Canvas, Anchor.Center), style: null);
@@ -2288,9 +2326,10 @@ namespace Barotrauma
             if (playSound) SoundPlayer.PlayUISound(GUISoundType.UIMessage);
         }
 
-        public static void AddMessage(string message, Color color, Vector2 worldPos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage)
+        public static void AddMessage(string message, Color color, Vector2 pos, Vector2 velocity, float lifeTime = 3.0f, bool playSound = true, GUISoundType soundType = GUISoundType.UIMessage, int subId = -1)
         {
-            messages.Add(new GUIMessage(message, color, worldPos, velocity, lifeTime, Alignment.Center, LargeFont));
+            Submarine sub = Submarine.Loaded.FirstOrDefault(s => s.ID == subId);
+            messages.Add(new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, LargeFont, sub: sub));
             if (playSound) SoundPlayer.PlayUISound(soundType);
         }
 

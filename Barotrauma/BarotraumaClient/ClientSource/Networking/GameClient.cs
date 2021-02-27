@@ -81,7 +81,7 @@ namespace Barotrauma.Networking
 
         private byte myID;
 
-        private List<Client> otherClients;
+        private readonly List<Client> otherClients;
 
         public readonly List<SubmarineInfo> ServerSubmarines = new List<SubmarineInfo>();
 
@@ -94,13 +94,13 @@ namespace Barotrauma.Networking
 
         private UInt16 lastSentChatMsgID = 0; //last message this client has successfully sent
         private UInt16 lastQueueChatMsgID = 0; //last message added to the queue
-        private List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
+        private readonly List<ChatMessage> chatMsgQueue = new List<ChatMessage>();
 
         public UInt16 LastSentEntityEventID;
 
-        private ClientEntityEventManager entityEventManager;
+        private readonly ClientEntityEventManager entityEventManager;
 
-        private FileReceiver fileReceiver;
+        private readonly FileReceiver fileReceiver;
 
 #if DEBUG
         public void PrintReceiverTransters()
@@ -138,6 +138,12 @@ namespace Barotrauma.Networking
             }
         }
 
+        private readonly List<Client> previouslyConnectedClients = new List<Client>();
+        public IEnumerable<Client> PreviouslyConnectedClients
+        {
+            get { return previouslyConnectedClients; }
+        }
+
         public FileReceiver FileReceiver
         {
             get { return fileReceiver; }
@@ -153,9 +159,9 @@ namespace Barotrauma.Networking
             get { return entityEventManager; }
         }
 
-        private object serverEndpoint;
-        private int ownerKey;
-        private bool steamP2POwner;
+        private readonly object serverEndpoint;
+        private readonly int ownerKey;
+        private readonly bool steamP2POwner;
 
         public bool IsServerOwner
         {
@@ -852,7 +858,7 @@ namespace Barotrauma.Networking
 
                     endMessage = inc.ReadString();
                     bool missionSuccessful = inc.ReadBoolean();
-                    Character.TeamType winningTeam = (Character.TeamType)inc.ReadByte();
+                    CharacterTeamType winningTeam = (CharacterTeamType)inc.ReadByte();
                     if (missionSuccessful && GameMain.GameSession?.Mission != null)
                     {
                         GameMain.GameSession.WinningTeam = winningTeam;
@@ -1634,7 +1640,7 @@ namespace Barotrauma.Networking
             {
                 if (Submarine.MainSubs[i] == null) { break; }
 
-                var teamID = i == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
+                var teamID = i == 0 ? CharacterTeamType.Team1 : CharacterTeamType.Team2;
                 Submarine.MainSubs[i].TeamID = teamID;
                 foreach (Item item in Item.ItemList)
                 {
@@ -1828,6 +1834,7 @@ namespace Barotrauma.Networking
                 UInt16 nameId       = inc.ReadUInt16();
                 string name         = inc.ReadString();
                 string preferredJob = inc.ReadString();
+                byte preferredTeam  = inc.ReadByte();
                 UInt16 characterID  = inc.ReadUInt16();
                 float karma         = inc.ReadSingle();
                 bool muted          = inc.ReadBoolean();
@@ -1844,6 +1851,7 @@ namespace Barotrauma.Networking
                     SteamID = steamId,
                     Name = name,
                     PreferredJob = preferredJob,
+                    PreferredTeam = (CharacterTeamType)preferredTeam,
                     CharacterID = characterID,
                     Karma = karma,
                     Muted = muted,
@@ -1878,6 +1886,7 @@ namespace Barotrauma.Networking
                     }
                     existingClient.NameID = tc.NameID;
                     existingClient.PreferredJob = tc.PreferredJob;
+                    existingClient.PreferredTeam = tc.PreferredTeam;
                     existingClient.Character = null;
                     existingClient.Karma = tc.Karma;
                     existingClient.Muted = tc.Muted;
@@ -1915,6 +1924,17 @@ namespace Barotrauma.Networking
                         ConnectedClients[i].Dispose();
                         ConnectedClients.RemoveAt(i);
                         refreshCampaignUI = true;
+                    }
+                }
+                foreach (Client client in ConnectedClients)
+                {
+                    if (!previouslyConnectedClients.Any(c => c.ID == client.ID))
+                    {
+                        while (previouslyConnectedClients.Count > 100)
+                        {
+                            previouslyConnectedClients.RemoveAt(0);
+                        }
+                        previouslyConnectedClients.Add(client);
                     }
                 }
                 if (updateClientListId) { LastClientListUpdateID = listId; }
@@ -2142,6 +2162,7 @@ namespace Barotrauma.Networking
                             }
                             break;
                         case ServerNetObject.ENTITY_POSITION:
+                            bool isItem = inc.ReadBoolean();
                             UInt16 id = inc.ReadUInt16();
                             uint msgLength = inc.ReadVariableUInt32();
                             int msgEndPos = (int)(inc.BitPosition + msgLength * 8);
@@ -2156,8 +2177,15 @@ namespace Barotrauma.Networking
                             entities.Add(entity);
                             if (entity != null && (entity is Item || entity is Character || entity is Submarine))
                             {
-                                entity.ClientRead(objHeader.Value, inc, sendingTime);
-                            }
+                                if (entity is Item != isItem)
+                                {
+                                    DebugConsole.AddWarning($"Received a potentially invalid ENTITY_POSITION message. Entity type does not match (server entity is {(isItem ? "an item" : "not an item")}, client entity is {(entity?.GetType().ToString() ?? "null")}). Ignoring the message...");
+                                }
+                                else
+                                {
+                                    entity.ClientRead(objHeader.Value, inc, sendingTime);
+                                }
+                            }                            
 
                             //force to the correct position in case the entity doesn't exist
                             //or the message wasn't read correctly for whatever reason
@@ -2230,9 +2258,9 @@ namespace Barotrauma.Networking
                 }
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.ReadInGameUpdate", GameAnalyticsSDK.Net.EGAErrorSeverity.Critical, string.Join("\n", errorLines));
 
-                DebugConsole.ThrowError("Writing object data to \"crashreport_object.log\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
+                DebugConsole.ThrowError("Writing object data to \"networkerror_data.log\", please send this file to us at http://github.com/Regalis11/Barotrauma/issues");
 
-                using (FileStream fl = File.Open("crashreport_object.log", System.IO.FileMode.Create))
+                using (FileStream fl = File.Open("networkerror_data.log", System.IO.FileMode.Create))
                 {
                     using (System.IO.BinaryWriter bw = new System.IO.BinaryWriter(fl))
                     using (System.IO.StreamWriter sw = new System.IO.StreamWriter(fl))
@@ -2245,7 +2273,7 @@ namespace Barotrauma.Networking
                         }
                     }
                 }
-                throw new Exception("Read error: please send us \"crashreport_object.bin\"!");
+                throw new Exception("Read error: please send us \"networkerror_data.log\"!");
             }            
         }
 
@@ -2269,6 +2297,7 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write("");
             }
+            outmsg.Write((byte)GameMain.Config.TeamPreference);
 
             if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaign.LastSaveID == 0)
             {
@@ -3241,12 +3270,12 @@ namespace Barotrauma.Networking
 
         public virtual bool SelectCrewCharacter(Character character, GUIComponent frame)
         {
-            if (character == null) return false;
+            if (character == null) { return false; }
 
             if (character != myCharacter)
             {
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.Character == character);
-                if (client == null) return false;
+                var client = previouslyConnectedClients.Find(c => c.Character == character);
+                if (client == null) { return false; }
 
                 CreateSelectionRelatedButtons(client, frame);
             }
@@ -3256,7 +3285,7 @@ namespace Barotrauma.Networking
 
         public virtual bool SelectCrewClient(Client client, GUIComponent frame)
         {
-            if (client == null || client.ID == ID) return false;
+            if (client == null || client.ID == ID) { return false; }
             CreateSelectionRelatedButtons(client, frame);
             return true;
         }

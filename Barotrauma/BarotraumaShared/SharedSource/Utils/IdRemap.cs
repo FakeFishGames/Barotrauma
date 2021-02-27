@@ -12,13 +12,13 @@ namespace Barotrauma
 
         private int maxId;
 
-        private List<Point> srcRanges;
-        private int destOffset;
+        private readonly List<Point> srcRanges;
+        private readonly int destOffset;
 
         public IdRemap(XElement parentElement, int offset)
         {
             destOffset = offset;
-            if (parentElement != null)
+            if (parentElement != null && parentElement.HasElements)
             {
                 srcRanges = new List<Point>();
                 foreach (XElement subElement in parentElement.Elements())
@@ -26,7 +26,7 @@ namespace Barotrauma
                     int id = subElement.GetAttributeInt("ID", -1);
                     if (id > 0) { InsertId(id); }
                 }
-                maxId = GetOffsetId(srcRanges.Last().Y + 1);
+                maxId = GetOffsetId(srcRanges.Last().Y) + 1;
             }
             else
             {
@@ -42,7 +42,7 @@ namespace Barotrauma
 
         private void InsertId(int id)
         {
-            for (int i=0;i<srcRanges.Count;i++)
+            for (int i = 0; i < srcRanges.Count; i++)
             {
                 if (srcRanges[i].X > id)
                 {
@@ -66,10 +66,10 @@ namespace Barotrauma
                     if (srcRanges[i].Y == (id - 1))
                     {
                         srcRanges[i] = new Point(srcRanges[i].X, id);
-                        if (i < (srcRanges.Count-1) && srcRanges[i].Y == srcRanges[i + 1].X)
+                        if (i < (srcRanges.Count - 1) && srcRanges[i].Y == srcRanges[i + 1].X)
                         {
                             srcRanges[i] = new Point(srcRanges[i].X, srcRanges[i + 1].Y);
-                            srcRanges.RemoveAt(i+1);
+                            srcRanges.RemoveAt(i + 1);
                         }
                         return;
                     }
@@ -90,9 +90,9 @@ namespace Barotrauma
             if (srcRanges == null) { return (ushort)(id + destOffset); }
 
             int currOffset = destOffset;
-            for (int i=0;i<srcRanges.Count;i++)
+            for (int i = 0; i < srcRanges.Count; i++)
             {
-                if (id >= srcRanges[i].X && (id <= srcRanges[i].Y || (i == srcRanges.Count-1)))
+                if (id >= srcRanges[i].X && id <= srcRanges[i].Y)
                 {
                     return (ushort)(id - srcRanges[i].X + 1 + currOffset);
                 }

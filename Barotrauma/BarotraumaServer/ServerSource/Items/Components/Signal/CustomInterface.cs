@@ -1,7 +1,5 @@
 ﻿using Barotrauma.Networking;
-using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -13,7 +11,7 @@ namespace Barotrauma.Items.Components
             string[] elementValues = new string[customInterfaceElementList.Count];
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                if (customInterfaceElementList[i].HasPropertyName)
                 {
                     elementValues[i] = msg.ReadString();
                 }
@@ -28,9 +26,17 @@ namespace Barotrauma.Items.Components
             {
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
-                    if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                    if (customInterfaceElementList[i].HasPropertyName)
                     {
-                        TextChanged(customInterfaceElementList[i], elementValues[i]);
+                        if (!customInterfaceElementList[i].IsIntegerInput)
+                        {
+                            TextChanged(customInterfaceElementList[i], elementValues[i]);
+                        }
+                        else
+                        {
+                            int.TryParse(elementValues[i], out int value);
+                            ValueChanged(customInterfaceElementList[i], value);
+                        }
                     }
                     else if (customInterfaceElementList[i].ContinuousSignal)
                     {
@@ -60,7 +66,7 @@ namespace Barotrauma.Items.Components
             //extradata contains an array of buttons clicked by a client (or nothing if nothing was clicked)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (!string.IsNullOrEmpty(customInterfaceElementList[i].PropertyName))
+                if (customInterfaceElementList[i].HasPropertyName)
                 {
                     msg.Write(customInterfaceElementList[i].Signal);
                 }

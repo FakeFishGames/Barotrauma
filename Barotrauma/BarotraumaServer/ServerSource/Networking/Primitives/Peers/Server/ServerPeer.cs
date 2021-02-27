@@ -233,7 +233,7 @@ namespace Barotrauma.Networking
                 case ConnectionInitialization.ContentPackageOrder:
                     outMsg.Write(GameMain.Server.ServerName);
 
-                    var mpContentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).Reverse().ToList();
+                    var mpContentPackages = GameMain.Config.AllEnabledPackages.Where(cp => cp.HasMultiplayerIncompatibleContent).ToList();
                     outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count);
                     for (int i = 0; i < mpContentPackages.Count; i++)
                     {

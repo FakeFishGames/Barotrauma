@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -83,7 +84,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (picker == null || picker.Removed || !picker.HasSelectedItem(item))
+            if (picker == null || picker.Removed || !picker.HeldItems.Contains(item))
             {
                 IsActive = false;
                 return;

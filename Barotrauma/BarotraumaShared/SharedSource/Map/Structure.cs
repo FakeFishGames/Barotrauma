@@ -14,12 +14,11 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
 {
-    partial class WallSection : ISpatialEntity
+    partial class WallSection : IIgnorable
     {
         public Rectangle rect;
         public float damage;
         public Gap gap;
-        private bool ignoreByAI;
 
         public Structure Wall { get; }
         public Vector2 Position => Wall.SectionPosition(Wall.Sections.IndexOf(this));
@@ -28,7 +27,8 @@ namespace Barotrauma
         public Submarine Submarine => Wall.Submarine;
         public Rectangle WorldRect => Submarine == null ? rect :
             new Rectangle((int)(rect.X + Submarine.Position.X), (int)(rect.Y + Submarine.Position.Y), rect.Width, rect.Height);
-        public bool IgnoreByAI => ignoreByAI;
+        public bool IgnoreByAI => OrderedToBeIgnored;
+        public bool OrderedToBeIgnored { get; set; }
 
         public WallSection(Rectangle rect, Structure wall, float damage = 0.0f)
         {
@@ -37,8 +37,6 @@ namespace Barotrauma
             this.damage = damage;
             Wall = wall;
         }
-
-        public void SetIgnoreByAI(bool ignore) => ignoreByAI = ignore;
     }
 
     partial class Structure : MapEntity, IDamageable, IServerSerializable, ISerializableEntity
@@ -843,7 +841,7 @@ namespace Barotrauma
 
         public int FindSectionIndex(Vector2 displayPos, bool world = false, bool clamp = false)
         {
-            if (!Sections.Any()) return -1;
+            if (Sections.None()) { return -1; }
 
             if (world && Submarine != null)
             {
@@ -857,7 +855,7 @@ namespace Barotrauma
                 displayPos.X += WallSectionSize - Sections[0].rect.Width;
             }
 
-            int index = (IsHorizontal) ?
+            int index = IsHorizontal ?
                 (int)Math.Floor((displayPos.X - rect.X) / WallSectionSize) :
                 (int)Math.Floor((rect.Y - displayPos.Y) / WallSectionSize);
 
@@ -1082,6 +1080,7 @@ namespace Barotrauma
 
             if (attacker != null && damageDiff != 0.0f)
             {
+                HumanAIController.StructureDamaged(this, damageDiff, attacker);
                 OnHealthChangedProjSpecific(attacker, damageDiff);
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
@@ -1089,7 +1088,7 @@ namespace Barotrauma
                     {
                         attacker.Info.IncreaseSkillLevel("mechanical", 
                             -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
-                            SectionPosition(sectionIndex, true));                                    
+                            SectionPosition(sectionIndex));                                    
                     }
                 }
             }
@@ -1301,6 +1300,7 @@ namespace Barotrauma
                 SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.Info.GameVersion);
             }
 
+            bool hasDamage = false;
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -1317,7 +1317,9 @@ namespace Barotrauma
                         }
                         else
                         {
-                            s.Sections[index].damage = subElement.GetAttributeFloat("damage", 0.0f);
+                            float damage = subElement.GetAttributeFloat("damage", 0.0f);
+                            s.Sections[index].damage = damage;
+                            hasDamage |= damage > 0.0f;
                         }
                         break;
                     case "upgrade":
@@ -1339,8 +1341,8 @@ namespace Barotrauma
                 }
             }
 
-            if (element.GetAttributeBool("flippedx", false)) s.FlipX(false);
-            if (element.GetAttributeBool("flippedy", false)) s.FlipY(false);
+            if (element.GetAttributeBool("flippedx", false)) { s.FlipX(false); }
+            if (element.GetAttributeBool("flippedy", false)) { s.FlipY(false); }
 
             //structures with a body drop a shadow by default
             if (element.Attribute("usedropshadow") == null)
@@ -1351,6 +1353,11 @@ namespace Barotrauma
             if (element.Attribute("noaitarget") == null)
             {
                 s.NoAITarget = prefab.NoAITarget;
+            }
+
+            if (hasDamage)
+            {
+                s.UpdateSections();
             }
 
             return s;

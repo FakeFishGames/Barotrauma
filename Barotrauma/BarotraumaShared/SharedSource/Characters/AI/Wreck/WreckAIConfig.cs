@@ -42,6 +42,12 @@ namespace Barotrauma
         [Serialize(0.5f, false)]
         public float AgentSpawnDelayRandomFactor { get; private set; }
 
+        [Serialize(1f, false)]
+        public float AgentSpawnDelayDifficultyMultiplier { get; private set; }
+
+        [Serialize(1f, false)]
+        public float AgentSpawnCountDifficultyMultiplier { get; private set; }
+
         [Serialize(0, false)]
         public int MinAgentsPerBrainRoom { get; private set; }
 

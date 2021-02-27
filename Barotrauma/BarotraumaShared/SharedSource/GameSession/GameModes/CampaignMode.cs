@@ -11,8 +11,7 @@ namespace Barotrauma
     abstract partial class CampaignMode : GameMode
     {
         const int MaxMoney = int.MaxValue / 2; //about 1 billion
-        const int InitialMoney = 2500;
-        public const int MaxInitialSubmarinePrice = 6000;
+        public const int InitialMoney = 8500;
 
         //duration of the cinematic + credits at the end of the campaign
         protected const float EndCinematicDuration = 240.0f;
@@ -700,7 +699,7 @@ namespace Barotrauma
         public void OutpostNPCAttacked(Character npc, Character attacker, AttackResult attackResult)
         {
             if (npc == null || attacker == null || npc.IsDead || npc.IsInstigator) { return; }
-            if (npc.TeamID != Character.TeamType.FriendlyNPC) { return; }
+            if (npc.TeamID != CharacterTeamType.FriendlyNPC) { return; }
             if (!attacker.IsRemotePlayer && attacker != Character.Controlled) { return; }
             Location location = Map?.CurrentLocation;
             if (location != null)

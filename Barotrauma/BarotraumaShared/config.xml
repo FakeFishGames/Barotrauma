@@ -43,6 +43,8 @@
     Grab="G"
     Shoot="PrimaryMouse"
     Deselect="SecondaryMouse"
+    TakeOneFromInventorySlot="LeftControl"
+    TakeHalfFromInventorySlot="LeftShift"
     SelectPreviousCharacter="Z"
     SelectNextCharacter="X" />
 

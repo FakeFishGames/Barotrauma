@@ -58,6 +58,11 @@ namespace Barotrauma
         {
             // Only continue when the get item sub objectives have been completed.
             if (subObjectives.Any()) { return; }
+            if (item.IgnoreByAI)
+            {
+                Abandon = true;
+                return;
+            }
             if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out Item suitableContainer))
             {
                 itemIndex = 0;

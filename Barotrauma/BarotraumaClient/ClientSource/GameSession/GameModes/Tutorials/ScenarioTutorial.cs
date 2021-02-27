@@ -122,7 +122,7 @@ namespace Barotrauma.Tutorials
             }
 
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", isRemotePlayer: false, hasAi: false);
-            character.TeamID = Character.TeamType.Team1;
+            character.TeamID = CharacterTeamType.Team1;
             Character.Controlled = character;
             character.GiveJobItems(null);
 

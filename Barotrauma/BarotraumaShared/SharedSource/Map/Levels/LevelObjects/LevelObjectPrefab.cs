@@ -37,11 +37,12 @@ namespace Barotrauma
             MainPathWall = 1,
             SidePathWall = 2,
             CaveWall = 4,
-            RuinWall = 8,
-            SeaFloor = 16,
-            MainPath = 32,
-            LevelStart = 64,
-            LevelEnd = 128,
+            NestWall = 8,
+            RuinWall = 16,
+            SeaFloor = 32,
+            MainPath = 64,
+            LevelStart = 128,
+            LevelEnd = 256,
             Wall = MainPathWall | SidePathWall | CaveWall,
         }
 
@@ -442,14 +443,14 @@ namespace Barotrauma
         partial void InitProjSpecific(XElement element);
 
 
-        public float GetCommonness(CaveGenerationParams generationParams)
+        public float GetCommonness(CaveGenerationParams generationParams, bool requireCaveSpecificOverride = true)
         {
             if (generationParams?.Identifier != null &&
                 OverrideCommonness.TryGetValue(generationParams.Identifier, out float commonness))
             {
                 return commonness;
             }
-            return 0.0f;
+            return requireCaveSpecificOverride ? 0.0f : Commonness;
         }
 
         public float GetCommonness(LevelGenerationParams generationParams)

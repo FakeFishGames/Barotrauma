@@ -53,13 +53,9 @@ namespace Barotrauma.Items.Components
             {
                 //if the Character using the panel has a wire item equipped
                 //and the wire hasn't been connected yet, draw it on the panel
-                for (int i = 0; i < character.SelectedItems.Length; i++)
+                foreach (Item item in character.HeldItems)
                 {
-                    Item selectedItem = character.SelectedItems[i];
-
-                    if (selectedItem == null) { continue; }
-
-                    Wire wireComponent = selectedItem.GetComponent<Wire>();
+                    Wire wireComponent = item.GetComponent<Wire>();
                     if (wireComponent != null)
                     {
                         equippedWire = wireComponent;
@@ -94,7 +90,8 @@ namespace Barotrauma.Items.Components
                             int linkIndex = c.FindWireIndex(DraggingConnected.Item);
                             if (linkIndex > -1 || panel.DisconnectedWires.Contains(DraggingConnected))
                             {
-                                Inventory.draggingItem = DraggingConnected.Item;
+                                Inventory.DraggingItems.Clear();
+                                Inventory.DraggingItems.Add(DraggingConnected.Item);
                             }
                         }
                     }
@@ -182,7 +179,11 @@ namespace Barotrauma.Items.Components
                         new Vector2(x + width / 2, y + height),
                         null, panel, "");
 
-                    if (DraggingConnected == equippedWire) { Inventory.draggingItem = equippedWire.Item; }
+                    if (DraggingConnected == equippedWire) 
+                    {
+                        Inventory.DraggingItems.Clear();
+                        Inventory.DraggingItems.Add(equippedWire.Item);
+                    }
                 }
             }
 
@@ -207,7 +208,7 @@ namespace Barotrauma.Items.Components
             //(so we don't drop the item when dropping the wire on a connection)
             if (mouseInRect || (GUI.MouseOn?.UserData is ConnectionPanel && GUI.MouseOn.MouseRect.Contains(PlayerInput.MousePosition))) 
             { 
-                Inventory.draggingItem = null; 
+                Inventory.DraggingItems.Clear(); 
             }       
         }
 
@@ -236,7 +237,7 @@ namespace Barotrauma.Items.Components
         {
             float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
 
-            for (int i = 0; i < MaxLinked; i++)
+            for (int i = 0; i < MaxWires; i++)
             {
                 if (wires[i] == null || wires[i].Hidden || (DraggingConnected == wires[i] && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
                 if (wires[i].HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }

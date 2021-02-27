@@ -65,6 +65,8 @@ namespace Barotrauma.MapCreatures.Behavior
         public readonly List<DamageParticle> DamageParticles = new List<DamageParticle>();
         public readonly List<DamageParticle> DeathParticles = new List<DamageParticle>();
 
+        public static bool AlwaysShowBallastFloraSprite = false;
+
         partial void LoadPrefab(XElement element)
         {
             string? branchAtlasPath = element.GetAttributeString("branchatlas", null);
@@ -125,7 +127,7 @@ namespace Barotrauma.MapCreatures.Behavior
             float particleAmount = Rand.Range(16, 32);
             for (int i = 0; i < particleAmount; i++)
             {
-                GameMain.ParticleManager.CreateParticle("shrapnel", pos, Rand.Vector(Rand.Range(-50f, 50.0f)));
+                GameMain.ParticleManager.CreateParticle("shrapnel", pos, Rand.Vector(Rand.Range(0f, 250.0f)), Rand.Range(0f, 360.0f));
             }
         }
 

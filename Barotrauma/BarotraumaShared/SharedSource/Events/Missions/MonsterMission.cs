@@ -125,7 +125,7 @@ namespace Barotrauma
             foreach (var monster in monsters)
             {
                 monster.Enabled = false;
-                if (monster.Params.AI.EnforceAggressiveBehaviorForMissions)
+                if (monster.Params.AI != null && monster.Params.AI.EnforceAggressiveBehaviorForMissions)
                 {
                     foreach (var targetParam in monster.Params.AI.Targets)
                     {

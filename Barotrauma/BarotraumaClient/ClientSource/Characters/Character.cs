@@ -457,7 +457,7 @@ namespace Barotrauma
                 if (draggingItemToWorld)
                 {
                     if (item.OwnInventory == null || 
-                        !item.OwnInventory.CanBePut(CharacterInventory.draggingItem) ||
+                        !item.OwnInventory.CanBePut(CharacterInventory.DraggingItems.First()) ||
                         !CanAccessInventory(item.OwnInventory))
                     {
                         continue;
@@ -561,7 +561,7 @@ namespace Barotrauma
         {
             if (InvisibleTimer > 0.0f)
             {
-                if (Controlled == null || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+                if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
                 {
                     InvisibleTimer = 0.0f;
                 }
@@ -579,15 +579,15 @@ namespace Barotrauma
                 {
                     soundTimer -= deltaTime;
                 }
-                else if (AIController != null)
+                else if (AIController is EnemyAIController enemyAI)
                 {
-                    switch (AIController.State)
+                    switch (enemyAI.State)
                     {
                         case AIState.Attack:
                             PlaySound(CharacterSound.SoundType.Attack);
                             break;
                         default:
-                            var petBehavior = (AIController as EnemyAIController)?.PetBehavior;
+                            var petBehavior = enemyAI.PetBehavior;
                             if (petBehavior != null && petBehavior.Happiness < petBehavior.MaxHappiness * 0.25f)
                             {
                                 PlaySound(CharacterSound.SoundType.Unhappy);
@@ -741,7 +741,7 @@ namespace Barotrauma
 
             if (speechBubbleTimer > 0.0f)
             {
-                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 30,
+                GUI.SpeechBubbleIcon.Draw(spriteBatch, pos - Vector2.UnitY * 5,
                     speechBubbleColor * Math.Min(speechBubbleTimer, 1.0f), 0.0f,
                     Math.Min(speechBubbleTimer, 1.0f));
             }
@@ -803,7 +803,7 @@ namespace Barotrauma
                     Color nameColor = Color.White;
                     if (Controlled != null && TeamID != Controlled.TeamID)
                     {
-                        nameColor = TeamID == TeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+                        nameColor = TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
                     }
                     if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
                     {
@@ -902,7 +902,7 @@ namespace Barotrauma
             }
             var selectedSound = matchingSounds.GetRandom();
             if (selectedSound?.Sound == null) { return; }
-            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: CurrentHull);
+            soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: CurrentHull, ignoreMuffling: selectedSound.IgnoreMuffling);
             soundTimer = soundInterval;
         }
 

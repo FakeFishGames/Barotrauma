@@ -127,10 +127,14 @@ namespace Barotrauma
             {
                 var orderPrefab = Order.GetPrefab(autonomousObjective.identifier);
                 if (orderPrefab == null) { throw new Exception($"Could not find a matching prefab by the identifier: '{autonomousObjective.identifier}'"); }
-                var item = orderPrefab.MustSetTarget ? orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID)?.GetRandom() : null;
+                Item item = null;
+                if (orderPrefab.MustSetTarget)
+                {
+                    item = orderPrefab.GetMatchingItems(character.Submarine, mustBelongToPlayerSub: false, requiredTeam: character.Info.TeamID, interactableFor: character)?.GetRandom();
+                }
                 var order = new Order(orderPrefab, item ?? character.CurrentHull as Entity, orderPrefab.GetTargetItemComponent(item), orderGiver: character);
                 if (order == null) { continue; }
-                if (autonomousObjective.ignoreAtOutpost && Level.IsLoadedOutpost && character.TeamID != Character.TeamType.FriendlyNPC) { continue; }
+                if (autonomousObjective.ignoreAtOutpost && Level.IsLoadedOutpost && character.TeamID != CharacterTeamType.FriendlyNPC) { continue; }
                 var objective = CreateObjective(order, autonomousObjective.option, character, isAutonomous: true, autonomousObjective.priorityModifier);
                 if (objective != null && objective.CanBeCompleted)
                 {
@@ -273,7 +277,8 @@ namespace Barotrauma
             CurrentOrder = objective;
         }
 
-        public void SetOrder(Order order, string option, Character orderGiver)
+        private CoroutineHandle speakRoutine;
+        public void SetOrder(Order order, string option, Character orderGiver, bool speak)
         {
             if (character.IsDead)
             {
@@ -294,6 +299,49 @@ namespace Barotrauma
             {
                 // This should be redundant, because all the objectives are reset when they are selected as active.
                 CurrentOrder.Reset();
+                if (speak)
+                {
+                    character.Speak(TextManager.Get("DialogAffirmative"), null, 1.0f);
+                    if (speakRoutine != null)
+                    {
+                        CoroutineManager.StopCoroutines(speakRoutine);
+                    }
+                    speakRoutine = CoroutineManager.InvokeAfter(() =>
+                    {
+                        if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+                        if (CurrentOrder != null && character.SpeechImpediment < 100.0f)
+                        {
+                            if (CurrentOrder is AIObjectiveRepairItems repairItems && repairItems.Targets.None())
+                            {
+                                character.Speak(TextManager.Get("DialogNoRepairTargets"), null, 3.0f, "norepairtargets");
+                            }
+                            else if (CurrentOrder is AIObjectiveChargeBatteries chargeBatteries && chargeBatteries.Targets.None())
+                            {
+                                character.Speak(TextManager.Get("DialogNoBatteries"), null, 3.0f, "nobatteries");
+                            }
+                            else if (CurrentOrder is AIObjectiveExtinguishFires extinguishFires && extinguishFires.Targets.None())
+                            {
+                                character.Speak(TextManager.Get("DialogNoFire"), null, 3.0f, "nofire");
+                            }
+                            else if (CurrentOrder is AIObjectiveFixLeaks fixLeaks && fixLeaks.Targets.None())
+                            {
+                                character.Speak(TextManager.Get("DialogNoLeaks"), null, 3.0f, "noleaks");
+                            }
+                            else if (CurrentOrder is AIObjectiveFightIntruders fightIntruders && fightIntruders.Targets.None())
+                            {
+                                character.Speak(TextManager.Get("DialogNoEnemies"), null, 3.0f, "noenemies");
+                            }
+                            else if (CurrentOrder is AIObjectiveRescueAll rescueAll && rescueAll.Targets.None())
+                            {
+                                character.Speak(TextManager.Get("DialogNoRescueTargets"), null, 3.0f, "norescuetargets");
+                            }
+                            else if (CurrentOrder is AIObjectivePumpWater pumpWater && pumpWater.Targets.None())
+                            {
+                                character.Speak(TextManager.Get("DialogNoPumps"), null, 3.0f, "nopumps");
+                            }
+                        }
+                    }, 3);
+                }
             }
         }
 
@@ -320,8 +368,7 @@ namespace Barotrauma
                 case "wait":
                     newObjective = new AIObjectiveGoTo(order.TargetSpatialEntity ?? character, character, this, repeat: true, priorityModifier: priorityModifier)
                     {
-                        AllowGoingOutside = order.TargetSpatialEntity == null ? character.CurrentHull == null :
-                            character.Submarine == null || character.Submarine != order.TargetSpatialEntity.Submarine
+                        AllowGoingOutside = character.Submarine == null || (order.TargetSpatialEntity != null && character.Submarine != order.TargetSpatialEntity.Submarine)
                     };
                     break;
                 case "fixleaks":
@@ -345,7 +392,7 @@ namespace Barotrauma
                 case "pumpwater":
                     if (order.TargetItemComponent is Pump targetPump)
                     {
-                        if (order.TargetItemComponent.Item.NonInteractable) { return null; }
+                        if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
                         newObjective = new AIObjectiveOperateItem(targetPump, character, this, option, false, priorityModifier: priorityModifier)
                         {
                             IsLoop = true,
@@ -370,7 +417,7 @@ namespace Barotrauma
                     var steering = (order?.TargetEntity as Item)?.GetComponent<Steering>();
                     if (steering != null) { steering.PosToMaintain = steering.Item.Submarine?.WorldPosition; }
                     if (order.TargetItemComponent == null) { return null; }
-                    if (order.TargetItemComponent.Item.NonInteractable) { return null; }
+                    if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option,
                         requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
                     {
@@ -403,11 +450,26 @@ namespace Barotrauma
                     };
                     break;
                 case "cleanupitems":
-                    newObjective = new AIObjectiveCleanupItems(character, this, priorityModifier, order.TargetEntity as Item);
+                    if (order.TargetEntity is Item targetItem)
+                    {
+                        if (targetItem.HasTag("allowcleanup") && targetItem.ParentInventory == null && targetItem.OwnInventory != null)
+                        {
+                            // Target all items inside the container
+                            newObjective = new AIObjectiveCleanupItems(character, this, targetItem.OwnInventory.AllItems, priorityModifier);
+                        }
+                        else
+                        {
+                            newObjective = new AIObjectiveCleanupItems(character, this, targetItem, priorityModifier);
+                        }
+                    }
+                    else
+                    {
+                        newObjective = new AIObjectiveCleanupItems(character, this, priorityModifier: priorityModifier);
+                    }
                     break;
                 default:
                     if (order.TargetItemComponent == null) { return null; }
-                    if (order.TargetItemComponent.Item.NonInteractable) { return null; }
+                    if (!order.TargetItemComponent.Item.IsInteractable(character)) { return null; }
                     newObjective = new AIObjectiveOperateItem(order.TargetItemComponent, character, this, option,
                         requireEquip: false, useController: order.UseController, controller: order.ConnectedController, priorityModifier: priorityModifier)
                     {

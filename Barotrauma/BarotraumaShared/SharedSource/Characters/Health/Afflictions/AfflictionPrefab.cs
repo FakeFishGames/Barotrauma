@@ -90,6 +90,10 @@ namespace Barotrauma
                 AttachLimbName = null;
                 AttachLimbType = LimbType.None;
             }
+
+            SendMessages = element.GetAttributeBool("sendmessages", true);
+            CauseSpeechImpediment = element.GetAttributeBool("causespeechimpediment", true);
+            NeedsAir = element.GetAttributeBool("needsair", false);
         }
 
         // Use any of these to define which limb the appendage is attached to.
@@ -101,6 +105,10 @@ namespace Barotrauma
         public readonly string HuskedSpeciesName;
         public readonly string[] TargetSpecies;
         public const string Tag = "[speciesname]";
+
+        public readonly bool SendMessages;
+        public readonly bool CauseSpeechImpediment;
+        public readonly bool NeedsAir;
     }
 
     class AfflictionPrefab : IPrefab, IDisposable
@@ -572,7 +580,7 @@ namespace Barotrauma
 
             IconColors = element.GetAttributeColorArray("iconcolors", null);
             AchievementOnRemoved = element.GetAttributeString("achievementonremoved", "");
-            
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

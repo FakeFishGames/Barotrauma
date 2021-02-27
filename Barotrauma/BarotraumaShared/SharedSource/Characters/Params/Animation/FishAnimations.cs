@@ -7,11 +7,11 @@ namespace Barotrauma
     {
         public static FishWalkParams GetDefaultAnimParams(Character character)
         {
-            return Check(character) ? GetDefaultAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk) : Empty;
+            return Check(character) ? GetDefaultAnimParams<FishWalkParams>(character, AnimationType.Walk) : Empty;
         }
         public static FishWalkParams GetAnimParams(Character character, string fileName = null)
         {
-            return Check(character) ? GetAnimParams<FishWalkParams>(character.SpeciesName, AnimationType.Walk, fileName) : Empty;
+            return Check(character) ? GetAnimParams<FishWalkParams>(character.VariantOf ?? character.SpeciesName, AnimationType.Walk, fileName) : Empty;
         }
 
         protected static FishWalkParams Empty = new FishWalkParams();
@@ -23,11 +23,11 @@ namespace Barotrauma
     {
         public static FishRunParams GetDefaultAnimParams(Character character)
         {
-            return Check(character) ? GetDefaultAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run) : Empty;
+            return Check(character) ? GetDefaultAnimParams<FishRunParams>(character, AnimationType.Run) : Empty;
         }
         public static FishRunParams GetAnimParams(Character character, string fileName = null)
         {
-            return Check(character) ? GetAnimParams<FishRunParams>(character.SpeciesName, AnimationType.Run, fileName) : Empty;
+            return Check(character) ? GetAnimParams<FishRunParams>(character.VariantOf ?? character.SpeciesName, AnimationType.Run, fileName) : Empty;
         }
 
         protected static FishRunParams Empty = new FishRunParams();
@@ -37,10 +37,10 @@ namespace Barotrauma
 
     class FishSwimFastParams : FishSwimParams
     {
-        public static FishSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast);
+        public static FishSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimFastParams>(character, AnimationType.SwimFast);
         public static FishSwimFastParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<FishSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
+            return GetAnimParams<FishSwimFastParams>(character.VariantOf ?? character.SpeciesName, AnimationType.SwimFast, fileName);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<FishSwimFastParams>();
@@ -48,10 +48,10 @@ namespace Barotrauma
 
     class FishSwimSlowParams : FishSwimParams
     {
-        public static FishSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow);
+        public static FishSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<FishSwimSlowParams>(character, AnimationType.SwimSlow);
         public static FishSwimSlowParams GetAnimParams(Character character, string fileName = null)
         {
-            return GetAnimParams<FishSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);
+            return GetAnimParams<FishSwimSlowParams>(character.VariantOf ?? character.SpeciesName, AnimationType.SwimSlow, fileName);
         }
 
         public override void StoreSnapshot() => StoreSnapshot<FishSwimSlowParams>();

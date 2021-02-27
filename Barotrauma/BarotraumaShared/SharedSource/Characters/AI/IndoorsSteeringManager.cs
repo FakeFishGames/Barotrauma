@@ -50,9 +50,9 @@ namespace Barotrauma
         /// Returns true if the current or the next node is in ladders.
         /// </summary>
         public bool InLadders =>
-            currentPath != null &&
-            currentPath.CurrentNode != null && (currentPath.CurrentNode.Ladders != null && !currentPath.CurrentNode.Ladders.Item.NonInteractable ||
-            (currentPath.NextNode != null && currentPath.NextNode.Ladders != null && !currentPath.NextNode.Ladders.Item.NonInteractable));
+            currentPath != null && currentPath.CurrentNode != null &&
+            (currentPath.CurrentNode.Ladders != null && currentPath.CurrentNode.Ladders.Item.IsInteractable(character) ||
+             (currentPath.NextNode != null && currentPath.NextNode.Ladders != null && currentPath.NextNode.Ladders.Item.IsInteractable(character)));
 
         /// <summary>
         /// Returns true if any node in the path is in stairs
@@ -70,7 +70,7 @@ namespace Barotrauma
                 if (currentPath.NextNode == null) { return false; }
                 var currentLadder = currentPath.CurrentNode.Ladders;
                 if (currentLadder == null) { return false; }
-                if (currentLadder.Item.NonInteractable) { return false; }
+                if (!currentLadder.Item.IsInteractable(character)) { return false; }
                 var nextLadder = GetNextLadder();
                 return nextLadder != null && nextLadder == currentLadder;
             }
@@ -123,7 +123,7 @@ namespace Barotrauma
         {
             if (currentPath == null) { return null; }
             if (currentPath.NextNode == null) { return null; }
-            if (currentPath.NextNode.Ladders != null && !currentPath.NextNode.Ladders.Item.NonInteractable)
+            if (currentPath.NextNode.Ladders != null && currentPath.NextNode.Ladders.Item.IsInteractable(character))
             {
                 return currentPath.NextNode.Ladders;
             }
@@ -134,7 +134,7 @@ namespace Barotrauma
                 {
                     var node = currentPath.Nodes[index];
                     if (node == null) { return null; }
-                    if (node.Ladders != null && !node.Ladders.Item.NonInteractable)
+                    if (node.Ladders != null && node.Ladders.Item.IsInteractable(character))
                     {
                         return node.Ladders;
                     }
@@ -146,7 +146,7 @@ namespace Barotrauma
                         {
                             node = currentPath.Nodes[index];
                             if (node == null) { return null; }
-                            if (node.Ladders != null && !node.Ladders.Item.NonInteractable)
+                            if (node.Ladders != null && node.Ladders.Item.IsInteractable(character))
                             {
                                 return node.Ladders;
                             }
@@ -295,7 +295,7 @@ namespace Barotrauma
             // Only humanoids can climb ladders
             bool canClimb = character.AnimController is HumanoidAnimController && !character.LockHands;
             Ladder currentLadder = currentPath.CurrentNode.Ladders;
-            if (currentLadder != null && currentLadder.Item.NonInteractable)
+            if (currentLadder != null && !currentLadder.Item.IsInteractable(character))
             {
                 currentLadder = null;
             }
@@ -303,7 +303,7 @@ namespace Barotrauma
             var ladders = currentLadder ?? nextLadder;
             if (canClimb && !isDiving && ladders != null && character.SelectedConstruction != ladders.Item)
             {
-                if (IsNextNodeLadder || currentPath.CurrentIndex == currentPath.Nodes.Count - 1)
+                if (IsNextNodeLadder || currentPath.Finished)
                 {
                     if (character.CanInteractWith(ladders.Item))
                     {
@@ -361,7 +361,7 @@ namespace Barotrauma
                             nextLadder.Item.TryInteract(character, false, true);
                         }
                     }
-                    if (nextLadder != null || isAboveFloor)
+                    if (isAboveFloor || nextLadderSameAsCurrent)
                     {
                         currentPath.SkipToNextNode();
                     }
@@ -387,8 +387,7 @@ namespace Barotrauma
                     character.SelectedConstruction = null;
                 }
                 var door = currentPath.CurrentNode.ConnectedDoor;
-                bool blockedByDoor = door != null && !door.IsOpen && !door.IsBroken;
-                if (!blockedByDoor)
+                if (door == null || door.CanBeTraversed)
                 {
                     float multiplier = MathHelper.Lerp(1, 10, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
                     float targetDistance = collider.GetSize().X * multiplier;
@@ -421,10 +420,9 @@ namespace Barotrauma
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
                 var door = currentPath.CurrentNode.ConnectedDoor;
-                bool blockedByDoor = door != null && !door.IsOpen && !door.IsBroken;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
                 float targetDistance = Math.Max(collider.radius * margin, minWidth);
-                if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && !blockedByDoor)
+                if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && (door == null || door.CanBeTraversed))
                 {
                     currentPath.SkipToNextNode();
                 }
@@ -438,18 +436,20 @@ namespace Barotrauma
 
         private bool CanAccessDoor(Door door, Func<Controller, bool> buttonFilter = null)
         {
-            if (door.IsOpen) { return true; }
-            if (door.Item.NonInteractable) { return false; }
-            if (CanBreakDoors) { return true; }
-            if (door.IsStuck || door.IsJammed) { return false; }
-            if (!canOpenDoors || character.LockHands) { return false; }
+            if (door.IsOpen || door.IsBroken) { return true; }
+            if (!door.Item.IsInteractable(character)) { return false; }
+            if (!CanBreakDoors)
+            {
+                if (door.IsStuck || door.IsJammed) { return false; }
+                if (!canOpenDoors || character.LockHands) { return false; }
+            }
             if (door.HasIntegratedButtons)
             {
-                return door.CanBeOpenedWithoutTools(character);
+                return door.HasAccess(character) || CanBreakDoors;
             }
             else
             {
-                return door.Item.GetConnectedComponents<Controller>(true).Any(b => !b.Item.NonInteractable && b.HasAccess(character) && (buttonFilter == null || buttonFilter(b)));
+                return door.Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character) && (buttonFilter == null || buttonFilter(b))) || CanBreakDoors;
             }
         }
 
@@ -624,18 +624,19 @@ namespace Barotrauma
                 }
             }
 
+            bool nextNodeAboveWaterLevel = nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y;
             //non-humanoids can't climb up ladders
             if (!(character.AnimController is HumanoidAnimController))
             {
-                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (nextNode.Waypoint.Ladders.Item.NonInteractable || character.LockHands)||
+                if (node.Waypoint.Ladders != null && nextNode.Waypoint.Ladders != null && (!nextNode.Waypoint.Ladders.Item.IsInteractable(character) || character.LockHands)||
                     (nextNode.Position.Y - node.Position.Y > 1.0f && //more than one sim unit to climb up
-                    nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y)) //upper node not underwater
+                    nextNodeAboveWaterLevel)) //upper node not underwater
                 {
                     return null;
                 }
             }
 
-            if (node.Waypoint != null && node.Waypoint.CurrentHull != null)
+            if (node.Waypoint.CurrentHull != null)
             {
                 var hull = node.Waypoint.CurrentHull;
                 if (hull.FireSources.Count > 0)
@@ -645,23 +646,26 @@ namespace Barotrauma
                         penalty += fs.Size.X * 10.0f;
                     }
                 }
-                if (character.NeedsAir && hull.WaterVolume / hull.Rect.Width > 100.0f)
+                if (character.NeedsAir)
                 {
-                    if (!HumanAIController.HasDivingSuit(character))
+                    if (hull.WaterVolume / hull.Rect.Width > 100.0f)
                     {
-                        penalty += 500.0f;
+                        if (!HumanAIController.HasDivingSuit(character))
+                        {
+                            penalty += 500.0f;
+                        }
+                    }
+                    if (character.PressureProtection < 10.0f && hull.WaterVolume > hull.Volume)
+                    {
+                        penalty += 1000.0f;
                     }
                 }
-                if (character.PressureProtection < 10.0f && hull.WaterVolume > hull.Volume)
-                {
-                    penalty += 1000.0f;
-                }
-            }
 
-            float yDist = Math.Abs(node.Position.Y - nextNode.Position.Y);
-            if (node.Waypoint.Ladders == null && nextNode.Waypoint.Ladders == null)
-            {
-                penalty += yDist * 10.0f;
+                float yDist = Math.Abs(node.Position.Y - nextNode.Position.Y);
+                if (nextNodeAboveWaterLevel && node.Waypoint.Ladders == null && nextNode.Waypoint.Ladders == null && node.Waypoint.Stairs == null && nextNode.Waypoint.Stairs == null)
+                {
+                    penalty += yDist * 10.0f;
+                }
             }
 
             return penalty;

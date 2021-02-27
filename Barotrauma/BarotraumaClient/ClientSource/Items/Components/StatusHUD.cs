@@ -148,26 +148,41 @@ namespace Barotrauma.Items.Components
             List<string> texts = new List<string>();
             List<Color> textColors = new List<Color>();
 
-            if (target.Info != null)
-            {
-                texts.Add(target.Name);
-                textColors.Add(GUI.Style.TextColor);
-            }
+            texts.Add(target.Info == null ? target.DisplayName : target.Info.DisplayName);
+            textColors.Add(GUI.Style.TextColor);            
             
             if (target.IsDead)
             {
                 texts.Add(TextManager.Get("Deceased"));
                 textColors.Add(GUI.Style.Red);
-                texts.Add(
-                    target.CauseOfDeath.Affliction?.CauseOfDeathDescription ??
-                    TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString())));
-                textColors.Add(GUI.Style.Red);
+                if (target.CauseOfDeath != null)
+                {
+                    texts.Add(
+                        target.CauseOfDeath.Affliction?.CauseOfDeathDescription ??
+                        TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + target.CauseOfDeath.Type.ToString())));
+                    textColors.Add(GUI.Style.Red);
+                }
             }
             else
             {
                 if (!string.IsNullOrEmpty(target.customInteractHUDText) && target.AllowCustomInteract)
                 {
                     texts.Add(target.customInteractHUDText);
+                    textColors.Add(GUI.Style.Green);
+                }
+                if (!target.IsIncapacitated && target.IsPet)
+                {
+                    texts.Add(CharacterHUD.GetCachedHudText("PlayHint", GameMain.Config.KeyBindText(InputType.Use)));
+                    textColors.Add(GUI.Style.Green);
+                }
+                if (target.CharacterHealth.UseHealthWindow && equipper?.FocusedCharacter == target && equipper.CanInteractWith(target, 160f, false))
+                {
+                    texts.Add(CharacterHUD.GetCachedHudText("HealHint", GameMain.Config.KeyBindText(InputType.Health)));
+                    textColors.Add(GUI.Style.Green);
+                }
+                if (target.CanBeDragged)
+                {
+                    texts.Add(CharacterHUD.GetCachedHudText("GrabHint", GameMain.Config.KeyBindText(InputType.Grab)));
                     textColors.Add(GUI.Style.Green);
                 }
 
@@ -181,7 +196,7 @@ namespace Barotrauma.Items.Components
                     texts.Add(TextManager.Get("Stunned"));
                     textColors.Add(GUI.Style.Orange);
                 }
-                
+
                 int oxygenTextIndex = MathHelper.Clamp((int)Math.Floor((1.0f - (target.Oxygen / 100.0f)) * OxygenTexts.Length), 0, OxygenTexts.Length - 1);
                 texts.Add(OxygenTexts[oxygenTextIndex]);
                 textColors.Add(Color.Lerp(GUI.Style.Red, GUI.Style.Green, target.Oxygen / 100.0f));

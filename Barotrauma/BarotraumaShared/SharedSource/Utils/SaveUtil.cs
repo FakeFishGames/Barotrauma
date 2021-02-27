@@ -482,6 +482,13 @@ namespace Barotrauma
                 }
             }
         }
+        public static void DeleteDownloadedSubs()
+        {
+            if (Directory.Exists(SubmarineDownloadFolder)) 
+            { 
+                ClearFolder(SubmarineDownloadFolder);
+            }
+        }
 
         public static void CleanUnnecessarySaveFiles()
         {

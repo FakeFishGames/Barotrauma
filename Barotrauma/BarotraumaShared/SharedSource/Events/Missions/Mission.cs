@@ -85,11 +85,6 @@ namespace Barotrauma
             get { return true; }
         }
 
-        public virtual int TeamCount
-        {
-            get { return 1; }
-        }
-
         public virtual IEnumerable<Vector2> SonarPositions
         {
             get { return Enumerable.Empty<Vector2>(); }
@@ -184,11 +179,6 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime) { }
 
-        public virtual void AssignTeamIDs(List<Networking.Client> clients)
-        {
-            clients.ForEach(c => c.TeamID = Character.TeamType.Team1);
-        }
-
         protected void ShowMessage(int missionState)
         {
             ShowMessageProjSpecific(missionState);
@@ -238,7 +228,16 @@ namespace Barotrauma
         {
             if (GameMain.GameSession.GameMode is CampaignMode && !IsClient)
             {
-                int srcIndex = Locations[0].Type.Identifier.Equals(from, StringComparison.OrdinalIgnoreCase) ? 0 : 1;
+                int srcIndex = -1;
+                for (int i = 0; i < Locations.Length; i++)
+                {
+                    if (Locations[i].Type.Identifier.Equals(from, StringComparison.OrdinalIgnoreCase))
+                    {
+                        srcIndex = i;
+                        break;
+                    }
+                }
+                if (srcIndex == -1) { return; }
                 var upgradeLocation = Locations[srcIndex];
                 upgradeLocation.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(to, StringComparison.OrdinalIgnoreCase)));
             }

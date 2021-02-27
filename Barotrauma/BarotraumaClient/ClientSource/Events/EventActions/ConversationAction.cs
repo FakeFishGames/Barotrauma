@@ -210,9 +210,33 @@ namespace Barotrauma
                         }
                     };
 
+                    double allowCloseTime = Timing.TotalTime + 0.5;
                     closeButton.Children.ForEach(child => child.SpriteEffects = SpriteEffects.FlipVertically);
                     closeButton.Frame.FadeIn(0.5f, 0.5f);
                     closeButton.SlideIn(0.5f, 0.33f, 16, SlideDirection.Down);
+
+                    InputType? closeInput = null;
+                    if (GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Use;
+                    }
+                    else if (GameMain.Config.KeyBind(InputType.Select).MouseButton == MouseButton.None)
+                    {
+                        closeInput = InputType.Select;
+                    }
+                    if (closeInput.HasValue)
+                    {
+                        closeButton.ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("Close")} ([InputType.{closeInput.Value}])");
+                        closeButton.OnAddedToGUIUpdateList += (GUIComponent component) =>
+                        {
+                            if (Timing.TotalTime > allowCloseTime && PlayerInput.KeyHit(closeInput.Value))
+                            {
+                                GUIButton btn = component as GUIButton;
+                                btn?.OnClicked(btn, btn.UserData);
+                                btn?.Flash(GUI.Style.Green);
+                            }
+                        };
+                    }
                 }
             
                 for (int i = 0; i < optionButtons.Count; i++)

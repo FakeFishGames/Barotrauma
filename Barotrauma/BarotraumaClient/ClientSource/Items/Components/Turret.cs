@@ -181,14 +181,14 @@ namespace Barotrauma.Items.Components
             {
                 if (moveSoundChannel == null && startMoveSound != null)
                 {
-                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound.Sound, item.WorldPosition, startMoveSound.Volume, startMoveSound.Range);
+                    moveSoundChannel = SoundPlayer.PlaySound(startMoveSound.Sound, item.WorldPosition, startMoveSound.Volume, startMoveSound.Range, ignoreMuffling: startMoveSound.IgnoreMuffling);
                 }
                 else if (moveSoundChannel == null || !moveSoundChannel.IsPlaying)
                 {
                     if (moveSound != null)
                     {
                         moveSoundChannel.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, item.WorldPosition, moveSound.Volume, moveSound.Range);
+                        moveSoundChannel = SoundPlayer.PlaySound(moveSound.Sound, item.WorldPosition, moveSound.Volume, moveSound.Range, ignoreMuffling: moveSound.IgnoreMuffling);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = true;
                     }
                 }
@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
                     if (endMoveSound != null && moveSoundChannel.Sound != endMoveSound.Sound)
                     {
                         moveSoundChannel.FadeOutAndDispose();
-                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, item.WorldPosition, endMoveSound.Volume, endMoveSound.Range);
+                        moveSoundChannel = SoundPlayer.PlaySound(endMoveSound.Sound, item.WorldPosition, endMoveSound.Volume, endMoveSound.Range, ignoreMuffling: endMoveSound.IgnoreMuffling);
                         if (moveSoundChannel != null) moveSoundChannel.Looping = false;
                     }
                     else if (!moveSoundChannel.IsPlaying)
@@ -286,40 +286,26 @@ namespace Barotrauma.Items.Components
                 rotation + MathHelper.PiOver2, item.Scale,
                 SpriteEffects.None, item.SpriteDepth + (barrelSprite.Depth - item.Sprite.Depth));
 
-            if (!GameMain.DebugDraw && (!editing || GUI.DisableHUD || !item.IsSelected)) { return; }
+            if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }
 
             const float widgetRadius = 60.0f;
 
             Vector2 center = new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2));
             GUI.DrawLine(spriteBatch,
                 drawPos,
-                drawPos + new Vector2((float)Math.Cos((maxRotation + minRotation) / 2), (float)Math.Sin((maxRotation + minRotation) / 2)) * widgetRadius,
+                drawPos + center * widgetRadius,
                 Color.LightGreen);
-
-            if (GameMain.DebugDraw)
-            {
-                center = new Vector2((float)Math.Cos(targetRotation), (float)Math.Sin(targetRotation));
-                GUI.DrawLine(spriteBatch,
-                    drawPos,
-                    drawPos + center * widgetRadius,
-                    Color.Red);
-
-                for (int i = 0; i < 5; i++)
-                {
-                    center = new Vector2((float)Math.Cos(rotation + (angularVelocity * 0.05f * i)), (float)Math.Sin(rotation + (angularVelocity * 0.05f * i)));
-                    GUI.DrawLine(spriteBatch,
-                        drawPos,
-                        drawPos + center * widgetRadius,
-                        Color.Lerp(Color.Black, Color.Yellow, i * 0.25f));
-                }
-            }
 
             const float coneRadius = 300.0f;
             float radians = maxRotation - minRotation;
             float circleRadius = coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
             float lineThickness = 1f / Screen.Selected.Cam.Zoom;
 
-            if (radians > Math.PI * 2)
+            if (Math.Abs(minRotation - maxRotation) < 0.02f)
+            {
+                spriteBatch.DrawLine(drawPos, drawPos + center * circleRadius, GUI.Style.Green, thickness: lineThickness);
+            }
+            else if (radians > Math.PI * 2)
             {
                 spriteBatch.DrawCircle(drawPos, circleRadius, 180, GUI.Style.Red, thickness: lineThickness);
             }
@@ -510,13 +496,8 @@ namespace Barotrauma.Items.Components
             List<Item> availableAmmo = new List<Item>();
             foreach (MapEntity e in item.linkedTo)
             {
-                var linkedItem = e as Item;
-                if (linkedItem == null) continue;
-
-                var itemContainer = linkedItem.GetComponent<ItemContainer>();
-                if (itemContainer?.Inventory?.Items == null) continue;   
-                
-                availableAmmo.AddRange(itemContainer.Inventory.Items);                
+                if (!(e is Item linkedItem)) { continue; }
+                availableAmmo.AddRange(linkedItem.ContainedItems);                
             }            
                         
             float chargeRate = 
@@ -558,7 +539,7 @@ namespace Barotrauma.Items.Components
                 {
                     // TODO: Optimize? Creates multiple new objects per frame?
                     Inventory.DrawSlot(spriteBatch, null,
-                        new InventorySlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
+                        new VisualSlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
                         availableAmmo[i], -1, true);
                 }
                 if (flashNoAmmo)

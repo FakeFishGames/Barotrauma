@@ -31,57 +31,54 @@ namespace Barotrauma
 
             GUI.DrawString(spriteBatch, pos + textOffset, Character.Name, Color.White, Color.Black);
 
-            if (ObjectiveManager != null)
+            var currentOrder = ObjectiveManager.CurrentOrder;
+            if (currentOrder != null)
             {
-                var currentOrder = ObjectiveManager.CurrentOrder;
-                if (currentOrder != null)
+                GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"ORDER: {currentOrder.DebugTag} ({currentOrder.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+            }
+            else if (ObjectiveManager.WaitTimer > 0)
+            {
+                GUI.DrawString(spriteBatch, pos + new Vector2(0, 20), $"Waiting... {ObjectiveManager.WaitTimer.FormatZeroDecimal()}", Color.White, Color.Black);
+            }
+            var currentObjective = ObjectiveManager.CurrentObjective;
+            if (currentObjective != null)
+            {
+                int offset = currentOrder != null ? 20 : 0;
+                if (currentOrder == null || currentOrder.Priority <= 0)
                 {
-                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20), $"ORDER: {currentOrder.DebugTag} ({currentOrder.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20 + offset), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
                 }
-                else if (ObjectiveManager.WaitTimer > 0)
+                var subObjective = currentObjective.CurrentSubObjective;
+                if (subObjective != null)
                 {
-                    GUI.DrawString(spriteBatch, pos + new Vector2(0, 20), $"Waiting... {ObjectiveManager.WaitTimer.FormatZeroDecimal()}", Color.White, Color.Black);
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40 + offset), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
                 }
-                var currentObjective = ObjectiveManager.CurrentObjective;
-                if (currentObjective != null)
+                var activeObjective = ObjectiveManager.GetActiveObjective();
+                if (activeObjective != null)
                 {
-                    int offset = currentOrder != null ? 20 : 0;
-                    if (currentOrder == null || currentOrder.Priority <= 0)
-                    {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 20 + offset), $"MAIN OBJECTIVE: {currentObjective.DebugTag} ({currentObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
-                    }
-                    var subObjective = currentObjective.CurrentSubObjective;
-                    if (subObjective != null)
-                    {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 40 + offset), $"SUBOBJECTIVE: {subObjective.DebugTag} ({subObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
-                    }
-                    var activeObjective = ObjectiveManager.GetActiveObjective();
-                    if (activeObjective != null)
-                    {
-                        GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60 + offset), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
-                    }
+                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(0, 60 + offset), $"ACTIVE OBJECTIVE: {activeObjective.DebugTag} ({activeObjective.Priority.FormatZeroDecimal()})", Color.White, Color.Black);
                 }
-                for (int i = 0; i < ObjectiveManager.Objectives.Count; i++)
+            }
+            for (int i = 0; i < ObjectiveManager.Objectives.Count; i++)
+            {
+                var objective = ObjectiveManager.Objectives[i];
+                int offsetMultiplier;
+                if (ObjectiveManager.CurrentOrder == null)
                 {
-                    var objective = ObjectiveManager.Objectives[i];
-                    int offsetMultiplier;
-                    if (ObjectiveManager.CurrentOrder == null)
+                    if (i == 0)
                     {
-                        if (i == 0)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            offsetMultiplier = i - 1;
-                        }
+                        continue;
                     }
                     else
                     {
-                        offsetMultiplier = i + 1;
+                        offsetMultiplier = i - 1;
                     }
-                    GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(120, offsetMultiplier * 18 + 100), $"{objective.DebugTag} ({objective.Priority.FormatZeroDecimal()})", Color.White, Color.Black * 0.5f);
                 }
+                else
+                {
+                    offsetMultiplier = i + 1;
+                }
+                GUI.DrawString(spriteBatch, pos + textOffset + new Vector2(120, offsetMultiplier * 18 + 100), $"{objective.DebugTag} ({objective.Priority.FormatZeroDecimal()})", Color.White, Color.Black * 0.5f);
             }
 
             if (steeringManager is IndoorsSteeringManager pathSteering)
@@ -115,6 +112,14 @@ namespace Barotrauma
             }
             GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Character.AnimController.TargetMovement.X, -Character.AnimController.TargetMovement.Y)), Color.SteelBlue, width: 2);
             GUI.DrawLine(spriteBatch, pos, pos + ConvertUnits.ToDisplayUnits(new Vector2(Steering.X, -Steering.Y)), Color.Blue, width: 3);
+
+            if (Character.AnimController.InWater && objectiveManager.GetActiveObjective() is AIObjectiveGoTo gotoObjective && gotoObjective.TargetGap != null)
+            {
+                Vector2 gapPosition = gotoObjective.TargetGap.WorldPosition;
+                gapPosition.Y = -gapPosition.Y;
+                GUI.DrawRectangle(spriteBatch, gapPosition - new Vector2(10.0f, 10.0f), new Vector2(20.0f, 20.0f), Color.Orange, false);
+                GUI.DrawLine(spriteBatch, pos, gapPosition, Color.Orange * 0.5f, 0, 5);
+            }
 
             //if (Character.IsKeyDown(InputType.Aim))
             //{

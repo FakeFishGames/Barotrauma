@@ -191,10 +191,11 @@ namespace Barotrauma
             Vector2 max = new Vector2(worldRect.Right, worldRect.Y);
             foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
             {
-                min.X =  Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * decorativeSprite.Scale * Scale, min.X);
-                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * decorativeSprite.Scale * Scale, max.X);
-                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * decorativeSprite.Scale * Scale, min.Y);
-                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * decorativeSprite.Scale * Scale, max.Y);
+                float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                min.X = Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale, min.X);
+                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale, max.X);
+                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
+                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
             }
 
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
@@ -220,9 +221,14 @@ namespace Barotrauma
             Draw(spriteBatch, editing, false, damageEffect);
         }
 
+        private float GetRealDepth()
+        {
+            return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
+        }
+
         public float GetDrawDepth()
         {
-            return GetDrawDepth(SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth, prefab.sprite);
+            return GetDrawDepth(GetRealDepth(), prefab.sprite);
         }
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
@@ -320,7 +326,7 @@ namespace Barotrauma
                 }
             }
 
-            if (back == depth > 0.5f)
+            if (back == GetRealDepth() > 0.5f)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;
                 prefab.sprite.effects ^= SpriteEffects;
@@ -377,10 +383,10 @@ namespace Barotrauma
                 foreach (var decorativeSprite in Prefab.DecorativeSprites)
                 {
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                    Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
+                    Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, decorativeSprite.Scale * Scale, prefab.sprite.effects,
+                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, prefab.sprite.effects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
                 }
                 prefab.sprite.effects = oldEffects;

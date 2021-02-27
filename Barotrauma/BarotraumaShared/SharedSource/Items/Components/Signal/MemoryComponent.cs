@@ -49,6 +49,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "signal_store":
+                case "lock_state":
                     writeable = signal == "1";
                     break;
             }

@@ -85,17 +85,17 @@ namespace Barotrauma
             Categories.Add(this);
         }
 
-        public bool CanBeApplied(Item item, UpgradePrefab? upgradePrefab = null)
+        public bool CanBeApplied(Item item, UpgradePrefab? upgradePrefab)
         {
             if (IsWallUpgrade) { return false; }
 
-            if (upgradePrefab != null && item.disallowedUpgrades.Contains(upgradePrefab.Identifier)) { return false; }
+            if (upgradePrefab != null && upgradePrefab.IsDisallowed(item)) { return false; }
 
             return item.prefab.GetAllowedUpgrades().Contains(Identifier) ||
                    ItemTags.Any(tag => item.Prefab.Tags.Contains(tag) || item.Prefab.Identifier.Equals(tag, StringComparison.OrdinalIgnoreCase));
         }
-        
-        public bool CanBeApplied(XElement element)
+
+        public bool CanBeApplied(XElement element, UpgradePrefab prefab)
         {
             if (string.Equals("Structure", element.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { return IsWallUpgrade; }
 
@@ -104,6 +104,10 @@ namespace Barotrauma
 
             ItemPrefab? item = ItemPrefab.Find(null, identifier);
             if (item == null) { return false; }
+
+            string[] disallowedUpgrades = element.GetAttributeStringArray("disallowedupgrades", new string[0]);
+
+            if (disallowedUpgrades.Any(s => s.Equals(Identifier, StringComparison.OrdinalIgnoreCase) || s.Equals(prefab.Identifier, StringComparison.OrdinalIgnoreCase))) { return false; }
 
             return item.GetAllowedUpgrades().Contains(Identifier) || 
                    ItemTags.Any(tag => item.Tags.Contains(tag) || item.Identifier.Equals(tag, StringComparison.OrdinalIgnoreCase));
@@ -241,6 +245,11 @@ namespace Barotrauma
             }
 
             Prefabs.Add(this, isOverride);
+        }
+
+        public bool IsDisallowed(Item item)
+        {
+            return item.disallowedUpgrades.Contains(Identifier);
         }
 
         public static UpgradePrefab? Find(string identifier)

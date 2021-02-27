@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using Barotrauma.IO;
@@ -16,6 +15,14 @@ using System.Text;
 
 namespace Barotrauma
 {
+    public enum CharacterTeamType
+    {
+        None = 0,
+        Team1 = 1,
+        Team2 = 2,
+        FriendlyNPC = 3
+    }
+
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerSerializable
     {
         public static List<Character> CharacterList = new List<Character>();
@@ -101,18 +108,9 @@ namespace Barotrauma
         }
 
         protected Key[] keys;
-        private readonly Item[] selectedItems;
 
-        public enum TeamType
-        {
-            None,
-            Team1,
-            Team2,
-            FriendlyNPC
-        }
-
-        private TeamType teamID;
-        public TeamType TeamID
+        private CharacterTeamType teamID;
+        public CharacterTeamType TeamID
         {
             get { return teamID; }
             set
@@ -121,6 +119,8 @@ namespace Barotrauma
                 if (info != null) { info.TeamID = value; }
             }
         }
+
+        public bool IsOnPlayerTeam => TeamID == CharacterTeamType.Team1 || TeamID == CharacterTeamType.Team2;
 
         public bool IsInstigator => CombatAction != null && CombatAction.IsInstigator;
         public CombatAction CombatAction;
@@ -135,7 +135,25 @@ namespace Barotrauma
         public readonly string Seed;
         protected Item focusedItem;
         private Character selectedCharacter, selectedBy;
-        public Character LastAttacker;
+
+        private const int maxLastAttackerCount = 4;
+
+        public class Attacker
+        {
+            public Character Character;
+            public float Damage;
+        }
+
+        private readonly List<Attacker> lastAttackers = new List<Attacker>();
+        public IEnumerable<Attacker> LastAttackers
+        {
+            get { return lastAttackers; }
+        }
+        public Character LastAttacker
+        {
+            get { return lastAttackers.Count > 0 ? lastAttackers[lastAttackers.Count - 1].Character : null; }
+        }
+
         public Entity LastDamageSource;
 
         public float InvisibleTimer;
@@ -259,6 +277,8 @@ namespace Barotrauma
                 if (info != null) info.Character = this;
             }
         }
+
+        public string VariantOf { get; private set; }
 
         public string Name
         {
@@ -429,6 +449,20 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Items the character has in their hand slots. Doesn't return nulls and only returns items held in both hands once.
+        /// </summary>
+        public IEnumerable<Item> HeldItems
+        {
+            get 
+            {
+                var item1 = Inventory?.GetItemInLimbSlot(InvSlotType.RightHand);
+                var item2 = Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand);
+                if (item1 != null) { yield return item1; }
+                if (item2 != null && item2 != item1) { yield return item2; }
+            }
+        }
+
         private float lowPassMultiplier;
         public float LowPassMultiplier
         {
@@ -445,7 +479,7 @@ namespace Barotrauma
             }
             set
             {
-                obstructVisionAmount = 1.0f;
+                obstructVisionAmount = value ? 1.0f : 0.0f;
             }
         }
 
@@ -498,6 +532,8 @@ namespace Barotrauma
             get { return oxygenAvailable; }
             set { oxygenAvailable = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+
+        public bool UseHullOxygen { get; set; } = true;
         
         public float Stun
         {
@@ -575,9 +611,12 @@ namespace Barotrauma
             set;
         }       
 
-        public Item[] SelectedItems
+        /// <summary>
+        /// Current speed of the character's collider. Can be used by status effects to check if the character is moving.
+        /// </summary>
+        public float CurrentSpeed
         {
-            get { return selectedItems; }
+            get { return AnimController?.Collider?.LinearVelocity.Length() ?? 0.0f; }
         }
 
         private Item _selectedConstruction;
@@ -620,7 +659,23 @@ namespace Barotrauma
             get { return null; }
         }
 
-        public bool IsDead { get; private set; }
+        private bool isDead;
+        public bool IsDead 
+        { 
+            get { return isDead; }
+            set 
+            { 
+                if (isDead == value) { return; }
+                if (value)
+                {
+                    Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
+                }
+                else
+                {
+                    Revive();
+                }
+            }
+        }
 
         public bool IsObserving => AIController is EnemyAIController enemyAI && enemyAI.Enabled && enemyAI.State == AIState.Observe;
 
@@ -666,7 +721,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return (IsDead || Stun > 0.0f || LockHands || IsIncapacitated);
+                    return IsDead || Stun > 0.0f || LockHands || IsIncapacitated;
                 }
             }
             set { canInventoryBeAccessed = value; }
@@ -679,6 +734,8 @@ namespace Barotrauma
                 return SelectedConstruction == null || SelectedConstruction.GetComponent<Ladder>() != null || (SelectedConstruction.GetComponent<Controller>()?.AllowAiming ?? false);
             }
         }
+
+        public bool InWater => AnimController?.InWater ?? false;
 
         public bool GodMode = false;
 
@@ -770,7 +827,8 @@ namespace Barotrauma
                 speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
             }
 
-            if (CharacterPrefab.FindBySpeciesName(speciesName) == null)
+            var prefab = CharacterPrefab.FindBySpeciesName(speciesName);      
+            if (prefab == null)
             {
                 DebugConsole.ThrowError($"Failed to create character \"{speciesName}\". Matching prefab not found.\n" + Environment.StackTrace);
                 return null;
@@ -779,21 +837,21 @@ namespace Barotrauma
             Character newCharacter = null;
             if (!speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
-                var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(prefab, speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new EnemyAIController(aiCharacter, seed);
                 aiCharacter.SetAI(ai);
                 newCharacter = aiCharacter;
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(prefab, speciesName, position, seed, characterInfo, isRemotePlayer, ragdoll);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
                 newCharacter = aiCharacter;
             }
             else
             {
-                newCharacter = new Character(speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isRemotePlayer, ragdollParams: ragdoll);
+                newCharacter = new Character(prefab, speciesName, position, seed, characterInfo, id: id, isRemotePlayer: isRemotePlayer, ragdollParams: ragdoll);
             }
 
             float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
@@ -833,15 +891,13 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        protected Character(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
+        protected Character(CharacterPrefab prefab, string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
             : base(null, id)
         {
-            prefab = CharacterPrefab.FindBySpeciesName(speciesName);
-
+            VariantOf = prefab.VariantOf;
             this.Seed = seed;
+            this.prefab = prefab;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
-
-            selectedItems = new Item[2];
 
             IsRemotePlayer = isRemotePlayer;
 
@@ -851,11 +907,19 @@ namespace Barotrauma
             lowPassMultiplier = 1.0f;
 
             Properties = SerializableProperty.GetProperties(this);
+
             Params = new CharacterParams(prefab.FilePath);
 
             Info = characterInfo;
+
+            speciesName = VariantOf ?? speciesName;
+
             if (speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
+                if (VariantOf != null)
+                {
+                    DebugConsole.ThrowError("The variant system does not yet support humans, sorry. It does support other humanoids though!");
+                }
                 if (characterInfo == null)
                 {
                     Info = new CharacterInfo(CharacterPrefab.HumanSpeciesName);
@@ -873,6 +937,10 @@ namespace Barotrauma
             }
 
             var rootElement = prefab.XDocument.Root;
+            if (VariantOf != null)
+            {
+                rootElement = CharacterPrefab.FindBySpeciesName(VariantOf)?.XDocument?.Root;
+            }
             var mainElement = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
             InitProjSpecific(mainElement);
 
@@ -897,6 +965,36 @@ namespace Barotrauma
                         break;
                 }
             }
+            if (Params.VariantFile != null)
+            {
+                XElement overrideElement = Params.VariantFile.Root;
+                // Only override if the override file contains matching elements
+                if (overrideElement.GetChildElement("inventory") != null)
+                {
+                    inventoryElements.Clear();
+                    inventoryCommonness.Clear();
+                    foreach (XElement subElement in overrideElement.GetChildElements("inventory"))
+                    {
+                        switch (subElement.Name.ToString().ToLowerInvariant())
+                        {
+                            case "inventory":
+                                inventoryElements.Add(subElement);
+                                inventoryCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
+                                break;
+                        }
+                    }
+                }
+                if (overrideElement.GetChildElement("health") != null)
+                {
+                    healthElements.Clear();
+                    healthCommonness.Clear();
+                    foreach (XElement subElement in overrideElement.GetChildElements("health"))
+                    {
+                        healthElements.Add(subElement);
+                        healthCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
+                    }
+                }
+            }
 
             if (inventoryElements.Count > 0)
             {
@@ -910,9 +1008,14 @@ namespace Barotrauma
             }
             else
             {
-                CharacterHealth = new CharacterHealth(
-                    healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random),
-                    this);
+                var selectedHealthElement = healthElements.Count == 1 ? healthElements[0] : ToolBox.SelectWeightedRandom(healthElements, healthCommonness, random);
+                // If there's no limb elements defined in the override variant, let's use the limb health definitions of the original file.
+                var limbHealthElement = selectedHealthElement;
+                if (Params.VariantFile != null && limbHealthElement.GetChildElement("limb") == null)
+                {
+                    limbHealthElement = Params.OriginalElement.GetChildElement("health");
+                }
+                CharacterHealth = new CharacterHealth(selectedHealthElement, this, limbHealthElement);
             }
 
             if (Params.Husk)
@@ -928,6 +1031,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
                     // Crashes if we fail to create a ragdoll -> Let's just use some ragdoll so that the user sees the error msg.
                     nonHuskedSpeciesName = IsHumanoid ? CharacterPrefab.HumanSpeciesName : "crawler";
+                    speciesName = nonHuskedSpeciesName;
                 }
                 else
                 {
@@ -1161,7 +1265,7 @@ namespace Barotrauma
         {
             if (info?.Job == null || spawnPoint == null) { return; }
 
-            foreach (Item item in Inventory.Items)
+            foreach (Item item in Inventory.AllItems)
             {
                 if (item?.Prefab.Identifier != "idcard") { continue; }
                 foreach (string s in spawnPoint.IdCardTags)
@@ -1558,12 +1662,8 @@ namespace Barotrauma
 
             if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
             {
-                for (int i = 0; i < selectedItems.Length; i++)
+                foreach (Item item in HeldItems)
                 {
-                    if (selectedItems[i] == null) { continue; }
-                    if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
-                    var item = selectedItems[i];
-                    if (item == null) { continue; }
                     if (IsKeyDown(InputType.Aim) || !item.RequireAimToSecondaryUse)
                     {
                         item.SecondaryUse(deltaTime, this);
@@ -1712,7 +1812,7 @@ namespace Barotrauma
                     var door = item.GetComponent<Door>();
                     if (door != null)
                     {
-                        return !door.IsOpen && !door.IsBroken;
+                        return !door.CanBeTraversed;
                     }
                 }
                 return false;
@@ -1739,7 +1839,7 @@ namespace Barotrauma
             Structure wall = closestBody.UserData as Structure;
             Item item = closestBody.UserData as Item;
             Door door = item?.GetComponent<Door>();
-            return (wall == null || !wall.CastShadow) && (door == null || door.IsOpen || door.IsBroken);
+            return (wall == null || !wall.CastShadow) && (door == null || door.CanBeTraversed);
         }
 
         /// <summary>
@@ -1754,9 +1854,8 @@ namespace Barotrauma
             if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (Inventory.Items[i] == item && Inventory.SlotTypes[i] != InvSlotType.Any) { return true; }
+                if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.GetItemAt(i) == item) { return true; }
             }
-
             return false;
         }
 
@@ -1765,53 +1864,13 @@ namespace Barotrauma
             if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (Inventory.SlotTypes[i] == InvSlotType.Any || Inventory.Items[i] == null) { continue; }
-                if (!allowBroken && Inventory.Items[i].Condition <= 0.0f) { continue; }
-                if (Inventory.Items[i].Prefab.Identifier == tagOrIdentifier || Inventory.Items[i].HasTag(tagOrIdentifier)) { return true; }
+                if (Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
+                var item = Inventory.GetItemAt(i);
+                if (item == null) { continue; }
+                if (!allowBroken && item.Condition <= 0.0f) { continue; }
+                if (item.Prefab.Identifier == tagOrIdentifier || item.HasTag(tagOrIdentifier)) { return true; }
             }
-
             return false;
-        }
-
-        public bool HasSelectedItem(Item item)
-        {
-            return selectedItems.Contains(item);
-        }
-
-        public bool TrySelectItem(Item item)
-        {
-            bool rightHand = Inventory.IsInLimbSlot(item, InvSlotType.RightHand);
-            bool leftHand = Inventory.IsInLimbSlot(item, InvSlotType.LeftHand);
-
-            bool selected = false;
-            if (rightHand && (selectedItems[0] == null || selectedItems[0] == item))
-            {
-                selectedItems[0] = item;
-                selected = true;
-            }
-            if (leftHand && (selectedItems[1] == null || selectedItems[1] == item))
-            {
-                selectedItems[1] = item;
-                selected = true;
-            }
-
-            return selected;
-        }
-
-        public bool TrySelectItem(Item item, int index)
-        {
-            if (selectedItems[index] != null) { return false; }
-
-            selectedItems[index] = item;
-            return true;
-        }
-
-        public void DeselectItem(Item item)
-        {
-            for (int i = 0; i < selectedItems.Length; i++)
-            {
-                if (selectedItems[i] == item) selectedItems[i] = null;
-            }
         }
 
         public bool CanAccessInventory(Inventory inventory)
@@ -1848,7 +1907,7 @@ namespace Barotrauma
         /// </summary>
         public bool FindItem(ref int itemIndex, out Item targetItem, IEnumerable<string> identifiers = null, bool ignoreBroken = true, 
             IEnumerable<Item> ignoredItems = null, IEnumerable<string> ignoredContainerIdentifiers = null, 
-            Func<Item, bool> customPredicate = null, Func<Item, float> customPriorityFunction = null, float maxItemDistance = 10000)
+            Func<Item, bool> customPredicate = null, Func<Item, float> customPriorityFunction = null, float maxItemDistance = 10000, ISpatialEntity positionalReference = null)
         {
             if (itemIndex == 0)
             {
@@ -1859,7 +1918,7 @@ namespace Barotrauma
             {
                 itemIndex++;
                 var item = Item.ItemList[itemIndex];
-                if (item.NonInteractable) { continue; }
+                if (!item.IsInteractable(this)) { continue; }
                 if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
                 if (item.Submarine == null) { continue; }
                 if (item.Submarine.TeamID != TeamID) { continue; }
@@ -1879,10 +1938,15 @@ namespace Barotrauma
                 float itemPriority = customPriorityFunction != null ? customPriorityFunction(item) : 1;
                 if (itemPriority <= 0) { continue; }
                 Entity rootInventoryOwner = item.GetRootInventoryOwner();
+                if (rootInventoryOwner is Item ownerItem)
+                {
+                    if (!ownerItem.IsInteractable(this)) { continue; }
+                }
                 Vector2 itemPos = (rootInventoryOwner ?? item).WorldPosition;
-                float yDist = Math.Abs(WorldPosition.Y - itemPos.Y);
+                Vector2 refPos = positionalReference != null ? positionalReference.WorldPosition : WorldPosition;
+                float yDist = Math.Abs(refPos.Y - itemPos.Y);
                 yDist = yDist > 100 ? yDist * 5 : 0;
-                float dist = Math.Abs(WorldPosition.X - itemPos.X) + yDist;
+                float dist = Math.Abs(refPos.X - itemPos.X) + yDist;
                 float distanceFactor = MathHelper.Lerp(1, 0, MathUtils.InverseLerp(0, maxItemDistance, dist));
                 itemPriority *= distanceFactor;
                 if (itemPriority > _selectedItemPriority)
@@ -1924,7 +1988,7 @@ namespace Barotrauma
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen) { hidden = false; }
 #endif  
-            if (!CanInteract || hidden || item.NonInteractable) { return false; }
+            if (!CanInteract || hidden || !item.IsInteractable(this)) { return false; }
 
             if (item.ParentInventory != null)
             {
@@ -2115,7 +2179,7 @@ namespace Barotrauma
                         FocusedCharacter = CanInteract ? FindCharacterAtPosition(mouseSimPos) : null;
                         if (FocusedCharacter != null && !CanSeeCharacter(FocusedCharacter)) { FocusedCharacter = null; }
                         float aimAssist = GameMain.Config.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
-                        if (SelectedItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
+                        if (HeldItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
                         {
                             //disable aim assist when rewiring to make it harder to accidentally select items when adding wire nodes
                             aimAssist = 0.0f;
@@ -2350,10 +2414,9 @@ namespace Barotrauma
 
             if (Inventory != null)
             {
-                foreach (Item item in Inventory.Items)
+                foreach (Item item in Inventory.AllItems)
                 {
-                    if (item == null || item.body == null || item.body.Enabled) { continue; }
-
+                    if (item.body == null || item.body.Enabled) { continue; }
                     item.SetTransform(SimPosition, 0.0f);
                     item.Submarine = Submarine;
                 }
@@ -2361,9 +2424,10 @@ namespace Barotrauma
 
             HideFace = false;
 
-
             UpdateSightRange(deltaTime);
             UpdateSoundRange(deltaTime);
+
+            UpdateAttackers(deltaTime);
 
             if (IsDead) { return; }
 
@@ -2523,6 +2587,56 @@ namespace Barotrauma
 
         partial void SetOrderProjSpecific(Order order, string orderOption);
 
+
+        public void AddAttacker(Character character, float damage)
+        {
+            Attacker attacker = lastAttackers.FirstOrDefault(a => a.Character == character);
+            if (attacker != null)
+            {
+                lastAttackers.Remove(attacker);
+            }
+            else
+            {
+                attacker = new Attacker { Character = character };
+            }
+
+            if (lastAttackers.Count > maxLastAttackerCount)
+            {
+                lastAttackers.RemoveRange(0, lastAttackers.Count - maxLastAttackerCount);
+            }
+
+            attacker.Damage += damage;
+            lastAttackers.Add(attacker);
+        }
+
+        public void ForgiveAttacker(Character character)
+        {
+            int index;
+            if ((index = lastAttackers.FindIndex(a => a.Character == character)) >= 0)
+            {
+                lastAttackers.RemoveAt(index);
+            }
+        }
+
+        private void UpdateAttackers(float deltaTime)
+        {
+            //slowly forget about damage done by attackers
+            foreach (Attacker enemy in LastAttackers)
+            {
+                float cumulativeDamage = enemy.Damage;
+                if (cumulativeDamage > 0)
+                {
+                    float reduction = deltaTime;
+                    if (cumulativeDamage < 2)
+                    {
+                        // If the damage is very low, let's not forget so quickly, or we can't cumulate the damage from repair tools (high frequency, low damage)
+                        reduction *= 0.5f;
+                    }
+                    enemy.Damage = Math.Max(0.0f, enemy.Damage-reduction);
+                }
+            }
+        }
+
         private void UpdateOxygen(float deltaTime)
         {
             if (NeedsAir)
@@ -2545,7 +2659,7 @@ namespace Barotrauma
                 {
                     //don't decrease the amount of oxygen in the hull if the character has more oxygen available than the hull
                     //(i.e. if the character has some external source of oxygen)
-                    if (OxygenAvailable * 0.98f < AnimController.CurrentHull.OxygenPercentage)
+                    if (OxygenAvailable * 0.98f < AnimController.CurrentHull.OxygenPercentage && UseHullOxygen)
                     {
                         AnimController.CurrentHull.Oxygen -= Hull.OxygenConsumptionSpeed * deltaTime;
                     }
@@ -2554,6 +2668,7 @@ namespace Barotrauma
                 }
                 OxygenAvailable += MathHelper.Clamp(hullAvailableOxygen - oxygenAvailable, -deltaTime * 50.0f, deltaTime * 50.0f);
             }
+            UseHullOxygen = true;
         }
 
         /// <summary>
@@ -2661,18 +2776,16 @@ namespace Barotrauma
 
                 void onItemContainerSpawned(Item item)
                 {
-                    if (Inventory?.Items == null) { return; }
+                    if (Inventory == null) { return; }
 
-                    item.UpdateTransform();
-                
+                    item.UpdateTransform();                
                     item.AddTag("name:" + Name);
                     if (info?.Job != null) { item.AddTag("job:" + info.Job.Name); }               
 
                     var itemContainer = item?.GetComponent<ItemContainer>();
                     if (itemContainer == null) { return; }
-                    foreach (Item inventoryItem in Inventory.Items)
+                    foreach (Item inventoryItem in Inventory.AllItemsMod)
                     {
-                        if (inventoryItem == null) { continue; }
                         if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null))
                         {
                             //if the item couldn't be put inside the despawn container, just drop it
@@ -2907,8 +3020,8 @@ namespace Barotrauma
             float attackImpulse = attack.TargetImpulse + attack.TargetForce * deltaTime;
 
             var attackResult = targetLimb == null ?
-                AddDamage(worldPosition, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, out limbHit, attacker) :
-                DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker);
+                AddDamage(worldPosition, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, out limbHit, attacker, attack.DamageMultiplier) :
+                DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker, attack.DamageMultiplier);
 
             if (limbHit == null) { return new AttackResult(); }
             Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld;
@@ -3000,7 +3113,7 @@ namespace Barotrauma
             return AddDamage(worldPosition, afflictions, stun, playSound, attackImpulse, out _, attacker);
         }
 
-        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, out Limb hitLimb, Character attacker = null)
+        public AttackResult AddDamage(Vector2 worldPosition, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, out Limb hitLimb, Character attacker = null, float damageMultiplier = 1)
         {
             hitLimb = null;
 
@@ -3022,10 +3135,26 @@ namespace Barotrauma
                 }
             }
 
-            return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackImpulse, attacker);
+            return DamageLimb(worldPosition, hitLimb, afflictions, stun, playSound, attackImpulse, attacker, damageMultiplier);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null)
+        public void RecordKill(Character target)
+        {
+            if (!IsOnPlayerTeam) { return; }
+            if (GameMain.Config.KilledCreatures.Any(name => name.Equals(target.SpeciesName, StringComparison.OrdinalIgnoreCase))) { return; }
+            GameMain.Config.KilledCreatures.Add(target.SpeciesName);
+            AddEncounter(target);
+        }
+
+        public void AddEncounter(Character other)
+        {
+            if (!IsOnPlayerTeam) { return; }
+            if (GameMain.Config.EncounteredCreatures.Any(name => name.Equals(other.SpeciesName, StringComparison.OrdinalIgnoreCase))) { return; }
+            GameMain.Config.EncounteredCreatures.Add(other.SpeciesName);
+            GameMain.Config.RecentlyEncounteredCreatures.Add(other.SpeciesName);
+        }
+
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1)
         {
             if (Removed) { return new AttackResult(); }
 
@@ -3069,7 +3198,7 @@ namespace Barotrauma
             }
             bool wasDead = IsDead;
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
-            AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound);
+            AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound, damageMultiplier: damageMultiplier);
             CharacterHealth.ApplyDamage(hitLimb, attackResult);
             if (attacker != this)
             {
@@ -3078,6 +3207,10 @@ namespace Barotrauma
                 if (!wasDead)
                 {
                     TryAdjustAttackerSkill(attacker, -attackResult.Damage);
+                    if (IsDead)
+                    {
+                        attacker?.RecordKill(this);
+                    }
                 }
             };
             if (attackResult.Damage > 0)
@@ -3086,7 +3219,9 @@ namespace Barotrauma
                 hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 if (attacker != null)
                 {
-                    LastAttacker = attacker;
+                    AddAttacker(attacker, attackResult.Damage);
+                    AddEncounter(attacker);
+                    attacker.AddEncounter(this);
                 }
             }
             return attackResult;
@@ -3106,7 +3241,7 @@ namespace Barotrauma
                     float attackerSkillLevel = attacker.GetSkillLevel("weapons");
                     attacker.Info?.IncreaseSkillLevel("weapons",
                         -healthChange * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, 1.0f),
-                        attacker.WorldPosition + Vector2.UnitY * 100.0f);
+                        attacker.Position + Vector2.UnitY * 100.0f);
                 }
             }
             else if (healthChange > 0.0f)
@@ -3114,7 +3249,7 @@ namespace Barotrauma
                 float attackerSkillLevel = attacker.GetSkillLevel("medical");
                 attacker.Info?.IncreaseSkillLevel("medical",
                     healthChange * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, 1.0f),
-                    attacker.WorldPosition + Vector2.UnitY * 100.0f);
+                    attacker.Position + Vector2.UnitY * 100.0f);
             }
         }
 
@@ -3253,7 +3388,7 @@ namespace Barotrauma
                 GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.Status });
             }
 
-            IsDead = true;
+            isDead = true;
 
             ApplyStatusEffects(ActionType.OnDeath, 1.0f);
 
@@ -3293,9 +3428,9 @@ namespace Barotrauma
             AnimController.movement = Vector2.Zero;
             AnimController.TargetMovement = Vector2.Zero;
 
-            for (int i = 0; i < selectedItems.Length; i++)
+            foreach (Item heldItem in HeldItems.ToList())
             {
-                if (selectedItems[i] != null) selectedItems[i].Drop(this);
+                heldItem.Drop(this);
             }
 
             SelectedConstruction = null;
@@ -3325,7 +3460,7 @@ namespace Barotrauma
                 return;
             }
 
-            IsDead = false;
+            isDead = false;
 
             if (aiTarget != null)
             {
@@ -3373,10 +3508,12 @@ namespace Barotrauma
 
             base.Remove();
 
-            if (selectedItems[0] != null) { selectedItems[0].Drop(this); }
-            if (selectedItems[1] != null) { selectedItems[1].Drop(this); }
+            foreach (Item heldItem in HeldItems.ToList())
+            {
+                heldItem.Drop(this);
+            }
 
-            if (info != null) { info.Remove(); }
+            info?.Remove();
 
 #if CLIENT
             GameMain.GameSession?.CrewManager?.KillCharacter(this);
@@ -3388,12 +3525,9 @@ namespace Barotrauma
 
             if (Inventory != null)
             {
-                foreach (Item item in Inventory.Items)
+                foreach (Item item in Inventory.AllItems)
                 {
-                    if (item != null)
-                    {
-                        Spawner?.AddToRemoveQueue(item);
-                    }
+                    Spawner?.AddToRemoveQueue(item);
                 }
             }
 
@@ -3421,18 +3555,13 @@ namespace Barotrauma
 
         public void SaveInventory(Inventory inventory, XElement parentElement)
         {
-            var items = Array.FindAll(inventory.Items, i => i != null).Distinct();
+            var items = inventory.AllItems.Distinct();
             foreach (Item item in items)
             {
                 item.Submarine = inventory.Owner.Submarine;
                 var itemElement = item.Save(parentElement);
 
-                List<int> slotIndices = new List<int>();
-                for (int i = 0; i < inventory.Capacity; i++)
-                {
-                    if (inventory.Items[i] == item) { slotIndices.Add(i); }
-                }
-
+                List<int> slotIndices = inventory.FindIndices(item);
                 itemElement.Add(new XAttribute("i", string.Join(",", slotIndices)));
 
                 foreach (ItemContainer container in item.GetComponents<ItemContainer>())
@@ -3446,10 +3575,10 @@ namespace Barotrauma
 
         public void SpawnInventoryItems(Inventory inventory, XElement itemData)
         {
-            SpawnInventoryItemsRecursive(inventory, itemData);
+            SpawnInventoryItemsRecursive(inventory, itemData, new List<Item>());
         }
         
-        private void SpawnInventoryItemsRecursive(Inventory inventory, XElement element)
+        private void SpawnInventoryItemsRecursive(Inventory inventory, XElement element, List<Item> extraDuffelBags)
         {
             foreach (XElement itemElement in element.Elements())
             {
@@ -3475,28 +3604,91 @@ namespace Barotrauma
                 //this should not happen normally, but can occur if the character is accidentally given new job items while also loading previous items in the campaign
                 for (int i = 0; i < inventory.Capacity; i++)
                 {
-                    if (slotIndices.Contains(i) && inventory.Items[i] != null && inventory.Items[i] != newItem)
+                    if (slotIndices.Contains(i))
                     {
-                        DebugConsole.ThrowError($"Error while loading character inventory data. The slot {i} was already occupied by the item \"{inventory.Items[i].Name} ({inventory.Items[i].ID})\" when loading the item \"{newItem.Name} ({newItem.ID})\"");
-                        inventory.Items[i].Drop(null, createNetworkEvent: false);
+                        var existingItem = inventory.GetItemAt(i);
+                        if (existingItem != null && existingItem != newItem && (existingItem.prefab != newItem.prefab || existingItem.Prefab.MaxStackSize == 1))
+                        {
+                            DebugConsole.ThrowError($"Error while loading character inventory data. The slot {i} was already occupied by the item \"{existingItem.Name} ({existingItem.ID})\" when loading the item \"{newItem.Name} ({newItem.ID})\"");
+                            existingItem.Drop(null, createNetworkEvent: false);
+                        }
                     }
                 }
 
-                inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
-                newItem.ParentInventory = inventory;
-
-                //force the item to the correct slots
-                //  e.g. putting the item in a hand slot will also put it in the first available Any-slot, 
-                //  which may not be where it actually was
-                for (int i = 0; i < inventory.Capacity; i++)
+                bool canBePutInOriginalInventory = true;
+                if (slotIndices[0] >= inventory.Capacity)
                 {
-                    if (slotIndices.Contains(i))
+                    canBePutInOriginalInventory = false;
+                    //legacy support: before item stacking was implemented, revolver for example had a separate slot for each bullet
+                    //now there's just one, try to put the extra items where they fit (= stack them)
+                    for (int i = 0; i < inventory.Capacity; i++)
                     {
-                        inventory.Items[i] = newItem;
+                        if (inventory.CanBePut(newItem, i))
+                        {
+                            slotIndices[0] = i;
+                            canBePutInOriginalInventory = true;
+                            break;
+                        }
                     }
-                    else if (inventory.Items[i] == newItem)
+                }
+
+                if (canBePutInOriginalInventory)
+                {
+                    inventory.TryPutItem(newItem, slotIndices[0], false, false, null);
+                    newItem.ParentInventory = inventory;
+
+                    //force the item to the correct slots
+                    //  e.g. putting the item in a hand slot will also put it in the first available Any-slot, 
+                    //  which may not be where it actually was
+                    for (int i = 0; i < inventory.Capacity; i++)
                     {
-                        inventory.Items[i] = null;
+                        if (slotIndices.Contains(i))
+                        {
+                            if (!inventory.GetItemsAt(i).Contains(newItem)) { inventory.ForceToSlot(newItem, i); }
+                        }
+                        else if (inventory.FindIndices(newItem).Contains(i))
+                        {
+                            inventory.ForceRemoveFromSlot(newItem, i);
+                        }
+                    }
+                }
+                else
+                {
+                    // In case the inventory capacity is smaller than it was when saving:
+                    // 1) Spawn a new duffel bag if none yet spawned or if the existing ones aren't enough
+                    if (extraDuffelBags.None(i => i.OwnInventory.CanBePut(newItem)) && ItemPrefab.Find(null, "duffelbag") is ItemPrefab duffelBagPrefab)
+                    {
+                        var hull = Hull.FindHull(WorldPosition, guess: CurrentHull);
+                        var mainSub = Submarine.MainSubs.FirstOrDefault(s => s.TeamID == TeamID);
+                        if ((hull == null || hull.Submarine != mainSub) && mainSub != null)
+                        {
+                            var wp = WayPoint.GetRandom(spawnType: SpawnType.Cargo, sub: mainSub) ?? WayPoint.GetRandom(sub: mainSub);
+                            if (wp != null)
+                            {
+                                hull = Hull.FindHull(wp.WorldPosition);
+                            }
+                        }
+                        var newDuffelBag = new Item(duffelBagPrefab,
+                            hull != null ? CargoManager.GetCargoPos(hull, duffelBagPrefab) : Position,
+                            hull?.Submarine ?? Submarine);
+                        extraDuffelBags.Add(newDuffelBag);
+#if SERVER
+                        Spawner.CreateNetworkEvent(newDuffelBag, false);
+#endif
+                    }
+
+                    // 2) Find a slot for the new item
+                    for (int i = 0; i < extraDuffelBags.Count; i++)
+                    {
+                        var duffelBag = extraDuffelBags[i];
+                        for (int j = 0; j < duffelBag.OwnInventory.Capacity; j++)
+                        {
+                            if (duffelBag.OwnInventory.TryPutItem(newItem, j, false, false, null))
+                            {
+                                newItem.ParentInventory = duffelBag.OwnInventory;
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -3506,7 +3698,7 @@ namespace Barotrauma
                 {
                     if (itemContainerIndex >= itemContainers.Count) break;
                     if (!childInvElement.Name.ToString().Equals("inventory", StringComparison.OrdinalIgnoreCase)) { continue; }
-                    SpawnInventoryItemsRecursive(itemContainers[itemContainerIndex].Inventory, childInvElement);
+                    SpawnInventoryItemsRecursive(itemContainers[itemContainerIndex].Inventory, childInvElement, extraDuffelBags);
                     itemContainerIndex++;
                 }
             }

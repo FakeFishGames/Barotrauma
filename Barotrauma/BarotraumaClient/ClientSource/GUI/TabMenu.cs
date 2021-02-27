@@ -29,7 +29,7 @@ namespace Barotrauma
         private float sizeMultiplier = 1f;
 
         private IEnumerable<Character> crew;
-        private List<Character.TeamType> teamIDs;
+        private List<CharacterTeamType> teamIDs;
         private const string inLobbyString = "\u2022 \u2022 \u2022";
 
         public static Color OwnCharacterBGColor = Color.Gold * 0.7f;
@@ -281,11 +281,11 @@ namespace Barotrauma
             // Show own team first when there's more than one team
             if (teamIDs.Count > 1 && GameMain.Client?.Character != null)
             {
-                Character.TeamType ownTeam = GameMain.Client.Character.TeamID;
+                CharacterTeamType ownTeam = GameMain.Client.Character.TeamID;
                 teamIDs = teamIDs.OrderBy(i => i != ownTeam).ThenBy(i => i).ToList();
             }
 
-            if (!teamIDs.Any()) teamIDs.Add(Character.TeamType.None);
+            if (!teamIDs.Any()) { teamIDs.Add(CharacterTeamType.None); }
 
             var content = new GUILayoutGroup(new RectTransform(Vector2.One, crewFrame.RectTransform));
 
@@ -465,15 +465,14 @@ namespace Barotrauma
             {
                 foreach (Character character in crew.Where(c => c.TeamID == teamIDs[i]))
                 {
-                    if (!(character is AICharacter) && connectedClients.Find(c => c.Character == null && c.Name == character.Name) != null) continue;
-                    CreateMultiPlayerCharacterElement(character, GameMain.Client.ConnectedClients.Find(c => c.Character == character), i);
+                    if (!(character is AICharacter) && connectedClients.Any(c => c.Character == null && c.Name == character.Name)) { continue; }
+                    CreateMultiPlayerCharacterElement(character, GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.Character == character), i);
                 }
             }
 
             for (int j = 0; j < connectedClients.Count; j++)
             {
                 Client client = connectedClients[j];
-
                 if (!client.InGame || client.Character == null || client.Character.IsDead)
                 {
                     CreateMultiPlayerClientElement(client);
@@ -565,7 +564,7 @@ namespace Barotrauma
 
         private int GetTeamIndex(Client client)
         {
-            if (teamIDs.Count <= 1) return 0;
+            if (teamIDs.Count <= 1) { return 0; }
 
             if (client.Character != null)
             {
@@ -707,7 +706,7 @@ namespace Barotrauma
         {
             GUIComponent paddedFrame;
 
-            if (client.Character == null)
+            if (client.Character?.Info == null)
             {
                 paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.874f, 0.58f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
                 {

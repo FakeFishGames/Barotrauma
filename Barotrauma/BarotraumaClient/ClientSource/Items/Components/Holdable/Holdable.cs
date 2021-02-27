@@ -12,16 +12,14 @@ namespace Barotrauma.Items.Components
             get { return item.Rect.Size.ToVector2(); }
         }
 
-        
-
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled) 
+            if (!IsActive || picker == null || !CanBeAttached(picker) || !picker.IsKeyDown(InputType.Aim) || picker != Character.Controlled)
             {
                 Drawable = false;
-                return; 
+                return;
             }
-            
+
             Vector2 gridPos = picker.Position;
             Vector2 roundedGridPos = new Vector2(
                 MathUtils.RoundTowardsClosest(picker.Position.X, Submarine.GridSize.X),
@@ -49,7 +47,7 @@ namespace Barotrauma.Items.Components
                 attachPos += item.Submarine.Position;
             }
 
-            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.7f);
+            Submarine.DrawGrid(spriteBatch, 14, gridPos, roundedGridPos, alpha: 0.4f);
 
             item.Sprite.Draw(
                 spriteBatch,

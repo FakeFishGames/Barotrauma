@@ -99,6 +99,94 @@ namespace Barotrauma
             if (hue < 240) return q1 + (q2 - q1) * (240 - hue) / 60;
             return q1;
         }
+        
+        /// <summary>
+        /// Convert a HSV value into a RGB value.
+        /// </summary>
+        /// <param name="hue">Value between 0 and 360</param>
+        /// <param name="saturation">Value between 0 and 1</param>
+        /// <param name="value">Value between 0 and 1</param>
+        /// <see href="https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB">Reference</see>
+        /// <returns></returns>
+        public static Color HSVToRGB(float hue, float saturation, float value)
+        {
+            float c = value * saturation;
+
+            float h = Math.Clamp(hue, 0, 360) / 60f;
+
+            float x = c * (1 - Math.Abs(h % 2 - 1));
+
+            float r = 0,
+                  g = 0,
+                  b = 0;
+
+            if (0 <= h && h <= 1)     { r = c; g = x; b = 0; }
+            else if (1 < h && h <= 2) { r = x; g = c; b = 0; }
+            else if (2 < h && h <= 3) { r = 0; g = c; b = x; }
+            else if (3 < h && h <= 4) { r = 0; g = x; b = c; }
+            else if (4 < h && h <= 5) { r = x; g = 0; b = c; }
+            else if (5 < h && h <= 6) { r = c; g = 0; b = x; }
+
+            float m = value - c;
+
+            return new Color(r + m, g + m, b + m);
+        }
+        
+        /// <summary>
+        /// Convert a RGB value into a HSV value.
+        /// </summary>
+        /// <param name="color"></param>
+        /// <see href="https://www.cs.rit.edu/~ncs/color/t_convert.html">Reference</see>
+        /// <returns>
+        /// Vector3 where X is the hue (0-360 or NaN)
+        /// Y is the saturation (0-1)
+        /// Z is the value (0-1) 
+        /// </returns>
+        public static Vector3 RGBToHSV(Color color)
+        {
+            float r = color.R / 255f,
+                  g = color.G / 255f,
+                  b = color.B / 255f;
+
+            float h, s;
+
+            float min = Math.Min(r, Math.Min(g, b));
+            float max = Math.Max(r, Math.Max(g, b));
+
+            float v = max;
+
+            float delta = max - min;
+
+            if (max != 0)
+            {
+                s = delta / max;
+            }
+            else
+            {
+                s = 0;
+                h = -1;
+                return new Vector3(h, s, v);
+            }
+
+            if (MathUtils.NearlyEqual(r, max))
+            {
+                h = (g - b) / delta;
+            }
+            else if (MathUtils.NearlyEqual(g, max))
+            {
+                h = 2 + (b - r) / delta;
+            }
+            else
+            {
+                h = 4 + (r - g) / delta;
+            }
+
+            h *= 60;
+            if (h < 0) { h += 360; }
+
+            return new Vector3(h, s, v);
+        }
+
 
         public static Color Add(this Color sourceColor, Color color)
         {
@@ -235,6 +323,7 @@ namespace Barotrauma
                         {
                             linePos = splitSize = 0.0f;
                             splitWord[k] = splitWord[k].Remove(splitWord[k].Length - 1) + "\n";
+                            if (splitWord[k].Length <= 1) { break; }
                             j--;
                             splitWord.Add(string.Empty);
                             k++;

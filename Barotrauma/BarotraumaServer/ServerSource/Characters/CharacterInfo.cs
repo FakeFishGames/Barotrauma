@@ -1,9 +1,27 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
     partial class CharacterInfo
     {
+        private readonly Dictionary<string, float> prevSentSkill = new Dictionary<string, float>();
+
+        partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos)
+        {
+            if (!prevSentSkill.ContainsKey(skillIdentifier))
+            {
+                prevSentSkill[skillIdentifier] = prevLevel;
+            }
+            if (Math.Abs(prevSentSkill[skillIdentifier] - newLevel) > 0.01f)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });
+                prevSentSkill[skillIdentifier] = newLevel;
+            }            
+        }
+
         public void ServerWrite(IWriteMessage msg)
         {
             msg.Write(ID);

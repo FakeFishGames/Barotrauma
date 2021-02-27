@@ -121,11 +121,26 @@ namespace Barotrauma
         [Serialize(false, true), Editable]
         public bool FullSpeedAfterAttack { get; private set; }
 
+        private float _structureDamage;
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10000.0f)]
-        public float StructureDamage { get; set; }
+        public float StructureDamage
+        {
+            get => _structureDamage * DamageMultiplier;
+            set => _structureDamage = value;
+        }
 
+        private float _itemDamage;
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
-        public float ItemDamage { get; set; }
+        public float ItemDamage
+        {
+            get =>_itemDamage * DamageMultiplier;
+            set => _itemDamage = value;
+        }
+
+        /// <summary>
+        /// Currently only used with variants. Used for multiplying all the damage.
+        /// </summary>
+        public float DamageMultiplier { get; set; } = 1;
 
         [Serialize(0.0f, true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }
@@ -280,7 +295,7 @@ namespace Barotrauma
             {
                 totalDamage += affliction.GetVitalityDecrease(null);
             }
-            return totalDamage;
+            return totalDamage * DamageMultiplier;
         }
 
         public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f)

@@ -34,44 +34,38 @@ namespace Barotrauma
 
         public Action<LevelTrigger, Entity> OnTriggered;
 
-        private PhysicsBody physicsBody;
-
         /// <summary>
         /// Effects applied to entities that are inside the trigger
         /// </summary>
-        private List<StatusEffect> statusEffects = new List<StatusEffect>();
+        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
 
         /// <summary>
         /// Attacks applied to entities that are inside the trigger
         /// </summary>
-        private List<Attack> attacks = new List<Attack>();
+        private readonly List<Attack> attacks = new List<Attack>();
 
-        private float cameraShake;
+        private readonly float cameraShake;
         private Vector2 unrotatedForce;
         private float forceFluctuationTimer, currentForceFluctuation = 1.0f;
 
-        private HashSet<Entity> triggerers = new HashSet<Entity>();
+        private readonly HashSet<Entity> triggerers = new HashSet<Entity>();
 
-        private TriggererType triggeredBy;
+        private readonly TriggererType triggeredBy;
         
-        private float randomTriggerInterval;
-        private float randomTriggerProbability;
+        private readonly float randomTriggerInterval;
+        private readonly float randomTriggerProbability;
         private float randomTriggerTimer;
 
         private float triggeredTimer;
-
-        //how far away this trigger can activate other triggers from
-        private float triggerOthersDistance;
-
-        private HashSet<string> tags = new HashSet<string>();
+        private readonly HashSet<string> tags = new HashSet<string>();
 
         //other triggers have to have at least one of these tags to trigger this one
-        private HashSet<string> allowedOtherTriggerTags = new HashSet<string>();
+        private readonly HashSet<string> allowedOtherTriggerTags = new HashSet<string>();
 
         /// <summary>
         /// How long the trigger stays in the triggered state after triggerers have left
         /// </summary>
-        private float stayTriggeredDelay;
+        private readonly float stayTriggeredDelay;
 
         public LevelTrigger ParentTrigger;
 
@@ -88,30 +82,24 @@ namespace Barotrauma
             set
             {
                 worldPosition = value;
-                physicsBody?.SetTransform(ConvertUnits.ToSimUnits(value), physicsBody.Rotation);
+                PhysicsBody?.SetTransform(ConvertUnits.ToSimUnits(value), PhysicsBody.Rotation);
             }
         }
 
         public float Rotation
         {
-            get { return physicsBody == null ? 0.0f : physicsBody.Rotation; }
+            get { return PhysicsBody == null ? 0.0f : PhysicsBody.Rotation; }
             set
             {
-                if (physicsBody == null) return;
-                physicsBody.SetTransform(physicsBody.Position, value);
+                if (PhysicsBody == null) return;
+                PhysicsBody.SetTransform(PhysicsBody.Position, value);
                 CalculateDirectionalForce();
             }
         }
 
-        public PhysicsBody PhysicsBody
-        {
-            get { return physicsBody; }
-        }
+        public PhysicsBody PhysicsBody { get; private set; }
 
-        public float TriggerOthersDistance
-        {
-            get { return triggerOthersDistance; }
-        }
+        public float TriggerOthersDistance { get; private set; }
 
         public IEnumerable<Entity> Triggerers
         {
@@ -153,7 +141,7 @@ namespace Barotrauma
             private set;
         }
 
-        private TriggerForceMode forceMode;
+        private readonly TriggerForceMode forceMode;
         public TriggerForceMode ForceMode
         {
             get { return forceMode; }
@@ -198,6 +186,9 @@ namespace Barotrauma
             get;
             set;
         }
+
+        private bool triggeredOnce;
+        private readonly bool triggerOnce;
                 
         public LevelTrigger(XElement element, Vector2 position, float rotation, float scale = 1.0f, string parentDebugName = "")
         {
@@ -206,26 +197,28 @@ namespace Barotrauma
             worldPosition = position;
             if (element.Attributes("radius").Any() || element.Attributes("width").Any() || element.Attributes("height").Any())
             {
-                physicsBody = new PhysicsBody(element, scale)
+                PhysicsBody = new PhysicsBody(element, scale)
                 {
                     CollisionCategories = Physics.CollisionLevel,
                     CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall
                 };
-                physicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
-                physicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
-                physicsBody.FarseerBody.SetIsSensor(true);
-                physicsBody.FarseerBody.BodyType = BodyType.Static;
-                physicsBody.FarseerBody.BodyType = BodyType.Kinematic;
+                PhysicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
+                PhysicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
+                PhysicsBody.FarseerBody.SetIsSensor(true);
+                PhysicsBody.FarseerBody.BodyType = BodyType.Static;
+                PhysicsBody.FarseerBody.BodyType = BodyType.Kinematic;
 
                 ColliderRadius = ConvertUnits.ToDisplayUnits(Math.Max(Math.Max(PhysicsBody.radius, PhysicsBody.width / 2.0f), PhysicsBody.height / 2.0f));
 
-                physicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
+                PhysicsBody.SetTransform(ConvertUnits.ToSimUnits(position), rotation);
             }
 
             cameraShake = element.GetAttributeFloat("camerashake", 0.0f);
             
             InfectIdentifier = element.GetAttributeString("infectidentifier", null);
             InfectionChance = element.GetAttributeFloat("infectionchance", 0.05f);
+
+            triggerOnce = element.GetAttributeBool("triggeronce", false);
 
             stayTriggeredDelay = element.GetAttributeFloat("staytriggereddelay", 0.0f);
             randomTriggerInterval = element.GetAttributeFloat("randomtriggerinterval", 0.0f);
@@ -256,7 +249,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Error in LevelTrigger config: \"" + triggeredByStr + "\" is not a valid triggerer type.");
             }
             UpdateCollisionCategories();
-            triggerOthersDistance = element.GetAttributeFloat("triggerothersdistance", 0.0f);
+            TriggerOthersDistance = element.GetAttributeFloat("triggerothersdistance", 0.0f);
 
             var tagsArray = element.GetAttributeStringArray("tags", new string[0]);
             foreach (string tag in tagsArray)
@@ -283,11 +276,14 @@ namespace Barotrauma
                     case "attack":
                     case "damage":
                         var attack = new Attack(subElement, string.IsNullOrEmpty(parentDebugName) ? "LevelTrigger" : "LevelTrigger in " + parentDebugName);
-                        var multipliedAfflictions = attack.GetMultipliedAfflictions((float)Timing.Step);
-                        attack.Afflictions.Clear();
-                        foreach (Affliction affliction in multipliedAfflictions)
+                        if (!triggerOnce)
                         {
-                            attack.Afflictions.Add(affliction, null);
+                            var multipliedAfflictions = attack.GetMultipliedAfflictions((float)Timing.Step);
+                            attack.Afflictions.Clear();
+                            foreach (Affliction affliction in multipliedAfflictions)
+                            {
+                                attack.Afflictions.Add(affliction, null);
+                            }
                         }
                         attacks.Add(attack);
                         break;
@@ -300,14 +296,14 @@ namespace Barotrauma
 
         private void UpdateCollisionCategories()
         {
-            if (physicsBody == null) return;
+            if (PhysicsBody == null) return;
 
             var collidesWith = Physics.CollisionNone;
-            if (triggeredBy.HasFlag(TriggererType.Character) || triggeredBy.HasFlag(TriggererType.Creature)) collidesWith |= Physics.CollisionCharacter;
-            if (triggeredBy.HasFlag(TriggererType.Item)) collidesWith |= Physics.CollisionItem | Physics.CollisionProjectile;
-            if (triggeredBy.HasFlag(TriggererType.Submarine)) collidesWith |= Physics.CollisionWall;
+            if (triggeredBy.HasFlag(TriggererType.Human) || triggeredBy.HasFlag(TriggererType.Creature)) { collidesWith |= Physics.CollisionCharacter; }
+            if (triggeredBy.HasFlag(TriggererType.Item)) { collidesWith |= Physics.CollisionItem | Physics.CollisionProjectile; }
+            if (triggeredBy.HasFlag(TriggererType.Submarine)) { collidesWith |= Physics.CollisionWall; }
 
-            physicsBody.CollidesWith = collidesWith;
+            PhysicsBody.CollidesWith = collidesWith;
         }
 
         private void CalculateDirectionalForce()
@@ -362,7 +358,7 @@ namespace Barotrauma
         private void PhysicsBody_OnSeparation(Fixture fixtureA, Fixture fixtureB, Contact contact)
         {
             Entity entity = GetEntity(fixtureB);
-            if (entity == null) return;
+            if (entity == null) { return; }
 
             if (entity is Character character && 
                 (!character.Enabled || character.Removed) &&
@@ -376,22 +372,25 @@ namespace Barotrauma
             //check if there are contacts with any other fixture of the trigger
             //(the OnSeparation callback happens when two fixtures separate, 
             //e.g. if a body stops touching the circular fixture at the end of a capsule-shaped body)
-            ContactEdge contactEdge = fixtureA.Body.ContactList;
-            while (contactEdge != null)
+            foreach (Fixture fixture in PhysicsBody.FarseerBody.FixtureList)
             {
-                if (contactEdge.Contact != null &&
-                    contactEdge.Contact.Enabled &&
-                    contactEdge.Contact.IsTouching)
+                ContactEdge contactEdge = fixture.Body.ContactList;
+                while (contactEdge != null)
                 {
-                    if (contactEdge.Contact.FixtureA != fixtureA && contactEdge.Contact.FixtureB != fixtureA)
+                    if (contactEdge.Contact != null &&
+                        contactEdge.Contact.Enabled &&
+                        contactEdge.Contact.IsTouching)
                     {
-                        var otherEntity = GetEntity(contactEdge.Contact.FixtureB == fixtureB ?
-                            contactEdge.Contact.FixtureB :
-                            contactEdge.Contact.FixtureA);
-                        if (otherEntity == entity) { return; }
+                        if (contactEdge.Contact.FixtureA != fixture && contactEdge.Contact.FixtureB != fixture)
+                        {
+                            var otherEntity = GetEntity(contactEdge.Contact.FixtureB == fixtureB ?
+                                contactEdge.Contact.FixtureB :
+                                contactEdge.Contact.FixtureA);
+                            if (otherEntity == entity) { return; }
+                        }
                     }
+                    contactEdge = contactEdge.Next;
                 }
-                contactEdge = contactEdge.Next;
             }
 
             if (triggerers.Contains(entity))
@@ -403,10 +402,10 @@ namespace Barotrauma
 
         private Entity GetEntity(Fixture fixture)
         {
-            if (fixture.Body == null || fixture.Body.UserData == null) return null;
-            if (fixture.Body.UserData is Entity entity) return entity;
-            if (fixture.Body.UserData is Limb limb) return limb.character;
-            if (fixture.Body.UserData is SubmarineBody subBody) return subBody.Submarine;
+            if (fixture.Body == null || fixture.Body.UserData == null) { return null; }
+            if (fixture.Body.UserData is Entity entity) { return entity; }
+            if (fixture.Body.UserData is Limb limb) { return limb.character; }
+            if (fixture.Body.UserData is SubmarineBody subBody) { return subBody.Submarine; }
 
             return null;
         }
@@ -416,15 +415,15 @@ namespace Barotrauma
         /// </summary>
         public void OtherTriggered(LevelObject levelObject, LevelTrigger otherTrigger)
         {
-            if (!triggeredBy.HasFlag(TriggererType.OtherTrigger) || stayTriggeredDelay <= 0.0f) return;
+            if (!triggeredBy.HasFlag(TriggererType.OtherTrigger) || stayTriggeredDelay <= 0.0f) { return; }
 
             //check if the other trigger has appropriate tags
             if (allowedOtherTriggerTags.Count > 0)
             {
-                if (!allowedOtherTriggerTags.Any(t => otherTrigger.tags.Contains(t))) return;
+                if (!allowedOtherTriggerTags.Any(t => otherTrigger.tags.Contains(t))) { return; }
             }
 
-            if (Vector2.DistanceSquared(WorldPosition, otherTrigger.WorldPosition) <= otherTrigger.triggerOthersDistance * otherTrigger.triggerOthersDistance)
+            if (Vector2.DistanceSquared(WorldPosition, otherTrigger.WorldPosition) <= otherTrigger.TriggerOthersDistance * otherTrigger.TriggerOthersDistance)
             {
                 bool wasAlreadyTriggered = IsTriggered;
                 triggeredTimer = stayTriggeredDelay;
@@ -441,10 +440,10 @@ namespace Barotrauma
 
             triggerers.RemoveWhere(t => t.Removed);
 
-            if (physicsBody != null)
+            if (PhysicsBody != null)
             {
                 //failsafe to ensure triggerers get removed when they're far from the trigger
-                float maxExtent = Math.Max(ConvertUnits.ToDisplayUnits(physicsBody.GetMaxExtent() * 5), 5000.0f);
+                float maxExtent = Math.Max(ConvertUnits.ToDisplayUnits(PhysicsBody.GetMaxExtent() * 5), 5000.0f);
                 triggerers.RemoveWhere(t =>
                 {
                     return Vector2.Distance(t.WorldPosition, WorldPosition) > maxExtent;
@@ -500,17 +499,43 @@ namespace Barotrauma
                 }
             }
 
+            if (triggerOnce)
+            {
+                if (triggeredOnce) { return; }
+                if (triggerers.Count > 0) { triggeredOnce = true; }
+            }
+
             foreach (Entity triggerer in triggerers)
             {
                 foreach (StatusEffect effect in statusEffects)
                 {
-                    if (triggerer is Character)
+                    Vector2? position = null;
+                    if (effect.HasTargetType(StatusEffect.TargetType.This)) { position = WorldPosition; }
+                    if (triggerer is Character character)
                     {
-                        effect.Apply(effect.type, deltaTime, triggerer, (Character)triggerer);
+                        effect.Apply(effect.type, deltaTime, triggerer, character, position);
+                        if (effect.HasTargetType(StatusEffect.TargetType.Contained) && character.Inventory != null)
+                        {
+                            foreach (Item item in character.Inventory.AllItemsMod)
+                            {
+                                if (item.ContainedItems == null) { continue; }
+                                foreach (Item containedItem in item.ContainedItems)
+                                {
+                                    effect.Apply(effect.type, deltaTime, triggerer, containedItem.AllPropertyObjects, position);
+                                }
+                            }
+                        }
                     }
-                    else if (triggerer is Item)
+                    else if (triggerer is Item item)
                     {
-                        effect.Apply(effect.type, deltaTime, triggerer, ((Item)triggerer).AllPropertyObjects);
+                        effect.Apply(effect.type, deltaTime, triggerer, item.AllPropertyObjects, position);
+                    }
+                    if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                        effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
+                    {
+                        var targets = new List<ISerializableEntity>();
+                        effect.GetNearbyTargets(worldPosition, targets);
+                        effect.Apply(effect.type, deltaTime, triggerer, targets);
                     }
                 }
 
