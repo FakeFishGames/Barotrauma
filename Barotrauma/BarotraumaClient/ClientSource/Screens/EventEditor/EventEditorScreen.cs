@@ -399,7 +399,7 @@ namespace Barotrauma
                     else
                     {
                         newNode = new CustomNode(subElement.Name.ToString()) { Position = new Vector2(ident, 0), ID = CreateID() };
-                        foreach (XAttribute attribute in subElement.Attributes())
+                        foreach (XAttribute attribute in subElement.Attributes().Where(attribute => !attribute.ToString().StartsWith("_")))
                         {
                             newNode.Connections.Add(new NodeConnection(newNode, NodeConnectionType.Value, attribute.Name.ToString(), typeof(string)));
                         }
@@ -525,6 +525,7 @@ namespace Barotrauma
 
         public override void Select()
         {
+            GUI.PreventPauseMenuToggle = false;
             projectName = TextManager.Get("EventEditor.Unnamed");
             base.Select();
         }

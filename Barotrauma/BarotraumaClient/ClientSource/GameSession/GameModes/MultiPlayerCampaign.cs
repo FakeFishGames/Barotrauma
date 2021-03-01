@@ -450,7 +450,7 @@ namespace Barotrauma
             {
                 if (mb is GUIMessageBox msgBox)
                 {
-                    if (mb.UserData is Pair<string, ushort> pair && pair.First.Equals("conversationaction", StringComparison.OrdinalIgnoreCase))
+                    if (ReadyCheck.IsReadyCheck(mb) || mb.UserData is Pair<string, ushort> pair && pair.First.Equals("conversationaction", StringComparison.OrdinalIgnoreCase))
                     {
                         msgBox.Close();
                     }
@@ -812,8 +812,7 @@ namespace Barotrauma
                 return; 
             }
             Load(doc.Root.Element("MultiPlayerCampaign"));
-            SubmarineInfo selectedSub;
-            GameMain.GameSession.OwnedSubmarines = SaveUtil.LoadOwnedSubmarines(doc, out selectedSub);
+            GameMain.GameSession.OwnedSubmarines = SaveUtil.LoadOwnedSubmarines(doc, out SubmarineInfo selectedSub);
             GameMain.GameSession.SubmarineInfo = selectedSub;
         }
     }

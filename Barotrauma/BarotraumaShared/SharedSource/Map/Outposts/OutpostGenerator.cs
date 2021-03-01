@@ -1386,10 +1386,10 @@ namespace Barotrauma
                 {
                     gotoTarget = outpost.GetHulls(true).GetRandom();
                 }
-                characterInfo.TeamID = Character.TeamType.FriendlyNPC;
+                characterInfo.TeamID = CharacterTeamType.FriendlyNPC;
                 var npc = Character.Create(CharacterPrefab.HumanConfigFile, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
                 npc.AnimController.FindHull(gotoTarget.WorldPosition, true);
-                npc.TeamID = Character.TeamType.FriendlyNPC;
+                npc.TeamID = CharacterTeamType.FriendlyNPC;
                 if (!outpost.Info.OutpostNPCs.ContainsKey(humanPrefab.Identifier))
                 {
                     outpost.Info.OutpostNPCs.Add(humanPrefab.Identifier, new List<Character>());
@@ -1404,9 +1404,9 @@ namespace Barotrauma
                     npc.CharacterHealth.MaxVitality *= humanPrefab.HealthMultiplier;
                 }
                 humanPrefab.GiveItems(npc, outpost, Rand.RandSync.Server);
-                foreach (Item item in npc.Inventory.Items)
+                foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
-                    if (item != null) { item.SpawnedInOutpost = true; }
+                    item.SpawnedInOutpost = true;
                 }
                 npc.GiveIdCardTags(gotoTarget as WayPoint);
                 if (npc.AIController is HumanAIController humanAI) 

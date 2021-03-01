@@ -299,7 +299,7 @@ namespace Barotrauma
                 //GetApproximateDistance returns float.MaxValue if there's no path through open gaps between the hulls (e.g. if there's a door/wall in between)
                 if (hull.GetApproximateDistance(Position, c.Position, c.CurrentHull, 10000.0f) > size.X + DamageRange)
                 {
-                    return;
+                    continue;
                 }
 
                 float dmg = (float)Math.Sqrt(Math.Min(500, size.X)) * deltaTime / c.AnimController.Limbs.Count(l => !l.IsSevered && !l.Hidden);
@@ -346,11 +346,17 @@ namespace Barotrauma
                 //don't apply OnFire effects if the item is inside a fireproof container
                 //(or if it's inside a container that's inside a fireproof container, etc)
                 Item container = item.Container;
+                bool fireProof = false;
                 while (container != null)
                 {
-                    if (container.FireProof) return;
+                    if (container.FireProof) 
+                    { 
+                        fireProof = true; 
+                        break; 
+                    }
                     container = container.Container;
                 }
+                if (fireProof) { continue; }
 
                 float range = (float)Math.Sqrt(size.X) * 10.0f;
                 if (item.Position.X < position.X - range || item.Position.X > position.X + size.X + range) { continue; }

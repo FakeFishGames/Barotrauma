@@ -235,6 +235,12 @@ namespace Barotrauma.Items.Components
         [Serialize(0f, false, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
         public float CombatPriority { get; private set; }
 
+        /// <summary>
+        /// Which sound should be played when manual sound selection type is selected? Not [Editable] because we don't want this visible in the editor for every component.
+        /// </summary>
+        [Serialize(0, true, alwaysUseInstanceValues: true)]
+        public int ManuallySelectedSound { get; private set; }
+
         public ItemComponent(Item item, XElement element)
         {
             this.item = item;
@@ -470,22 +476,20 @@ namespace Barotrauma.Items.Components
 
         public virtual bool Combine(Item item, Character user)
         {
-            if (canBeCombined && this.item.Prefab == item.Prefab && item.Condition > 0.0f && this.item.Condition > 0.0f)
+            if (canBeCombined && this.item.Prefab == item.Prefab && 
+                item.Condition > 0.0f && this.item.Condition > 0.0f &&
+                !item.IsFullCondition && !this.item.IsFullCondition)
             {
-                float transferAmount = 0.0f;
-                if (this.Item.Condition <= item.Condition)
-                    transferAmount = Math.Min(item.Condition, this.item.MaxCondition - this.item.Condition);
-                else
-                    transferAmount = -Math.Min(this.item.Condition, item.MaxCondition - item.Condition);
+                float transferAmount = Math.Min(item.Condition, this.item.MaxCondition - this.item.Condition);
 
-                if (transferAmount == 0.0f) { return false; }
+                if (MathUtils.NearlyEqual(transferAmount, 0.0f)) { return false; }
                 if (removeOnCombined)
                 {
                     if (item.Condition - transferAmount <= 0.0f)
                     {
                         if (item.ParentInventory != null)
                         {
-                            if (item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(item))
+                            if (item.ParentInventory.Owner is Character owner && owner.HeldItems.Contains(item))
                             {
                                 item.Unequip(owner);
                             }
@@ -501,7 +505,7 @@ namespace Barotrauma.Items.Components
                     {
                         if (this.Item.ParentInventory != null)
                         {
-                            if (this.Item.ParentInventory.Owner is Character owner && owner.HasSelectedItem(this.Item))
+                            if (this.Item.ParentInventory.Owner is Character owner && owner.HeldItems.Contains(this.Item))
                             {
                                 this.Item.Unequip(owner);
                             }
@@ -671,16 +675,18 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Only checks if any of the Picked requirements are matched (used for checking id card(s)). Much simpler and a bit different than HasRequiredItems.
         /// </summary>
-        public bool HasAccess(Character character)
+        public virtual bool HasAccess(Character character)
         {
-            if (character.Inventory == null) { return false; }
+            if (!item.IsInteractable(character)) { return false; }
             if (requiredItems.None()) { return true; }
-
-            foreach (Item item in character.Inventory.Items)
+            if (character.Inventory != null)
             {
-                if (requiredItems.Any(ri => ri.Value.Any(r => r.Type == RelatedItem.RelationType.Picked && r.MatchesItem(item))))
+                foreach (Item item in character.Inventory.AllItems)
                 {
-                    return true;
+                    if (requiredItems.Any(ri => ri.Value.Any(r => r.Type == RelatedItem.RelationType.Picked && r.MatchesItem(item))))
+                    {
+                        return true;
+                    }                    
                 }
             }
             return false;
@@ -689,6 +695,7 @@ namespace Barotrauma.Items.Components
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (requiredItems.None()) { return true; }
+            if (!character.IsPlayer && character.Params.AI != null && character.Params.AI.Infiltrate) { return true; }
             if (character.Inventory == null) { return false; }
             bool hasRequiredItems = false;
             bool canContinue = true;
@@ -696,7 +703,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
                 {
-                    canContinue = CheckItems(ri, character.SelectedItems);
+                    canContinue = CheckItems(ri, character.HeldItems);
                     if (!canContinue) { break; }
                 }
             }
@@ -706,7 +713,7 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Picked])
                     {
-                        if (!CheckItems(ri, character.Inventory.Items)) { break; }
+                        if (!CheckItems(ri, character.Inventory.AllItems)) { break; }
                     }
                 }
             }
@@ -974,7 +981,7 @@ namespace Barotrauma.Items.Components
                     previousUser = character;
                     itemIndex = 0;
                 }
-                if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: aiController.IgnoredItems, customPriorityFunction: priority))
+                if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: aiController.IgnoredItems, customPriorityFunction: priority, positionalReference: Item))
                 {
                     suitableContainer = targetContainer;
                     return true;
@@ -1033,7 +1040,7 @@ namespace Barotrauma.Items.Components
             if (character.AIController is HumanAIController aiController)
             {
                 ItemContainer sourceC = sourceContainer ?? (item.OwnInventory?.Owner is Item it ? it.GetComponent<ItemContainer>() : null);
-                var containedItems = sourceContainer != null ? sourceContainer.Inventory.Items : item.OwnInventory.Items;
+                var containedItems = sourceContainer != null ? sourceContainer.Inventory.AllItems : item.OwnInventory.AllItems;
                 foreach (Item containedItem in containedItems)
                 {
                     if (containedItem != null && containedItem.Condition <= 0.0f)
@@ -1044,20 +1051,20 @@ namespace Barotrauma.Items.Components
                                 if (i.IsThisOrAnyContainerIgnoredByAI()) { return 0; }
                                 var container = i.GetComponent<ItemContainer>();
                                 if (container == null) { return 0; }
-                                if (container.Inventory.IsFull()) { return 0; }
+                                if (!container.Inventory.CanBePut(containedItem)) { return 0; }
                                 // Ignore containers that are identical to the source container
                                 if (sourceC != null && container.Item.Prefab == sourceC.Item.Prefab) { return 0; }
                                 if (container.ShouldBeContained(containedItem, out bool isRestrictionsDefined))
                                 {
                                     if (isRestrictionsDefined)
                                     {
-                                        return 4;
+                                        return 10;
                                     }
                                     else
                                     {
-                                        if (containedItem.Prefab.IsContainerPreferred(container, out bool isPreferencesDefined, out bool isSecondary))
+                                        if (containedItem.IsContainerPreferred(container, out bool isPreferencesDefined, out bool isSecondary))
                                         {
-                                            return isPreferencesDefined ? isSecondary ? 2 : 3 : 1;
+                                            return isPreferencesDefined ? isSecondary ? 2 : 5 : 1;
                                         }
                                         else
                                         {

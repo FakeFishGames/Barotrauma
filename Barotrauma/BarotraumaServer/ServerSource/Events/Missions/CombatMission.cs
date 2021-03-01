@@ -21,31 +21,6 @@ namespace Barotrauma
             }
         }
 
-        public override void AssignTeamIDs(List<Client> clients)
-        {
-            List<Client> randList = new List<Client>(clients);
-            for (int i = 0; i < randList.Count; i++)
-            {
-                Client a = randList[i];
-                int oi = Rand.Range(0, randList.Count - 1);
-                Client b = randList[oi];
-                randList[i] = b;
-                randList[oi] = a;
-            }
-            int halfPlayers = randList.Count / 2;
-            for (int i = 0; i < randList.Count; i++)
-            {
-                if (i < halfPlayers)
-                {
-                    randList[i].TeamID = Character.TeamType.Team1;
-                }
-                else
-                {
-                    randList[i].TeamID = Character.TeamType.Team2;
-                }
-            }
-        }
-
         public override void Update(float deltaTime)
         {
             if (!initialized)
@@ -54,11 +29,11 @@ namespace Barotrauma
                 crews[1].Clear();
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (character.TeamID == Character.TeamType.Team1)
+                    if (character.TeamID == CharacterTeamType.Team1)
                     {
                         crews[0].Add(character);
                     }
-                    else if (character.TeamID == Character.TeamType.Team2)
+                    else if (character.TeamID == CharacterTeamType.Team2)
                     {
                         crews[1].Add(character);
                     }
@@ -88,7 +63,7 @@ namespace Barotrauma
                         //make sure nobody in the other team can be revived because that would be pretty weird
                         crews[1 - i].ForEach(c => { if (!c.IsDead) c.Kill(CauseOfDeathType.Unknown, null); });
 
-                        GameMain.GameSession.WinningTeam = i == 0 ? Character.TeamType.Team1 : Character.TeamType.Team2;
+                        GameMain.GameSession.WinningTeam = i == 0 ? CharacterTeamType.Team1 : CharacterTeamType.Team2;
 
                         state = 1;
                         break;
@@ -99,10 +74,10 @@ namespace Barotrauma
             {
                 if (teamDead[0] && teamDead[1])
                 {
-                    GameMain.GameSession.WinningTeam = Character.TeamType.None;
+                    GameMain.GameSession.WinningTeam = CharacterTeamType.None;
                     if (GameMain.Server != null) { GameMain.Server.EndGame(); }
                 }
-                else if (GameMain.GameSession.WinningTeam != Character.TeamType.None)
+                else if (GameMain.GameSession.WinningTeam != CharacterTeamType.None)
                 {
                     GameMain.Server.EndGame();
                 }

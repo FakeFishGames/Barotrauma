@@ -122,7 +122,7 @@ namespace Barotrauma.Items.Components
                 msg.ReadUInt16(); //user ID
                 foreach (Connection connection in Connections)
                 {
-                    for (int i = 0; i < Connection.MaxLinked; i++)
+                    for (int i = 0; i < connection.MaxWires; i++)
                     {
                         msg.ReadUInt16();
                     }
@@ -168,7 +168,7 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection connection in Connections)
             {
-                for (int i = 0; i < Connection.MaxLinked; i++)
+                for (int i = 0; i < connection.MaxWires; i++)
                 {
                     ushort wireId = msg.ReadUInt16();
 

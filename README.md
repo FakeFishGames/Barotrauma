@@ -14,7 +14,7 @@ If you're interested in working on the code, either to develop mods or to contri
 
 **Forums:** http://undertowgames.com/forum/
 
-**Wiki:** http://barotrauma.gamepedia.com/Barotrauma_Wiki
+**Wiki:** https://barotraumagame.com/wiki/Main_Page
 
 ## Prerequisities:
 ### Windows

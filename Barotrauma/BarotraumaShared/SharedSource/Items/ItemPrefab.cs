@@ -22,6 +22,7 @@ namespace Barotrauma
         public readonly float OutCondition;
         //should the condition of the deconstructed item be copied to the output items
         public readonly bool CopyCondition;
+        public float Commonness { get; }
 
         public DeconstructItem(XElement element)
         {
@@ -30,6 +31,7 @@ namespace Barotrauma
             MaxCondition = element.GetAttributeFloat("maxcondition", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
             CopyCondition = element.GetAttributeBool("copycondition", false);
+            Commonness = element.GetAttributeFloat("commonness", 1.0f);
         }
     }
 
@@ -66,6 +68,7 @@ namespace Barotrauma
         public readonly float RequiredTime;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly List<Skill> RequiredSkills;
+        public int Amount { get; }
 
         public FabricationRecipe(XElement element, ItemPrefab itemPrefab)
         {
@@ -79,6 +82,7 @@ namespace Barotrauma
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
             RequiredItems = new List<RequiredItem>();
+            Amount = element.GetAttributeInt("amount", 1);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -118,7 +122,7 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            var existing = RequiredItems.Find(r => r.ItemPrefabs.Count == 1 && r.ItemPrefabs[0] == requiredItem);
+                            var existing = RequiredItems.Find(r => r.ItemPrefabs.Count == 1 && r.ItemPrefabs[0] == requiredItem && MathUtils.NearlyEqual(r.MinCondition, minCondition));
                             if (existing == null)
                             {
                                 RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
@@ -137,7 +141,7 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            var existing = RequiredItems.Find(r => r.ItemPrefabs.SequenceEqual(matchingItems));
+                            var existing = RequiredItems.Find(r => r.ItemPrefabs.SequenceEqual(matchingItems) && MathUtils.NearlyEqual(r.MinCondition, minCondition));
                             if (existing == null)
                             {
                                 RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, useCondition));
@@ -157,7 +161,10 @@ namespace Barotrauma
     {
         public readonly HashSet<string> Primary = new HashSet<string>();
         public readonly HashSet<string> Secondary = new HashSet<string>();
+
         public float SpawnProbability { get; private set; }
+        public float MaxCondition { get; private set; }
+        public float MinCondition { get; private set; }
         public int MinAmount { get; private set; }
         public int MaxAmount { get; private set; }
 
@@ -168,6 +175,8 @@ namespace Barotrauma
             SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
             MinAmount = element.GetAttributeInt("minamount", 0);
             MaxAmount = Math.Max(MinAmount, element.GetAttributeInt("maxamount", 0));
+            MaxCondition = element.GetAttributeFloat("maxcondition", 100f);
+            MinCondition = element.GetAttributeFloat("mincondition", 0f);
 
             if (element.Attribute("spawnprobability") == null)
             {
@@ -498,9 +507,26 @@ namespace Barotrauma
 
         public bool CanSpriteFlipY { get; private set; }
 
+        private int maxStackSize;
+        [Serialize(1, false)]
+        public int MaxStackSize
+        {
+            get { return maxStackSize; }
+            set { maxStackSize = MathHelper.Clamp(value, 1, Inventory.MaxStackSize); }
+        }
+
         public Vector2 Size => size;
 
         public bool CanBeBought => (defaultPrice != null && defaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
+
+        /// <summary>
+        /// Any item with a Price element in the definition can be sold everywhere.
+        /// </summary>
+        public bool CanBeSold => defaultPrice != null;
+
+        public bool RandomDeconstructionOutput { get; }
+
+        public int RandomDeconstructionOutputAmount { get; }
 
         public static void RemoveByFile(string filePath) => Prefabs.RemoveByFile(filePath);
 
@@ -876,6 +902,8 @@ namespace Barotrauma
                     case "deconstruct":
                         DeconstructTime = subElement.GetAttributeFloat("time", 1.0f);
                         AllowDeconstruct = true;
+                        RandomDeconstructionOutput = subElement.GetAttributeBool("chooserandom", false);
+                        RandomDeconstructionOutputAmount = subElement.GetAttributeInt("amount", 1);
                         foreach (XElement deconstructItem in subElement.Elements())
                         {
                             if (deconstructItem.Attribute("name") != null)
@@ -883,10 +911,9 @@ namespace Barotrauma
                                 DebugConsole.ThrowError("Error in item config \"" + Name + "\" - use item identifiers instead of names to configure the deconstruct items.");
                                 continue;
                             }
-
                             DeconstructItems.Add(new DeconstructItem(deconstructItem));
                         }
-
+                        RandomDeconstructionOutputAmount = Math.Min(RandomDeconstructionOutputAmount, DeconstructItems.Count);
                         break;
                     case "fabricate":
                     case "fabricable":
@@ -1073,31 +1100,33 @@ namespace Barotrauma
             }
         }
 
-        public bool IsContainerPreferred(ItemContainer itemContainer, out bool isPreferencesDefined, out bool isSecondary)
+        public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary)
         {
             isPreferencesDefined = PreferredContainers.Any();
             isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            if (PreferredContainers.Any(pc => IsContainerPreferred(pc.Primary, itemContainer)))
+            if (PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Primary, targetContainer)))
             {
                 return true;
             }
             isSecondary = true;
-            return PreferredContainers.Any(pc => IsContainerPreferred(pc.Secondary, itemContainer));
+            return PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, targetContainer));
         }
 
-        public bool IsContainerPreferred(string[] identifiersOrTags, out bool isPreferencesDefined, out bool isSecondary)
+        public bool IsContainerPreferred(Item item, string[] identifiersOrTags, out bool isPreferencesDefined, out bool isSecondary)
         {
             isPreferencesDefined = PreferredContainers.Any();
             isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            if (PreferredContainers.Any(pc => IsContainerPreferred(pc.Primary, identifiersOrTags)))
+            if (PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Primary, identifiersOrTags)))
             {
                 return true;
             }
             isSecondary = true;
-            return PreferredContainers.Any(pc => IsContainerPreferred(pc.Secondary, identifiersOrTags));
+            return PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, identifiersOrTags));
         }
+
+        private bool IsItemConditionAcceptable(Item item, PreferredContainer pc) => item.ConditionPercentage >= pc.MinCondition && item.ConditionPercentage <= pc.MaxCondition;
 
         public static bool IsContainerPreferred(IEnumerable<string> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
         public static bool IsContainerPreferred(IEnumerable<string> preferences, IEnumerable<string> ids) => ids.Any(id => preferences.Contains(id));

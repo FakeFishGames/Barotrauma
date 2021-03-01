@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -135,6 +136,13 @@ namespace Barotrauma
                     case "walledge":
                         WallEdgeSprite = new Sprite(subElement);
                         break;
+                    case "overridecommonness":
+                        string levelType = subElement.GetAttributeString("leveltype", "").ToLowerInvariant();
+                        if (!OverrideCommonness.ContainsKey(levelType))
+                        {
+                            OverrideCommonness.Add(levelType, subElement.GetAttributeFloat("commonness", 1.0f));
+                        }
+                        break;
                 }
             }
         }
@@ -190,6 +198,31 @@ namespace Barotrauma
                             CaveParams.Add(new CaveGenerationParams(element));
                         }
                     }
+                }
+            }
+        }
+
+        public void Save(XElement element)
+        {
+            SerializableProperty.SerializeProperties(this, element, true);
+            foreach (KeyValuePair<string, float> overrideCommonness in OverrideCommonness)
+            {
+                bool elementFound = false;
+                foreach (XElement subElement in element.Elements())
+                {
+                    if (subElement.Name.ToString().Equals("overridecommonness", StringComparison.OrdinalIgnoreCase)
+                        && subElement.GetAttributeString("leveltype", "").Equals(overrideCommonness.Key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        subElement.Attribute("commonness").Value = overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture);
+                        elementFound = true;
+                        break;
+                    }
+                }
+                if (!elementFound)
+                {
+                    element.Add(new XElement("overridecommonness",
+                        new XAttribute("leveltype", overrideCommonness.Key),
+                        new XAttribute("commonness", overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture))));
                 }
             }
         }

@@ -149,7 +149,7 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (item.IgnoreByAI) { return false; }
-            if (item.NonInteractable) { return false; }
+            if (!item.IsInteractable(character)) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null || character.Submarine == null) { return false; }

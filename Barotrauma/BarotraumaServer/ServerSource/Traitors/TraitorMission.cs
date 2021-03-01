@@ -87,13 +87,13 @@ namespace Barotrauma
                 return pendingObjectives.Find(objective => objective.Roles.Contains(traitor.Role));
             }
 
-            protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, Character.TeamType team, RoleFilter traitorRoleFilter)
+            protected List<Tuple<Client, Character>> FindTraitorCandidates(GameServer server, CharacterTeamType team, RoleFilter traitorRoleFilter)
             {
                 var traitorCandidates = new List<Tuple<Client, Character>>();
                 foreach (Client c in server.ConnectedClients)
                 {
                     if (c.Character == null || c.Character.IsDead || c.Character.Removed || !traitorRoleFilter(c.Character) ||
-                        (team != Character.TeamType.None && c.Character.TeamID != team))
+                        (team != CharacterTeamType.None && c.Character.TeamID != team))
                     {
                         continue;
                     }
@@ -115,7 +115,7 @@ namespace Barotrauma
                 return characters;
             }
 
-            protected List<Tuple<string, Tuple<Client, Character>>> AssignTraitors(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            protected List<Tuple<string, Tuple<Client, Character>>> AssignTraitors(GameServer server, TraitorManager traitorManager, CharacterTeamType team)
             {
                 List<Character> characters = FindCharacters();
 #if !ALLOW_SOLO_TRAITOR
@@ -176,7 +176,7 @@ namespace Barotrauma
                 return assignedCandidates;
             }
 
-            public bool CanBeStarted(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            public bool CanBeStarted(GameServer server, TraitorManager traitorManager, CharacterTeamType team)
             {
                 foreach (var role in Roles)
                 {
@@ -189,7 +189,7 @@ namespace Barotrauma
                 return AssignTraitors(server, traitorManager, team) != null;
             }
 
-            public bool Start(GameServer server, TraitorManager traitorManager, Character.TeamType team)
+            public bool Start(GameServer server, TraitorManager traitorManager, CharacterTeamType team)
             {
                 var assignedCandidates = AssignTraitors(server, traitorManager, team);
                 if (assignedCandidates == null)

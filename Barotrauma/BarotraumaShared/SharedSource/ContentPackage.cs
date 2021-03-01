@@ -57,13 +57,13 @@ namespace Barotrauma
     {
         public static string Folder = "Data/ContentPackages/";
 
-        private static List<ContentPackage> regularPackages = new List<ContentPackage>();
+        private static readonly List<ContentPackage> regularPackages = new List<ContentPackage>();
         public static IReadOnlyList<ContentPackage> RegularPackages
         {
             get { return regularPackages; }
         }
 
-        private static List<ContentPackage> corePackages = new List<ContentPackage>();
+        private static readonly List<ContentPackage> corePackages = new List<ContentPackage>();
         public static IReadOnlyList<ContentPackage> CorePackages
         {
             get { return corePackages; }
@@ -105,7 +105,7 @@ namespace Barotrauma
         };
 
         //at least one file of each these types is required in core content packages
-        private static HashSet<ContentType> corePackageRequiredFiles = new HashSet<ContentType>
+        private static readonly HashSet<ContentType> corePackageRequiredFiles = new HashSet<ContentType>
         {
             ContentType.Jobs,
             ContentType.Item,
@@ -141,8 +141,8 @@ namespace Barotrauma
         }
 
         public static bool IngameModSwap = false;
-        
-        public string Name { get; set; }
+
+        public string Name { get; set; } = string.Empty;
 
         public string Path
         {
@@ -208,9 +208,9 @@ namespace Barotrauma
         }
 
 
-        private List<ContentFile> files;
-        private List<ContentFile> filesToAdd;
-        private List<ContentFile> filesToRemove;
+        private readonly List<ContentFile> files;
+        private readonly List<ContentFile> filesToAdd;
+        private readonly List<ContentFile> filesToRemove;
 
 
         public IReadOnlyList<ContentFile> Files
@@ -238,6 +238,12 @@ namespace Barotrauma
             get { return Files.Any(f => MultiplayerIncompatibleContent.Contains(f.Type)); }
         }
 
+        public bool IsCorrupt
+        {
+            get;
+            private set;
+        }
+
         private ContentPackage()
         {
             files = new List<ContentFile>();
@@ -256,7 +262,8 @@ namespace Barotrauma
 
             if (doc?.Root == null)
             {
-                DebugConsole.ThrowError("Couldn't load content package \"" + filePath + "\"!");
+                DebugConsole.ThrowError("Couldn't load content package \"" + filePath + "\"!"); 
+                IsCorrupt = true;
                 return;
             }
 
@@ -621,14 +628,12 @@ namespace Barotrauma
                 {
                     case ContentType.Character:
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                        var rootElement = doc.Root;
-                        var element = rootElement.IsOverride() ? rootElement.FirstElement() : rootElement;
-                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
+                        var ragdollFolder = RagdollParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(ragdollFolder))
                         {
                             Directory.GetFiles(ragdollFolder, "*.xml").ForEach(f => filePaths.Add(f));
                         }
-                        var animationFolder = AnimationParams.GetFolder(doc, file.Path).CleanUpPathCrossPlatform(true);
+                        var animationFolder = AnimationParams.GetFolder(doc, file.Path);
                         if (Directory.Exists(animationFolder))
                         {
                             Directory.GetFiles(animationFolder, "*.xml").ForEach(f => filePaths.Add(f));
@@ -764,7 +769,8 @@ namespace Barotrauma
 
             foreach (string filePath in files)
             {
-                AddPackage(new ContentPackage(filePath));
+                var newPackage = new ContentPackage(filePath);
+                if (!newPackage.IsCorrupt) { AddPackage(newPackage); }
             }
 
             IEnumerable<string> modDirectories = Directory.GetDirectories("Mods");
@@ -780,21 +786,25 @@ namespace Barotrauma
                 }
                 else if (File.Exists(modFilePath))
                 {
-                    AddPackage(new ContentPackage(modFilePath));
+                    var newPackage = new ContentPackage(modFilePath);
+                    if (!newPackage.IsCorrupt)
+                    {
+                        AddPackage(newPackage);
+                    }
                 }
             }
             SortContentPackages(p => prevRegularPackages.IndexOf(p.Name.ToLowerInvariant()));
             GameMain.Config?.SortContentPackages();
         }
 
-        public static void SortContentPackages<T>(Func<ContentPackage, T> order, bool refreshAll = false)
+        public static void SortContentPackages<T>(Func<ContentPackage, T> order, bool refreshAll = false, GameSettings config = null)
         {
             var ordered = regularPackages
                 .OrderBy(p => order(p))
                 .ThenBy(p => regularPackages.IndexOf(p))
                 .ToList();
             regularPackages.Clear(); regularPackages.AddRange(ordered);
-            GameMain.Config?.SortContentPackages(refreshAll);
+            (config ?? GameMain.Config)?.SortContentPackages(refreshAll);
         }
 
         public void Delete()

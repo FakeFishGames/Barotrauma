@@ -25,7 +25,7 @@ namespace Barotrauma
     {
         public SubmarineInfo Info { get; private set; }
 
-        public Character.TeamType TeamID = Character.TeamType.None;
+        public CharacterTeamType TeamID = CharacterTeamType.None;
 
         public static readonly Vector2 HiddenSubStartPosition = new Vector2(-50000.0f, 10000.0f);
         //position of the "actual submarine" which is rendered wherever the SubmarineBody is 
@@ -254,7 +254,7 @@ namespace Barotrauma
             get 
             {
                 if (Level.Loaded == null || subBody == null) { return false; }
-                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth; 
+                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth & RealWorldDepth > RealWorldCrushDepth;
             }
         }
 
@@ -325,7 +325,7 @@ namespace Barotrauma
             Info.Type = SubmarineType.Wreck;
             ShowSonarMarker = false;
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
-            TeamID = Character.TeamType.None;
+            TeamID = CharacterTeamType.None;
 
             string defaultTag = Level.Loaded.GetWreckIDTag("wreck_id", this);
             ReplaceIDCardTagRequirements("wreck_id", defaultTag);
@@ -554,7 +554,7 @@ namespace Barotrauma
                 spawnPos.X = (limits.X + limits.Y) / 2 + subDockingPortOffset;
             }
             
-            spawnPos.Y = MathHelper.Clamp(spawnPos.Y, dockedBorders.Height / 2 + 10, Level.Loaded.Size.Y - dockedBorders.Height / 2 - 10);
+            spawnPos.Y = MathHelper.Clamp(spawnPos.Y, dockedBorders.Height / 2 + 10, Level.Loaded.Size.Y - dockedBorders.Height / 2 - padding * 2);
             return spawnPos - diffFromDockedBorders;
         }
 
@@ -1332,7 +1332,7 @@ namespace Barotrauma
                 {
                     ShowSonarMarker = false;
                     PhysicsBody.FarseerBody.BodyType = BodyType.Static;
-                    TeamID = Character.TeamType.FriendlyNPC;
+                    TeamID = CharacterTeamType.FriendlyNPC;
 
                     foreach (MapEntity me in MapEntity.mapEntityList)
                     {
@@ -1495,7 +1495,19 @@ namespace Barotrauma
                 if (e is Item item)
                 {
                     if (item.FindParentInventory(inv => inv is CharacterInventory) != null) { continue; }
+#if CLIENT
+                    if (Screen.Selected != GameMain.SubEditorScreen)
+                    {
+                        if (e.Submarine != this && item.GetRootContainer()?.Submarine != this) { continue; }
+                    }
+                    else
+                    {
+                        e.Submarine = this;
+                    }
+#else
                     if (e.Submarine != this && item.GetRootContainer()?.Submarine != this) { continue; }
+#endif
+
                 }
                 else
                 {
@@ -1517,6 +1529,10 @@ namespace Barotrauma
                 OutpostModuleInfo = Info.OutpostModuleInfo != null ? new OutpostModuleInfo(Info.OutpostModuleInfo) : null,
                 Name = Path.GetFileNameWithoutExtension(filePath)
             };
+#if CLIENT
+            //remove reference to the preview image from the old info, so we don't dispose it (the new info still uses the texture)
+            Info.PreviewImage = null;
+#endif
             Info.Dispose(); Info = newInfo;
             return newInfo.SaveAs(filePath, previewImage);
         }
@@ -1691,6 +1707,7 @@ namespace Barotrauma
                         }
                     }
                 }
+                node.Waypoint.FindHull();
             }
         }
 
@@ -1705,6 +1722,7 @@ namespace Barotrauma
                 nodes.Clear();
                 obstructedNodes.Remove(otherSub);
             }
+            OutdoorNodes.ForEach(n => n.Waypoint.FindHull());
         }
     }
 }

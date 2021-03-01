@@ -33,7 +33,7 @@ namespace Barotrauma
 
                 int prevIndex = 0;
                 int currIndex = 0;
-                for (int i=0;i<segments.Length;i++)
+                for (int i = 0; i < segments.Length; i++)
                 {
                     if (i % 2 == 0)
                     {
@@ -44,7 +44,7 @@ namespace Barotrauma
                     else
                     {
                         string[] attributes = segments[i].Split(attributeSeparator);
-                        for (int j=0;j<attributes.Length;j++)
+                        for (int j = 0; j < attributes.Length; j++)
                         {
                             if (attributes[j].Contains(endDefinition))
                             {

@@ -178,7 +178,7 @@ namespace Barotrauma
                 {
                     if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0f && 
                         speaker?.CurrentHull != null && 
-                        speaker.TeamID == Character.TeamType.FriendlyNPC && 
+                        speaker.TeamID == CharacterTeamType.FriendlyNPC && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost"); 
@@ -213,7 +213,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (speaker.TeamID == Character.TeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
+                if (speaker.TeamID == CharacterTeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
                 {
                     currentFlags.Add("OutpostNPC");
                 }

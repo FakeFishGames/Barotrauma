@@ -71,9 +71,13 @@ namespace Barotrauma.Items.Components
 
         private float showDirectionalIndicatorTimer;
 
-        private List<LevelObject> nearbyObjects = new List<LevelObject>();
+        private readonly List<LevelObject> nearbyObjects = new List<LevelObject>();
         private const float NearbyObjectUpdateInterval = 1.0f;
         float nearbyObjectUpdateTimer;
+
+        private List<Submarine> connectedSubs = new List<Submarine>();
+        private const float ConnectedSubUpdateInterval = 1.0f;
+        float connectedSubUpdateTimer;
 
         //Vector2 = vector from the ping source to the position of the disruption
         //float = strength of the disruption, between 0-1
@@ -135,6 +139,8 @@ namespace Barotrauma.Items.Components
 
         private bool isConnectedToSteering;
 
+        private static string caveLabel;
+
         private bool AllowUsingMineralScanner =>
             HasMineralScanner && !isConnectedToSteering;
 
@@ -142,6 +148,10 @@ namespace Barotrauma.Items.Components
         {
             System.Diagnostics.Debug.Assert(Enum.GetValues(typeof(BlipType)).Cast<BlipType>().All(t => blipColorGradient.ContainsKey(t)));
             sonarBlips = new List<SonarBlip>();
+
+            caveLabel = 
+                TextManager.Get("cave", returnNull: true) ?? 
+                TextManager.Get("missiontype.nest");
 
             foreach (XElement subElement in element.Elements())
             {
@@ -411,6 +421,26 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 networkUpdateTimer -= deltaTime;
+            }
+
+            connectedSubUpdateTimer -= deltaTime;
+            if (connectedSubUpdateTimer <= 0.0f)
+            {
+                connectedSubs.Clear();
+                if (UseTransducers)
+                {
+                    foreach (var transducer in connectedTransducers)
+                    {
+                        if (transducer.Transducer.Item.Submarine == null) { continue; }
+                        if (connectedSubs.Contains(transducer.Transducer.Item.Submarine)) { continue; }
+                        connectedSubs = transducer.Transducer.Item.Submarine?.GetConnectedSubs();
+                    }
+                }
+                else if (item.Submarine != null)
+                {
+                    connectedSubs = item.Submarine?.GetConnectedSubs();
+                }
+                connectedSubUpdateTimer = ConnectedSubUpdateInterval;
             }
 
             if (sonarView.Rect.Contains(PlayerInput.MousePosition))
@@ -848,10 +878,22 @@ namespace Barotrauma.Items.Components
                     displayScale, center, DisplayRadius);
             }
 
+            for (int i = 0; i < Level.Loaded.Caves.Count; i++)
+            {
+                var cave = Level.Loaded.Caves[i];
+                if (!cave.DisplayOnSonar) { continue; }
+                DrawMarker(spriteBatch,
+                    caveLabel,
+                    "cave",
+                    "cave" + i,
+                    cave.StartPos.ToVector2(), transducerCenter,
+                    displayScale, center, DisplayRadius);
+            }
+
             foreach (AITarget aiTarget in AITarget.List)
             {
-                if (!aiTarget.Enabled) continue;
-                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) continue;
+                if (!aiTarget.Enabled) { continue; }
+                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) { continue; }
 
                 if (Vector2.DistanceSquared(aiTarget.WorldPosition, transducerCenter) < aiTarget.SoundRange * aiTarget.SoundRange)
                 {
@@ -902,16 +944,11 @@ namespace Barotrauma.Items.Components
             foreach (Submarine sub in Submarine.Loaded)
             {
                 if (!sub.ShowSonarMarker) { continue; }
-                if (UseTransducers ?
-                    connectedTransducers.Any(t => sub == t.Transducer.Item.Submarine || sub.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                    (sub == item.Submarine || sub.DockedTo.Contains(item.Submarine)))
-                {
-                    continue;
-                }
+                if (connectedSubs.Contains(sub)) { continue; }
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
-                             
-                DrawMarker(spriteBatch, 
-                    sub.Info.DisplayName, 
+
+                DrawMarker(spriteBatch,
+                    sub.Info.DisplayName,
                     sub.Info.HasTag(SubmarineTag.Shuttle) ? "shuttle" : "submarine",
                     sub,
                     sub.WorldPosition, transducerCenter, 
@@ -931,10 +968,8 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
-                if (UseTransducers ?
-                    !connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || submarine.DockedTo.Contains(t.Transducer.Item.Submarine)) :
-                    submarine != item.Submarine && !submarine.DockedTo.Contains(item.Submarine)) continue;
-                if (submarine.HullVertices == null) continue;
+                if (!connectedSubs.Contains(submarine)) { continue; }
+                if (submarine.HullVertices == null) { continue; }
 
                 Vector2 offset = ConvertUnits.ToSimUnits(submarine.WorldPosition - transducerCenter);
 
@@ -1018,8 +1053,8 @@ namespace Barotrauma.Items.Components
                 //don't show the docking ports of the opposing team on the sonar
                 if (item.Submarine != null)
                 {
-                    if ((dockingPort.Item.Submarine.TeamID == Character.TeamType.Team1 && item.Submarine.TeamID == Character.TeamType.Team2) ||
-                        (dockingPort.Item.Submarine.TeamID == Character.TeamType.Team2 && item.Submarine.TeamID == Character.TeamType.Team1))
+                    if ((dockingPort.Item.Submarine.TeamID == CharacterTeamType.Team1 && item.Submarine.TeamID == CharacterTeamType.Team2) ||
+                        (dockingPort.Item.Submarine.TeamID == CharacterTeamType.Team2 && item.Submarine.TeamID == CharacterTeamType.Team1))
                     {
                         continue;
                     }
@@ -1226,19 +1261,10 @@ namespace Barotrauma.Items.Components
 
             foreach (Submarine submarine in Submarine.Loaded)
             {
-                if (submarine.HullVertices == null) continue;
+                if (submarine.HullVertices == null) { continue; }
                 if (!DetectSubmarineWalls)
                 {
-                    if (UseTransducers)
-                    {
-                        if (connectedTransducers.Any(t => submarine == t.Transducer.Item.Submarine || 
-                            submarine.DockedTo.Contains(t.Transducer.Item.Submarine))) continue;
-                    }
-                    else
-                    {
-                        if (item.Submarine == submarine) continue;
-                        if (item.Submarine != null && item.Submarine.DockedTo.Contains(submarine)) continue;
-                    }
+                    if (connectedSubs.Contains(submarine)) { continue; }                    
                 }
 
                 for (int i = 0; i < submarine.HullVertices.Count; i++)

@@ -11,15 +11,15 @@ namespace Barotrauma
 {
     class CampaignSetupUI
     {
-        private GUIComponent newGameContainer, loadGameContainer;
+        private readonly GUIComponent newGameContainer, loadGameContainer;
 
         private GUIListBox subList;
         private GUIListBox saveList;
         private List<GUITickBox> subTickBoxes;
 
-        private GUITextBox saveNameBox, seedBox;
+        private readonly GUITextBox saveNameBox, seedBox;
 
-        private GUILayoutGroup subPreviewContainer;
+        private readonly GUILayoutGroup subPreviewContainer;
 
         private GUIButton loadGameButton, deleteMpSaveButton;
         
@@ -30,6 +30,12 @@ namespace Barotrauma
         private CategoryFilter subFilter = CategoryFilter.All;
 
         public GUIButton StartButton
+        {
+            get;
+            private set;
+        }
+
+        public GUITextBlock InitialMoneyText
         {
             get;
             private set;
@@ -122,10 +128,10 @@ namespace Barotrauma
             };
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.12f),
-                (isMultiplayer ? leftColumn : rightColumn).RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.TopRight);
+                (isMultiplayer ? leftColumn : rightColumn).RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.BottomRight, isHorizontal: true);
             if (!isMultiplayer) { buttonContainer.IgnoreLayoutGroups = true; }
 
-            StartButton = new GUIButton(new RectTransform(new Vector2(0.45f, 1f), buttonContainer.RectTransform, Anchor.BottomRight) { MaxSize = new Point(350, 60) }, TextManager.Get("StartCampaignButton"))
+            StartButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1f), buttonContainer.RectTransform, Anchor.BottomRight) { MaxSize = new Point(350, 60) }, TextManager.Get("StartCampaignButton"))
             {
                 OnClicked = (GUIButton btn, object userData) =>
                 {
@@ -224,6 +230,27 @@ namespace Barotrauma
                 }
             };
 
+            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", 
+                font: isMultiplayer ? GUI.Style.SmallFont : GUI.Style.Font, textColor: GUI.Style.Green)
+            {
+                TextGetter = () =>
+                {
+                    int initialMoney = CampaignMode.InitialMoney;
+                    if (isMultiplayer)
+                    {
+                        if (GameMain.NetLobbyScreen.SelectedSub != null)
+                        {
+                            initialMoney -= GameMain.NetLobbyScreen.SelectedSub.Price;
+                        }
+                    }
+                    else if (subList.SelectedData is SubmarineInfo subInfo)
+                    {
+                        initialMoney -= subInfo.Price;
+                    }
+                    initialMoney = Math.Max(initialMoney, isMultiplayer ? MultiPlayerCampaign.MinimumInitialMoney : 0);
+                    return TextManager.GetWithVariable("campaignstartingmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", initialMoney));
+                }
+            };
 
             if (!isMultiplayer)
             {
@@ -366,7 +393,7 @@ namespace Barotrauma
 
             if (!(obj is SubmarineInfo sub)) { return true; }
 #if !DEBUG
-            if (!isMultiplayer && sub.Price > CampaignMode.MaxInitialSubmarinePrice && !GameMain.DebugDraw) 
+            if (!isMultiplayer && sub.Price > CampaignMode.InitialMoney && !GameMain.DebugDraw) 
             {
                 StartButton.Enabled = false;
                 return false; 
@@ -419,13 +446,14 @@ namespace Barotrauma
             }
             else
             {
-                subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass).ToList();
+                string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
+                subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass && Path.GetDirectoryName(Path.GetFullPath(s.FilePath)) != downloadFolder).ToList();
             }
 
             subsToShow.Sort((s1, s2) => 
             {
-                int p1 = s1.Price > CampaignMode.MaxInitialSubmarinePrice ? 10 : 0;
-                int p2 = s2.Price > CampaignMode.MaxInitialSubmarinePrice ? 10 : 0;
+                int p1 = s1.Price > CampaignMode.InitialMoney ? 10 : 0;
+                int p2 = s2.Price > CampaignMode.InitialMoney ? 10 : 0;
                 return p1.CompareTo(p2) * 100 + s1.Name.CompareTo(s2.Name); 
             });
 
@@ -450,13 +478,13 @@ namespace Barotrauma
                 var priceText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
                     TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
                 {
-                    TextColor = sub.Price > CampaignMode.MaxInitialSubmarinePrice ? GUI.Style.Red : textBlock.TextColor * 0.8f,
+                    TextColor = sub.Price > CampaignMode.InitialMoney ? GUI.Style.Red : textBlock.TextColor * 0.8f,
                     ToolTip = textBlock.ToolTip
                 };
 #if !DEBUG
                 if (!GameMain.DebugDraw)
                 {
-                    if (sub.Price > CampaignMode.MaxInitialSubmarinePrice || !sub.IsCampaignCompatible)
+                    if (sub.Price > CampaignMode.InitialMoney || !sub.IsCampaignCompatible)
                     {
                         textBlock.CanBeFocused = false;
                         textBlock.TextColor *= 0.5f;
@@ -466,7 +494,7 @@ namespace Barotrauma
             }
             if (SubmarineInfo.SavedSubmarines.Any())
             {
-                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CampaignMode.MaxInitialSubmarinePrice).ToList();
+                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CampaignMode.InitialMoney).ToList();
                 if (validSubs.Count > 0)
                 {
                     subList.Select(validSubs[Rand.Int(validSubs.Count)]);

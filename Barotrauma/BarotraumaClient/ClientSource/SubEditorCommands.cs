@@ -123,8 +123,9 @@ namespace Barotrauma
         /// <param name="handleInventoryBehavior">Ignore item inventories when set to false, workaround for pasting</param>
         public AddOrDeleteCommand(List<MapEntity> receivers, bool wasDeleted, bool handleInventoryBehavior = true)
         {
+            Debug.Assert(receivers.Count > 0, "Command has 0 receivers");
             WasDeleted = wasDeleted;
-            Receivers = receivers;
+            Receivers = new List<MapEntity>(receivers);
 
             try
             {
@@ -132,7 +133,7 @@ namespace Barotrauma
                 {
                     if (receiver is Item it && it.ParentInventory != null)
                     {
-                        PreviousInventories.Add(new InventorySlotItem(Array.IndexOf(it.ParentInventory.Items, it), it), it.ParentInventory);
+                        PreviousInventories.Add(new InventorySlotItem(it.ParentInventory.FindIndex(it), it), it.ParentInventory);
                     }
                 }
 
@@ -146,8 +147,7 @@ namespace Barotrauma
                         foreach (ItemContainer component in it.GetComponents<ItemContainer>())
                         {
                             if (component.Inventory == null) { continue; }
-
-                            itemsToDelete.AddRange(component.Inventory.Items.Where(item => item != null && !item.Removed));
+                            itemsToDelete.AddRange(component.Inventory.AllItems.Where(item => !item.Removed));
                         }
                     }
                 }
@@ -309,12 +309,12 @@ namespace Barotrauma
             {
                 return Receivers.Count > 1
                     ? TextManager.GetWithVariable("Undo.RemovedItemsMultiple", "[count]", Receivers.Count.ToString())
-                    : TextManager.GetWithVariable("Undo.RemovedItem", "[item]", Receivers.FirstOrDefault()?.Name);
+                    : TextManager.GetWithVariable("Undo.RemovedItem", "[item]", Receivers.FirstOrDefault()?.Name ?? "null");
             }
 
             return Receivers.Count > 1
                 ? TextManager.GetWithVariable("Undo.AddedItemsMultiple", "[count]", Receivers.Count.ToString())
-                : TextManager.GetWithVariable("Undo.AddedItem", "[item]", Receivers.FirstOrDefault()?.Name);
+                : TextManager.GetWithVariable("Undo.AddedItem", "[item]", Receivers.FirstOrDefault()?.Name ?? "null");
         }
     }
 
@@ -332,7 +332,7 @@ namespace Barotrauma
         public InventoryPlaceCommand(Inventory inventory, List<Item> items, bool dropped)
         {
             Inventory = inventory;
-            Receivers = items.Select(item => new InventorySlotItem(Array.IndexOf(inventory.Items, item), item)).ToList();
+            Receivers = items.Select(item => new InventorySlotItem(inventory.FindIndex(item), item)).ToList();
             wasDropped = dropped;
         }
 

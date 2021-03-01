@@ -113,25 +113,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem)
+        partial void FixItemProjSpecific(Character user, float deltaTime, Item targetItem, bool showProgressBar)
         {
-            float progressBarState = targetItem.ConditionPercentage / 100.0f;
-            if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState) || prevProgressBarTarget != targetItem)
+            if (showProgressBar)
             {
-                var door = targetItem.GetComponent<Door>();
-                if (door == null || door.Stuck <= 0)
+                float progressBarState = targetItem.ConditionPercentage / 100.0f;
+                if (!MathUtils.NearlyEqual(progressBarState, prevProgressBarState) || prevProgressBarTarget != targetItem)
                 {
-                    Vector2 progressBarPos = targetItem.DrawPosition;
-                    var progressBar = user?.UpdateHUDProgressBar(
-                        targetItem,
-                        progressBarPos,
-                        progressBarState,
-                        GUI.Style.Red, GUI.Style.Green,
-                        progressBarState < prevProgressBarState ? "progressbar.cutting" : "");
-                    if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                    var door = targetItem.GetComponent<Door>();
+                    if (door == null || door.Stuck <= 0)
+                    {
+                        Vector2 progressBarPos = targetItem.DrawPosition;
+                        var progressBar = user?.UpdateHUDProgressBar(
+                            targetItem,
+                            progressBarPos,
+                            progressBarState,
+                            GUI.Style.Red, GUI.Style.Green,
+                            progressBarState < prevProgressBarState ? "progressbar.cutting" : "");
+                        if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                    }
+                    prevProgressBarState = progressBarState;
+                    prevProgressBarTarget = targetItem;
                 }
-                prevProgressBarState = progressBarState;
-                prevProgressBarTarget = targetItem;
             }
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);

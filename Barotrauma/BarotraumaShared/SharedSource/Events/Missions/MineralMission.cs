@@ -14,6 +14,8 @@ namespace Barotrauma
         private Dictionary<string, Item[]> RelevantLevelResources { get; } = new Dictionary<string, Item[]>();
         private List<Tuple<string, Vector2>> MissionClusterPositions { get; } = new List<Tuple<string, Vector2>>();
 
+        private readonly HashSet<Level.Cave> caves = new HashSet<Level.Cave>();
+
         public override IEnumerable<Vector2> SonarPositions
         {
             get
@@ -74,6 +76,8 @@ namespace Barotrauma
 #endif
             }
 
+            caves.Clear();
+
             if (IsClient) { return; }
             foreach (var kvp in ResourceClusters)
             {
@@ -93,6 +97,19 @@ namespace Barotrauma
                 if (spawnedResources.None()) { continue; }
                 SpawnedResources.Add(kvp.Key, spawnedResources);
                 kvp.Value.Second = rotation;
+
+                foreach (Level.Cave cave in Level.Loaded.Caves)
+                {
+                    foreach (Item spawnedResource in spawnedResources)
+                    {
+                        if (cave.Area.Contains(spawnedResource.WorldPosition))
+                        {
+                            cave.DisplayOnSonar = true;
+                            caves.Add(cave);
+                            break;
+                        }
+                    }
+                }
             }
             CalculateMissionClusterPositions();
             FindRelevantLevelResources();

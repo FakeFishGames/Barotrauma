@@ -35,6 +35,11 @@ namespace Barotrauma
 
         public readonly int InitialDepth;
 
+        /// <summary>
+        /// Determined during level generation based on the size of the submarine. Null if the level hasn't been generated.
+        /// </summary>
+        public int? MinMainPathWidth;
+
         public readonly List<EventPrefab> EventHistory = new List<EventPrefab>();
         public readonly List<EventPrefab> NonRepeatableEvents = new List<EventPrefab>();
 

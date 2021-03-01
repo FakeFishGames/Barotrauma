@@ -66,6 +66,8 @@ namespace Barotrauma.Items.Components
         private Rectangle doorRect;
 
         private bool isBroken;
+
+        public bool CanBeTraversed => (IsOpen || IsBroken) && !IsJammed && !IsStuck;
         
         public bool IsBroken
         {
@@ -281,12 +283,6 @@ namespace Barotrauma.Items.Components
                 msg = msg ?? (HasIntegratedButtons ? accessDeniedTxt : cannotOpenText);
             }
             return isBroken || base.HasRequiredItems(character, addMessage, msg);
-        }
-
-        public bool CanBeOpenedWithoutTools(Character character)
-        {
-            if (isBroken) { return true; }
-            return HasAccess(character);
         }
 
         public override bool Pick(Character picker)
@@ -641,6 +637,19 @@ namespace Barotrauma.Items.Components
         }
 
         partial void OnFailedToOpen();
+
+        public override bool HasAccess(Character character)
+        {
+            if (!item.IsInteractable(character)) { return false; }
+            if (HasIntegratedButtons)
+            {
+                return base.HasAccess(character);
+            }
+            else
+            {
+                return Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character));
+            }
+        }
 
         public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
         {

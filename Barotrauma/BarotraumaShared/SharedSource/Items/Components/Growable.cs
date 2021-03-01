@@ -395,6 +395,9 @@ namespace Barotrauma.Items.Components
         [Serialize("1,1,1,1", true, "Probability for the plant to grow in a direction.")]
         public Vector4 GrowthWeights { get; set; }
 
+        [Serialize(0.0f, true, "How much damage is taken from fires.")]
+        public float FireVulnerability { get; set; }
+
         private const float increasedDeathSpeed = 10f;
         private bool accelerateDeath;
         private float health;
@@ -418,6 +421,7 @@ namespace Barotrauma.Items.Components
 
         private int productDelay;
         private int vineDelay;
+        private float fireCheckCooldown;
 
         public readonly List<ProducedItem> ProducedItems = new List<ProducedItem>();
         public readonly List<VineTile> Vines = new List<VineTile>();
@@ -489,11 +493,15 @@ namespace Barotrauma.Items.Components
             if (Health > 0)
             {
                 GrowVines(planter, slot);
-                Health -= accelerateDeath ? Hardiness * increasedDeathSpeed : Hardiness;
+
+                // fertilizer makes the plant tick faster, compensate by halving water requirement
+                float multipler = planter.Fertilizer > 0 ? 0.5f : 1f;
+
+                Health -= (accelerateDeath ? Hardiness * increasedDeathSpeed : Hardiness) * multipler;
 
                 if (planter.Item.InWater)
                 {
-                    Health -= FloodTolerance;
+                    Health -= FloodTolerance * multipler;
                 }
 #if SERVER
                 if (FullyGrown)
@@ -630,6 +638,8 @@ namespace Barotrauma.Items.Components
         {
             base.Update(deltaTime, cam);
 
+            UpdateFires(deltaTime);
+
 #if CLIENT
             foreach (VineTile vine in Vines)
             {
@@ -638,6 +648,29 @@ namespace Barotrauma.Items.Components
 #endif
 
             CheckPlantState();
+        }
+
+        private void UpdateFires(float deltaTime)
+        {
+            if (!Decayed && item.CurrentHull?.FireSources is { } fireSources && FireVulnerability > 0f)
+            {
+                if (fireCheckCooldown <= 0)
+                {
+                    foreach (FireSource source in fireSources)
+                    {
+                        if (source.IsInDamageRange(item.WorldPosition, source.DamageRange))
+                        {
+                            Health -= FireVulnerability;
+                        }
+                    }
+
+                    fireCheckCooldown = 5f;
+                }
+                else
+                {
+                    fireCheckCooldown -= deltaTime;
+                }
+            }
         }
 
         private void GrowVines(Planter planter, PlantSlot slot)

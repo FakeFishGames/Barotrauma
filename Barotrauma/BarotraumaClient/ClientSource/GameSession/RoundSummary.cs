@@ -87,12 +87,12 @@ namespace Barotrauma
                 TextManager.Get("crew"), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
             crewHeader.RectTransform.MinSize = new Point(0, GUI.IntScale(crewHeader.Rect.Height * 2.0f));
 
-            CreateCrewList(crewContent, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID != Character.TeamType.Team2));
+            CreateCrewList(crewContent, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID != CharacterTeamType.Team2));
 
             //another crew frame for the 2nd team in combat missions
             if (gameSession.Mission is CombatMission)
             {
-                crewHeader.Text = CombatMission.GetTeamName(Character.TeamType.Team1);
+                crewHeader.Text = CombatMission.GetTeamName(CharacterTeamType.Team1);
                 GUIFrame crewFrame2 = new GUIFrame(new RectTransform(new Vector2(0.35f, 0.55f), background.RectTransform, Anchor.TopCenter, minSize: new Point(minWidth, minHeight)));
                 rightPanels.Add(crewFrame2);
                 GUIFrame crewFrameInner2 = new GUIFrame(new RectTransform(new Point(crewFrame2.Rect.Width - padding * 2, crewFrame2.Rect.Height - padding * 2), crewFrame2.RectTransform, Anchor.Center), style: "InnerFrame");
@@ -101,9 +101,9 @@ namespace Barotrauma
                     Stretch = true
                 };
                 var crewHeader2 = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), crewContent2.RectTransform),
-                    CombatMission.GetTeamName(Character.TeamType.Team2), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
+                    CombatMission.GetTeamName(CharacterTeamType.Team2), textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont);
                 crewHeader2.RectTransform.MinSize = new Point(0, GUI.IntScale(crewHeader2.Rect.Height * 2.0f));
-                CreateCrewList(crewContent2, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID == Character.TeamType.Team2));
+                CreateCrewList(crewContent2, gameSession.CrewManager.GetCharacterInfos().Where(c => c.TeamID == CharacterTeamType.Team2));
             }
 
             //header -------------------------------------------------------------------------------

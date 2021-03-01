@@ -8,6 +8,11 @@ namespace Barotrauma
         Vector2 WorldPosition { get; }
         Vector2 SimPosition { get; }
         Submarine Submarine { get; }
-        bool IgnoreByAI => false;
+    }
+
+    interface IIgnorable : ISpatialEntity
+    {
+        bool IgnoreByAI { get; }
+        bool OrderedToBeIgnored { get; set; }
     }
 }

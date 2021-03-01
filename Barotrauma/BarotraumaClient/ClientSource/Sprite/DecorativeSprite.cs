@@ -11,6 +11,9 @@ namespace Barotrauma
         {
             public float RotationState;
             public float OffsetState;
+            public Vector2 RandomOffsetMultiplier = new Vector2(Rand.Range(-1.0f, 1.0f), Rand.Range(-1.0f, 1.0f));
+            public float RandomRotationFactor = Rand.Range(0.0f, 1.0f);
+            public float RandomScaleFactor = Rand.Range(0.0f, 1.0f);
             public bool IsActive = true;
         }
 
@@ -28,6 +31,9 @@ namespace Barotrauma
 
         [Serialize("0,0", true), Editable]
         public Vector2 Offset { get; private set; }
+
+        [Serialize("0,0", true), Editable]
+        public Vector2 RandomOffset { get; private set; }
 
         [Serialize(AnimationType.None, false), Editable]
         public AnimationType OffsetAnim { get; private set; }
@@ -66,12 +72,33 @@ namespace Barotrauma
             }
         }
 
+        private Vector2 randomRotationRadians;
+        [Serialize("0,0", true), Editable]
+        public Vector2 RandomRotation
+        {
+            get
+            {
+                return new Vector2(MathHelper.ToDegrees(randomRotationRadians.X), MathHelper.ToDegrees(randomRotationRadians.Y));
+            }
+            private set
+            {
+                randomRotationRadians = new Vector2(MathHelper.ToRadians(value.X), MathHelper.ToRadians(value.Y));
+            }
+        }
+
         private float scale;
         [Serialize(1.0f, true), Editable]
         public float Scale
         {
             get { return scale; }
             private set { scale = MathHelper.Clamp(value, 0.0f, 10.0f); }
+        }
+
+        [Serialize("0,0", true), Editable]
+        public Vector2 RandomScale
+        {
+            get;
+            private set;
         }
 
         [Serialize(AnimationType.None, false), Editable]
@@ -99,9 +126,10 @@ namespace Barotrauma
         {
             Sprite = new Sprite(element, path, file, lazyLoad: lazyLoad);
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-            // TODO: what's the purpose of this?
+            // load property conditionals
             foreach (XElement subElement in element.Elements())
             {
+                //choose which list the new conditional should be placed to
                 List<PropertyConditional> conditionalList = null;
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -125,7 +153,7 @@ namespace Barotrauma
             }
         }
 
-        public Vector2 GetOffset(ref float offsetState, float rotation = 0.0f)
+        public Vector2 GetOffset(ref float offsetState, Vector2 randomOffsetMultiplier, float rotation = 0.0f)
         {
             Vector2 offset = Offset;
             if (OffsetAnimSpeed > 0.0f)
@@ -146,6 +174,9 @@ namespace Barotrauma
                         break;
                 }
             }
+            offset += new Vector2(
+                RandomOffset.X * randomOffsetMultiplier.X, 
+                RandomOffset.Y * randomOffsetMultiplier.Y);
             if (Math.Abs(rotation) > 0.01f)
             {
                 Matrix transform = Matrix.CreateRotationZ(rotation);
@@ -154,24 +185,40 @@ namespace Barotrauma
             return offset;
         }
 
-        public float GetRotation(ref float rotationState)
+        public float GetRotation(ref float rotationState, float randomRotationFactor)
         {
             RotationSpeed = -Math.Abs(RotationSpeed);
             switch (RotationAnim)
             {
                 case AnimationType.Sine:
                     rotationState %= MathHelper.TwoPi / absRotationSpeedRadians;
-                    return rotationRadians * (float)Math.Sin(rotationState * rotationSpeedRadians);
+                    return 
+                        rotationRadians * (float)Math.Sin(rotationState * rotationSpeedRadians)
+                        + MathHelper.Lerp(randomRotationRadians.X, randomRotationRadians.Y, randomRotationFactor);
                 case AnimationType.Noise:
                     rotationState %= 1.0f / absRotationSpeedRadians;
-                    return rotationRadians * (PerlinNoise.GetPerlin(rotationState * absRotationSpeedRadians, rotationState * absRotationSpeedRadians) - 0.5f);
+                    return 
+                        rotationRadians * (PerlinNoise.GetPerlin(rotationState * absRotationSpeedRadians, rotationState * absRotationSpeedRadians) - 0.5f)
+                        + MathHelper.Lerp(randomRotationRadians.X, randomRotationRadians.Y, randomRotationFactor);
                 default:
-                    return rotationState * rotationSpeedRadians;
+                    return  
+                        rotationRadians + 
+                        rotationState * rotationSpeedRadians
+                        + MathHelper.Lerp(randomRotationRadians.X, randomRotationRadians.Y, randomRotationFactor);
             }
         }
 
-        public static void UpdateSpriteStates(Dictionary<int, List<DecorativeSprite>> spriteGroups, Dictionary<DecorativeSprite, State> animStates, 
-            int entityID, float deltaTime, Func<PropertyConditional,bool> checkConditional)
+        public float GetScale(float randomScaleModifier)
+        {
+            if (RandomScale == Vector2.Zero)
+            { 
+                return scale;
+            }
+            return MathHelper.Lerp(RandomScale.X, RandomScale.Y, randomScaleModifier);
+        }
+
+        public static void UpdateSpriteStates(Dictionary<int, List<DecorativeSprite>> spriteGroups, Dictionary<DecorativeSprite, State> animStates,
+            int entityID, float deltaTime, Func<PropertyConditional, bool> checkConditional)
         {
             foreach (int spriteGroup in spriteGroups.Keys)
             {

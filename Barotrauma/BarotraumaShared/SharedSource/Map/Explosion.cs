@@ -25,6 +25,7 @@ namespace Barotrauma
         private readonly float screenColorRange, screenColorDuration;
 
         private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
+        private bool playTinnitus;
         private bool applyFireEffects;
         private readonly float flashDuration;
         private readonly float? flashRange;
@@ -62,6 +63,8 @@ namespace Barotrauma
             flames      = element.GetAttributeBool("flames", true);
             underwaterBubble = element.GetAttributeBool("underwaterbubble", true);
             smoke       = element.GetAttributeBool("smoke", true);
+
+            playTinnitus = element.GetAttributeBool("playtinnitus", true);
 
             applyFireEffects = element.GetAttributeBool("applyfireeffects", flames);
 
@@ -225,7 +228,7 @@ namespace Barotrauma
 
         partial void ExplodeProjSpecific(Vector2 worldPosition, Hull hull);
         
-        public static void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker)
+        private void DamageCharacters(Vector2 worldPosition, Attack attack, float force, Entity damageSource, Character attacker)
         {
             if (attack.Range <= 0.0f) { return; }
 
@@ -323,10 +326,10 @@ namespace Barotrauma
                     }
                 }
 
-                if (c == Character.Controlled && !c.IsDead)
+                if (c == Character.Controlled && !c.IsDead && playTinnitus)
                 {
                     Limb head = c.AnimController.GetLimb(LimbType.Head);
-                    if (damages.TryGetValue(head, out float headDamage) && headDamage > 0.0f && distFactors.TryGetValue(head, out float headFactor))
+                    if (head != null && damages.TryGetValue(head, out float headDamage) && headDamage > 0.0f && distFactors.TryGetValue(head, out float headFactor))
                     {
                         PlayTinnitusProjSpecific(headFactor);
                     }

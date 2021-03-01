@@ -24,8 +24,11 @@ namespace Barotrauma
         [Serialize(0.0f, true, description: "Range both entities must be within to activate the trigger.")]
         public float Radius { get; set; }
 
-        [Serialize(true, true, description: "If true, characters who are being targeted by some enemy cannot trigger the event.")]
+        [Serialize(true, true, description: "If true, characters who are being targeted by some enemy cannot trigger the action.")]
         public bool DisableInCombat { get; set; }
+
+        [Serialize(true, true, description: "If true, dead/unconscious characters cannot trigger the action.")]
+        public bool DisableIfTargetIncapacitated { get; set; }
 
         private float distance;
         
@@ -59,6 +62,7 @@ namespace Barotrauma
             foreach (Entity e1 in targets1)
             {
                 if (DisableInCombat && IsInCombat(e1)) { continue; }
+                if (DisableIfTargetIncapacitated && e1 is Character character1 && (character1.IsDead || character1.IsIncapacitated)) { continue; }
                 if (!string.IsNullOrEmpty(TargetModuleType))
                 {
                     if (IsCloseEnoughToHull(e1, out Hull hull))
@@ -75,6 +79,7 @@ namespace Barotrauma
                 {
                     if (e1 == e2) { continue; }
                     if (DisableInCombat && IsInCombat(e2)) { continue; }
+                    if (DisableIfTargetIncapacitated && e2 is Character character2 && (character2.IsDead || character2.IsIncapacitated)) { continue; }
 
                     Vector2 pos1 = e1.WorldPosition;
                     Vector2 pos2 = e2.WorldPosition;

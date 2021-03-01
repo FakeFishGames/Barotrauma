@@ -56,7 +56,7 @@ namespace Barotrauma
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
             if (!Stackable && DelayList.Any(d => d.Parent == this && d.Targets.FirstOrDefault() == target)) { return; }
-            if (targetIdentifiers != null && !IsValidTarget(target)) { return; }
+            if (!IsValidTarget(target)) { return; }
             if (!HasRequiredConditions(target.ToEnumerable())) { return; }
 
             switch (delayType)
@@ -92,11 +92,7 @@ namespace Barotrauma
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
             {
-                if (targetIdentifiers != null)
-                {
-                    //ignore invalid targets
-                    if (!IsValidTarget(target)) { continue; }
-                }
+                if (!IsValidTarget(target)) { continue; }
                 currentTargets.Add(target);
             }
 

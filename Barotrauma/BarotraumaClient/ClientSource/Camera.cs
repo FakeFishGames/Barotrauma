@@ -47,6 +47,8 @@ namespace Barotrauma
             set { maxZoom = MathHelper.Clamp(value, 1.0f, 10.0f); }
         }
 
+        public float FreeCamMoveSpeed = 1.0f;
+
         private float zoom;
 
         private float offsetAmount;
@@ -197,10 +199,15 @@ namespace Barotrauma
 
         private void CreateMatrices()
         {
-            resolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            worldView = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
-            viewMatrix = Matrix.CreateTranslation(new Vector3(GameMain.GraphicsWidth / 2.0f, GameMain.GraphicsHeight / 2.0f, 0));
-            
+            SetResolution(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight));
+        }
+
+        public void SetResolution(Point res)
+        {
+            resolution = res;
+
+            worldView = new Rectangle(0, 0, res.X, res.Y);
+            viewMatrix = Matrix.CreateTranslation(new Vector3(res.X / 2.0f, res.Y / 2.0f, 0));
             globalZoomScale = (float)Math.Pow(new Vector2(GUI.UIWidth, resolution.Y).Length() / GUI.ReferenceResolution.Length(), 2);
         }
 
@@ -265,17 +272,17 @@ namespace Barotrauma
                 {
                     if (GUI.KeyboardDispatcher.Subscriber == null)
                     {
-                        if (PlayerInput.KeyDown(Keys.LeftShift)) moveSpeed *= 2.0f;
-                        if (PlayerInput.KeyDown(Keys.LeftControl)) moveSpeed *= 0.5f;
+                        if (PlayerInput.KeyDown(Keys.LeftShift)) { moveSpeed *= 2.0f; }
+                        if (PlayerInput.KeyDown(Keys.LeftControl)) { moveSpeed *= 0.5f; }
 
-                        if (GameMain.Config.KeyBind(InputType.Left).IsDown()) moveInput.X -= 1.0f;
-                        if (GameMain.Config.KeyBind(InputType.Right).IsDown()) moveInput.X += 1.0f;
-                        if (GameMain.Config.KeyBind(InputType.Down).IsDown()) moveInput.Y -= 1.0f;
-                        if (GameMain.Config.KeyBind(InputType.Up).IsDown()) moveInput.Y += 1.0f;
+                        if (GameMain.Config.KeyBind(InputType.Left).IsDown()) { moveInput.X -= 1.0f; }
+                        if (GameMain.Config.KeyBind(InputType.Right).IsDown()) { moveInput.X += 1.0f; }
+                        if (GameMain.Config.KeyBind(InputType.Down).IsDown()) { moveInput.Y -= 1.0f; }
+                        if (GameMain.Config.KeyBind(InputType.Up).IsDown()) { moveInput.Y += 1.0f; }
                     }
 
                     velocity = Vector2.Lerp(velocity, moveInput, deltaTime * 10.0f);
-                    moveCam = velocity * moveSpeed * deltaTime * 60.0f;
+                    moveCam = velocity * moveSpeed * deltaTime * FreeCamMoveSpeed * 60.0f;
 
                     if (Screen.Selected == GameMain.GameScreen && FollowSub)
                     {
@@ -291,14 +298,21 @@ namespace Barotrauma
                 {
                     Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
                     Vector2 diffViewCenter;
-                    diffViewCenter = ((mouseInWorld - Position) * Zoom);
+                    diffViewCenter = (mouseInWorld - Position) * Zoom;
                     targetZoom = MathHelper.Clamp(
-                        targetZoom + (PlayerInput.ScrollWheelSpeed / 1000.0f) * zoom, 
+                        targetZoom + PlayerInput.ScrollWheelSpeed / 1000.0f * zoom, 
                         GameMain.DebugDraw ? MinZoom * 0.1f : MinZoom, 
                         MaxZoom);
 
-                    Zoom = MathHelper.Lerp(Zoom, targetZoom, deltaTime * 10.0f);
-                    if (!PlayerInput.KeyDown(Keys.F)) Position = mouseInWorld - (diffViewCenter / Zoom);
+                    if (PlayerInput.KeyDown(Keys.LeftControl)) 
+                    {  
+                        Zoom += (targetZoom - zoom) / (ZoomSmoothness * 10.0f);
+                    }
+                    else
+                    {
+                        Zoom = MathHelper.Lerp(Zoom, targetZoom, deltaTime * 10.0f);
+                    }
+                    if (!PlayerInput.KeyDown(Keys.F)) { Position = mouseInWorld - (diffViewCenter / Zoom); }
                 }
             }
             else if (allowMove)

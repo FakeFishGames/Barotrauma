@@ -24,8 +24,8 @@ namespace Barotrauma.Items.Components
 
         private int[] channelMemory = new int[ChannelMemorySize];
 
-        [Serialize(Character.TeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
-        public Character.TeamType TeamID { get; set; }
+        [Serialize(CharacterTeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
+        public CharacterTeamType TeamID { get; set; }
 
         [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.", alwaysUseInstanceValues: true)]
         public float Range

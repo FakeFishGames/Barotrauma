@@ -33,10 +33,14 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            if (!IsAllowed)
+            if (!IsAllowed || Item.IgnoreByAI)
             {
                 Priority = 0;
                 Abandon = true;
+                if (IsRepairing())
+                {
+                    Item.Repairables.ForEach(r => r.StopRepairing(character));
+                }
                 return Priority;
             }
             // TODO: priority list?
@@ -107,8 +111,7 @@ namespace Barotrauma
             }
             if (repairTool != null)
             {
-                var containedItems = repairTool.Item.OwnInventory?.Items;
-                if (containedItems == null)
+                if (repairTool.Item.OwnInventory == null)
                 {
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveRepairItem failed - the item \"" + repairTool + "\" has no proper inventory");
@@ -116,27 +119,39 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                // Drop empty tanks
-                foreach (Item containedItem in containedItems)
+                // Eject empty tanks
+                if (repairTool.Item.OwnInventory.AllItems.Any(it => it.Condition <= 0.0f))
                 {
-                    if (containedItem == null) { continue; }
-                    if (containedItem.Condition <= 0.0f)
+                    foreach (Item containedItem in repairTool.Item.OwnInventory.AllItemsMod)
                     {
-                        containedItem.Drop(character);
+                        if (containedItem == null) { continue; }
+                        if (containedItem.Condition <= 0.0f)
+                        {
+                            if (character.Submarine == null)
+                            {
+                                // If we are outside of main sub, try to put the tank in the inventory instead dropping it in the sea.
+                                if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
+                                {
+                                    continue;
+                                }
+                            }
+                            containedItem.Drop(character);
+                        }
                     }
                 }
+
                 RelatedItem item = null;
                 Item fuel = null;
                 foreach (RelatedItem requiredItem in repairTool.requiredItems[RelatedItem.RelationType.Contained])
                 {
                     item = requiredItem;
-                    fuel = containedItems.FirstOrDefault(it => it != null && it.Condition > 0.0f && requiredItem.MatchesItem(it));
+                    fuel = repairTool.Item.OwnInventory.AllItems.FirstOrDefault(it => it.Condition > 0.0f && requiredItem.MatchesItem(it));
                     if (fuel != null) { break; }
                 }
                 if (fuel == null)
                 {
                     RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC), 
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
                         onCompleted: () => RemoveSubObjective(ref refuelObjective),
                         onAbandon: () => Abandon = true);
                     return;
@@ -229,7 +244,7 @@ namespace Barotrauma
                 {
                     foreach (RelatedItem requiredItem in kvp.Value)
                     {
-                        foreach (var item in character.Inventory.Items)
+                        foreach (var item in character.Inventory.AllItems)
                         {
                             if (requiredItem.MatchesItem(item))
                             {

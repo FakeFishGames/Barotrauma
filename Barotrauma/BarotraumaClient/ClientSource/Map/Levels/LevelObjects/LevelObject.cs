@@ -241,6 +241,7 @@ namespace Barotrauma
 
         private void UpdateDeformations(float deltaTime)
         {
+            if (ActivePrefab.DeformableSprite == null) { return; }
             foreach (SpriteDeformation deformation in spriteDeformations)
             {
                 if (deformation is PositionalDeformation positionalDeformation)

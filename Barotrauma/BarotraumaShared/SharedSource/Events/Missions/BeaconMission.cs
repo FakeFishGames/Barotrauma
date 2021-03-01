@@ -46,7 +46,11 @@ namespace Barotrauma
         {
             get
             {
-                yield return level.BeaconStation.WorldPosition;
+                if (level.BeaconStation == null)
+                {
+                    yield break;
+                }
+                yield return level.BeaconStation.WorldPosition;                
             }
         }
 

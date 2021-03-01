@@ -78,6 +78,8 @@ namespace Barotrauma
 
         public readonly string File;
 
+        public XDocument VariantFile { get; private set; }
+
         public readonly List<SubParam> SubParams = new List<SubParam>();
         public readonly List<SoundParams> Sounds = new List<SoundParams>();
         public readonly List<ParticleParams> BloodEmitters = new List<ParticleParams>();
@@ -100,6 +102,32 @@ namespace Barotrauma
         public bool Load()
         {
             bool success = base.Load(File);
+            if (doc.Root.IsCharacterVariant())
+            {
+                VariantFile = doc;
+                var original = CharacterPrefab.FindBySpeciesName(doc.Root.GetAttributeString("inherit", string.Empty));
+                success = Load(original.FilePath);
+                CreateSubParams();
+                TryLoadOverride(this, VariantFile.Root, SerializableProperties);
+                foreach (XElement subElement in VariantFile.Root.Elements())
+                {
+                    var matchingParams = SubParams.FirstOrDefault(p => p.Name.Equals(subElement.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                    if (matchingParams != null)
+                    {
+                        TryLoadOverride(matchingParams, subElement, matchingParams.SerializableProperties);
+                        // TODO: Make recursive? In practice we don't have to go deeper than this, but the implementation would be a lot cleaner with recursion.
+                        foreach (XElement subSubElement in subElement.Elements())
+                        {
+                            matchingParams = matchingParams.SubParams.FirstOrDefault(p => p.Name.Equals(subSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                            if (matchingParams != null)
+                            {
+                                TryLoadOverride(matchingParams, subSubElement, matchingParams.SerializableProperties);
+                            }
+                        }
+                    }
+                }
+                return success;
+            }
             if (string.IsNullOrEmpty(SpeciesName) && MainElement != null)
             {
                 //backwards compatibility
@@ -111,6 +139,8 @@ namespace Barotrauma
 
         public bool Save(string fileNameWithoutExtension = null)
         {
+            // Disable saving variants for now. Making it work probably requires more work.
+            if (VariantFile != null) { return false; }
             Serialize();
             return base.Save(fileNameWithoutExtension, new XmlWriterSettings
             {
@@ -181,7 +211,19 @@ namespace Barotrauma
             }
         }
 
-        public bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true)
+        private void TryLoadOverride(object parentObject, XElement element, Dictionary<string, SerializableProperty> properties)
+        {
+            foreach (var property in properties)
+            {
+                var matchingAttribute = element.GetAttribute(property.Key);
+                if (matchingAttribute != null)
+                {
+                    property.Value.TrySetValue(parentObject, matchingAttribute.Value);
+                }
+            }
+        }
+
+        public bool Deserialize(XElement element = null, bool alsoChildren = true, bool recursive = true, bool loadDefaultValues = true)
         {
             if (base.Deserialize(element))
             {
@@ -486,17 +528,21 @@ namespace Barotrauma
             [Serialize(true, true, description: "Enforce aggressive behavior if the creature is spawned as a target of a monster mission."), Editable()]
             public bool EnforceAggressiveBehaviorForMissions { get; private set; }
 
-            [Serialize(true, true, description: "Should the character target or ignore walls when it's outside the submarine. Doesn't have any effect if no target priority for walls is defined."), Editable()]
+            [Serialize(true, true, description: "Should the character target or ignore walls when it's outside the submarine."), Editable()]
             public bool TargetOuterWalls { get; private set; }
 
             [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable()]
             public bool RandomAttack { get; private set; }
+
+            [Serialize(false, true, description:"Can the character open doors and hatches without a proper id card? Only applies on humanoids.")]
+            public bool Infiltrate { get; private set; }
 
             public IEnumerable<TargetParams> Targets => targets;
             protected readonly List<TargetParams> targets = new List<TargetParams>();
 
             public AIParams(XElement element, CharacterParams character) : base(element, character)
             {
+                if (element == null) { return; }
                 element.GetChildElements("target").ForEach(t => TryAddTarget(t, out _));
                 element.GetChildElements("targetpriority").ForEach(t => TryAddTarget(t, out _));
             }
@@ -588,10 +634,13 @@ namespace Barotrauma
             public bool IgnoreContained { get; set; }
 
             [Serialize(false, true, description: "Should the target be ignored while the creature is inside. Doesn't matter where the target is."), Editable]
-            public bool IgnoreWhileInside { get; set; }
+            public bool IgnoreInside { get; set; }
 
             [Serialize(false, true, description: "Should the target be ignored while the creature is outside. Doesn't matter where the target is."), Editable]
-            public bool IgnoreWhileOutside { get; set; }
+            public bool IgnoreOutside { get; set; }
+
+            [Serialize(false, true)]
+            public bool IgnoreIncapacitated { get; set; }
 
             [Serialize(0f, true, description: "Use to define a distance at which the creature starts the sweeping movement."), Editable(MinValueFloat = 0, MaxValueFloat = 10000, ValueStep = 1, DecimalCount = 0)]
             public float SweepDistance { get; private set; }
@@ -601,6 +650,9 @@ namespace Barotrauma
 
             [Serialize(1f, true, description: "How quickly the sweep direction changes. Uses the sine wave pattern."), Editable(MinValueFloat = 0, MaxValueFloat = 10, ValueStep = 0.1f, DecimalCount = 2)]
             public float SweepSpeed { get; private set; }
+
+            [Serialize(0f, true, description: "How much damage the protected target should take from an attacker before the creature starts defending it.")]
+            public float Threshold { get; private set; }
 
             public TargetParams(XElement element, CharacterParams character) : base(element, character) { }
 

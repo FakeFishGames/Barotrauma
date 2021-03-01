@@ -163,7 +163,7 @@ index 30d363af..f759a484 100644
          return;
      }
 diff --git a/alc/backends/wasapi.cpp b/alc/backends/wasapi.cpp
-index 8e43aa7c..0f313dea 100644
+index 8e43aa7c..45950062 100644
 --- a/alc/backends/wasapi.cpp
 +++ b/alc/backends/wasapi.cpp
 @@ -54,6 +54,12 @@
@@ -356,15 +356,24 @@ index 8e43aa7c..0f313dea 100644
          ERR("Failed to reactivate audio client: 0x%08lx\n", hr);
          return hr;
      }
-@@ -1521,6 +1548,7 @@ HRESULT WasapiCapture::resetProxy()
+@@ -1521,8 +1548,14 @@ HRESULT WasapiCapture::resetProxy()
      hr = mClient->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED, &OutputType.Format, &wfx);
      if(FAILED(hr))
      {
-+        alcCallErrorReasonCallback(std::string("WASAPI capture proxy reset failed: failed to check format support (HRESULT ")+toStringHex(hr)+")");
-         ERR("Failed to check format support: 0x%08lx\n", hr);
-         return hr;
+-        ERR("Failed to check format support: 0x%08lx\n", hr);
+-        return hr;
++        alcCallErrorReasonCallback(std::string("WASAPI capture proxy reset error: failed to check format support (HRESULT ")+toStringHex(hr)+")");
++        hr = mClient->GetMixFormat(&wfx);
++        if (FAILED(hr))
++        {
++            alcCallErrorReasonCallback(std::string("WASAPI capture proxy reset failed: failed to get mix format (HRESULT ")+toStringHex(hr)+")");
++            ERR("Failed to check format support: 0x%08lx\n", hr);
++            return hr;
++        }
      }
-@@ -1619,6 +1647,7 @@ HRESULT WasapiCapture::resetProxy()
+ 
+     mSampleConv = nullptr;
+@@ -1619,6 +1652,7 @@ HRESULT WasapiCapture::resetProxy()
          buf_time.count(), 0, &OutputType.Format, nullptr);
      if(FAILED(hr))
      {
@@ -372,7 +381,7 @@ index 8e43aa7c..0f313dea 100644
          ERR("Failed to initialize audio client: 0x%08lx\n", hr);
          return hr;
      }
-@@ -1630,6 +1659,7 @@ HRESULT WasapiCapture::resetProxy()
+@@ -1630,6 +1664,7 @@ HRESULT WasapiCapture::resetProxy()
          hr = mClient->GetBufferSize(&buffer_len);
      if(FAILED(hr))
      {
@@ -380,7 +389,7 @@ index 8e43aa7c..0f313dea 100644
          ERR("Failed to get buffer size: 0x%08lx\n", hr);
          return hr;
      }
-@@ -1641,6 +1671,7 @@ HRESULT WasapiCapture::resetProxy()
+@@ -1641,6 +1676,7 @@ HRESULT WasapiCapture::resetProxy()
      hr = mClient->SetEventHandle(mNotifyEvent);
      if(FAILED(hr))
      {
@@ -388,7 +397,7 @@ index 8e43aa7c..0f313dea 100644
          ERR("Failed to set event handle: 0x%08lx\n", hr);
          return hr;
      }
-@@ -1653,7 +1684,10 @@ void WasapiCapture::start()
+@@ -1653,7 +1689,10 @@ void WasapiCapture::start()
  {
      const HRESULT hr{pushMessage(MsgType::StartDevice).get()};
      if(FAILED(hr))
@@ -399,7 +408,7 @@ index 8e43aa7c..0f313dea 100644
  }
  
  HRESULT WasapiCapture::startProxy()
-@@ -1663,6 +1697,7 @@ HRESULT WasapiCapture::startProxy()
+@@ -1663,6 +1702,7 @@ HRESULT WasapiCapture::startProxy()
      HRESULT hr{mClient->Start()};
      if(FAILED(hr))
      {
@@ -407,7 +416,7 @@ index 8e43aa7c..0f313dea 100644
          ERR("Failed to start audio client: 0x%08lx\n", hr);
          return hr;
      }
-@@ -1676,9 +1711,17 @@ HRESULT WasapiCapture::startProxy()
+@@ -1676,9 +1716,17 @@ HRESULT WasapiCapture::startProxy()
              mKillNow.store(false, std::memory_order_release);
              mThread = std::thread{std::mem_fn(&WasapiCapture::recordProc), this};
          }
@@ -425,7 +434,7 @@ index 8e43aa7c..0f313dea 100644
              ERR("Failed to start thread\n");
              hr = E_FAIL;
          }
-@@ -1737,6 +1780,12 @@ bool WasapiBackendFactory::init()
+@@ -1737,6 +1785,12 @@ bool WasapiBackendFactory::init()
          InitResult = future.get();
      }
      catch(...) {

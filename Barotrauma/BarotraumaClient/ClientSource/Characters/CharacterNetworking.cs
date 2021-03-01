@@ -350,7 +350,7 @@ namespace Barotrauma
                             {
                                 string skillIdentifier = msg.ReadString();
                                 float skillLevel = msg.ReadSingle();
-                                info?.SetSkillLevel(skillIdentifier, skillLevel, WorldPosition + Vector2.UnitY * 150.0f);
+                                info?.SetSkillLevel(skillIdentifier, skillLevel, Position + Vector2.UnitY * 150.0f);
                             }
                             break;
                         case 4: //NetEntityEvent.Type.ExecuteAttack
@@ -435,7 +435,7 @@ namespace Barotrauma
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
 
                 character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
-                character.TeamID = (TeamType)teamID;
+                character.TeamID = (CharacterTeamType)teamID;
                 character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
                 if (character.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {
@@ -488,7 +488,7 @@ namespace Barotrauma
                     character.ReadStatus(inc);
                 }
 
-                if (character.IsHuman && character.TeamID != TeamType.FriendlyNPC && !character.IsDead)
+                if (character.IsHuman && character.TeamID != CharacterTeamType.FriendlyNPC && !character.IsDead)
                 {
                     CharacterInfo duplicateCharacterInfo = GameMain.GameSession.CrewManager.GetCharacterInfos().FirstOrDefault(c => c.ID == info.ID);
                     GameMain.GameSession.CrewManager.RemoveCharacterInfo(duplicateCharacterInfo);

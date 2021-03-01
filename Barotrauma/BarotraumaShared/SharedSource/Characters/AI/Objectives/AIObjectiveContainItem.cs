@@ -67,14 +67,14 @@ namespace Barotrauma
             }
             if (item != null)
             {
-                return container.Inventory.Items.Contains(item);
+                return container.Inventory.Contains(item);
             }
             else
             {
                 int containedItemCount = 0;
-                foreach (Item i in container.Inventory.Items)
+                foreach (Item it in container.Inventory.AllItems)
                 {
-                    if (i != null && CheckItem(i))
+                    if (CheckItem(it))
                     {
                         containedItemCount++;
                     }
@@ -83,7 +83,7 @@ namespace Barotrauma
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel;
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI();
 
         protected override void Act(float deltaTime)
         {
@@ -102,11 +102,10 @@ namespace Barotrauma
                 }
                 if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
-                    if (RemoveEmpty)
+                    if (RemoveEmpty && container.Inventory.AllItems.Any(it => it.Condition <= 0.0f))
                     {
-                        foreach (var emptyItem in container.Inventory.Items)
+                        foreach (var emptyItem in container.Inventory.AllItemsMod)
                         {
-                            if (emptyItem == null) { continue; }
                             if (emptyItem.Condition <= 0)
                             {
                                 emptyItem.Drop(character);

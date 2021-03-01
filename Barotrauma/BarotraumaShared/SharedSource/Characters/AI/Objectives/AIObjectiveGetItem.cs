@@ -177,7 +177,7 @@ namespace Barotrauma
             }
             else if (moveToTarget is Item parentItem)
             {
-                canInteract = character.CanInteractWith(parentItem, out _, checkLinked: false);
+                canInteract = character.CanInteractWith(parentItem, checkLinked: false);
             }
             if (canInteract)
             {
@@ -256,7 +256,7 @@ namespace Barotrauma
                 if (mySub == null) { continue; }
                 if (!AllowStealing)
                 {
-                    if (character.TeamID == Character.TeamType.FriendlyNPC != item.SpawnedInOutpost) { continue; }
+                    if (character.TeamID == CharacterTeamType.FriendlyNPC != item.SpawnedInOutpost) { continue; }
                 }
                 if (!CheckItem(item)) { continue; }
                 if (ignoredContainerIdentifiers != null && item.Container != null)
@@ -276,6 +276,10 @@ namespace Barotrauma
                     itemPriority = GetItemPriority(item);
                 }
                 Entity rootInventoryOwner = item.GetRootInventoryOwner();
+                if (rootInventoryOwner is Item ownerItem)
+                {
+                    if (!ownerItem.IsInteractable(character)) { continue; }
+                }
                 Vector2 itemPos = (rootInventoryOwner ?? item).WorldPosition;
                 float yDist = Math.Abs(character.WorldPosition.Y - itemPos.Y);
                 yDist = yDist > 100 ? yDist * 5 : 0;
@@ -308,7 +312,7 @@ namespace Barotrauma
                             Entity.Spawner.AddToSpawnQueue(prefab, character.Inventory, onSpawned: (Item spawnedItem) => 
                             {
                                 targetItem = spawnedItem; 
-                                if (character.TeamID == Character.TeamType.FriendlyNPC && (character.Submarine?.Info.IsOutpost ?? false))
+                                if (character.TeamID == CharacterTeamType.FriendlyNPC && (character.Submarine?.Info.IsOutpost ?? false))
                                 {
                                     spawnedItem.SpawnedInOutpost = true;
                                 }
@@ -347,7 +351,7 @@ namespace Barotrauma
 
         private bool CheckItem(Item item)
         {
-            if (item.NonInteractable) { return false; }
+            if (!item.IsInteractable(character)) { return false; }
             if (item.IsThisOrAnyContainerIgnoredByAI()) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
             if (item.Condition < TargetCondition) { return false; }

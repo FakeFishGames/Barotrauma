@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -56,7 +57,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!DropEmptyTanks(character, targetItem, out Item[] containedItems))
+                if (!EjectEmptyTanks(character, targetItem, out var containedItems))
                 {
 #if DEBUG
                     DebugConsole.ThrowError($"{character.Name}: AIObjectiveFindDivingGear failed - the item \"" + targetItem + "\" has no proper inventory");
@@ -70,8 +71,11 @@ namespace Barotrauma
                     // Seek oxygen that has min 10% condition left.
                     TryAddSubObjective(ref getOxygen, () =>
                     {
-                        character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
-                        return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC)
+                        if (!HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: 10))
+                        {
+                            character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
+                        }
+                        return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                         {
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
@@ -83,7 +87,7 @@ namespace Barotrauma
                         // Try to seek any oxygen sources.
                         TryAddSubObjective(ref getOxygen, () =>
                         {
-                            return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == Character.TeamType.FriendlyNPC)
+                            return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                             {
                                 AllowToFindDivingGear = false,
                                 AllowDangerousPressure = true
@@ -100,18 +104,22 @@ namespace Barotrauma
         /// <summary>
         /// Returns false only when no inventory can be found from the item.
         /// </summary>
-        public static bool DropEmptyTanks(Character actor, Item target, out Item[] containedItems)
+        public static bool EjectEmptyTanks(Character actor, Item target, out IEnumerable<Item> containedItems)
         {
-            containedItems = target.OwnInventory?.Items;
-            if (containedItems == null)
+            containedItems = target.OwnInventory?.AllItems;
+            if (containedItems == null) { return false; }
+            foreach (Item containedItem in target.OwnInventory.AllItemsMod)
             {
-                return false;
-            }
-            foreach (Item containedItem in containedItems)
-            {
-                if (containedItem == null) { continue; }
                 if (containedItem.Condition <= 0.0f)
                 {
+                    if (actor.Submarine == null)
+                    {
+                        // If we are outside of main sub, try to put the tank in the inventory instead dropping it in the sea.
+                        if (actor.Inventory.TryPutItem(containedItem, actor, CharacterInventory.anySlot))
+                        {
+                            continue;
+                        }          
+                    }
                     containedItem.Drop(actor);
                 }
             }

@@ -610,8 +610,8 @@ namespace Barotrauma
             {
                 if (GameMain.Client == null)
                 {
-                    GameMain.GameSession.SwitchSubmarine(selectedSubmarine, deliveryFee);
-                    GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(selectedSubmarine);
+                    SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(selectedSubmarine, deliveryFee);
+                    GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(newSub);
                     RefreshSubmarineDisplay(true);
                 }
                 else
@@ -645,8 +645,8 @@ namespace Barotrauma
                     if (GameMain.Client == null)
                     {
                         GameMain.GameSession.PurchaseSubmarine(selectedSubmarine);
-                        GameMain.GameSession.SwitchSubmarine(selectedSubmarine, 0);
-                        GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(selectedSubmarine);
+                        SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(selectedSubmarine, 0);
+                        GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(newSub);
                         RefreshSubmarineDisplay(true);
                     }
                     else

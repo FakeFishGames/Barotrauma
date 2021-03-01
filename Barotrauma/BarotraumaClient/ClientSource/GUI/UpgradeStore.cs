@@ -625,13 +625,19 @@ namespace Barotrauma
             selectedUpgradeCategoryLayout?.ClearChildren();
             GUIFrame frame = new GUIFrame(rectT(1, 0.4f, selectedUpgradeCategoryLayout));
             GUIListBox prefabList = new GUIListBox(rectT(0.93f, 0.9f, frame, Anchor.Center)) { UserData = "prefablist" };
+
+            List<Item> entitiesOnSub = null;
+            if (!category.IsWallUpgrade)
+            {
+                entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true)).ToList();
+            }
             foreach (UpgradePrefab prefab in prefabs)
             {
-                CreateUpgradeEntry(prefab, category, prefabList.Content);
+                CreateUpgradeEntry(prefab, category, prefabList.Content, entitiesOnSub);
             }
         }
 
-        private void CreateUpgradeEntry(UpgradePrefab prefab, UpgradeCategory category, GUIComponent parent)
+        private void CreateUpgradeEntry(UpgradePrefab prefab, UpgradeCategory category, GUIComponent parent, List<Item> itemsOnSubmarine)
         {
             /*                        UPGRADE PREFAB ENTRY
              * |------------------------------------------------------------------|
@@ -680,12 +686,14 @@ namespace Barotrauma
             progressLayout.Recalculate();
             buyButtonLayout.Recalculate();
 
-            if (!HasPermission)
+            if (!HasPermission || itemsOnSubmarine != null && !itemsOnSubmarine.Any(it => category.CanBeApplied(it, prefab)))
             {
                 prefabFrame.Enabled = false;
                 description.Enabled = false;
                 name.Enabled = false;
                 icon.Color = Color.Gray;
+                buyButton.Enabled = false;
+                buyButtonLayout.UserData = null; // prevent UpdateUpgradeEntry() from enabling the button
             }
 
             buyButton.OnClicked += (button, o) =>
@@ -731,7 +739,7 @@ namespace Barotrauma
             // include pending upgrades into the tooltip
             foreach (var (prefab, category, level) in Campaign.UpgradeManager.PendingUpgrades)
             {
-                if (entity is Item item && category.CanBeApplied(item) || entity is Structure && category.IsWallUpgrade)
+                if (entity is Item item && category.CanBeApplied(item, prefab) || entity is Structure && category.IsWallUpgrade)
                 {
                     bool found = false;
                     foreach (GUITextBlock textBlock in upgradeList.Content.Children.Where(c => c is GUITextBlock).Cast<GUITextBlock>())
@@ -786,7 +794,7 @@ namespace Barotrauma
 
                     foreach (UpgradeCategory category in UpgradeCategory.Categories)
                     {
-                        if (entitiesOnSub.Any(item => category.CanBeApplied(item) && !item.disallowedUpgrades.Contains(category.Identifier)))
+                        if (entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
                         {
                             applicableCategories.Add(category);
                         }
@@ -826,7 +834,7 @@ namespace Barotrauma
                     HoveredItem = item;
                     if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradTab == UpgradeTab.Upgrade && currentStoreLayout != null)
                     {
-                        ScrollToCategory(data => data.Category.CanBeApplied(item));
+                        ScrollToCategory(data => data.Category.CanBeApplied(item, null));
                     }
                     found = true;
                     break;
@@ -895,7 +903,7 @@ namespace Barotrauma
             submarineInfoFrame.RectTransform.ScreenSpaceOffset = new Point(0, (int)(16 * GUI.Scale));
             
             description.Padding = new Vector4(description.Padding.X, 24 * GUI.Scale, description.Padding.Z, description.Padding.W);
-            List<Entity> pointsOfInterest = (from category in UpgradeCategory.Categories from item in submarine.GetItems(UpgradeManager.UpgradeAlsoConnectedSubs) where category.CanBeApplied(item) && !item.NonInteractable select item).Cast<Entity>().ToList();
+            List<Entity> pointsOfInterest = (from category in UpgradeCategory.Categories from item in submarine.GetItems(UpgradeManager.UpgradeAlsoConnectedSubs) where category.CanBeApplied(item, null) && item.IsPlayerTeamInteractable select item).Cast<Entity>().ToList();
 
             List<ushort> ids = GameMain.GameSession.SubmarineInfo?.LeftBehindDockingPortIDs ?? new List<ushort>();
             pointsOfInterest.AddRange(submarine.GetItems(UpgradeManager.UpgradeAlsoConnectedSubs).Where(item => ids.Contains(item.ID)));
@@ -1112,7 +1120,7 @@ namespace Barotrauma
             List<GUIFrame> frames = new List<GUIFrame>();
             foreach (var (item, guiFrame) in itemPreviews)
             {
-                if (category.CanBeApplied(item))
+                if (category.CanBeApplied(item, null))
                 {
                     frames.Add(guiFrame);
                 }

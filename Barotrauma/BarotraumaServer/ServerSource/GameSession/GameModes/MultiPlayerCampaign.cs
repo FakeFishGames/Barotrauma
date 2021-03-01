@@ -225,7 +225,7 @@ namespace Barotrauma
                     if (c.Inventory == null) { continue; }
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost && c.Submarine != Level.Loaded.StartOutpost)
                     {
-                        Map.CurrentLocation.RegisterTakenItems(c.Inventory.Items.Where(it => it != null && it.SpawnedInOutpost && it.OriginalModuleIndex > 0).Distinct());
+                        Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInOutpost && it.OriginalModuleIndex > 0));
                     }
 
                     if (c.Info != null && c.IsBot)
@@ -773,6 +773,9 @@ namespace Barotrauma
             element.Add(new XAttribute("campaignid", CampaignID));
             XElement modeElement = new XElement("MultiPlayerCampaign",
                 new XAttribute("money", Money),
+                new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),
+                new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
+                new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
                 new XAttribute("cheatsenabled", CheatsEnabled));
             CampaignMetadata?.Save(modeElement);
             Map.Save(modeElement);

@@ -9,11 +9,24 @@ namespace Barotrauma.Items.Components
 {
     partial class ItemContainer : ItemComponent, IDrawableComponent
     {
+        class ActiveContainedItem
+        {
+            public readonly Item Item;
+            public readonly StatusEffect StatusEffect;
+            public readonly bool ExcludeBroken;
+            public ActiveContainedItem(Item item, StatusEffect statusEffect, bool excludeBroken)
+            {
+                Item = item;
+                StatusEffect = statusEffect;
+                ExcludeBroken = excludeBroken;
+            }
+        }
+
         public ItemInventory Inventory;
 
-        private List<Pair<Item, StatusEffect>> itemsWithStatusEffects;
+        private readonly List<ActiveContainedItem> activeContainedItems = new List<ActiveContainedItem>();
         
-        private ushort[] itemIds;
+        private List<ushort>[] itemIds;
 
         private class reloadItems
         {
@@ -28,6 +41,15 @@ namespace Barotrauma.Items.Components
         {
             get { return capacity; }
             set { capacity = Math.Max(value, 1); }
+        }
+
+        //how many items can be contained
+        private int maxStackSize;
+        [Serialize(64, false, description: "How many items can be stacked in one slot. Does not increase the maximum stack size of the items themselves, e.g. a stack of bullets could have a maximum size of 8 but the number of bullets in a specific weapon could be restricted to 6.")]
+        public int MaxStackSize
+        {
+            get { return maxStackSize; }
+            set { maxStackSize = Math.Max(value, 1); }
         }
 
         private bool hideItems;
@@ -161,8 +183,6 @@ namespace Barotrauma.Items.Components
             }
 
             InitProjSpecific(element);
-
-            itemsWithStatusEffects = new List<Pair<Item, StatusEffect>>();
         }
 
         partial void InitProjSpecific(XElement element);
@@ -174,23 +194,23 @@ namespace Barotrauma.Items.Components
             RelatedItem ri = ContainableItems.Find(x => x.MatchesItem(containedItem));
             if (ri != null)
             {
-                itemsWithStatusEffects.RemoveAll(i => i.First == containedItem);
+                activeContainedItems.RemoveAll(i => i.Item == containedItem);
                 foreach (StatusEffect effect in ri.statusEffects)
                 {
-                    itemsWithStatusEffects.Add(new Pair<Item, StatusEffect>(containedItem, effect));
+                    activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, ri.ExcludeBroken));
                 }
             }
 
             //no need to Update() if this item has no statuseffects and no physics body
-            IsActive = itemsWithStatusEffects.Count > 0 || Inventory.Items.Any(it => it?.body != null);
+            IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
         }
 
         public void OnItemRemoved(Item containedItem)
         {
-            itemsWithStatusEffects.RemoveAll(i => i.First == containedItem);
+            activeContainedItems.RemoveAll(i => i.Item == containedItem);
 
             //deactivate if the inventory is empty
-            IsActive = itemsWithStatusEffects.Count > 0 || Inventory.Items.Any(it => it?.body != null);
+            IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
         }
 
         public bool CanBeContained(Item item)
@@ -216,18 +236,17 @@ namespace Barotrauma.Items.Components
             {
                 item.SetContainedItemPositions();
             }
-            else if (itemsWithStatusEffects.Count == 0)
+            else if (activeContainedItems.Count == 0)
             {
                 IsActive = false;
                 return;
             }
 
-            foreach (Pair<Item, StatusEffect> itemAndEffect in itemsWithStatusEffects)
+            foreach (var activeContainedItem in activeContainedItems)
             {
-                Item contained = itemAndEffect.First;
-                if (contained.Condition <= 0.0f) continue;
-
-                StatusEffect effect = itemAndEffect.Second;
+                Item contained = activeContainedItem.Item;
+                if (activeContainedItem.ExcludeBroken && contained.Condition <= 0.0f) { continue; }
+                StatusEffect effect = activeContainedItem.StatusEffect;
 
                 if (effect.HasTargetType(StatusEffect.TargetType.This))                 
                     effect.Apply(ActionType.OnContaining, deltaTime, item, item.AllPropertyObjects);
@@ -260,9 +279,8 @@ namespace Barotrauma.Items.Components
             }
             if (AutoInteractWithContained && character.SelectedConstruction == null)
             {
-                foreach (Item contained in Inventory.Items)
+                foreach (Item contained in Inventory.AllItems)
                 {
-                    if (contained == null) continue;
                     if (contained.TryInteract(character))
                     {
                         character.FocusedItem = contained;
@@ -284,9 +302,8 @@ namespace Barotrauma.Items.Components
             }
             if (AutoInteractWithContained)
             {
-                foreach (Item contained in Inventory.Items)
+                foreach (Item contained in Inventory.AllItems)
                 {
-                    if (contained == null) continue;
                     if (contained.TryInteract(picker))
                     {
                         picker.FocusedItem = contained;
@@ -297,20 +314,19 @@ namespace Barotrauma.Items.Components
 
             IsActive = true;
 
-            return (picker != null);
+            return picker != null;
         }
 
         public override bool Combine(Item item, Character user)
         {
             if (!AllowDragAndDrop && user != null) { return false; }
-
-            if (!ContainableItems.Any(x => x.MatchesItem(item))) { return false; }
+            if (!ContainableItems.Any(it => it.MatchesItem(item))) { return false; }
             if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
             
-            if (Inventory.TryPutItem(item, null))
+            if (Inventory.TryPutItem(item, user))
             {            
                 IsActive = true;
-                if (hideItems && item.body != null) item.body.Enabled = false;
+                if (hideItems && item.body != null) { item.body.Enabled = false; }
                             
                 return true;
             }
@@ -449,9 +465,8 @@ namespace Barotrauma.Items.Components
                 currentRotation += item.body.Rotation;
             }
 
-            foreach (Item contained in Inventory.Items)
+            foreach (Item contained in Inventory.AllItems)
             {
-                if (contained == null) { continue; }
                 if (contained.body != null)
                 {
                     try
@@ -493,13 +508,22 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            if (itemIds != null)            
-            { 
+            if (itemIds != null)
+            {
                 for (ushort i = 0; i < itemIds.Length; i++)
                 {
-                    if (!(Entity.FindEntityByID(itemIds[i]) is Item item)) { continue; }
-                    if (i >= Inventory.Capacity) { continue; }
-                    Inventory.TryPutItem(item, i, false, false, null, false);
+                    if (i >= Inventory.Capacity) 
+                    {
+                        //legacy support: before item stacking was implemented, revolver for example had a separate slot for each bullet
+                        //now there's just one, try to put the extra items where they fit (= stack them)
+                        Inventory.TryPutItem(item, user: null, createNetworkEvent: false);
+                        continue;
+                    }
+                    foreach (ushort id in itemIds[i])
+                    {
+                        if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
+                        Inventory.TryPutItem(item, i, false, false, null, false);
+                    }
                 }
                 itemIds = null;
             }
@@ -511,7 +535,7 @@ namespace Barotrauma.Items.Components
             if (SpawnWithId.Length > 0)
             {
                 ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);
-                if (prefab != null && Inventory != null && Inventory.Items.Any(it => it == null))
+                if (prefab != null && Inventory != null && Inventory.CanBePut(prefab))
                 {
                     Entity.Spawner?.AddToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false);                    
                 }
@@ -538,13 +562,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 #endif
-
-            foreach (Item item in Inventory.Items)
-            {
-                if (item == null) continue;
-                item.Drop(null);
-            }               
-        }        
+            Inventory.AllItemsMod.ForEach(it => it.Drop(null));
+        }
 
         public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
@@ -552,26 +571,28 @@ namespace Barotrauma.Items.Components
 
             string containedString = componentElement.GetAttributeString("contained", "");
             string[] itemIdStrings = containedString.Split(',');
-            itemIds = new ushort[itemIdStrings.Length];
+            itemIds = new List<ushort>[itemIdStrings.Length];
             for (int i = 0; i < itemIdStrings.Length; i++)
             {
-                if (!int.TryParse(itemIdStrings[i], out int id)) { continue; }
-                itemIds[i] = idRemap.GetOffsetId(id);
+                itemIds[i] ??= new List<ushort>();
+                foreach (string idStr in itemIdStrings[i].Split(';'))
+                {
+                    if (!int.TryParse(idStr, out int id)) { continue; }
+                    itemIds[i].Add(idRemap.GetOffsetId(id));
+                }
             }
         }
 
         public override XElement Save(XElement parentElement)
         {
             XElement componentElement = base.Save(parentElement);
-
-            string[] itemIdStrings = new string[Inventory.Items.Length];
-            for (int i = 0; i < Inventory.Items.Length; i++)
+            string[] itemIdStrings = new string[Inventory.Capacity];
+            for (int i = 0; i < Inventory.Capacity; i++)
             {
-                itemIdStrings[i] = (Inventory.Items[i] == null) ? "0" : Inventory.Items[i].ID.ToString();
+                var items = Inventory.GetItemsAt(i);
+                itemIdStrings[i] = string.Join(';', items.Select(it => it.ID.ToString()));
             }
-
-            componentElement.Add(new XAttribute("contained", string.Join(",", itemIdStrings)));
-
+            componentElement.Add(new XAttribute("contained", string.Join(',', itemIdStrings)));
             return componentElement;
         }
     }

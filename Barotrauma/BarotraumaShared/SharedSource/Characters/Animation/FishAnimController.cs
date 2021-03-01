@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
@@ -23,7 +22,11 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.SpeciesName);
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.VariantOf ?? character.SpeciesName);
+                    if (character.VariantOf != null)
+                    {
+                        _ragdollParams.ApplyVariantScale(character.Params.VariantFile);
+                    }
                 }
                 return _ragdollParams;
             }
@@ -338,9 +341,21 @@ namespace Barotrauma
                 float dragForce = MathHelper.Clamp(eatSpeed * 10, 0, 40);
                 if (dragForce > 0.1f)
                 {
-                    target.AnimController.MainLimb.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    Vector2 targetPos = mouthPos;
+                    if (target.Submarine != null && character.Submarine == null)
+                    {
+                        targetPos -= target.Submarine.SimPosition;
+                    }
+                    else if (target.Submarine == null && character.Submarine != null)
+                    {
+                        targetPos += character.Submarine.SimPosition;
+                    }
                     target.AnimController.MainLimb.body.SmoothRotate(mouthLimb.Rotation, dragForce * 2);
-                    target.AnimController.Collider.MoveToPos(mouthPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    if (!target.AnimController.SimplePhysicsEnabled)
+                    {
+                        target.AnimController.MainLimb.MoveToPos(targetPos, (float)(Math.Sin(eatTimer) + dragForce));
+                    }
+                    target.AnimController.Collider.MoveToPos(targetPos, (float)(Math.Sin(eatTimer) + dragForce));
                 }
 
                 if (InWater)
