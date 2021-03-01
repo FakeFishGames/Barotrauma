@@ -62,7 +62,6 @@ namespace Barotrauma.Sounds
 
             ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
             SampleRate = reader.SampleRate;
-            TotalTime = reader.TotalTime;
 
             if (!Stream)
             {

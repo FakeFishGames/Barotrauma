@@ -76,12 +76,6 @@ namespace Barotrauma.Sounds
             protected set;
         }
 
-        public TimeSpan TotalTime
-        {
-            get;
-            protected set;
-        }
-
         /// <summary>
         /// How many instances of the same sound clip can be playing at the same time
         /// </summary>

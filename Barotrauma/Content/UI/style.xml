@@ -21,6 +21,7 @@
   <ColorInventoryHalf color="243,162,50,255" />
   <ColorInventoryFull color="96,222,146,255" />
   <ColorInventoryBackground color="56,56,56,255" />
+  <ColorInventoryEmptyOverlay color="125,125,125,255" />
   
   <TextColorNormal color="228,217,167,255" />
   <TextColorBright color="255,255,255,255" />
@@ -54,7 +55,8 @@
   <UIGlow texture="Content/UI/InnerGlow.png" sourcerect="0,0,512,384" slice="128,128,384,256" />
   <UIGlowCircular texture="Content/UI/UIAtlasGeneral.png" sourcerect="177,637,170,170" origin="0.5,0.5" tile="false" compress="false" />
   <FocusIndicator texture="Content/UI/FocusIndicator.png" sourcerect="0,0,448,224" rows="2" columns="4" />
-  <ReloadIndicator texture="Content/UI/FocusIndicator.png" sourcerect="0,0,112,112" />
+  <ReloadIndicator texture="Content/UI/ReloadIndicator.png" sourcerect="0,0,96,96" />
+  <ReloadIndicatorBullet texture="Content/UI/ReloadIndicatorBullet.png" sourcerect="0,0,32,32" />
   <!-- LEGACY
   <Font file="Content/Fonts/Exo2-Medium.otf" size="14"/>
   <SmallFont file="Content/Fonts/Exo2-Light.otf" size="12"/>
@@ -432,10 +434,10 @@
     </GUIButtonVertical>
   </GUIScrollBar>
   <GUISlider>
-    <GUIFrameHorizontal color="169,212,187,255" textcolor="255,255,255,255" padding="2,2,2,2">
+    <GUIFrameHorizontal color="169,212,187,255" disabledcolor="125,125,125,125" textcolor="255,255,255,255" padding="2,2,2,2">
       <Sprite name="GUISlider.GUIFrameHorizontal" texture="Content/UI/UIAtlasGeneral.png" sourcerect="0,2,114,32" slice="5,7,109,30" origin="0.5,0.5" />
     </GUIFrameHorizontal>
-    <GUIButtonHorizontal color="169,212,187,255" hovercolor="255,255,255,255" selectedcolor="230,230,230,255" pressedcolor="150,150,150,255">
+    <GUIButtonHorizontal color="169,212,187,255" disabledcolor="125,125,125,125" hovercolor="255,255,255,255" selectedcolor="230,230,230,255" pressedcolor="150,150,150,255">
       <Sprite name="GUISlider.GUIButtonHorizontal_Back" texture="Content/UI/UIAtlasGeneral.png" sourcerect="122,0,34,34" tile="false" origin="0.5,0.5" />
       <Sprite name="GUISlider.GUIButtonHorizontal_Front" texture="Content/UI/UIAtlasGeneral.png" sourcerect="162,0,34,34" tile="false" origin="0.5,0.5" />
       <Size maxresolution="1024,768" width="18" height="14" />
@@ -1170,8 +1172,14 @@
     <Sprite name="StoreTradingIcon" texture="Content/UI/CampaignUIAtlas2.png" tile="false" sourcerect="0,256,128,128" maintainaspectratio="true" />
   </StoreTradingIcon>
   <StoreShoppingCrateIcon color="255,255,255,255">
-    <Sprite name="StoreTradingIcon" texture="Content/UI/CampaignUIAtlas2.png" tile="false" sourcerect="256,256,128,128" maintainaspectratio="true" />
+    <Sprite name="StoreShoppingCrateIcon" texture="Content/UI/CampaignUIAtlas2.png" tile="false" sourcerect="256,256,128,128" maintainaspectratio="true" />
   </StoreShoppingCrateIcon>
+  <StoreDealIcon color="40,108,46,255">
+    <Sprite name="StoreDealIcon" texture="Content/UI/CampaignUIAtlas2.png" tile="false" sourcerect="595,304,80,48" maintainaspectratio="true" />
+  </StoreDealIcon>
+  <StoreArrow color="255,255,255,255">
+    <Sprite name="StoreArrow" texture="Content/UI/UIAtlasGeneral.png" tile="false" maintainaspectratio="true" sourcerect="271,499,32,25" origin="0.5,0.5" />
+  </StoreArrow>
 
   <CrewManagementHeaderIcon color="255,255,255,255">
     <Sprite name="CrewManagementHeaderIcon" texture="Content/UI/CampaignUIAtlas2.png" tile="false" sourcerect="384,256,128,128" maintainaspectratio="true" />
@@ -1221,4 +1229,33 @@
     <GUITextBlock textcolor="228,217,167,255" padding="10.0, 0.0, 10.0, 0.0" font="subheading" />
   </EndRoundButton>
   <EndRoundButtonPulse name="EndRoundButton.Pulse" texture="Content/UI/CampaignUIAtlas2.png" sourcerect="716,379,196,64" tile="false" origin="0.5,0.5" />
+
+  <ContainedStateIndicator.Default>
+    <Sprite name="ContainedStateIndicator.Default.None" texture="Content/UI/ContainerIndicators.png" sourcerect="1,1,120,29" state="None" />
+    <Sprite name="ContainedStateIndicator.Default.Hover" texture="Content/UI/ContainerIndicators.png" sourcerect="133,1,120,29" state="Hover" />
+  </ContainedStateIndicator.Default>
+  <ContainedStateIndicator.Spear>
+    <Sprite name="ContainedStateIndicator.Spear.None" texture="Content/UI/ContainerIndicators.png" sourcerect="2,124,120,29" state="None" />
+    <Sprite name="ContainedStateIndicator.Spear.Hover" texture="Content/UI/ContainerIndicators.png" sourcerect="134,124,120,29" state="Hover" />
+  </ContainedStateIndicator.Spear>
+  <ContainedStateIndicator.Syringe>
+    <Sprite name="ContainedStateIndicator.Syringe.None" texture="Content/UI/ContainerIndicators.png" sourcerect="2,155,120,29" state="None" />
+    <Sprite name="ContainedStateIndicator.Syringe.Hover" texture="Content/UI/ContainerIndicators.png" sourcerect="134,155,120,29" state="Hover" />
+  </ContainedStateIndicator.Syringe>
+  <ContainedStateIndicator.Battery>
+    <Sprite name="ContainedStateIndicator.Battery.None" texture="Content/UI/ContainerIndicators.png" sourcerect="2,186,120,29" state="None" />
+    <Sprite name="ContainedStateIndicator.Battery.Hover" texture="Content/UI/ContainerIndicators.png" sourcerect="134,186,120,29" state="Hover" />
+  </ContainedStateIndicator.Battery>
+  <ContainedStateIndicator.Bullet>
+    <Sprite name="ContainedStateIndicator.Bullet.None" texture="Content/UI/ContainerIndicators.png" sourcerect="1,62,120,29" state="None" />
+    <Sprite name="ContainedStateIndicator.Bullet.Hover" texture="Content/UI/ContainerIndicators.png" sourcerect="133,62,120,29" state="Hover" />
+  </ContainedStateIndicator.Bullet>
+  <ContainedStateIndicator.Tank>
+    <Sprite name="ContainedStateIndicator.Tank.None" texture="Content/UI/ContainerIndicators.png" sourcerect="1,93,120,29" state="None" />
+    <Sprite name="ContainedStateIndicator.Tank.Hover" texture="Content/UI/ContainerIndicators.png" sourcerect="133,93,120,29" state="Hover" />
+  </ContainedStateIndicator.Tank>
+  <ContainedStateIndicator.Explosive>
+    <Sprite name="ContainedStateIndicator.Explosive.None" texture="Content/UI/ContainerIndicators.png" sourcerect="1,31,120,29" state="None" />
+    <Sprite name="ContainedStateIndicator.Explosive.Hover" texture="Content/UI/ContainerIndicators.png" sourcerect="133,31,120,29" state="Hover" />
+  </ContainedStateIndicator.Explosive>
 </style>

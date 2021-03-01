@@ -69,6 +69,11 @@
 <loadingscreentip>Making trouble at an outpost hurts your reputation. A bad reputation might cause the inhabitants of the outpost to charge you a premium for their services, or, in more extreme cases, lead to a confrontation with their security.</loadingscreentip>
 <loadingscreentip>Many Europan outposts don't recognize the Coalition's authority, although it is still powerful enough that few dare to openly oppose it. However, there are groups such as the Jovian Separatists who do fight against it, aiming to bring it down and create a more democratic society.</loadingscreentip>
 <loadingscreentip>Behold the Watcher. Don't lose your mind.</loadingscreentip>
+<loadingscreentip>Straddling the border between surface ice and the denser, rockier subsurface ice layer, the Europan Ridge is the area along the western-most slope of the Eye of Europa. Warmer water is convected into this area, allowing a wider array of life to subsist.</loadingscreentip>
+<loadingscreentip>The Aphotic Plateau sits atop the western rim of an ancient impact crater known as the Eye of Europa. As with the neighboring Europan Ridge, the Plateau’s tunnel networks consist mostly of dark, rocky ice pressed as hard as any stone by the unimaginable weight of the ice above it.</loadingscreentip>
+<loadingscreentip>Most of the human habitation on Europa is situated in the so-called Cold Caverns. Due to the cold water and relative proximity to the surface, this biome is biologically less diverse than others, primarily hosting moderate concentrations of crawlers and practically no vegetation.</loadingscreentip>
+<loadingscreentip>Ice spires are enormous icy projections that sometimes burst through the subsurface tunnels under Europa's crust. Submarine crews are advised to avoid any contact with the spires, or to destroy any they come across, as the sharp edges can easily tear through a submarine's hull.</loadingscreentip>
+<loadingscreentip>The poorly understood "Piezo Crystals" found in The Great Sea pose some extra challenges to crews travelling through the region: Navigating too close to one may cause disruptions in the submarine's electrical grid.</loadingscreentip>
 
 <!-- Main menu labels -->
 <campaignlabel>Campaign</campaignlabel>
@@ -127,10 +132,12 @@
 <gamemode.mission>Mission</gamemode.mission>
 <gamemode.multiplayercampaign>Campaign</gamemode.multiplayercampaign>
 <gamemode.testmode>Testing Mode</gamemode.testmode>
+<gamemode.pvp>PvP</gamemode.pvp>
 <gamemodedescription.singleplayercampaign>Embark on a journey through the depths of Europa. Travel from location to location, complete missions to earn money for supplies, discover new biomes…</gamemodedescription.singleplayercampaign>
 <gamemodedescription.sandbox>A game mode with no specific objectives.</gamemodedescription.sandbox>
 <gamemodedescription.mission>The crew must work together to complete a single mission, such as retrieving an alien artifact or killing a creature that's terrorizing nearby outposts.</gamemodedescription.mission>
 <gamemodedescription.multiplayercampaign>Embark on a journey through the depths of Europa. Travel from location to location, complete missions to earn money for supplies, discover new biomes…</gamemodedescription.multiplayercampaign>
+<gamemodedescription.pvp>The players are split up into two separate subs, tasked with destroying each other.</gamemodedescription.pvp>
 
 <!-- Steam Workshop menu -->
 <browsetab>Popular Mods</browsetab>
@@ -229,6 +236,7 @@
 <modsdownloadingnotif>Downloading mods...</modsdownloadingnotif>
 <workshopitemdownloadtitle>Workshop items required</workshopitemdownloadtitle>
 <workshopitemdownloadprompt>The following Workshop items are required to play on this server: [items] Would you like to subscribe to them?</workshopitemdownloadprompt>
+<workshopitemdownloadprompttruncated>+ [number] more</workshopitemdownloadprompttruncated>
 
 <!-- Settings Menu -->
 <settings>Settings</settings>
@@ -292,6 +300,9 @@
 <inventoryscale>Inventory scale</inventoryscale>
 <enabletexturecompression>Enable texture compression</enabletexturecompression>
 <enabletexturecompressiontooltip>Significantly reduces the amount of video memory used by textures. This may increase loading times and generate visual artifacts.</enabletexturecompressiontooltip>
+<radialdistortion>Fisheye lens effect</radialdistortion>
+<radialdistortiontooltip>Enables the fisheye screen distortion effect that's caused by certain afflictions and environmental hazards.</radialdistortiontooltip>
+<textscale>Text scale</textscale>
 
 <!-- Audio tab -->
 <settingstab.audio>Audio</settingstab.audio>
@@ -301,6 +312,8 @@
 <muteonfocuslost>Mute on focus lost</muteonfocuslost>
 <muteonfocuslosttooltip>Mutes the game when its window is not in focus.</muteonfocuslosttooltip>
 <audionodevices>No audio output devices found</audionodevices>
+<localvoicebydefault>Use local voice chat by default</localvoicebydefault>
+<localvoicebydefaulttooltip>When enabled, your voice will be sent through the local voice chat (meaning that only nearby players can hear you). You can use the push-to-talk key to speak through the radio.</localvoicebydefaulttooltip>
 
 <!-- Voice chat tab -->
 <settingstab.voicechat>Voice chat</settingstab.voicechat>
@@ -361,6 +374,9 @@
 <inputtype.localvoice>Local voice chat</inputtype.localvoice>
 <inputtype.nextfiremode>Next fire mode</inputtype.nextfiremode>
 <inputtype.previousfiremode>Previous fire mode</inputtype.previousfiremode>
+<inputtype.takeallfrominventoryslot>Take all from slot</inputtype.takeallfrominventoryslot>
+<inputtype.takehalffrominventoryslot>Take half from slot</inputtype.takehalffrominventoryslot>
+<inputtype.takeonefrominventoryslot>Take one from slot</inputtype.takeonefrominventoryslot>
 <input.leftmouse>Left mouse</input.leftmouse>
 <input.rightmouse>Right mouse</input.rightmouse>
 <input.middlemouse>Middle mouse</input.middlemouse>
@@ -457,6 +473,7 @@
 <grabhint>[[key]] Grab</grabhint>
 <healhint>[[key]] Heal</healhint>
 <talkhint>[[key]] Talk</talkhint>
+<playhint>[[key]] Play</playhint>
 <quickuseaction.equip>Equip</quickuseaction.equip>
 <quickuseaction.unequip>Unequip</quickuseaction.unequip>
 <quickuseaction.drop>Hold to drop</quickuseaction.drop>
@@ -567,12 +584,15 @@
 <message>Message</message>
 <legacyitemformat>[name] (Legacy)</legacyitemformat>
 <moderationmenu.userdetails>Details</moderationmenu.userdetails>
+<crushdepthwarninglow>This route may be too deep to traverse safely without upgrading the durability of your current submarine's hull, or utilizing a more suitable sub. The route starts at the depth of [initialdepth] meters, but your submarine's hull can only withstand a depth of [submarinecrushdepth] meters.</crushdepthwarninglow>
+<crushdepthwarninghigh>You cannot traverse this route without upgrading the durability of your current submarine's hull, or utilizing a more suitable sub. The route starts at the depth of [initialdepth] meters, but your submarine's hull can only withstand a depth of [submarinecrushdepth] meters.</crushdepthwarninghigh>
+<navterminalicespirewarning>Ice spire detected. Destroying the spire or switching to manual steering is advised.</navterminalicespirewarning>
 
 <!-- Editor -->
 
+
 <!-- Links -->
-<editordisclaimerwikiurl>https://barotrauma.gamepedia.com/Barotrauma_Wiki</editordisclaimerwikiurl>
-<editordisclaimerforumurl>https://undertowgames.com/forum/viewforum.php?f=17</editordisclaimerforumurl>
+<editordisclaimerwikiurl>https://barotraumagame.com/wiki</editordisclaimerwikiurl>
 <editordisclaimerdiscordurl>https://discordapp.com/invite/undertow</editordisclaimerdiscordurl>
 
 <!-- Generic -->
@@ -1137,6 +1157,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <leveleditor.levelobjnametaken>The selected name is already in use.</leveleditor.levelobjnametaken>
 <leveleditor.levelobjtexturenotfound>Could not find the selected texture file.</leveleditor.levelobjtexturenotfound>
 <leveleditor.ruinparams>Ruin parameters</leveleditor.ruinparams>
+<leveleditor.caveparams>Cave parameters</leveleditor.caveparams>
 <leveleditor.outpostparams>Outpost parameters</leveleditor.outpostparams>
 <leveleditor.addmoduletype>Add module type</leveleditor.addmoduletype>
 
@@ -1375,10 +1396,12 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <!-- Entity Editor -->
 <stringpropertytranslate>This text will be translated to [translation].</stringpropertytranslate>
 <stringpropertycannottranslate>This text will not be translated - text with the tag [tag] not found in the language files.</stringpropertycannottranslate>
+<charactereditor.addmultiplelimbsbutton>Add Multiple</charactereditor.addmultiplelimbsbutton>
+<charactereditor.contentpackagenameinuse>A content package with the same name already exists. Please choose another name or select the existing content package from the dropdown if you want to add the character to it.</charactereditor.contentpackagenameinuse>
 <subeditorlights>Lights</subeditorlights>
 <subeditorshadowcastinglights>Shadow-casting lights</subeditorshadowcastinglights>
 
-  
+
 <!-- Sprite Editor -->
 <spriteeditor.reloadtexture>Reload Texture</spriteeditor.reloadtexture>
 <spriteeditor.texturesreloaded>Textures reloaded from [filepath]</spriteeditor.texturesreloaded>
@@ -1912,7 +1935,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <sp.powerconsumption.description>How much power the device draws (or attempts to draw) from the electrical grid when active.</sp.powerconsumption.description>
 <sp.vulnerabletoemp.name>Vulnerable To E M P</sp.vulnerabletoemp.name>
 <sp.vulnerabletoemp.description>Can the item be damaged by electomagnetic pulses.</sp.vulnerabletoemp.description>
-  
+
 
 <subeditor.shadowcastinglightswarning>The submarine includes a very high number of shadow-casting lights, which can cause performance issues. You may want to go through the light sources and disable shadow casting where possible: dim and/or low-range static lights don't necessarily need to cast shadows if letting the light go through walls and doors is not noticeable, and lights outside the submarine can be set to be drawn behind the submarine so shadows don't need to be cast.</subeditor.shadowcastinglightswarning>
 <subeditor.outpostcommonness>Commonness</subeditor.outpostcommonness>
@@ -1922,13 +1945,18 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <subeditor.saveageminutes>[minutes] minute(s) ago</subeditor.saveageminutes>
 <subeditor.savedmorethanhour>More than an hour ago</subeditor.savedmorethanhour>
 <subeditor.autosaveentry>[submarine] ([saveage])</subeditor.autosaveentry>
-<editor.cut>Cut</editor.cut>
-<editor.paste>Paste</editor.paste>
+<subeditor.toggleimageediting>Toggle image editing</subeditor.toggleimageediting>
+<subeditor.addimage>Add image</subeditor.addimage>
+<subeditor.imageeditingmode>Image editing mode</subeditor.imageeditingmode>
+<subeditor.togglegrid>Toggle grid</subeditor.togglegrid>
+<subeditor.editbackgroundcolor>Edit background color</subeditor.editbackgroundcolor>
+<subeditor.toggletransparency>Toggle wiring mode transparency</subeditor.toggletransparency>
 <subeditorvisibilitybutton>Toggle visibility</subeditorvisibilitybutton>
 <subeditorvisibilitytooltip>Choose which types of entities are visible.</subeditorvisibilitytooltip>
 <subeditoreditingmode>Edit mode</subeditoreditingmode>
+<editor.cut>Cut</editor.cut>
+<editor.paste>Paste</editor.paste>
 <particle.muzzleflash>Muzzle Flash</particle.muzzleflash>
-<sp.item.rotation.name>Rotation</sp.item.rotation.name>
 <gapinsidehullwarning>This gap will do nothing, because both sides of the gap are inside the same hull. If you want water and oxygen to flow through the gap, or a door to block water/oxygen flow, it must be placed between two hulls.</gapinsidehullwarning>
 <opensubbutton>Open...</opensubbutton>
 <generatewaypointsverification>Are you sure you want to regenerate the waypoints in the submarine? This will reset all the existing waypoints. To ensure that AI characters can navigate the submarine effectively, you may need to make some manual adjustments to the waypoints after they have been generated, such as adding extra waypoints and links between them to make sure the paths between the waypoints cover all rooms.</generatewaypointsverification>
@@ -1950,6 +1978,9 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <sp.regexfindcomponent.usecapturegroup.name>Use capture group</sp.regexfindcomponent.usecapturegroup.name>
 <sp.regexfindcomponent.usecapturegroup.description>Should the component output a value of a named capture group.</sp.regexfindcomponent.usecapturegroup.description>
 <sp.regexfindcomponent.output.description>The signal this item outputs when the received signal matches the target signal or the name of the capture group to use as a signal.</sp.regexfindcomponent.output.description>
+<sp.nametag.writtenname.name>Name</sp.nametag.writtenname.name>
+<sp.nametag.writtenname.description>Name written on the tag.</sp.nametag.writtenname.description>
+<sp.item.rotation.name>Rotation</sp.item.rotation.name>
 <editor.undohistorybutton>History</editor.undohistorybutton>
 <undo.beginning>Beginning</undo.beginning>
 <undo.beginningtooltip>The beginning of the undo history.</undo.beginningtooltip>
@@ -1966,6 +1997,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <undo.containeditem>Moved [item] inside [container]</undo.containeditem>
 <undo.containeditemsmultiple>Moved [count] items inside [container]</undo.containeditemsmultiple>
 <editor.suppresswarnings>Suppress these warnings for this session.</editor.suppresswarnings>
+<showwires>Wires</showwires>
 
 <!-- Characters -->
 <MyCharacter>My character</MyCharacter>
@@ -1999,6 +2031,9 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <character.peanut>Peanut</character.peanut>
 <character.orangeboy>Orange Boy</character.orangeboy>
 <character.psilotoad>Psilotoad</character.psilotoad>
+<character.cthulhu>Cthulhu</character.cthulhu>
+<character.hammerheadspawn>Hammerhead Spawn</character.hammerheadspawn>
+<character.spineling>Spineling</character.spineling>
 
 <!-- Customization -->
 <clicktoselectjob>Click to select a job</clicktoselectjob>
@@ -2056,6 +2091,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <campaignmode.savenotreceived>Accessing the campaign save file from the server, please wait...</campaignmode.savenotreceived>
 <undefinedsubmarineclasswarning>Submarines with an undefined class cannot be used in the campaign!\n\nAre you sure you want to save the submarine without assigning a submarine class?</undefinedsubmarineclasswarning>
 <undefinedsubmarineselected>Submarines with an undefined class cannot be used in the campaign!</undefinedsubmarineselected>
+<campaignstartingmoney>Starting balance: [money] mk</campaignstartingmoney>
 
 <!-- Campaign menu -->
 <map>Map</map>
@@ -2189,6 +2225,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <forbiddenservernameverification>Your server will be hidden from the server list by default because it contains the word "[forbiddenword]". Are you sure you want to name your server "[servername]"?</forbiddenservernameverification>
 <filteroffensiveservers>Hide offensive server names</filteroffensiveservers>
 <filteroffensiveserverstooltip>Filters out servers with certain offensive words in the name. You can add or remove disallowed words by editing the file Data/forbiddenwordlist.txt in the game folder.</filteroffensiveserverstooltip>
+<filteroffensiveserversprompt>Would you like to automatically hide servers with offensive words in their names? You can also add or remove disallowed words by editing the file Data/forbiddenwordlist.txt in the game folder.</filteroffensiveserversprompt>
 
 <!-- Disconnect reasons -->
 <disconnectreason.banned>You have been banned from the server.</disconnectreason.banned>
@@ -2350,6 +2387,10 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <returntoserverlobby>Server lobby</returntoserverlobby>
 <pausemenureturntoserverlobbyverification>Are you sure you want to return to the server lobby? All your unsaved progress will be lost.</pausemenureturntoserverlobbyverification>
 <purchasablesubmarines>Purchasable submarines</purchasablesubmarines>
+<teampreference.team1>Coalition</teampreference.team1>
+<teampreference.team2>Renegade</teampreference.team2>
+<teampreference.nopreference>No preference</teampreference.nopreference>
+<waitforsubmarinehashcalculations>Calculating submarine hashes (which are used for determining compatibility with clients) before starting the server. If you run into this warning often, you may want to uninstall some of your custom submarines.</waitforsubmarinehashcalculations>
 
 <!-- Server log -->
 <serverlog.filter>Filter</serverlog.filter>
@@ -2427,6 +2468,9 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <missiontype.personneltransport>Personnel Transport</missiontype.personneltransport>
 <missiontype.swarm>Swarm</missiontype.swarm>
 <missiontype.prospect>Prospecting</missiontype.prospect>
+<missiontype.nest>Nest</missiontype.nest>
+<missiontype.mineral>Mining</missiontype.mineral>
+<missiontype.beacon>Beacon</missiontype.beacon>
 
 <!-- Mission descriptions -->
 <missionname.salvageskyholderartifactruins>Salvaging an artifact</missionname.salvageskyholderartifactruins>
@@ -2587,6 +2631,73 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <missionfailure.salvagewreck2>Failed to retrieve any evidence of what caused the sinking.</missionfailure.salvagewreck2>
 <missionheader0.salvagewreck2>Evidence retrieved</missionheader0.salvagewreck2>
 <missionmessage0.salvagewreck2>You have a good idea of what might have caused the sub to sink. Bring the evidence to [location2] to claim your reward.</missionmessage0.salvagewreck2>
+<missionname.quartzcollection>Mining quartz</missionname.quartzcollection>
+<missiondescription.quartzcollection>There's been talk of deposits of quartz along the way from [location1] to [location2]. Bring back ten samples of quartz to verify these claims.</missiondescription.quartzcollection>
+<missionheader0.quartzcollection>Quartz mined</missionheader0.quartzcollection>
+<missionmessage0.quartzcollection>You have mined enough quartz. Bring it to an outpost to claim the reward.</missionmessage0.quartzcollection>
+<missionsuccess.quartzcollection>The existence of the quartz deposits has been successfully proven.</missionsuccess.quartzcollection>
+<missionsonarlabel.quartzcollection>Quartz</missionsonarlabel.quartzcollection>
+<missionname.pyromorphitecollection>Mining pyromorphite</missionname.pyromorphitecollection>
+<missiondescription.pyromorphitecollection>There's been talk of deposits of pyromorphite along the way from [location1] to [location2]. Bring back ten samples of pyromorphite to verify these claims.</missiondescription.pyromorphitecollection>
+<missionheader0.pyromorphitecollection>Pyromorphite mined</missionheader0.pyromorphitecollection>
+<missionmessage0.pyromorphitecollection>You have mined enough pyromorphite. Bring it to an outpost to claim the reward.</missionmessage0.pyromorphitecollection>
+<missionsuccess.pyromorphitecollection>The existence of the pyromorphite deposits has been successfully proven.</missionsuccess.pyromorphitecollection>
+<missionsonarlabel.pyromorphitecollection>Pyromorphite</missionsonarlabel.pyromorphitecollection>
+<missionname.uraniumcollection>Mining uranium</missionname.uraniumcollection>
+<missiondescription.uraniumcollection>There's been talk of deposits of uranium ore along the way from [location1] to [location2]. Bring back eight samples of uranium ore to verify these claims.</missiondescription.uraniumcollection>
+<missionheader0.uraniumcollection>Uranium ore mined</missionheader0.uraniumcollection>
+<missionmessage0.uraniumcollection>You have mined enough uranium ore. Bring it to an outpost to claim the reward.</missionmessage0.uraniumcollection>
+<missionsuccess.uraniumcollection>The existence of the uranium ore deposits has been successfully proven.</missionsuccess.uraniumcollection>
+<missionsonarlabel.uraniumcollection>Uranium</missionsonarlabel.uraniumcollection>
+<missionname.thorianitecollection>Mining thorianite</missionname.thorianitecollection>
+<missiondescription.thorianitecollection>There's been talk of deposits of thorianite along the way from [location1] to [location2]. Bring back six samples of thorianite to verify these claims.</missiondescription.thorianitecollection>
+<missionheader0.thorianitecollection>Thorianite mined</missionheader0.thorianitecollection>
+<missionmessage0.thorianitecollection>You have mined enough thorianite. Bring it to an outpost to claim the reward.</missionmessage0.thorianitecollection>
+<missionsuccess.thorianitecollection>The existence of the thorianite deposits has been successfully proven.</missionsuccess.thorianitecollection>
+<missionsonarlabel.thorianitecollection>Thorianite</missionsonarlabel.thorianitecollection>
+<missionname.titanitecollection>Mining titanite</missionname.titanitecollection>
+<missiondescription.titanitecollection>There's been talk of deposits of titanite along the way from [location1] to [location2]. Bring back six samples of titanite to verify these claims.</missiondescription.titanitecollection>
+<missionheader0.titanitecollection>Titanite mined</missionheader0.titanitecollection>
+<missionmessage0.titanitecollection>You have mined enough titanite. Bring it to an outpost to claim the reward.</missionmessage0.titanitecollection>
+<missionsuccess.titanitecollection>The existence of the titanite deposits has been successfully proven.</missionsuccess.titanitecollection>
+<missionsonarlabel.titanitecollection>Titanite</missionsonarlabel.titanitecollection>
+
+
+<missiontypedescription.salvage>Find and retrieve a specific item—for example, an artifact from an alien ruin, or sensitive cargo from a sunken submarine.</missiontypedescription.salvage>
+<missiontypedescription.monster>Terminate an aggressive creature (or a group of creatures) residing within the passageway.</missiontypedescription.monster>
+<missiontypedescription.cargo>Deliver cargo (such as explosives, dangerous chemicals or minerals) from one outpost to another.</missiontypedescription.cargo>
+<missiontypedescription.nest>Find and destroy a nest. Nests are usually located inside small caverns within the passageway.</missiontypedescription.nest>
+<missiontypedescription.beacon>Locate a beacon station and get it back online by repairing any damage to the station or its systems.</missiontypedescription.beacon>
+<missiontypedescription.mineral>There's been talk of valuable mineral clusters within the passageway. Locate the clusters and retrieve the minerals.</missiontypedescription.mineral>
+
+<missionname.crawlernest>Destroy a Crawler nest</missionname.crawlernest>
+<missiondescription.crawlernest>A crawler nest was recently discovered in a cave near [location1]. A reward of [reward] marks has been promised to any crew that can get rid of the nest.</missiondescription.crawlernest>
+<missionsonarlabel.crawlernest>Crawler nest</missionsonarlabel.crawlernest>
+<missionmessage0.crawlernest>The nest has been wiped out. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.crawlernest>
+<missionsuccess.crawlernest>The nest has been destroyed.</missionsuccess.crawlernest>
+<entityname.tigerthresheregg>Tiger Thresher Egg</entityname.tigerthresheregg>
+<missionname.tigerthreshernest>Destroy a Tiger Thresher nest</missionname.tigerthreshernest>
+<missiondescription.tigerthreshernest>A thresher nest was recently discovered in a cave near [location1]. A reward of [reward] marks has been promised to any crew that can get rid of the nest.</missiondescription.tigerthreshernest>
+<missionsonarlabel.tigerthreshernest>Tiger Thresher nest</missionsonarlabel.tigerthreshernest>
+<missionmessage0.tigerthreshernest>The nest has been wiped out. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.tigerthreshernest>
+<missionsuccess.tigerthreshernest>The nest has been destroyed.</missionsuccess.tigerthreshernest>
+<missionname.beaconmission>Activate beacon</missionname.beaconmission>
+<missiondescription.beaconmission>The beacon station between [location1] and [location2] is down—get in there, and get it back online and transmitting an active sonar signal.</missiondescription.beaconmission>
+<missionmessage0.beaconmission>The beacon station is back online. Make sure it stays transmitting, and navigate the submarine to [location2] to claim your reward.</missionmessage0.beaconmission>
+<missionsuccess.beaconmission>Beacon reactivated.</missionsuccess.beaconmission>
+
+<missionname.mudraptornest>Destroy a Mudraptor nest</missionname.mudraptornest>
+<missiondescription.mudraptornest>A mudraptor nest was recently discovered in a cave near [location1]. A reward of [reward] marks has been promised to any crew that can get rid of the nest.</missiondescription.mudraptornest>
+<missionsonarlabel.mudraptornest>Mudraptor nest</missionsonarlabel.mudraptornest>
+<missionmessage0.mudraptornest>The nest has been wiped out. Navigate the submarine out of the cavern to claim the reward.</missionmessage0.mudraptornest>
+<missionsuccess.mudraptornest>The nest has been destroyed.</missionsuccess.mudraptornest>
+
+<missionname.pvpmission>Search and destroy</missionname.pvpmission>
+<missiondescriptionneutral.pvpmission>A Coalition vessel has been dispatched from [location1] to destroy a renegade vessel at the outskirts of [location2].</missiondescriptionneutral.pvpmission>
+<missiondescription1.pvpmission>A renegade vessel has been detected at the outskirts of [location2]. Treason against the Europa Coalition is punishable by death—eliminate the renegades by any means necessary.</missiondescription1.pvpmission>
+<missiondescription2.pvpmission>You're a member of the Jovian Separatists, a group opposing the Europa Coalition. According to your informants at [location1], a Coalition vessel has just been dispatched on a mission to take down your boat. Eliminate their crew by any means necessary.</missiondescription2.pvpmission>
+
+<!-- Mission misc -->
 <missionteam1.pvpmission>Coalition</missionteam1.pvpmission>
 <missionteam2.pvpmission>Jovian Separatists</missionteam2.pvpmission>
 <missionsuccess.pvpmission>The [loser] vessel has been defeated by the [winner] crew!</missionsuccess.pvpmission>
@@ -2594,6 +2705,8 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <missionfailed>Mission failed</missionfailed>
 <missioncompleted>Completed</missioncompleted>
 <missionunlocked>Mission unlocked: [missionname]</missionunlocked>
+<beaconstationsonarlabel>Beacon station</beaconstationsonarlabel>
+<sonarmineralscanner>Mineral scanner</sonarmineralscanner>
 
 <!-- Entity categories -->
 <mapentitycategory.all>All</mapentitycategory.all>
@@ -2867,6 +2980,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <entitydescription.captainspipe>For calming the nerves when the sea is stormy.</entitydescription.captainspipe>
 <entityname.incendiumfueltank>Incendium Fuel Tank</entityname.incendiumfueltank>
 <entityname.physicoriumammobox>Physicorium Ammunition Box</entityname.physicoriumammobox>
+<entitydescription.physicoriumammobox>Coilgun ammunition made of alien material.</entitydescription.physicoriumammobox>
 <entityname.physicoriumbolt>Physicorium Bolt</entityname.physicoriumbolt>
 <entityname.orangejumpsuit1>Hazmat Suit</entityname.orangejumpsuit1>
 <entitydescription.orangejumpsuit1>Has a protective lead shielding against radiation.</entitydescription.orangejumpsuit1>
@@ -2927,6 +3041,8 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <entitydescription.toolbelt>A wearable container for storing tools and supplies.</entitydescription.toolbelt>
 <entityname.chitinhelmet>Chitin Helmet</entityname.chitinhelmet>
 <entitydescription.chitinhelmet>A tough helmet made of chitin.</entitydescription.chitinhelmet>
+<entityname.glowstick>Glowstick</entityname.glowstick>
+<entitydescription.glowstick>Temporary handheld light. Useful for marking a path while exploring outside the sub.</entitydescription.glowstick>
 
 <!-- Electrical -->
 <entityname.junctionbox>Junction Box</entityname.junctionbox>
@@ -2981,7 +3097,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <entitydescription.signalcheckcomponent>Sends a signal when a signal matching a specific value is received.</entitydescription.signalcheckcomponent>
 <entityname.regexcomponent>RegEx Find Component</entityname.regexcomponent>
 <entitydescription.regexcomponent>Sends a signal if the received signal matches a specific regular expression pattern.</entitydescription.regexcomponent>
-<entityname.oscillator>Oscillator</entityname.oscillator>
+<entityname.oscillator>Oscillator Component</entityname.oscillator>
 <entitydescription.oscillator>Sends out a periodic, oscillating signal.</entitydescription.oscillator>
 <entityname.wificomponent>Wifi Component</entityname.wificomponent>
 <entitydescription.wificomponent>Allows remote communication between other wifi components that are using the same channel.</entitydescription.wificomponent>
@@ -3050,6 +3166,8 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <entitydescription.terminal>Outputs a user-submitted string.</entitydescription.terminal>
 <entityname.lever>Lever</entityname.lever>
 <entitydescription.lever>Produces a constant signal that can be used to change the state of equipment and doors.</entitydescription.lever>
+<entityname.concatcomponent>Concatenation Component</entityname.concatcomponent>
+<entitydescription.concatcomponent>Joins the inputs together and outputs the joined value (for example, the inputs "mud" and "raptor" would output "mudraptor").</entitydescription.concatcomponent>
 
 <!-- Material -->
 <entityname.alienblood>Alien Blood</entityname.alienblood>
@@ -3264,6 +3382,8 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <entitydescription.poop>A pile of poop.</entitydescription.poop>
 <entityname.petegg>Strange Egg</entityname.petegg>
 <entitydescription.petegg>A strange egg. Try injecting it with saline.</entitydescription.petegg>
+<entityname.food>Pet Food</entityname.food>
+<entitydescription.food>The best food for your slimy friend.</entitydescription.food>
 
 <!-- Misc -->
 <entityname.swimbladder>Swim Bladder</entityname.swimbladder>
@@ -3418,6 +3538,12 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <entityname.supportbeamvertical>Support Beam Vertical</entityname.supportbeamvertical>
 <entityname.scrap>Scrap</entityname.scrap>
 <entitydescription.scrap>A pile of possibly useful material.</entitydescription.scrap>
+<entityname.spinelingspike>Spineling's Spike</entityname.spinelingspike>
+<entitydescription.spinelingspike>A detached bone spike that once belonged to a Spineling.</entitydescription.spinelingspike>
+<entityname.piezocrystal>Piezo Crystal</entityname.piezocrystal>
+<entityname.crawleregg>Crawler Egg</entityname.crawleregg>
+<entityname.mediccrate>Medic Crate</entityname.mediccrate>
+<entitydescription.mediccrate>A box for medical items and ingredients.</entitydescription.mediccrate>
 
 <!-- Alien -->
 <entityname.skyholderartifact>Sky Alien Artifact</entityname.skyholderartifact>
@@ -3481,19 +3607,27 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <entityname.seedbag>Seed Bag</entityname.seedbag>
 <entitydescription.seedbag>Can store a wide variety of seeds.</entitydescription.seedbag>
 <entityname.wateringcan>Watering Can</entityname.wateringcan>
+<entitydescription.wateringcan>Keeps your plants happy and alive.</entitydescription.wateringcan>
 <entityname.creepingorange>Pomegrenade</entityname.creepingorange>
+<entitydescription.creepingorange>A tasty fruit. Its processed juice has minor healing properties.</entitydescription.creepingorange>
 <entityname.tobaccobud>Tobacco Bud</entityname.tobaccobud>
+<entitydescription.tobaccobud>Damp and strongly fragrant. Can be refined into serviceable pipe tobacco.</entitydescription.tobaccobud>
 <entityname.badraptorbane>Mutated Raptor Bane</entityname.badraptorbane>
 <entityname.saltbulb>Salt Bulb</entityname.saltbulb>
+<entitydescription.saltbulb>Salty. Avoid moisture.</entitydescription.saltbulb>
 <entityname.raptorbane>Raptor Bane</entityname.raptorbane>
+<entitydescription.raptorbane>It looks delicious, but should not be ingested under any circumstances. Not good for mudraptors.</entitydescription.raptorbane>
 <entityname.badcreepingorange>Mutated Pomegrenade</entityname.badcreepingorange>
 <entityname.creepingorangevineseed>Pomegrenade Seed</entityname.creepingorangevineseed>
 <entityname.tobaccovineseed>Tobacco Vine Seed</entityname.tobaccovineseed>
 <entityname.saltvineseed>Salt Vine Seed</entityname.saltvineseed>
 <entityname.raptorbaneseed>Raptor Bane Seed</entityname.raptorbaneseed>
 <entityname.raptorbaneextract>Raptor Bane Extract</entityname.raptorbaneextract>
+<entitydescription.raptorbaneextract>Concentrated raptorbane juice. Mildly toxic for humans, catastrophically toxic for mudraptors.</entitydescription.raptorbaneextract>
 <entityname.pomegrenadeextract>Pomegrenade Extract</entityname.pomegrenadeextract>
+<entitydescription.pomegrenadeextract>Concentrated pomegrenade juice. It offers minor healing properties.</entitydescription.pomegrenadeextract>
 <entityname.pipetobacco>Pipe Tobacco</entityname.pipetobacco>
+<entitydescription.pipetobacco>Put it in your pipe and smoke it.</entitydescription.pipetobacco>
 
 <!-- Room names -->
 <roomname.reactorroom>Reactor room</roomname.reactorroom>
@@ -3809,6 +3943,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <electricalrepairsheader>Electrical Repairs</electricalrepairsheader>
 <mechanicalrepairsheader>Mechanical Repairs</mechanicalrepairsheader>
 <powerlabel>Power</powerlabel>
+<fabricationrecipenamewithamount>[name] (x[amount])</fabricationrecipenamewithamount>
 
 <!-- Health interface -->
 <vitality>Vitality</vitality>
@@ -4009,6 +4144,30 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <dialogattackedbyfriendlysecurityarrest>Don't you run away!</dialogattackedbyfriendlysecurityarrest>
 <dialogattackedbyfriendlysecurityarrest>Stop right there!</dialogattackedbyfriendlysecurityarrest>
 <dialogcannotfinditem>I can't find the item I need.</dialogcannotfinditem>
+<dialogcannotfindrequireditemtorepair>Can't find the tools to do the repairs!</dialogcannotfindrequireditemtorepair>
+<dialogcannotfindrequireditemtorepair>I don't have the tools for the repairs!</dialogcannotfindrequireditemtorepair>
+<dialogcannotfindfireextinguisher>I need something to help with the fire! Where are all the fire extinguishers?</dialogcannotfindfireextinguisher>
+<dialogcannotfindfireextinguisher>Can't find any fire extinguishers on board!</dialogcannotfindfireextinguisher>
+<dialogcannotfindweldingequipment>Where's all the welding equipment? I can't find any!</dialogcannotfindweldingequipment>
+<dialogcannotfindweldingequipment>A torch, a welding torch... Where are you when I need you the most?</dialogcannotfindweldingequipment>
+<dialogdamagewallswarning>Hey, what the hell do you think you're doing?!</dialogdamagewallswarning>
+<dialogdamagewallswarning>Stop that or you'll drown us all!</dialogdamagewallswarning>
+<dialogdamagewallswarning>Are you out of your mind? Stop it or you'll flood the whole place!</dialogdamagewallswarning>
+<dialogidentifiedtargetspotted>Target spotted: [speciesname]!</dialogidentifiedtargetspotted>
+<dialogidentifiedtargetspotted>New target: [speciesname]!</dialogidentifiedtargetspotted>
+<dialogidentifiedtargetspotted>Target locked: [speciesname]!</dialogidentifiedtargetspotted>
+<dialogidentifiedtargetspotted>Target identified: [speciesname]!</dialogidentifiedtargetspotted>
+<dialogunidentifiedtargetspotted>I've got a new target! I'm not sure what it is...</dialogunidentifiedtargetspotted>
+<dialogunidentifiedtargetspotted>An unknown target spotted!</dialogunidentifiedtargetspotted>
+<dialognewtargetspotted>New target spotted!</dialognewtargetspotted>
+<dialognewtargetspotted>I've got a new target!</dialognewtargetspotted>
+<dialogicespirespotted>New target: ice spire!</dialogicespirespotted>
+<dialogicespirespotted>Target locked: ice spire!</dialogicespirespotted>
+<dialogicespirespotted>Targeting an ice spire!</dialogicespirespotted>
+<dialogicespirespottedsonar>Ice spire spotted!</dialogicespirespottedsonar>
+<dialogicespirespottedsonar>Got some ice spires on the sonar!</dialogicespirespottedsonar>
+<dialogcannottreatpatient>I don't have the means to treat [name]!</dialogcannottreatpatient>
+<dialogcannottreatpatient>I'm sorry, there's nothing I can do for [name]!</dialogcannottreatpatient>
 
 <!-- Character orders -->
 <orderdialog.follow>[name], follow me!</orderdialog.follow>
@@ -4150,6 +4309,16 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <orderoptions.equipfor>Away mission, Invaders, Hull breach</orderoptions.equipfor>
 <ordername.getitem>Get Item</ordername.getitem>
 <ordername.cleanupitems>Cleanup Items</ordername.cleanupitems>
+<ordername.ignorethis>Ignore This</ordername.ignorethis>
+<orderdialog.ignorethis>Ignore the target in [roomname]!</orderdialog.ignorethis>
+<orderdialog.ignorethis>Don't touch the target in [roomname]!</orderdialog.ignorethis>
+<ordername.unignorethis>Unignore This</ordername.unignorethis>
+<orderdialog.unignorethis>Stop ignoring the target in [roomname]!</orderdialog.unignorethis>
+<orderdialog.unignorethis>You should consider the target in [roomname] again!</orderdialog.unignorethis>
+<orderdialog.reportballastflora>There's something alien growing in [roomname].</orderdialog.reportballastflora>
+<orderdialog.reportballastflora>I found weird, fleshy, plants in [roomname].</orderdialog.reportballastflora>
+<orderdialog.reportballastflora>We need to do something to these things growing in [roomname]!</orderdialog.reportballastflora>
+<ordernamecontextual.wait>Wait Here</ordernamecontextual.wait>
 
 <!-- Command UI -->
 <commandui.return>Return</commandui.return>
@@ -4166,6 +4335,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <ordercategorydescription.maintenance></ordercategorydescription.maintenance>
 <ordercategorytitle.operate>Operate</ordercategorytitle.operate>
 <ordercategorydescription.operate></ordercategorydescription.operate>
+<crewlistordericontooltip>[ordername] ([orderoption])</crewlistordericontooltip>
 
 <!-- Status -->
 <deceased>Deceased</deceased>
@@ -4340,6 +4510,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <afflictiondescription.watchersgaze>Seeming confused and slightly terrified, the patient doesn't look good. Could it be a mental breakdown? A stress reaction? There's not much you can do about it.</afflictiondescription.watchersgaze>
 <afflictioncauseofdeath.watchersgaze>Stared to death by a Watcher.</afflictioncauseofdeath.watchersgaze>
 <afflictioncauseofdeathself.watchersgaze>Stared to death by a Watcher.</afflictioncauseofdeathself.watchersgaze>
+<afflictionname.hallucinating>Hallucinating</afflictionname.hallucinating>
 
 <!-- Buffs -->
 <afflictionname.durationincrease>Slow metabolism</afflictionname.durationincrease>
@@ -4443,6 +4614,9 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <locationchange.military.changeto.city>The commander at [previousname] has been appointed governor, making [name] officially a city.</locationchange.military.changeto.city>
 <locationchange.research.changeto.city>Research laboratories at [previousname] have driven more settlers to move in. It is now known as [name].</locationchange.research.changeto.city>
 <locationchange.mine.changeto.city>Families of miners at [previousname] have moved in and turned it into a proper city.</locationchange.mine.changeto.city>
+<locationname.explored>Explored Location</locationname.explored>
+<locationnameformat.explored>[name]</locationnameformat.explored>
+<cave>Cave</cave>
 
 <!-- Biomes -->
 <biomename.coldcaverns>Cold Caverns</biomename.coldcaverns>
@@ -4450,6 +4624,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <biomename.theaphoticplateau>The Aphotic Plateau</biomename.theaphoticplateau>
 <biomename.thegreatvoid>The Great Void</biomename.thegreatvoid>
 <biomename.hydrothermalwastes>Hydrothermal Wastes</biomename.hydrothermalwastes>
+<biomename.thegreatsea>The Great Sea</biomename.thegreatsea>
 
 <!-- Tutorials -->
 <!-- Generic -->
@@ -4689,7 +4864,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <!-- Room 6 -->
 <doctor.cpr>Resuscitation</doctor.cpr>
 <doctor.cprobjective>Perform CPR</doctor.cprobjective>
-<doctor.cprtext>When characters suffer too many injuries, they become unconscious. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be resuscitated through CPR.\n\nResuscitate the patient by entering the medical interface ({0}) and clicking the green “resuscitate” button. The process may take a while, depending on your medical skill.</doctor.cprtext>
+<doctor.cprtext>When characters suffer too many injuries, they become unconscious. In this state, their oxygen level falls constantly and when it gets to zero, they die. They can be resuscitated through CPR.\n\nResuscitate the patient by entering their medical interface (by hovering over their character and pressing {0}) and clicking the green “resuscitate” button. The process may take a while, depending on your medical skill.</doctor.cprtext>
 
 <!-- Submarine -->
 <doctor.submarine>Medical assistance</doctor.submarine>
@@ -4794,6 +4969,8 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <karma.dangerousitemstealkarmadecreasetooltip>How much karma decreases when stealing weapons and ID cards from unconscious or handcuffed players.</karma.dangerousitemstealkarmadecreasetooltip>
 <karma.dangerousitemstealbots>Stealing dangerous items from bots.</karma.dangerousitemstealbots>
 <karma.dangerousitemstealbotstooltip>Apply a karma penalty when stealing dangerous items from bots.</karma.dangerousitemstealbotstooltip>
+<karma.ballastflorakarmaincrease>Ballast flora damage</karma.ballastflorakarmaincrease>
+<karma.ballastflorakarmaincreasetooltip>How much karma increases when damaging ballast flora.</karma.ballastflorakarmaincreasetooltip>
 
 <!-- Disclaimers -->
 <campaigndisclaimertitle>Welcome to Barotrauma!</campaigndisclaimertitle>
@@ -4871,6 +5048,8 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <connection.loadvalueout>load_value_out</connection.loadvalueout>
 <connection.availablefuelout>fuel_out</connection.availablefuelout>
 <connection.setlight>set_light</connection.setlight>
+<connection.waterpercentageout>water_%</connection.waterpercentageout>
+<connection.lockstate>lock_state</connection.lockstate>
 
 <!-- Traitor system -->
 <traitormissionstartmessage>You are the traitor! You have successfully infiltrated the submarine and now it's time to put the plans in motion.</traitormissionstartmessage>
@@ -5412,6 +5591,11 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <eventtext.huskcultist_return.o1.o3>Actually, I'll keep these for now.</eventtext.huskcultist_return.o1.o3>
 <eventtext.huskcultist_return.o1.c2>“No, you don't. Please stop wasting my time.”</eventtext.huskcultist_return.o1.c2>
 <eventtext.huskcultist_return.o2>No.</eventtext.huskcultist_return.o2>
+<eventtext.missionevent_collectminerals.c1>“There's been talk of valuable mineral clusters nearby. We'd like you to see if there's any truth to the rumors.”</eventtext.missionevent_collectminerals.c1>
+<eventtext.missionevent_mudraptornest.c1>“A couple of divers stumbled upon a mudraptor nest full of eggs in a nearby cave. We obviously don't want a swarm of raptors in our backyard, so if you can get rid of those eggs we'd happily pay you.”</eventtext.missionevent_mudraptornest.c1>
+<eventtext.missionevent_crawlernest.c1>“A couple of divers discovered a bunch of crawler eggs in a nearby cave. We don't need any more crawlers near the station, so I've put a little reward aside for the crew that wipes out the nest.”</eventtext.missionevent_crawlernest.c1>
+<eventtext.missionevent_tigerthreshernest.c1>“A couple of divers discovered a thresher nest full of eggs in a nearby cave. We don't want to see those things hatching, and there's a reward in it for any crew that makes sure they won't.”</eventtext.missionevent_tigerthreshernest.c1>
+<eventtext.missionevent_beacon.c1>“We could use a hand getting one of our beacon stations back online and transmitting so we can start building a new outpost out there. There's some marks in it for you and your crew if you can set it right.”</eventtext.missionevent_beacon.c1>
 
 <!-- Submarine upgrades & repairs -->
 <upgradecategory.walls>Hulls</upgradecategory.walls>
@@ -5428,7 +5612,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <upgradecategory.monitors>Monitors</upgradecategory.monitors>
 <upgradecategory.oxygengenerators>Oxygen generators</upgradecategory.oxygengenerators>
 <upgradename.increasewallhealth>Tougher Hulls</upgradename.increasewallhealth>
-<upgradedescription.increasewallhealth>Increase submarine hull durability.</upgradedescription.increasewallhealth>
+<upgradedescription.increasewallhealth>Increase submarine hull durability. Makes the walls less vulnerable to damage and allows the submarine to dive deeper without getting crushed by pressure.</upgradedescription.increasewallhealth>
 <upgradename.increasedeteriorationdelay>Enhanced Durability</upgradename.increasedeteriorationdelay>
 <upgradedescription.increasedeteriorationdelay>Equipment will take longer to start deteriorating.</upgradedescription.increasedeteriorationdelay>
 <upgradename.decreasedeteriorationspeed>Enhanced Redundant Systems</upgradename.decreasedeteriorationspeed>
@@ -5507,6 +5691,11 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <suppliespurchasedmessage>The purchased supplies will be delivered to your submarine when you leave [location].</suppliespurchasedmessage>
 <campaignstore.sellwarningtext>Are you sure you want to sell the items?</campaignstore.sellwarningtext>
 <campaignstore.owned>Owned: [amount]</campaignstore.owned>
+<campaignstore.dailyspecials>Daily Specials</campaignstore.dailyspecials>
+<campaignstore.requestedgoods>Requested Goods</campaignstore.requestedgoods>
+<campaignstore.sellvalue>Item Sell Value</campaignstore.sellvalue>
+<campaingstore.valueincreasetooltip>Buying the listed items will increase the merchant's balance enough for them to offer more for items sold in the future!</campaingstore.valueincreasetooltip>
+<campaingstore.valuedecreasetooltip>Selling the listed items will decrease the merchant's balance enough for them to offer less for items sold in the future.</campaingstore.valuedecreasetooltip>
 
 <!-- Campaign crew -->
 <sortingmethod.alphabeticalasc>Alphabetical</sortingmethod.alphabeticalasc>
@@ -5560,7 +5749,7 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <submarinetype.outpostmodule>Outpost module</submarinetype.outpostmodule>
 <submarinetype.outpostmodules>Outpost modules</submarinetype.outpostmodules>
 <submarinetype.wreck>Wreck</submarinetype.wreck>
-
+<submarinetype.beaconstation>Beacon Station</submarinetype.beaconstation>
 
 <!-- Submarine classes -->
 <submarineclass>Class</submarineclass>
@@ -5665,12 +5854,9 @@ TODO: Before sending the structure texts to localization, get rid of the unneces
 <radiochannelpreset>Preset: [channel]</radiochannelpreset>
 <currentradiochannel>Current radio channel</currentradiochannel>
 
-<!-- Modified Values after October 20th -->
+<!-- Modified Values after January -->
 
-<!-- New Values after October 20th -->
-<playhint>[[key]] Play</playhint>
-<sp.nametag.writtenname.name>Name</sp.nametag.writtenname.name>
-<sp.nametag.writtenname.description>Name written on the tag.</sp.nametag.writtenname.description>
-<character.cthulhu>Cthulhu</character.cthulhu>
-<connection.waterpercentageout>water_%</connection.waterpercentageout>
+
+<!-- New Values after January -->
+
 </infotexts>

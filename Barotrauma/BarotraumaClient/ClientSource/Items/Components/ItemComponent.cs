@@ -193,8 +193,7 @@ namespace Barotrauma.Items.Components
         private float lastMuffleCheckTime;
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
-        //private List<SoundChannel> playingOneshotSoundChannels = new List<SoundChannel>();
-        //private List<SoundChannel> playingOneshotCancelableSoundChannels = new List<SoundChannel>();
+
         class SoundChannelWithType
         {
             public SoundChannel SoundChanel;

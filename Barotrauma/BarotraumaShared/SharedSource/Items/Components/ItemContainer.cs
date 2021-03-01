@@ -82,12 +82,6 @@ namespace Barotrauma.Items.Components
         [Serialize(false, false, description: "Can the Reload action of the item be triggered by players.")]
         public bool PlayerReloadable { get; set; }
 
-        [Serialize(0.5f, false, description: "Minimum time it takes to remove magazine/ammo")]
-        public float UnloadBaseTime { get; set; }
-
-        [Serialize(1.5f, false, description: "Additional time it takes to remove magazine/ammo if the character's skill is 0")]
-        public float UnloadUnskilledExtraTime { get; set; }
-
         [Serialize(0.5f, false, description: "Minimum time it takes to load magazine/ammo")]
         public float ReloadBaseTime { get; set; }
 
@@ -336,13 +330,15 @@ namespace Barotrauma.Items.Components
 
         private reloadItems CheckReload(Character character)
         {
-            // The properties of ri are null by default which is interpreted in the code as item can't be reloaded or no ammo to use
+            // The properties of ri are null by default which is interpreted in the code as item can't be reloaded (full or no ammo to use)
             reloadItems ri = new reloadItems();
 
             if (!this.PlayerReloadable) return ri;
 
-            // Return if item's inventory is full and all itmes in it are in perfect condition.
-            if (this.Inventory.IsFull() && this.Inventory.Items.All(i => i.Condition == 100)) return ri;
+            // Return empty ri if item's inventory is full and all itmes in it are in perfect condition.
+            if (this.Inventory.IsFull()
+                && this.Inventory.AllItemsMod.Count() == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity
+                    && this.Inventory.AllItems.All(i => i.Condition == 100)) { return ri; }
 
             // Get the type of items storable in the item
             List<string> containableId = new List<string>();
@@ -356,12 +352,12 @@ namespace Barotrauma.Items.Components
             if (containableId.Count == 0) return ri;
 
             // If the weapon/item is full then look for ammo that is in better condition
-            if (this.Inventory.IsFull())
+            if (this.Inventory.AllItemsMod.Count() == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity)
             {
                 // get the item in the worst condition from the weapon's inventory
-                ri.WorstAmmoInWeapon = this.Inventory.Items.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
+                ri.WorstAmmoInWeapon = this.Inventory.AllItems.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
                 // get the first suitable item from the inventory
-                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.HeldItems.All(si => si != i.ParentInventory.Owner)
                                                                 && character.HeadsetSlotItem != i.ParentInventory.Owner
                                                                 && character.HeadSlotItem != i.ParentInventory.Owner
                                                                 && ri.WorstAmmoInWeapon.Prefab.Identifier == i.Prefab.Identifier
@@ -371,7 +367,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 // get the first suitable item from the inventory
-                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.SelectedItems.All(si => si != i.ParentInventory.Owner)
+                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.HeldItems.All(si => si != i.ParentInventory.Owner)
                                                                 && character.HeadsetSlotItem != i.ParentInventory.Owner
                                                                 && character.HeadSlotItem != i.ParentInventory.Owner
                                                                 && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
@@ -388,7 +384,7 @@ namespace Barotrauma.Items.Components
 
             // No reloading if item is not reloadable or there is no ammo to use
             if (ri.ReplacementAmmo == null) return reloadCooldown;
-                       
+
 
             // Calculate additional time modifier (in percentage) for reloading based on the character's required skill levels
             float skillModifier = 0f;
@@ -399,18 +395,11 @@ namespace Barotrauma.Items.Components
                 {
                     charSkillSum += character.GetSkillLevel(requiredSkill.Identifier);
                 }
-                skillModifier = (100f - charSkillSum / this.requiredSkills.Count) / 100f;
+                skillModifier = (this.requiredSkills.Count * 100f - charSkillSum / this.requiredSkills.Count) / 100f;
             }
 
-            // If there is ammo in the weapon and no empty slot
-            if (ri.WorstAmmoInWeapon != null)
-            {
-                reloadCooldown = UnloadBaseTime + UnloadUnskilledExtraTime * skillModifier + ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
-            }
-            else
-            {
-                reloadCooldown = ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
-            }
+            reloadCooldown = ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
+
 #if CLIENT
             PlaySound(ActionType.OnReload, character);
 #endif

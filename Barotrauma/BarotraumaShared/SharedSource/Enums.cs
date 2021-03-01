@@ -13,7 +13,7 @@
     public enum ActionType
     {
         Always, OnPicked, OnUse, OnSecondaryUse, 
-        OnReload, OnRemoveMag,
+        OnReload,
         OnWearing, OnContaining, OnContained, OnNotContained,
         OnActive, OnFailure, OnBroken,
         OnFire, InWater, NotInWater,

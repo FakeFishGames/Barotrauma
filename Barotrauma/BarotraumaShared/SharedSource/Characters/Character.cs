@@ -109,8 +109,6 @@ namespace Barotrauma
 
         protected Key[] keys;
 
-        private readonly Item[] selectedItems;
-
         private CharacterTeamType teamID;
         public CharacterTeamType TeamID
         {
@@ -626,7 +624,20 @@ namespace Barotrauma
             set;
         }
 
-        public Item[] SelectedItems
+        public Item HeadsetSlotItem
+        {
+            get { return this.Inventory.GetItemInLimbSlot(InvSlotType.Headset); }
+        }
+
+        public Item HeadSlotItem
+        {
+            get { return this.Inventory.GetItemInLimbSlot(InvSlotType.Head); }
+        }
+
+        /// <summary>
+        /// Current speed of the character's collider. Can be used by status effects to check if the character is moving.
+        /// </summary>
+        public float CurrentSpeed
         {
             get { return AnimController?.Collider?.LinearVelocity.Length() ?? 0.0f; }
         }
@@ -1683,12 +1694,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    for (int i = 0; i < selectedItems.Length; i++)
+                    foreach (Item item in HeldItems)
                     {
-                        if (selectedItems[i] == null) { continue; }
-                        if (i == 1 && selectedItems[0] == selectedItems[1]) { continue; }
-                        var item = selectedItems[i];
-                        if (item == null) { continue; }
                         StartReload(item);
                     }
                 }
@@ -1760,13 +1767,9 @@ namespace Barotrauma
 
         private void StartReload(Item item)
         {
-            // Check if item can be reloaded (has container which is Player reloadable)
-            // Check if item should be reloaded / is not full
-            // Check if there's anything worth reloading it with
-            // Start reload timer/sound/animation
-            // Block Inventory and selection to be changed 
             float reloadtime = -1f;
             float reloadtimeMax = -1f; 
+            // Reload time is going to be the longest reload time of any of the components
             foreach (ItemComponent ic in item.Components)
             {
                 reloadtime = ic.StartReload(this);
