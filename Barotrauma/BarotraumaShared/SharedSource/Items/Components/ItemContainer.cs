@@ -22,11 +22,29 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private class scoredItem
+        {
+            public readonly Item Item;
+            public float Score = 0f;
+
+            public scoredItem(Item item, float score)
+            {
+                Item = item;
+                Score = score;
+            }
+        }
+
         public ItemInventory Inventory;
 
         private readonly List<ActiveContainedItem> activeContainedItems = new List<ActiveContainedItem>();
         
         private List<ushort>[] itemIds;
+
+        private class reloadItems
+        {
+            public Item WorstAmmoInWeapon;
+            public Item ReplacementAmmo;
+        }
 
         //how many items can be contained
         private int capacity;
@@ -73,6 +91,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "Can the Reload action of the item be triggered by players.")]
+        public bool PlayerReloadable { get; set; }
+
+        [Serialize(0.5f, false, description: "Minimum time it takes to load magazine/ammo")]
+        public float ReloadBaseTime { get; set; }
+
+        [Serialize(1.5f, false, description: "Additional time it takes to load magazine/ammo if the character's skill is 0")]
+        public float ReloadUnskilledExtraTime { get; set; }
 
         [Serialize(false, false, description: "If set to true, interacting with this item will make the character interact with the contained item(s), automatically picking them up if they can be picked up.")]
         public bool AutoInteractWithContained
@@ -314,6 +340,146 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
+        private reloadItems CheckReload(Character character)
+        {
+            // The properties of ri are null by default which is interpreted in the code as item can't be reloaded (full or no ammo to use)
+            reloadItems ri = new reloadItems();
+
+            if (!this.PlayerReloadable) return ri;
+
+            // Return empty ri if item's inventory is full and all itmes in it are in perfect condition.
+            if (this.Inventory.IsFull()
+                && this.Inventory.AllItems.Count() == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity
+                    && this.Inventory.AllItems.All(i => i.Condition == 100)) { return ri; }
+
+            //Get the type of items storable in the weapon/item
+            List<string> containableId = new List<string>();
+            foreach (RelatedItem containableItem in this.ContainableItems)
+            {
+                foreach (string itemId in containableItem.Identifiers)
+                {
+                    containableId.Add(itemId);
+                }
+            }
+            if (containableId.Count == 0) return ri;
+
+            List<Item> suitableAmmoInCharacterInventory = character.Inventory.FindAllItems(i => character.HeldItems.All(si => si != i.ParentInventory.Owner)
+                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
+                                                                && character.HeadSlotItem != i.ParentInventory.Owner
+                                                                && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) 
+                                                                && i.Condition > 0
+                                                                , true);
+
+            List<scoredItem> scoredAmmoList = new List<scoredItem>();
+            foreach (Item item in suitableAmmoInCharacterInventory)
+            {
+                Item parentItem = character.Inventory.FindItem(i => i == item.ParentInventory.Owner, true);
+                float calculatedScore = 0f;
+                // if the ammo is in the root of the inventory it's priority is it's condition
+                if (item.ParentInventory == character.Inventory)
+                {
+                    calculatedScore = item.Condition;
+                }
+                // if the ammo is in a weapon then lower it's priority significantly
+                else if (parentItem.Components.Any(i => i.Name == "RangedWeapon" || i.Name == "MeleeWeapon"))
+                {
+                    calculatedScore = item.Condition / 3;
+                }
+                // if the ammo is not in a weapon  then lower it's priority somewhat
+                else
+                {
+                    calculatedScore = item.Condition / 1.66f;
+                }
+                
+                scoredAmmoList.Add(new scoredItem(item, calculatedScore));
+            }
+
+            List<Item> prioritizedAmmoList = scoredAmmoList.OrderByDescending(i => i.Score).Select(i => i.Item).ToList();
+
+            // If the weapon/item is empty then look for any suitable ammo in the best condition
+            int itemInventoryContentCount = this.Inventory.AllItems.Count();
+            if (itemInventoryContentCount == 0)
+            {
+                ri.ReplacementAmmo = prioritizedAmmoList.FirstOrDefault();
+            }
+            // If the weapon/item is full then look for the same type of ammo that is in better condition
+            else if (itemInventoryContentCount == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity)
+            {
+                // get the item in the worst condition from the weapon's inventory
+                ri.WorstAmmoInWeapon = this.Inventory.AllItems.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
+                // get the best suitable item from the inventory based on this: Capacity * Modifier (InventoryBase 3x, ContainerNotWeapon 2x, Weapon 1x)
+                ri.ReplacementAmmo = prioritizedAmmoList.FirstOrDefault(i => i.Condition > ri.WorstAmmoInWeapon.Condition);
+            }
+            // If the weapon/item has some type of ammo in it already then look for more of the same ammo
+            else 
+            {
+                // Get the currently used ammo type
+                string currentAmmoType = this.Inventory.FirstOrDefault().Prefab.Identifier;
+                // Look for more of it in the character's inventory
+                ri.ReplacementAmmo = prioritizedAmmoList.FirstOrDefault(i => i.Prefab.Identifier == currentAmmoType);
+            }
+            return ri;
+        }
+
+        public override float StartReload(Character character)
+        {
+            // -1 means no reloading
+            float reloadCooldown = -1f;
+
+            reloadItems ri = CheckReload(character);
+
+            // No reloading if item is not reloadable or there is no ammo to use
+            if (ri.ReplacementAmmo == null) return reloadCooldown;
+
+
+            // Calculate additional time modifier (in percentage) for reloading based on the character's required skill levels
+            float skillModifier = 0f;
+            if (this.requiredSkills.Count >= 1)
+            {
+                float charSkillSum = 0f;
+                foreach (Skill requiredSkill in this.requiredSkills)
+                {
+                    charSkillSum += character.GetSkillLevel(requiredSkill.Identifier);
+                }
+                skillModifier = (this.requiredSkills.Count * 100f - charSkillSum / this.requiredSkills.Count) / 100f;
+            }
+
+            reloadCooldown = ReloadBaseTime + ReloadUnskilledExtraTime * skillModifier;
+
+#if CLIENT
+            PlaySound(ActionType.OnReload, character);
+#endif
+            return reloadCooldown;
+        }
+
+        public override bool FinalizeReload(Character character)
+        {
+            reloadItems ri = CheckReload(character);
+
+            // If there is ammo in the weapon and no empty slot
+            if (ri.WorstAmmoInWeapon != null)
+            {
+                var worstAmmoInWeaponInventoryPosition = ri.WorstAmmoInWeapon.ParentInventory.FindIndex(ri.WorstAmmoInWeapon);
+                if (ri.WorstAmmoInWeapon.ParentInventory.TryPutItem(ri.ReplacementAmmo, worstAmmoInWeaponInventoryPosition, true, false, character, true))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (this.Inventory.TryPutItem(ri.ReplacementAmmo, character))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public override void AbortReload(Character character)
+        {
+            // stop reload sound
+            return;
+        }
         public override void Drop(Character dropper)
         {
             IsActive = true;

@@ -1498,8 +1498,8 @@ namespace Barotrauma
                     ic.UpdateSounds();
                     if (!ic.WasUsed)
                     {
-                        ic.StopSounds(ActionType.OnUse);
-                        ic.StopSounds(ActionType.OnSecondaryUse);
+                        ic.StopLoopingSounds(ActionType.OnUse);
+                        ic.StopLoopingSounds(ActionType.OnSecondaryUse);
                     }
                 }
 #endif

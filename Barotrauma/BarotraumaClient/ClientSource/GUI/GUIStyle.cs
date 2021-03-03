@@ -41,6 +41,10 @@ namespace Barotrauma
 
         public UISprite ButtonPulse { get; private set; }
 
+        public SpriteSheet ReloadIndicator { get; private set; }
+
+        public UISprite ReloadIndicatorBullet { get; private set; }
+
         public SpriteSheet FocusIndicator { get; private set; }
 
         /// <summary>
@@ -219,6 +223,12 @@ namespace Barotrauma
                         break;
                     case "endroundbuttonpulse":
                         ButtonPulse = new UISprite(subElement);
+                        break;
+                    case "reloadindicator":
+                        ReloadIndicator = new SpriteSheet(subElement);
+                        break;
+                    case "reloadindicatorbullet":
+                        ReloadIndicatorBullet = new UISprite(subElement);
                         break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);

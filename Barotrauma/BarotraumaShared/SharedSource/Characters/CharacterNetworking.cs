@@ -38,7 +38,7 @@ namespace Barotrauma
     partial class Character
     {
         [Flags]
-        private enum InputNetFlags : ushort
+        private enum InputNetFlags : uint
         {
             None = 0x0,
             Left = 0x1,
@@ -57,8 +57,10 @@ namespace Barotrauma
             Grab = 0x2000,
             Deselect = 0x4000, // 16384
             Shoot = 0x8000, // 32768
+            Reload = 0x10000, // 65536
 
-            MaxVal = 0xFFFF // 65535
+            MaxVal = 0x1FFFF // 131071
+            //MaxVal = 0xFFFF // 65535
             //MaxVal = 0x7FFF   // 32767
             //MaxVal = 0x3FFF // 16383
         }

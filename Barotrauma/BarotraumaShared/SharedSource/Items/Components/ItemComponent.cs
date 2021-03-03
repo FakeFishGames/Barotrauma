@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
                     IsActiveTimer = 0.0f;
                     if (isActive)
                     {
-                        StopSounds(ActionType.OnActive);
+                        StopLoopingSounds(ActionType.OnActive);
                     }
                 }
 #endif
@@ -409,7 +409,7 @@ namespace Barotrauma.Items.Components
         public virtual void UpdateBroken(float deltaTime, Camera cam)
         {
 #if CLIENT
-            StopSounds(ActionType.OnActive);
+            StopLoopingSounds(ActionType.OnActive);
 #endif
         }
 
@@ -424,6 +424,23 @@ namespace Barotrauma.Items.Components
         public virtual bool SecondaryUse(float deltaTime, Character character = null)
         {
             return false;
+        }
+
+        //called when the item is equipped and the "Reload" key is pressed
+        //returns true if the item was reloaded succesfully
+        public virtual float StartReload(Character character = null)
+        {
+            return -1f;
+        }
+
+        public virtual bool FinalizeReload(Character character = null)
+        {
+            return false;
+        }
+
+        public virtual void AbortReload(Character character = null)
+        {
+            return;
         }
 
         //called when the item is placed in a "limbslot"

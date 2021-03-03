@@ -193,7 +193,14 @@ namespace Barotrauma.Items.Components
         private float lastMuffleCheckTime;
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
-        private List<SoundChannel> playingOneshotSoundChannels = new List<SoundChannel>();
+
+        class SoundChannelWithType
+        {
+            public SoundChannel SoundChanel;
+            public ActionType Type;
+        }
+        private List<SoundChannelWithType> playingOneshotSoundChannels = new List<SoundChannelWithType>();
+
         public ItemComponent ReplacedBy;
 
         public ItemComponent GetReplacementOrThis()
@@ -205,7 +212,7 @@ namespace Barotrauma.Items.Components
         {
             if (!isActive || item.Condition <= 0.0f)
             {
-                StopSounds(ActionType.OnActive);
+                StopLoopingSounds(ActionType.OnActive);
             }
 
             if (loopingSound != null && loopingSoundChannel != null && loopingSoundChannel.IsPlaying)
@@ -221,19 +228,22 @@ namespace Barotrauma.Items.Components
                 loopingSoundChannel.Gain += Math.Abs(gainDiff) < 0.1f ? gainDiff : Math.Sign(gainDiff) * 0.1f;
                 loopingSoundChannel.Position = new Vector3(item.WorldPosition, 0.0f);
             }
-            for (int i = 0; i < playingOneshotSoundChannels.Count; i++)
+            foreach (SoundChannelWithType playingOneShotSoundChannel in playingOneshotSoundChannels)
             {
-                if (!playingOneshotSoundChannels[i].IsPlaying)
+                if (!playingOneShotSoundChannel.SoundChanel.IsPlaying)
                 {
-                    playingOneshotSoundChannels[i].Dispose();
-                    playingOneshotSoundChannels[i] = null;
+                    playingOneShotSoundChannel.SoundChanel.Dispose();
+                    playingOneShotSoundChannel.SoundChanel = null;
                 }
             }
-            playingOneshotSoundChannels.RemoveAll(ch => ch == null);
-            foreach (SoundChannel channel in playingOneshotSoundChannels)
+            playingOneshotSoundChannels.RemoveAll(i => i.SoundChanel == null);
+
+            foreach (SoundChannelWithType channelAndType in playingOneshotSoundChannels)
             {
-                channel.Position = new Vector3(item.WorldPosition, 0.0f);
+                channelAndType.SoundChanel.Position = new Vector3(item.WorldPosition, 0.0f);
             }
+
+            //if (item.ParentInventory.Owner.)
         }
 
         public void PlaySound(ActionType type, Character user = null)
@@ -292,6 +302,8 @@ namespace Barotrauma.Items.Components
             }
 
             var matchingSounds = sounds[type];
+            bool cancelableSound = (type == ActionType.OnReload);
+            
             if (loopingSoundChannel == null || !loopingSoundChannel.IsPlaying)
             {
                 SoundSelectionMode soundSelectionMode = soundSelectionModes[type];
@@ -308,7 +320,7 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (ItemSound sound in matchingSounds)
                     {
-                        PlaySound(sound, item.WorldPosition);
+                        PlaySound(sound, item.WorldPosition, type);
                     }
                     return;
                 }
@@ -320,11 +332,11 @@ namespace Barotrauma.Items.Components
                 {
                     index = Rand.Int(matchingSounds.Count);
                 }
-
-                PlaySound(matchingSounds[index], item.WorldPosition);
+                
+                PlaySound(matchingSounds[index], item.WorldPosition, type);
             }
         }
-        private void PlaySound(ItemSound itemSound, Vector2 position)
+        private void PlaySound(ItemSound itemSound, Vector2 position, ActionType type)
         {
             if (Vector2.DistanceSquared(new Vector2(GameMain.SoundManager.ListenerPosition.X, GameMain.SoundManager.ListenerPosition.Y), position) > itemSound.Range * itemSound.Range)
             {
@@ -343,7 +355,7 @@ namespace Barotrauma.Items.Components
                     if (volume <= 0.0001f) { return; }
                     loopingSound = itemSound;
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
-                        new Vector3(position.X, position.Y, 0.0f), 
+                        new Vector3(position.X, position.Y, 0.0f),
                         0.01f,
                         muffle: SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
@@ -357,17 +369,13 @@ namespace Barotrauma.Items.Components
                 float volume = GetSoundVolume(itemSound);
                 if (volume <= 0.0001f) { return; }
                 var channel = SoundPlayer.PlaySound(itemSound.RoundSound.Sound, position, volume, itemSound.Range, itemSound.RoundSound.GetRandomFrequencyMultiplier(), item.CurrentHull, ignoreMuffling: itemSound.RoundSound.IgnoreMuffling);
-                if (channel != null) { playingOneshotSoundChannels.Add(channel); }
+                if (channel != null) { playingOneshotSoundChannels.Add(new SoundChannelWithType { SoundChanel = channel, Type = type }); }
             }
         }
 
-        public void StopSounds(ActionType type)
+        public void StopLoopingSounds(ActionType type)
         {
-            if (loopingSound == null) { return; }
-
-            if (loopingSound.Type != type) { return; }
-
-            if (loopingSoundChannel != null)
+            if (loopingSoundChannel != null && loopingSound.Type == type)
             {
                 loopingSoundChannel.FadeOutAndDispose();
                 loopingSoundChannel = null;
@@ -375,7 +383,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private float GetSoundVolume(ItemSound sound)
+        public void StopOneshotSounds(ActionType type)
+        {
+                if (playingOneshotSoundChannels.Any(i => i.Type == type))
+            {
+                var playingOneShotSoundChannelsOfType = playingOneshotSoundChannels.FindAll(i => i.Type == type);
+                foreach (SoundChannelWithType playingOneShotSoundChannelOfType in playingOneShotSoundChannelsOfType)
+                {
+                    playingOneShotSoundChannelOfType.SoundChanel.Dispose();
+                    playingOneShotSoundChannelOfType.SoundChanel = null;
+                }
+                playingOneshotSoundChannels.RemoveAll(i => i.Type == type);
+            }
+        }
+
+private float GetSoundVolume(ItemSound sound)
         {
             if (sound == null) { return 0.0f; }
             if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }

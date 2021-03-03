@@ -228,6 +228,16 @@ namespace Barotrauma
                 DrawObjectiveIndicator(spriteBatch, cam, character, objectiveEntity, 1.0f);
             }
 
+            if (character.IsReloading)
+            {
+                Vector2 bulletSpriteSize = GUI.Style.ReloadIndicatorBullet.Sprite.size;
+                int reloadIndicatorCenterX = GUI.Canvas.NonScaledSize.X/2;
+                int reloadIndicatorCenterY = 160;
+                GUI.Style.ReloadIndicatorBullet.Draw(spriteBatch, new Rectangle(reloadIndicatorCenterX - (int)bulletSpriteSize.X/2, reloadIndicatorCenterY - (int)bulletSpriteSize.Y/2, (int)bulletSpriteSize.X, (int)bulletSpriteSize.Y), Color.Gray);
+                GUI.Style.ReloadIndicator.Draw(spriteBatch, new Vector2(reloadIndicatorCenterX, reloadIndicatorCenterY), Color.Gray, rotate: (float)Timing.TotalTime*2);
+                
+            }
+
             foreach (Item brokenItem in brokenItems)
             {
                 if (!brokenItem.IsInteractable(character)) { continue; }
@@ -491,7 +501,7 @@ namespace Barotrauma
 
         private static bool LockInventory(Character character)
         {
-            if (character?.Inventory == null || !character.AllowInput || character.LockHands || IsCampaignInterfaceOpen) { return true; }
+            if (character?.Inventory == null || !character.AllowInput || character.LockHands || IsCampaignInterfaceOpen || character.IsReloading) { return true; }
             return character.ShouldLockHud();
         }
 
