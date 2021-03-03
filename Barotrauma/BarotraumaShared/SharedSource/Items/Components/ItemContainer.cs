@@ -478,6 +478,9 @@ namespace Barotrauma.Items.Components
         public override void AbortReload(Character character)
         {
             // stop reload sound
+#if CLIENT
+            StopOneshotSounds(ActionType.OnReload);
+#endif
             return;
         }
         public override void Drop(Character dropper)

@@ -1606,7 +1606,7 @@ namespace Barotrauma
                 }
             }
 #endif
-            if (attackCoolDown > 0.0f) attackCoolDown -= deltaTime;
+            if (attackCoolDown > 0.0f) { attackCoolDown -= deltaTime; }
 
             if (attackCoolDown <= 0.0f && !IsReloading && IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
             {

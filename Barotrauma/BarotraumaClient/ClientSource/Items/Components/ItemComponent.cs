@@ -242,8 +242,6 @@ namespace Barotrauma.Items.Components
             {
                 channelAndType.SoundChanel.Position = new Vector3(item.WorldPosition, 0.0f);
             }
-
-            //if (item.ParentInventory.Owner.)
         }
 
         public void PlaySound(ActionType type, Character user = null)
@@ -385,7 +383,7 @@ namespace Barotrauma.Items.Components
 
         public void StopOneshotSounds(ActionType type)
         {
-                if (playingOneshotSoundChannels.Any(i => i.Type == type))
+            if (playingOneshotSoundChannels.Any(i => i.Type == type))
             {
                 var playingOneShotSoundChannelsOfType = playingOneshotSoundChannels.FindAll(i => i.Type == type);
                 foreach (SoundChannelWithType playingOneShotSoundChannelOfType in playingOneShotSoundChannelsOfType)
@@ -397,7 +395,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-private float GetSoundVolume(ItemSound sound)
+        private float GetSoundVolume(ItemSound sound)
         {
             if (sound == null) { return 0.0f; }
             if (sound.VolumeProperty == "") { return sound.VolumeMultiplier; }
