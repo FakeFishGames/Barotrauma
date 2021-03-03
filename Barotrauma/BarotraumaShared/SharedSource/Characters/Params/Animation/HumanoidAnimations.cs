@@ -4,7 +4,7 @@ namespace Barotrauma
 {
     class HumanWalkParams : HumanGroundedParams
     {
-        public static HumanWalkParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanWalkParams>(character.SpeciesName, AnimationType.Walk);
+        public static HumanWalkParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanWalkParams>(character, AnimationType.Walk);
         public static HumanWalkParams GetAnimParams(Character character, string fileName = null)
         {
             return GetAnimParams<HumanWalkParams>(character.SpeciesName, AnimationType.Walk, fileName);
@@ -15,7 +15,7 @@ namespace Barotrauma
 
     class HumanRunParams : HumanGroundedParams
     {
-        public static HumanRunParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanRunParams>(character.SpeciesName, AnimationType.Run);
+        public static HumanRunParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanRunParams>(character, AnimationType.Run);
         public static HumanRunParams GetAnimParams(Character character, string fileName = null)
         {
             return GetAnimParams<HumanRunParams>(character.SpeciesName, AnimationType.Run, fileName);
@@ -26,7 +26,7 @@ namespace Barotrauma
 
     class HumanSwimFastParams: HumanSwimParams
     {
-        public static HumanSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimFastParams>(character.SpeciesName, AnimationType.SwimFast);
+        public static HumanSwimFastParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimFastParams>(character, AnimationType.SwimFast);
         public static HumanSwimFastParams GetAnimParams(Character character, string fileName = null)
         {
             return GetAnimParams<HumanSwimFastParams>(character.SpeciesName, AnimationType.SwimFast, fileName);
@@ -38,7 +38,7 @@ namespace Barotrauma
 
     class HumanSwimSlowParams : HumanSwimParams
     {
-        public static HumanSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow);
+        public static HumanSwimSlowParams GetDefaultAnimParams(Character character) => GetDefaultAnimParams<HumanSwimSlowParams>(character, AnimationType.SwimSlow);
         public static HumanSwimSlowParams GetAnimParams(Character character, string fileName = null)
         {
             return GetAnimParams<HumanSwimSlowParams>(character.SpeciesName, AnimationType.SwimSlow, fileName);

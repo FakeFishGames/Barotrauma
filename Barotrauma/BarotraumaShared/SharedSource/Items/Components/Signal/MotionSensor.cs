@@ -15,17 +15,24 @@ namespace Barotrauma.Items.Components
 
         private float updateTimer;
 
+        public enum TargetType
+        {
+            Any,
+            Human,
+            Monster
+        }
+
         [Serialize(false, false, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public bool MotionDetected { get; set; }
 
-        [Editable, Serialize(false, true, description: "Should the sensor only detect the movement of humans?", alwaysUseInstanceValues: true)]
-        public bool OnlyHumans
+        [InGameEditable, Serialize(TargetType.Any, true, description: "Which kind of targets can trigger the sensor?", alwaysUseInstanceValues: true)]
+        public TargetType Target
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, true, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, true, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
         public bool IgnoreDead
         {
             get;
@@ -55,7 +62,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("0,0", true, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
+        [InGameEditable, Serialize("0,0", true, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
         public Vector2 DetectOffset
         {
             get { return detectOffset; }
@@ -80,7 +87,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-
         public MotionSensor(Item item, XElement element)
             : base(item, element)
         {
@@ -90,6 +96,16 @@ namespace Barotrauma.Items.Components
             if (element.Attribute("range") != null)
             {
                 rangeX = rangeY = element.GetAttributeFloat("range", 0.0f);
+            }
+        }
+
+        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        {
+            base.Load(componentElement, usePrefabValues, idRemap);
+            //backwards compatibility
+            if (componentElement.GetAttributeBool("onlyhumans", false))
+            {
+                Target = TargetType.Human;
             }
         }
 
@@ -121,7 +137,20 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (IgnoreDead && c.IsDead) { continue; }
-                if (OnlyHumans && !c.IsHuman) { continue; }
+
+                //ignore characters that have spawned a second or less ago
+                //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
+                if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
+
+                switch (Target)
+                {
+                    case TargetType.Human:
+                        if (!c.IsHuman) { continue; }
+                        break;
+                    case TargetType.Monster:
+                        if (c.IsHuman || c.IsPet) { continue; }
+                        break;
+                }
 
                 //do a rough check based on the position of the character's collider first
                 //before the more accurate limb-based check

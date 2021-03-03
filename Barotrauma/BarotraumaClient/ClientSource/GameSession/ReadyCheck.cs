@@ -33,6 +33,8 @@ namespace Barotrauma
 
         public static DateTime lastReadyCheck = DateTime.MinValue;
 
+        public static bool IsReadyCheck(GUIComponent? msgBox) => msgBox?.UserData as string == PromptData || msgBox?.UserData as string == ResultData;
+
         private void CreateMessageBox(string author)
         {
             Vector2 relativeSize = new Vector2(GUI.IsFourByThree() ? 0.3f : 0.2f, 0.15f);
@@ -46,6 +48,7 @@ namespace Barotrauma
             msgBox.Buttons[0].OnClicked = delegate
             {
                 msgBox.Close();
+                if (GameMain.Client == null) { return true; }
                 SendState(ReadyStatus.Yes);
                 CreateResultsMessage();
                 return true;
@@ -55,6 +58,7 @@ namespace Barotrauma
             msgBox.Buttons[1].OnClicked = delegate
             {
                 msgBox.Close();
+                if (GameMain.Client == null) { return true; }
                 SendState(ReadyStatus.No);
                 CreateResultsMessage();
                 return true;
@@ -63,6 +67,8 @@ namespace Barotrauma
 
         private void CreateResultsMessage()
         {
+            if (GameMain.Client == null) { return; }
+
             Vector2 relativeSize = new Vector2(0.2f, 0.3f);
             Point minSize = new Point(300, 400);
             resultsBox = new GUIMessageBox(readyCheckHeader, string.Empty, new[] { closeButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = ResultData, Draggable = true };
@@ -73,7 +79,7 @@ namespace Barotrauma
 
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.8f), resultsBox.Content.RectTransform)) { UserData = UserListData };
 
-            foreach (var (id, status) in Clients)
+            foreach (var (id, _) in Clients)
             {
                 Client? client = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.ID == id);
                 GUIFrame container = new GUIFrame(new RectTransform(new Vector2(1f, 0.15f), listBox.Content.RectTransform), style: "ListBoxElement") { UserData = id };
@@ -120,7 +126,10 @@ namespace Barotrauma
             int second = (int) Math.Ceiling(time);
             if (second < lastSecond)
             {
-                SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
+                if (msgBox != null && !msgBox.Closed)
+                {
+                    SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
+                }
                 lastSecond = second;
             }
         }
@@ -130,12 +139,20 @@ namespace Barotrauma
             ReadyCheckState state = (ReadyCheckState) inc.ReadByte();
             CrewManager? crewManager = GameMain.GameSession?.CrewManager;
             List<Client> otherClients = GameMain.Client.ConnectedClients;
-            if (crewManager == null || otherClients == null) { return; }
+            if (crewManager == null || otherClients == null)
+            {
+                if (state == ReadyCheckState.Start)
+                {
+                    SendState(ReadyStatus.No);
+                }
+                return; 
+            }
 
             switch (state)
             {
                 case ReadyCheckState.Start:
                     bool isOwn = false;
+                    byte authorId = 0;
 
                     float duration = inc.ReadSingle();
                     string author = inc.ReadString();
@@ -143,7 +160,8 @@ namespace Barotrauma
 
                     if (hasAuthor)
                     {
-                        isOwn = inc.ReadByte() == GameMain.Client.ID;
+                        authorId = inc.ReadByte();
+                        isOwn = authorId == GameMain.Client.ID;
                     }
 
                     ushort clientCount = inc.ReadUInt16();
@@ -165,12 +183,21 @@ namespace Barotrauma
                     {
                         rCheck.CreateMessageBox(author);
                     }
+
+                    if (hasAuthor && rCheck.Clients.ContainsKey(authorId))
+                    {
+                        rCheck.Clients[authorId] = ReadyStatus.Yes;
+                    }
                     break;
                 case ReadyCheckState.Update:
-                    crewManager.ActiveReadyCheck.time = inc.ReadSingle();
+                    float time = inc.ReadSingle();
                     ReadyStatus newState = (ReadyStatus) inc.ReadByte();
                     byte targetId = inc.ReadByte();
-                    crewManager.ActiveReadyCheck?.UpdateState(targetId, newState);
+                    if (crewManager.ActiveReadyCheck != null)
+                    {
+                        crewManager.ActiveReadyCheck.time = time;
+                        crewManager.ActiveReadyCheck?.UpdateState(targetId, newState);
+                    }
                     break;
                 case ReadyCheckState.End:
                     ushort count = inc.ReadUInt16();
@@ -190,6 +217,9 @@ namespace Barotrauma
 
         partial void EndReadyCheck()
         {
+            if (IsFinished) { return; }
+            IsFinished = true;
+
             int readyCount = Clients.Count(pair => pair.Value == ReadyStatus.Yes);
             int totalCount = Clients.Count;
             GameMain.Client.AddChatMessage(ChatMessage.Create(string.Empty, readyCheckStatus(readyCount, totalCount), ChatMessageType.Server, null));

@@ -97,25 +97,23 @@ namespace Barotrauma
 
 
 #if DEBUG && CLIENT
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null &&
-                !DebugConsole.IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
+            if (GameMain.GameSession != null && !DebugConsole.IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                if (PlayerInput.KeyHit(Keys.Insert))
+                if (GameMain.GameSession.Level != null && GameMain.GameSession.Submarine != null)
                 {
-                    DebugConsole.ExecuteCommand("teleportcharacter");
+                    Submarine closestSub = Submarine.FindClosest(cam.WorldViewCenter) ?? GameMain.GameSession.Submarine;
+
+                    Vector2 targetMovement = Vector2.Zero;
+                    if (PlayerInput.KeyDown(Keys.I)) { targetMovement.Y += 1.0f; }
+                    if (PlayerInput.KeyDown(Keys.K)) { targetMovement.Y -= 1.0f; }
+                    if (PlayerInput.KeyDown(Keys.J)) { targetMovement.X -= 1.0f; }
+                    if (PlayerInput.KeyDown(Keys.L)) { targetMovement.X += 1.0f; }
+
+                    if (targetMovement != Vector2.Zero)
+                    {
+                        closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
+                    }
                 }
-
-                var closestSub = Submarine.FindClosest(cam.WorldViewCenter);
-                if (closestSub == null) closestSub = GameMain.GameSession.Submarine;
-
-                Vector2 targetMovement = Vector2.Zero;
-                if (PlayerInput.KeyDown(Keys.I)) targetMovement.Y += 1.0f;
-                if (PlayerInput.KeyDown(Keys.K)) targetMovement.Y -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.J)) targetMovement.X -= 1.0f;
-                if (PlayerInput.KeyDown(Keys.L)) targetMovement.X += 1.0f;
-
-                if (targetMovement != Vector2.Zero)
-                    closestSub.ApplyForce(targetMovement * closestSub.SubBody.Body.Mass * 100.0f);
             }
 #endif
 
@@ -158,9 +156,8 @@ namespace Barotrauma
                 }
                 if (Character.Controlled.Inventory != null)
                 {
-                    foreach (Item item in Character.Controlled.Inventory.Items)
+                    foreach (Item item in Character.Controlled.Inventory.AllItems)
                     {
-                        if (item == null) { continue; }
                         if (Character.Controlled.HasEquippedItem(item))
                         {
                             item.UpdateHUD(cam, Character.Controlled, (float)deltaTime);
@@ -225,7 +222,10 @@ namespace Barotrauma
 
             foreach (PhysicsBody body in PhysicsBody.List)
             {
-                if (body.Enabled) { body.SetPrevTransform(body.SimPosition, body.Rotation); }
+                if (body.Enabled && body.BodyType != FarseerPhysics.BodyType.Static) 
+                { 
+                    body.SetPrevTransform(body.SimPosition, body.Rotation); 
+                }
             }
 
 #if CLIENT

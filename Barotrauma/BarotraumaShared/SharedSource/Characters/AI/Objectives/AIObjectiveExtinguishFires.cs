@@ -38,11 +38,19 @@ namespace Barotrauma
         public static bool IsValidTarget(Hull hull, Character character)
         {
             if (hull == null) { return false; }
-            if (hull.IgnoreByAI) { return false; }
             if (hull.FireSources.None()) { return false; }
             if (hull.Submarine == null) { return false; }
             if (character.Submarine == null) { return false; }
             if (!character.Submarine.IsEntityFoundOnThisSub(hull, includingConnectedSubs: true)) { return false; }
+            if (hull.BallastFlora != null) { return false; }
+            foreach (var ballastFlora in MapCreatures.Behavior.BallastFloraBehavior.EntityList)
+            {
+                if (ballastFlora.Parent?.Submarine != character.Submarine) { continue; }
+                if (ballastFlora.Branches.Any(b => !b.Removed && b.Health > 0 && b.CurrentHull == hull))
+                {
+                    return false;
+                }
+            }
             return true;
         }
     }

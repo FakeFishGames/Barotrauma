@@ -249,10 +249,6 @@ namespace Barotrauma
         {
             get { return ""; }
         }
-
-        private bool ignoreByAI;
-        public bool IgnoreByAI => ignoreByAI;
-        public void SetIgnoreByAI(bool ignore) => ignoreByAI = ignore;
         
         public MapEntity(MapEntityPrefab prefab, Submarine submarine, ushort id) : base(submarine, id)
         {
@@ -622,6 +618,21 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Error in " + filePath + "! Could not find a entity of the type \"" + typeName + "\".", e);
                     continue;
+                }
+
+                if (t == typeof(Structure))
+                {
+                    string name = element.Attribute("name").Value;
+                    string identifier = element.GetAttributeString("identifier", "");
+                    StructurePrefab structurePrefab = Structure.FindPrefab(name, identifier);
+                    if (structurePrefab == null)
+                    {
+                        ItemPrefab itemPrefab = ItemPrefab.Find(name, identifier);
+                        if (itemPrefab != null)
+                        {
+                            t = typeof(Item);
+                        }
+                    }
                 }
 
                 try

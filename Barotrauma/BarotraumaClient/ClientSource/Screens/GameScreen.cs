@@ -77,9 +77,8 @@ namespace Barotrauma
             }
             if (Character.Controlled?.Inventory != null)
             {
-                foreach (Item item in Character.Controlled.Inventory.Items)
+                foreach (Item item in Character.Controlled.Inventory.AllItems)
                 {
-                    if (item == null) { continue; }
                     if (Character.Controlled.HasEquippedItem(item))
                     {
                         item.AddToGUIUpdateList();
@@ -249,6 +248,8 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
+            Level.Loaded?.DrawFront(spriteBatch, cam);
+
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
             graphics.SetRenderTarget(renderTargetWater);
 
@@ -317,10 +318,8 @@ namespace Barotrauma
             {
                 c.DrawFront(spriteBatch, cam);
             }
-            if (Level.Loaded != null)
-            {
-                Level.Loaded.DrawFront(spriteBatch, cam);
-            }
+
+            Level.Loaded?.DrawDebugOverlay(spriteBatch, cam);            
             if (GameMain.DebugDraw)
             {
                 MapEntity.mapEntityList.ForEach(me => me.AiTarget?.Draw(spriteBatch));
@@ -374,7 +373,10 @@ namespace Barotrauma
             {
                 BlurStrength = Character.Controlled.BlurStrength * 0.005f;
                 DistortStrength = Character.Controlled.DistortStrength;
-                chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                if (GameMain.Config.EnableRadialDistortion)
+                {
+                    chromaticAberrationStrength -= Vector3.One * Character.Controlled.RadialDistortStrength;
+                }
                 chromaticAberrationStrength += new Vector3(-0.03f, -0.015f, 0.0f) * Character.Controlled.ChromaticAberrationStrength;
             }
             else
@@ -438,8 +440,8 @@ namespace Barotrauma
 
             if (!PlayerInput.PrimaryMouseButtonHeld())
             {
-                Inventory.draggingSlot = null;
-                Inventory.draggingItem = null;
+                Inventory.DraggingSlot = null;
+                Inventory.DraggingItems.Clear();
             }
         }
     }

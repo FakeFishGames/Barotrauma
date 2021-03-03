@@ -42,13 +42,13 @@ namespace Barotrauma.Items.Components
         public override void Equip(Character character)
         {
             base.Equip(character);
-            character.Info.CheckDisguiseStatus(true, this);
+            character.Info?.CheckDisguiseStatus(true, this);
         }
 
         public override void Unequip(Character character)
         {
             base.Unequip(character);
-            character.Info.CheckDisguiseStatus(true, this);
+            character.Info?.CheckDisguiseStatus(true, this);
         }
     }
 }

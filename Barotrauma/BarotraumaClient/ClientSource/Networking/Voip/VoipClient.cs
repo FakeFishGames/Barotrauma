@@ -94,6 +94,7 @@ namespace Barotrauma.Networking
                     DebugConsole.Log("Recreating voipsound " + queueId);
                     client.VoipSound = new VoipSound(client.Name, GameMain.SoundManager, client.VoipQueue);
                 }
+                GameMain.SoundManager.ForceStreamUpdate();
 
                 if (client.Character != null && !client.Character.IsDead && !client.Character.Removed && client.Character.SpeechImpediment <= 100.0f)
                 {
@@ -101,8 +102,8 @@ namespace Barotrauma.Networking
                     var messageType = !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
-                    client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio;
-                    if (client.VoipSound.UseRadioFilter)
+                    client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameMain.Config.DisableVoiceChatFilters;
+                    if (messageType == ChatMessageType.Radio)
                     {
                         client.VoipSound.SetRange(radio.Range * 0.8f, radio.Range);
                     }
@@ -110,7 +111,7 @@ namespace Barotrauma.Networking
                     {
                         client.VoipSound.SetRange(ChatMessage.SpeakRange * 0.4f, ChatMessage.SpeakRange);
                     }
-                    if (!client.VoipSound.UseRadioFilter && Character.Controlled != null)
+                    if (messageType != ChatMessageType.Radio && Character.Controlled != null && !GameMain.Config.DisableVoiceChatFilters)
                     {
                         client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
                     }

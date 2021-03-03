@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 
@@ -25,10 +23,11 @@ namespace Barotrauma
         public string Name { get; private set; }
         public string Identifier { get; private set; }
         public string FilePath { get; private set; }
+        public string VariantOf { get; private set; }
+
         public ContentPackage ContentPackage { get; private set; }
 
         public XDocument XDocument { get; private set; }
-
 
         public static IEnumerable<string> ConfigFilePaths => Prefabs.Select(p => p.FilePath);
         public static IEnumerable<XDocument> ConfigFiles => Prefabs.Select(p => p.XDocument);
@@ -80,8 +79,46 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Duplicate path: {filePath}");
                 return false;
             }
-            XElement mainElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
-            var name = mainElement.GetAttributeString("name", null);
+            XElement mainElement = doc.Root;
+            if (doc.Root.IsCharacterVariant())
+            {
+                if (!CheckSpeciesName(mainElement, filePath, out string n)) { return false; }
+                string inherit = mainElement.GetAttributeString("inherit", null);
+                string id = n.ToLowerInvariant();
+                Prefabs.Add(new CharacterPrefab
+                {
+                    Name = n,
+                    OriginalName = n,
+                    Identifier = id,
+                    FilePath = filePath,
+                    ContentPackage = contentPackage,
+                    XDocument = doc,
+                    VariantOf = inherit
+                }, isOverride: false);
+                return true;
+            }
+            else if (doc.Root.IsOverride())
+            {
+                mainElement = doc.Root.FirstElement();
+            }
+            if (!CheckSpeciesName(mainElement, filePath, out string name)) { return false; }
+            string identifier = name.ToLowerInvariant();
+            Prefabs.Add(new CharacterPrefab
+            {
+                Name = name,
+                OriginalName = name,
+                Identifier = identifier,
+                FilePath = filePath,
+                ContentPackage = contentPackage,
+                XDocument = doc
+            }, forceOverride || doc.Root.IsOverride());
+
+            return true;
+        }
+
+        public static bool CheckSpeciesName(XElement mainElement, string filePath, out string name)
+        {
+            name = mainElement.GetAttributeString("name", null);
             if (name != null)
             {
                 DebugConsole.NewMessage($"Error in {filePath}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
@@ -95,17 +132,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"No species name defined for: {filePath}");
                 return false;
             }
-            var identifier = name.ToLowerInvariant();
-            Prefabs.Add(new CharacterPrefab
-            {
-                Name = name,
-                OriginalName = name,
-                Identifier = identifier,
-                FilePath = filePath,
-                ContentPackage = contentPackage,
-                XDocument = doc
-            }, forceOverride || doc.Root.IsOverride());
-
             return true;
         }
 

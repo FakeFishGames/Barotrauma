@@ -17,11 +17,10 @@ namespace Barotrauma
         Deselect,
         Shoot,
         Command,
-        ToggleInventory
-#if DEBUG
-        , 
+        ToggleInventory,
+        TakeOneFromInventorySlot,
+        TakeHalfFromInventorySlot,
         NextFireMode,
         PreviousFireMode
-#endif
     }
 }

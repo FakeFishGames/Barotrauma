@@ -132,7 +132,7 @@ namespace Barotrauma.Lights
 
         public void AddLight(LightSource light)
         {
-            if (!lights.Contains(light)) lights.Add(light);
+            if (!lights.Contains(light)) { lights.Add(light); }
         }
 
         public void RemoveLight(LightSource light)
@@ -153,7 +153,7 @@ namespace Barotrauma.Lights
 
         public void Update(float deltaTime)
         {
-            foreach (LightSource light in lights)
+            foreach (LightSource light in activeLights)
             {
                 if (!light.Enabled) { continue; }
                 light.Update(deltaTime);
@@ -183,7 +183,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in lights)
             {
                 if (!light.Enabled) { continue; }    
-                if ((light.Color.A < 1 || light.Range < 1.0f || light.CurrentBrightness <= 0.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
+                if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
                 if (light.ParentBody != null)
                 {
                     light.Position = light.ParentBody.DrawPosition;
@@ -212,7 +212,7 @@ namespace Barotrauma.Lights
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform);
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) { continue; }
+                if (light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 //draw limb lights at this point, because they were skipped over previously to prevent them from being obstructed
                 if (light.ParentBody?.UserData is Limb limb && !limb.Hide) { light.DrawSprite(spriteBatch, cam); }
             }
@@ -227,7 +227,7 @@ namespace Barotrauma.Lights
             Level.Loaded?.BackgroundCreatureManager?.DrawLights(spriteBatch, cam);
             foreach (LightSource light in activeLights)
             {
-                if (!light.IsBackground) { continue; }
+                if (!light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawSprite(spriteBatch, cam);
                 light.DrawLightVolume(spriteBatch, lightEffect, transform);
             }
@@ -272,7 +272,7 @@ namespace Barotrauma.Lights
             foreach (LightSource light in activeLights)
             {
                 //don't draw limb lights at this point, they need to be drawn after lights have been obstructed by characters
-                if (light.IsBackground || light.ParentBody?.UserData is Limb) { continue; }
+                if (light.IsBackground || light.ParentBody?.UserData is Limb || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawSprite(spriteBatch, cam);
             }
             spriteBatch.End();
@@ -337,7 +337,7 @@ namespace Barotrauma.Lights
 
             foreach (LightSource light in activeLights)
             {
-                if (light.IsBackground) { continue; }
+                if (light.IsBackground || light.CurrentBrightness <= 0.0f) { continue; }
                 light.DrawLightVolume(spriteBatch, lightEffect, transform);
             }
 
@@ -391,7 +391,7 @@ namespace Barotrauma.Lights
             if (GUI.DisableItemHighlights) { return false; }
 
             highlightedEntities.Clear();
-            if (Character.Controlled != null && (!Character.Controlled.IsKeyDown(InputType.Aim) || Character.Controlled.SelectedItems.Any(it => it?.GetComponent<Sprayer>() == null)))
+            if (Character.Controlled != null && (!Character.Controlled.IsKeyDown(InputType.Aim) || Character.Controlled.HeldItems.Any(it => it.GetComponent<Sprayer>() == null)))
             {
                 if (Character.Controlled.FocusedItem != null)
                 {

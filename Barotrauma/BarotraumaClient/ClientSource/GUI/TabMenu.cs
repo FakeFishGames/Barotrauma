@@ -29,7 +29,7 @@ namespace Barotrauma
         private float sizeMultiplier = 1f;
 
         private IEnumerable<Character> crew;
-        private List<Character.TeamType> teamIDs;
+        private List<CharacterTeamType> teamIDs;
         private const string inLobbyString = "\u2022 \u2022 \u2022";
 
         public static Color OwnCharacterBGColor = Color.Gold * 0.7f;
@@ -281,11 +281,11 @@ namespace Barotrauma
             // Show own team first when there's more than one team
             if (teamIDs.Count > 1 && GameMain.Client?.Character != null)
             {
-                Character.TeamType ownTeam = GameMain.Client.Character.TeamID;
+                CharacterTeamType ownTeam = GameMain.Client.Character.TeamID;
                 teamIDs = teamIDs.OrderBy(i => i != ownTeam).ThenBy(i => i).ToList();
             }
 
-            if (!teamIDs.Any()) teamIDs.Add(Character.TeamType.None);
+            if (!teamIDs.Any()) { teamIDs.Add(CharacterTeamType.None); }
 
             var content = new GUILayoutGroup(new RectTransform(Vector2.One, crewFrame.RectTransform));
 
@@ -465,15 +465,14 @@ namespace Barotrauma
             {
                 foreach (Character character in crew.Where(c => c.TeamID == teamIDs[i]))
                 {
-                    if (!(character is AICharacter) && connectedClients.Find(c => c.Character == null && c.Name == character.Name) != null) continue;
-                    CreateMultiPlayerCharacterElement(character, GameMain.Client.ConnectedClients.Find(c => c.Character == character), i);
+                    if (!(character is AICharacter) && connectedClients.Any(c => c.Character == null && c.Name == character.Name)) { continue; }
+                    CreateMultiPlayerCharacterElement(character, GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.Character == character), i);
                 }
             }
 
             for (int j = 0; j < connectedClients.Count; j++)
             {
                 Client client = connectedClients[j];
-
                 if (!client.InGame || client.Character == null || client.Character.IsDead)
                 {
                     CreateMultiPlayerClientElement(client);
@@ -565,7 +564,7 @@ namespace Barotrauma
 
         private int GetTeamIndex(Client client)
         {
-            if (teamIDs.Count <= 1) return 0;
+            if (teamIDs.Count <= 1) { return 0; }
 
             if (client.Character != null)
             {
@@ -707,7 +706,7 @@ namespace Barotrauma
         {
             GUIComponent paddedFrame;
 
-            if (client.Character == null)
+            if (client.Character?.Info == null)
             {
                 paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.874f, 0.58f), frame.RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.05f) })
                 {
@@ -858,54 +857,60 @@ namespace Barotrauma
 
             int locationInfoYOffset = locationNameText.Rect.Height + locationTypeText.Rect.Height + padding * 2;
 
-            GUIFrame missionDescriptionHolder;
+            GUIListBox missionList;
 
             if (hasPortrait)
             {
-                GUIFrame missionImageHolder = new GUIFrame(new RectTransform(new Point(contentWidth, (int)(missionFrame.Rect.Height * 0.588f)), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationInfoYOffset) });
+                GUIFrame portraitHolder = new GUIFrame(new RectTransform(new Point(contentWidth, (int)(missionFrame.Rect.Height * 0.588f)), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationInfoYOffset) });
                 float portraitAspectRatio = portrait.SourceRect.Width / portrait.SourceRect.Height;
-                GUIImage portraitImage = new GUIImage(new RectTransform(new Vector2(1.0f, 1f), missionImageHolder.RectTransform), portrait, scaleToFit: true);
-                missionImageHolder.RectTransform.NonScaledSize = new Point(portraitImage.Rect.Size.X, (int)(portraitImage.Rect.Size.X / portraitAspectRatio));
-                missionDescriptionHolder = new GUIFrame(new RectTransform(new Point(contentWidth, 0), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, missionImageHolder.RectTransform.AbsoluteOffset.Y + missionImageHolder.Rect.Height + padding) }, style: null);
+                GUIImage portraitImage = new GUIImage(new RectTransform(new Vector2(1.0f, 1f), portraitHolder.RectTransform), portrait, scaleToFit: true);
+                portraitHolder.RectTransform.NonScaledSize = new Point(portraitImage.Rect.Size.X, (int)(portraitImage.Rect.Size.X / portraitAspectRatio));
+
+                missionList = new GUIListBox(new RectTransform(new Point(contentWidth, missionFrame.Rect.Bottom - portraitHolder.Rect.Bottom - padding), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, portraitHolder.RectTransform.AbsoluteOffset.Y + portraitHolder.Rect.Height + padding) });
             }
             else
             {
-                missionDescriptionHolder = new GUIFrame(new RectTransform(new Point(contentWidth, 0), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationInfoYOffset) }, style: null);
-            }               
+                missionList = new GUIListBox(new RectTransform(new Point(contentWidth, missionFrame.Rect.Height - locationInfoYOffset - padding), missionFrame.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, locationInfoYOffset) });
+            }
+            missionList.ContentBackground.Color = Color.Transparent;
+            missionList.Spacing = GUI.IntScale(15);
 
-            Mission mission = GameMain.GameSession?.Mission;
-            if (mission != null)
+            if (GameMain.GameSession?.Missions != null)
             {
-                GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.744f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.225f, 0f) }, false, childAnchor: Anchor.TopLeft);
-
-                string missionNameString = ToolBox.WrapText(mission.Name, missionTextGroup.Rect.Width, GUI.LargeFont);
-                string missionDescriptionString = ToolBox.WrapText(mission.Description, missionTextGroup.Rect.Width, GUI.Font);
-                string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward));
-                string missionRewardString = ToolBox.WrapText(TextManager.GetWithVariable("MissionReward", "[reward]", rewardText), missionTextGroup.Rect.Width, GUI.Font);
-
-                Vector2 missionNameSize = GUI.LargeFont.MeasureString(missionNameString);
-                Vector2 missionDescriptionSize = GUI.Font.MeasureString(missionDescriptionString);
-                Vector2 missionRewardSize = GUI.Font.MeasureString(missionRewardString);
-
-                missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)(missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y));
-                missionTextGroup.RectTransform.NonScaledSize = new Point(missionTextGroup.RectTransform.NonScaledSize.X, missionDescriptionHolder.RectTransform.NonScaledSize.Y);
-
-                if (mission.Prefab.Icon != null)
+                foreach (Mission mission in GameMain.GameSession.Missions)
                 {
-                    float iconAspectRatio = mission.Prefab.Icon.SourceRect.Width / mission.Prefab.Icon.SourceRect.Height;
-                    int iconWidth = (int)(0.225f * missionDescriptionHolder.RectTransform.NonScaledSize.X);
-                    int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
-                    Point iconSize = new Point(iconWidth, iconHeight);
+                    GUIFrame missionDescriptionHolder = new GUIFrame(new RectTransform(Vector2.One, missionList.Content.RectTransform), style: null);
+                    GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.744f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.225f, 0f) }, false, childAnchor: Anchor.TopLeft);
 
-                    new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) { Color = mission.Prefab.IconColor };
-                }
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUI.LargeFont);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardString);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
+                    string missionNameString = ToolBox.WrapText(mission.Name, missionTextGroup.Rect.Width, GUI.LargeFont);
+                    string missionDescriptionString = ToolBox.WrapText(mission.Description, missionTextGroup.Rect.Width, GUI.Font);
+                    string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward));
+                    string missionRewardString = ToolBox.WrapText(TextManager.GetWithVariable("MissionReward", "[reward]", rewardText), missionTextGroup.Rect.Width, GUI.Font);
+
+                    Vector2 missionNameSize = GUI.LargeFont.MeasureString(missionNameString);
+                    Vector2 missionDescriptionSize = GUI.Font.MeasureString(missionDescriptionString);
+                    Vector2 missionRewardSize = GUI.Font.MeasureString(missionRewardString);
+
+                    missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)(missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y));
+                    missionTextGroup.RectTransform.NonScaledSize = new Point(missionTextGroup.RectTransform.NonScaledSize.X, missionDescriptionHolder.RectTransform.NonScaledSize.Y);
+
+                    if (mission.Prefab.Icon != null)
+                    {
+                        float iconAspectRatio = mission.Prefab.Icon.SourceRect.Width / mission.Prefab.Icon.SourceRect.Height;
+                        int iconWidth = (int)(0.225f * missionDescriptionHolder.RectTransform.NonScaledSize.X);
+                        int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
+                        Point iconSize = new Point(iconWidth, iconHeight);
+
+                        new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) { Color = mission.Prefab.IconColor, HoverColor = mission.Prefab.IconColor };
+                    }
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUI.LargeFont);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardString);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
+                }                
             }
             else
             {
-                GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft), false, childAnchor: Anchor.TopLeft);
+                GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0f), missionList.RectTransform, Anchor.CenterLeft), false, childAnchor: Anchor.TopLeft);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), TextManager.Get("NoMission"), font: GUI.LargeFont);
             }
         }

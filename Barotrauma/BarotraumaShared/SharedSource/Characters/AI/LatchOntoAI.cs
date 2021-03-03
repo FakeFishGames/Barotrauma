@@ -19,6 +19,7 @@ namespace Barotrauma
         private Body targetBody;
         private Vector2 attachSurfaceNormal;
         private Submarine targetSubmarine;
+        private readonly Character character;
 
         public bool AttachToSub { get; private set; }
         public bool AttachToWalls { get; private set; }
@@ -74,22 +75,24 @@ namespace Barotrauma
                 attachLimb = enemyAI.Character.AnimController.MainLimb;
             }
 
+            character = enemyAI.Character;
             enemyAI.Character.OnDeath += OnCharacterDeath;
         }
 
         public void SetAttachTarget(Structure wall, Vector2 attachPos, Vector2 attachSurfaceNormal)
         {
+            if (wall == null) { return; }
+            var sub = wall.Submarine;
+            if (sub == null) { return; }
             targetWall = wall;
-            targetBody = wall.Submarine.PhysicsBody.FarseerBody;
-            targetSubmarine = wall.Submarine;
+            targetSubmarine = sub;
+            targetBody = targetSubmarine.PhysicsBody.FarseerBody;
             this.attachSurfaceNormal = attachSurfaceNormal;
             wallAttachPos = attachPos;
         }
         
         public void Update(EnemyAIController enemyAI, float deltaTime)
         {
-            Character character = enemyAI.Character;
-
             if (character.Submarine != null)
             {
                 DeattachFromBody(reset: true);
@@ -160,12 +163,12 @@ namespace Barotrauma
                                         {
                                             if (MathUtils.GetLineIntersection(edge.Point1, edge.Point2, character.WorldPosition, cell.Center, out Vector2 intersection))
                                             {
-                                                attachSurfaceNormal = edge.GetNormal(cell);
-                                                targetBody = cell.Body;
                                                 Vector2 potentialAttachPos = ConvertUnits.ToSimUnits(intersection);
-                                                float distSqr = Vector2.DistanceSquared(character.SimPosition, wallAttachPos);
+                                                float distSqr = Vector2.DistanceSquared(character.SimPosition, potentialAttachPos);
                                                 if (distSqr < closestDist)
                                                 {
+                                                    attachSurfaceNormal = edge.GetNormal(cell);
+                                                    targetBody = cell.Body;
                                                     wallAttachPos = potentialAttachPos;
                                                     closestDist = distSqr;
                                                 }
@@ -183,7 +186,7 @@ namespace Barotrauma
                         wallAttachPos = Vector2.Zero;
                     }
 
-                    if (wallAttachPos == Vector2.Zero)
+                    if (wallAttachPos == Vector2.Zero || targetBody == null)
                     {
                         DeattachFromBody(reset: false);
                     }
@@ -194,7 +197,7 @@ namespace Barotrauma
                         if (squaredDistance < targetDistance * targetDistance)
                         {
                             //close enough to a wall -> attach
-                            AttachToBody(character.AnimController.Collider, attachLimb, targetBody, wallAttachPos);
+                            AttachToBody(wallAttachPos);
                             enemyAI.SteeringManager.Reset();
                         }
                         else
@@ -217,7 +220,7 @@ namespace Barotrauma
                             {
                                 if (Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(transformedAttachPos), enemyAI.AttackingLimb.WorldPosition) < enemyAI.AttackingLimb.attack.DamageRange * enemyAI.AttackingLimb.attack.DamageRange)
                                 {
-                                    AttachToBody(character.AnimController.Collider, attachLimb, targetBody, transformedAttachPos);
+                                    AttachToBody(transformedAttachPos);
                                 }
                             }
                         }
@@ -268,9 +271,12 @@ namespace Barotrauma
             }
         }
 
-        private void AttachToBody(PhysicsBody collider, Limb attachLimb, Body targetBody, Vector2 attachPos)
+        private void AttachToBody(Vector2 attachPos)
         {
+            if (attachLimb == null) { return; }
+            if (targetBody == null) { return; }
             if (attachCooldown > 0) { return; }
+            var collider = character.AnimController.Collider;
             //already attached to something
             if (AttachJoints.Count > 0)
             {

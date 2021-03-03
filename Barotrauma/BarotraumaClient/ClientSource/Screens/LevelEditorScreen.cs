@@ -489,7 +489,7 @@ namespace Barotrauma
                 {
                     MinValueFloat = 0,
                     MaxValueFloat = 100,
-                    FloatValue = caveGenerationParams.GetCommonness(selectedParams),
+                    FloatValue = caveGenerationParams.GetCommonness(selectedParams, abyss: false),
                     OnValueChanged = (numberInput) =>
                     {
                         caveGenerationParams.OverrideCommonness[selectedParams.Identifier] = numberInput.FloatValue;
@@ -514,7 +514,7 @@ namespace Barotrauma
                 }
                 foreach (var caveParam in CaveGenerationParams.CaveParams)
                 {
-                    if (selectedParams != null && caveParam.GetCommonness(selectedParams) <= 0.0f) { continue; }
+                    if (selectedParams != null && caveParam.GetCommonness(selectedParams, abyss: false) <= 0.0f) { continue; }
                     availableIdentifiers.Add(caveParam.Identifier);
                 }
                 availableIdentifiers.Reverse();
@@ -714,8 +714,9 @@ namespace Barotrauma
             if (Level.Loaded != null)
             {
                 Level.Loaded.DrawBack(graphics, spriteBatch, cam);
-                spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.DepthRead, transformMatrix: cam.Transform);
                 Level.Loaded.DrawFront(spriteBatch, cam);
+                spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, SamplerState.LinearWrap, DepthStencilState.DepthRead, transformMatrix: cam.Transform);
+                Level.Loaded.DrawDebugOverlay(spriteBatch, cam);
                 Submarine.Draw(spriteBatch, false);
                 Submarine.DrawFront(spriteBatch);
                 Submarine.DrawDamageable(spriteBatch, null);
@@ -810,6 +811,19 @@ namespace Barotrauma
                     GUI.DrawLine(spriteBatch, new Vector2(0, crushDepthScreen), new Vector2(GameMain.GraphicsWidth, crushDepthScreen), GUI.Style.Red * 0.25f, width: 5);
                     GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, crushDepthScreen), "Crush depth", GUI.Style.Red, backgroundColor: Color.Black);
                 }
+
+                float abyssStartScreen = cam.WorldToScreen(new Vector2(0.0f, Level.Loaded.AbyssArea.Bottom)).Y;
+                if (abyssStartScreen > 0.0f && abyssStartScreen < GameMain.GraphicsHeight)
+                {
+                    GUI.DrawLine(spriteBatch, new Vector2(0, abyssStartScreen), new Vector2(GameMain.GraphicsWidth, abyssStartScreen), GUI.Style.Blue * 0.25f, width: 5);
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, abyssStartScreen), "Abyss start", GUI.Style.Blue, backgroundColor: Color.Black);
+                }
+                float abyssEndScreen = cam.WorldToScreen(new Vector2(0.0f, Level.Loaded.AbyssArea.Y)).Y;
+                if (abyssEndScreen > 0.0f && abyssEndScreen < GameMain.GraphicsHeight)
+                {
+                    GUI.DrawLine(spriteBatch, new Vector2(0, abyssEndScreen), new Vector2(GameMain.GraphicsWidth, abyssEndScreen), GUI.Style.Blue * 0.25f, width: 5);
+                    GUI.DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, abyssEndScreen), "Abyss end", GUI.Style.Blue, backgroundColor: Color.Black);
+                }
             }
             GUI.Draw(Cam, spriteBatch);
             spriteBatch.End();
@@ -817,6 +831,13 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
+            if (lightingEnabled.Selected)
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    item?.GetComponent<Items.Components.LightComponent>()?.Update((float)deltaTime, cam);
+                }
+            }
             GameMain.LightManager?.Update((float)deltaTime);
 
             pointerLightSource.Position = cam.ScreenToWorld(PlayerInput.MousePosition);
@@ -886,16 +907,16 @@ namespace Barotrauma
                         {
                             foreach (XElement subElement in element.Elements())
                             {
-                                string id = element.GetAttributeString("identifier", null) ?? element.Name.ToString();
+                                string id = subElement.GetAttributeString("identifier", null) ?? subElement.Name.ToString();
                                 if (!id.Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
-                                SerializableProperty.SerializeProperties(genParams, element, true);
+                                genParams.Save(subElement);
                             }
                         }
                         else
                         {
                             string id = element.GetAttributeString("identifier", null) ?? element.Name.ToString();
                             if (!id.Equals(genParams.Name, StringComparison.OrdinalIgnoreCase)) { continue; }
-                            SerializableProperty.SerializeProperties(genParams, element, true);
+                            genParams.Save(element);
                         }
                         break;
                     }

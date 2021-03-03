@@ -11,6 +11,8 @@ namespace Barotrauma
 {
     class SinglePlayerCampaign : CampaignMode
     {
+        public const int MinimumInitialMoney = 0;
+
         public override bool Paused
         {
             get { return ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition") || ShowCampaignUI && CampaignUI.SelectedTab == InteractionType.Map; }
@@ -20,7 +22,7 @@ namespace Barotrauma
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
 
-            if (PlayerInput.RightButtonClicked() ||
+            if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {
                 ShowCampaignUI = false;
@@ -105,7 +107,6 @@ namespace Barotrauma
             }
 
             CampaignMetadata ??= new CampaignMetadata(this);
-
             UpgradeManager ??= new UpgradeManager(this);
 
             InitCampaignData();
@@ -113,6 +114,9 @@ namespace Barotrauma
             InitUI();
 
             Money = element.GetAttributeInt("money", 0);
+            PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
+            PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
+            PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {
@@ -137,7 +141,7 @@ namespace Barotrauma
         /// <summary>
         /// Start a completely new single player campaign
         /// </summary>
-        public static SinglePlayerCampaign StartNew(string mapSeed)
+        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub)
         {
             var campaign = new SinglePlayerCampaign(mapSeed);
             return campaign;
@@ -368,9 +372,6 @@ namespace Barotrauma
             SoundPlayer.OverrideMusicDuration = 18.0f;
             crewDead = false;
 
-            LevelData lvlData = GameMain.GameSession.LevelData;
-            bool beaconActive = GameMain.GameSession.Level.CheckBeaconActive();
-
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
@@ -455,8 +456,6 @@ namespace Barotrauma
                     }
                 }
 
-                lvlData.IsBeaconActive = beaconActive;
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
@@ -526,6 +525,8 @@ namespace Barotrauma
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
 
             base.Update(deltaTime);
+            
+            Map?.Radiation.UpdateRadiation(deltaTime);
 
             if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
@@ -699,6 +700,9 @@ namespace Barotrauma
         {
             XElement modeElement = new XElement("SinglePlayerCampaign",
                 new XAttribute("money", Money),
+                new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),
+                new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
+                new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
                 new XAttribute("cheatsenabled", CheatsEnabled));
 
             //save and remove all items that are in someone's inventory so they don't get included in the sub file as well

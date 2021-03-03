@@ -91,9 +91,10 @@ namespace Barotrauma
                 UserData = "container"
             };
 
+            int panelMaxWidth = (int)(GUI.xScale * (GUI.HorizontalAspectRatio < 1.4f ? 650 : 560));
             var availableMainGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).RectTransform)
                 {
-                    MaxSize = new Point(560, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
+                    MaxSize = new Point(panelMaxWidth, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
                 })
             {
                 Stretch = true,
@@ -149,7 +150,7 @@ namespace Barotrauma
 
             var pendingAndCrewMainGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).RectTransform, anchor: Anchor.TopRight)
             {
-                MaxSize = new Point(560, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
+                MaxSize = new Point(panelMaxWidth, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
             })
             {
                 Stretch = true,
@@ -177,7 +178,7 @@ namespace Barotrauma
             var pendingAndCrewGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), anchor: Anchor.Center,
                 parent: new GUIFrame(new RectTransform(new Vector2(1.0f, 13.25f / 14.0f), pendingAndCrewMainGroup.RectTransform)
                         {
-                            MaxSize = new Point(560, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
+                            MaxSize = new Point(panelMaxWidth, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
                         }).RectTransform));
 
             float height = 0.05f;
@@ -335,7 +336,7 @@ namespace Barotrauma
                 jobColor = characterInfo.Job.Prefab.UIColor;
             }
 
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, 55), parent: listBox.Content.RectTransform), "ListBoxElement")
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.yScale * 55)), parent: listBox.Content.RectTransform), "ListBoxElement")
             {
                 UserData = new Tuple<CharacterInfo, float>(characterInfo, skill != null ? skill.Level : 0.0f)
             };
@@ -366,7 +367,7 @@ namespace Barotrauma
             jobBlock.Text = ToolBox.LimitString(jobBlock.Text, jobBlock.Font, jobBlock.Rect.Width);
 
             float width =  0.6f / 3;
-            if (characterInfo.Job != null)
+            if (characterInfo.Job != null && skill != null)
             {
                 GUILayoutGroup skillGroup = new GUILayoutGroup(new RectTransform(new Vector2(width, 0.6f), mainGroup.RectTransform), isHorizontal: true);
                 float iconWidth = (float)skillGroup.Rect.Height / skillGroup.Rect.Width;

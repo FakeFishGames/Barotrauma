@@ -21,9 +21,9 @@ namespace Barotrauma
             set
             {
                 behavior = value;
-                if (behavior == BehaviorType.StayInHull && character.TeamID != Character.TeamType.FriendlyNPC)
+                if (behavior == BehaviorType.StayInHull && TargetHull == null)
                 {
-                    DebugConsole.NewMessage($"AIObjectiveIdle.BehaviorType.StayInHull is implemented only for outpost NPCs. Using passive behavior for {character.Name} ({character.Info.Job.Prefab.Identifier})", color: Color.Red);
+                    DebugConsole.AddWarning($"Trying to set a character's behavior type to StayInHull, but target hull is not set. {character.Name} ({character.Info.Job.Prefab.Identifier})");
                     behavior = BehaviorType.Passive;
                 }
                 switch (behavior)
@@ -203,7 +203,7 @@ namespace Barotrauma
 
                 if (currentTarget != null && !currentTargetIsInvalid)
                 {
-                    if (character.TeamID == Character.TeamType.FriendlyNPC)
+                    if (character.TeamID == CharacterTeamType.FriendlyNPC)
                     {
                         if (currentTarget.Submarine.TeamID != character.TeamID)
                         {
@@ -260,7 +260,7 @@ namespace Barotrauma
                     {
                         //choose a random available hull
                         currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
-                        bool isInWrongSub = character.TeamID == Character.TeamType.FriendlyNPC && character.Submarine.TeamID != character.TeamID;
+                        bool isInWrongSub = character.TeamID == CharacterTeamType.FriendlyNPC && character.Submarine.TeamID != character.TeamID;
                         bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
                         var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: $"AIObjectiveIdle {character.DisplayName}", nodeFilter: node =>
                         {
@@ -319,14 +319,14 @@ namespace Barotrauma
         public void Wander(float deltaTime)
         {
             if (character.IsClimbing) { return; }
-            if (!character.AnimController.InWater)
+            var currentHull = character.CurrentHull;
+            if (!character.AnimController.InWater && currentHull != null)
             {
                 standStillTimer -= deltaTime;
                 if (standStillTimer > 0.0f)
                 {
                     walkDuration = Rand.Range(walkDurationMin, walkDurationMax);
-                    var currentHull = character.CurrentHull;
-                    if (currentHull != null && currentHull.Rect.Width > IndoorsSteeringManager.smallRoomSize / 2 && tooCloseCharacter == null)
+                    if (currentHull.Rect.Width > IndoorsSteeringManager.smallRoomSize / 2 && tooCloseCharacter == null)
                     {
                         foreach (Character c in Character.CharacterList)
                         {
@@ -402,6 +402,14 @@ namespace Barotrauma
             PathSteering.Wander(deltaTime);
         }
 
+        public void FaceTargetAndWait(ISpatialEntity target, float waitTime)
+        {
+            standStillTimer = waitTime;
+            HumanAIController.FaceTarget(target);
+            currentTarget = null;
+            SetTargetTimerHigh();
+        }
+
         private void FindTargetHulls()
         {
             targetHulls.Clear();
@@ -411,7 +419,7 @@ namespace Barotrauma
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
                 if (character.Submarine == null) { break; }
-                if (character.TeamID == Character.TeamType.FriendlyNPC)
+                if (character.TeamID == CharacterTeamType.FriendlyNPC)
                 {
                     if (hull.Submarine.TeamID != character.TeamID)
                     {
@@ -487,7 +495,7 @@ namespace Barotrauma
                     foreach (Item item in Item.ItemList)
                     {
                         if (item.CurrentHull != hull) { continue; }
-                        if (AIObjectiveCleanupItems.IsValidTarget(item, character) && !ignoredItems.Contains(item))
+                        if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true) && !ignoredItems.Contains(item))
                         {
                             itemsToClean.Add(item);
                         }

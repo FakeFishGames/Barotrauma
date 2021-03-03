@@ -240,8 +240,6 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) { return; }
 
-            int initialLength = msg.LengthBytes;
-
             msg.Write(Prefab.OriginalName);
             msg.Write(Prefab.Identifier);
             msg.Write(Description != prefab.Description);
@@ -293,11 +291,6 @@ namespace Barotrauma
             if (nameTag != null)
             {
                 msg.Write(nameTag.WrittenName ?? "");
-            }
-
-            if (msg.LengthBytes - initialLength >= 255)
-            {
-                DebugConsole.ThrowError($"Too much data in an item spawn message. Item: \"{Prefab.Identifier}\", msg bytes: {(msg.LengthBytes - initialLength)}, description changed: {(Description != prefab.Description)}, description: {Description}, tags changed: {tagsChanged}, tags: {Tags}");
             }
         }
 

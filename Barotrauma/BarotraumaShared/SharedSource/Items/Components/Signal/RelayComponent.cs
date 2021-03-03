@@ -180,6 +180,7 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "toggle")
             {
+                if (signal == "0") { return; }
                 SetState(!IsOn, false);
             }
             else if (connection.Name == "set_state")

@@ -39,6 +39,34 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(false, isSaveable: true), Editable]
+        public bool AlwaysDestructible
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, isSaveable: true), Editable]
+        public bool AlwaysRewireable
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, isSaveable: true), Editable]
+        public bool AllowStealing
+        {
+            get;
+            set;
+        }
+
+        [Serialize(true, isSaveable: true), Editable]
+        public bool SpawnCrewInsideOutpost
+        {
+            get;
+            set;
+        }
+
         private readonly Dictionary<string, int> moduleCounts = new Dictionary<string, int>();
 
         public IEnumerable<KeyValuePair<string, int>> ModuleCounts

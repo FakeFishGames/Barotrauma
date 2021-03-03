@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Xml.Linq;
 using System;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -73,7 +74,10 @@ namespace Barotrauma
             else if (Strength < ActiveThreshold)
             {
                 DeactivateHusk();
-                character.SpeechImpediment = 100;
+                if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: false })
+                {
+                    character.SpeechImpediment = 100;
+                }
                 State = InfectionState.Transition;
             }
             else if (Strength < Prefab.MaxStrength)
@@ -98,7 +102,7 @@ namespace Barotrauma
 
         private void ApplyDamage(float deltaTime, bool applyForce)
         {
-            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered);
+            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered && !l.Hidden);
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.IsSevered) { continue; }
@@ -118,13 +122,25 @@ namespace Barotrauma
             {
                 huskAppendage = AttachHuskAppendage(character, Prefab.Identifier);
             }
-            character.NeedsAir = false;
-            character.SpeechImpediment = 100;
+
+            if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
+            {
+                character.NeedsAir = false;
+            }
+
+            if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: false })
+            {
+                character.SpeechImpediment = 100;
+            }
         }
 
         private void DeactivateHusk()
         {
-            character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
+            if (Prefab is AfflictionPrefabHusk { NeedsAir: false })
+            {
+                character.NeedsAir = character.Params.MainElement.GetAttributeBool("needsair", false);
+            }
+
             if (huskAppendage != null)
             {
                 huskAppendage.ForEach(l => character.AnimController.RemoveLimb(l));
@@ -160,6 +176,13 @@ namespace Barotrauma
 
         private IEnumerable<object> CreateAIHusk()
         {
+            //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
+            // -> don't spawn the AI husk
+            if (Entity.Spawner.IsInRemoveQueue(character))
+            {
+                yield return CoroutineStatus.Success;
+            }
+
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
 
@@ -179,7 +202,7 @@ namespace Barotrauma
             if (husk.Info != null)
             {
                 husk.Info.Character = husk;
-                husk.Info.TeamID = Character.TeamType.None;
+                husk.Info.TeamID = CharacterTeamType.None;
             }
 
             foreach (Limb limb in husk.AnimController.Limbs)
@@ -201,17 +224,16 @@ namespace Barotrauma
 
             if (character.Inventory != null && husk.Inventory != null)
             {
-                if (character.Inventory.Items.Length != husk.Inventory.Items.Length)
+                if (character.Inventory.Capacity != husk.Inventory.Capacity)
                 {
                     string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
                     DebugConsole.ThrowError(errorMsg);
                     GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     yield return CoroutineStatus.Success;
                 }
-                for (int i = 0; i < character.Inventory.Items.Length && i < husk.Inventory.Items.Length; i++)
+                for (int i = 0; i < character.Inventory.Capacity && i < husk.Inventory.Capacity; i++)
                 {
-                    if (character.Inventory.Items[i] == null) continue;
-                    husk.Inventory.TryPutItem(character.Inventory.Items[i], i, true, false, null);
+                    character.Inventory.GetItemsAt(i).ForEachMod(item => husk.Inventory.TryPutItem(item, i, true, false, null));
                 }
             }
 

@@ -152,7 +152,7 @@ namespace Barotrauma.Items.Components
 
         public Projectile FindProjectile(bool triggerOnUseOnContainers = false)
         {
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItemsMod;
             if (containedItems == null) { return null; }
 
             foreach (Item item in containedItems)
@@ -166,7 +166,7 @@ namespace Barotrauma.Items.Components
             foreach (Item it in containedItems)
             {
                 if (it == null) { continue; }
-                var containedSubItems = it.OwnInventory?.Items;
+                var containedSubItems = it.OwnInventory?.AllItemsMod;
                 if (containedSubItems == null) { continue; }
                 foreach (Item subItem in containedSubItems)
                 {

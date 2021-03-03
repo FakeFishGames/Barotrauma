@@ -37,6 +37,11 @@ namespace Barotrauma.Items.Components
 
                 angle = MathUtils.VectorToAngle(end - start);
                 length = Vector2.Distance(start, end);
+
+                if (length > 5000.0f)
+                {
+                    int akjsdnfkjsadf = 1;
+                }
             }
         }
 
@@ -183,8 +188,12 @@ namespace Barotrauma.Items.Components
                 if (refSub == null)
                 {
                     Structure attachTarget = Structure.GetAttachTarget(newConnection.Item.WorldPosition);
-                    if (attachTarget == null) { continue; }
-                    refSub = attachTarget.Submarine;
+                    if (attachTarget == null && !(newConnection.Item.GetComponent<Holdable>()?.Attached ?? false))
+                    {
+                        connections[i] = null;
+                        continue; 
+                    }
+                    refSub = attachTarget?.Submarine;
                 }
 
                 Vector2 nodePos = refSub == null ? 
@@ -238,18 +247,18 @@ namespace Barotrauma.Items.Components
             {
                 foreach (ItemComponent ic in item.Components)
                 {
-                    if (ic == this) continue;
+                    if (ic == this) { continue; }
                     ic.Drop(null);
                 }
-                if (item.Container != null) item.Container.RemoveContained(this.item);
-                if (item.body != null) item.body.Enabled = false;
+                if (item.Container != null) { item.Container.RemoveContained(this.item); }
+                if (item.body != null) { item.body.Enabled = false; }
 
                 IsActive = false;
 
                 CleanNodes();
             }
-            
-            if (item.body != null) item.Submarine = newConnection.Item.Submarine;
+
+            if (item.body != null) { item.Submarine = newConnection.Item.Submarine; }
 
             if (sendNetworkEvent)
             {
@@ -735,6 +744,11 @@ namespace Barotrauma.Items.Components
         public override void FlipX(bool relativeToSub)
         {
             if (item.ParentInventory != null) { return; }
+#if CLIENT
+            if (!relativeToSub && Screen.Selected != GameMain.SubEditorScreen) { return; }
+#else
+            if (!relativeToSub) { return; }
+#endif
 
             Vector2 refPos = item.Submarine == null ?
                 Vector2.Zero :

@@ -48,7 +48,7 @@ namespace Barotrauma
                 float selectedBonus = isSelected ? 100 - MaxDevotion : 0;
                 float devotion = (CumulatedDevotion + selectedBonus) / 100;
                 float reduction = IsPriority ? 1 : isSelected ? 2 : 3;
-                float max = MathHelper.Min(AIObjectiveManager.OrderPriority - reduction, 90);
+                float max = AIObjectiveManager.LowestOrderPriority - reduction;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (distanceFactor * PriorityModifier), 0, 1));
             }
             return Priority;
@@ -58,6 +58,11 @@ namespace Barotrauma
         {
             // Only continue when the get item sub objectives have been completed.
             if (subObjectives.Any()) { return; }
+            if (item.IgnoreByAI)
+            {
+                Abandon = true;
+                return;
+            }
             if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out Item suitableContainer))
             {
                 itemIndex = 0;
@@ -74,6 +79,7 @@ namespace Barotrauma
                     TryAddSubObjective(ref decontainObjective, () => new AIObjectiveDecontainItem(character, item, objectiveManager, targetContainer: suitableContainer.GetComponent<ItemContainer>())
                     {
                         Equip = equip,
+                        TakeWholeStack = true,
                         DropIfFails = true
                     }, 
                     onCompleted: () =>

@@ -26,7 +26,7 @@ namespace Barotrauma
         protected override AIObjective ObjectiveConstructor(Character target)
         {
             var combatObjective = new AIObjectiveCombat(character, target, AIObjectiveCombat.CombatMode.Offensive, objectiveManager, PriorityModifier);
-            if (character.TeamID == Character.TeamType.FriendlyNPC && target.TeamID == Character.TeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
+            if (character.TeamID == CharacterTeamType.FriendlyNPC && target.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
                 var reputation = campaign.Map?.CurrentLocation?.Reputation;
                 if (reputation != null && reputation.NormalizedValue < Reputation.HostileThreshold)
@@ -50,14 +50,11 @@ namespace Barotrauma
         {
             if (target == null || target.IsDead || target.Removed) { return false; }
             if (target == character) { return false; }
-            if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (target.Submarine == null) { return false; }
-            if (target.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine == null) { return false; }
             if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
-            }
+            if (HumanAIController.IsFriendly(character, target)) { return false; }
+            if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
             return true;
         }
     }

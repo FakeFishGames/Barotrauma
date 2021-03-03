@@ -19,10 +19,10 @@ namespace Barotrauma
         // All traitor related functionality should use the following interface for generating random values
         public static double RandomDouble() => Random.NextDouble();
 
-        public readonly Dictionary<Character.TeamType, Traitor.TraitorMission> Missions = new Dictionary<Character.TeamType, Traitor.TraitorMission>();
+        public readonly Dictionary<CharacterTeamType, Traitor.TraitorMission> Missions = new Dictionary<CharacterTeamType, Traitor.TraitorMission>();
 
-        public string GetCodeWords(Character.TeamType team) => Missions.TryGetValue(team, out var mission) ? mission.CodeWords : "";
-        public string GetCodeResponse(Character.TeamType team) => Missions.TryGetValue(team, out var mission) ? mission.CodeResponse : "";
+        public string GetCodeWords(CharacterTeamType team) => Missions.TryGetValue(team, out var mission) ? mission.CodeWords : "";
+        public string GetCodeResponse(CharacterTeamType team) => Missions.TryGetValue(team, out var mission) ? mission.CodeResponse : "";
 
         public IEnumerable<Traitor> Traitors => Missions.Values.SelectMany(mission => mission.Traitors.Values);
 
@@ -87,18 +87,18 @@ namespace Barotrauma
             {
                 bool missionCompleted = false;
                 bool gameShouldEnd = false;
-                Character.TeamType winningTeam = Character.TeamType.None;
+                CharacterTeamType winningTeam = CharacterTeamType.None;
                 foreach (var mission in Missions)
                 {
                     mission.Value.Update(deltaTime, () =>
                     {
                         switch (mission.Key)
                         {
-                            case Character.TeamType.Team1:
-                                winningTeam = (winningTeam == Character.TeamType.None) ? Character.TeamType.Team2 : Character.TeamType.None;
+                            case CharacterTeamType.Team1:
+                                winningTeam = (winningTeam == CharacterTeamType.None) ? CharacterTeamType.Team2 : CharacterTeamType.None;
                                 break;
-                            case Character.TeamType.Team2:
-                                winningTeam = (winningTeam == Character.TeamType.None) ? Character.TeamType.Team1 : Character.TeamType.None;
+                            case CharacterTeamType.Team2:
+                                winningTeam = (winningTeam == CharacterTeamType.None) ? CharacterTeamType.Team1 : CharacterTeamType.None;
                                 break;
                             default:
                                 break;
@@ -137,13 +137,13 @@ namespace Barotrauma
                         startCountdown = MathHelper.Lerp(server.ServerSettings.TraitorsMinRestartDelay, server.ServerSettings.TraitorsMaxRestartDelay, (float)RandomDouble());
                         return;
                     }
-                    if (Character.CharacterList.Count(c => !c.IsDead && c.TeamID == Character.TeamType.Team1 || c.TeamID == Character.TeamType.Team2) <= 1)
+                    if (Character.CharacterList.Count(c => !c.IsDead && c.TeamID == CharacterTeamType.Team1 || c.TeamID == CharacterTeamType.Team2) <= 1)
                     {
                         return;
                     }
-                    if (GameMain.GameSession.Mission is CombatMission)
+                    if (GameMain.GameSession.Missions.Any(m => m is CombatMission))
                     {
-                        var teamIds = new[] { Character.TeamType.Team1, Character.TeamType.Team2 };
+                        var teamIds = new[] { CharacterTeamType.Team1, CharacterTeamType.Team2 };
                         foreach (var teamId in teamIds)
                         {
                             if (server.ConnectedClients.Count(c => c.Character != null && !c.Character.IsDead && c.TeamID == teamId) < 2)
@@ -170,11 +170,11 @@ namespace Barotrauma
                     {
                         var mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
                         if (mission != null) {
-                            if (mission.CanBeStarted(server, this, Character.TeamType.None))
+                            if (mission.CanBeStarted(server, this, CharacterTeamType.None))
                             {
-                                if (mission.Start(server, this, Character.TeamType.None))
+                                if (mission.Start(server, this, CharacterTeamType.None))
                                 {
-                                    Missions.Add(Character.TeamType.None, mission);
+                                    Missions.Add(CharacterTeamType.None, mission);
                                     return;
                                 }
                             }

@@ -215,15 +215,33 @@ namespace Barotrauma.Items.Components
 
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
+            int msgStartPos = msg.BitPosition;
+
+            float flowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
+            bool isActive = msg.ReadBoolean();
+            bool hijacked = msg.ReadBoolean();
+            float? targetLevel;
+            if (msg.ReadBoolean())
+            {
+                targetLevel = msg.ReadSingle();
+            }
+            else
+            {
+                targetLevel = null;
+            }
+
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(5 + 1), sendingTime);
+                int msgLength = msg.BitPosition - msgStartPos;
+                msg.BitPosition = msgStartPos;
+                StartDelayedCorrection(type, msg.ExtractBits(msgLength), sendingTime);
                 return;
             }
 
-            FlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;
-            IsActive = msg.ReadBoolean();
-            Hijacked = msg.ReadBoolean();
+            FlowPercentage = flowPercentage;
+            IsActive = isActive;
+            Hijacked = hijacked;
+            TargetLevel = targetLevel;
         }
     }
 }

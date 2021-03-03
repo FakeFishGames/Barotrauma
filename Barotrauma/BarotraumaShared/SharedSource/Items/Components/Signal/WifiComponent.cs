@@ -24,8 +24,8 @@ namespace Barotrauma.Items.Components
 
         private int[] channelMemory = new int[ChannelMemorySize];
 
-        [Serialize(Character.TeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
-        public Character.TeamType TeamID { get; set; }
+        [Serialize(CharacterTeamType.None, true, description: "WiFi components can only communicate with components that have the same Team ID.", alwaysUseInstanceValues: true)]
+        public CharacterTeamType TeamID { get; set; }
 
         [Editable, Serialize(20000.0f, false, description: "How close the recipient has to be to receive a signal from this WiFi component.", alwaysUseInstanceValues: true)]
         public float Range
@@ -152,7 +152,7 @@ namespace Barotrauma.Items.Components
             channelMemory[index] = MathHelper.Clamp(value, 0, 10000);
         }
 
-        public void TransmitSignal(int stepsTaken, string signal, Item source, Character sender, bool sendToChat, float signalStrength = 1.0f)
+        public void TransmitSignal(int stepsTaken, string signal, Item source, Character sender, bool sentFromChat, float signalStrength = 1.0f)
         {
             var senderComponent = source?.GetComponent<WifiComponent>();
             if (senderComponent != null && !CanReceive(senderComponent)) { return; }
@@ -162,6 +162,8 @@ namespace Barotrauma.Items.Components
             var receivers = GetReceiversInRange();
             foreach (WifiComponent wifiComp in receivers)
             {
+                if (sentFromChat && !wifiComp.LinkToChat) { continue; }
+
                 //signal strength diminishes by distance
                 float sentSignalStrength = signalStrength *
                     MathHelper.Clamp(1.0f - (Vector2.Distance(item.WorldPosition, wifiComp.item.WorldPosition) / wifiComp.range), 0.0f, 1.0f);
@@ -176,11 +178,12 @@ namespace Barotrauma.Items.Components
                             source.LastSentSignalRecipients.Add(receiverItem);
                         }
                     }
-                }                
+                }
 
-                if (DiscardDuplicateChatMessages && signal == prevSignal) continue;
+                if (DiscardDuplicateChatMessages && signal == prevSignal) { continue; }
 
-                if (LinkToChat && wifiComp.LinkToChat && chatMsgCooldown <= 0.0f && sendToChat)
+                //create a chat message
+                if (LinkToChat && wifiComp.LinkToChat && chatMsgCooldown <= 0.0f && !sentFromChat)
                 {
                     if (wifiComp.item.ParentInventory != null &&
                         wifiComp.item.ParentInventory.Owner != null)
@@ -232,7 +235,7 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "signal_in":
-                    TransmitSignal(stepsTaken, signal, source, sender, true, signalStrength);
+                    TransmitSignal(stepsTaken, signal, source, sender, false, signalStrength);
                     break;
                 case "set_channel":
                     if (int.TryParse(signal, out int newChannel))

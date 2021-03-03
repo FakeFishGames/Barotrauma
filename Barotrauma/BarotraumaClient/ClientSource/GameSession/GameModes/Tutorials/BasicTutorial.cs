@@ -182,7 +182,7 @@ namespace Barotrauma.Tutorials
             + " Equip a screwdriver by pulling it to either of the slots with a hand symbol, and then use it on the terminal by left clicking.");
 
             while (Controlled.SelectedConstruction != steering.Item ||
-                Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Prefab.Identifier == "screwdriver") == null)
+                Controlled.HeldItems.FirstOrDefault(i => i.Prefab.Identifier == "screwdriver") == null)
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
@@ -203,16 +203,16 @@ namespace Barotrauma.Tutorials
 
             while ((Controlled.SelectedConstruction != junctionBox.Item &&
                 Controlled.SelectedConstruction != steering.Item) ||
-            Controlled.SelectedItems.FirstOrDefault(i => i != null && i.Prefab.Identifier == "screwdriver") == null)
+                !Controlled.HeldItems.Any(i => i.Prefab.Identifier == "screwdriver"))
             {
                 yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
             }
 
-            if (Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
+            if (!Controlled.HeldItems.Any(i => i.GetComponent<Wire>() != null))
             {
                 infoBox = CreateInfoFrame("", "Equip the wire by dragging it to one of the slots with a hand symbol.");
 
-                while (Controlled.SelectedItems.FirstOrDefault(i => i != null && i.GetComponent<Wire>() != null) == null)
+                while (!Controlled.HeldItems.Any(i => i.GetComponent<Wire>() != null))
                 {
                     yield return Controlled.IsDead ? CoroutineStatus.Success : CoroutineStatus.Running;
                 }
@@ -501,7 +501,7 @@ namespace Barotrauma.Tutorials
 
             do
             {
-                var weldingTool = Controlled.Inventory.Items.FirstOrDefault(i => i != null && i.Prefab.Identifier == "weldingtool");
+                var weldingTool = Controlled.Inventory.FindItemByIdentifier("weldingtool");
                 if (weldingTool != null &&
                     weldingTool.ContainedItems.FirstOrDefault(contained => contained != null && contained.Prefab.Identifier == "weldingfueltank") != null) break;
 
@@ -661,7 +661,10 @@ namespace Barotrauma.Tutorials
                 //TODO: reimplement
                 //enemy.Health = 50.0f;
 
-                enemy.AIController.State = AIState.Idle;
+                if (enemy.AIController is EnemyAIController enemyAI)
+                {
+                    enemyAI.State = AIState.Idle;
+                }
 
                 Vector2 targetPos = Character.Controlled.WorldPosition + new Vector2(0.0f, 3000.0f);
 

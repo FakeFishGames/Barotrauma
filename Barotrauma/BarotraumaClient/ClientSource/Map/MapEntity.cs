@@ -114,6 +114,18 @@ namespace Barotrauma
         public MapEntity ReplacedBy;
 
         public virtual void Draw(SpriteBatch spriteBatch, bool editing, bool back = true) { }
+
+        /// <summary>
+        /// A method that modifies the draw depth to prevent z-fighting between entities with the same sprite depth
+        /// </summary>
+        public float GetDrawDepth(float baseDepth, Sprite sprite)
+        {
+            float depth = baseDepth            
+                //take texture into account to get entities with (roughly) the same base depth and texture to render consecutively to minimize texture swaps
+                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.00001f
+                + ID % 100 * 0.000001f;
+            return Math.Min(depth, 1.0f);
+        }
         
         /// <summary>
         /// Update the selection logic in submarine editor
@@ -202,7 +214,7 @@ namespace Barotrauma
                     }
                     else if (PlayerInput.KeyHit(Keys.V))
                     {
-                        Paste(cam.WorldViewCenter);
+                        Paste(cam.ScreenToWorld(PlayerInput.MousePosition));
                     }
                     else if (PlayerInput.KeyHit(Keys.G))
                     {
@@ -267,31 +279,10 @@ namespace Barotrauma
 
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
-                int up = PlayerInput.KeyDown(Keys.Up) ? 1 : 0,
-                    down = PlayerInput.KeyDown(Keys.Down) ? -1 : 0,
-                    left = PlayerInput.KeyDown(Keys.Left) ? -1 : 0,
-                    right = PlayerInput.KeyDown(Keys.Right) ? 1 : 0;
-
-                int xKeysDown = (left + right);
-                int yKeysDown = (up + down);
-                
-                if (xKeysDown != 0 || yKeysDown != 0) { keyDelay += (float) Timing.Step; } else { keyDelay = 0; }
-                
-                Vector2 nudgeAmount = Vector2.Zero;
-
-                if (keyDelay >= 0.5f)
+                Vector2 nudge = GetNudgeAmount();
+                if (nudge != Vector2.Zero)
                 {
-                    nudgeAmount.Y = yKeysDown;
-                    nudgeAmount.X = xKeysDown;
-                }
-                
-                if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y =  1f;
-                if (PlayerInput.KeyHit(Keys.Down))  nudgeAmount.Y = -1f;
-                if (PlayerInput.KeyHit(Keys.Left))  nudgeAmount.X = -1f;
-                if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X =  1f;
-                if (nudgeAmount != Vector2.Zero)
-                {
-                    foreach (MapEntity entityToNudge in selectedList) { entityToNudge.Move(nudgeAmount); }
+                    foreach (MapEntity entityToNudge in selectedList) { entityToNudge.Move(nudge); }
                 }
             }
             else
@@ -464,6 +455,8 @@ namespace Barotrauma
             {
                 if (PlayerInput.PrimaryMouseButtonHeld() &&
                     PlayerInput.KeyUp(Keys.Space) &&
+                    PlayerInput.KeyUp(Keys.LeftAlt) && 
+                    PlayerInput.KeyUp(Keys.RightAlt) && 
                     (highlightedListBox == null || (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn))))
                 {
                     //if clicking a selected entity, start moving it
@@ -477,6 +470,37 @@ namespace Barotrauma
                     Screen.Selected.Cam.StopMovement();
                 }
             }
+        }
+
+        public static Vector2 GetNudgeAmount(bool doHold = true)
+        {
+            Vector2 nudgeAmount = Vector2.Zero;
+            if (doHold)
+            {
+                int up = PlayerInput.KeyDown(Keys.Up) ? 1 : 0,
+                    down = PlayerInput.KeyDown(Keys.Down) ? -1 : 0,
+                    left = PlayerInput.KeyDown(Keys.Left) ? -1 : 0,
+                    right = PlayerInput.KeyDown(Keys.Right) ? 1 : 0;
+
+                int xKeysDown = (left + right);
+                int yKeysDown = (up + down);
+                
+                if (xKeysDown != 0 || yKeysDown != 0) { keyDelay += (float) Timing.Step; } else { keyDelay = 0; }
+
+
+                if (keyDelay >= 0.5f)
+                {
+                    nudgeAmount.Y = yKeysDown;
+                    nudgeAmount.X = xKeysDown;
+                }
+            }
+
+            if (PlayerInput.KeyHit(Keys.Up))    nudgeAmount.Y =  1f;
+            if (PlayerInput.KeyHit(Keys.Down))  nudgeAmount.Y = -1f;
+            if (PlayerInput.KeyHit(Keys.Left))  nudgeAmount.X = -1f;
+            if (PlayerInput.KeyHit(Keys.Right)) nudgeAmount.X =  1f;
+
+            return nudgeAmount;
         }
 
         public MapEntity GetReplacementOrThis()
@@ -499,7 +523,7 @@ namespace Barotrauma
                 {
                     if (entities == null)
                     {
-                        if (potentialContainer.OwnInventory != null && potentialContainer.ParentInventory == null && !potentialContainer.OwnInventory.IsFull())
+                        if (potentialContainer.OwnInventory != null && potentialContainer.ParentInventory == null && !potentialContainer.OwnInventory.IsFull(takeStacksIntoAccount: true))
                         {
                             targetContainer = potentialContainer;
                             break;

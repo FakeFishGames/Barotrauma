@@ -736,11 +736,6 @@ namespace Barotrauma.Sounds
 
                         if (FilledByNetwork)
                         {
-                            if (Sound is VoipSound voipSound)
-                            {
-                                voipSound.ApplyFilters(buffer, readSamples);
-                            }
-
                             if (readSamples <= 0)
                             {
                                 streamAmplitude *= 0.5f;
@@ -752,13 +747,18 @@ namespace Barotrauma.Sounds
                             }
                             else
                             {
+                                if (Sound is VoipSound voipSound)
+                                {
+                                    voipSound.ApplyFilters(buffer, readSamples);
+                                }
+
                                 decayTimer = 0;
                             }
                         }
                         else if (Sound.StreamsReliably)
                         {
-                            streamSeekPos += readSamples;
-                            if (readSamples < STREAM_BUFFER_SIZE)
+                            streamSeekPos += readSamples * 2;
+                            if (readSamples * 2 < STREAM_BUFFER_SIZE)
                             {
                                 if (looping)
                                 {
@@ -775,7 +775,7 @@ namespace Barotrauma.Sounds
                         {
                             streamBufferAmplitudes[index] = readAmplitude;
 
-                            Al.BufferData<short>(streamBuffers[index], Sound.ALFormat, buffer, readSamples, Sound.SampleRate);
+                            Al.BufferData<short>(streamBuffers[index], Sound.ALFormat, buffer, readSamples * 2, Sound.SampleRate);
 
                             alError = Al.GetError();
                             if (alError != Al.NoError)

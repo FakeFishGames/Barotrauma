@@ -557,6 +557,7 @@ namespace Barotrauma
             
             GameModePreset.Init();
 
+            SaveUtil.DeleteDownloadedSubs();
             SubmarineInfo.RefreshSavedSubs();
 
             TitleScreen.LoadState = 65.0f;
@@ -634,6 +635,7 @@ namespace Barotrauma
         /// </summary>
         protected override void UnloadContent()
         {
+            TextureLoader.CancelAll();
             CoroutineManager.StopCoroutines("Load");
             Video.Close();
             VoipCapture.Instance?.Dispose();
@@ -682,7 +684,7 @@ namespace Barotrauma
         }
 
         public void OnLobbyJoinRequested(Steamworks.Data.Lobby lobby, Steamworks.SteamId friendId)
-    {
+        {
             SteamManager.JoinLobby(lobby.Id, true);
         }
 
@@ -902,7 +904,9 @@ namespace Barotrauma
                     }
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !Paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
+                    if (NetworkMember == null && !WindowActive && !Paused && true && Config.PauseOnFocusLost &&
+                        Screen.Selected != MainMenuScreen && Screen.Selected != ServerListScreen && Screen.Selected != NetLobbyScreen &&
+                        Screen.Selected != SubEditorScreen && Screen.Selected != LevelEditorScreen)
                     {
                         GUI.TogglePauseMenu();
                         Paused = true;
@@ -1072,13 +1076,6 @@ namespace Barotrauma
                 {
                     ((TutorialMode)GameSession.GameMode).Tutorial?.Stop();
                 }
-
-                if (GameSettings.SendUserStatistics)
-                {
-                    Mission mission = GameSession.Mission;
-                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
-                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
-                }
             }
             GUIMessageBox.CloseAll();
             MainMenuScreen.Select();
@@ -1112,7 +1109,6 @@ namespace Barotrauma
             {
                 new Pair<string, string>(TextManager.Get("EditorDisclaimerWikiLink"), TextManager.Get("EditorDisclaimerWikiUrl")),
                 new Pair<string, string>(TextManager.Get("EditorDisclaimerDiscordLink"), TextManager.Get("EditorDisclaimerDiscordUrl")),
-                new Pair<string, string>(TextManager.Get("EditorDisclaimerForumLink"), TextManager.Get("EditorDisclaimerForumUrl")),
             };
             foreach (var link in links)
             {

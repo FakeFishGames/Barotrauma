@@ -171,11 +171,8 @@ namespace Barotrauma
 
                 if (Character.Inventory != null)
                 {
-                    int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
-                    if (cardSlotIndex < 0) return disguiseName;
-
-                    var idCard = Character.Inventory.Items[cardSlotIndex];
-                    if (idCard == null) return disguiseName;
+                    var idCard = Character.Inventory.GetItemInLimbSlot(InvSlotType.Card);
+                    if (idCard == null) { return disguiseName; }
 
                     //Disguise as the ID card name if it's equipped                    
                     string[] readTags = idCard.Tags.Split(',');
@@ -294,19 +291,15 @@ namespace Barotrauma
 
                 if (Character.Inventory != null)
                 {
-                    int cardSlotIndex = Character.Inventory.FindLimbSlot(InvSlotType.Card);
-                    if (cardSlotIndex >= 0)
+                    idCard = Character.Inventory.GetItemInLimbSlot(InvSlotType.Card)?.GetComponent<IdCard>();
+                    if (idCard != null)
                     {
-                        idCard = Character.Inventory.Items[cardSlotIndex].GetComponent<IdCard>();
-
-                        if (idCard != null)
-                        {
 #if CLIENT
-                            GetDisguisedSprites(idCard);
+                        GetDisguisedSprites(idCard);
 #endif
-                            return;
-                        }
+                        return;
                     }
+                    
                 }
             }
 
@@ -352,13 +345,13 @@ namespace Barotrauma
 
         public CauseOfDeath CauseOfDeath;
 
-        public Character.TeamType TeamID;
+        public CharacterTeamType TeamID;
 
         private readonly NPCPersonalityTrait personalityTrait;
 
-        public Order CurrentOrder { get; set; }
-        public string CurrentOrderOption { get; set; }
-        public bool IsDismissed => CurrentOrder == null || CurrentOrder.Identifier.Equals("dismissed", StringComparison.OrdinalIgnoreCase);
+        public const int MaxCurrentOrders = 3;
+        public static int HighestManualOrderPriority => MaxCurrentOrders;
+        public List<OrderInfo> CurrentOrders { get; } = new List<OrderInfo>();
 
         //unique ID given to character infos in MP
         //used by clients to identify which infos are the same to prevent duplicate characters in round summary
@@ -445,6 +438,7 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
+                    // TODO: support for variants
                     string speciesName = SpeciesName;
                     bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase));
                     ragdoll = isHumanoid 
@@ -472,6 +466,7 @@ namespace Barotrauma
             XDocument doc = CharacterPrefab.FindBySpeciesName(_speciesName)?.XDocument;
             if (doc == null) { return; }
             CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
+            // TODO: support for variants
             head = new HeadInfo();
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders)
@@ -540,6 +535,7 @@ namespace Barotrauma
                 doc = XMLExtensions.TryLoadXml(file);
             }
             if (doc == null) { return; }
+            // TODO: support for variants
             CharacterConfigElement = doc.Root.IsOverride() ? doc.Root.FirstElement() : doc.Root;
             HasGenders = CharacterConfigElement.GetAttributeBool("genders", false);
             if (HasGenders && gender == Gender.None)
@@ -906,7 +902,7 @@ namespace Barotrauma
             return (int)(salary * Job.Prefab.PriceMultiplier);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 worldPos)
+        public void IncreaseSkillLevel(string skillIdentifier, float increase, Vector2 pos)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }         
 
@@ -920,15 +916,10 @@ namespace Barotrauma
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
 
-            OnSkillChanged(skillIdentifier, prevLevel, newLevel, worldPos);
-
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && !MathUtils.NearlyEqual(newLevel, prevLevel))
-            {
-                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });                
-            }
+            OnSkillChanged(skillIdentifier, prevLevel, newLevel, pos);
         }
 
-        public void SetSkillLevel(string skillIdentifier, float level, Vector2 worldPos)
+        public void SetSkillLevel(string skillIdentifier, float level, Vector2 pos)
         {
             if (Job == null) { return; }
 
@@ -936,13 +927,13 @@ namespace Barotrauma
             if (skill == null)
             {
                 Job.Skills.Add(new Skill(skillIdentifier, level));
-                OnSkillChanged(skillIdentifier, 0.0f, level, worldPos);
+                OnSkillChanged(skillIdentifier, 0.0f, level, pos);
             }
             else
             {
                 float prevLevel = skill.Level;
                 skill.Level = level;
-                OnSkillChanged(skillIdentifier, prevLevel, skill.Level, worldPos);
+                OnSkillChanged(skillIdentifier, prevLevel, skill.Level, pos);
             }
         }
 
@@ -1013,13 +1004,9 @@ namespace Barotrauma
             faceAttachments = null;
         }
 
-        /// <summary>
-        /// Reset order data so it doesn't carry into further rounds, as the AI is "recreated" always in between rounds anyway.
-        /// </summary>
-        public void ResetCurrentOrder()
+        public void ClearCurrentOrders()
         {
-            CurrentOrder = null;
-            CurrentOrderOption = "";
+            CurrentOrders.Clear();
         }
 
         public void Remove()

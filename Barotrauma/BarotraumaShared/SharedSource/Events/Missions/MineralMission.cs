@@ -14,6 +14,8 @@ namespace Barotrauma
         private Dictionary<string, Item[]> RelevantLevelResources { get; } = new Dictionary<string, Item[]>();
         private List<Tuple<string, Vector2>> MissionClusterPositions { get; } = new List<Tuple<string, Vector2>>();
 
+        private readonly HashSet<Level.Cave> caves = new HashSet<Level.Cave>();
+
         public override IEnumerable<Vector2> SonarPositions
         {
             get
@@ -42,17 +44,72 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
+            if (SpawnedResources.Any())
+            {
+#if DEBUG
+                throw new Exception($"SpawnedResources.Count > 0 ({SpawnedResources.Count})");
+#else
+                DebugConsole.AddWarning("Spawned resources list was not empty at the start of a mineral mission. The mission instance may not have been ended correctly on previous rounds.");
+                SpawnedResources.Clear();
+#endif
+            }
+
+            if (RelevantLevelResources.Any())
+            {
+#if DEBUG
+                throw new Exception($"RelevantLevelResources.Count > 0 ({RelevantLevelResources.Count})");
+#else
+                DebugConsole.AddWarning("Relevant level resources list was not empty at the start of a mineral mission. The mission instance may not have been ended correctly on previous rounds.");
+                RelevantLevelResources.Clear();
+#endif
+            }
+
+            if (MissionClusterPositions.Any())
+            {
+#if DEBUG
+                throw new Exception($"MissionClusterPositions.Count > 0 ({MissionClusterPositions.Count})");
+#else
+                DebugConsole.AddWarning("Mission cluster positions list was not empty at the start of a mineral mission. The mission instance may not have been ended correctly on previous rounds.");
+                MissionClusterPositions.Clear();
+#endif
+            }
+
+            caves.Clear();
+
             if (IsClient) { return; }
             foreach (var kvp in ResourceClusters)
             {
                 var prefab = ItemPrefab.Find(null, kvp.Key);
-                if (prefab == null) { continue; }
+                if (prefab == null)
+                {
+                    DebugConsole.ThrowError("Error in MineralMission - " +
+                        "couldn't find an item prefab with the identifier " + kvp.Key);
+                    continue;
+                }
                 var spawnedResources = level.GenerateMissionResources(prefab, kvp.Value.First, out float rotation);
+                if (spawnedResources.Count < kvp.Value.First)
+                {
+                    DebugConsole.ThrowError("Error in MineralMission - " +
+                        "spawned " + spawnedResources.Count + "/" + kvp.Value.First + " of " + prefab.Name);
+                }
                 if (spawnedResources.None()) { continue; }
                 SpawnedResources.Add(kvp.Key, spawnedResources);
                 kvp.Value.Second = rotation;
+
+                foreach (Level.Cave cave in Level.Loaded.Caves)
+                {
+                    foreach (Item spawnedResource in spawnedResources)
+                    {
+                        if (cave.Area.Contains(spawnedResource.WorldPosition))
+                        {
+                            cave.DisplayOnSonar = true;
+                            caves.Add(cave);
+                            break;
+                        }
+                    }
+                }
             }
             CalculateMissionClusterPositions();
             FindRelevantLevelResources();
@@ -76,9 +133,29 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (!EnoughHaveBeenCollected()) { return; }
-            GiveReward();
-            completed = true;
+            if (EnoughHaveBeenCollected())
+            {
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
+                GiveReward();
+                completed = true;
+            }
+            foreach (var kvp in SpawnedResources)
+            {
+                foreach (var i in kvp.Value)
+                {
+                    if (i != null && !i.Removed && !HasBeenCollected(i))
+                    {
+                        i.Remove();
+                    }
+                }
+            }
+            SpawnedResources.Clear();
+            RelevantLevelResources.Clear();
+            MissionClusterPositions.Clear();
+            failed = !completed && state > 0;
         }
 
         private void FindRelevantLevelResources()

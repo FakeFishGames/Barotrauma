@@ -1,11 +1,9 @@
 ﻿using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -120,10 +118,17 @@ namespace Barotrauma
                 return "Gap";
             }
         }
-        
+
         public Gap(MapEntityPrefab prefab, Rectangle rectangle)
-           : this (rectangle, Submarine.MainSub)
-        { }
+            : this(rectangle, Submarine.MainSub)
+        {
+#if CLIENT
+            if (SubEditorScreen.IsSubEditor())
+            {
+                SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { this }, false));
+            }
+#endif
+        }
 
         public Gap(Rectangle rect, Submarine submarine)
             : this(rect, rect.Width < rect.Height, submarine)
@@ -233,6 +238,13 @@ namespace Barotrauma
         {
             Hull[] hulls = new Hull[2];
 
+            foreach (var linked in linkedTo)
+            {
+                if (linked is Hull hull)
+                {
+                    hull.ConnectedGaps.Remove(this);
+                }
+            }
             linkedTo.Clear();
 
             Vector2[] searchPos = new Vector2[2];
@@ -595,7 +607,7 @@ namespace Barotrauma
             }
 
             Vector2 rayStart = ConvertUnits.ToSimUnits(WorldPosition);
-            Vector2 rayEnd = rayStart + rayDir * 500.0f;
+            Vector2 rayEnd = rayStart + rayDir * 5.0f;
 
             var levelCells = Level.Loaded.GetCells(WorldPosition, searchDepth: 1);
             foreach (var cell in levelCells)

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
+using Barotrauma.Particles;
+using Barotrauma.Sounds;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -33,12 +35,19 @@ namespace Barotrauma.MapCreatures.Behavior
             [Serialize(defaultValue: 0f, isSaveable: false)]
             public float MaxVelocity { get; set; }
 
+            [Serialize(defaultValue: "255,255,255,255", isSaveable: false)]
+            public Color ColorMultiplier { get; set; }
+
             private float RandRotation() => Rand.Range(MinRotation, MaxRotation);
             private float RandVelocity() => Rand.Range(MinVelocity, MaxVelocity);
 
             public void Emit(Vector2 pos)
             {
-                GameMain.ParticleManager.CreateParticle(Identifier, pos, RandRotation(), RandVelocity());
+                Particle particle = GameMain.ParticleManager.CreateParticle(Identifier, pos, RandRotation(), RandVelocity());
+                if (particle != null)
+                {
+                    particle.ColorMultiplier = ColorMultiplier.ToVector4();
+                }
             }
 
             public DamageParticle(XElement element)
@@ -54,6 +63,9 @@ namespace Barotrauma.MapCreatures.Behavior
         public readonly List<Sprite> LeafSprites = new List<Sprite>(), DamagedLeafSprites = new List<Sprite>();
 
         public readonly List<DamageParticle> DamageParticles = new List<DamageParticle>();
+        public readonly List<DamageParticle> DeathParticles = new List<DamageParticle>();
+
+        public static bool AlwaysShowBallastFloraSprite = false;
 
         partial void LoadPrefab(XElement element)
         {
@@ -97,6 +109,9 @@ namespace Barotrauma.MapCreatures.Behavior
                     case "damageparticle":
                         DamageParticles.Add(new DamageParticle(subElement));
                         break;
+                    case "deathparticle":
+                        DeathParticles.Add(new DamageParticle(subElement));
+                        break;
                     case "targets":
                         LoadTargets(subElement);
                         break;
@@ -112,7 +127,7 @@ namespace Barotrauma.MapCreatures.Behavior
             float particleAmount = Rand.Range(16, 32);
             for (int i = 0; i < particleAmount; i++)
             {
-                GameMain.ParticleManager.CreateParticle("shrapnel", pos, Rand.Vector(Rand.Range(-50f, 50.0f)));
+                GameMain.ParticleManager.CreateParticle("shrapnel", pos, Rand.Vector(Rand.Range(0f, 250.0f)), Rand.Range(0f, 360.0f));
             }
         }
 
@@ -129,11 +144,22 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
-        private static readonly Color DarkColor = new Color(25, 25, 25);
+        private void CreateDeathParticle(BallastFloraBranch branch)
+        {
+            Vector2 pos = GetWorldPosition() + branch.Position;
+            int amount = (int)Math.Clamp(branch.MaxHealth / 10f, 1, 10);
+            for (int i = 0; i < amount; i++)
+            {
+                foreach (DamageParticle particle in DeathParticles)
+                {
+                    particle.Emit(pos);
+                }
+            }
+        }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            const float zStep = 0.00001f;
+            const float zStep = 0.000001f;
             float leafDepth = zStep;
             float flowerDepth = zStep;
 
@@ -217,12 +243,12 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 if (HasBrokenThrough)
                 {
-                    if (branchAtlas != null)
+                    if (branchAtlas != null && branchAtlas.Loaded)
                     {
                         spriteBatch.Draw(branchAtlas.Texture, pos + branch.offset, branchSprite.SourceRect, branchColor, 0f, branchSprite.AbsoluteOrigin, BaseBranchScale * branch.VineStep, SpriteEffects.None, layer2);
                     }
 
-                    if (decayAtlas != null && isDamaged)
+                    if (decayAtlas != null && isDamaged && decayAtlas.Loaded)
                     {
                         spriteBatch.Draw(decayAtlas.Texture, pos + branch.offset, branchSprite.SourceRect, branch.HealthColor, 0f, branchSprite.AbsoluteOrigin, BaseBranchScale * branch.VineStep, SpriteEffects.None, layer2 - zStep);
                     }
@@ -242,6 +268,10 @@ namespace Barotrauma.MapCreatures.Behavior
                         DamagedFlowerSprites[variant].Draw(spriteBatch, pos, branch.HealthColor, flowerSprite.Origin, scale: flowerScale, rotate: branch.FlowerConfig.Rotation, depth: layer1 - flowerDepth - zStep);
                     }
                     flowerDepth -= zStep;
+                    if (flowerDepth > 0.01f)
+                    {
+                        flowerDepth = zStep;
+                    }
                 }
 
                 if (branch.LeafConfig.Variant >= 0 && HasBrokenThrough)
@@ -254,6 +284,10 @@ namespace Barotrauma.MapCreatures.Behavior
                         DamagedLeafSprites[variant].Draw(spriteBatch, pos, branch.HealthColor, leafSprite.Origin, scale: BaseLeafScale * branch.LeafConfig.Scale * branch.FlowerStep, rotate: branch.LeafConfig.Rotation, depth: layer3 + leafDepth - zStep);
                     }
                     leafDepth += zStep;
+                    if (leafDepth > 0.01f)
+                    {
+                        flowerDepth = zStep;
+                    }
                 }
             }
         }
@@ -264,25 +298,42 @@ namespace Barotrauma.MapCreatures.Behavior
             switch (header)
             {
                 case NetworkHeader.Infect:
+                    int infectBranch = -1;
                     ushort itemId = msg.ReadUInt16();
                     bool infect = msg.ReadBoolean();
-                    if (Entity.FindEntityByID(itemId) is Item item)
+                    if (infect)
+                    {
+                        infectBranch = msg.ReadInt32();
+                    }
+
+                    Entity? entity = Entity.FindEntityByID(itemId);
+                    if (entity is Item item)
                     {
                         if (infect)
                         {
-                            ClaimTarget(item, null);
+                            ClaimTarget(item, Branches.FirstOrDefault(b => b.ID == infectBranch));
                         }
                         else
                         {
                             RemoveClaim(itemId);
                         }
                     }
+                    else
+                    {
+                        DebugConsole.AddWarning($"Received Infect.{infect} Network Header with invalid item ID: {itemId}, which belongs to {entity?.ToString() ?? "null!"}");
+                    }
                     break;
                 case NetworkHeader.BranchCreate:
                     int parentId = msg.ReadInt32();
                     BallastFloraBranch branch = ReadBranch(msg);
+                    BallastFloraBranch? parent = Branches.FirstOrDefault(b => b.ID == parentId);
 
-                    UpdateConnections(branch, Branches.FirstOrDefault(b => b.ID == parentId));
+                    if (parent == null)
+                    {
+                        DebugConsole.AddWarning($"Received BranchCreate with an invalid parent ID: {parentId}, Maximum ID is {Branches.Max(b => b.ID)}");
+                    }
+
+                    UpdateConnections(branch, parent);
                     Branches.Add(branch);
                     OnBranchGrowthSuccess(branch);
                     break;
@@ -290,7 +341,15 @@ namespace Barotrauma.MapCreatures.Behavior
 
                     int removedBranchId = msg.ReadInt32();
                     BallastFloraBranch removedBranch = Branches.FirstOrDefault(b => b.ID == removedBranchId);
-                    if (removedBranch != null) { RemoveBranch(removedBranch); }
+                    if (removedBranch != null)
+                    {
+                        RemoveBranch(removedBranch);
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"Received BranchRemove for a branch that doesn't exist. ID: {removedBranchId}, Maximum ID is {Branches.Max(b => b.ID)}");
+                    }
+                    
                     break;
                 case NetworkHeader.BranchDamage:
 
@@ -302,6 +361,10 @@ namespace Barotrauma.MapCreatures.Behavior
                     {
                         CreateDamageParticle(damagedBranch, damage);
                         damagedBranch.Health = health;
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"Received BranchDamage for a branch that doesn't exist. ID: {damageBranchId}, Maximum ID is {Branches.Max(b => b.ID)}");
                     }
                     break;
                 case NetworkHeader.Kill:
@@ -326,6 +389,7 @@ namespace Barotrauma.MapCreatures.Behavior
             return new BallastFloraBranch(this, pos, (VineTileType)type, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafConfig))
             {
                 ID = id,
+                MaxHealth = maxHealth,
                 Sides = (TileSide) sides
             };
         }

@@ -500,8 +500,8 @@ namespace Barotrauma.Networking
 
             CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
             string intervalLabel = sliderLabel.Text;
-            slider.Step = 0.05f;
             slider.Range = new Vector2(10.0f, 600.0f);
+            slider.StepValue = 10.0f;
             GetPropertyData("RespawnInterval").AssignGUIComponent(slider);
             slider.OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
             {

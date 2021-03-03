@@ -44,14 +44,14 @@ namespace Barotrauma
 
         protected virtual bool Deserialize(XElement element = null)
         {
-            element = element ?? MainElement;
+            element ??= MainElement;
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             return SerializableProperties != null;
         }
 
         protected virtual bool Serialize(XElement element = null)
         {
-            element = element ?? MainElement;
+            element ??= MainElement;
             if (element == null)
             {
                 DebugConsole.ThrowError("[EditableParams] The XML element is null!");

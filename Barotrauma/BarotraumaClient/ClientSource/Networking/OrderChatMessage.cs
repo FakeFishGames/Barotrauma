@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Barotrauma.Networking
+﻿namespace Barotrauma.Networking
 {
     partial class OrderChatMessage : ChatMessage
     {
@@ -9,26 +7,7 @@ namespace Barotrauma.Networking
             msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
             msg.Write((byte)ChatMessageType.Order);
-            msg.Write((byte)Order.PrefabList.IndexOf(Order.Prefab));
-            msg.Write(TargetCharacter == null ? (UInt16)0 : TargetCharacter.ID);
-            msg.Write(TargetEntity is Entity ? (TargetEntity as Entity).ID : (UInt16)0);
-            msg.Write((byte)Array.IndexOf(Order.Prefab.Options, OrderOption));
-            msg.Write((byte)Order.TargetType);
-            if (Order.TargetType == Order.OrderTargetType.Position && TargetEntity is OrderTarget orderTarget)
-            {
-                msg.Write(true);
-                msg.Write(orderTarget.Position.X);
-                msg.Write(orderTarget.Position.Y);
-                msg.Write(orderTarget.Hull == null ? (UInt16)0 : orderTarget.Hull.ID);
-            }
-            else
-            {
-                msg.Write(false);
-                if (Order.TargetType == Order.OrderTargetType.WallSection)
-                {
-                    msg.Write((byte)(WallSectionIndex ?? Order.WallSectionIndex ?? 0));
-                }
-            }
+            WriteOrder(msg);
         }
     }
 }

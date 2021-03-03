@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -13,6 +12,14 @@ namespace Barotrauma
         public readonly int MinAvailableAmount;
         //maximum number of items available at a given store
         public readonly int MaxAvailableAmount;
+        /// <summary>
+        /// Used when both <see cref="MinAvailableAmount"/> and <see cref="MaxAvailableAmount"/> are set to 0.
+        /// </summary>
+        public const int DefaultAmount = 5;
+        /// <summary>
+        /// Can the item be a Daily Special or a Requested Good
+        /// </summary>
+        public readonly bool CanBeSpecial;
 
         /// <summary>
         /// Support for the old style of determining item prices
@@ -23,16 +30,21 @@ namespace Barotrauma
         {
             Price = element.GetAttributeInt("buyprice", 0);
             CanBeBought = true;
-            MinAvailableAmount = GetMinAmount(element);
-            MaxAvailableAmount = GetMaxAmount(element);
+            var minAmount = GetMinAmount(element);
+            MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
+            var maxAmount = GetMaxAmount(element);
+            maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
+            MaxAvailableAmount = Math.Max(maxAmount, MinAvailableAmount);
         }
 
-        public PriceInfo(int price, bool canBeBought, int minAmount = 0, int maxAmount = 0)
+        public PriceInfo(int price, bool canBeBought, int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true)
         {
             Price = price;
             CanBeBought = canBeBought;
-            MinAvailableAmount = minAmount;
-            MaxAvailableAmount = maxAmount;
+            MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
+            maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
+            MaxAvailableAmount = Math.Max(maxAmount, minAmount);
+            CanBeSpecial = canBeSpecial;
         }
 
         public static List<Tuple<string, PriceInfo>> CreatePriceInfos(XElement element, out PriceInfo defaultPrice)
@@ -42,6 +54,7 @@ namespace Barotrauma
             var soldByDefault = element.GetAttributeBool("soldbydefault", true);
             var minAmount = GetMinAmount(element);
             var maxAmount = GetMaxAmount(element);
+            var canBeSpecial = element.GetAttributeBool("canbespecial", true);
             var priceInfos = new List<Tuple<string, PriceInfo>>();
 
             foreach (XElement childElement in element.GetChildElements("price"))
@@ -51,13 +64,15 @@ namespace Barotrauma
                 priceInfos.Add(new Tuple<string, PriceInfo>(childElement.GetAttributeString("locationtype", "").ToLowerInvariant(),
                     new PriceInfo(price: (int)(priceMultiplier * basePrice), canBeBought: sold,
                         minAmount: sold ? GetMinAmount(childElement, minAmount) : 0,
-                        maxAmount: sold ? GetMaxAmount(childElement, maxAmount) : 0)));
+                        maxAmount: sold ? GetMaxAmount(childElement, maxAmount) : 0,
+                        canBeSpecial: canBeSpecial)));
             }
 
             var canBeBoughtAtOtherLocations = soldByDefault && element.GetAttributeBool("soldeverywhere", true);
             defaultPrice = new PriceInfo(basePrice, canBeBoughtAtOtherLocations,
                 minAmount: canBeBoughtAtOtherLocations ? minAmount : 0,
-                maxAmount: canBeBoughtAtOtherLocations ? maxAmount : 0);
+                maxAmount: canBeBoughtAtOtherLocations ? maxAmount : 0,
+                canBeSpecial: canBeSpecial);
             
             return priceInfos;
         }

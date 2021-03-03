@@ -6,6 +6,12 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
+            msg.Write((byte)caves.Count);
+            foreach (var cave in caves)
+            {
+                msg.Write((byte)(Level.Loaded == null || !Level.Loaded.Caves.Contains(cave) ? 255 : Level.Loaded.Caves.IndexOf(cave)));
+            }
+
             foreach (var kvp in SpawnedResources)
             {
                 msg.Write((byte)kvp.Value.Count);

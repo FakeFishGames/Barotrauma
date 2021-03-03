@@ -39,7 +39,16 @@ namespace Barotrauma.Networking
             public double UpdateTime;
             public double TimeOut;
             public int Retries;
-            public UInt64? SteamID;
+            private UInt64? steamId;
+            public UInt64? SteamID
+            {
+                get { return steamId; }
+                set
+                {
+                    steamId = value;
+                    Connection.SetSteamIDIfUnknown(value ?? 0);
+                }
+            }
             public Int32? PasswordSalt;
             public bool AuthSessionStarted;
 

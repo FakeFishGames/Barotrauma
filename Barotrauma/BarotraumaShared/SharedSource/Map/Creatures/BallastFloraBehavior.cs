@@ -91,6 +91,9 @@ namespace Barotrauma.MapCreatures.Behavior
         public List<Tuple<Vector2, Vector2>> debugSearchLines = new List<Tuple<Vector2, Vector2>>();
 #endif
 
+        private static List<BallastFloraBehavior> _entityList = new List<BallastFloraBehavior>();
+        public static IEnumerable<BallastFloraBehavior> EntityList => _entityList;
+
         public enum NetworkHeader
         {
             Spawn,
@@ -199,13 +202,18 @@ namespace Barotrauma.MapCreatures.Behavior
         [Serialize(5f, true, "How much damage is taken from open fires")]
         public float FireVulnerability { get; set; }
 
+        [Serialize(0.5f, true, "How much resistance against fire is gained while submerged.")]
+        public float SubmergedWaterResistance { get; set; }
+
         [Serialize(0.8f, true, "What depth the branches will be drawn on")]
         public float BranchDepth { get; set; }
+        
+        [Serialize("", true, "What sound to play when the ballast flora bursts thru walls")]
+        public string BurstSound { get; set; } = "";
 
         private float availablePower;
 
-        private float toxinsTimer;
-
+        [Serialize(0f, true, "How much power the ballast flora has stored.")]
         public float AvailablePower
         {
             get => availablePower;
@@ -244,7 +252,7 @@ namespace Barotrauma.MapCreatures.Behavior
         public float PowerConsumptionTimer;
 
         private float defenseCooldown, toxinsCooldown, fireCheckCooldown;
-        private float damageIndicatorTimer, selfDamageTimer;
+        private float damageIndicatorTimer, selfDamageTimer, toxinsTimer;
 
         private readonly List<BallastFloraBranch> branchesVulnerableToFire = new List<BallastFloraBranch>();
 
@@ -293,6 +301,7 @@ namespace Barotrauma.MapCreatures.Behavior
             LoadPrefab(prefab.Element);
             StateMachine = new BallastFloraStateMachine(this);
             if (firstGrowth) { GenerateStem(); }
+            _entityList.Add(this);
         }
 
         partial void LoadPrefab(XElement element);
@@ -373,8 +382,8 @@ namespace Barotrauma.MapCreatures.Behavior
                 int flowerConfig = getInt("flowerconfig");
                 int leafconfig = getInt("leafconfig");
                 int id = getInt("ID");
-                int health = getInt("health");
-                int maxhealth = getInt("maxhealth");
+                float health = getFloat("health");
+                float maxhealth = getFloat("maxhealth");
                 int sides = getInt("sides");
                 int blockedSides = getInt("blockedsides");
                 int claimedId = branchElement.GetAttributeInt("claimed", -1);
@@ -398,6 +407,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 Branches.Add(newBranch);
 
                 int getInt(string name) => branchElement.GetAttributeInt(name, 0);
+                float getFloat(string name) => branchElement.GetAttributeFloat(name, 0f);
             }
         }
 
@@ -424,7 +434,8 @@ namespace Barotrauma.MapCreatures.Behavior
 
                         if (GameMain.DebugDraw)
                         {
-                            GUI.AddMessage($"{(int)branch.AccumulatedDamage}", GUI.Style.Red, GetWorldPosition() + branch.Position, Vector2.UnitY * 10.0f, 3f, playSound: false);
+                            var pos = (Parent?.Position ?? Vector2.Zero) + Offset + branch.Position;
+                            GUI.AddMessage($"{(int)branch.AccumulatedDamage}", GUI.Style.Red, pos, Vector2.UnitY * 10.0f, 3f, playSound: false, subId: Parent?.Submarine?.ID ?? -1);
                         }
 #elif SERVER
                         SendNetworkMessage(this, NetworkHeader.BranchDamage, branch, branch.AccumulatedDamage);
@@ -466,24 +477,8 @@ namespace Barotrauma.MapCreatures.Behavior
                     }
                 }
             }
-            else
-            {
-                if (selfDamageTimer <= 0)
-                {
-                    if (!CanGrowMore())
-                    {
-                        foreach (BallastFloraBranch branch in Branches)
-                        {
-                            float maxHealth = branch.IsRoot ? StemHealth : BranchHealth;
-                            DamageBranch(branch, Rand.Range(1f, maxHealth), AttackType.Other);
-                        }
-                    }
-
-                    selfDamageTimer = 1f;
-                }
-
-                selfDamageTimer -= deltaTime;
-            }
+            
+            UpdateSelfDamage(deltaTime);
 
             if (Anger > 1f)
             {
@@ -544,6 +539,41 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
+        private void UpdateSelfDamage(float deltaTime)
+        {
+            if (selfDamageTimer <= 0)
+            {
+                bool hasRoot = false;
+                foreach (BallastFloraBranch branch in Branches)
+                {
+                    if (branch.IsRoot)
+                    {
+                        hasRoot = true;
+                        break;
+                    }
+                }
+
+                if (!hasRoot)
+                {
+                    Kill();
+                    return;
+                }
+
+                if (!HasBrokenThrough && !CanGrowMore())
+                {
+                    Branches.ForEachMod(branch =>
+                    {
+                        float maxHealth = branch.IsRoot ? StemHealth : BranchHealth;
+                        DamageBranch(branch, Rand.Range(1f, maxHealth), AttackType.Other);
+                    });
+                }
+
+                selfDamageTimer = 1f;
+            }
+
+            selfDamageTimer -= deltaTime;
+        }
+
         private void UpdatePowerDrain(float deltaTime)
         {
             PowerConsumptionTimer += deltaTime;
@@ -576,7 +606,7 @@ namespace Barotrauma.MapCreatures.Behavior
             float batteryDrain = powerDelta * 0.1f;
             foreach (PowerContainer battery in ClaimedBatteries)
             {
-                float amount = Math.Max(battery.MaxOutPut, batteryDrain);
+                float amount = Math.Min(battery.MaxOutPut, batteryDrain);
 
                 if (battery.Charge > amount)
                 {
@@ -744,7 +774,7 @@ namespace Barotrauma.MapCreatures.Behavior
 #if SERVER
             if (!load)
             {
-                SendNetworkMessage(this, NetworkHeader.Infect, target.ID, true);
+                SendNetworkMessage(this, NetworkHeader.Infect, target.ID, true, branch);
             }
 #endif
         }
@@ -802,7 +832,7 @@ namespace Barotrauma.MapCreatures.Behavior
                     Vector2 flowerPos = GetWorldPosition() + newBranch.Position;
                     CreateShapnel(flowerPos);
                     newBranch.GrowthStep = 2.0f;
-                    SoundPlayer.PlayDamageSound("ArmorBreak", 1.0f, flowerPos, range: 800);
+                    SoundPlayer.PlayDamageSound(BurstSound, 1.0f, flowerPos, range: 800);
                 }
 #endif
             }
@@ -840,6 +870,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
         public void DamageBranch(BallastFloraBranch branch, float amount, AttackType type, Character? attacker = null)
         {
+            float damage = amount;
             // damage is handled server side currently
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
@@ -853,7 +884,7 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 if (IsInWater(branch))
                 {
-                    return;
+                    damage *= 1f - SubmergedWaterResistance;
                 }
 
                 if (defenseCooldown <= 0)
@@ -861,24 +892,24 @@ namespace Barotrauma.MapCreatures.Behavior
                     if (!(StateMachine.State is DefendWithPumpState))
                     {
                         StateMachine.EnterState(new DefendWithPumpState(branch, ClaimedTargets, attacker));
-                        defenseCooldown = 60f;
+                        defenseCooldown = 180f;
                     }
 
                     defenseCooldown = 10f;
                 }
             }
 
-            branch.AccumulatedDamage += amount;
+            branch.AccumulatedDamage += damage;
 
-            branch.Health -= amount;
+            branch.Health -= damage;
 
             if (type != AttackType.Other)
             {
-                Anger += amount * 0.001f;
+                Anger += damage * 0.001f;
             }
 
 #if SERVER
-            GameMain.Server?.KarmaManager?.OnBallastFloraDamaged(attacker, amount);
+            GameMain.Server?.KarmaManager?.OnBallastFloraDamaged(attacker, damage);
 #endif
 
             if (branch.Health < 0)
@@ -901,6 +932,8 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 target.Infector = null;
             }
+
+            _entityList.Remove(this);
         }
 
         public void RemoveBranch(BallastFloraBranch branch)
@@ -935,18 +968,10 @@ namespace Barotrauma.MapCreatures.Behavior
                         }
                     }
                 }
-            });      
+            });
 
 #if CLIENT
-            Vector2 pos = GetWorldPosition() + branch.Position;
-
-            GameMain.ParticleManager.CreateParticle("bloodsplash", pos, Rand.Range(0, 360), Rand.Range(0, 100));
-            GameMain.ParticleManager.CreateParticle("waterblood", pos, Rand.Range(0, 360), 0);
-
-            for (int i = 0; i < 4; i++)
-            {
-                GameMain.ParticleManager.CreateParticle("gib", pos, Rand.Range(0, 360), Rand.Range(100f, 300f));
-            }
+            CreateDeathParticle(branch);
 #endif
 
             if (isClient) { return; }
@@ -1014,6 +1039,8 @@ namespace Barotrauma.MapCreatures.Behavior
                 target.Infector = null;
             }
 
+            StateMachine?.State?.Exit();
+
             // clean up leftover (can probably be removed)
             foreach (Body body in bodies)
             {
@@ -1041,7 +1068,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 CreateShapnel(GetWorldPosition() + branch.Position);
             }
 
-            SoundPlayer.PlayDamageSound("ArmorBreak", BreakthroughPoint, GetWorldPosition(), range: 800);
+            SoundPlayer.PlayDamageSound(BurstSound, BreakthroughPoint, GetWorldPosition(), range: 800);
 #endif
         }
 

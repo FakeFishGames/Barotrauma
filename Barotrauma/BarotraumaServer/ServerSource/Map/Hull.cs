@@ -93,7 +93,9 @@ namespace Barotrauma
                         behavior.ServerWriteBranchRemove(message, branch);
                         break;
                     case BallastFloraBehavior.NetworkHeader.Infect when extraData.Length >= 4 && extraData[2] is UInt16 itemID && extraData[3] is bool infect:
-                        behavior.ServerWriteInfect(message, itemID, infect);
+                        BallastFloraBranch infector = null;
+                        if (extraData.Length >= 5 && extraData[4] is BallastFloraBranch b) { infector = b; }  
+                        behavior.ServerWriteInfect(message, itemID, infect, infector);
                         break;
                 }
 
@@ -223,7 +225,7 @@ namespace Barotrauma
                 byte decalIndex = msg.ReadByte();
                 float decalAlpha = msg.ReadRangedSingle(0.0f, 1.0f, 255);
                 if (decalIndex < 0 || decalIndex >= decals.Count) { return; }
-                if (c.Character != null && c.Character.AllowInput && c.Character.SelectedItems.Any(it => it?.GetComponent<Sprayer>() != null))
+                if (c.Character != null && c.Character.AllowInput && c.Character.HeldItems.Any(it => it.GetComponent<Sprayer>() != null))
                 {
                     decals[decalIndex].BaseAlpha = decalAlpha;
                 }
@@ -240,7 +242,7 @@ namespace Barotrauma
                     Color color = new Color(msg.ReadUInt32());
 
                     //TODO: verify the client is close enough to this hull to paint it, that the sprayer is functional and that the color matches
-                    if (c.Character != null && c.Character.AllowInput && c.Character.SelectedItems.Any(it => it?.GetComponent<Sprayer>() != null))
+                    if (c.Character != null && c.Character.AllowInput && c.Character.HeldItems.Any(it => it.GetComponent<Sprayer>() != null))
                     {
                         BackgroundSections[i].SetColorStrength(colorStrength);
                         BackgroundSections[i].SetColor(color);

@@ -234,24 +234,24 @@ namespace Barotrauma.Tutorials
                     if (!firstSlotRemoved)
                     {
                         HighlightInventorySlot(officer_equipmentCabinet.Inventory, 0, highlightColor, .5f, .5f, 0f);
-                        if (officer_equipmentCabinet.Inventory.Items[0] == null) firstSlotRemoved = true;
+                        if (officer_equipmentCabinet.Inventory.GetItemAt(0) == null) { firstSlotRemoved = true; }
                     }
 
                     if (!secondSlotRemoved)
                     {
                         HighlightInventorySlot(officer_equipmentCabinet.Inventory, 1, highlightColor, .5f, .5f, 0f);
-                        if (officer_equipmentCabinet.Inventory.Items[1] == null) secondSlotRemoved = true;
+                        if (officer_equipmentCabinet.Inventory.GetItemAt(1) == null) { secondSlotRemoved = true; }
                     }
 
                     if (!thirdSlotRemoved)
                     {
                         HighlightInventorySlot(officer_equipmentCabinet.Inventory, 2, highlightColor, .5f, .5f, 0f);
-                        if (officer_equipmentCabinet.Inventory.Items[2] == null) thirdSlotRemoved = true;
+                        if (officer_equipmentCabinet.Inventory.GetItemAt(2) == null) { thirdSlotRemoved = true; }
                     }
 
-                    for (int i = 0; i < officer.Inventory.slots.Length; i++)
+                    for (int i = 0; i < officer.Inventory.visualSlots.Length; i++)
                     {
-                        if (officer.Inventory.Items[i] == null) HighlightInventorySlot(officer.Inventory, i, highlightColor, .5f, .5f, 0f);
+                        if (officer.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(officer.Inventory, i, highlightColor, .5f, .5f, 0f); }
                     }
                 }
 
@@ -298,7 +298,7 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(3); // Arm coilgun
             do
             {
-                SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.Items[0] == null || officer_coilgunLoader.Inventory.Items[0].Condition == 0);
+                SetHighlight(officer_coilgunLoader.Item, officer_coilgunLoader.Inventory.GetItemAt(0) == null || officer_coilgunLoader.Inventory.GetItemAt(0).Condition == 0);
                 HighlightInventorySlot(officer_coilgunLoader.Inventory, 0, highlightColor, .5f, .5f, 0f);
                 SetHighlight(officer_superCapacitor.Item, officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate);
                 SetHighlight(officer_ammoShelf_1.Item, officer_coilgunLoader.Item.ExternalHighlight );
@@ -308,7 +308,7 @@ namespace Barotrauma.Tutorials
                     HighlightInventorySlot(officer.Inventory, "coilgunammobox", highlightColor, .5f, .5f, 0f);
                 }
             yield return null;
-            } while (officer_coilgunLoader.Inventory.Items[0] == null || officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate || officer_coilgunLoader.Inventory.Items[0].Condition == 0);
+            } while (officer_coilgunLoader.Inventory.GetItemAt(0) == null || officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate || officer_coilgunLoader.Inventory.GetItemAt(0).Condition == 0);
             SetHighlight(officer_coilgunLoader.Item, false);
             SetHighlight(officer_superCapacitor.Item, false);
             SetHighlight(officer_ammoShelf_1.Item, false);
@@ -317,7 +317,8 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(2f, false);
             TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster("hammerhead", officer_hammerheadSpawnPos);
-            ((EnemyAIController)officer_hammerhead.AIController).StayInsideLevel = false;
+            officer_hammerhead.Params.AI.AvoidAbyss = false;
+            officer_hammerhead.Params.AI.StayInAbyss = false;
             officer_hammerhead.AIController.SelectTarget(officer.AiTarget);
             SetHighlight(officer_coilgunPeriscope, true);
             float originalDistance = Vector2.Distance(officer_coilgunPeriscope.WorldPosition, officer_hammerheadSpawnPos);
@@ -371,12 +372,11 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(officer_rangedWeaponCabinet.Item))
                 {
-                    if (officer_rangedWeaponCabinet.Inventory.slots != null)
+                    if (officer_rangedWeaponCabinet.Inventory.visualSlots != null)
                     {
-                        for (int i = 0; i < officer_rangedWeaponCabinet.Inventory.Items.Length; i++)
+                        for (int i = 0; i < officer_rangedWeaponCabinet.Inventory.Capacity; i++)
                         {
-                            if (officer_rangedWeaponCabinet.Inventory.Items[i] == null) continue;
-                            if (officer_rangedWeaponCabinet.Inventory.Items[i].Prefab.Identifier == "shotgunshell")
+                            if (officer_rangedWeaponCabinet.Inventory.GetItemAt(i)?.Prefab.Identifier == "shotgunshell")
                             {
                                 HighlightInventorySlot(officer_rangedWeaponCabinet.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
                             }
@@ -384,10 +384,9 @@ namespace Barotrauma.Tutorials
                     }
                 }
 
-                for (int i = 0; i < officer.Inventory.Items.Length; i++)
+                for (int i = 0; i < officer.Inventory.Capacity; i++)
                 {
-                    if (officer.Inventory.Items[i] == null) continue;
-                    if (officer.Inventory.Items[i].Prefab.Identifier == "shotgunshell")
+                    if (officer.Inventory.GetItemAt(i)?.Prefab.Identifier == "shotgunshell")
                     {
                         HighlightInventorySlot(officer.Inventory, i, highlightColor, 0.5f, 0.5f, 0f);
                     }
@@ -398,7 +397,7 @@ namespace Barotrauma.Tutorials
                     HighlightInventorySlot(officer.Inventory, "shotgun", highlightColor, 0.5f, 0.5f, 0f);
                 }
                 yield return null;
-            } while (!shotGunChamber.Inventory.IsFull()); // Wait until all six harpoons loaded
+            } while (!shotGunChamber.Inventory.IsFull(takeStacksIntoAccount: true)); // Wait until all six harpoons loaded
             RemoveCompletedObjective(segments[5]);
             SetHighlight(officer_rangedWeaponCabinet.Item, false);
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, true);
@@ -425,8 +424,8 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Submarine"), ChatMessageType.Radio, null);
             do
             {
-                SetHighlight(officer_subLoader_1.Item, officer_subLoader_1.Inventory.Items[0] == null || officer_subLoader_1.Inventory.Items[0].Condition == 0);
-                SetHighlight(officer_subLoader_2.Item, officer_subLoader_2.Inventory.Items[0] == null || officer_subLoader_2.Inventory.Items[0].Condition == 0);
+                SetHighlight(officer_subLoader_1.Item, officer_subLoader_1.Inventory.GetItemAt(0) == null || officer_subLoader_1.Inventory.GetItemAt(0).Condition == 0);
+                SetHighlight(officer_subLoader_2.Item, officer_subLoader_2.Inventory.GetItemAt(0) == null || officer_subLoader_2.Inventory.GetItemAt(0).Condition == 0);
                 HighlightInventorySlot(officer_subLoader_1.Inventory, 0, highlightColor, .5f, .5f, 0f);
                 HighlightInventorySlot(officer_subLoader_2.Inventory, 0, highlightColor, .5f, .5f, 0f);
 

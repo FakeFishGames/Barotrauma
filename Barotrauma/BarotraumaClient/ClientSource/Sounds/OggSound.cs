@@ -41,7 +41,7 @@ namespace Barotrauma.Sounds
             //MuffleBuffer(floatBuffer, reader.Channels);
             CastBuffer(floatBuffer, buffer, readSamples);
 
-            return readSamples * 2;
+            return readSamples;
         }
 
         static void MuffleBuffer(float[] buffer, int sampleRate, int channelCount)

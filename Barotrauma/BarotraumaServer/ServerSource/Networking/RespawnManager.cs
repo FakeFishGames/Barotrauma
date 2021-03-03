@@ -36,7 +36,7 @@ namespace Barotrauma.Networking
             if (GameMain.Server.ServerSettings.BotSpawnMode == BotSpawnMode.Normal)
             {
                 return Character.CharacterList
-                    .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null && c.IsDead)
+                    .FindAll(c => c.TeamID == CharacterTeamType.Team1 && c.AIController != null && c.Info != null && c.IsDead)
                     .Select(c => c.Info)
                     .ToList();
             }
@@ -46,7 +46,7 @@ namespace Barotrauma.Networking
                 (!c.SpectateOnly || (!GameMain.Server.ServerSettings.AllowSpectating && GameMain.Server.OwnerConnection != c.Connection)));
 
             var existingBots = Character.CharacterList
-                .FindAll(c => c.TeamID == Character.TeamType.Team1 && c.AIController != null && c.Info != null);
+                .FindAll(c => c.TeamID == CharacterTeamType.Team1 && c.AIController != null && c.Info != null);
 
             int requiredBots = GameMain.Server.ServerSettings.BotCount - currPlayerCount;
             requiredBots -= existingBots.Count(b => !b.IsDead);
@@ -238,13 +238,17 @@ namespace Barotrauma.Networking
 
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
-                c.TeamID = Character.TeamType.Team1;
+                c.TeamID = CharacterTeamType.Team1;
                 if (c.CharacterInfo == null) { c.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, c.Name); }
             }
             List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
 
-            var botsToSpawn = GetBotsToRespawn();
-            characterInfos.AddRange(botsToSpawn);
+            //bots don't respawn in the campaign
+            if (campaign == null)
+            {
+                var botsToSpawn = GetBotsToRespawn();
+                characterInfos.AddRange(botsToSpawn);
+            }
 
             GameMain.Server.AssignJobs(clients);
             foreach (Client c in clients)
@@ -272,11 +276,10 @@ namespace Barotrauma.Networking
             {
                 bool bot = i >= clients.Count;
 
-                characterInfos[i].CurrentOrder = null;
-                characterInfos[i].CurrentOrderOption = null;
+                characterInfos[i].ClearCurrentOrders();
 
                 var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
-                character.TeamID = Character.TeamType.Team1;
+                character.TeamID = CharacterTeamType.Team1;
 
                 if (bot)
                 {
@@ -348,9 +351,9 @@ namespace Barotrauma.Networking
                 }
 
                 //add the ID card tags they should've gotten when spawning in the shuttle
-                foreach (Item item in character.Inventory.Items)
+                foreach (Item item in character.Inventory.AllItems.Distinct())
                 {
-                    if (item == null || item.Prefab.Identifier != "idcard") { continue; }
+                    if (item.Prefab.Identifier != "idcard") { continue; }
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);

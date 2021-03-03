@@ -281,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        public const float MAX_SPEED = 15;
+        public const float MAX_SPEED = 30;
 
         public Vector2 TargetMovement
         {
@@ -472,7 +472,7 @@ namespace Barotrauma
                 if (joint == null) { continue; }
                 float angle = (joint.LowerLimit + joint.UpperLimit) / 2.0f;
                 joint.LimbB?.body?.SetTransform(
-                    (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, MathHelper.ToDegrees(joint.BodyA.Rotation + angle), true)),
+                    (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, joint.BodyA.Rotation + angle, true)),
                     joint.BodyA.Rotation + angle);
             }
         }
@@ -758,11 +758,11 @@ namespace Barotrauma
                 limb.IsSevered = true;
                 if (limb.type == LimbType.RightHand)
                 {
-                    character.SelectedItems[0]?.Drop(character);
+                    character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand)?.Drop(character);
                 }
                 else if (limb.type == LimbType.LeftHand)
                 {
-                    character.SelectedItems[1]?.Drop(character);
+                    character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand)?.Drop(character);
                 }
             }
 
@@ -1119,6 +1119,32 @@ namespace Barotrauma
             CheckBodyInRest(deltaTime);            
 
             splashSoundTimer -= deltaTime;
+
+            if (character.Submarine == null && Level.Loaded != null)
+            {
+                if (Collider.SimPosition.Y > Level.Loaded.TopBarrier.Position.Y)
+                {
+                    Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, Math.Min(Collider.LinearVelocity.Y, -1));
+                }
+                else if (Collider.SimPosition.Y < Level.Loaded.BottomBarrier.Position.Y)
+                {
+                    Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, 
+                        MathHelper.Clamp(Collider.LinearVelocity.Y, Level.Loaded.BottomBarrier.Position.Y - Collider.SimPosition.Y, 10.0f));
+                }
+                foreach (Limb limb in Limbs)
+                {
+                    if (limb.SimPosition.Y > Level.Loaded.TopBarrier.Position.Y)
+                    {
+                        limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X, Math.Min(limb.LinearVelocity.Y, -1));
+                    }
+                    else if (limb.SimPosition.Y < Level.Loaded.BottomBarrier.Position.Y)
+                    {
+                        limb.body.LinearVelocity = new Vector2(
+                            limb.LinearVelocity.X,
+                            MathHelper.Clamp(limb.LinearVelocity.Y, Level.Loaded.BottomBarrier.Position.Y - limb.SimPosition.Y, 10.0f));
+                    }
+                }
+            }
 
             if (forceStanding)
             {
@@ -1562,7 +1588,7 @@ namespace Barotrauma
             }
         }
 
-        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
+        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true, bool forceMainLimbToCollider = false)
         {
             if (!MathUtils.IsValid(simPosition))
             {
@@ -1575,8 +1601,7 @@ namespace Barotrauma
             }
             if (MainLimb == null) { return; }
 
-            Vector2 limbMoveAmount = simPosition - Collider.SimPosition;
-
+            Vector2 limbMoveAmount = forceMainLimbToCollider ? simPosition - MainLimb.SimPosition : simPosition - Collider.SimPosition;
             if (lerp)
             {
                 Collider.TargetPosition = simPosition;
@@ -1587,13 +1612,15 @@ namespace Barotrauma
                 Collider.SetTransform(simPosition, Collider.Rotation);
             }
 
-            foreach (Limb limb in Limbs)
+            if (!MathUtils.NearlyEqual(limbMoveAmount, Vector2.Zero))
             {
-                if (limb.IsSevered) { continue; }
-                //check visibility from the new position of the collider to the new position of this limb
-                Vector2 movePos = limb.SimPosition + limbMoveAmount;
-
-                TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
+                foreach (Limb limb in Limbs)
+                {
+                    if (limb.IsSevered) { continue; }
+                    //check visibility from the new position of the collider to the new position of this limb
+                    Vector2 movePos = limb.SimPosition + limbMoveAmount;
+                    TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
+                }
             }
         }
 
@@ -1644,7 +1671,7 @@ namespace Barotrauma
             if (distSqrd > resetDist * resetDist)
             {
                 //ragdoll way too far, reset position
-                SetPosition(Collider.SimPosition, true);
+                SetPosition(Collider.SimPosition, true, forceMainLimbToCollider: true);
             }
             if (distSqrd > allowedDist * allowedDist)
             {

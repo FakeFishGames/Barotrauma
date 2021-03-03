@@ -71,11 +71,11 @@ namespace Barotrauma.Items.Components
 
             character.AnimController.Collider.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
 
-            if (character.SelectedItems[0] == item)
+            if (character.Inventory.IsInLimbSlot(item, InvSlotType.RightHand))
             {
                 character.AnimController.GetLimb(LimbType.RightHand)?.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }
-            if (character.SelectedItems[1] == item)
+            if (character.Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
             {
                 character.AnimController.GetLimb(LimbType.LeftHand)?.body.ApplyForce(propulsion, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
             }

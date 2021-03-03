@@ -35,5 +35,14 @@ namespace Barotrauma.Networking
         public abstract bool EndpointMatches(string endPoint);
 
         public NetworkConnectionStatus Status = NetworkConnectionStatus.Disconnected;
+
+        public virtual bool SetSteamIDIfUnknown(UInt64 id)
+        {
+            //by default, don't allow setting the ID, this is only done
+            //with Lidgren connections since those are initialized before
+            //the SteamID can be known; it's set once the Steam auth ticket
+            //is received by the server.
+            return false;
+        }
     }
 }

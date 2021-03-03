@@ -3,9 +3,11 @@ using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
 using Barotrauma.SpriteDeformations;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -67,6 +69,18 @@ namespace Barotrauma
         }
 
         public Vector2[,] CurrentSpriteDeformation
+        {
+            get;
+            private set;
+        }
+
+        public bool VisibleOnSonar
+        {
+            get;
+            private set;
+        }
+
+        public float SonarRadius
         {
             get;
             private set;
@@ -134,6 +148,13 @@ namespace Barotrauma
                         j++;
                     }
                 }                
+            }
+
+            VisibleOnSonar = Prefab.SonarDisruption > 0.0f || Prefab.OverrideProperties.Any(p => p != null && p.SonarDisruption > 0.0f) || 
+                (Triggers != null && Triggers.Any(t => !MathUtils.NearlyEqual(t.Force, Vector2.Zero) && t.ForceMode != LevelTrigger.TriggerForceMode.LimitVelocity || !string.IsNullOrWhiteSpace(t.InfectIdentifier)));
+            if (VisibleOnSonar && Triggers.Any())
+            {
+                SonarRadius = Triggers.Select(t => t.ColliderRadius * 1.5f).Max();
             }
         }
 
@@ -220,6 +241,7 @@ namespace Barotrauma
 
         private void UpdateDeformations(float deltaTime)
         {
+            if (ActivePrefab.DeformableSprite == null) { return; }
             foreach (SpriteDeformation deformation in spriteDeformations)
             {
                 if (deformation is PositionalDeformation positionalDeformation)

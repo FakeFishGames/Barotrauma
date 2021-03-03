@@ -22,7 +22,12 @@ namespace Barotrauma
         public AIObjectiveGetItem GetItemObjective => getItemObjective;
         public AIObjectiveContainItem ContainObjective => containObjective;
 
+        public Item TargetItem => targetItem;
+        public ItemContainer TargetContainer => targetContainer;
+
         public bool Equip { get; set; }
+
+        public bool TakeWholeStack { get; set; }
 
         /// <summary>
         /// If true drops the item when containing the item fails.
@@ -58,8 +63,13 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            Item itemToDecontain = targetItem ?? sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)), recursive: false);
+            Item itemToDecontain = targetItem ?? sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id) && !i.IgnoreByAI), recursive: false);
             if (itemToDecontain == null)
+            {
+                Abandon = true;
+                return;
+            }
+            if (itemToDecontain.IgnoreByAI)
             {
                 Abandon = true;
                 return;
@@ -77,7 +87,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            else if (targetContainer.Inventory.Items.Contains(itemToDecontain))
+            else if (targetContainer.Inventory.Contains(itemToDecontain))
             {
                 IsCompleted = true;
                 return;
@@ -85,7 +95,7 @@ namespace Barotrauma
             if (getItemObjective == null && !itemToDecontain.IsOwnedBy(character))
             {
                 TryAddSubObjective(ref getItemObjective,
-                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip),
+                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip) { TakeWholeStack = this.TakeWholeStack },
                     onAbandon: () => Abandon = true);
                 return;
             }
@@ -94,6 +104,7 @@ namespace Barotrauma
                 TryAddSubObjective(ref containObjective,
                     constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager)
                     {
+                        MoveWholeStack = TakeWholeStack,
                         Equip = Equip,
                         RemoveEmpty = false,
                         GetItemPriority = GetItemPriority,

@@ -18,6 +18,11 @@ namespace Barotrauma
         public float Range => roundSound == null ? 0.0f : roundSound.Range;
         public Sound Sound => roundSound?.Sound;
 
+        public bool IgnoreMuffling
+        {
+            get { return roundSound?.IgnoreMuffling ?? false; }
+        }
+
         public CharacterSound(CharacterParams.SoundParams soundParams)
         {
             Params = soundParams;

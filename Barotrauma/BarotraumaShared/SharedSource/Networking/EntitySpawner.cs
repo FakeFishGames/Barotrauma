@@ -26,6 +26,9 @@ namespace Barotrauma
             public readonly Submarine Submarine;
             public readonly float Condition;
 
+            public bool SpawnIfInventoryFull = true;
+            public bool IgnoreLimbSlots = false;
+
             private readonly Action<Item> onSpawned;
 
             public ItemSpawnInfo(ItemPrefab prefab, Vector2 worldPosition, Action<Item> onSpawned, float? condition = null)
@@ -62,9 +65,27 @@ namespace Barotrauma
                 Item spawnedItem;
                 if (Inventory?.Owner != null)
                 {
-                    spawnedItem = new Item(Prefab, Vector2.Zero, null);
+                    if (!SpawnIfInventoryFull && !Inventory.CanBePut(Prefab))
+                    {
+                        return null;
+                    }
+                    spawnedItem = new Item(Prefab, Vector2.Zero, null)
+                    {
+                        Condition = Condition
+                    };
                     if (!Inventory.Owner.Removed && !Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots))
                     {
+                        if (IgnoreLimbSlots)
+                        {
+                            for (int i = 0; i < Inventory.Capacity; i++)
+                            {
+                                if (Inventory.GetItemAt(i) == null)
+                                {
+                                    Inventory.ForceToSlot(spawnedItem, i);
+                                    break;
+                                }
+                            }
+                        }
                         spawnedItem.SetTransform(FarseerPhysics.ConvertUnits.ToSimUnits(Inventory.Owner?.WorldPosition ?? Vector2.Zero), spawnedItem.body?.Rotation ?? 0.0f, findNewHull: false);
                     }
                 }
@@ -238,7 +259,7 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, Action<Item> onSpawned = null)
+        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -248,7 +269,11 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue3:ItemPrefabNull", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                 return;
             }
-            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition));
+            spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, inventory, onSpawned, condition) 
+            { 
+                SpawnIfInventoryFull = spawnIfInventoryFull, 
+                IgnoreLimbSlots = ignoreLimbSlots 
+            });
         }
 
         public void AddToSpawnQueue(string speciesName, Vector2 worldPosition, Action<Character> onSpawn = null)
@@ -302,7 +327,7 @@ namespace Barotrauma
             if (removeQueue.Contains(item) || item.Removed) { return; }
 
             removeQueue.Enqueue(item);
-            var containedItems = item.OwnInventory?.Items;
+            var containedItems = item.OwnInventory?.AllItems;
             if (containedItems == null) { return; }
             foreach (Item containedItem in containedItems)
             {
@@ -327,6 +352,11 @@ namespace Barotrauma
         public int CountSpawnQueue(Predicate<IEntitySpawnInfo> predicate)
         {
             return spawnQueue.Count(s => predicate(s));
+        }
+
+        public bool IsInRemoveQueue(Entity entity)
+        {
+            return removeQueue.Contains(entity);
         }
 
         public void Update()

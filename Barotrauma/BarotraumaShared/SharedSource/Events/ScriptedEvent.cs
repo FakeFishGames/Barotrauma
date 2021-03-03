@@ -13,6 +13,9 @@ namespace Barotrauma
         private int prevEntityCount;
         private int prevPlayerCount, prevBotCount;
 
+        private readonly string[] requiredDestinationTypes;
+        public readonly bool RequireBeaconStation;
+
         public int CurrentActionIndex { get; private set; }
         public List<EventAction> Actions { get; } = new List<EventAction>();
         public Dictionary<string, List<Entity>> Targets { get; } = new Dictionary<string, List<Entity>>();
@@ -39,6 +42,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Scripted event \"{prefab.Identifier}\" has no actions. The event will do nothing.");
             }
+
+            requiredDestinationTypes = prefab.ConfigElement.GetAttributeStringArray("requireddestinationtypes", null);
+            RequireBeaconStation = prefab.ConfigElement.GetAttributeBool("requirebeaconstation", false);
         }
 
         public void AddTarget(string tag, Entity target)
@@ -198,6 +204,22 @@ namespace Barotrauma
             {
                 currentAction.Update(deltaTime);
             }
+        }
+
+        public override bool LevelMeetsRequirements()
+        {
+            if (requiredDestinationTypes == null) { return true; }
+            var currLocation = GameMain.GameSession?.Campaign?.Map.CurrentLocation;
+            if (currLocation?.Connections == null) { return true; }
+            foreach (LocationConnection c in currLocation.Connections)
+            {
+                if (RequireBeaconStation && !c.LevelData.HasBeaconStation) { continue; }
+                if (requiredDestinationTypes.Any(t => c.OtherLocation(currLocation).Type.Identifier.Equals(t, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

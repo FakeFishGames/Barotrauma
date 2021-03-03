@@ -42,6 +42,15 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
             msg.Write(IsActive);
             msg.Write(Hijacked);
+            if (TargetLevel != null)
+            { 
+                msg.Write(true);
+                msg.Write(TargetLevel.Value);
+            }
+            else
+            {
+                msg.Write(false);
+            }
         }
     }
 }

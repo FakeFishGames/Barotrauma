@@ -679,7 +679,7 @@ namespace Barotrauma
         }
 #endregion
 
-        public void QuickStart(bool fixedSeed = false)
+        public void QuickStart(bool fixedSeed = false, string sub = null)
         {
             if (fixedSeed)
             {
@@ -688,7 +688,7 @@ namespace Barotrauma
             }
 
             SubmarineInfo selectedSub = null;
-            string subName = GameMain.Config.QuickStartSubmarineName;
+            string subName = sub ?? GameMain.Config.QuickStartSubmarineName;
             if (!string.IsNullOrEmpty(subName))
             {
                 DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
@@ -709,7 +709,7 @@ namespace Barotrauma
             var gamesession = new GameSession(
                 selectedSub,
                 GameModePreset.DevSandbox,
-                missionPrefab: null);
+                missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
             gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty: 40);
             GameMain.GameScreen.Select();
@@ -832,6 +832,39 @@ namespace Barotrauma
             maxPlayersBox.Text = currMaxPlayers.ToString();
 
             return true;
+        }
+
+        private void TryStartServer()
+        {
+            if (SubmarineInfo.SavedSubmarines.Any(s => s.CalculatingHash))
+            {
+                var waitBox = new GUIMessageBox(TextManager.Get("pleasewait"), TextManager.Get("waitforsubmarinehashcalculations"), new string[] { TextManager.Get("cancel") });
+                var waitCoroutine = CoroutineManager.StartCoroutine(WaitForSubmarineHashCalculations(waitBox), "WaitForSubmarineHashCalculations");
+                waitBox.Buttons[0].OnClicked += (btn, userdata) =>
+                {
+                    CoroutineManager.StopCoroutines(waitCoroutine);
+                    return true;
+                };
+            }
+            else
+            {
+                StartServer();
+            }
+        }
+
+        private IEnumerable<object> WaitForSubmarineHashCalculations(GUIMessageBox messageBox)
+        {
+            string originalText = messageBox.Text.Text;
+            int doneCount = 0;
+            do
+            {
+                doneCount = SubmarineInfo.SavedSubmarines.Count(s => !s.CalculatingHash);
+                messageBox.Text.Text = originalText + $" ({doneCount}/{SubmarineInfo.SavedSubmarines.Count()})";
+                yield return CoroutineStatus.Running;
+            } while (doneCount < SubmarineInfo.SavedSubmarines.Count());
+            messageBox.Close();
+            StartServer();
+            yield return CoroutineStatus.Success;
         }
 
         private void StartServer()
@@ -1095,12 +1128,13 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var startButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), style: null);
+            var startButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.BottomRight);
             campaignSetupUI.StartButton.RectTransform.Parent = startButtonContainer.RectTransform;
             campaignSetupUI.StartButton.RectTransform.MinSize = new Point(
                 (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
                 campaignSetupUI.StartButton.RectTransform.MinSize.Y);
             startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
+            campaignSetupUI.InitialMoneyText.RectTransform.Parent = startButtonContainer.RectTransform;
         }
 
         private void CreateHostServerFields()
@@ -1340,7 +1374,7 @@ namespace Barotrauma
                             new string[] { TextManager.Get("yes"), TextManager.Get("no") });
                         msgBox.Buttons[0].OnClicked += (_, __) =>
                         {
-                            StartServer();
+                            TryStartServer();
                             msgBox.Close();
                             return true;
                         };
@@ -1348,7 +1382,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        StartServer();
+                        TryStartServer();
                     }
 
                     return true;

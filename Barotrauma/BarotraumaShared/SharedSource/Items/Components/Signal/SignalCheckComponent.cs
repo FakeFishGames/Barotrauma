@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
                     string signalOut = (signal == TargetSignal) ? Output : FalseOutput;
 
                     if (string.IsNullOrWhiteSpace(signalOut)) return;
-                    item.SendSignal(stepsTaken, signalOut, "signal_out", sender, signalStrength);
+                    item.SendSignal(stepsTaken, signalOut, "signal_out", sender, signalStrength, source);
 
                     break;
                 case "set_output":

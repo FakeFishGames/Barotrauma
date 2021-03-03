@@ -24,6 +24,8 @@ namespace Barotrauma
         public readonly float MinLevelDifficulty = 0.0f;
         public readonly float MaxLevelDifficulty = 100.0f;
 
+        public readonly float FreezeDurationWhenCrewAway = 60.0f * 10.0f;
+
         public static void Init()
         {
             List.Clear();
@@ -77,6 +79,8 @@ namespace Barotrauma
 
             MinLevelDifficulty = element.GetAttributeFloat("MinLevelDifficulty", 0.0f);
             MaxLevelDifficulty = element.GetAttributeFloat("MaxLevelDifficulty", 100.0f);
+
+            FreezeDurationWhenCrewAway = element.GetAttributeFloat("FreezeDurationWhenCrewAway", 10.0f * 60.0f);
         }
     }
 }

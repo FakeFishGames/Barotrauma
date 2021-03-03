@@ -86,12 +86,12 @@ namespace Barotrauma.Items.Components
 
             float scale = VineScale * vine.VineStep;
 
-            if (VineAtlas != null)
+            if (VineAtlas != null && VineAtlas.Loaded)
             {
                 spriteBatch.Draw(VineAtlas.Texture, pos + vine.offset, vineSprite.SourceRect, color, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer3);
             }
 
-            if (DecayAtlas != null)
+            if (DecayAtlas != null && DecayAtlas.Loaded)
             {
                 spriteBatch.Draw(DecayAtlas.Texture, pos, vineSprite.SourceRect, vine.HealthColor, 0f, vineSprite.AbsoluteOrigin, scale, SpriteEffects.None, layer2);
             }

@@ -165,7 +165,14 @@ namespace Barotrauma.Items.Components
 
                 if (isLocked)
                 {
-                    Lock(isNetworkMessage: true, forcePosition: true);
+                    if (DockingTarget.joint != null)
+                    {
+                        DockingTarget.Lock(isNetworkMessage: true, forcePosition: true);
+                    }
+                    else
+                    {
+                        Lock(isNetworkMessage: true, forcePosition: true);
+                    }
                 }
             }
             else

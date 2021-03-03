@@ -68,6 +68,9 @@ namespace Barotrauma
             }
         }
 
+        [Serialize(false, true, description: "Should the AI ignore this item. This will prevent outpost NPCs cleaning up or otherwise using important items intended to be left for the players.")]
+        public bool IgnoreByAI { get; set; }
+
         private bool spawned;
         private Entity spawnedEntity;
 
@@ -106,38 +109,17 @@ namespace Barotrauma
                 ISpatialEntity spawnPos = GetSpawnPos();
                 Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), onSpawn: newCharacter =>
                 {
-                    newCharacter.TeamID = Character.TeamType.FriendlyNPC;
+                    newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
                     newCharacter.EnableDespawn = false;
                     humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
                     if (LootingIsStealing)
                     {
-                        foreach (Item item in newCharacter.Inventory.Items)
+                        foreach (Item item in newCharacter.Inventory.AllItems)
                         {
-                            if (item != null) { item.SpawnedInOutpost = true; }
+                            item.SpawnedInOutpost = true;
                         }
                     }
-                    newCharacter.CharacterHealth.MaxVitality *= humanPrefab.HealthMultiplier;
-                    var humanAI = newCharacter.AIController as HumanAIController;
-                    if (humanAI != null) 
-                    { 
-                        var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
-                        if (idleObjective != null)
-                        {
-                            idleObjective.Behavior = humanPrefab.Behavior;
-                            foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
-                            {
-                                idleObjective.PreferredOutpostModuleTypes.Add(moduleType); 
-                            }
-                        }
-                    }
-                    if (humanPrefab.CampaignInteractionType != CampaignMode.InteractionType.None)
-                    {
-                        (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(newCharacter, humanPrefab.CampaignInteractionType);
-                        if (spawnPos != null && humanAI != null)
-                        {
-                            humanAI.ObjectiveManager.SetOrder(new AIObjectiveGoTo(spawnPos, newCharacter, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200));
-                        }
-                    }
+                    humanPrefab.InitializeCharacter(newCharacter, spawnPos);
                     if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
                     {
                         ParentEvent.AddTarget(TargetTag, newCharacter);
@@ -197,9 +179,16 @@ namespace Barotrauma
                     }
                     void onSpawned(Item newItem)
                     {
-                        if (!string.IsNullOrEmpty(TargetTag) && newItem != null)
+                        if (newItem != null)
                         {
-                            ParentEvent.AddTarget(TargetTag, newItem);
+                            if (!string.IsNullOrEmpty(TargetTag))
+                            {
+                                ParentEvent.AddTarget(TargetTag, newItem);
+                            }
+                            if (IgnoreByAI)
+                            {
+                                newItem.AddTag("ignorebyai");
+                            }
                         }
                         spawnedEntity = newItem;
                     }

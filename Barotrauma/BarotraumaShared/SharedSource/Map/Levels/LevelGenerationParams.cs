@@ -195,25 +195,25 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(100000, true), Editable(MinValueInt = 10000, MaxValueInt = 1000000)]
+        [Serialize(100000, true), Editable]
         public int MinWidth
         {
             get { return minWidth; }
-            set { minWidth = Math.Max(value, 2000); }
+            set { minWidth = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(100000, true), Editable(MinValueInt = 10000, MaxValueInt = 1000000)]
+        [Serialize(100000, true), Editable]
         public int MaxWidth
         {
             get { return maxWidth; }
-            set { maxWidth = Math.Max(value, 2000); }
+            set { maxWidth = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
-        [Serialize(50000, true), Editable(MinValueInt = 10000, MaxValueInt = 1000000)]
+        [Serialize(50000, true), Editable]
         public int Height
         {
             get { return height; }
-            set { height = Math.Max(value, 2000); }
+            set { height = MathHelper.Clamp(value, 2000, 1000000); }
         }
 
         [Serialize(80000, true), Editable(MinValueInt = 0, MaxValueInt = 1000000)]
@@ -404,7 +404,35 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(300000, true, description: "How far below the level the sea floor is placed."), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f)]
+        [Serialize(5, true), Editable(MinValueInt = 0, MaxValueInt = 20)]
+        public int AbyssIslandCount
+        {
+            get;
+            set;
+        }
+
+        [Serialize("4000,7000", true), Editable]
+        public Point AbyssIslandSizeMin
+        {
+            get;
+            set;
+        }
+
+        [Serialize("8000,10000", true), Editable]
+        public Point AbyssIslandSizeMax
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.5f, true), Editable()]
+        public float AbyssIslandCaveProbability
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-300000, true, description: "How far below the level the sea floor is placed."), Editable(MinValueFloat = Level.MaxEntityDepth, MaxValueFloat = 0.0f)]
         public int SeaFloorDepth
         {
             get { return seaFloorBaseDepth; }
@@ -554,7 +582,7 @@ namespace Barotrauma
             var matchingLevelParams = LevelParams.FindAll(lp => lp.Type == type && lp.allowedBiomes.Any());
             if (biome == null)
             {
-                matchingLevelParams = matchingLevelParams.FindAll(lp => !lp.allowedBiomes.Any(b => b.IsEndBiome));
+                matchingLevelParams = matchingLevelParams.FindAll(lp => !lp.allowedBiomes.All(b => b.IsEndBiome));
             }
             else
             {

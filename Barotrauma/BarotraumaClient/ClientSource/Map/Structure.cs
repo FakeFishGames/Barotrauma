@@ -24,7 +24,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!GameMain.SubEditorScreen.ShowThalamus && prefab.Category.HasFlag(MapEntityCategory.Thalamus))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
                 {
                     return false;
                 }
@@ -191,10 +191,11 @@ namespace Barotrauma
             Vector2 max = new Vector2(worldRect.Right, worldRect.Y);
             foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
             {
-                min.X =  Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * decorativeSprite.Scale * Scale, min.X);
-                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * decorativeSprite.Scale * Scale, max.X);
-                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * decorativeSprite.Scale * Scale, min.Y);
-                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * decorativeSprite.Scale * Scale, max.Y);
+                float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                min.X = Math.Min(worldPos.X - decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale, min.X);
+                max.X = Math.Max(worldPos.X + decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale, max.X);
+                min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
+                max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
             }
 
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
@@ -220,11 +221,14 @@ namespace Barotrauma
             Draw(spriteBatch, editing, false, damageEffect);
         }
 
+        private float GetRealDepth()
+        {
+            return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
+        }
+
         public float GetDrawDepth()
         {
-            float depth = SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
-            depth -= (ID % 255) * 0.000001f;
-            return depth;
+            return GetDrawDepth(GetRealDepth(), prefab.sprite);
         }
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
@@ -254,7 +258,7 @@ namespace Barotrauma
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
-            bool isWiringMode = editing && SubEditorScreen.IsWiringMode();
+            bool isWiringMode = editing && SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
 
             if (isWiringMode) { color *= 0.15f; }
 
@@ -263,8 +267,8 @@ namespace Barotrauma
             float depth = GetDrawDepth();
 
             Vector2 textureOffset = this.textureOffset;
-            if (FlippedX) textureOffset.X = -textureOffset.X;
-            if (FlippedY) textureOffset.Y = -textureOffset.Y;
+            if (FlippedX) { textureOffset.X = -textureOffset.X; }
+            if (FlippedY) { textureOffset.Y = -textureOffset.Y; }
 
             if (back && damageEffect == null && !isWiringMode)
             {
@@ -304,7 +308,7 @@ namespace Barotrauma
                         color: Prefab.BackgroundSpriteColor,
                         textureScale: TextureScale * Scale,
                         startOffset: backGroundOffset,
-                        depth: Math.Max(Prefab.BackgroundSprite.Depth + (ID % 255) * 0.000001f, depth + 0.000001f));
+                        depth: Math.Max(GetDrawDepth(Prefab.BackgroundSprite.Depth, Prefab.BackgroundSprite), depth + 0.000001f));
 
                     if (UseDropShadow)
                     {
@@ -322,13 +326,14 @@ namespace Barotrauma
                 }
             }
 
-            if (back == depth > 0.5f)
+            if (back == GetRealDepth() > 0.5f)
             {
                 SpriteEffects oldEffects = prefab.sprite.effects;
                 prefab.sprite.effects ^= SpriteEffects;
 
                 for (int i = 0; i < Sections.Length; i++)
                 {
+                    Rectangle drawSection = Sections[i].rect;
                     if (damageEffect != null)
                     {
                         float newCutoff = MathHelper.Lerp(0.0f, 0.65f, Sections[i].damage / MaxHealth);
@@ -345,21 +350,30 @@ namespace Barotrauma
                             Submarine.DamageEffectColor = color;
                         }
                     }
+                    if (!HasDamage && i == 0)
+                    {
+                        drawSection = new Rectangle(
+                            drawSection.X, 
+                            drawSection.Y, 
+                            Sections[Sections.Length -1 ].rect.Right - drawSection.X,
+                            drawSection.Y - (Sections[Sections.Length - 1].rect.Y - Sections[Sections.Length - 1].rect.Height));
+                        i = Sections.Length;
+                    }
                     
                     Vector2 sectionOffset = new Vector2(
-                        Math.Abs(rect.Location.X - Sections[i].rect.Location.X),
-                        Math.Abs(rect.Location.Y - Sections[i].rect.Location.Y));
+                        Math.Abs(rect.Location.X - drawSection.Location.X),
+                        Math.Abs(rect.Location.Y - drawSection.Location.Y));
 
-                    if (FlippedX && IsHorizontal) sectionOffset.X = Sections[i].rect.Right - rect.Right;
-                    if (FlippedY && !IsHorizontal) sectionOffset.Y = (rect.Y - rect.Height) - (Sections[i].rect.Y - Sections[i].rect.Height);
+                    if (FlippedX && IsHorizontal) { sectionOffset.X = drawSection.Right - rect.Right; }
+                    if (FlippedY && !IsHorizontal) { sectionOffset.Y = (rect.Y - rect.Height) - (drawSection.Y - drawSection.Height); }
 
                     sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
                     sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
 
                     prefab.sprite.DrawTiled(
                         spriteBatch,
-                        new Vector2(Sections[i].rect.X + drawOffset.X, -(Sections[i].rect.Y + drawOffset.Y)),
-                        new Vector2(Sections[i].rect.Width, Sections[i].rect.Height),
+                        new Vector2(drawSection.X + drawOffset.X, -(drawSection.Y + drawOffset.Y)),
+                        new Vector2(drawSection.Width, drawSection.Height),
                         color: color,
                         startOffset: sectionOffset,
                         depth: depth,
@@ -369,10 +383,10 @@ namespace Barotrauma
                 foreach (var decorativeSprite in Prefab.DecorativeSprites)
                 {
                     if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState);
-                    Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState) * Scale;
+                    float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
+                    Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, decorativeSprite.Scale * Scale, prefab.sprite.effects,
+                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, prefab.sprite.effects,
                         depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
                 }
                 prefab.sprite.effects = oldEffects;
