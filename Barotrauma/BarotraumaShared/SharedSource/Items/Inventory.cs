@@ -678,7 +678,7 @@ namespace Barotrauma
                         if (slots[j].Contains(item)) { visualSlots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f); }                       
                     }
                 }
-                if (otherInventory.slots != null)
+                if (otherInventory.visualSlots != null)
                 {
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {

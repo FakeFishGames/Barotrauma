@@ -22,6 +22,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private class scoredItem
+        {
+            public readonly Item Item;
+            public float Score = 0f;
+
+            public scoredItem(Item item, float score)
+            {
+                Item = item;
+                Score = score;
+            }
+        }
+
         public ItemInventory Inventory;
 
         private readonly List<ActiveContainedItem> activeContainedItems = new List<ActiveContainedItem>();
@@ -337,10 +349,10 @@ namespace Barotrauma.Items.Components
 
             // Return empty ri if item's inventory is full and all itmes in it are in perfect condition.
             if (this.Inventory.IsFull()
-                && this.Inventory.AllItemsMod.Count() == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity
+                && this.Inventory.AllItems.Count() == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity
                     && this.Inventory.AllItems.All(i => i.Condition == 100)) { return ri; }
 
-            // Get the type of items storable in the item
+            //Get the type of items storable in the weapon/item
             List<string> containableId = new List<string>();
             foreach (RelatedItem containableItem in this.ContainableItems)
             {
@@ -351,26 +363,60 @@ namespace Barotrauma.Items.Components
             }
             if (containableId.Count == 0) return ri;
 
-            // If the weapon/item is full then look for ammo that is in better condition
-            if (this.Inventory.AllItemsMod.Count() == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity)
+            List<Item> suitableAmmoInCharacterInventory = character.Inventory.FindAllItems(i => character.HeldItems.All(si => si != i.ParentInventory.Owner)
+                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
+                                                                && character.HeadSlotItem != i.ParentInventory.Owner
+                                                                && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) 
+                                                                && i.Condition > 0
+                                                                , true);
+
+            List<scoredItem> scoredAmmoList = new List<scoredItem>();
+            foreach (Item item in suitableAmmoInCharacterInventory)
+            {
+                Item parentItem = character.Inventory.FindItem(i => i == item.ParentInventory.Owner, true);
+                float calculatedScore = 0f;
+                // if the ammo is in the root of the inventory it's priority is it's condition
+                if (item.ParentInventory == character.Inventory)
+                {
+                    calculatedScore = item.Condition;
+                }
+                // if the ammo is in a weapon then lower it's priority significantly
+                else if (parentItem.Components.Any(i => i.Name == "RangedWeapon" || i.Name == "MeleeWeapon"))
+                {
+                    calculatedScore = item.Condition / 3;
+                }
+                // if the ammo is not in a weapon  then lower it's priority somewhat
+                else
+                {
+                    calculatedScore = item.Condition / 1.66f;
+                }
+                
+                scoredAmmoList.Add(new scoredItem(item, calculatedScore));
+            }
+
+            List<Item> prioritizedAmmoList = scoredAmmoList.OrderByDescending(i => i.Score).Select(i => i.Item).ToList();
+
+            // If the weapon/item is empty then look for any suitable ammo in the best condition
+            int itemInventoryContentCount = this.Inventory.AllItems.Count();
+            if (itemInventoryContentCount == 0)
+            {
+                ri.ReplacementAmmo = prioritizedAmmoList.FirstOrDefault();
+            }
+            // If the weapon/item is full then look for the same type of ammo that is in better condition
+            else if (itemInventoryContentCount == this.Inventory.Container.MaxStackSize * this.Inventory.Capacity)
             {
                 // get the item in the worst condition from the weapon's inventory
                 ri.WorstAmmoInWeapon = this.Inventory.AllItems.Aggregate((x, y) => x.Condition < y.Condition ? x : y);
-                // get the first suitable item from the inventory
-                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.HeldItems.All(si => si != i.ParentInventory.Owner)
-                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
-                                                                && character.HeadSlotItem != i.ParentInventory.Owner
-                                                                && ri.WorstAmmoInWeapon.Prefab.Identifier == i.Prefab.Identifier
-                                                                && i.Condition > ri.WorstAmmoInWeapon.Condition, true);
+                // get the best suitable item from the inventory based on this: Capacity * Modifier (InventoryBase 3x, ContainerNotWeapon 2x, Weapon 1x)
+                ri.ReplacementAmmo = prioritizedAmmoList.FirstOrDefault(i => i.Condition > ri.WorstAmmoInWeapon.Condition);
             }
-            // If the weapon/item is not full then look for any suitable ammo
-            else
+            // If the weapon/item has some type of ammo in it already then look for more of the same ammo
+            else 
             {
-                // get the first suitable item from the inventory
-                ri.ReplacementAmmo = character.Inventory.FindItem(i => character.HeldItems.All(si => si != i.ParentInventory.Owner)
-                                                                && character.HeadsetSlotItem != i.ParentInventory.Owner
-                                                                && character.HeadSlotItem != i.ParentInventory.Owner
-                                                                && containableId.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+                // Get the currently used ammo type
+                string currentAmmoType = this.Inventory.FirstOrDefault().Prefab.Identifier;
+                // Look for more of it in the character's inventory
+                ri.ReplacementAmmo = prioritizedAmmoList.FirstOrDefault(i => i.Prefab.Identifier == currentAmmoType);
             }
             return ri;
         }
