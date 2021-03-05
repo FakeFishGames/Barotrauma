@@ -346,7 +346,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(0, (ConvertUnits.ToDisplayUnits(controlledSub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_x", null);
             item.SendSignal(0, (ConvertUnits.ToDisplayUnits(controlledSub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_y", null);
             // TODO: add position_x and depth pins on the navigation terminals and shuttle terminals
-            item.SendSignal(0, controlledSub.WorldPosition.X.ToString("0.0000", CultureInfo.InvariantCulture), "position_x", null);
+            item.SendSignal(0, (controlledSub.WorldPosition.X * Physics.DisplayToRealWorldRatio).ToString("0.0000", CultureInfo.InvariantCulture), "position_x", null);
             item.SendSignal(0, controlledSub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), "depth", null);
         }
 
