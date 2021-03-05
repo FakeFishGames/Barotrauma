@@ -236,6 +236,11 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to load a linked submarine (empty XML element). The save file may be corrupted.");
                 return;
             }
+            if (!info.SubmarineElement.Elements().Any(e => e.Name.ToString().Equals("hull", StringComparison.OrdinalIgnoreCase)))
+            {
+                DebugConsole.ThrowError("Failed to load a linked submarine (the submarine contains no hulls).");
+                return;
+            }
 
             IdRemap parentRemap = new IdRemap(Submarine.Info.SubmarineElement, Submarine.IdOffset);
             sub = Submarine.Load(info, false, parentRemap);
@@ -322,7 +327,7 @@ namespace Barotrauma
                     sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
 
                     myPort.Dock(linkedPort);   
-                    myPort.Lock(true, applyEffects: false);
+                    myPort.Lock(isNetworkMessage: true, applyEffects: false);
                 }
             }
 

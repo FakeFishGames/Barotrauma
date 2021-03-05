@@ -1284,7 +1284,8 @@ namespace Barotrauma
             // Add items on the sub(s)
             Submarine.MainSub?.GetItems(true)
                 .Where(i => i.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached) &&
-                            i.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null)))
+                            i.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null)) &&
+                            ItemAndAllContainersInteractable(i))
                 .ForEach(i => AddToOwnedItems(i.Prefab));
 
             // Add items in character inventories
@@ -1301,6 +1302,16 @@ namespace Barotrauma
             CargoManager?.PurchasedItems?.ForEach(pi => AddToOwnedItems(pi.ItemPrefab, amount: pi.Quantity));
 
             ownedItemsUpdateTimer = 0.0f;
+
+            static bool ItemAndAllContainersInteractable(Item item)
+            {
+                do
+                {
+                    if (!item.IsPlayerTeamInteractable) { return false; }
+                    item = item.Container;
+                } while (item != null);
+                return true;
+            }
 
             void AddToOwnedItems(ItemPrefab itemPrefab, int amount = 1)
             {

@@ -14,6 +14,8 @@ namespace Barotrauma
 
         public bool Passed;
 
+        public bool Locked;
+
         public LevelData LevelData { get; set; }
 
         public Vector2 CenterPos

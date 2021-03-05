@@ -221,6 +221,19 @@ namespace Barotrauma
                 {
                     currentFlags.Add("CampaignNPC." + speaker.CampaignInteractionType);
                 }
+
+                if (GameMain.GameSession?.GameMode is CampaignMode campaignMode && 
+                    (campaignMode.Map?.CurrentLocation?.Type?.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase) ?? false))
+                {
+                    if (speaker.TeamID == CharacterTeamType.None)
+                    {
+                        currentFlags.Add("Bandit");
+                    }
+                    else if (speaker.TeamID == CharacterTeamType.FriendlyNPC)
+                    {
+                        currentFlags.Add("Hostage");
+                    }
+                }
             }
 
             return currentFlags;

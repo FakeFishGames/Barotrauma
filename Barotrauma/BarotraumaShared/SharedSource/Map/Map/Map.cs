@@ -59,18 +59,21 @@ namespace Barotrauma
 
         public Radiation Radiation;
 
-        public Map()
+        public Map(CampaignSettings settings)
         {
             generationParams = MapGenerationParams.Instance;
             Locations = new List<Location>();
             Connections = new List<LocationConnection>();
-            Radiation = new Radiation(this, generationParams.RadiationParams);
+            Radiation = new Radiation(this, generationParams.RadiationParams)
+            {
+                Enabled = settings.RadiationEnabled
+            };
         }
 
         /// <summary>
         /// Load a previously saved campaign map from XML
         /// </summary>
-        private Map(CampaignMode campaign, XElement element) : this()
+        private Map(CampaignMode campaign, XElement element, CampaignSettings settings) : this(settings)
         {
             Seed = element.GetAttributeString("seed", "a");
             Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
@@ -87,7 +90,10 @@ namespace Barotrauma
                         Locations[i] = new Location(subElement);
                         break;
                     case "radiation":
-                        Radiation = new Radiation(this, generationParams.RadiationParams, subElement);
+                        Radiation = new Radiation(this, generationParams.RadiationParams, subElement)
+                        {
+                            Enabled = settings.RadiationEnabled
+                        };
                         break;
                 }
             }
@@ -107,6 +113,7 @@ namespace Barotrauma
                         var connection = new LocationConnection(Locations[locationIndices.X], Locations[locationIndices.Y])
                         {
                             Passed = subElement.GetAttributeBool("passed", false),
+                            Locked = subElement.GetAttributeBool("locked", false),
                             Difficulty = subElement.GetAttributeFloat("difficulty", 0.0f)
                         };
                         Locations[locationIndices.X].Connections.Add(connection);
@@ -162,7 +169,7 @@ namespace Barotrauma
         /// <summary>
         /// Generate a new campaign map from the seed
         /// </summary>
-        public Map(CampaignMode campaign, string seed) : this()
+        public Map(CampaignMode campaign, string seed, CampaignSettings settings) : this(settings)
         {
             Seed = seed;
             Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
@@ -404,6 +411,7 @@ namespace Barotrauma
                         leftMostLocation.ChangeType(LocationType.List.First(lt => lt.HasOutpost));
                     }
                     leftMostLocation.IsGateBetweenBiomes = true;
+                    Connections[i].Locked = true;
                 }
             }
 
@@ -688,6 +696,10 @@ namespace Barotrauma
             SelectedConnection = 
                 Connections.Find(c => c.Locations.Contains(GameMain.GameSession?.Campaign?.CurrentDisplayLocation) && c.Locations.Contains(SelectedLocation)) ??
                 Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            if (SelectedConnection?.Locked ?? false)
+            {
+                DebugConsole.ThrowError("A locked connection was selected - this should not be possible.\n" + Environment.StackTrace.CleanupStackTrace());
+            }
             OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
         }
 
@@ -703,6 +715,10 @@ namespace Barotrauma
 
             SelectedLocation = location;
             SelectedConnection = Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            if (SelectedConnection?.Locked ?? false)
+            {
+                DebugConsole.ThrowError("A locked connection was selected - this should not be possible.\n" + Environment.StackTrace.CleanupStackTrace());
+            }
             OnLocationSelected?.Invoke(SelectedLocation, SelectedConnection);
         }
 
@@ -736,7 +752,7 @@ namespace Barotrauma
 
         public void SelectRandomLocation(bool preferUndiscovered)
         {
-            List<Location> nextLocations = CurrentLocation.Connections.Select(c => c.OtherLocation(CurrentLocation)).ToList();            
+            List<Location> nextLocations = CurrentLocation.Connections.Where(c => !c.Locked).Select(c => c.OtherLocation(CurrentLocation)).ToList();            
             List<Location> undiscoveredLocations = nextLocations.FindAll(l => !l.Discovered);
             
             if (undiscoveredLocations.Count > 0 && preferUndiscovered)
@@ -943,9 +959,9 @@ namespace Barotrauma
         /// <summary>
         /// Load a previously saved map from an xml element
         /// </summary>
-        public static Map Load(CampaignMode campaign, XElement element)
+        public static Map Load(CampaignMode campaign, XElement element, CampaignSettings settings)
         {
-            Map map = new Map(campaign, element);
+            Map map = new Map(campaign, element, settings);
             map.LoadState(element, false);
 #if CLIENT
             map.DrawOffset = -map.CurrentLocation.MapPosition;
@@ -1079,6 +1095,7 @@ namespace Barotrauma
 
                 var connectionElement = new XElement("connection",
                     new XAttribute("passed", connection.Passed),
+                    new XAttribute("locked", connection.Locked),
                     new XAttribute("difficulty", connection.Difficulty),
                     new XAttribute("biome", connection.Biome.Identifier),
                     new XAttribute("locations", Locations.IndexOf(connection.Locations[0]) + "," + Locations.IndexOf(connection.Locations[1])));

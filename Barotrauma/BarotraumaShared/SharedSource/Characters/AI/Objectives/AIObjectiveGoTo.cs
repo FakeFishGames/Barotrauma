@@ -555,6 +555,13 @@ namespace Barotrauma
                     //otherwise characters can let go of the ladders too soon once they're close enough to the target
                     if (PathSteering.CurrentPath.NextNode != null) { return false; }
                 }
+                if (!character.AnimController.InWater)
+                {
+                    float yDiff = Math.Abs(Target.WorldPosition.Y - character.WorldPosition.Y);
+                    if (yDiff > CloseEnough) { return false; }
+                    float xDiff = Math.Abs(Target.WorldPosition.X - character.WorldPosition.X);
+                    return xDiff <= CloseEnough;
+                }
                 return Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
             }
         }

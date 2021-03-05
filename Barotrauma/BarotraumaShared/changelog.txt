@@ -1,5 +1,86 @@
 ---------------------------------------------------------------------------------------------------------
-v0.12.X.X
+v0.1300.0.1 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- 3 new outpost mission types: clearing a nest, hostage rescue and assassination.
+- The enemies in abandoned outposts are tougher and there's more of them in multiplayer.
+- Improvements to abandoned outpost modules.
+- Respawning is disabled in abandoned outposts.
+- Gating progress between biomes: you need a certain amount of money or reputation before you can enter the next biome. 
+- Reworked Charybdis as another abyss monster (in addition to Endworm).
+- Revisited husk animations, movement speeds, and general balance. Husks regenerate a lot and are a bit tougher than they use to be. Human husks can and will easily rise again, unless properly killed.
+- Adjustments and fixes on the thresher attacks.
+- Revisit mudraptors' attacks. Fixes unarmored mudraptors and mudraptor hatchlings acting weird when attacking characters in water.
+- Lower the overall damage of all the hatchlings.
+- Bots can now be renamed through the outpost crew management interface.
+- Fabricators now display remaining time when fabricating.
+- Endworm now groans when the tail is cut.
+- Beacon stations' reactors don't deteriorate or consuming fuel to prevent the station from going back down when the player is travelling out from the level.
+- Irradiated outposts become abandoned instead of simply disappearing.
+- Fabricator displays the time until ready when fabrication is in progress.
+- The output length of all signal components is now restricted to 200 characters by default to prevent performance and networking issues if the output is set to an excessively long value (such as the entire dialog of the Bee Movie). The limit can be increased in the sub editor.
+- Stunning still works on friendly characters even if friendly fire has been disabled on a server.
+- Made radiation sickness's icon appear before it starts causing burns (instead of working the other way around).
+- Made radiation sickness cause nausea.
+- Added a checkbox to color component that toggles between RGBA and HSV input.
+- Disabled NPC conversations in sub editor test mode.
+- Added a tooltip when hovering over radiated area.
+- Added a checkbox for the radiation feature to both singleplayer and multiplayer.
+- Radiated outposts now turn into abandoned outposts instead of vanishing in thin air.
+- Use ternary states for some of the server filters (thanks someone972!)
+- Banning a player who's using Steam Family Sharing will now also ban the owner's account, solving ban evasion using this method.
+- Added interactive submarine previews to the lobby and "New Game" screen.
+- Implemented rudimentary text highlighting in mission descriptions.
+- Added in-game hints, designed to help with new player onboarding. Can be disabled in the settings.
+
+Fixes:
+- Attempt to fix crashes with the error message "failed to generate OpenAL/stream buffer" on Mac.
+- Waypoint fixes in the abandoned outposts.
+- Fixed bot reaction times and readjusted aiming delays.
+- Fixed bots that follow you not always holding position in the combat mode.
+- Fixed bots not being able to hit targets that lie on the ground.
+- Fixed monsters sometimes targeting ruin rooms.
+- Monsters now stop targeting characters that are far enough behind level geometry. Fixes them getting stuck while trying to reach targets that are not easily reachable.
+- Fixes to the Endworm's behavior and ragdoll.
+- Minor boost to the Endworm's attack on walls, major boost to the attack on characters.
+- Fixed a crash when no valid limb was found for an affliction. Probably only happened with characters that already had some limbs severed.
+- Fixed non-multiplied damage to limbs effectively always being clamped to 100, which means that no attack could do more than 100 damage per hit unless there's some damage modifier defined on the target limb.
+- Fixed husk's mouth tentacles rendering on top of the left hand. Also fixed a minor texture bleeding on the waist.
+- Fixed possible desync when multiple players use the crew management interface simultaneously.
+- Fixed being able to drag order icons when spectating.
+- Fixed non-interactable items being counted as owned in the store interface.
+- Fixed abyss monsters not keeping in the depths and non-abyss monsters not avoiding the depths when they have attack targets. Now they should only attack the targets that come to their zone and continue pursuing the target until they either lose it or if the state changes from attack to something else.
+- Fixed bots treating radiation sickness too eagerly (leading to wasted antirad).
+- Added missing platforms to abandoned outpost modules.
+- Fixed vanilla wrecks/modules/outposts being shown in the Workshop menu's publish tab.
+- Fixed bioluminescent cave's hallucination effect never going fully away and made it treatable with haloperidol.
+- Fixed characters getting impact damage from collisions with sensors. Caused characters to get stunned when they're thrown around by a monster while touching a level trigger (for instance, the branches in forest caves).
+- Fixed held items not appearing in the characters hand after entering a new level in the campaign.
+- Fixed hidden items being shown when searching for them in sub editor.
+- Fixed crashing when trying to load a linked sub that contains no hulls.
+- Fixed "hide incompatible" checkbox in the server list.
+- Fixed one of the engineer variants having too many items in the toolbelt.
+- Monster events don't spawn an additional endworm in the abyss if one has already been spawned by a hunting grounds mission.
+- Fixed nav terminal ignoring velocity_in signals when the terminal hasn't been operated by anyone during the round.
+- Fixed launching depth charges crashing the game.
+- Fixed coilgun lights flickering when firing.
+- Fixed ability to walk through the heavy doors in mining outposts.
+- Fixed inability to move stacks of items to containers by double-clicking.
+- Fixed crashing when trying to enter an abandoned outpost with a sub that has shuttles.
+- Fixed monsters targeting entities outside of their allowed zone. They dropped the target when they reached the non-allowed zone, which caused indetermined behavior (fluctuating) at the border.
+- Fixed monsters with the circling behavior sometimes not being able to reach the target because they were not targeting the closest target.
+- Fixed Workshop mod download prompt looping and freezing when there's a hash mismatch after a mod has already been installed.
+
+Modding: 
+- Added AITrigger that can be used to trigger an ai state using the status effects (See Charybdis).
+- Turned IsTraitor into a property so it can be accessed by status effects.
+
+Bots:
+- Fixed non-security bots fleeing the enemy (in defensive combat state) even when they are ordered to fight intruders.
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.0.0 (unstable)
 ---------------------------------------------------------------------------------------------------------
 
 Campaign changes:
@@ -12,17 +93,21 @@ Campaign changes:
 Abyss:
 - Reintroduced Endworms.
 - Added floating islands that contain caves and rare minerals to the Abyss.
-- Multiple current orders: you can assign up to three simultaneous orders for characters and drag the icons to change their priority.
 
 Changes:
 - Added abandoned outposts and a new abandoned outpost mission type.
 - Added entity subcategories to the submarine editor (note that most of the vanilla items/structures aren't categorized yet in this build).
+- Reworked the impacts to the sub when it's hit by monsters. Increased the screen shake and stunning. There's now a 30 second cooldown for getting knocked down. Fixed the impact not triggering if the colliding limb is not big enough.
 - Reworked attacks and effects for the following creatures: Moloch, Black Moloch, Hammerhead, Hammerhead Matriarch, and Golden Hammerhead. They now have bigger impact on the sub when they hit it. Black Moloch's emp damage is halved.
 - Moloch's shell now always breaks when shot with a railgun.
 - Recreated waypoints for the vanilla subs.
-- Added EMP effect to nuclear shells.
+- Added EMP effect to nuclear shells. Increased the damage a bit.
 - Added a right click context menu option to copy debug console errors to clipboard.
-- Railgun shells now explode instead of piercing armor. Physicorium shells still go through armor.
+- Railgun shells now explode instead of piercing armor. Physicorium shells still go through armor. Make all railgun ammunition slightly more likely to break limb joints.
+- Added multiple current orders: you can assign up to three simultaneous orders for characters and drag the icons to change their priority.
+- NPCs (non-bots) speak report related lines less than they used to.
+- The bleeding particles are now emitted from the last matching limb instead of the first. Readjusted particle emit frequency and scale.
+- Reduced Moloch's bleeding reductions.
 
 Fixes:
 - Major improvements to the voice chat: higher audio quality, less intrusive radio effect, fixed clicks/distortion.
@@ -43,6 +128,10 @@ Fixes:
 - Fixed status monitor in a docked shuttle sometimes not displaying the main sub.
 - Fixed campaign stores sometimes displaying prices for a previous location.
 - Fixed various scaling issues on higher resolutions.
+- Fixed monsters fluttering while pursuing other creatures. Only happened while swimming and was not notable on all monsters).
+- Fixed mouse cursor being switched to hand even when the spritesheet is not shown in the character editor.
+- Fixed monsters with low head/torso torques moving backwards when they try to turn around 180 degrees.
+- Fixed regular Moloch not bleeding correctly.
 
 Bots:
 - Bots now warn when you are running low / out of oxygen or welding fuel tanks, turret ammunition, or reactor fuel.
@@ -58,11 +147,33 @@ Bots:
 - Fixed bots trying to return the diving suit when it's not a reasonable thing to do, but when they actually don't need it.
 - Fixed bots failing to swap an oxygen tank from a diving mask to a diving suit when both items are equipped.
 - Fixed bots getting confused when they have a mask without a valid oxygen tank inside it and when there's not enough oxygen in the room to be without the mask.
+- Bots now react faster in general to all enemies.
+- Bots now automatically attack enemies outside of the main sub, if they have a weapon. While docked to an enemy outpost or submarine, the "fight intruders" order now acts as an offensive order to attack the enemies on the connected submarine/outpost.
+- Fixed bots following the player when the player is controlling a monster.
+- You can now escape from NPCs by going far enough from them while they are pursuing you.
+- Fixed bots reacting to attackers that are outside of the submarine.
+- Fixed the "reportrange" parameter not working when the character is attacked. In practice only has effect on NPCs.
+- Fixed report icons being shown also for other teams instead of just the own team.
+- Bots now target the closest limb instead of the main collider when they aim with the turret. With small creatures, this should now make any difference. With long creatures, it allows the bots to target the extremities of the body instead of always shooting at the main body.
 
 Modding:
+- The hit impact of a monster's attack can now be adjusted with the new "submarineimpactmultiplier" defined in the attack block. Note that this is a multipler to the actual impact, hence also the force applied on the attacking monster affects the final impact.
 - Explosions now have three new parameters: ignorecover, onlyinside, and onlyoutside.
 - Fixed crashing when attempting to play a music clip that isn't a valid ogg file or if the file is not found.
 - Fixed crashing when trying to spawn a character variant with custom inventory contents.
+- Renamed the ai parameter "Threshold" as "DamageThreshold".
+- Replaced "spawndeep" with "abyss" spawn type (defined in random events).
+- New parameters StayInAbyss and StayInsideLevel that define the area where the creature tries to keep inside while not attacking.
+- The creature disable distance, which totally disables the creature, is now exposed in the character parameters. The distance for triggering simple physics, which disables all the limbs and keeps only the main collider updated, is half of this distance. Increased the default from 22 000 to 25 000 (pixels).
+- New attack pattern: Circle (around the target). Used by the abyss creatures.
+- The aim speed and accuracy of NPC characters can now be adjusted in the npc (spawn) definition. The Aim speed also affects melee attack speed.
+- Fixed OnSevered status effects launching also on the limb that the severed limb was attached to.
+- Added "bleedingnonstop" affliction, which is just the same as normal bleeding but it never wears off.
+- Added and option to target the last matching limb insted of the first (StatusEffect.TargetType.Limb). Implemented targeting other limbs even when the status effect is triggered from the limb, which was previously only implemented for status effects that targeted character. See Endworm for an example.
+- Fixed hidden limbs not being ignored in many cases where they should, which potentially could cause issues with some custom monsters.
+- Added "bleedparticlemultiplier" parameter in character definition, which can be used to increase/decrease the general amount of bleeding for the character in question.
+- Added an option to always ignore an ai target if it's not inside the same sub as the character.
+- Attacks can now "blink" limbs when they attack (Endworm). Blinking is a generic way to rotate limbs so that they "animate" (see Watcher's eye).
 
 ---------------------------------------------------------------------------------------------------------
 v0.12.0.3

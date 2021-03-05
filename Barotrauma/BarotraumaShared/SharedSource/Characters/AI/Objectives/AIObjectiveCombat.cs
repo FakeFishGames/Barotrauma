@@ -79,6 +79,7 @@ namespace Barotrauma
         private float coolDownTimer;
         private IEnumerable<Body> myBodies;
         private float aimTimer;
+        private float reloadTimer;
         private float spreadTimer;
 
         private bool canSeeTarget;
@@ -147,6 +148,7 @@ namespace Barotrauma
                 Mode = CombatMode.Retreat;
             }
             spreadTimer = Rand.Range(-10, 10);
+            HumanAIController.SortTimer = 0;
         }
 
         public override float GetPriority()
@@ -170,6 +172,10 @@ namespace Barotrauma
             base.Update(deltaTime);
             ignoreWeaponTimer -= deltaTime;
             checkWeaponsTimer -= deltaTime;
+            if (reloadTimer > 0)
+            {
+                reloadTimer -= deltaTime;
+            }
             if (ignoreWeaponTimer < 0)
             {
                 ignoredWeapons.Clear();
@@ -219,7 +225,11 @@ namespace Barotrauma
                 {
                     OperateWeapon(deltaTime);
                 }
-                if (!HoldPosition && seekAmmunitionObjective == null && seekWeaponObjective == null)
+                if (HoldPosition)
+                {
+                    SteeringManager.Reset();
+                }
+                else if (seekAmmunitionObjective == null && seekWeaponObjective == null)
                 {
                     Move(deltaTime);
                 }
@@ -641,7 +651,7 @@ namespace Barotrauma
                 var slots = Weapon.AllowedSlots.Where(s => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
                 {
-                    aimTimer = Rand.Range(1f, 1.5f) / AimSpeed;
+                    aimTimer = Rand.Range(0.2f, 0.4f) / AimSpeed;
                 }
                 else
                 {
@@ -912,7 +922,7 @@ namespace Barotrauma
             }
             if (!canSeeTarget)
             {
-                aimTimer = Rand.Range(0.2f, 1f) / AimSpeed;
+                aimTimer = Rand.Range(0.2f, 0.4f) / AimSpeed;
                 return;
             }
             if (Weapon.RequireAimToUse)
@@ -930,6 +940,7 @@ namespace Barotrauma
                 aimTimer -= deltaTime;
                 return;
             }
+            if (reloadTimer > 0) { return; }
             if (Mode == CombatMode.Arrest && isLethalWeapon && Enemy.Stun > 1) { return; }
             if (holdFireCondition != null && holdFireCondition()) { return; }
             float sqrDist = Vector2.DistanceSquared(character.Position, Enemy.Position);
@@ -1010,18 +1021,25 @@ namespace Barotrauma
 
         private void UseWeapon(float deltaTime)
         {
-            character.SetInput(InputType.Shoot, false, true);
-            Weapon.Use(deltaTime, character);
             float reloadTime = 0;
             if (WeaponComponent is RangedWeapon rangedWeapon)
             {
-                reloadTime = rangedWeapon.Reload;
+                // If the weapon is just equipped, we can't shoot just yet.
+                if (rangedWeapon.ReloadTimer <= 0)
+                {
+                    reloadTime = rangedWeapon.Reload;
+                }
             }
             if (WeaponComponent is MeleeWeapon mw)
             {
-                reloadTime = mw.Reload;
+                if (!((HumanoidAnimController)character.AnimController).Crouching)
+                {
+                    reloadTime = mw.Reload;
+                }
             }
-            aimTimer = Math.Max(reloadTime, reloadTime * Rand.Range(1f, 1.5f) / AimSpeed);
+            character.SetInput(InputType.Shoot, false, true);
+            Weapon.Use(deltaTime, character);
+            reloadTimer = Math.Max(reloadTime, reloadTime * Rand.Range(1f, 1.25f) / AimSpeed);
         }
 
         protected override void OnCompleted()
@@ -1031,10 +1049,7 @@ namespace Barotrauma
             {
                 Unequip();
             }
-            if (!HoldPosition)
-            {
-                SteeringManager.Reset();
-            }
+            SteeringManager.Reset();
         }
 
         protected override void OnAbandon()
@@ -1044,10 +1059,7 @@ namespace Barotrauma
             {
                 Unequip();
             }
-            if (!HoldPosition)
-            {
-                SteeringManager.Reset();
-            }
+            SteeringManager.Reset();
         }
 
         public override void Reset()

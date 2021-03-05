@@ -23,7 +23,7 @@ namespace Barotrauma
 
         private GUIButton loadGameButton, deleteMpSaveButton;
         
-        public Action<SubmarineInfo, string, string> StartNewGame;
+        public Action<SubmarineInfo, string, string, CampaignSettings> StartNewGame;
         public Action<string> LoadGame;
 
         private enum CategoryFilter { All = 0, Vanilla = 1, Custom = 2 };            
@@ -40,6 +40,8 @@ namespace Barotrauma
             get;
             private set;
         }
+        
+        public GUITickBox EnableRadiationToggle { get; set; }
 
         private readonly bool isMultiplayer;
 
@@ -171,6 +173,8 @@ namespace Barotrauma
                     string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
                     bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
 
+                    CampaignSettings settings = new CampaignSettings { RadiationEnabled = EnableRadiationToggle?.Selected ?? GameMain.NetLobbyScreen.IsRadiationEnabled() };
+
                     if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
                     {
                         if (!hasRequiredContentPackages)
@@ -184,7 +188,7 @@ namespace Barotrauma
                             {
                                 if (GUIMessageBox.MessageBoxes.Count == 0)
                                 {
-                                    StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                    StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
                                     if (isMultiplayer)
                                     {
                                         CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
@@ -204,7 +208,7 @@ namespace Barotrauma
 
                             msgBox.Buttons[0].OnClicked = (button, obj) => 
                             {
-                                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                                StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
                                 if (isMultiplayer)
                                 {
                                     CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
@@ -219,7 +223,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text);
+                        StartNewGame?.Invoke(selectedSub, savePath, seedBox.Text, settings);
                         if (isMultiplayer)
                         {
                             CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
@@ -230,8 +234,7 @@ namespace Barotrauma
                 }
             };
 
-            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", 
-                font: isMultiplayer ? GUI.Style.SmallFont : GUI.Style.Font, textColor: GUI.Style.Green)
+            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(isMultiplayer ? 0.6f : 0.3f, 1f), buttonContainer.RectTransform), "", font: isMultiplayer ? GUI.Style.SmallFont : GUI.Style.Font, textColor: GUI.Style.Green)
             {
                 TextGetter = () =>
                 {
@@ -254,6 +257,12 @@ namespace Barotrauma
 
             if (!isMultiplayer)
             {
+                EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 1f), buttonContainer.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                {
+                    Selected = true,
+                    ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
+                };
+
                 var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
                 {
                     IgnoreLayoutGroups = true,

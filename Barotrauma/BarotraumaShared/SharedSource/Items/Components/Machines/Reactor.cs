@@ -221,6 +221,13 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+#if CLIENT
+            if(PowerOn && AvailableFuel < 1)
+            {
+                HintManager.OnReactorOutOfFuel(this);
+            }
+#endif
+
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 

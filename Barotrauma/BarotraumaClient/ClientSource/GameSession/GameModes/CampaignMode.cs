@@ -63,7 +63,7 @@ namespace Barotrauma
             {
                 new GUIMessageBox(
                     mission.Prefab.IsSideObjective ? TextManager.AddPunctuation(':', TextManager.Get("sideobjective"), mission.Name) : mission.Name, 
-                    mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon)
+                    mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon, parseRichText: true)
                 {
                     IconColor = mission.Prefab.IconColor,
                     UserData = "missionstartmessage"

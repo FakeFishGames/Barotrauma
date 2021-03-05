@@ -5,9 +5,39 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
+    internal struct CampaignSettings
+    {
+        public static CampaignSettings Empty = new CampaignSettings();
+
+        // Anything that uses this field I wasn't sure if actually needed the proper campaign settings to be passed down
+        public static CampaignSettings Unsure = Empty;
+        public bool RadiationEnabled { get; set; }
+
+        public CampaignSettings(IReadMessage inc)
+        {
+            RadiationEnabled = inc.ReadBoolean();
+        }
+        
+        public CampaignSettings(XElement element)
+        {
+            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLower(), true);
+        }
+
+        public void Serialize(IWriteMessage msg)
+        {
+            msg.Write(RadiationEnabled);
+        }
+
+        public XElement Save()
+        {
+            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLower(), RadiationEnabled));
+        }
+    }
+
     abstract partial class CampaignMode : GameMode
     {
         const int MaxMoney = int.MaxValue / 2; //about 1 billion
@@ -30,6 +60,8 @@ namespace Barotrauma
         public CampaignMetadata CampaignMetadata;
 
         protected XElement petsElement;
+
+        public CampaignSettings Settings;
 
         private List<Mission> extraMissions = new List<Mission>();
 
@@ -224,7 +256,7 @@ namespace Barotrauma
 
                 if (levelData.HasBeaconStation && !levelData.IsBeaconActive)
                 {
-                    var beaconMissionPrefab = MissionPrefab.List.Find(m => m.Identifier.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase));
+                    var beaconMissionPrefab = MissionPrefab.List.Find(m => m.Tags.Any(t => t.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase)));
                     if (beaconMissionPrefab != null && !Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
                     {
                         extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
@@ -232,8 +264,12 @@ namespace Barotrauma
                 }
                 if (levelData.HasHuntingGrounds)
                 {
-                    var huntingGroundsMissionPrefab = MissionPrefab.List.Find(m => m.Identifier.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase));
-                    if (huntingGroundsMissionPrefab != null && !Missions.Any(m => m.Prefab.Type == huntingGroundsMissionPrefab.Type))
+                    var huntingGroundsMissionPrefab = MissionPrefab.List.Find(m => m.Tags.Any(t => t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)));
+                    if (huntingGroundsMissionPrefab == null)
+                    {
+                        DebugConsole.AddWarning("Could not find a hunting grounds mission for the level. No mission with the tag \"huntinggroundsnoreward\" found.");
+                    }
+                    else if (!Missions.Any(m => m.Prefab.Type == huntingGroundsMissionPrefab.Type))
                     {
                         extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
                     }
@@ -342,7 +378,7 @@ namespace Barotrauma
                         nextLevel = map.StartLocation.LevelData;
                         return TransitionType.End;
                     }
-                    if (Level.Loaded.EndLocation != null && Level.Loaded.EndLocation.HasOutpost() && Level.Loaded.EndOutpost != null)
+                    if (Level.Loaded.EndLocation != null && Level.Loaded.EndLocation.Type.HasOutpost && Level.Loaded.EndOutpost != null)
                     {
                         nextLevel = Level.Loaded.EndLocation.LevelData;
                         return TransitionType.ProgressToNextLocation;
@@ -361,12 +397,12 @@ namespace Barotrauma
                 }
                 else if (leavingSub.AtStartPosition)
                 {
-                    if (map.CurrentLocation.HasOutpost() && Level.Loaded.StartOutpost != null)
+                    if (map.CurrentLocation.Type.HasOutpost && Level.Loaded.StartOutpost != null)
                     {
                         nextLevel = map.CurrentLocation.LevelData;
                         return TransitionType.ReturnToPreviousLocation;
                     }
-                    else if (map.SelectedLocation != null && map.SelectedLocation != map.CurrentLocation && !map.CurrentLocation.HasOutpost() &&
+                    else if (map.SelectedLocation != null && map.SelectedLocation != map.CurrentLocation && !map.CurrentLocation.Type.HasOutpost &&
                             map.SelectedConnection != null && Level.Loaded.LevelData != map.SelectedConnection.LevelData)
                     {
                         nextLevel = map.SelectedConnection.LevelData;
@@ -584,14 +620,12 @@ namespace Barotrauma
 
         public bool TryHireCharacter(Location location, CharacterInfo characterInfo)
         {
+            if (characterInfo == null) { return false; }
             if (Money < characterInfo.Salary) { return false; }
-
             characterInfo.IsNewHire = true;
-
             location.RemoveHireableCharacter(characterInfo);
             CrewManager.AddCharacterInfo(characterInfo);
             Money -= characterInfo.Salary;
-
             return true;
         }
 

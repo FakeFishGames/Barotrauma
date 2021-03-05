@@ -18,9 +18,10 @@ namespace Barotrauma
         Nest = 0x10,
         Mineral = 0x20,
         Combat = 0x40,
-        AbandonedOutpost = 0x80,
+        OutpostDestroy = 0x80,
+        OutpostRescue = 0x100,
 
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | AbandonedOutpost
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | OutpostDestroy | OutpostRescue
     }
 
     partial class MissionPrefab
@@ -35,7 +36,8 @@ namespace Barotrauma
             { MissionType.Beacon, typeof(BeaconMission) },
             { MissionType.Nest, typeof(NestMission) },
             { MissionType.Mineral, typeof(MineralMission) },
-            { MissionType.AbandonedOutpost, typeof(AbandonedOutpostMission) },
+            { MissionType.OutpostDestroy, typeof(OutpostDestroyMission) },
+            { MissionType.OutpostRescue, typeof(AbandonedOutpostMission) },
         };
         public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
         {
@@ -166,7 +168,10 @@ namespace Barotrauma
                 FailureMessage = element.GetAttributeString("failuremessage", "");
             }
 
-            SonarLabel          = TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ?? element.GetAttributeString("sonarlabel", "");
+            SonarLabel          = 
+                TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ?? 
+                TextManager.Get("MissionSonarLabel." + element.GetAttributeString("sonarlabel", ""), true) ?? 
+                element.GetAttributeString("sonarlabel", "");
             SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
 
             MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);

@@ -529,6 +529,7 @@ namespace Barotrauma
         {
             ushort infoID = inc.ReadUInt16();
             string newName = inc.ReadString();
+            string originalName = inc.ReadString();
             int gender = inc.ReadByte();
             int race = inc.ReadByte();
             int headSpriteID = inc.ReadByte();
@@ -556,7 +557,7 @@ namespace Barotrauma
             }
 
             // TODO: animations
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, jobPrefab, ragdollFile, variant)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant)
             {
                 ID = infoID,
             };

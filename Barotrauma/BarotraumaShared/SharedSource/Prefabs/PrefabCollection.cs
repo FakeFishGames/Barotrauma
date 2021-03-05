@@ -93,7 +93,7 @@ namespace Barotrauma
             //Handle bad overrides and duplicates
             if (basePrefabExists && !isOverride)
             {
-                DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): base already exists; try overriding");
+                DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): base already exists; try overriding\n{Environment.StackTrace}");
                 return;
             }
 

@@ -590,10 +590,11 @@ namespace Barotrauma
                     if (item.GetComponent<Turret>() != null) { return false; }
                     if (item.body != null && !item.body.Enabled) { return true; }
                 }
+                if (e.HiddenInGame) { return true; }
                 return false;
             });
 
-            if (entities.Count == 0) return Rectangle.Empty;
+            if (entities.Count == 0) { return Rectangle.Empty; }
 
             float minX = entities[0].Rect.X, minY = entities[0].Rect.Y - entities[0].Rect.Height;
             float maxX = entities[0].Rect.Right, maxY = entities[0].Rect.Y;
@@ -1356,7 +1357,7 @@ namespace Barotrauma
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInOutpost = !info.OutpostGenerationParams.AllowStealing;
+                            item.SpawnedInOutpost = info.OutpostGenerationParams != null && !info.OutpostGenerationParams.AllowStealing;
                             if (item.GetComponent<Repairable>() != null && indestructible)
                             {
                                 item.Indestructible = true;
@@ -1366,7 +1367,7 @@ namespace Barotrauma
                                 if (ic is ConnectionPanel connectionPanel)
                                 {
                                     //prevent rewiring
-                                    if (!info.OutpostGenerationParams.AlwaysRewireable)
+                                    if (info.OutpostGenerationParams != null && !info.OutpostGenerationParams.AlwaysRewireable)
                                     {
                                         connectionPanel.Locked = true;
                                     }

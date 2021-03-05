@@ -147,7 +147,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? useRespawnShuttle = null)
+        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? radiationEnabled = null, bool? useRespawnShuttle = null)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -212,6 +212,7 @@ namespace Barotrauma.Networking
 
                 outMsg.Write(autoRestart != null);
                 outMsg.Write(autoRestart ?? false);
+                outMsg.Write(radiationEnabled ?? RadiationEnabled);
                 outMsg.WritePadBits();
             }
 
@@ -274,7 +275,7 @@ namespace Barotrauma.Networking
                 if (GUI.MouseOn == btn || GUI.MouseOn == btn.TextBlock) { ToggleSettingsFrame(btn, userData); }
                 return true;
             };
-            
+
             new GUIButton(new RectTransform(Vector2.One, settingsFrame.RectTransform), "", style: null)
             {
                 OnClicked = ToggleSettingsFrame

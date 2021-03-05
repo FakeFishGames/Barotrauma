@@ -35,6 +35,7 @@ namespace Barotrauma
         public readonly Sprite[] CursorSprite = new Sprite[7];
 
         public UISprite RadiationSprite { get; private set; }
+        public SpriteSheet RadiationAnimSpriteSheet { get; private set; }
 
         public UISprite UIGlow { get; private set; }
         public UISprite UIGlowCircular { get; private set; }
@@ -213,6 +214,9 @@ namespace Barotrauma
                         break;
                     case "radiation":
                         RadiationSprite = new UISprite(subElement);
+                        break;
+                    case "radiationanimspritesheet":
+                        RadiationAnimSpriteSheet = new SpriteSheet(subElement);
                         break;
                     case "uiglowcircular":
                         UIGlowCircular = new UISprite(subElement);

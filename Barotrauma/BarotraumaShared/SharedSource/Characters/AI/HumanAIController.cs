@@ -15,7 +15,7 @@ namespace Barotrauma
 
         private readonly AIObjectiveManager objectiveManager;
         
-        private float sortTimer;
+        public float SortTimer { get; set; }
         private float crouchRaycastTimer;
         private float reactTimer;
         private float unreachableClearTimer;
@@ -131,7 +131,7 @@ namespace Barotrauma
             outsideSteering = new SteeringManager(this);
             objectiveManager = new AIObjectiveManager(c);
             reactTimer = GetReactionTime();
-            sortTimer = Rand.Range(0f, sortObjectiveInterval);
+            SortTimer = Rand.Range(0f, sortObjectiveInterval);
         }
 
         public override void Update(float deltaTime)
@@ -218,6 +218,7 @@ namespace Barotrauma
                         foreach (Character c in Character.CharacterList)
                         {
                             if (c.Submarine != Character.Submarine) { continue; }
+                            if (c.Removed || c.IsDead || c.IsIncapacitated) { continue; }
                             if (IsFriendly(c)) { continue; }
                             Vector2 toTarget = c.WorldPosition - WorldPosition;
                             float dist = toTarget.LengthSquared();
@@ -264,14 +265,14 @@ namespace Barotrauma
             CheckCrouching(deltaTime);
             Character.ClearInputs();
             
-            if (sortTimer > 0.0f)
+            if (SortTimer > 0.0f)
             {
-                sortTimer -= deltaTime;
+                SortTimer -= deltaTime;
             }
             else
             {
                 objectiveManager.SortObjectives();
-                sortTimer = sortObjectiveInterval;
+                SortTimer = sortObjectiveInterval;
             }
             objectiveManager.UpdateObjectives(deltaTime);
 
@@ -288,14 +289,14 @@ namespace Barotrauma
             {
                 if (Character.CurrentHull != null)
                 {
-                    if (Character.TeamID == CharacterTeamType.FriendlyNPC)
+                    if (Character.IsOnPlayerTeam)
                     {
-                        // Outpost npcs don't inform each other about threats, like crew members do.
-                        VisibleHulls.ForEach(h => RefreshHullSafety(h));
+                        VisibleHulls.ForEach(h => PropagateHullSafety(Character, h));
                     }
                     else
                     {
-                        VisibleHulls.ForEach(h => PropagateHullSafety(Character, h));
+                        // Outpost npcs don't inform each other about threats, like crew members do.
+                        VisibleHulls.ForEach(h => RefreshHullSafety(h));
                     }
                 }
                 if (Character.SpeechImpediment < 100.0f)
@@ -1065,7 +1066,9 @@ namespace Barotrauma
             {
                 if (!IsFriendly(attacker))
                 {
-                    return c.IsSecurity ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive;
+                    return c.AIController is HumanAIController humanAI && 
+                        (humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders)) 
+                        ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive;
                 }
                 else
                 {
@@ -1192,7 +1195,7 @@ namespace Barotrauma
         {
             base.Reset();
             objectiveManager.SortObjectives();
-            sortTimer = sortObjectiveInterval;
+            SortTimer = sortObjectiveInterval;
             float waitDuration = characterWaitOnSwitch;
             if (ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>())
             {
@@ -1418,6 +1421,9 @@ namespace Barotrauma
                         item.StolenDuringRound = true;
                         otherCharacter.Speak(TextManager.Get("dialogstealwarning"), null, Rand.Range(0.5f, 1.0f), "thief", 10.0f);
                         someoneSpoke = true;
+#if CLIENT
+                        HintManager.OnStoleItem(thief, item);
+#endif
                     }
                     // React if we are security
                     if (!TriggerSecurity(otherHumanAI))
@@ -1554,7 +1560,7 @@ namespace Barotrauma
                         targetAdded = true;
                     }
                 }
-            }, (caller.AIController as HumanAIController)?.ReportRange ?? float.PositiveInfinity);
+            }, range: (caller.AIController as HumanAIController)?.ReportRange ?? float.PositiveInfinity);
             return targetAdded;
         }
 
@@ -1726,11 +1732,9 @@ namespace Barotrauma
             switch (myTeam)
             {
                 case CharacterTeamType.None:
-                    // Only enemies are in the Team "None"
-                    return false;
                 case CharacterTeamType.Team1:
                 case CharacterTeamType.Team2:
-                    // Team1 is only friendly to Team1 and friendly NPCs
+                    // Only friendly to the same team and friendly NPCs
                     return otherTeam == CharacterTeamType.FriendlyNPC;
                 case CharacterTeamType.FriendlyNPC:
                     // Friendly NPCs are friendly to both teams

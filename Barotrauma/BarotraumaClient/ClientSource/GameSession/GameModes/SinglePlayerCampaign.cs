@@ -57,11 +57,12 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates a new single player campaign
         /// </summary>
-        private SinglePlayerCampaign(string mapSeed) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign)
         {
             CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
-            map = new Map(this, mapSeed);
+            map = new Map(this, mapSeed, settings);
+            Settings = settings;
             foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
@@ -85,11 +86,14 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "campaignsettings":
+                        Settings = new CampaignSettings(subElement);
+                        break;
                     case "crew":
                         GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
                         break;
                     case "map":
-                        map = Map.Load(this, subElement);
+                        map = Map.Load(this, subElement, Settings);
                         break;
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
@@ -141,9 +145,9 @@ namespace Barotrauma
         /// <summary>
         /// Start a completely new single player campaign
         /// </summary>
-        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub)
+        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
         {
-            var campaign = new SinglePlayerCampaign(mapSeed);
+            var campaign = new SinglePlayerCampaign(mapSeed, settings);
             return campaign;
         }
 
@@ -608,6 +612,7 @@ namespace Barotrauma
                 {
                     ShowCampaignUI = false;
                 }
+                HintManager.OnAvailableTransition(transitionType);
             }
 
             if (!crewDead)
@@ -629,9 +634,9 @@ namespace Barotrauma
             if (nextLevel == null)
             {
                 //no level selected -> force the player to select one
+                ForceMapUI = true;
                 CampaignUI.SelectTab(InteractionType.Map);
                 map.SelectLocation(-1);
-                ForceMapUI = true;
                 return false;
             }
             else if (transitionType == TransitionType.ProgressToNextEmptyLocation)
@@ -704,6 +709,7 @@ namespace Barotrauma
                 new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
                 new XAttribute("cheatsenabled", CheatsEnabled));
+            modeElement.Add(Settings.Save());
 
             //save and remove all items that are in someone's inventory so they don't get included in the sub file as well
             foreach (Character c in Character.CharacterList)

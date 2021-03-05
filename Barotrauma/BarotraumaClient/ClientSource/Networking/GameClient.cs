@@ -2064,6 +2064,8 @@ namespace Barotrauma.Networking
                             bool autoRestartEnabled = inc.ReadBoolean();
                             float autoRestartTimer = autoRestartEnabled ? inc.ReadSingle() : 0.0f;
 
+                            bool radiationEnabled = inc.ReadBoolean();
+
                             //ignore the message if we already a more up-to-date one
                             //or if we're still waiting for the initial update
                             if (NetIdUtils.IdMoreRecent(updateID, GameMain.NetLobbyScreen.LastUpdateID) &&
@@ -2119,7 +2121,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetAllowSpectating(allowSpectating);
                                 GameMain.NetLobbyScreen.LevelSeed = levelSeed;
                                 GameMain.NetLobbyScreen.SetLevelDifficulty(levelDifficulty);
-                                GameMain.NetLobbyScreen.SetBotCount(botCount);
+                                GameMain.NetLobbyScreen.SetRadiationEnabled(radiationEnabled);
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
@@ -2564,7 +2566,7 @@ namespace Barotrauma.Networking
                     if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaign.CampaignID != campaignID)
                     {
                         string savePath = transfer.FilePath;
-                        GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign);
+                        GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Unsure);
                         campaign = (MultiPlayerCampaign)GameMain.GameSession.GameMode;
                         campaign.CampaignID = campaignID;
                         GameMain.NetLobbyScreen.ToggleCampaignMode(true);
@@ -2912,7 +2914,7 @@ namespace Barotrauma.Networking
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 
-        public void SetupNewCampaign(SubmarineInfo sub, string saveName, string mapSeed)
+        public void SetupNewCampaign(SubmarineInfo sub, string saveName, string mapSeed, CampaignSettings settings)
         {
             GameMain.NetLobbyScreen.CampaignSetupFrame.Visible = false;
             GameMain.NetLobbyScreen.CampaignFrame.Visible = false;
@@ -2927,6 +2929,7 @@ namespace Barotrauma.Networking
             msg.Write(mapSeed);
             msg.Write(sub.Name);
             msg.Write(sub.MD5Hash.Hash);
+            settings.Serialize(msg);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }

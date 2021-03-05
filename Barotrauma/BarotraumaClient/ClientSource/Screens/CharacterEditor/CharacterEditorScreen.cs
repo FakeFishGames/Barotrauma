@@ -1761,9 +1761,9 @@ namespace Barotrauma.CharacterEditor
 #endif
             // Add to the selected content package
             contentPackage.AddFile(configFilePath, ContentType.Character);
-            Barotrauma.IO.Validation.DevException = true;
+            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
             contentPackage.Save(contentPackage.Path);
-            Barotrauma.IO.Validation.DevException = false;
+            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));      
 
             // Ragdoll

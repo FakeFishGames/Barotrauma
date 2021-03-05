@@ -305,9 +305,21 @@ namespace Barotrauma.Items.Components
 
         private void ToggleState(ActionType actionType, Character user)
         {
-            if (toggleCooldownTimer > 0.0f && user != lastUser) { OnFailedToOpen(); return; }
+            if (toggleCooldownTimer > 0.0f && user != lastUser)
+            {
+                OnFailedToOpen();
+                return;
+            }
             toggleCooldownTimer = ToggleCoolDown;
-            if (IsStuck || IsJammed) { toggleCooldownTimer = 1.0f; OnFailedToOpen(); return; }
+            if (IsStuck || IsJammed)
+            {
+#if CLIENT
+                if (IsStuck) { HintManager.OnTryOpenStuckDoor(user); }
+#endif
+                toggleCooldownTimer = 1.0f;
+                OnFailedToOpen();
+                return;
+            }
             lastUser = user;
             SetState(PredictedState == null ? !isOpen : !PredictedState.Value, false, true, forcedOpen: actionType == ActionType.OnPicked);
         }

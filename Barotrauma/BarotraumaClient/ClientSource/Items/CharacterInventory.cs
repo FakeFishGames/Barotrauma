@@ -639,7 +639,13 @@ namespace Barotrauma
                 foreach (Item doubleClickedItem in doubleClickedItems)
                 {
                     QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: doubleClickedItem == doubleClickedItems.First());
-                    if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment || !IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
+                    //only use one item if we're equipping or using it as a treatment
+                    if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)
+                    {
+                        break;
+                    }
+                    //if the item was put in a limb slot, only put one item from the stack
+                    if (doubleClickedItem.ParentInventory == this && !IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                     {
                         break;
                     }
@@ -810,6 +816,8 @@ namespace Barotrauma
                     highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
                 }
             }
+
+            HintManager.OnShowSubInventory(slotRef?.Item);
         }
         
         public void AssignQuickUseNumKeys()

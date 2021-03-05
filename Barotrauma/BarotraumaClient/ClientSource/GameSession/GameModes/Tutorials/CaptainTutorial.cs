@@ -99,7 +99,7 @@ namespace Barotrauma.Tutorials
             captain_medicSpawnPos = Item.ItemList.Find(i => i.HasTag("captain_medicspawnpos")).WorldPosition;
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
-            var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("medicaldoctor"));
+            var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("medicaldoctor"));
             captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
             captain_medic.TeamID = CharacterTeamType.Team1;
             captain_medic.GiveJobItems(null);
@@ -122,17 +122,17 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_lockedDoor_1, null, false);
             SetDoorAccess(tutorial_lockedDoor_2, null, false);
 
-            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("mechanic"));
+            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("mechanic"));
             captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "mechanic");
             captain_mechanic.TeamID = CharacterTeamType.Team1;
             captain_mechanic.GiveJobItems();
 
-            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("securityofficer"));
+            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("securityofficer"));
             captain_security = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "securityofficer");
             captain_security.TeamID = CharacterTeamType.Team1;
             captain_security.GiveJobItems();
 
-            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("engineer"));
+            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
             captain_engineer = Character.Create(engineerInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "engineer");
             captain_engineer.TeamID = CharacterTeamType.Team1;
             captain_engineer.GiveJobItems();

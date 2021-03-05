@@ -156,6 +156,8 @@ namespace Barotrauma
 
         public Entity LastDamageSource;
 
+        public AttackResult LastDamage;
+
         public float InvisibleTimer;
 
         private CharacterPrefab prefab;
@@ -199,7 +201,12 @@ namespace Barotrauma
             set => Params.Visibility = value;
         }
 
-        public bool IsTraitor;
+        public bool IsTraitor
+        {
+            get; 
+            set;
+        }
+
         public string TraitorCurrentObjective = "";
         public bool IsHuman => SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase);
         public bool IsMale => Info != null && Info.HasGenders && Info.Gender == Gender.Male;
@@ -333,6 +340,7 @@ namespace Barotrauma
         //text displayed when the character is highlighted if custom interact is set
         public string customInteractHUDText;
         private Action<Character, Character> onCustomInteract;
+        public ConversationAction ActiveConversation;
 
         public bool AllowCustomInteract
         {
@@ -349,6 +357,9 @@ namespace Barotrauma
             set
             {
                 lockHandsTimer = MathHelper.Clamp(lockHandsTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+#if CLIENT
+                HintManager.OnHandcuffed(this);
+#endif
             }
         }
 
@@ -605,6 +616,9 @@ namespace Barotrauma
             get => _selectedConstruction;
             set
             {
+#if CLIENT
+                HintManager.OnSetSelectedConstruction(this, _selectedConstruction, value);
+#endif
                 _selectedConstruction = value;
 #if CLIENT
                 if (Controlled == this)
@@ -1661,6 +1675,12 @@ namespace Barotrauma
                         {
                             item.Use(deltaTime, this);
                         }
+#if CLIENT
+                        else if (item.RequireAimToUse && !IsKeyDown(InputType.Aim))
+                        {
+                            HintManager.OnShootWithoutAiming(this, item);
+                        }
+#endif
                     }
                 }
             }
@@ -1851,6 +1871,19 @@ namespace Barotrauma
                 if (item.Prefab.Identifier == tagOrIdentifier || item.HasTag(tagOrIdentifier)) { return true; }
             }
             return false;
+        }
+
+        public Item GetEquippedItem(string tagOrIdentifier)
+        {
+            if (Inventory == null) { return null; }
+            for (int i = 0; i < Inventory.Capacity; i++)
+            {
+                if (Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
+                var item = Inventory.GetItemAt(i);
+                if (item == null) { continue; }
+                if (item.Prefab.Identifier == tagOrIdentifier || item.HasTag(tagOrIdentifier)) { return item; }
+            }
+            return null;
         }
 
         public bool CanAccessInventory(Inventory inventory)
@@ -2857,6 +2890,7 @@ namespace Barotrauma
                 {
                     if (character == this) { continue; }
                     if (character.TeamID != TeamID) { continue; }
+                    if (!HumanAIController.IsActive(character)) { continue; }
                     foreach (var currentOrder in character.CurrentOrders)
                     {
                         if (currentOrder.Order == null) { continue; }
@@ -3268,12 +3302,13 @@ namespace Barotrauma
 //#endif
 //            }
 
+            SetStun(stun);
+
             if (attacker != null && attacker != this && GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.AllowFriendlyFire)
             {
                 if (attacker.TeamID == TeamID) { return new AttackResult(); }
             }
 
-            SetStun(stun);
             Vector2 dir = hitLimb.WorldPosition - worldPosition;
             if (Math.Abs(attackImpulse) > 0.0f)
             {
@@ -3308,6 +3343,7 @@ namespace Barotrauma
             };
             if (attackResult.Damage > 0)
             {
+                LastDamage = attackResult;
                 ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 if (attacker != null)

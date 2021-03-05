@@ -212,6 +212,7 @@ namespace Barotrauma.Items.Components
 
             progressState = 0.0f;
             timeUntilReady = 0.0f;
+            UpdateRequiredTimeProjSpecific();
             inputContainer.Inventory.Locked = false;
             outputContainer.Inventory.Locked = false;
 
@@ -279,6 +280,7 @@ namespace Barotrauma.Items.Components
             if (powerConsumption <= 0) { Voltage = 1.0f; }
 
             timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f);
+            UpdateRequiredTimeProjSpecific();
 
             if (timeUntilReady > 0.0f) { return; }
 
@@ -359,6 +361,8 @@ namespace Barotrauma.Items.Components
                 CancelFabricating();
             }
         }
+
+        partial void UpdateRequiredTimeProjSpecific();
 
         private bool CanBeFabricated(FabricationRecipe fabricableItem)
         {

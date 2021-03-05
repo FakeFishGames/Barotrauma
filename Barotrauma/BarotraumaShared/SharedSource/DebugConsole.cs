@@ -707,9 +707,10 @@ namespace Barotrauma
 
             commands.Add(new Command("freecamera|freecam", "freecam: Detach the camera from the controlled character.", (string[] args) =>
             {
+#if CLIENT
+                if (Screen.Selected == GameMain.SubEditorScreen) { return; }
                 Character.Controlled = null;
                 GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-#if CLIENT
                 GameMain.Client?.SendConsoleCommand("freecam");
 #endif
             }, isCheat: true));
@@ -1695,6 +1696,8 @@ namespace Barotrauma
                 return null;
             }
 
+            // Use same sorting as DebugConsole.ListCharacterNames() above
+            matchingCharacters = matchingCharacters.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).ToList();
             if (characterIndex == -1)
             {
                 if (matchingCharacters.Count > 1)

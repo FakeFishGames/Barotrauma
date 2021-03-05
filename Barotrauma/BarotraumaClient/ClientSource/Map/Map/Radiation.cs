@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -6,6 +7,13 @@ namespace Barotrauma
 {
     internal partial class Radiation
     {
+        private static readonly string radiationTooltip = TextManager.Get("RadiationTooltip");
+        private static float spriteIndex;
+        private readonly SpriteSheet sheet = GUI.Style.RadiationAnimSpriteSheet;
+        private int maxFrames => sheet.FrameCount + 1;
+
+        private bool isHovingOver;
+
         public void Draw(SpriteBatch spriteBatch, Rectangle container, float zoom)
         {
             if (!Enabled) { return; }
@@ -19,16 +27,38 @@ namespace Barotrauma
             Vector2 size = new Vector2((Amount - increasedAmount) * zoom + halfSizeX, viewBottom - topLeft.Y);
             if (size.X < 0) { return; }
 
-            uiSprite.Sprite.DrawTiled(spriteBatch, topLeft, size, GUI.Style.Red * 0.33f, Vector2.Zero, textureScale: new Vector2(zoom));
+            Vector2 spriteScale = new Vector2(zoom);
 
-            if (container.Contains(PlayerInput.MousePosition) && PlayerInput.MousePosition.X < topLeft.X + size.X)
+            uiSprite.Sprite.DrawTiled(spriteBatch, topLeft, size, Params.RadiationAreaColor, Vector2.Zero, textureScale: spriteScale);
+
+            Vector2 topRight = topLeft + Vector2.UnitX * size.X;
+
+            int index = 0;
+            for (float i = 0; i <= size.Y; i += sheet.FrameSize.Y / 2f * zoom)
             {
-                // TODO tooltip?
+                bool isEven = ++index % 2 == 0;
+                Vector2 origin = new Vector2(0.5f, 0) * sheet.FrameSize.X;
+                // every other sprite's animation is reversed to make it seem more chaotic
+                int sprite = (int) MathF.Floor(isEven ? spriteIndex : maxFrames - spriteIndex);
+                sheet.Draw(spriteBatch, sprite, topRight + new Vector2(0, i), Params.RadiationBorderTint, origin, 0f, spriteScale);
+            }
+
+            isHovingOver = container.Contains(PlayerInput.MousePosition) && PlayerInput.MousePosition.X < topLeft.X + size.X;
+        }
+
+        public void DrawFront(SpriteBatch spriteBatch)
+        {
+            if (isHovingOver)
+            {
+                GUIComponent.DrawToolTip(spriteBatch, radiationTooltip, PlayerInput.MousePosition + new Vector2(18 * GUI.Scale));
             }
         }
 
         public void MapUpdate(float deltaTime)
         {
+            float spriteStep = Params.BorderAnimationSpeed * deltaTime;
+            spriteIndex = (spriteIndex + spriteStep) % maxFrames;
+
             if (increasedAmount > 0)
             {
                 increasedAmount -= (lastIncrease / Params.AnimationSpeed) * deltaTime;

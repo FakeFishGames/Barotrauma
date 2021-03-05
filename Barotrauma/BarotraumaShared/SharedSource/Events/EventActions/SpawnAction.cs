@@ -240,7 +240,7 @@ namespace Barotrauma
             return GetSpawnPos(SpawnLocation, spawnPointType, targetModuleTags, SpawnPointTag.ToEnumerable());
         }
 
-        public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<string> moduleFlags = null, IEnumerable<string> spawnpointTags = null)
+        public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<string> moduleFlags = null, IEnumerable<string> spawnpointTags = null, bool asFarAsPossibleFromAirlock = false)
         {
             List<WayPoint> potentialSpawnPoints = spawnLocation switch
             {
@@ -253,6 +253,7 @@ namespace Barotrauma
             };
 
             potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && !wp.isObstructed);
+            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false).ToList();
 
             if (moduleFlags != null && moduleFlags.Any())
             {
@@ -282,7 +283,7 @@ namespace Barotrauma
             IEnumerable<WayPoint> validSpawnPoints;
             if (spawnPointType.HasValue)
             {
-                validSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.SpawnType == spawnPointType.Value);
+                validSpawnPoints = potentialSpawnPoints.FindAll(wp => spawnPointType.Value.HasFlag(wp.SpawnType));
             }
             else
             {
@@ -291,7 +292,6 @@ namespace Barotrauma
             }
 
             //don't spawn in an airlock module if there are other options
-            var airlockSpawnPoints = validSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false);
             if (airlockSpawnPoints.Count() < validSpawnPoints.Count())
             {
                 validSpawnPoints = validSpawnPoints.Except(airlockSpawnPoints);
@@ -313,7 +313,25 @@ namespace Barotrauma
                 }
             }
 
-            return validSpawnPoints.GetRandom();
+            if (asFarAsPossibleFromAirlock && airlockSpawnPoints.Any())
+            {
+                WayPoint furthestPoint = validSpawnPoints.First();
+                float furthestDist = 0.0f;
+                foreach (WayPoint waypoint in validSpawnPoints)
+                {
+                    float dist = Vector2.DistanceSquared(waypoint.WorldPosition, airlockSpawnPoints.First().WorldPosition);
+                    if (dist > furthestDist)
+                    {
+                        furthestDist = dist;
+                        furthestPoint = waypoint;
+                    }
+                }
+                return furthestPoint;
+            }
+            else
+            {
+                return validSpawnPoints.GetRandom();
+            }
         }
 
         public override string ToDebugString()

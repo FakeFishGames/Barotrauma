@@ -260,10 +260,13 @@ namespace Barotrauma
 
         /// <summary>
         /// Use this method to skip clamping and additional logic of the setters.
-        /// Intended only to be used when the value is already clamped! (networking code)
         /// Ideally we would keep this private, but doing so would require too much refactoring.
         /// </summary>
-        public void SetStrength(float strength) => _strength = strength;
+        public void SetStrength(float strength)
+        {
+            _nonClampedStrength = strength;
+            _strength = _nonClampedStrength;
+        }
 
         public bool ShouldShowIcon(Character afflictedCharacter)
         {

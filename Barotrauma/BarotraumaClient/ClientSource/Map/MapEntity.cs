@@ -805,7 +805,7 @@ namespace Barotrauma
             }
             if (selectionPos != null && selectionPos != Vector2.Zero)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(selectionPos.X, -selectionPos.Y), selectionSize, Color.DarkRed, false, 0, (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
+                GUI.DrawRectangle(spriteBatch, new Vector2(selectionPos.X, -selectionPos.Y), selectionSize, Color.DarkRed, false, 0, 2f / GameScreen.Selected.Cam.Zoom);
             }
         }
 

@@ -36,7 +36,11 @@ namespace Barotrauma
 
             public LimbHealth(XElement element, CharacterHealth characterHealth)
             {
-                Name = TextManager.Get("HealthLimbName." + element.GetAttributeString("name", ""));
+                string limbName = element.GetAttributeString("name", null) ?? "generic";
+                if (limbName != "generic")
+                {
+                    Name = TextManager.Get("HealthLimbName." + limbName);
+                }
                 this.characterHealth = characterHealth;
                 foreach (XElement subElement in element.Elements())
                 {
@@ -664,7 +668,6 @@ namespace Barotrauma
             }
         }
 
-
         partial void UpdateProjSpecific(float deltaTime);
 
         partial void UpdateLimbAfflictionOverlays();
@@ -687,6 +690,10 @@ namespace Barotrauma
                 {
                     var affliction = limbHealths[i].Afflictions[j];
                     Limb targetLimb = Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == i);
+                    if (targetLimb == null)
+                    {
+                        targetLimb = Character.AnimController.MainLimb;
+                    }
                     affliction.Update(this, targetLimb, deltaTime);
                     affliction.DamagePerSecondTimer += deltaTime;
                     if (affliction is AfflictionBleeding bleeding)
@@ -877,6 +884,7 @@ namespace Barotrauma
             float minSuitability = -10, maxSuitability = 10;
             foreach (Affliction affliction in GetAllAfflictions())
             {
+                if (affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
                 foreach (KeyValuePair<string, float> treatment in affliction.Prefab.TreatmentSuitability)
                 {
                     if (!treatmentSuitability.ContainsKey(treatment.Key))

@@ -88,6 +88,8 @@ namespace Barotrauma
                     }
                 }
             }
+
+            HintManager.Update();
         }
 
         public void Draw(SpriteBatch spriteBatch)

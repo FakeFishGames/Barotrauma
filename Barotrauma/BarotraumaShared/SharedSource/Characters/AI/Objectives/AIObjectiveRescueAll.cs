@@ -25,8 +25,8 @@ namespace Barotrauma
             {
                 // When targeting player characters, always treat them when ordered, else use the threshold so that minor/non-severe damage is ignored.
                 // If we ignore any damage when the player orders a bot to do healings, it's observed to cause confusion among the players.
-                // On the other hand, if the bots too eagerly heal characters when it's not nevessary, it's inefficient and can feel frustrating, because it can't be controlled.
-                return character == target || manager.CurrentOrder is AIObjectiveRescueAll ? (target.IsPlayer ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
+                // On the other hand, if the bots too eagerly heal characters when it's not necessary, it's inefficient and can feel frustrating, because it can't be controlled.
+                return character == target || manager.HasOrder<AIObjectiveRescueAll>() ? (target.IsPlayer ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
             }
         }
         
@@ -83,7 +83,7 @@ namespace Barotrauma
             if (character.AIController is HumanAIController humanAI)
             {
                 if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target)) { return false; }
-                if (!humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveRescueAll>())
+                if (!humanAI.ObjectiveManager.HasOrder<AIObjectiveRescueAll>())
                 {
                     if (!character.IsMedic && target != character)
                     {

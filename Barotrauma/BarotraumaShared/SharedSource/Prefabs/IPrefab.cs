@@ -30,7 +30,7 @@ namespace Barotrauma
                 var collision = prefabs.Find(p => p != prefab && p.UIntIdentifier == prefab.UIntIdentifier);
                 if (collision != null)
                 {
-                    DebugConsole.ThrowError($"Hashing collision when generating uint identifiers for {nameof(T)}: {prefab.Identifier} has the same identifier as {collision.Identifier} ({prefab.UIntIdentifier})");
+                    DebugConsole.ThrowError($"Hashing collision when generating uint identifiers for {typeof(T).Name}: {prefab.Identifier} has the same identifier as {collision.Identifier} ({prefab.UIntIdentifier})");
                     collision.UIntIdentifier++;
                 }
             }

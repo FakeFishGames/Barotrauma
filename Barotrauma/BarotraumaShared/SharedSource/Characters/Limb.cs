@@ -732,6 +732,10 @@ namespace Barotrauma
                 {
                     newAffliction = affliction.CreateMultiplied(finalDamageModifier);
                 }
+                else
+                {
+                    newAffliction.SetStrength(affliction.NonClampedStrength);
+                }
 
                 if (applyAffliction)
                 {

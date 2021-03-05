@@ -327,10 +327,11 @@ namespace Barotrauma
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
                     if (!rect.Contains(pos)) { continue; }
 
-                    float iconScale = generationParams.LocationIconSize / location.Type.Sprite.size.X;
+                    Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
+                    float iconScale = generationParams.LocationIconSize / locationSprite.size.X;
                     if (location == CurrentDisplayLocation) { iconScale *= 1.2f; }
 
-                    Rectangle drawRect = location.Type.Sprite.SourceRect;
+                    Rectangle drawRect = locationSprite.SourceRect;
                     drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
                     drawRect.Height = (int)(drawRect.Height * iconScale * zoom * 1.4f);
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
@@ -375,13 +376,18 @@ namespace Barotrauma
                 foreach (LocationConnection connection in Connections)
                 {
                     if (HighlightedLocation != CurrentDisplayLocation &&
-                        connection.Locations.Contains(HighlightedLocation) && connection.Locations.Contains(CurrentDisplayLocation))
+                        connection.Locations.Contains(HighlightedLocation) && 
+                        connection.Locations.Contains(CurrentDisplayLocation))
                     {
                         if (PlayerInput.PrimaryMouseButtonClicked() &&
                             SelectedLocation != HighlightedLocation && HighlightedLocation != null)
                         {
+                            if (connection.Locked)
+                            {
+                                new GUIMessageBox(string.Empty, TextManager.Get("LockedPathTooltip"));
+                            }
                             //clients aren't allowed to select the location without a permission
-                            if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign() ?? false)
+                            else if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign() ?? false)
                             {
                                 connectionHighlightState = 0.0f;
                                 SelectedConnection = connection;
@@ -517,8 +523,6 @@ namespace Barotrauma
             float rawNoiseScale = 1.0f + PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
             cameraNoiseStrength = PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
 
-            Radiation.Draw(spriteBatch, rect, zoom);
-
             noiseOverlay.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(), 
                 startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
                 color : Color.White * cameraNoiseStrength * 0.1f,
@@ -534,6 +538,8 @@ namespace Barotrauma
                 color: Color.White * cameraNoiseStrength * 0.1f,
                 textureScale: Vector2.One * noiseScale);
 
+            Radiation.Draw(spriteBatch, rect, zoom);
+
             Pair<Rectangle, string> tooltip = null;
             if (generationParams.ShowLocations)
             {
@@ -548,8 +554,10 @@ namespace Barotrauma
                     Location location = Locations[i];
                     if (IsInFogOfWar(location)) { continue; }
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
-                    
-                    Rectangle drawRect = location.Type.Sprite.SourceRect;
+
+                    Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
+
+                    Rectangle drawRect = locationSprite.SourceRect;
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
@@ -562,20 +570,14 @@ namespace Barotrauma
                         color *= 0.5f;
                     }
 
-                    // TODO proper visualization of this
-                    if (location.Type.HasOutpost && !location.HasOutpost())
-                    {
-                        color = GUI.Style.Red;
-                    }
-
                     float iconScale = location == CurrentDisplayLocation ? 1.2f : 1.0f;
                     if (location == HighlightedLocation)
                     {
                         iconScale *= 1.2f;
                     }
 
-                    location.Type.Sprite.Draw(spriteBatch, pos, color, 
-                        scale: generationParams.LocationIconSize / location.Type.Sprite.size.X * iconScale * zoom);
+                    locationSprite.Draw(spriteBatch, pos, color, 
+                        scale: generationParams.LocationIconSize / locationSprite.size.X * iconScale * zoom);
 
                     if (location == CurrentDisplayLocation)
                     {
@@ -657,8 +659,11 @@ namespace Barotrauma
 
             DrawDecorativeHUD(spriteBatch, rect);
 
+            bool drawRadiationTooltip = true;
+
             if (HighlightedLocation != null)
             {
+                drawRadiationTooltip = false;
                 Vector2 pos = rectCenter + (HighlightedLocation.MapPosition + viewOffset) * zoom;
                 pos.X += 50 * zoom;
                 Vector2 nameSize = GUI.LargeFont.MeasureString(HighlightedLocation.Name);
@@ -693,14 +698,23 @@ namespace Barotrauma
                     GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + 4, repBarRect.Top), repValueText, GUI.Style.TextColor);
                 }
             }
+            
             if (tooltip != null)
             {
                 GUIComponent.DrawToolTip(spriteBatch, tooltip.Second, tooltip.First);
+                drawRadiationTooltip = false;
             }
             if (connectionTooltip != null)
             {
                 GUIComponent.DrawToolTip(spriteBatch, connectionTooltip.Second, connectionTooltip.First);
+                drawRadiationTooltip = false;
             }
+
+            if (drawRadiationTooltip)
+            {
+                Radiation.DrawFront(spriteBatch);
+            }
+
             spriteBatch.End();
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
@@ -827,6 +841,7 @@ namespace Barotrauma
             {
                 if (connection.LevelData.HasBeaconStation) { iconCount++; }
                 if (connection.LevelData.HasHuntingGrounds) { iconCount++; }
+                if (connection.Locked) { iconCount++; }
                 string tooltip = null;
                 var subCrushDepth = Submarine.MainSub?.RealWorldCrushDepth ?? Level.DefaultRealWorldCrushDepth;
                 if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
@@ -865,6 +880,11 @@ namespace Barotrauma
                 {
                     var beaconStationIconStyle = connection.LevelData.IsBeaconActive ? "BeaconStationActive" : "BeaconStationInactive";
                     DrawIcon(beaconStationIconStyle, (int)(28 * zoom), TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip"));
+                }
+
+                if (connection.Locked)
+                {
+                    DrawIcon("LockIcon", (int)(28 * zoom), TextManager.Get("LockedPathTooltip"));
                 }
 
                 if (connection.LevelData.HasHuntingGrounds)

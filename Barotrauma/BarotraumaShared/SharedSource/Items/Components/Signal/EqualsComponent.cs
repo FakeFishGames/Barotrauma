@@ -15,18 +15,45 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
-        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the condition is met.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("1", true, description: "The signal sent when the condition is met.", alwaysUseInstanceValues: true)]
         public string Output
         {
             get { return output; }
-            set { output = value; }
+            set
+            {
+                if (value == null) { return; }
+                output = value;
+                if (output.Length > MaxOutputLength)
+                {
+                    output = output.Substring(0, MaxOutputLength);
+                }
+            }
         }
 
-        [InGameEditable, Serialize("", true, description: "The signal this item outputs when the condition is not met.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("", true, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
-            set { falseOutput = value; }
+            set
+            {
+                if (value == null) { return; }
+                falseOutput = value;
+                if (falseOutput.Length > MaxOutputLength)
+                {
+                    falseOutput = falseOutput.Substring(0, MaxOutputLength);
+                }
+            }
+        }
+
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
         }
 
         [InGameEditable(DecimalCount = 2), Serialize(0.0f, true, description: "The maximum amount of time between the received signals. If set to 0, the signals must be received at the same time.", alwaysUseInstanceValues: true)]

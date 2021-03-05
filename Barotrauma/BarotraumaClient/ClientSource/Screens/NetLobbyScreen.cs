@@ -27,6 +27,8 @@ namespace Barotrauma
 
         private GUIComponent jobVariantTooltip;
 
+        private SubmarinePreview submarinePreview;
+
         private readonly GUITextBox chatInput;
         private readonly GUITextBox serverLogFilter;
         public GUITextBox ChatInput
@@ -40,6 +42,8 @@ namespace Barotrauma
         private readonly GUIImage micIcon;
 
         private readonly GUIScrollBar levelDifficultyScrollBar;
+
+        private readonly GUITickBox radiationEnabledTickBox;
 
         private readonly GUIButton[] traitorProbabilityButtons;
         private readonly GUITextBlock traitorProbabilityText;
@@ -1095,6 +1099,16 @@ namespace Barotrauma
                 }
             };
 
+            radiationEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+            {
+                Selected = true,
+                OnSelected = box =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, radiationEnabled: box.Selected);
+                    return true;
+                }
+            };
+
             List<GUIComponent> settingsElements = settingsContent.Children.ToList();
             for (int i = 0; i < settingsElements.Count; i++)
             {
@@ -1238,6 +1252,7 @@ namespace Barotrauma
             }
             SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            radiationEnabledTickBox.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled = 
                 !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
@@ -2533,8 +2548,14 @@ namespace Barotrauma
                 chatBox.RemoveChild(chatBox.Content.Children.First());
             }
 
+            string textWithSender = message.TextWithSender;
+            if (message.Type == ChatMessageType.Server)
+            {
+                RichTextData.GetRichTextData(textWithSender, out textWithSender);
+            }
+
             GUITextBlock msg = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), chatBox.Content.RectTransform),
-                text: ChatMessage.GetTimeStamp() + (message.Type == ChatMessageType.Private ? TextManager.Get("PrivateMessageTag") + " " : "") + message.TextWithSender,
+                text: ChatMessage.GetTimeStamp() + (message.Type == ChatMessageType.Private ? TextManager.Get("PrivateMessageTag") + " " : "") + textWithSender,
                 textColor: message.Color,
                 color: ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f,
                 wrap: true, font: GUI.SmallFont)

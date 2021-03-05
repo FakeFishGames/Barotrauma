@@ -153,6 +153,8 @@ namespace Barotrauma
         private static ushort idCounter;
         private const string disguiseName = "???";
 
+        public bool HasNickname => Name != OriginalName;
+        public string OriginalName { get; private set; }
         public string Name;
         public string DisplayName
         {
@@ -453,7 +455,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string speciesName, string name = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public CharacterInfo(string speciesName, string name = "", string originalName = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -503,6 +505,7 @@ namespace Barotrauma
                     }
                 }
             }
+            OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
             personalityTrait = NPCPersonalityTrait.GetRandom(name + HeadSpriteId);         
             Salary = CalculateSalary();
             if (ragdollFileName != null)
@@ -518,6 +521,7 @@ namespace Barotrauma
             ID = idCounter;
             idCounter++;
             Name = infoElement.GetAttributeString("name", "");
+            OriginalName = infoElement.GetAttributeString("originalname", null);
             string genderStr = infoElement.GetAttributeString("gender", "male").ToLowerInvariant();
             Salary = infoElement.GetAttributeInt("salary", 1000);
             Enum.TryParse(infoElement.GetAttributeString("race", "White"), true, out Race race);
@@ -576,6 +580,11 @@ namespace Barotrauma
                 }
             }
 
+            if (string.IsNullOrEmpty(OriginalName))
+            {
+                OriginalName = Name;
+            }
+
             StartItemsGiven = infoElement.GetAttributeBool("startitemsgiven", false);
             string personalityName = infoElement.GetAttributeString("personality", "");
             ragdollFileName = infoElement.GetAttributeString("ragdoll", string.Empty);
@@ -622,7 +631,17 @@ namespace Barotrauma
 
         public int GetIdentifier()
         {
-            int id = ToolBox.StringToInt(Name);
+            return GetIdentifier(Name);
+        }
+
+        public int GetIdentifierUsingOriginalName()
+        {
+            return GetIdentifier(OriginalName);
+        }
+
+        private int GetIdentifier(string name)
+        {
+            int id = ToolBox.StringToInt(name);
             id ^= HeadSpriteId;
             id ^= (int)Race << 6;
             id ^= HairIndex << 12;
@@ -939,12 +958,24 @@ namespace Barotrauma
 
         partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos);
 
+        public void Rename(string newName)
+        {
+            if (string.IsNullOrEmpty(newName)) { return; }
+            Name = newName;
+        }
+
+        public void ResetName()
+        {
+            Name = OriginalName;
+        }
+
         public XElement Save(XElement parentElement)
         {
             XElement charElement = new XElement("Character");
 
             charElement.Add(
                 new XAttribute("name", Name),
+                new XAttribute("originalname", OriginalName),
                 new XAttribute("speciesname", SpeciesName),
                 new XAttribute("gender", Head.gender == Gender.Male ? "male" : "female"),
                 new XAttribute("race", Head.race.ToString()),
@@ -957,7 +988,7 @@ namespace Barotrauma
                 new XAttribute("startitemsgiven", StartItemsGiven),
                 new XAttribute("ragdoll", ragdollFileName),
                 new XAttribute("personality", personalityTrait == null ? "" : personalityTrait.Name));
-            
+
             // TODO: animations?
 
             if (Character != null)

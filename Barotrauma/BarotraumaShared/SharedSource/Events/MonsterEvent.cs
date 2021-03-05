@@ -18,11 +18,13 @@ namespace Barotrauma
 
         private Vector2? spawnPos;
 
-        private readonly bool disallowed;
+        private bool disallowed;
 
         private readonly Level.PositionType spawnPosType;
 
         private bool spawnPending;
+
+        private int maxAmountPerLevel = int.MaxValue;
 
         public List<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
@@ -69,6 +71,8 @@ namespace Barotrauma
             int defaultAmount = prefab.ConfigElement.GetAttributeInt("amount", 1);
             minAmount = prefab.ConfigElement.GetAttributeInt("minamount", defaultAmount);
             maxAmount = Math.Max(prefab.ConfigElement.GetAttributeInt("maxamount", 1), minAmount);
+
+            maxAmountPerLevel = prefab.ConfigElement.GetAttributeInt("maxamountperlevel", int.MaxValue);
 
             var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
             if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
@@ -345,6 +349,15 @@ namespace Barotrauma
 
             if (spawnPos == null)
             {
+                if (maxAmountPerLevel < int.MaxValue)
+                {
+                    if (Character.CharacterList.Count(c => c.SpeciesName == speciesName) >= maxAmountPerLevel)
+                    {
+                        disallowed = true;
+                        return;
+                    }
+                }
+
                 FindSpawnPosition(affectSubImmediately: true);
                 //the event gets marked as finished if a spawn point is not found
                 if (isFinished) { return; }
@@ -400,7 +413,7 @@ namespace Barotrauma
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
                         if (submarine.Info.Type != SubmarineType.Player) { continue; }
-                        if (submarine.WorldPosition.Y > Level.Loaded.AbyssStart)
+                        if (submarine.WorldPosition.Y > 0)
                         {
                             return;
                         }

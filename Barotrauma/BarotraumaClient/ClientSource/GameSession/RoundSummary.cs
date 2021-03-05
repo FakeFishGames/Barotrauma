@@ -336,7 +336,7 @@ namespace Barotrauma
                 {
                     string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", displayedMission.Reward));
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
-                        TextManager.GetWithVariable("MissionReward", "[reward]", rewardText));
+                        TextManager.GetWithVariable("MissionReward", "[reward]", rewardText), parseRichText: true);
                 }
 
                 if (displayedMission != missionsToDisplay.Last())

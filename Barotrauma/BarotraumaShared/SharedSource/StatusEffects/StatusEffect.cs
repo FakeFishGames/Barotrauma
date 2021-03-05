@@ -39,6 +39,66 @@ namespace Barotrauma
         }
     }
 
+    class AITrigger : ISerializableEntity
+    {
+        public string Name => "ai trigger";
+
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+
+        [Serialize(AIState.Idle, false)]
+        public AIState State { get; private set; }
+
+        [Serialize(0f, false)]
+        public float Duration { get; private set; }
+
+        [Serialize(1f, false)]
+        public float Probability { get; private set; }
+
+        [Serialize(0f, false)]
+        public float MinDamage { get; private set; }
+
+        [Serialize(true, false)]
+        public bool AllowToOverride { get; private set; }
+
+        [Serialize(true, false)]
+        public bool AllowToBeOverridden { get; private set; }
+
+        public bool IsTriggered { get; private set; }
+
+        public float Timer { get; private set; } = -1;
+
+        public bool IsActive { get; private set; }
+
+        public void Launch()
+        {
+            IsTriggered = true;
+            IsActive = true;
+            Timer = Duration;
+        }
+
+        public void Reset()
+        {
+            IsTriggered = false;
+            IsActive = false;
+            Timer = 0;
+        }
+
+        public void UpdateTimer(float deltaTime)
+        {
+            Timer -= deltaTime;
+            if (Timer < 0)
+            {
+                Timer = 0;
+                IsActive = false;
+            }
+        }
+
+        public AITrigger(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+    }
+
     partial class StatusEffect
     {
         [Flags]
@@ -203,6 +263,7 @@ namespace Barotrauma
 
         private readonly List<ItemSpawnInfo> spawnItems;
         private readonly List<CharacterSpawnInfo> spawnCharacters;
+        private readonly List<AITrigger> aiTriggers;
 
         private readonly List<EventPrefab> triggeredEvents;
         private readonly string triggeredEventTargetTag = "statuseffecttarget", 
@@ -282,6 +343,7 @@ namespace Barotrauma
             requiredItems = new List<RelatedItem>();
             spawnItems = new List<ItemSpawnInfo>();
             spawnCharacters = new List<CharacterSpawnInfo>();
+            aiTriggers = new List<AITrigger>();
             Afflictions = new List<Affliction>();
             Explosions = new List<Explosion>();
             triggeredEvents = new List<EventPrefab>();
@@ -532,7 +594,6 @@ namespace Barotrauma
                                 triggeredEvents.Add(prefab);
                             }
                         }
-
                         foreach (XElement eventElement in subElement.Elements())
                         {
                             if (!eventElement.Name.ToString().Equals("ScriptedEvent", StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -542,6 +603,9 @@ namespace Barotrauma
                     case "spawncharacter":
                         var newSpawnCharacter = new CharacterSpawnInfo(subElement, parentDebugName);
                         if (!string.IsNullOrWhiteSpace(newSpawnCharacter.SpeciesName)) { spawnCharacters.Add(newSpawnCharacter); }
+                        break;
+                    case "aitrigger":
+                        aiTriggers.Add(new AITrigger(subElement));
                         break;
                 }
             }
@@ -1032,7 +1096,7 @@ namespace Barotrauma
                     {
                         targetCharacter = character;
                     }
-                    else if (target is Limb limb)
+                    else if (target is Limb limb && !limb.Removed)
                     {
                         targetLimb = limb;
                         targetCharacter = limb.character;
@@ -1051,6 +1115,32 @@ namespace Barotrauma
 #if SERVER
                         GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, prevVitality - targetCharacter.Vitality, 0.0f);
 #endif
+                    }
+                }
+
+                if (aiTriggers.Any())
+                {
+                    Character targetCharacter = target as Character;
+                    if (targetCharacter == null)
+                    {
+                        if (target is Limb targetLimb && !targetLimb.Removed)
+                        {
+                            targetCharacter = targetLimb.character;
+                        }
+                    }
+                    if (targetCharacter != null && !targetCharacter.Removed && !targetCharacter.IsPlayer)
+                    {
+                        if (targetCharacter.AIController is EnemyAIController enemyAI)
+                        {
+                            foreach (AITrigger trigger in aiTriggers)
+                            {
+                                if (Rand.Value(Rand.RandSync.Unsynced) > trigger.Probability) { continue; }
+                                if (target is Limb targetLimb && targetCharacter.LastDamage.HitLimb != targetLimb) { continue; }
+                                if (targetCharacter.LastDamage.Damage < trigger.MinDamage) { continue; }
+                                enemyAI.LaunchTrigger(trigger);
+                                break;
+                            }
+                        }
                     }
                 }
             }

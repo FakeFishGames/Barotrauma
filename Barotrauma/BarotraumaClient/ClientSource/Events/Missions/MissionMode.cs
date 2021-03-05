@@ -6,7 +6,7 @@
         {
             foreach (Mission mission in missions)
             {
-                new GUIMessageBox(mission.Name, mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon)
+                new GUIMessageBox(mission.Name, mission.Description, new string[0], type: GUIMessageBox.Type.InGame, icon: mission.Prefab.Icon, parseRichText: true)
                 {
                     IconColor = mission.Prefab.IconColor,
                     UserData = "missionstartmessage"

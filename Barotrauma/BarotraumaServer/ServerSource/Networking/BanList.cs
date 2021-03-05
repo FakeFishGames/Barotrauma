@@ -121,13 +121,14 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool IsBanned(IPAddress IP, ulong steamID, out string reason)
+        public bool IsBanned(IPAddress IP, ulong steamID, ulong ownerSteamID, out string reason)
         {
             reason = string.Empty;
             if (IPAddress.IsLoopback(IP)) { return false; }
             var bannedPlayer = bannedPlayers.Find(bp =>
                 bp.CompareTo(IP) ||
-                (steamID > 0 && (bp.SteamID == steamID || SteamManager.SteamIDStringToUInt64(bp.EndPoint) == steamID)));
+                (steamID > 0 && (bp.SteamID == steamID || SteamManager.SteamIDStringToUInt64(bp.EndPoint) == steamID)) ||
+                (ownerSteamID > 0 && (bp.SteamID == ownerSteamID || SteamManager.SteamIDStringToUInt64(bp.EndPoint) == ownerSteamID)));
             reason = bannedPlayer?.Reason;
             return bannedPlayer != null;
         }
@@ -166,6 +167,7 @@ namespace Barotrauma.Networking
 
         public void BanPlayer(string name, ulong steamID, string reason, TimeSpan? duration)
         {
+            if (steamID == 0) { return; }
             BanPlayer(name, "", steamID, reason, duration);
         }
 

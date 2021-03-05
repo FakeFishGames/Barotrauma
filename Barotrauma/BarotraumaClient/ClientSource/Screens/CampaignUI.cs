@@ -477,8 +477,8 @@ namespace Barotrauma
                         }
                         string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward));
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), 
-                            TextManager.GetWithVariable("missionreward", "[reward]", rewardText), wrap: true);
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.Description, wrap: true);
+                            TextManager.GetWithVariable("missionreward", "[reward]", rewardText), wrap: true, parseRichText: true);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.Description, wrap: true, parseRichText: true);
                     }
                     missionPanel.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Children.Sum(c => c.Rect.Height) / missionTextContent.RectTransform.RelativeSize.Y) + GUI.IntScale(20));
                     foreach (GUIComponent child in missionTextContent.Children)
@@ -562,6 +562,11 @@ namespace Barotrauma
 
         public void SelectTab(CampaignMode.InteractionType tab)
         {
+            if (Campaign.ShowCampaignUI || (Campaign.ForceMapUI && tab == CampaignMode.InteractionType.Map))
+            {
+                HintManager.OnShowCampaignInterface(tab);
+            }
+
             selectedTab = tab;
             for (int i = 0; i < tabs.Length; i++)
             {

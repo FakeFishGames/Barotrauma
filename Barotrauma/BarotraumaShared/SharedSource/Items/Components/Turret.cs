@@ -767,7 +767,6 @@ namespace Barotrauma.Items.Components
             TryLaunch(deltaTime, ignorePower: true);
         }
 
-        private bool outOfAmmo;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget &&
@@ -834,7 +833,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (container == null || container.ContainableItems.Count == 0)
                 {
-                    if (!outOfAmmo && character.IsOnPlayerTeam)
+                    if (character.IsOnPlayerTeam)
                     {
                         character.Speak(TextManager.GetWithVariable("DialogCannotLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "cannotloadturret", 30.0f);
                     }
@@ -850,7 +849,7 @@ namespace Barotrauma.Items.Components
                     }
                     loadItemsObjective.Abandoned += CheckRemainingAmmo;
                     loadItemsObjective.Completed += CheckRemainingAmmo;
-                    return outOfAmmo;
+                    return false;
 
                     void CheckRemainingAmmo()
                     {
@@ -1203,8 +1202,7 @@ namespace Barotrauma.Items.Components
                     resetUserTimer = 10.0f;
                     break;
                 case "trigger_in":
-                    if (signal == "0") { return; }                    
-                    lightComponent.IsOn = !lightComponent.IsOn;                    
+                    if (signal == "0") { return; }
                     item.Use((float)Timing.Step, sender);
                     user = sender;
                     resetUserTimer = 10.0f;

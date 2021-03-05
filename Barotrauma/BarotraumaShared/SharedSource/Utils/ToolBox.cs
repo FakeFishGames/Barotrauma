@@ -225,6 +225,38 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Convert a HSV value into a RGB value.
+        /// </summary>
+        /// <param name="hue">Value between 0 and 360</param>
+        /// <param name="saturation">Value between 0 and 1</param>
+        /// <param name="value">Value between 0 and 1</param>
+        /// <see href="https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB">Reference</see>
+        /// <returns></returns>
+        public static Color HSVToRGB(float hue, float saturation, float value)
+        {
+            float c = value * saturation;
+
+            float h = Math.Clamp(hue, 0, 360) / 60f;
+
+            float x = c * (1 - Math.Abs(h % 2 - 1));
+
+            float r = 0,
+                  g = 0,
+                  b = 0;
+
+            if (0 <= h && h <= 1)     { r = c; g = x; b = 0; }
+            else if (1 < h && h <= 2) { r = x; g = c; b = 0; }
+            else if (2 < h && h <= 3) { r = 0; g = c; b = x; }
+            else if (3 < h && h <= 4) { r = 0; g = x; b = c; }
+            else if (4 < h && h <= 5) { r = x; g = 0; b = c; }
+            else if (5 < h && h <= 6) { r = c; g = 0; b = x; }
+
+            float m = value - c;
+
+            return new Color(r + m, g + m, b + m);
+        }
+
+        /// <summary>
         /// Returns either a green [x] or a red [o]
         /// </summary>
         /// <param name="isFinished"></param>
@@ -489,6 +521,30 @@ namespace Barotrauma
             //    throw new Exception("Failed to copy some of the fields.");
             //}
             return destination;
+        }
+
+        public static void SiftElement<T>(this List<T> list, int from, int to)
+        {
+            if (from < 0 || from >= list.Count) { throw new ArgumentException($"from parameter out of range (from={from}, range=[0..{list.Count - 1}])"); }
+            if (to < 0 || to >= list.Count) { throw new ArgumentException($"to parameter out of range (to={to}, range=[0..{list.Count - 1}])"); }
+
+            T elem = list[from];
+            if (from > to)
+            {
+                for (int i = from; i > to; i--)
+                {
+                    list[i] = list[i - 1];
+                }
+                list[to] = elem;
+            }
+            else if (from < to)
+            {
+                for (int i = from; i < to; i++)
+                {
+                    list[i] = list[i + 1];
+                }
+                list[to] = elem;
+            }
         }
 
         public static string ByteArrayToString(byte[] ba)

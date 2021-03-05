@@ -23,7 +23,7 @@ namespace Barotrauma
             {
                 yield return new WaitForSeconds(1.0f);
             }
-            new GUIMessageBox(header, message, buttons: new string[0], type: GUIMessageBox.Type.InGame, icon: Prefab.Icon)
+            new GUIMessageBox(header, message, buttons: new string[0], type: GUIMessageBox.Type.InGame, icon: Prefab.Icon, parseRichText: true)
             {
                 IconColor = Prefab.IconColor
             };

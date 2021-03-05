@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -28,6 +29,15 @@ namespace Barotrauma
 
         [Serialize(defaultValue: 1f, isSaveable: false, "How much is the radiation affliction increased by while in a radiated zone.")]
         public float RadiationDamageAmount { get; set; }
+
+        [Serialize(defaultValue: "139,0,0,85", isSaveable: false, "The color of the radiated area.")]
+        public Color RadiationAreaColor { get; set; }
+
+        [Serialize(defaultValue: "255,0,0,255", isSaveable: false, "The tint of the radiation border sprites.")]
+        public Color RadiationBorderTint { get; set; }
+
+        [Serialize(defaultValue: 16.66f, isSaveable: false, "Speed of the border spritesheet animation.")]
+        public float BorderAnimationSpeed { get; set; }
 
         public RadiationParams(XElement element)
         {

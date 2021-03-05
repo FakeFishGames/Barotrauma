@@ -159,6 +159,8 @@ namespace Barotrauma.Networking
                     AutoRestart = autoRestart;
                 }
 
+                RadiationEnabled = incMsg.ReadBoolean();
+
                 changed |= true;
             }
 

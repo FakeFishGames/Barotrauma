@@ -826,7 +826,8 @@ namespace Barotrauma
         {
             slots[index].Add(item);
             item.ParentInventory = this;
-            if (item.body != null)
+            bool equipped = (this as CharacterInventory)?.Owner is Character character && character.HasEquippedItem(item);
+            if (item.body != null && !equipped)
             {
                 item.body.Enabled = false;
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;

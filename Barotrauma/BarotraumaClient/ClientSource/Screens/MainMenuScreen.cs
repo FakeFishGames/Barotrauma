@@ -1043,7 +1043,7 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void StartGame(SubmarineInfo selectedSub, string saveName, string mapSeed)
+        private void StartGame(SubmarineInfo selectedSub, string saveName, string mapSeed, CampaignSettings settings)
         {
             if (string.IsNullOrEmpty(saveName)) return;
 
@@ -1082,7 +1082,7 @@ namespace Barotrauma
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
-            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.SinglePlayerCampaign, mapSeed);
+            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
             ((SinglePlayerCampaign)GameMain.GameSession.GameMode).LoadNewLevel();
         }
 
@@ -1134,6 +1134,7 @@ namespace Barotrauma
                 (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
                 campaignSetupUI.StartButton.RectTransform.MinSize.Y);
             startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
+            campaignSetupUI.EnableRadiationToggle.RectTransform.Parent = startButtonContainer.RectTransform;
             campaignSetupUI.InitialMoneyText.RectTransform.Parent = startButtonContainer.RectTransform;
         }
 

@@ -334,7 +334,11 @@ namespace Barotrauma.Sounds
                         return;
                     }
 
-                    Al.Sourcei(alSource, Al.Buffer, muffled ? (int)Sound.ALMuffledBuffer : (int)Sound.ALBuffer);
+                    if (Sound.Buffers.RequestAlBuffers())
+                    {
+                        Sound.FillBuffers();
+                    }
+                    Al.Sourcei(alSource, Al.Buffer, muffled ? (int)Sound.Buffers.AlMuffledBuffer : (int)Sound.Buffers.AlBuffer);
 
                     alError = Al.GetError();
                     if (alError != Al.NoError)
@@ -506,17 +510,26 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to reset source buffer: " + debugName + ", " + Al.GetErrorString(alError));
                         }
 
-                        if (!Al.IsBuffer(sound.ALBuffer))
+                        if (Sound.Buffers.RequestAlBuffers())
+                        {
+                            Sound.FillBuffers();
+                        }
+
+                        if (!Al.IsBuffer(sound.Buffers.AlBuffer))
                         {
                             throw new Exception(sound.Filename + " has an invalid buffer!");
                         }
+                        if (!Al.IsBuffer(sound.Buffers.AlMuffledBuffer))
+                        {
+                            throw new Exception(sound.Filename + " has an invalid muffled buffer!");
+                        }
 
-                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
+                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffled ? Sound.Buffers.AlMuffledBuffer : Sound.Buffers.AlBuffer;
                         Al.Sourcei(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.Buffer, (int)alBuffer);
                         alError = Al.GetError();
                         if (alError != Al.NoError)
                         {
-                            throw new Exception("Failed to bind buffer to source (" + ALSourceIndex.ToString() + ":" + sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) + "," + sound.ALBuffer.ToString() + "): " + debugName + ", " + Al.GetErrorString(alError));
+                            throw new Exception("Failed to bind buffer to source (" + ALSourceIndex.ToString() + ":" + sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) + "," + alBuffer.ToString() + "): " + debugName + ", " + Al.GetErrorString(alError));
                         }
 
                         Al.SourcePlay(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
@@ -528,7 +541,7 @@ namespace Barotrauma.Sounds
                     }
                     else
                     {
-                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
+                        uint alBuffer = 0;
                         Al.Sourcei(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.Buffer, (int)alBuffer);
                         int alError = Al.GetError();
                         if (alError != Al.NoError)

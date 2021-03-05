@@ -103,12 +103,12 @@ namespace Barotrauma
         /// <summary>
         /// Start a new GameSession. Will be saved to the specified save path (if playing a game mode that can be saved).
         /// </summary>
-        public GameSession(SubmarineInfo submarineInfo, string savePath, GameModePreset gameModePreset, string seed = null, MissionType missionType = MissionType.None)
+        public GameSession(SubmarineInfo submarineInfo, string savePath, GameModePreset gameModePreset, CampaignSettings settings, string seed = null, MissionType missionType = MissionType.None)
             : this(submarineInfo)
         {
             this.SavePath = savePath;
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-            GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, missionType: missionType);
+            GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, settings, missionType: missionType);
         }
 
         /// <summary>
@@ -118,14 +118,13 @@ namespace Barotrauma
             : this(submarineInfo)
         {
             CrewManager = new CrewManager(gameModePreset != null && gameModePreset.IsSinglePlayer);
-            GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, missionPrefabs: missionPrefabs);
+            GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, CampaignSettings.Empty, missionPrefabs: missionPrefabs);
         }
 
         /// <summary>
         /// Load a game session from the specified XML document. The session will be saved to the specified path.
         /// </summary>
-        public GameSession(SubmarineInfo submarineInfo, List<SubmarineInfo> ownedSubmarines, XDocument doc, string saveFile)
-            : this(submarineInfo, ownedSubmarines)
+        public GameSession(SubmarineInfo submarineInfo, List<SubmarineInfo> ownedSubmarines, XDocument doc, string saveFile) : this(submarineInfo, ownedSubmarines)
         {
             this.SavePath = saveFile;
             GameMain.GameSession = this;
@@ -159,7 +158,7 @@ namespace Barotrauma
             }
         }
 
-        private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, SubmarineInfo selectedSub, IEnumerable<MissionPrefab> missionPrefabs = null, MissionType missionType = MissionType.None)
+        private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, SubmarineInfo selectedSub, CampaignSettings settings, IEnumerable<MissionPrefab> missionPrefabs = null, MissionType missionType = MissionType.None)
         {
             if (gameModePreset.GameModeType == typeof(CoOpMode))
             {
@@ -175,7 +174,7 @@ namespace Barotrauma
             }
             else if (gameModePreset.GameModeType == typeof(MultiPlayerCampaign))
             {
-                var campaign = MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub);
+                var campaign = MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub, settings);
                 if (campaign != null && selectedSub != null)
                 {
                     campaign.Money = Math.Max(MultiPlayerCampaign.MinimumInitialMoney, campaign.Money - selectedSub.Price);
@@ -185,7 +184,7 @@ namespace Barotrauma
 #if CLIENT
             else if (gameModePreset.GameModeType == typeof(SinglePlayerCampaign))
             {
-                var campaign = SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub);
+                var campaign = SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub, settings);
                 if (campaign != null && selectedSub != null)
                 {
                     campaign.Money = Math.Max(SinglePlayerCampaign.MinimumInitialMoney, campaign.Money - selectedSub.Price);
@@ -400,6 +399,8 @@ namespace Barotrauma
             }
 
             GUI.PreventPauseMenuToggle = false;
+
+            HintManager.OnRoundStarted();
 #endif
         }
 
@@ -467,7 +468,7 @@ namespace Barotrauma
                     {
                         mpCampaign.CargoManager.CreatePurchasedItems();
 #if SERVER
-                        mpCampaign.SendCrewState(false, null);
+                        mpCampaign.SendCrewState(null, default, null);
 #endif
                     }
                     mpCampaign.UpgradeManager.ApplyUpgrades();
@@ -544,7 +545,7 @@ namespace Barotrauma
                     {
                         Submarine.SetPosition(spawnPos);
                         myPort.Dock(outPostPort);
-                        myPort.Lock(true, forcePosition: true, applyEffects: false);
+                        myPort.Lock(isNetworkMessage: true, applyEffects: false);
                     }
                     else
                     {
@@ -583,9 +584,10 @@ namespace Barotrauma
         {
             EventManager?.Update(deltaTime);
             GameMode?.Update(deltaTime);
-            foreach (Mission mission in missions)
+            //backwards for loop because the missions may get completed and removed from the list in Update()
+            for (int i = missions.Count - 1; i >= 0; i--)
             {
-                mission.Update(deltaTime);
+                missions[i].Update(deltaTime);
             }
             UpdateProjSpecific(deltaTime);
         }
@@ -636,6 +638,10 @@ namespace Barotrauma
             StatusEffect.StopAll();
             missions.Clear();
             IsRunning = false;
+
+#if CLIENT
+            HintManager.OnRoundEnded();
+#endif
         }
 
         public void KillCharacter(Character character)

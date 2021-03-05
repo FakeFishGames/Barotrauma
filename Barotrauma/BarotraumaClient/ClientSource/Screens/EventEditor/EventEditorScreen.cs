@@ -882,7 +882,7 @@ namespace Barotrauma
                 return false;
             }
 
-            GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, null);
+            GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
             TestGameMode gameMode = (TestGameMode) gameSession.GameMode;
 
             gameMode.SpawnOutpost = true;

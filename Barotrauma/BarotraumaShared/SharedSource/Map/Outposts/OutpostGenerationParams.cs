@@ -67,6 +67,9 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize("", isSaveable: true), Editable]
+        public string ReplaceInRadiation { get; set; }
+
         private readonly Dictionary<string, int> moduleCounts = new Dictionary<string, int>();
 
         public IEnumerable<KeyValuePair<string, int>> ModuleCounts

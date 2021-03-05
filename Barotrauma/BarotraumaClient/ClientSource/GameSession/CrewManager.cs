@@ -330,7 +330,10 @@ namespace Barotrauma
             if (removeInfo) { characterInfos.Remove(character.Info); }
         }
 
-        private void AddCharacterToCrewList(Character character)
+        /// <summary>
+        /// Add character to the list without actually adding it to the crew
+        /// </summary>
+        public void AddCharacterToCrewList(Character character)
         {
             if (character == null) { return; }
 
@@ -416,7 +419,8 @@ namespace Barotrauma
                 font: font,
                 textColor: character.Info?.Job?.Prefab?.UIColor)
             {
-                CanBeFocused = false
+                CanBeFocused = false,
+                UserData = "name"
             };
             nameBlock.Text = ToolBox.LimitString(character.Name, font, (int)nameBlock.Rect.Width);
 
@@ -429,22 +433,7 @@ namespace Barotrauma
             {
                 UserData = character
             };
-
-            // Only create a tooltip if the name doesn't fit the name block
-            if (nameBlock.Text.EndsWith("..."))
-            {
-                var characterTooltip = character.Name;
-                if (character.Info?.Job?.Name != null) { characterTooltip += " (" + character.Info.Job.Name + ")"; };
-                characterButton.ToolTip = characterTooltip;
-                if (character.Info?.Job?.Prefab != null)
-                {
-                    characterButton.TooltipRichTextData = new List<RichTextData>() { new RichTextData()
-                    {
-                        Color = character.Info.Job.Prefab.UIColor,
-                        EndIndex = characterTooltip.Length - 1
-                    }};
-                }
-            }
+            SetCharacterButtonTooltip(characterButton);
 
             if (IsSinglePlayer)
             {
@@ -482,6 +471,14 @@ namespace Barotrauma
                 UserData = character
             };
             currentOrderList.RectTransform.IsFixedSize = true;
+            currentOrderList.OnAddedToGUIUpdateList += (component) =>
+            {
+                if (component is GUIListBox list)
+                {
+                    list.CanBeFocused = CanIssueOrders;
+                    list.CanDragElements = CanIssueOrders && list.Content.CountChildren > 1;
+                }
+            };
 
             // Previous orders
             new GUILayoutGroup(new RectTransform(Vector2.One, parent: orderGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
@@ -526,14 +523,26 @@ namespace Barotrauma
             };
         }
 
+        private void SetCharacterButtonTooltip(GUIButton characterButton)
+        {
+            var character = (Character)characterButton.UserData;
+            if (character?.Info?.Job?.Prefab == null) { return; }
+            string color = XMLExtensions.ColorToString(character.Info.Job.Prefab.UIColor);
+            string tooltip = $"‖color:{color}‖{character.Name} ({character.Info.Job.Name})‖color:end‖";
+            var richTextData = RichTextData.GetRichTextData(tooltip, out string sanitizedTooltip);
+            characterButton.ToolTip = sanitizedTooltip;
+            characterButton.TooltipRichTextData = richTextData;
+        }
+
         /// <summary>
         /// Sets which character is selected in the crew UI (highlight effect etc)
         /// </summary>
         public bool CharacterClicked(GUIComponent component, object selection)
         {
             if (!AllowCharacterSwitch) { return false; }
-            Character character = selection as Character;
-            if (character == null || character.IsDead || character.IsUnconscious) { return false; }
+            if (!(selection is Character character) || character.IsDead || character.IsUnconscious) { return false; }
+            if (!character.IsOnPlayerTeam) { return false; }
+
             SelectCharacter(character);
             if (GUI.KeyboardDispatcher.Subscriber == crewList) { GUI.KeyboardDispatcher.Subscriber = null; }
             return true;
@@ -586,6 +595,15 @@ namespace Barotrauma
             crewList.UpdateScrollBarSize();
 
             yield return CoroutineStatus.Success;
+        }
+
+        partial void RenameCharacterProjSpecific(CharacterInfo characterInfo)
+        {
+            if (!(crewList.Content.GetChildByUserData(characterInfo?.Character) is GUIComponent characterComponent)) { return; }
+            if (!(characterComponent.FindChild("name", recursive: true) is GUITextBlock nameBlock)) { return; }
+            nameBlock.Text = ToolBox.LimitString(characterInfo.Name, nameBlock.Font, nameBlock.Rect.Width);
+            if (!(characterComponent.FindChild(c => c is GUIButton && c.UserData == characterInfo?.Character) is GUIButton characterButton)) { return; }
+            SetCharacterButtonTooltip(characterButton);
         }
 
         #endregion
@@ -835,7 +853,6 @@ namespace Barotrauma
 
             if (order == null || order.Identifier == dismissedOrderPrefab.Identifier || updatedExistingIcon)
             {
-                currentOrderIconList.CanDragElements = currentOrderIconList.Content.CountChildren > 1;
                 RearrangeIcons();
                 return;
             }
@@ -874,7 +891,6 @@ namespace Barotrauma
                 nodeIcon.RectTransform.RepositionChildInHierarchy(hierarchyIndex);
             }
 
-            currentOrderIconList.CanDragElements = currentOrderIconList.Content.CountChildren > 1;
             RearrangeIcons();
 
             void RearrangeIcons()
@@ -1276,6 +1292,7 @@ namespace Barotrauma
             }
             DisableCommandUI();
             Character.Controlled = character;
+            HintManager.OnChangeCharacter();
         }
 
         private int TryAdjustIndex(int amount)
@@ -1537,6 +1554,11 @@ namespace Barotrauma
                     if (characterComponent.UserData is Character character)
                     {
                         characterComponent.Visible = Character.Controlled == null || Character.Controlled.TeamID == character.TeamID;
+                        if (character.TeamID == CharacterTeamType.FriendlyNPC && Character.Controlled != null && 
+                            (character.CurrentHull == Character.Controlled.CurrentHull || Vector2.DistanceSquared(Character.Controlled.WorldPosition, character.WorldPosition) < 500.0f * 500.0f))
+                        {
+                            characterComponent.Visible = true;
+                        }
                         if (characterComponent.Visible)
                         {
                             if (character == Character.Controlled && characterComponent.State != GUIComponent.ComponentState.Selected)
@@ -1817,6 +1839,8 @@ namespace Barotrauma
             {
                 Character.Controlled.dontFollowCursor = true;
             }
+
+            HintManager.OnShowCommandInterface();
         }
 
         private void ToggleCommandUI()
@@ -3218,14 +3242,14 @@ namespace Barotrauma
 #endif
             if (order.Identifier == dismissedOrderPrefab.Identifier)
             {
-                return characters.FindAll(c => !c.IsDismissed).OrderBy(c => c.Info.DisplayName).ToList();
+                return characters.Union(GetOrderableFriendlyNPCs()).Where(c => !c.IsDismissed).OrderBy(c => c.Info.DisplayName).ToList();
             }
             return GetCharactersSortedForOrder(order, order.Identifier != "follow").ToList();
         }
 
         private IEnumerable<Character> GetCharactersSortedForOrder(Order order, bool includeSelf)
         {
-            return characters.FindAll(c => Character.Controlled == null || ((includeSelf || c != Character.Controlled) && c.TeamID == Character.Controlled.TeamID))
+            return characters.Where(c => Character.Controlled == null || ((includeSelf || c != Character.Controlled) && c.TeamID == Character.Controlled.TeamID)).Union(GetOrderableFriendlyNPCs())
                     // 1. Prioritize those who are on the same submarine than the controlled character
                     .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
                     // 2. Prioritize those who are already ordered to operate the item target of the new 'operate' order, or given the same maintenance order as now issued
@@ -3241,6 +3265,12 @@ namespace Barotrauma
                     // 6. Prioritize those with the best skill for the order
                     .ThenByDescending(c => c.GetSkillLevel(order.AppropriateSkill));
         }
+
+        private IEnumerable<Character> GetOrderableFriendlyNPCs()
+        {
+            return crewList.Content.Children.Where(c => c.UserData is Character character && character.TeamID == CharacterTeamType.FriendlyNPC).Select(c => (Character)c.UserData);
+        }
+
 
         #endregion
 

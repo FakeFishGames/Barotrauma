@@ -65,6 +65,8 @@ namespace Barotrauma
         //0-100
         public readonly float MinLevelDifficulty, MaxLevelDifficulty;
 
+        public readonly string BiomeIdentifier;
+
         public readonly LevelData.LevelType LevelType;
 
         public readonly string[] LocationTypeIdentifiers;
@@ -111,6 +113,7 @@ namespace Barotrauma
             EventPrefabs = new List<Pair<EventPrefab, float>>();
             ChildSets = new List<EventSet>();
 
+            BiomeIdentifier = element.GetAttributeString("biome", string.Empty);
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
 

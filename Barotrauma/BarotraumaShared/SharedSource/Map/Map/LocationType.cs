@@ -54,8 +54,11 @@ namespace Barotrauma
             get;
             private set;
         }
+        
+        public string ReplaceInRadiation { get; }
 
         public Sprite Sprite { get; private set; }
+        public Sprite RadiationSprite { get; }
 
         public Color SpriteColor
         {
@@ -84,6 +87,8 @@ namespace Barotrauma
             MissionTags = element.GetAttributeStringArray("missiontags", new string[0]).ToList();
 
             HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", new string[0]).ToList();
+
+            ReplaceInRadiation = element.GetAttributeString(nameof(ReplaceInRadiation).ToLower(), "");
 
             string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
             try
@@ -139,6 +144,9 @@ namespace Barotrauma
                     case "symbol":
                         Sprite = new Sprite(subElement, lazyLoad: true);
                         SpriteColor = subElement.GetAttributeColor("color", Color.White);
+                        break;
+                    case "radiationsymbol":
+                        RadiationSprite = new Sprite(subElement, lazyLoad: true);
                         break;
                     case "changeto":
                         CanChangeTo.Add(new LocationTypeChange(Identifier, subElement, requireChangeMessages: true));

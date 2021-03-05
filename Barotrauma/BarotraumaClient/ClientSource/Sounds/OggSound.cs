@@ -63,8 +63,18 @@ namespace Barotrauma.Sounds
             ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
             SampleRate = reader.SampleRate;
 
+            if (Buffers != null && SoundBuffers.BuffersGenerated < SoundBuffers.MaxBuffers)
+            {
+                Buffers.RequestAlBuffers(); FillBuffers();
+            }
+        }
+
+        public override void FillBuffers()
+        {
             if (!Stream)
             {
+                reader.DecodedPosition = 0;
+
                 int bufferSize = (int)reader.TotalSamples * reader.Channels;
 
                 float[] floatBuffer = new float[bufferSize];
@@ -86,7 +96,7 @@ namespace Barotrauma.Sounds
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                Al.BufferData(ALBuffer, ALFormat, shortBuffer,
+                Al.BufferData(Buffers.AlBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
                 int alError = Al.GetError();
@@ -99,7 +109,7 @@ namespace Barotrauma.Sounds
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                Al.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
+                Al.BufferData(Buffers.AlMuffledBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
                 alError = Al.GetError();

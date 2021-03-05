@@ -872,6 +872,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(true, true)]
+        public bool RadiationEnabled
+        {
+            get;
+            set;
+        }
+
         public void SetPassword(string password)
         {
             if (string.IsNullOrEmpty(password))

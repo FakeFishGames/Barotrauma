@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -1065,6 +1066,16 @@ namespace Barotrauma
             // Ensure that we don't get division by zero exceptions.
             if (diff == 0) { return v >= max ? 1f : 0f; }
             return MathHelper.Clamp((v - min) / diff, 0f, 1f);
+        }
+
+        public static float Min(params float[] vals)
+        {
+            return vals.Min();
+        }
+
+        public static float Max(params float[] vals)
+        {
+            return vals.Max();
         }
     }
 

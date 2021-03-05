@@ -154,7 +154,7 @@ namespace Barotrauma.Items.Components
                 var prevDockingTarget = DockingTarget;
                 Undock(applyEffects: false);
                 Dock(prevDockingTarget);
-                Lock(true, applyEffects: false);
+                Lock(isNetworkMessage: true, applyEffects: false);
             }
         }
 
@@ -240,7 +240,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void Lock(bool isNetworkMessage, bool forcePosition = false, bool applyEffects = true)
+        public void Lock(bool isNetworkMessage, bool applyEffects = true)
         {
 #if CLIENT
             if (GameMain.Client != null && !isNetworkMessage) { return; }
@@ -262,20 +262,17 @@ namespace Barotrauma.Items.Components
                     ApplyStatusEffects(ActionType.OnUse, 1.0f);
                 }
 
-                if (forcePosition)
+                Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
+                if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
+                    DockingTarget.item.Submarine.Info.IsOutpost)
                 {
-                    Vector2 jointDiff = joint.WorldAnchorB - joint.WorldAnchorA;
-                    if (item.Submarine.PhysicsBody.Mass < DockingTarget.item.Submarine.PhysicsBody.Mass ||
-                        DockingTarget.item.Submarine.Info.IsOutpost)
-                    {
-                        item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
-                    }
-                    else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
-                       item.Submarine.Info.IsOutpost)
-                    {
-                        DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
-                    }
+                    item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
                 }
+                else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
+                    item.Submarine.Info.IsOutpost)
+                {
+                    DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
+                }                
 
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
@@ -988,7 +985,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        Lock(isNetworkMessage: false, forcePosition: true);
+                        Lock(isNetworkMessage: false);
                     }
                 }
                 else

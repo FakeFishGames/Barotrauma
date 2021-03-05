@@ -30,6 +30,8 @@ namespace Barotrauma.Sounds
         private readonly SoundSourcePool[] sourcePools;
         
         private readonly List<Sound> loadedSounds;
+        public IReadOnlyList<Sound> LoadedSounds => loadedSounds;
+
         private readonly SoundChannel[][] playingChannels = new SoundChannel[2][];
         private readonly object threadDeathMutex = new object();
 

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -17,8 +18,22 @@ namespace Barotrauma.Items.Components
 
         private bool nonContinuousOutputSent;
 
+        private string output;
+
         [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the regular expression.", alwaysUseInstanceValues: true)]
-        public string Output { get; set; }
+        public string Output 
+        {
+            get { return output; }
+            set
+            {
+                if (value == null) { return; }
+                output = value;
+                if (output.Length > MaxOutputLength)
+                {
+                    output = output.Substring(0, MaxOutputLength);
+                }
+            }
+        }
 
         [InGameEditable, Serialize(false, true, description: "Should the component output a value of a capture group instead of a constant signal.", alwaysUseInstanceValues: true)]
         public bool UseCaptureGroup { get; set; }
@@ -49,6 +64,17 @@ namespace Barotrauma.Items.Components
                     item.SendSignal(0, "ERROR", "signal_out", null);
                     return;
                 }
+            }
+        }
+
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
             }
         }
 

@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
                     SpriteEffects.None,
                     depth);
             }
-        }        
+        }
         private static Sprite defaultWireSprite;
         private Sprite overrideSprite;
         private Sprite wireSprite;

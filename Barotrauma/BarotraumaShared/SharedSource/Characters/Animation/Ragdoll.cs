@@ -281,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        public const float MAX_SPEED = 30;
+        public const float MAX_SPEED = 20;
 
         public Vector2 TargetMovement
         {
@@ -636,9 +636,12 @@ namespace Barotrauma
             //always collides with bodies other than structures
             if (!(f2.Body.UserData is Structure structure))
             {
-                lock (impactQueue)
+                if (!f2.IsSensor)
                 {
-                    impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
+                    lock (impactQueue)
+                    {
+                        impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
+                    }
                 }
                 return true;
             }

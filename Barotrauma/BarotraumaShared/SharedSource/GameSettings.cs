@@ -171,7 +171,7 @@ namespace Barotrauma
         /// <summary>
         /// How many corpses there can be in a sub before they start to get despawned
         /// </summary>
-        public int CorpsesPerSubDespawnThreshold { get; set; }  = 5;
+        public int CorpsesPerSubDespawnThreshold { get; set; }  = 10;
 
         private string overrideSaveFolder, overrideMultiplayerSaveFolder;
 
@@ -301,10 +301,14 @@ namespace Barotrauma
 
         public volatile bool WaitingForAutoUpdate;
 
+        public bool DisableInGameHints { get; set; }
+
 #if DEBUG
         public bool AutomaticQuickStartEnabled { get; set; }
         public bool AutomaticCampaignLoadEnabled { get; set; }
         public bool TextManagerDebugModeEnabled { get; set; }
+
+        public bool ModBreakerMode { get; set; }
 #endif
 
         private System.IO.FileSystemWatcher modsFolderWatcher;
@@ -735,6 +739,10 @@ namespace Barotrauma
         private bool textScaleDirty;
 
         public List<string> CompletedTutorialNames { get; private set; }
+        /// <summary>
+        /// Identifiers of hints the player has chosen not to see again
+        /// </summary>
+        public HashSet<string> IgnoredHints { get; private set; } = new HashSet<string>();
         public HashSet<string> EncounteredCreatures { get; private set; } = new HashSet<string>();
         public HashSet<string> KilledCreatures { get; private set; } = new HashSet<string>();
 
@@ -1151,6 +1159,12 @@ namespace Barotrauma
                     CompletedTutorialNames.Add(element.GetAttributeString("name", ""));
                 }
             }
+
+            if (doc.Root.Element("ignoredhints") is XElement ignoredHintsElement)
+            {
+                IgnoredHints = new HashSet<string>(ignoredHintsElement.GetAttributeStringArray("identifiers", new string[0], convertToLowerInvariant: true));
+            }
+
             XElement encounters = doc.Root.Element("encountered");
             if (encounters != null)
             {
@@ -1172,7 +1186,7 @@ namespace Barotrauma
 #endregion
 
 #region Save PlayerConfig
-        public void SaveNewPlayerConfig()
+        public bool SaveNewPlayerConfig()
         {
             XDocument doc = new XDocument();
             UnsavedSettings = false;
@@ -1211,11 +1225,13 @@ namespace Barotrauma
                 new XAttribute("tutorialskipwarning", ShowTutorialSkipWarning),
                 new XAttribute("corpsedespawndelay", CorpseDespawnDelay),
                 new XAttribute("corpsespersubdespawnthreshold", CorpsesPerSubDespawnThreshold),
-                new XAttribute("usedualmodesockets", UseDualModeSockets)
+                new XAttribute("usedualmodesockets", UseDualModeSockets),
+                new XAttribute("disableingamehints", DisableInGameHints)
 #if DEBUG
                 , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
                 , new XAttribute("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled)
                 , new XAttribute("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled)
+                , new XAttribute("modbreakermode", ModBreakerMode)
 #endif
                 );
 
@@ -1403,6 +1419,8 @@ namespace Barotrauma
             }
             doc.Root.Add(tutorialElement);
 
+            doc.Root.Add(new XElement("ignoredhints", new XAttribute("identifiers", string.Join(",", IgnoredHints).Trim().ToLowerInvariant())));
+
             doc.Root.Add(new XElement("encountered", new XAttribute("creatures", string.Join(",", EncounteredCreatures).Trim().ToLowerInvariant())));
             doc.Root.Add(new XElement("killed", new XAttribute("creatures", string.Join(",", KilledCreatures).Trim().ToLowerInvariant())));
 
@@ -1426,7 +1444,10 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Saving game settings failed.", e);
                 GameAnalyticsManager.AddErrorEventOnce("GameSettings.Save:SaveFailed", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
                     "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
+                return false;
             }
+
+            return true;
         }
 #endregion
 
@@ -1460,10 +1481,12 @@ namespace Barotrauma
             EditorDisclaimerShown = doc.Root.GetAttributeBool("editordisclaimershown", EditorDisclaimerShown);
             ShowTutorialSkipWarning = doc.Root.GetAttributeBool("tutorialskipwarning", true);
             UseDualModeSockets = doc.Root.GetAttributeBool("usedualmodesockets", true);
+            DisableInGameHints = doc.Root.GetAttributeBool("disableingamehints", DisableInGameHints);
 #if DEBUG
             AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
             AutomaticCampaignLoadEnabled = doc.Root.GetAttributeBool("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled);
             TextManagerDebugModeEnabled = doc.Root.GetAttributeBool("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled);
+            ModBreakerMode = doc.Root.GetAttributeBool("modbreakermode", ModBreakerMode);
 #endif
             XElement gameplayElement = doc.Root.Element("gameplay");
             jobPreferences = new List<Pair<string, int>>();
@@ -1578,6 +1601,32 @@ namespace Barotrauma
         {
             CurrentCorePackage = null;
             enabledRegularPackages.Clear();
+
+#if DEBUG && CLIENT
+            if (ModBreakerMode)
+            {
+                CurrentCorePackage = ContentPackage.CorePackages.GetRandom();
+                foreach (var regularPackage in ContentPackage.RegularPackages)
+                {
+                    if (Rand.Range(0.0, 1.0) <= 0.5)
+                    {
+                        enabledRegularPackages.Add(regularPackage);
+                    }
+                }
+                ContentPackage.SortContentPackages(p =>
+                {
+                    return Rand.Int(int.MaxValue);
+                }, config: this);
+
+                if (CurrentCorePackage == null)
+                {
+                    CurrentCorePackage = ContentPackage.CorePackages.First();
+                }
+
+                TextManager.LoadTextPacks(AllEnabledPackages);
+                return;
+            }
+#endif
 
             var contentPackagesElement = doc.Root.Element("contentpackages");
             if (contentPackagesElement != null)
@@ -1725,6 +1774,7 @@ namespace Barotrauma
             AutoUpdateWorkshopItems = true;
             TextScale = 1;
             textScaleDirty = false;
+            DisableInGameHints = false;
         }
     }
 }

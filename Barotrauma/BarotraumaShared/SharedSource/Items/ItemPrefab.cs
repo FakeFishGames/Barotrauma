@@ -485,12 +485,14 @@ namespace Barotrauma
             public int ClusterQuantity { get; }
             public int ClusterSize { get; }
             public bool IsIslandSpecifc { get; }
+            public bool AllowAtStart { get; }
 
-            public FixedQuantityResourceInfo(int clusterQuantity, int clusterSize, bool isIslandSpecific)
+            public FixedQuantityResourceInfo(int clusterQuantity, int clusterSize, bool isIslandSpecific, bool allowAtStart)
             {
                 ClusterQuantity = clusterQuantity;
                 ClusterSize = clusterSize;
                 IsIslandSpecifc = isIslandSpecific;
+                AllowAtStart = allowAtStart;
             }
         }
 
@@ -965,7 +967,8 @@ namespace Barotrauma
                                     LevelQuantity.Add(levelName, new FixedQuantityResourceInfo(
                                         levelCommonnessElement.GetAttributeInt("clusterquantity", 0),
                                         levelCommonnessElement.GetAttributeInt("clustersize", 0),
-                                        levelCommonnessElement.GetAttributeBool("isislandspecific", false)));
+                                        levelCommonnessElement.GetAttributeBool("isislandspecific", false),
+                                        levelCommonnessElement.GetAttributeBool("allowatstart", true)));
                                 }
                             }
                         }

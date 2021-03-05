@@ -771,6 +771,10 @@ namespace Barotrauma.Items.Components
                     brokenEffects.ForEach(e => e.SetUser(user));
                 }
             }
+
+#if CLIENT
+            HintManager.OnStatusEffectApplied(this, type, character);
+#endif
         }
 
         public virtual void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)

@@ -62,6 +62,7 @@
   <Character file="Content/Characters/Balloon/Balloon.xml" />
   <Character file="Content/Characters/Carrier/Carrier.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
+  <Character file="Content/Characters/Charybdisold/Charybdisold.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Crawlerhusk/Crawlerhusk.xml" />
@@ -248,4 +249,6 @@
   <OutpostModule file="Content/Map/Outposts/Hall4wayModule_01_Abandoned.sub" />
   <BeaconStation file="Content/Map/BeaconStations/BeaconStation1.sub" />
   <OutpostModule file="Content/Map/Outposts/MineModule_04.sub" />
+  <OutpostModule file="Content/Map/Outposts/HallModuleHorizontal_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/HallModuleVertical_Abandoned.sub" />
 </contentpackage>

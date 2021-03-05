@@ -35,7 +35,10 @@ namespace Barotrauma
 
         public void CreatePreviewWindow(GUIComponent parent)
         {
-            var content = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform), style: null);
+            var content = new GUIButton(new RectTransform(Vector2.One, parent.RectTransform), style: null)
+            {
+                OnClicked = (btn, obj) => { SubmarinePreview.Create(this); return false; }
+            };
 
             if (PreviewImage == null)
             {

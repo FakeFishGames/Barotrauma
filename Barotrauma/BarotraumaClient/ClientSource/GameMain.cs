@@ -465,7 +465,28 @@ namespace Barotrauma
 
                 while (Config.WaitingForAutoUpdate) { yield return CoroutineStatus.Running; }
             }
-            
+
+#if DEBUG
+            if (Config.ModBreakerMode)
+            {
+                Config.SelectCorePackage(ContentPackage.CorePackages.GetRandom());
+                foreach (var regularPackage in ContentPackage.RegularPackages)
+                {
+                    if (Rand.Range(0.0, 1.0) <= 0.5)
+                    {
+                        Config.EnableRegularPackage(regularPackage);
+                    }
+                    else
+                    {
+                        Config.DisableRegularPackage(regularPackage);
+                    }
+                }
+                ContentPackage.SortContentPackages(p =>
+                {
+                    return Rand.Int(int.MaxValue);
+                });
+            }
+#endif
 
             if (Config.AllEnabledPackages.None())
             {
@@ -535,6 +556,7 @@ namespace Barotrauma
             Order.Init();
             EventManagerSettings.Init();
             BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
+            HintManager.Init();
             TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 
@@ -919,6 +941,8 @@ namespace Barotrauma
                     {
                         Client.AddToGUIUpdateList();
                     }
+
+                    SubmarinePreview.AddToGUIUpdateList();
 
                     FileSelection.AddToGUIUpdateList();
 

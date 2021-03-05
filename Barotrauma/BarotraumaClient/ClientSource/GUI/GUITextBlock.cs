@@ -279,7 +279,8 @@ namespace Barotrauma
         /// If the rectT height is set 0, the height is calculated from the text.
         /// </summary>
         public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false) 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null,
+            bool playerInput = false, bool parseRichText = false) 
             : base(style, rectT)
         {
             if (color.HasValue)
@@ -289,7 +290,13 @@ namespace Barotrauma
             if (textColor.HasValue)
             {
                 OverrideTextColor(textColor.Value);
-            }            
+            }
+
+            if (parseRichText)
+            {
+                richTextData = RichTextData.GetRichTextData(text, out text);
+                hasColorHighlight = richTextData != null;
+            }
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
             //use the default CJK font as a fallback

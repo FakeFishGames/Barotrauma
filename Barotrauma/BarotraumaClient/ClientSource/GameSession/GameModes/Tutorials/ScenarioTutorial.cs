@@ -110,7 +110,7 @@ namespace Barotrauma.Tutorials
             }
 
             CharacterInfo charInfo = configElement.Element("Character") == null ?
-                new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("engineer")) :
+                new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer")) :
                 new CharacterInfo(configElement.Element("Character"));
 
             WayPoint wayPoint = GetSpawnPoint(charInfo);

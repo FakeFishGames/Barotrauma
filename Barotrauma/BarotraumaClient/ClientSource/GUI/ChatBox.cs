@@ -321,6 +321,10 @@ namespace Barotrauma
             float prevSize = chatBox.BarSize;
 
             string displayedText = message.TranslatedText;
+            if (message.Type == ChatMessageType.Server)
+            {
+                RichTextData.GetRichTextData(displayedText, out displayedText);
+            }
             string senderName = "";
             Color senderColor = Color.White;
             if (!string.IsNullOrWhiteSpace(message.SenderName))

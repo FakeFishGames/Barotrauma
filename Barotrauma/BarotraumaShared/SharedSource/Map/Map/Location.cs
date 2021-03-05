@@ -579,6 +579,16 @@ namespace Barotrauma
             return false;
         }
 
+        public LocationType GetLocationType()
+        {
+            if (IsCriticallyRadiated() && LocationType.List.FirstOrDefault(lt => lt.Identifier.Equals(Type.ReplaceInRadiation, StringComparison.OrdinalIgnoreCase)) is { } newLocationType)
+            {
+                return newLocationType;
+            }
+
+            return Type;
+        }
+
         public IEnumerable<Mission> GetMissionsInConnection(LocationConnection connection)
         {
             System.Diagnostics.Debug.Assert(Connections.Contains(connection));

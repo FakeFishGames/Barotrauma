@@ -1380,6 +1380,7 @@ namespace Barotrauma.Items.Components
                             MathHelper.Clamp(c.Mass * 0.03f, 0.1f, 2.0f));
                         if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
                         sonarBlips.Add(blip);
+                        HintManager.OnSonarSpottedCharacter(Item, c);
                     }
                     continue;
                 }
@@ -1399,6 +1400,7 @@ namespace Barotrauma.Items.Components
                             MathHelper.Clamp(limb.Mass * 0.1f, 0.1f, 2.0f));
                         if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
                         sonarBlips.Add(blip);
+                        HintManager.OnSonarSpottedCharacter(Item, c);
                     }
                 }
             }

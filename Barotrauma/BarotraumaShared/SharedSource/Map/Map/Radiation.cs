@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -13,6 +14,9 @@ namespace Barotrauma
         [Serialize(defaultValue: 0f, isSaveable: true)]
         public float Amount { get; set; }
 
+        [Serialize(defaultValue: true, isSaveable: true)]
+        public bool Enabled { get; set; }
+
         public Dictionary<string, SerializableProperty> SerializableProperties { get; }
 
         public readonly Map Map;
@@ -22,8 +26,6 @@ namespace Barotrauma
 
         private float increasedAmount;
         private float lastIncrease;
-
-        public bool Enabled = true;
 
         public Radiation(Map map, RadiationParams radiationParams, XElement? element = null)
         {
@@ -52,6 +54,12 @@ namespace Barotrauma
 
             foreach (Location location in Map.Locations.Where(Contains))
             {
+                if (location.IsGateBetweenBiomes)
+                {
+                    location.Connections.ForEach(c => c.Locked = false);
+                    continue;
+                }
+
                 if (amountOfOutposts <= Params.MinimumOutpostAmount) { break; }
 
                 if (Map.CurrentLocation is { } currLocation)

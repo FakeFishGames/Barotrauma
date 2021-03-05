@@ -296,7 +296,7 @@ namespace Barotrauma
                     subInfo ??= SubmarineInfo.SavedSubmarines.GetRandom(s =>
                         s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&
                         !nonPlayerFiles.Any(f => f.Path.CleanUpPath().Equals(s.FilePath.CleanUpPath(), StringComparison.InvariantCultureIgnoreCase)));
-                    GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, null);
+                    GameSession gameSession = new GameSession(subInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
                     gameSession.StartRound(Level.Loaded.LevelData);
                     (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
                     {

@@ -232,8 +232,7 @@ namespace Barotrauma
 
         public bool IsWithinSector(Vector2 worldPosition)
         {
-            if (sectorRad >= MathHelper.TwoPi) return true;
-
+            if (sectorRad >= MathHelper.TwoPi) { return true; }
             Vector2 diff = worldPosition - WorldPosition;
             return MathUtils.GetShortestAngle(MathUtils.VectorToAngle(diff), MathUtils.VectorToAngle(sectorDir)) <= sectorRad * 0.5f;
         }

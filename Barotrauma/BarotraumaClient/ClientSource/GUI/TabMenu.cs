@@ -882,10 +882,15 @@ namespace Barotrauma
                     GUIFrame missionDescriptionHolder = new GUIFrame(new RectTransform(Vector2.One, missionList.Content.RectTransform), style: null);
                     GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.744f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.225f, 0f) }, false, childAnchor: Anchor.TopLeft);
 
-                    string missionNameString = ToolBox.WrapText(mission.Name, missionTextGroup.Rect.Width, GUI.LargeFont);
-                    string missionDescriptionString = ToolBox.WrapText(mission.Description, missionTextGroup.Rect.Width, GUI.Font);
                     string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward));
-                    string missionRewardString = ToolBox.WrapText(TextManager.GetWithVariable("MissionReward", "[reward]", rewardText), missionTextGroup.Rect.Width, GUI.Font);
+
+                    var missionNameRichTextData = RichTextData.GetRichTextData(mission.Name, out string missionNameString);
+                    var missionDescriptionRichTextData = RichTextData.GetRichTextData(mission.Description, out string missionDescriptionString);
+                    var missionRewardRichTextData = RichTextData.GetRichTextData(TextManager.GetWithVariable("MissionReward", "[reward]", rewardText), out string missionRewardString);
+
+                    missionNameString = ToolBox.WrapText(missionNameString, missionTextGroup.Rect.Width, GUI.LargeFont);
+                    missionDescriptionString = ToolBox.WrapText(missionDescriptionString, missionTextGroup.Rect.Width, GUI.Font);
+                    missionRewardString = ToolBox.WrapText(missionRewardString, missionTextGroup.Rect.Width, GUI.Font);
 
                     Vector2 missionNameSize = GUI.LargeFont.MeasureString(missionNameString);
                     Vector2 missionDescriptionSize = GUI.Font.MeasureString(missionDescriptionString);
@@ -901,12 +906,12 @@ namespace Barotrauma
                         int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
                         Point iconSize = new Point(iconWidth, iconHeight);
 
-                        new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) { Color = mission.Prefab.IconColor, HoverColor = mission.Prefab.IconColor };
+                        new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) { Color = mission.Prefab.IconColor };
                     }
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUI.LargeFont);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardString);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
-                }                
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameRichTextData, missionNameString, font: GUI.LargeFont);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardRichTextData, missionRewardString);
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionRichTextData, missionDescriptionString);
+                }
             }
             else
             {

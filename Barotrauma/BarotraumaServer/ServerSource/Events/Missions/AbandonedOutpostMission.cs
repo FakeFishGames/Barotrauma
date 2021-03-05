@@ -17,6 +17,8 @@ namespace Barotrauma
             foreach (Character character in characters)
             {
                 character.WriteSpawnData(msg, character.ID, restrictMessageSize: false);
+                msg.Write(requireKill.Contains(character));
+                msg.Write(requireRescue.Contains(character));
                 msg.Write((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {

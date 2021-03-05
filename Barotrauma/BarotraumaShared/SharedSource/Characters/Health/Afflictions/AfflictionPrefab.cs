@@ -290,6 +290,9 @@ namespace Barotrauma
         //how high the strength has to be for the affliction icon to be shown with a health scanner
         public readonly float ShowInHealthScannerThreshold = 0.05f;
 
+        //how strong the affliction needs to be before bots attempt to treat it
+        public readonly float TreatmentThreshold = 5.0f;
+
         //how much karma changes when a player applies this affliction to someone (per strength of the affliction)
         public float KarmaChangeOnApplied;
 
@@ -376,6 +379,9 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Cannot override all afflictions, because many of them are required by the main game! Please try overriding them one by one.");
             }
+
+            List<(AfflictionPrefab prefab, XElement element)> loadedAfflictions = new List<(AfflictionPrefab prefab, XElement element)>();
+
             foreach (XElement element in mainElement.Elements())
             {
                 bool isOverride = element.IsOverride();
@@ -510,9 +516,17 @@ namespace Barotrauma
 
                 if (prefab != null)
                 {
+                    loadedAfflictions.Add((prefab, element));
                     Prefabs.Add(prefab, isOverride);
                     prefab.CalculatePrefabUIntIdentifier(Prefabs);
                 }
+            }
+
+            //load the effects after all the afflictions in the file have been instantiated
+            //otherwise afflictions can't inflict other afflictions that are defined at a later point in the file
+            foreach ((AfflictionPrefab prefab, XElement element) in loadedAfflictions)
+            {
+                prefab.LoadEffects(element);
             }
         }
 
@@ -565,6 +579,7 @@ namespace Barotrauma
             MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
 
             ShowInHealthScannerThreshold = element.GetAttributeFloat("showinhealthscannerthreshold", Math.Max(ActivationThreshold, 0.05f));
+            TreatmentThreshold = element.GetAttributeFloat("treatmentthreshold", Math.Max(ActivationThreshold, 5.0f));
 
             DamageOverlayAlpha  = element.GetAttributeFloat("damageoverlayalpha", 0.0f);
             BurnOverlayAlpha    = element.GetAttributeFloat("burnoverlayalpha", 0.0f);
@@ -583,9 +598,6 @@ namespace Barotrauma
                 {
                     case "icon":
                         Icon = new Sprite(subElement);
-                        break;
-                    case "effect":
-                        effects.Add(new Effect(subElement, Name));
                         break;
                     case "periodiceffect":
                         periodicEffects.Add(new PeriodicEffect(subElement, Name));
@@ -612,6 +624,19 @@ namespace Barotrauma
             }
 
             constructor = type.GetConstructor(new[] { typeof(AfflictionPrefab), typeof(float) });
+        }
+
+        private void LoadEffects(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "effect":
+                        effects.Add(new Effect(subElement, Name));
+                        break;
+                }
+            }
         }
 
         public override string ToString()

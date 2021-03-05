@@ -52,16 +52,10 @@ namespace Barotrauma.Sounds
             }
         }
 
-        private uint alBuffer;
-        public uint ALBuffer
+        private SoundBuffers buffers;
+        public SoundBuffers Buffers
         {
-            get { return !Stream ? alBuffer : 0; }
-        }
-
-        private uint alMuffledBuffer;
-        public uint ALMuffledBuffer
-        {
-            get { return !Stream ? alMuffledBuffer : 0; }
+            get { return !Stream ? buffers : null; }
         }
 
         public int ALFormat
@@ -169,69 +163,20 @@ namespace Barotrauma.Sounds
         {
             if (!Stream)
             {
-                Al.GenBuffer(out alBuffer);
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
-                }
-
-                if (!Al.IsBuffer(alBuffer))
-                {
-                    throw new Exception("Generated OpenAL buffer is invalid!");
-                }
-
-                Al.GenBuffer(out alMuffledBuffer);
-                alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to create OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
-                }
-
-                if (!Al.IsBuffer(alMuffledBuffer))
-                {
-                    throw new Exception("Generated OpenAL buffer is invalid!");
-                }
+                buffers = new SoundBuffers(this);
             }
             else
             {
-                alBuffer = 0;
+                buffers = null;
             }
         }
+
+        public virtual void FillBuffers() { }
 
         public virtual void DeleteALBuffers()
         {
             Owner.KillChannels(this);
-            if (alBuffer != 0)
-            {
-                if (!Al.IsBuffer(alBuffer))
-                {
-                    throw new Exception("Buffer to delete is invalid!");
-                }
-
-                Al.DeleteBuffer(alBuffer); alBuffer = 0;
-
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
-                }
-            }
-            if (alMuffledBuffer != 0)
-            {
-                if (!Al.IsBuffer(alMuffledBuffer))
-                {
-                    throw new Exception("Buffer to delete is invalid!");
-                }
-
-                Al.DeleteBuffer(alMuffledBuffer); alMuffledBuffer = 0;
-
-                int alError = Al.GetError();
-                if (alError != Al.NoError)
-                {
-                    throw new Exception("Failed to delete OpenAL buffer for non-streamed sound: " + Al.GetErrorString(alError));
-                }
-            }
+            buffers?.Dispose();
         }
 
         public virtual void Dispose()

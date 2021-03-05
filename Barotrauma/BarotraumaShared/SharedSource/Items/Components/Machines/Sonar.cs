@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            currPowerConsumption = powerConsumption;
+            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * 0.1f;
 
             UpdateOnActiveEffects(deltaTime);
 

@@ -20,6 +20,7 @@ namespace Barotrauma
             Audio,
             VoiceChat,
             Controls,
+            Gameplay,
 #if DEBUG
             Debug
 #endif
@@ -532,29 +533,19 @@ namespace Barotrauma
                     UserData = tab
                 };
 
-                float tabWidth = 0.25f;
+                float tabWidth = 1.0f / tabs.Length;
 #if DEBUG
-                tabWidth = 0.2f;
-                if (tab != Tab.Debug)
-                {
+                string buttonText = tab != Tab.Debug ? TextManager.Get("SettingsTab." + tab.ToString()) : "Debug";
+#else
+                string buttonText = TextManager.Get("SettingsTab." + tab.ToString());
 #endif
-                    tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(tabWidth, 1.0f), tabButtonHolder.RectTransform),
-                        TextManager.Get("SettingsTab." + tab.ToString()), style: "GUITabButton")
-                    {
-                        UserData = tab,
-                        OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
-                    };
-#if DEBUG
-                }
-                else
+
+                tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(tabWidth, 1.0f), tabButtonHolder.RectTransform), style: "GUITabButton")
                 {
-                    tabButtons[(int)tab] = new GUIButton(new RectTransform(new Vector2(tabWidth, 1.0f), tabButtonHolder.RectTransform), "Debug", style: "GUITabButton")
-                    {
-                        UserData = tab,
-                        OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
-                    };
-                }
-#endif
+                    UserData = tab,
+                    OnClicked = (bt, userdata) => { SelectTab((Tab)userdata); return true; }
+                };
+                tabButtons[(int)tab].Text = ToolBox.LimitString(buttonText, tabButtons[(int)tab].Font, (int)(0.75f * tabWidth * tabButtonHolder.Rect.Width));
             }
 
             new GUIButton(new RectTransform(new Vector2(0.05f, 0.75f), tabButtonHolder.RectTransform, Anchor.BottomRight) { RelativeOffset = new Vector2(0.0f, 0.2f) }, style: "GUIBugButton")
@@ -669,19 +660,6 @@ namespace Barotrauma
                 Selected = TextureCompressionEnabled
             };
 
-            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, leftColumn.RectTransform),
-                TextManager.Get("PauseOnFocusLost"))
-            {
-                Selected = PauseOnFocusLost,
-                ToolTip = TextManager.Get("PauseOnFocusLostToolTip"),
-                OnSelected = (tickBox) =>
-                {
-                    PauseOnFocusLost = tickBox.Selected;
-                    UnsavedSettings = true;
-                    return true;
-                }
-            };
-
             GUITextBlock particleLimitText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("ParticleLimit"), font: GUI.SubHeadingFont, wrap: true);
             GUIScrollBar particleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), style: "GUISlider",
                 barSize: 0.1f)
@@ -772,56 +750,6 @@ namespace Barotrauma
                     return true;
                 }
             };
-
-            GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("HUDScale"), font: GUI.SubHeadingFont, wrap: true);
-            GUIScrollBar HUDScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
-               style: "GUISlider", barSize: 0.1f)
-            {
-                UserData = HUDScaleText,
-                BarScroll = (HUDScale - MinHUDScale) / (MaxHUDScale - MinHUDScale),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, scroll);
-                    ChangeSliderText(scrollBar, HUDScale);
-                    OnHUDScaleChanged?.Invoke();
-                    return true;
-                },
-                Step = 0.02f
-            };
-            HUDScaleScrollBar.OnMoved(HUDScaleScrollBar, HUDScaleScrollBar.BarScroll);
-
-            GUITextBlock inventoryScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("InventoryScale"), font: GUI.SubHeadingFont);
-            GUIScrollBar inventoryScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), 
-                style: "GUISlider", barSize: 0.1f)
-            {
-                UserData = inventoryScaleText,
-                BarScroll = (InventoryScale - MinInventoryScale) / (MaxInventoryScale - MinInventoryScale),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, scroll);
-                    ChangeSliderText(scrollBar, InventoryScale);
-                    return true;
-                },
-                Step = 0.02f
-            };
-            inventoryScaleScrollBar.OnMoved(inventoryScaleScrollBar, inventoryScaleScrollBar.BarScroll);
-
-            GUITextBlock textScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), TextManager.Get("TextScale"), font: GUI.SubHeadingFont);
-            GUIScrollBar textScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform),
-                style: "GUISlider", barSize: 0.1f)
-            {
-                UserData = textScaleText,
-                BarScroll = (TextScale - MinTextScale) / (MaxTextScale - MinTextScale),
-                OnMoved = (scrollBar, scroll) =>
-                {
-                    TextScale = MathHelper.Lerp(MinTextScale, MaxTextScale, scroll);
-                    textScaleDirty = true;
-                    ChangeSliderText(scrollBar, TextScale);
-                    return true;
-                },
-                Step = 0.01f
-            };
-            textScaleScrollBar.OnMoved(textScaleScrollBar, textScaleScrollBar.BarScroll);
 
             /// Audio tab ----------------------------------------------------------------
 
@@ -1380,6 +1308,88 @@ namespace Barotrauma
                 GUITextBlock.AutoScaleAndNormalize(defaultBindingsButton.TextBlock, legacyBindingsButton.TextBlock);
             };
 
+            /// Gameplay tab -------------------------------------------------------------
+            var gameplaySettingsGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.46f, 0.95f), tabs[(int)Tab.Gameplay].RectTransform, Anchor.TopLeft)
+            { RelativeOffset = new Vector2(0.025f, 0.02f) })
+            { RelativeSpacing = 0.01f };
+
+            GUITickBox pauseOnFocusLostBox = new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform),
+                TextManager.Get("PauseOnFocusLost"))
+            {
+                Selected = PauseOnFocusLost,
+                ToolTip = TextManager.Get("PauseOnFocusLostToolTip"),
+                OnSelected = (tickBox) =>
+                {
+                    PauseOnFocusLost = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
+
+            GUITickBox disableInGameHintsBox = new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform),
+                TextManager.Get("DisableInGameHints"))
+            {
+                Selected = DisableInGameHints,
+                ToolTip = TextManager.Get("DisableInGameHintsToolTip"),
+                OnSelected = (tickBox) =>
+                {
+                    DisableInGameHints = tickBox.Selected;
+                    UnsavedSettings = true;
+                    return true;
+                }
+            };
+
+            GUITextBlock HUDScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform), TextManager.Get("HUDScale"), font: GUI.SubHeadingFont, wrap: true);
+            GUIScrollBar HUDScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+               style: "GUISlider", barSize: 0.1f)
+            {
+                UserData = HUDScaleText,
+                BarScroll = (HUDScale - MinHUDScale) / (MaxHUDScale - MinHUDScale),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    HUDScale = MathHelper.Lerp(MinHUDScale, MaxHUDScale, scroll);
+                    ChangeSliderText(scrollBar, HUDScale);
+                    OnHUDScaleChanged?.Invoke();
+                    return true;
+                },
+                Step = 0.02f
+            };
+            HUDScaleScrollBar.OnMoved(HUDScaleScrollBar, HUDScaleScrollBar.BarScroll);
+
+            GUITextBlock inventoryScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform), TextManager.Get("InventoryScale"), font: GUI.SubHeadingFont);
+            GUIScrollBar inventoryScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+                style: "GUISlider", barSize: 0.1f)
+            {
+                UserData = inventoryScaleText,
+                BarScroll = (InventoryScale - MinInventoryScale) / (MaxInventoryScale - MinInventoryScale),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    InventoryScale = MathHelper.Lerp(MinInventoryScale, MaxInventoryScale, scroll);
+                    ChangeSliderText(scrollBar, InventoryScale);
+                    return true;
+                },
+                Step = 0.02f
+            };
+            inventoryScaleScrollBar.OnMoved(inventoryScaleScrollBar, inventoryScaleScrollBar.BarScroll);
+
+            GUITextBlock textScaleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform), TextManager.Get("TextScale"), font: GUI.SubHeadingFont);
+            GUIScrollBar textScaleScrollBar = new GUIScrollBar(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+                style: "GUISlider", barSize: 0.1f)
+            {
+                UserData = textScaleText,
+                BarScroll = (TextScale - MinTextScale) / (MaxTextScale - MinTextScale),
+                OnMoved = (scrollBar, scroll) =>
+                {
+                    TextScale = MathHelper.Lerp(MinTextScale, MaxTextScale, scroll);
+                    textScaleDirty = true;
+                    ChangeSliderText(scrollBar, TextScale);
+                    return true;
+                },
+                Step = 0.01f
+            };
+            textScaleScrollBar.OnMoved(textScaleScrollBar, textScaleScrollBar.BarScroll);
+
+            /// Bottom buttons -------------------------------------------------------------
             new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))
             {
@@ -1465,55 +1475,54 @@ namespace Barotrauma
             { RelativeOffset = new Vector2(0.02f, 0.02f) })
             { RelativeSpacing = 0.01f };
 
-            var automaticQuickStartTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Automatic quickstart enabled", style: "GUITickBox");
-            automaticQuickStartTickBox.Selected = AutomaticQuickStartEnabled;
-            automaticQuickStartTickBox.ToolTip = "Will the game automatically move on to Quickstart when the game is launched";
-            automaticQuickStartTickBox.OnSelected = (tickBox) =>
+            void addDebugTickBox(bool initialValue, Action<bool> set, string label, string tooltip)
             {
-                AutomaticQuickStartEnabled = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+                var tickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), label, style: "GUITickBox");
+                tickBox.Selected = initialValue;
+                tickBox.ToolTip = tooltip;
+                tickBox.OnSelected = (tickBox) =>
+                {
+                    set(tickBox.Selected);
+                    UnsavedSettings = true;
+                    return true;
+                };
+            }
 
-            var automaticCampaignLoadTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Automatic campaign load enabled", style: "GUITickBox");
-            automaticCampaignLoadTickBox.Selected = AutomaticCampaignLoadEnabled;
-            automaticCampaignLoadTickBox.ToolTip = "Will the game automatically load the latest campaign save when the game is launched";
-            automaticCampaignLoadTickBox.OnSelected = (tickBox) =>
-            {
-                AutomaticCampaignLoadEnabled = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                AutomaticQuickStartEnabled,
+                (b) => AutomaticQuickStartEnabled = b,
+                "Automatic quickstart enabled",
+                "Will the game automatically move on to Quickstart when the game is launched");
 
-            var showSplashScreenTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Splash screen enabled", style: "GUITickBox");
-            showSplashScreenTickBox.Selected = EnableSplashScreen;
-            showSplashScreenTickBox.ToolTip = "Are the splash screens shown when the game is launched";
-            showSplashScreenTickBox.OnSelected = (tickBox) =>
-            {
-                EnableSplashScreen = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                AutomaticCampaignLoadEnabled,
+                (b) => AutomaticCampaignLoadEnabled = b,
+                "Automatic campaign load enabled",
+                "Will the game automatically load the latest campaign save when the game is launched");
 
-            var verboseLoggingTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "Verbose logging enabled", style: "GUITickBox");
-            verboseLoggingTickBox.Selected = VerboseLogging;
-            verboseLoggingTickBox.ToolTip = "Should verbose logging be used";
-            verboseLoggingTickBox.OnSelected = (tickBox) =>
-            {
-                VerboseLogging = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                EnableSplashScreen,
+                (b) => EnableSplashScreen = b,
+                "Splash screen enabled",
+                "Are the splash screens shown when the game is launched");
 
-            var textManagerDebugModeTickBox = new GUITickBox(new RectTransform(tickBoxScale / 0.18f, debugTickBoxes.RectTransform, scaleBasis: ScaleBasis.BothHeight), "TextManager debug mode enabled", style: "GUITickBox");
-            textManagerDebugModeTickBox.Selected = TextManagerDebugModeEnabled;
-            textManagerDebugModeTickBox.ToolTip = "Does the TextManager return the text tags for debug purposes?";
-            textManagerDebugModeTickBox.OnSelected = (tickBox) =>
-            {
-                TextManagerDebugModeEnabled = tickBox.Selected;
-                UnsavedSettings = true;
-                return true;
-            };
+            addDebugTickBox(
+                VerboseLogging,
+                (b) => VerboseLogging = b,
+                "Verbose logging enabled",
+                "Should verbose logging be used");
+
+            addDebugTickBox(
+                TextManagerDebugModeEnabled,
+                (b) => TextManagerDebugModeEnabled = b,
+                "TextManager debug mode enabled",
+                "Does the TextManager return the text tags for debug purposes?");
+
+            addDebugTickBox(
+                ModBreakerMode,
+                (b) => ModBreakerMode = b,
+                "Mod breaker mode enabled",
+                "Do horrible things when loading mods to see if it breaks?");
 #endif
 
             UnsavedSettings = false; // Reset unsaved settings to false once the UI has been created

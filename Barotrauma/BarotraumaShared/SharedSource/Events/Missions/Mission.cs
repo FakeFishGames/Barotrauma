@@ -43,21 +43,21 @@ namespace Barotrauma
         public virtual string SuccessMessage
         {
             get { return successMessage; }
-            private set { successMessage = value; }
+            //private set { successMessage = value; }
         }
 
         private string failureMessage;
         public virtual string FailureMessage
         {
             get { return failureMessage; }
-            private set { failureMessage = value; }
+            //private set { failureMessage = value; }
         }
 
         protected string description;
         public virtual string Description
         {
             get { return description; }
-            private set { description = value; }
+            //private set { description = value; }
         }
 
         public int Reward
@@ -110,7 +110,7 @@ namespace Barotrauma
 
             description = prefab.Description;
             successMessage = prefab.SuccessMessage;
-            FailureMessage = prefab.FailureMessage;
+            failureMessage = prefab.FailureMessage;
             Headers = new List<string>(prefab.Headers);
             Messages = new List<string>(prefab.Messages);
 
@@ -118,12 +118,13 @@ namespace Barotrauma
 
             for (int n = 0; n < 2; n++)
             {
-                if (description != null) description = description.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                if (successMessage != null) successMessage = successMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
-                if (failureMessage != null) failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locations[n].Name);
+                string locationName = $"‖color:gui.orange‖{locations[n].Name}‖end‖";
+                if (description != null) description = description.Replace("[location" + (n + 1) + "]", locationName);
+                if (successMessage != null) successMessage = successMessage.Replace("[location" + (n + 1) + "]", locationName);
+                if (failureMessage != null) failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locationName);
                 for (int m = 0; m < Messages.Count; m++)
                 {
-                    Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locations[n].Name);
+                    Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locationName);
                 }
             }
             if (description != null) description = description.Replace("[reward]", Reward.ToString("N0"));
@@ -180,7 +181,7 @@ namespace Barotrauma
         {
             foreach (string categoryToShow in Prefab.UnhideEntitySubCategories)
             {
-                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.prefab.HasSubCategory(categoryToShow)))
+                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
                     entityToShow.HiddenInGame = false;
                 }

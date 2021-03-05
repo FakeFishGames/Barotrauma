@@ -357,8 +357,8 @@ namespace Barotrauma.Items.Components
                             DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
                         {
                             // Undocking from an outpost
-                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
                             campaign.ShowCampaignUI = true;
+                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map); 
                             return false;
                         }
                         else if (!Level.IsLoadedOutpost && DockingModeEnabled && ActiveDockingSource != null &&
@@ -748,7 +748,7 @@ namespace Barotrauma.Items.Components
             }
             if (!AutoPilot && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                steeringAdjustSpeed = character == null ? DefaultSteeringAdjustSpeed : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                 Vector2 input = Vector2.Zero;
                 if (PlayerInput.KeyDown(InputType.Left)) { input -= Vector2.UnitX; }
                 if (PlayerInput.KeyDown(InputType.Right)) { input += Vector2.UnitX; }

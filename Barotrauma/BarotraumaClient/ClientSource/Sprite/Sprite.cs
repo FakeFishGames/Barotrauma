@@ -172,22 +172,22 @@ namespace Barotrauma
             return null;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 pos, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None)
+        public void Draw(ISpriteBatch spriteBatch, Vector2 pos, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None)
         {
             this.Draw(spriteBatch, pos, Color.White, rotate, scale, spriteEffect);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
+        public void Draw(ISpriteBatch spriteBatch, Vector2 pos, Color color, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
             this.Draw(spriteBatch, pos, color, this.origin, rotate, new Vector2(scale, scale), spriteEffect, depth);
         }
 
-        public void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
+        public void Draw(ISpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate = 0.0f, float scale = 1.0f, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
             this.Draw(spriteBatch, pos, color, origin, rotate, new Vector2(scale, scale), spriteEffect, depth);
         }
 
-        public virtual void Draw(SpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
+        public virtual void Draw(ISpriteBatch spriteBatch, Vector2 pos, Color color, Vector2 origin, float rotate, Vector2 scale, SpriteEffects spriteEffect = SpriteEffects.None, float? depth = null)
         {
             if (Texture == null) { return; }
             //DrawSilhouette(spriteBatch, pos, origin, rotate, scale, spriteEffect, depth);
@@ -209,7 +209,7 @@ namespace Barotrauma
             }
         }
 
-        public void DrawTiled(SpriteBatch spriteBatch, Vector2 position, Vector2 targetSize,
+        public void DrawTiled(ISpriteBatch spriteBatch, Vector2 position, Vector2 targetSize,
             Color? color = null, Vector2? startOffset = null, Vector2? textureScale = null, float? depth = null)
         {
             if (Texture == null) { return; }

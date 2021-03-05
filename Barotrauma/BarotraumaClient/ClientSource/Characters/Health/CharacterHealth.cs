@@ -240,6 +240,8 @@ namespace Barotrauma
                         Character.Controlled.SelectedConstruction = null;
                     }
                 }
+
+                HintManager.OnShowHealthInterface();
             }
         }
 
@@ -718,6 +720,7 @@ namespace Barotrauma
                     int dmgPerSecond = Math.Sign(a2.DamagePerSecond - a1.DamagePerSecond);
                     return dmgPerSecond != 0 ? dmgPerSecond : Math.Sign(a1.Strength - a1.Strength);
                 });
+                HintManager.OnAfflictionDisplayed(Character, currentDisplayedAfflictions.FirstOrDefault());
                 updateDisplayedAfflictionsTimer = UpdateDisplayedAfflictionsInterval;
             }
             
@@ -1188,7 +1191,7 @@ namespace Barotrauma
             }
         }
 
-        private Color GetAfflictionIconColor(AfflictionPrefab prefab, Affliction affliction)
+        public static Color GetAfflictionIconColor(AfflictionPrefab prefab, Affliction affliction)
         {
             // No specific colors, use generic
             if (prefab.IconColors == null)
@@ -1207,6 +1210,8 @@ namespace Barotrauma
                 return ToolBox.GradientLerp(affliction.Strength / prefab.MaxStrength, prefab.IconColors);
             }
         }
+
+        public static Color GetAfflictionIconColor(Affliction affliction) => GetAfflictionIconColor(affliction.Prefab, affliction);
 
         private void UpdateAfflictionContainer(LimbHealth selectedLimb)
         {
@@ -1275,7 +1280,7 @@ namespace Barotrauma
 
                 var afflictionIcon = new GUIImage(new RectTransform(Vector2.One * 0.8f, button.RectTransform, Anchor.Center), affliction.Prefab.Icon, scaleToFit: true)
                 {
-                    Color = GetAfflictionIconColor(affliction.Prefab, affliction),
+                    Color = GetAfflictionIconColor(affliction),
                     CanBeFocused = false
                 };
                 afflictionIcon.PressedColor = afflictionIcon.Color;
@@ -1911,7 +1916,7 @@ namespace Barotrauma
             float alpha = MathHelper.Lerp(0.3f, 1.0f,
                 (affliction.Strength - showIconThreshold) / Math.Min(affliction.Prefab.MaxStrength - showIconThreshold, 10.0f));
 
-            affliction.Prefab.Icon.Draw(spriteBatch, iconPos - iconSize / 2.0f, GetAfflictionIconColor(affliction.Prefab, affliction) * alpha, 0, iconScale);
+            affliction.Prefab.Icon.Draw(spriteBatch, iconPos - iconSize / 2.0f, GetAfflictionIconColor(affliction) * alpha, 0, iconScale);
             iconPos += new Vector2(10.0f, 20.0f) * iconScale;
         }
 

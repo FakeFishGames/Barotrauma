@@ -11,6 +11,7 @@ namespace Barotrauma
         protected HashSet<T> ignoreList = new HashSet<T>();
         private float ignoreListTimer;
         protected float targetUpdateTimer;
+        protected virtual float TargetUpdateTimeMultiplier { get; } = 1;
 
         private float syncTimer;
         private readonly float syncTime = 1;
@@ -61,7 +62,7 @@ namespace Barotrauma
                     ignoreListTimer += deltaTime;
                 }
             }
-            if (targetUpdateTimer < 0)
+            if (targetUpdateTimer <= 0)
             {
                 UpdateTargets();
             }
@@ -69,9 +70,9 @@ namespace Barotrauma
             {
                 targetUpdateTimer -= deltaTime;
             }
-            if (syncTimer < 0)
+            if (syncTimer <= 0)
             {
-                syncTimer = syncTime * Rand.Range(0.9f, 1.1f);
+                syncTimer = Math.Min(syncTime * Rand.Range(0.9f, 1.1f), targetUpdateTimer);
                 // Sync objectives, subobjectives and targets
                 foreach (var objective in Objectives)
                 {
@@ -95,7 +96,7 @@ namespace Barotrauma
         }
 
         // the timer is set between 1 and 10 seconds, depending on the priority modifier and a random +-25%
-        private float SetTargetUpdateTimer() => targetUpdateTimer = 1 / MathHelper.Clamp(PriorityModifier * Rand.Range(0.75f, 1.25f), 0.1f, 1);
+        private float CalculateTargetUpdateTimer() => targetUpdateTimer = 1 / MathHelper.Clamp(PriorityModifier * Rand.Range(0.75f, 1.25f), 0.1f, 1) * TargetUpdateTimeMultiplier;
 
         public override void Reset()
         {
@@ -156,7 +157,7 @@ namespace Barotrauma
 
         protected void UpdateTargets()
         {
-            SetTargetUpdateTimer();
+            CalculateTargetUpdateTimer();
             Targets.Clear();
             FindTargets();
             CreateObjectives();

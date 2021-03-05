@@ -1534,7 +1534,9 @@ namespace Barotrauma
                 List<string> lines = missingTags.Select(t => "\"" + t.Key + "\"\n    missing from " + string.Join(", ", t.Value)).ToList();
 
                 string filePath = "missingloca.txt";
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
                 TextManager.Language = "English";
             }));
@@ -1543,7 +1545,9 @@ namespace Barotrauma
             {
                 var debugLines = EventSet.GetDebugStatistics();
                 string filePath = "eventstats.txt";
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, debugLines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
 
@@ -1824,7 +1828,9 @@ namespace Barotrauma
                     lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</EntityName." + me.Identifier + ">");
                     lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</EntityDescription." + me.Identifier + ">");
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             }));
 
             commands.Add(new Command("dumpeventtexts", "dumpeventtexts [filepath]: gets the texts from event files and and writes them into a file along with xml tags that can be used in translation files. If the filepath is omitted, the file is written to Content/Texts/EventTexts.txt", (string[] args) =>
@@ -1843,16 +1849,15 @@ namespace Barotrauma
                     docs.Add(eventPrefab.ConfigElement.Document);
                     getTextsFromElement(eventPrefab.ConfigElement, lines, eventPrefab.Identifier);
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
-
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
 
                 System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
                 {
                     Indent = true,
                     NewLineOnAttributes = false
-                };
-
+                };                
                 foreach (XDocument doc in docs)
                 {
                     using (var writer = XmlWriter.Create(new System.Uri(doc.BaseUri).LocalPath, settings))
@@ -1861,6 +1866,7 @@ namespace Barotrauma
                         writer.Flush();
                     }
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
 
                 void getTextsFromElement(XElement element, List<string> list, string parentName)
                 {
@@ -2007,7 +2013,9 @@ namespace Barotrauma
                     lines.Add("[/table]");
                     lines.Add("");
                 }
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
 #if DEBUG
@@ -2049,7 +2057,9 @@ namespace Barotrauma
             commands.Add(new Command("printproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>
             {
                 string path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\propertylocalization.txt";
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(path, SerializableEntityEditor.MissingLocalizations);
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             }));
 
             commands.Add(new Command("getproperties", "Goes through the MapEntity prefabs and checks their serializable properties for localization issues.", (string[] args) =>

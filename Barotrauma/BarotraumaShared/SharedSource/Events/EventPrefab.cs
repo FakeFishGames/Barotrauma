@@ -12,6 +12,8 @@ namespace Barotrauma
         public readonly bool TriggerEventCooldown;
         public float Commonness;
         public string Identifier;
+        public bool UnlockPathEvent;
+        public string BiomeIdentifier;
 
         public EventPrefab(XElement element)
         {
@@ -34,6 +36,8 @@ namespace Barotrauma
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             SpawnProbability = Math.Clamp(element.GetAttributeFloat("spawnprobability", 1.0f), 0, 1);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
+            UnlockPathEvent = element.GetAttributeBool("unlockpathevent", false);
+            BiomeIdentifier = ConfigElement.GetAttributeString("biome", string.Empty);
         }
 
         public Event CreateInstance()

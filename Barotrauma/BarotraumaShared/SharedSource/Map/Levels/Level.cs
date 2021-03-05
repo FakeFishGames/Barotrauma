@@ -159,6 +159,11 @@ namespace Barotrauma
             get { return AbyssArea.Y + AbyssArea.Height; }
         }
 
+        public int AbyssEnd
+        {
+            get { return AbyssArea.Y; }
+        }
+
         public class AbyssIsland
         {
             public readonly Rectangle Area;
@@ -1370,15 +1375,15 @@ namespace Barotrauma
                 float seaFloorPos = GetBottomPosition(xPos).Y;
 
                 //above the bottom of the level = can't place a point here
-                if (seaFloorPos > AbyssArea.Bottom) { continue; }
+                if (seaFloorPos > AbyssStart) { continue; }
 
-                float yPos = Rand.Range(Math.Max(seaFloorPos, AbyssArea.Y), AbyssArea.Bottom);
+                float yPos = MathHelper.Lerp(AbyssStart, Math.Max(seaFloorPos, AbyssArea.Y), Rand.Range(0.2f, 1.0f, Rand.RandSync.Server));
 
                 foreach (var abyssIsland in AbyssIslands)
                 {
                     if (abyssIsland.Area.Contains(new Point((int)xPos, (int)yPos)))
                     {
-                        xPos = abyssIsland.Area.Center.X + (int)(Rand.Int(1) == 0 ? abyssIsland.Area.Width * -0.6f : 0.6f);
+                        xPos = abyssIsland.Area.Center.X + (int)(Rand.Int(1, Rand.RandSync.Server) == 0 ? abyssIsland.Area.Width * -0.6f : 0.6f);
                     }
                 }
 
@@ -2035,6 +2040,7 @@ namespace Barotrauma
                     {
                         if (l.Cell == null || l.Edge == null) { return false; }
                         if (resourceInfo.IsIslandSpecifc && !l.Cell.Island) { return false; }
+                        if (!resourceInfo.AllowAtStart && l.EdgeCenter.Y > StartPosition.Y && l.EdgeCenter.X < Size.X * 0.25f) { return false; }
                         if (l.EdgeCenter.Y < AbyssArea.Bottom) { return false; }
                         return resourceInfo.ClusterSize <= GetMaxResourcesOnEdge(itemPrefab, l, out _);
 
@@ -3240,13 +3246,13 @@ namespace Barotrauma
                         }
 #endif
                     }
-                    if (StartLocation != null && !StartLocation.HasOutpost()) { continue; }
+                    if (StartLocation != null && !StartLocation.Type.HasOutpost) { continue; }
                 }
                 else
                 {
                     //don't create an end outpost for locations
                     if (LevelData.Type == LevelData.LevelType.Outpost) { continue; }
-                    if (EndLocation != null && !EndLocation.HasOutpost()) { continue; }
+                    if (EndLocation != null && !EndLocation.Type.HasOutpost) { continue; }
                 }
 
                 SubmarineInfo outpostInfo;
@@ -3266,7 +3272,7 @@ namespace Barotrauma
                         {
                             var suitableParams = OutpostGenerationParams.Params
                                 .Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
-                            if (suitableParams.Count() == 0)
+                            if (!suitableParams.Any())
                             {
                                 suitableParams = OutpostGenerationParams.Params
                                     .Where(p => location == null || !p.AllowedLocationTypes.Any());
@@ -3305,7 +3311,7 @@ namespace Barotrauma
 
                         foreach (string categoryToHide in locationType.HideEntitySubcategories)
                         {
-                            foreach (MapEntity entityToHide in MapEntity.mapEntityList.Where(me => me.Submarine == outpost && me.prefab.HasSubCategory(categoryToHide)))
+                            foreach (MapEntity entityToHide in MapEntity.mapEntityList.Where(me => me.Submarine == outpost && (me.prefab?.HasSubCategory(categoryToHide) ?? false)))
                             {
                                 entityToHide.HiddenInGame = true;
                             }                                
@@ -3444,7 +3450,12 @@ namespace Barotrauma
             Item reactorItem = beaconItems.Find(it => it.GetComponent<Reactor>() != null);
             Reactor reactorComponent = reactorItem.GetComponent<Reactor>();
             ItemContainer reactorContainer = reactorItem.GetComponent<ItemContainer>();
-
+            Repairable repairable = reactorItem.GetComponent<Repairable>();
+            reactorComponent.FuelConsumptionRate = 0.0f;
+            if (repairable != null)
+            {
+                repairable.DeteriorationSpeed = 0.0f;
+            }
             if (LevelData.IsBeaconActive)
             {
                 if (reactorContainer.Inventory.IsEmpty())

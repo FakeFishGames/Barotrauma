@@ -22,6 +22,11 @@ namespace Barotrauma.Items.Components
         private const float AutoPilotMaxSpeed = 0.5f;
         private const float AIPilotMaxSpeed = 1.0f;
 
+        /// <summary>
+        /// How fast the steering vector adjusts when the nav terminal is operated by something else than a character (= signals)
+        /// </summary>
+        const float DefaultSteeringAdjustSpeed = 0.2f;
+
         private Vector2 targetVelocity;
 
         private Vector2 steeringInput;
@@ -543,6 +548,10 @@ namespace Barotrauma.Items.Components
             {
                 TargetVelocity *= 100.0f / velMagnitude;
             }
+
+#if CLIENT
+            HintManager.OnAutoPilotPathUpdated(this);
+#endif
         }
 
         private float? GetNodePenalty(PathNode node, PathNode nextNode)
@@ -700,7 +709,10 @@ namespace Barotrauma.Items.Components
         {
             if (connection.Name == "velocity_in")
             {
-                TargetVelocity = XMLExtensions.ParseVector2(signal, errorMessages: false);
+                steeringAdjustSpeed = DefaultSteeringAdjustSpeed;
+                steeringInput = XMLExtensions.ParseVector2(signal, errorMessages: false);
+                steeringInput.X = MathHelper.Clamp(steeringInput.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(steeringInput.Y, -100.0f, 100.0f);
             }
             else
             {

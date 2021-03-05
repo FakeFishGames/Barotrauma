@@ -21,6 +21,9 @@ namespace Barotrauma
         public float HealthMultiplier { get; protected set; }
 
         [Serialize(1f, false)]
+        public float HealthMultiplierInMultiplayer { get; protected set; }
+
+        [Serialize(1f, false)]
         public float AimSpeed { get; protected set; }
 
         [Serialize(1f, false)]
@@ -117,6 +120,10 @@ namespace Barotrauma
         public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
         {
             npc.CharacterHealth.MaxVitality *= HealthMultiplier;
+            if (GameMain.NetworkMember != null)
+            {
+                npc.CharacterHealth.MaxVitality *= HealthMultiplierInMultiplayer;
+            }
             var humanAI = npc.AIController as HumanAIController;
             if (humanAI != null)
             {

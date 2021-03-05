@@ -68,6 +68,15 @@ namespace Barotrauma
         private static Submarine Generate(OutpostGenerationParams generationParams, LocationType locationType, Location location, bool onlyEntrance = false)
         {
             var outpostModuleFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.OutpostModule);
+            if (location != null)
+            {
+                if (location.IsCriticallyRadiated() && OutpostGenerationParams.Params.FirstOrDefault(p => p.Identifier.Equals(generationParams.ReplaceInRadiation, StringComparison.OrdinalIgnoreCase)) is { } newParams)
+                {
+                    generationParams = newParams;
+                }
+
+                locationType = location.GetLocationType();
+            }
             
             //load the infos of the outpost module files
             List<SubmarineInfo> outpostModules = new List<SubmarineInfo>();
@@ -974,7 +983,7 @@ namespace Barotrauma
                 var moduleEntities = MapEntity.LoadAll(sub, hallwayInfo.SubmarineElement, hallwayInfo.FilePath, -1);
 
                 //remove items that don't fit in the hallway
-                moduleEntities.Where(e => e is Item item && item.GetComponent<Door>() == null && e.Rect.Width > hallwayLength).ForEach(e => e.Remove());
+                moduleEntities.Where(e => e is Item item && item.GetComponent<Door>() == null && (isHorizontal ? e.Rect.Width : e.Rect.Height) > hallwayLength).ForEach(e => e.Remove());
 
                 //find the largest hull to use it as the center point of the hallway
                 //and the bounds of all the hulls, used when resizing the hallway to fit between the modules
@@ -1047,11 +1056,11 @@ namespace Barotrauma
                             }
                         }
                     }
-                    else if (me is Structure structure)
+                    else if (me is Structure || (me is Item item && item.GetComponent<Door>() == null))
                     {
                         if (isHorizontal)
                         {
-                            if (!structure.ResizeHorizontal)
+                            if (!me.ResizeHorizontal)
                             {
                                 int xPos = (int)(leftHull.WorldRect.Right + (me.WorldPosition.X - hullBounds.X) * scaleFactor);
                                 me.Rect = new Rectangle(xPos - me.RectWidth / 2, me.Rect.Y, me.Rect.Width, me.Rect.Height);
@@ -1065,9 +1074,9 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (!structure.ResizeVertical)
+                            if (!me.ResizeVertical)
                             {
-                                int yPos = (int)(topHull.WorldRect.Y - topHull.RectHeight + (me.WorldPosition.X - hullBounds.Bottom) * scaleFactor);
+                                int yPos = (int)(topHull.WorldRect.Y - topHull.RectHeight + (me.WorldPosition.Y - hullBounds.Bottom) * scaleFactor);
                                 me.Rect = new Rectangle(me.Rect.X, yPos + me.RectHeight / 2, me.Rect.Width, me.Rect.Height);
                             }
                             else
@@ -1394,7 +1403,7 @@ namespace Barotrauma
                 ISpatialEntity gotoTarget = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Human, humanPrefab.GetModuleFlags(), humanPrefab.GetSpawnPointTags());
                 if (gotoTarget == null)
                 {
-                    gotoTarget = outpost.GetHulls(true).GetRandom();
+                    gotoTarget = outpost.GetHulls(true).GetRandom(Rand.RandSync.Server);
                 }
                 characterInfo.TeamID = CharacterTeamType.FriendlyNPC;
                 var npc = Character.Create(CharacterPrefab.HumanConfigFile, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);

@@ -257,7 +257,7 @@ namespace Barotrauma
         /// </summary>
         public bool Freeze { get; set; }
 
-        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true)
+        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true, Rectangle? overrideMouseOn = null)
         {
             prevPosition = position;
             prevZoom = zoom;
@@ -294,7 +294,7 @@ namespace Barotrauma
                     }                    
                 }
                  
-                if (allowZoom && GUI.MouseOn == null)
+                if (allowZoom && (GUI.MouseOn == null || (overrideMouseOn?.Contains(PlayerInput.MousePosition) ?? false)))
                 {
                     Vector2 mouseInWorld = ScreenToWorld(PlayerInput.MousePosition);
                     Vector2 diffViewCenter;

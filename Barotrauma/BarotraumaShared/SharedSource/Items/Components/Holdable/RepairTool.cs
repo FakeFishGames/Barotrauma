@@ -854,9 +854,11 @@ namespace Barotrauma.Items.Components
                         object value = property.GetValue(target);
                         if (door.Stuck > 0)
                         {
+                            bool isCutting = effect.propertyEffects[i].GetType() == typeof(float) && (float)effect.propertyEffects[i] < 0;
                             var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
-                                effect.propertyEffects[i].GetType() == typeof(float) && (float)effect.propertyEffects[i] < 0 ? "progressbar.cutting" : "progressbar.welding");
+                                textTag: isCutting ? "progressbar.cutting" : "progressbar.welding");
                             if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
+                            if (!isCutting) { HintManager.OnWeldingDoor(user); }
                         }
                     }                    
                 }

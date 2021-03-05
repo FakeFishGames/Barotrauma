@@ -870,7 +870,7 @@ namespace Barotrauma
 
             GameMain.GameScreen.Select();
 
-            GameSession gameSession = new GameSession(backedUpSubInfo, "", GameModePreset.TestMode, null);
+            GameSession gameSession = new GameSession(backedUpSubInfo, "", GameModePreset.TestMode, CampaignSettings.Empty, null);
             gameSession.StartRound(null, false);
             (gameSession.GameMode as TestGameMode).OnRoundEnd = () =>
             {
@@ -897,6 +897,8 @@ namespace Barotrauma
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
+                string categoryName = TextManager.Get("MapEntityCategory." + category);
+                maxTextWidth = (int)Math.Max(maxTextWidth, GUI.SubHeadingFont.MeasureString(categoryName.Replace(' ', '\n')).X + GUI.IntScale(50));
                 foreach (MapEntityPrefab ep in MapEntityPrefab.List)
                 {
                     if (!ep.Category.HasFlag(category)) { continue; }
@@ -907,13 +909,14 @@ namespace Barotrauma
                     }
                     entityLists[category + ep.Subcategory].Add(ep);
                     categoryKeys[category + ep.Subcategory] = category;
-                    string categoryName = TextManager.Get("subcategory." + ep.Subcategory, returnNull: true) ?? ep.Subcategory;
-                    if (categoryName != null)
+                    string subcategoryName = TextManager.Get("subcategory." + ep.Subcategory, returnNull: true) ?? ep.Subcategory;
+                    if (subcategoryName != null)
                     {
-                        maxTextWidth = (int)Math.Max(maxTextWidth, GUI.SubHeadingFont.MeasureString(categoryName.Replace(' ', '\n')).X + GUI.IntScale(50));
+                        maxTextWidth = (int)Math.Max(maxTextWidth, GUI.SubHeadingFont.MeasureString(subcategoryName.Replace(' ', '\n')).X + GUI.IntScale(50));
                     }
                 }
             }
+
             categorizedEntityList.Content.ClampMouseRectToParent = true;
             int entitiesPerRow = (int)Math.Ceiling(categorizedEntityList.Content.Rect.Width / Math.Max(125 * GUI.Scale, 60));
             foreach (string categoryKey in entityLists.Keys)
@@ -926,19 +929,33 @@ namespace Barotrauma
 
                 new GUIFrame(new RectTransform(Vector2.One, categoryFrame.RectTransform), style: "HorizontalLine");
 
-                string categoryName = entityLists[categoryKey].First().Subcategory;
-                categoryName = string.IsNullOrEmpty(categoryName) ?
-                    TextManager.Get("mapentitycategory.misc") :
-                    (TextManager.Get("subcategory." + categoryName, returnNull: true) ?? categoryName);
-                new GUITextBlock(
-                    new RectTransform(new Point(maxTextWidth, categoryFrame.Rect.Height), categoryFrame.RectTransform, Anchor.TopLeft),
-                    categoryName,
-                    textAlignment: Alignment.TopLeft,
-                    font: GUI.SubHeadingFont,
-                    wrap: true)
+                string categoryName = TextManager.Get("MapEntityCategory." + entityLists[categoryKey].First().Category);
+                string subCategoryName = entityLists[categoryKey].First().Subcategory;
+                if (string.IsNullOrEmpty(subCategoryName))
                 {
-                    Padding = new Vector4(GUI.IntScale(10))
-                };
+                    new GUITextBlock(new RectTransform(new Point(maxTextWidth, categoryFrame.Rect.Height), categoryFrame.RectTransform, Anchor.TopLeft),
+                        categoryName, textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont, wrap: true)
+                    {
+                        Padding = new Vector4(GUI.IntScale(10))
+                    };
+
+                }
+                else
+                {
+                    subCategoryName = string.IsNullOrEmpty(subCategoryName) ?
+                        TextManager.Get("mapentitycategory.misc") :
+                        (TextManager.Get("subcategory." + subCategoryName, returnNull: true) ?? subCategoryName);
+                    var categoryTitle = new GUITextBlock(new RectTransform(new Point(maxTextWidth, categoryFrame.Rect.Height), categoryFrame.RectTransform, Anchor.TopLeft),
+                        categoryName, textAlignment: Alignment.TopLeft, font: GUI.Font, wrap: true)
+                    {
+                        Padding = new Vector4(GUI.IntScale(10))
+                    };
+                    new GUITextBlock(new RectTransform(new Point(maxTextWidth, categoryFrame.Rect.Height), categoryFrame.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(0, (int)(categoryTitle.TextSize.Y + GUI.IntScale(10))) },
+                        subCategoryName, textAlignment: Alignment.TopLeft, font: GUI.SubHeadingFont, wrap: true)
+                    {
+                        Padding = new Vector4(GUI.IntScale(10))
+                    };
+                }
 
                 var entityListInner = new GUIListBox(new RectTransform(new Point(categoryFrame.Rect.Width - maxTextWidth, categoryFrame.Rect.Height), categoryFrame.RectTransform, Anchor.CenterRight),
                     style: null,
@@ -959,7 +976,6 @@ namespace Barotrauma
 #if !DEBUG
                     if (ep.HideInMenus) { continue; }
 #endif
-
                     CreateEntityElement(ep, entitiesPerRow, entityListInner.Content);                   
                 }
 
@@ -976,6 +992,9 @@ namespace Barotrauma
 
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
+#if !DEBUG
+                if (ep.HideInMenus) { continue; }
+#endif
                 CreateEntityElement(ep, entitiesPerRow, allEntityList.Content);
             }
         }
@@ -1354,7 +1373,7 @@ namespace Barotrauma
                     {
                         try
                         {
-                            Barotrauma.IO.Validation.DevException = true;
+                            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                             TimeSpan time = DateTime.UtcNow - DateTime.MinValue;
                             string filePath = Path.Combine(autoSavePath, $"AutoSave_{(ulong)time.TotalMilliseconds}.sub");
                             SaveUtil.CompressStringToFile(filePath, doc.ToString());
@@ -1390,7 +1409,7 @@ namespace Barotrauma
                                 }
                             });
                             
-                            Barotrauma.IO.Validation.DevException = false;
+                            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                             CrossThread.RequestExecutionOnMainThread(DisplayAutoSavePrompt);
                         }
                         catch (Exception e)
@@ -1558,9 +1577,9 @@ namespace Barotrauma
                     msgBox.Buttons[0].OnClicked = (bt, userdata) =>
                     {
                         contentPackage.AddFile(savePath, ContentType.OutpostModule);
-                        Barotrauma.IO.Validation.DevException = true;
+                        Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                         contentPackage.Save(contentPackage.Path, reload: false);
-                        Barotrauma.IO.Validation.DevException = false;
+                        Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                         msgBox.Close();
                         return true;
                     };
@@ -1635,7 +1654,7 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null)
             {
-                Barotrauma.IO.Validation.DevException = true;
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 if (previewImage?.Sprite?.Texture != null && !previewImage.Sprite.Texture.IsDisposed && Submarine.MainSub.Info.Type != SubmarineType.OutpostModule)
                 {
                     bool savePreviewImage = true;
@@ -1655,7 +1674,7 @@ namespace Barotrauma
                 {
                     Submarine.MainSub.SaveAs(savePath);
                 }
-                Barotrauma.IO.Validation.DevException = false;
+                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
 
                 Submarine.MainSub.CheckForErrors();
                 
@@ -4695,6 +4714,7 @@ namespace Barotrauma
             }
 
             graphics.Clear(backgroundColor);
+
             ImageManager.Draw(spriteBatch, cam);
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
