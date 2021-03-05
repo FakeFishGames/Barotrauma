@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -340,6 +340,14 @@ namespace Barotrauma.Items.Components
             targetLevel = -targetVelocity.Y;
             targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
             item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", user);
+            // converts the controlled sub's velocity to km/h and sends it. 
+            // TODO: add current_velocity_x and current_velocity_y pins on the navigation terminals and shuttle terminals
+            // TODO: increase the size of the connection panels of both navigation terminals
+            item.SendSignal(0, (ConvertUnits.ToDisplayUnits(controlledSub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_x", null);
+            item.SendSignal(0, (ConvertUnits.ToDisplayUnits(controlledSub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_y", null);
+            // TODO: add position_x and depth pins on the navigation terminals and shuttle terminals
+            item.SendSignal(0, controlledSub.WorldPosition.X.ToString("0.0000", CultureInfo.InvariantCulture), "position_x", null);
+            item.SendSignal(0, controlledSub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), "depth", null);
         }
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
