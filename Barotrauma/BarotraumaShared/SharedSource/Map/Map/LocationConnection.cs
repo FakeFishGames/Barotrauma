@@ -39,7 +39,7 @@ namespace Barotrauma
         {
             get
             {
-                availableMissions.RemoveAll(m => m.Completed || (m.Failed && m.Prefab.AllowRetry));
+                availableMissions.RemoveAll(m => m.Completed || (m.Failed && !m.Prefab.AllowRetry));
                 return availableMissions;
             }
         }

@@ -227,16 +227,16 @@ namespace Barotrauma
                 IsSubSlot = isSubSlot;
                 Item = ParentInventory.GetItemAt(slotIndex);
 
-                int stackCount = 1;
+                IEnumerable<Item> itemsInSlot = null;
                 if (parentInventory != null && Item != null)
                 {
-                    stackCount = parentInventory.GetItemsAt(slotIndex).Count();
+                    itemsInSlot = parentInventory.GetItemsAt(slotIndex);
                 }
 
-                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, stackCount), out Tooltip);
+                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, itemsInSlot), out Tooltip);
             }
 
-            private string GetTooltip(Item item, int stackCount)
+            private string GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
             {
                 if (item == null) { return null; }
 
@@ -291,6 +291,10 @@ namespace Barotrauma
                     string colorStr = XMLExtensions.ColorToString(item.SpawnedInOutpost ? GUI.Style.Red : Color.White);
 
                     toolTip = $"‖color:{colorStr}‖{item.Name}‖color:end‖";
+                    if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
+                    {
+                        toolTip += " " + TextManager.Get("connectionlocked");
+                    }
                     if (!item.IsFullCondition && !item.Prefab.HideConditionBar)
                     {
                         string conditionColorStr = XMLExtensions.ColorToString(ToolBox.GradientLerp(item.Condition / item.MaxCondition, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull));
@@ -298,7 +302,7 @@ namespace Barotrauma
                     }
                     if (!string.IsNullOrEmpty(description)) { toolTip += '\n' + description; }
                 }
-                if (stackCount > 2)
+                if (itemsInSlot.Count() > 2)
                 {
                     string colorStr = XMLExtensions.ColorToString(GUI.Style.Blue);
                     toolTip += $"\n‖color:{colorStr}‖[{GameMain.Config.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
@@ -579,6 +583,10 @@ namespace Barotrauma
                         {
                             DraggingItems.AddRange(slots[slotIndex].Items);
                         }
+                        if (Screen.Selected == GameMain.GameScreen)
+                        {
+                            DraggingItems.RemoveAll(it => it.NonInteractable || it.NonPlayerTeamInteractable);
+                        }
                         DraggingSlot = slot;
                     }
                 }
@@ -598,6 +606,10 @@ namespace Barotrauma
                         else
                         {
                             doubleClickedItems.AddRange(slots[slotIndex].Items);
+                        }
+                        if (Screen.Selected == GameMain.GameScreen)
+                        {
+                            doubleClickedItems.RemoveAll(it => it.NonInteractable || it.NonPlayerTeamInteractable);
                         }
                     }
                 }
@@ -1535,7 +1547,7 @@ namespace Barotrauma
                 }
 
                 Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
-                if (inventory != null && inventory.Locked) { spriteColor *= 0.5f; }
+                if (inventory != null && (inventory.Locked || inventory.slots[slotIndex].Items.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))) { spriteColor *= 0.5f; }
                 if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);

@@ -131,7 +131,7 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (Submarine.MainSub != null && Submarine.MainSub.AtEndPosition)
+            if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
                 int deliveredItemCount = items.Count(i => i.CurrentHull != null && !i.Removed && i.Condition > 0.0f);
                 if (deliveredItemCount >= requiredDeliveryAmount)

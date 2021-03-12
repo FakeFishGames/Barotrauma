@@ -77,6 +77,9 @@ namespace Barotrauma
         {
             Seed = element.GetAttributeString("seed", "a");
             Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
+
+            bool lairsFound = false;
+
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -87,6 +90,7 @@ namespace Barotrauma
                         {
                             Locations.Add(null);
                         }
+                        lairsFound |= subElement.GetAttributeString("type", "").Equals("lair", StringComparison.OrdinalIgnoreCase);
                         Locations[i] = new Location(subElement);
                         break;
                     case "radiation":
@@ -103,6 +107,7 @@ namespace Barotrauma
                 Locations[i].Reputation ??= new Reputation(campaign.CampaignMetadata, $"location.{i}", -100, 100, Rand.Range(-10, 10, Rand.RandSync.Server));
             }
 
+            List<XElement> connectionElements = new List<XElement>();
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -125,6 +130,7 @@ namespace Barotrauma
                             LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.OldIdentifier == biomeId) ??
                             LevelGenerationParams.GetBiomes().First();
                         Connections.Add(connection);
+                        connectionElements.Add(subElement);
                         break;
                 }
             }
@@ -160,6 +166,17 @@ namespace Barotrauma
                     {
                         EndLocation = location;
                     }
+                }
+            }
+
+            //backwards compatibility: if the map contained the now-removed lairs and has no hunting grounds, create some hunting grounds
+            if (lairsFound && !Connections.Any(c => c.LevelData.HasHuntingGrounds))
+            {
+                for (int i = 0; i < Connections.Count; i++)
+                {
+                    float maxHuntingGroundsProbability = 0.3f;
+                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * maxHuntingGroundsProbability;
+                    connectionElements[i].SetAttributeValue("hashuntinggrounds", true);
                 }
             }
 
@@ -504,7 +521,7 @@ namespace Barotrauma
             foreach (LocationConnection connection in Connections)
             {
                 if (connection.Biome != null) { continue; }
-                connection.Biome = connection.Locations[0].Biome;
+                connection.Biome = connection.Locations[0].MapPosition.X > connection.Locations[1].MapPosition.X ? connection.Locations[0].Biome : connection.Locations[1].Biome;
             }
 
             System.Diagnostics.Debug.Assert(Locations.All(l => l.Biome != null));
@@ -805,7 +822,7 @@ namespace Barotrauma
                     continue;
                 }
 
-                if (location == CurrentLocation || location == SelectedLocation) { continue; }
+                if (location == CurrentLocation || location == SelectedLocation || location.IsGateBetweenBiomes) { continue; }
 
                 ProgressLocationTypeChanges(location);
 

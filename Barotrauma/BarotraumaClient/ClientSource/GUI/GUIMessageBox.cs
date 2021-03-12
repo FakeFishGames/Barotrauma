@@ -351,29 +351,6 @@ namespace Barotrauma
                     }
                 };
 
-                InputType? closeInput = null;
-                if (GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None)
-                {
-                    closeInput = InputType.Use;
-                }
-                else if (GameMain.Config.KeyBind(InputType.Select).MouseButton == MouseButton.None)
-                {
-                    closeInput = InputType.Select;
-                }
-                if (closeInput.HasValue)
-                {
-                    Buttons[0].ToolTip = TextManager.ParseInputTypes($"{TextManager.Get("hintmessagebox.dismiss")} ([InputType.{closeInput.Value}])");
-                    Buttons[0].OnAddedToGUIUpdateList += (GUIComponent component) =>
-                    {
-                        if (!closing && openState >= 1.0f && PlayerInput.KeyHit(closeInput.Value))
-                        {
-                            GUIButton btn = component as GUIButton;
-                            btn?.OnClicked(btn, btn.UserData);
-                            btn?.Flash(GUI.Style.Green);
-                        }
-                    };
-                }
-
                 Header = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), Content.RectTransform), headerText, wrap: true);
                 GUI.Style.Apply(Header, "", this);
                 Header.RectTransform.MinSize = new Point(0, Header.Rect.Height);

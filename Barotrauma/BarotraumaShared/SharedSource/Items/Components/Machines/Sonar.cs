@@ -325,23 +325,23 @@ namespace Barotrauma.Items.Components
             return transducerPosSum / connectedTransducers.Count;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+            base.ReceiveSignal(signal, connection);
 
             if (connection.Name == "transducer_in")
             {
-                var transducer = source.GetComponent<SonarTransducer>();
+                var transducer = signal.source.GetComponent<SonarTransducer>();
                 if (transducer == null) return;
 
                 var connectedTransducer = connectedTransducers.Find(t => t.Transducer == transducer);
                 if (connectedTransducer == null)
                 {
-                    connectedTransducers.Add(new ConnectedTransducer(transducer, signalStrength, 1.0f));
+                    connectedTransducers.Add(new ConnectedTransducer(transducer, signal.strength, 1.0f));
                 }
                 else
                 {
-                    connectedTransducer.SignalStrength = signalStrength;
+                    connectedTransducer.SignalStrength = signal.strength;
                     connectedTransducer.DisconnectTimer = 1.0f;
                 }
             }

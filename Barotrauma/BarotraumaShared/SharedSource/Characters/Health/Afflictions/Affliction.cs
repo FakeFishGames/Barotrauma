@@ -101,6 +101,19 @@ namespace Barotrauma
 
             return currVitalityDecrease;
         }
+        
+        public float GetScreenGrainStrength()
+        {
+            if (Strength < Prefab.ActivationThreshold) { return 0.0f; }
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) { return 0.0f; }
+            if (MathUtils.NearlyEqual(currentEffect.MaxGrainStrength, 0f)) { return 0.0f; }
+
+            return MathHelper.Lerp(
+                currentEffect.MinGrainStrength,
+                currentEffect.MaxGrainStrength,
+                (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+        }
 
         public float GetScreenDistortStrength()
         {

@@ -858,7 +858,7 @@ namespace Barotrauma.Items.Components
                             var progressBar = user.UpdateHUDProgressBar(door, door.Item.WorldPosition, door.Stuck / 100, Color.DarkGray * 0.5f, Color.White,
                                 textTag: isCutting ? "progressbar.cutting" : "progressbar.welding");
                             if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
-                            if (!isCutting) { HintManager.OnWeldingDoor(user); }
+                            if (!isCutting) { HintManager.OnWeldingDoor(user, door); }
                         }
                     }                    
                 }

@@ -95,8 +95,9 @@ namespace Barotrauma
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
 
-        public bool IsOutpost => Type == SubmarineType.Outpost;
+        public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
         public bool IsWreck => Type == SubmarineType.Wreck;
+        public bool IsBeacon => Type == SubmarineType.BeaconStation;
         public bool IsPlayer => Type == SubmarineType.Player;
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;

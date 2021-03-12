@@ -355,6 +355,19 @@ namespace Barotrauma
                 Submarine.MainSubs[1] = new Submarine(SubmarineInfo, true);
             }
 
+            if (GameMain.NetworkMember?.ServerSettings?.LockAllDefaultWires ?? false)
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Submarine == Submarine.MainSubs[0] ||
+                        (Submarine.MainSubs[1] != null && item.Submarine == Submarine.MainSubs[1]))
+                    {
+                        Wire wire = item.GetComponent<Wire>();
+                        if (wire != null && !wire.NoAutoLock && wire.Connections.Any(c => c != null)) { wire.Locked = true; }
+                    }
+                }
+            }
+
             Level level = null;
             if (levelData != null)
             {
@@ -562,7 +575,7 @@ namespace Barotrauma
             }
             else
             {
-                Submarine.SetPosition(Submarine.FindSpawnPos(level.StartPosition, verticalMoveDir: 1));
+                Submarine.SetPosition(Submarine.FindSpawnPos(level.StartPosition));
                 Submarine.NeutralizeBallast();
                 Submarine.EnableMaintainPosition();
             }

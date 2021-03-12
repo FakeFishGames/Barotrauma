@@ -4,6 +4,25 @@ namespace Barotrauma
 {
     partial class AbandonedOutpostMission : Mission
     {
+        public override int State
+        {
+            get { return base.State; }
+            protected set
+            {
+                if (state != value)
+                {
+                    base.State = value;
+                    if (state == HostagesKilledState && !string.IsNullOrEmpty(hostagesKilledMessage))
+                    {
+                        new GUIMessageBox(string.Empty, hostagesKilledMessage, buttons: new string[0], type: GUIMessageBox.Type.InGame, icon: Prefab.Icon, parseRichText: true)
+                        {
+                            IconColor = Prefab.IconColor
+                        };
+                    }
+                }
+            }
+        }
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             byte characterCount = msg.ReadByte();

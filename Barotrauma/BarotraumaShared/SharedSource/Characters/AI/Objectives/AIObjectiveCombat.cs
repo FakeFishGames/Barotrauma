@@ -30,6 +30,7 @@ namespace Barotrauma
         private float holdFireTimer;
         private bool hasAimed;
         private bool isLethalWeapon;
+        private bool AllowCoolDown => !IsOffensiveOrArrest || Mode != initialMode;
 
         public Character Enemy { get; private set; }
         public bool HoldPosition { get; set; }
@@ -195,17 +196,12 @@ namespace Barotrauma
 
         protected override bool Check()
         {
-            if (IsOffensiveOrArrest && Mode != initialMode)
-            {
-                Abandon = true;
-                return false;
-            }
             if (sqrDistance > maxDistance * maxDistance)
             {
                 // The target escaped from us.
                 return true;
             }
-            return IsEnemyDisabled || (!IsOffensiveOrArrest && coolDownTimer <= 0);
+            return IsEnemyDisabled || (AllowCoolDown && coolDownTimer <= 0);
         }
 
         protected override void Act(float deltaTime)
@@ -215,7 +211,7 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            if (!IsOffensiveOrArrest)
+            if (AllowCoolDown)
             {
                 coolDownTimer -= deltaTime;
             }

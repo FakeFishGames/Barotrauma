@@ -420,7 +420,7 @@ namespace Barotrauma
                 {
                     //wasn't initially docked (sub doesn't have a docking port?)
                     // -> choose a destination when the sub is far enough from the start outpost
-                    if (!Submarine.MainSub.AtStartPosition)
+                    if (!Submarine.MainSub.AtStartExit)
                     {
                         ForceMapUI = true;
                         if (CampaignUI == null) { InitCampaignUI(); }

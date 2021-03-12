@@ -381,6 +381,8 @@ namespace Barotrauma.Items.Components
 
         private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
+            if (!outputContainer.Inventory.IsEmpty()) { return; }
+
             overlayComponent.RectTransform.SetAsLastChild();
 
             FabricationRecipe targetItem = fabricatedItem ?? selectedItem;

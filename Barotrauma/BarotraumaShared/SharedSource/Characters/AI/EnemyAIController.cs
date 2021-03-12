@@ -2149,8 +2149,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Ignore all structures and items inside wrecks
-                    if (aiTarget.Entity.Submarine != null && aiTarget.Entity.Submarine.Info.IsWreck) { continue; }
+                    // Ignore all structures, items, and hulls inside wrecks and beacons
+                    if (aiTarget.Entity.Submarine != null && (aiTarget.Entity.Submarine.Info.IsWreck || aiTarget.Entity.Submarine.Info.IsBeacon)) { continue; }
                     if (aiTarget.Entity is Hull hull)
                     {
                         // Ignore the target if it's a room and the character is already inside a sub
@@ -2358,7 +2358,12 @@ namespace Barotrauma
                 if (targetParams.IgnoreInside && character.CurrentHull != null) { continue; }
                 if (targetParams.IgnoreOutside && character.CurrentHull == null) { continue; }
                 if (targetParams.IgnoreIncapacitated && targetCharacter != null && targetCharacter.IsIncapacitated) { continue; }
-                if (targetParams.IgnoreIfNotInSameSub && aiTarget.Entity.Submarine != Character.Submarine) { continue; }
+                if (targetParams.IgnoreIfNotInSameSub)
+                {
+                    if (aiTarget.Entity.Submarine != Character.Submarine) { continue; }
+                    var targetHull = targetCharacter != null ? targetCharacter.CurrentHull : aiTarget.Entity is Item it ? it.CurrentHull : null;
+                    if ((targetHull == null) != (character.CurrentHull == null)) { continue; }
+                }
                 if (targetParams.State == AIState.Observe || targetParams.State == AIState.Eat)
                 {
                     if (targetCharacter != null && targetCharacter.Submarine != Character.Submarine)
@@ -2472,7 +2477,7 @@ namespace Barotrauma
                                 }
                             }
                         }
-                        if (targetCharacter.Submarine != Character.Submarine)
+                        if (targetCharacter.Submarine != Character.Submarine || (targetCharacter.CurrentHull == null) != (Character.CurrentHull == null))
                         {
                             if (targetCharacter.Submarine != null)
                             {
@@ -2486,30 +2491,10 @@ namespace Barotrauma
                             }
                             else if (Character.CurrentHull != null)
                             {
-                                // Target outside, but we are inside -> Check if we can get to the target.
-                                // Only check if we are not already targeting the character.
-                                // If we are, keep the target (unless we choose another).
+                                // Target outside, but we are inside -> Ignore the target but allow to keep target that is currently selected.
                                 if (SelectedAiTarget?.Entity != targetCharacter)
                                 {
-                                    foreach (var gap in Character.CurrentHull.ConnectedGaps)
-                                    {
-                                        var door = gap.ConnectedDoor;
-                                        if (door == null)
-                                        {
-                                            var wall = gap.ConnectedWall;
-                                            if (wall != null)
-                                            {
-                                                for (int j = 0; j < wall.Sections.Length; j++)
-                                                {
-                                                    WallSection section = wall.Sections[j];
-                                                    if (!CanPassThroughHole(wall, j) && section?.gap != null)
-                                                    {
-                                                        continue;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    continue;
                                 }
                             }
                         }
@@ -3038,6 +3023,7 @@ namespace Barotrauma
         private bool IsPositionInsideAllowedZone(Vector2 pos, out Vector2 targetDir)
         {
             targetDir = Vector2.Zero;
+            if (Level.Loaded == null) { return true; }
             if (AIParams.AvoidAbyss)
             {
                 if (pos.Y < Level.Loaded.AbyssStart)
@@ -3046,7 +3032,7 @@ namespace Barotrauma
                     targetDir = Vector2.UnitY;
                 }
             }
-            if (AIParams.StayInAbyss)
+            else if (AIParams.StayInAbyss)
             {
                 if (pos.Y > Level.Loaded.AbyssStart)
                 {

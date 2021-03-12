@@ -128,6 +128,7 @@ namespace Barotrauma
 
             public float MinScreenBlurStrength, MaxScreenBlurStrength;
             public float MinScreenDistortStrength, MaxScreenDistortStrength;
+            public float MinGrainStrength, MaxGrainStrength;
             public float MinRadialDistortStrength, MaxRadialDistortStrength;
             public float MinChromaticAberrationStrength, MaxChromaticAberrationStrength;
             public float MinSpeedMultiplier, MaxSpeedMultiplier;
@@ -162,6 +163,10 @@ namespace Barotrauma
                 MinChromaticAberrationStrength = element.GetAttributeFloat("minchromaticaberration", 0.0f);
                 MaxChromaticAberrationStrength = element.GetAttributeFloat("maxchromaticaberration", 0.0f);
                 MaxChromaticAberrationStrength = Math.Max(MinChromaticAberrationStrength, MaxChromaticAberrationStrength);
+
+                MinGrainStrength = element.GetAttributeFloat(nameof(MinGrainStrength).ToLower(), 0.0f);
+                MaxGrainStrength = element.GetAttributeFloat(nameof(MaxGrainStrength).ToLower(), 0.0f);
+                MaxGrainStrength = Math.Max(MinGrainStrength, MaxGrainStrength);
 
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);

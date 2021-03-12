@@ -475,9 +475,12 @@ namespace Barotrauma
                             };
                             missionName.Padding = new Vector4(missionName.Padding.X + icon.Rect.Width * 1.5f, missionName.Padding.Y, missionName.Padding.Z, missionName.Padding.W);
                         }
-                        string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", mission.Reward));
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), 
-                            TextManager.GetWithVariable("missionreward", "[reward]", rewardText), wrap: true, parseRichText: true);
+
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(), wrap: true, parseRichText: true);
+
+                        string reputationText = mission.GetReputationRewardText(mission.Locations[0]);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText, wrap: true, parseRichText: true);
+
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.Description, wrap: true, parseRichText: true);
                     }
                     missionPanel.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Children.Sum(c => c.Rect.Height) / missionTextContent.RectTransform.RelativeSize.Y) + GUI.IntScale(20));

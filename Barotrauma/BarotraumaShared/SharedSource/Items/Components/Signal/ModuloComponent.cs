@@ -21,18 +21,19 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "set_modulus":
                 case "modulus":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newModulus);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newModulus);
                     Modulus = newModulus;
                     break;
                 case "signal_in":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
-                    item.SendSignal(stepsTaken, (value % modulus).ToString("G", CultureInfo.InvariantCulture), "signal_out", sender, source: source);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
+                    signal.value = (value % modulus).ToString("G", CultureInfo.InvariantCulture);
+                    item.SendSignal(signal, "signal_out");
                     break;
             }
                 

@@ -96,6 +96,13 @@ namespace Barotrauma
             get { return chromaticAberrationStrength; }
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+        
+        private float grainStrength;
+        public float GrainStrength
+        {
+            get => grainStrength;
+            set => grainStrength = MathHelper.Clamp(value, 0.0f, 1.0f);
+        }
 
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters

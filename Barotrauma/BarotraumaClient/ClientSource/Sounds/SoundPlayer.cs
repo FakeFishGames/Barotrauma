@@ -1054,7 +1054,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null)
             {
-                if (Submarine.Loaded != null && Level.Loaded != null && Submarine.MainSub != null && Submarine.MainSub.AtEndPosition)
+                if (Submarine.Loaded != null && Level.Loaded != null && Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
                 {
                     return "levelend";
                 }

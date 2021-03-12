@@ -168,7 +168,7 @@ namespace Barotrauma
                 s != leavingSub &&
                 !leavingSub.DockedTo.Contains(s) &&
                 s.Info.Type == SubmarineType.Player &&
-                (s.AtEndPosition != leavingSub.AtEndPosition || s.AtStartPosition != leavingSub.AtStartPosition));
+                (s.AtEndExit != leavingSub.AtEndExit || s.AtStartExit != leavingSub.AtStartExit));
         }
 
         public override void Start()
@@ -176,7 +176,9 @@ namespace Barotrauma
             base.Start();
             dialogLastSpoken.Clear();
             characterOutOfBoundsTimer.Clear();
-
+#if CLIENT
+            prevCampaignUIAutoOpenType = TransitionType.None;
+#endif
             if (PurchasedHullRepairs)
             {
                 foreach (Structure wall in Structure.WallList)
@@ -307,8 +309,8 @@ namespace Barotrauma
                     "(current location: " + (map.CurrentLocation?.Name ?? "null") + ", " +
                     "selected location: " + (map.SelectedLocation?.Name ?? "null") + ", " +
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
-                    "at start: " + (leavingSub?.AtStartPosition.ToString() ?? "null") + ", " +
-                    "at end: " + (leavingSub?.AtEndPosition.ToString() ?? "null") + ")\n" +
+                    "at start: " + (leavingSub?.AtStartExit.ToString() ?? "null") + ", " +
+                    "at end: " + (leavingSub?.AtEndExit.ToString() ?? "null") + ")\n" +
                     Environment.StackTrace.CleanupStackTrace());
                 return;
             }
@@ -319,8 +321,8 @@ namespace Barotrauma
                     "current location: " + (map.CurrentLocation?.Name ?? "null") + ", " +
                     "selected location: " + (map.SelectedLocation?.Name ?? "null") + ", " +
                     "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
-                    "at start: " + (leavingSub?.AtStartPosition.ToString() ?? "null") + ", " +
-                    "at end: " + (leavingSub?.AtEndPosition.ToString() ?? "null") + ")\n" +
+                    "at start: " + (leavingSub?.AtStartExit.ToString() ?? "null") + ", " +
+                    "at end: " + (leavingSub?.AtEndExit.ToString() ?? "null") + ")\n" +
                     Environment.StackTrace.CleanupStackTrace());
                 return;
             }
@@ -331,8 +333,8 @@ namespace Barotrauma
                 " (current location: " + (map.CurrentLocation?.Name ?? "null") + ", " +
                 "selected location: " + (map.SelectedLocation?.Name ?? "null") + ", " +
                 "leaving sub: " + (leavingSub?.Info?.Name ?? "null") + ", " +
-                "at start: " + (leavingSub?.AtStartPosition.ToString() ?? "null") + ", " +
-                "at end: " + (leavingSub?.AtEndPosition.ToString() ?? "null") + ", " +
+                "at start: " + (leavingSub?.AtStartExit.ToString() ?? "null") + ", " +
+                "at end: " + (leavingSub?.AtEndExit.ToString() ?? "null") + ", " +
                 "transition type: " + availableTransition + ")");
 
             IsFirstRound = false;
@@ -369,7 +371,7 @@ namespace Barotrauma
             //currently travelling from location to another
             if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
             {
-                if (leavingSub.AtEndPosition)
+                if (leavingSub.AtEndExit)
                 {
                     if (Map.EndLocation != null && 
                         map.SelectedLocation == Map.EndLocation && 
@@ -395,7 +397,7 @@ namespace Barotrauma
                         return TransitionType.ProgressToNextEmptyLocation;
                     }
                 }
-                else if (leavingSub.AtStartPosition)
+                else if (leavingSub.AtStartExit)
                 {
                     if (map.CurrentLocation.Type.HasOutpost && Level.Loaded.StartOutpost != null)
                     {
@@ -463,7 +465,7 @@ namespace Barotrauma
             {
                 if (Level.Loaded.StartOutpost == null)
                 {
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartPosition, ignoreOutposts: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartExitPosition, ignoreOutposts: true);
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -478,7 +480,7 @@ namespace Barotrauma
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
                     if (Level.Loaded.Type == LevelData.LevelType.LocationConnection && !leavingPlayers.Any(s => s.Submarine == Level.Loaded.StartOutpost)) { return null; }
                     Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartOutpost.WorldPosition, ignoreOutposts: true);
-                    if (closestSub == null || !closestSub.AtStartPosition) { return null; }
+                    if (closestSub == null || !closestSub.AtStartExit) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
             }
@@ -505,7 +507,7 @@ namespace Barotrauma
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
                     if (Level.Loaded.Type == LevelData.LevelType.LocationConnection && !leavingPlayers.Any(s => s.Submarine == Level.Loaded.EndOutpost)) { return null; }
                     Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndOutpost.WorldPosition, ignoreOutposts: true);
-                    if (closestSub == null || !closestSub.AtEndPosition) { return null; }
+                    if (closestSub == null || !closestSub.AtEndExit) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
             }
@@ -594,11 +596,15 @@ namespace Barotrauma
             {
                 connection.Difficulty = MathHelper.Lerp(connection.Difficulty, 100.0f, 0.25f);
                 connection.LevelData.Difficulty = connection.Difficulty;
+                connection.LevelData.IsBeaconActive = false;
+                connection.LevelData.HasHuntingGrounds = connection.LevelData.OriginallyHadHuntingGrounds;
             }
             foreach (Location location in Map.Locations)
             {
+                location.ChangeType(location.OriginalType);
                 location.CreateStore(force: true);
                 location.ClearMissions();
+                location.Discovered = false;
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);

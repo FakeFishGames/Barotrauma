@@ -1440,6 +1440,7 @@ namespace Barotrauma.Networking
             bool respawnAllowed = inc.ReadBoolean();
             serverSettings.AllowDisguises = inc.ReadBoolean();
             serverSettings.AllowRewiring = inc.ReadBoolean();
+            serverSettings.LockAllDefaultWires = inc.ReadBoolean();
             serverSettings.AllowRagdollButton = inc.ReadBoolean();
             GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
             GameMain.LightManager.LosMode = (LosMode)inc.ReadByte();
@@ -2078,6 +2079,12 @@ namespace Barotrauma.Networking
                                 {
                                     ServerInfo info = GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(serverEndpoint, serverSettings);
                                     GameMain.ServerListScreen.AddToRecentServers(info);
+                                    GameMain.NetLobbyScreen.Favorite.Visible = true;
+                                    GameMain.NetLobbyScreen.Favorite.Selected = GameMain.ServerListScreen.IsFavorite(info);
+                                }
+                                else
+                                {
+                                    GameMain.NetLobbyScreen.Favorite.Visible = false;
                                 }
 
                                 GameMain.NetLobbyScreen.LastUpdateID = updateID;
@@ -2123,6 +2130,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetLevelDifficulty(levelDifficulty);
                                 GameMain.NetLobbyScreen.SetRadiationEnabled(radiationEnabled);
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);
+                                GameMain.NetLobbyScreen.SetBotCount(botCount);
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;

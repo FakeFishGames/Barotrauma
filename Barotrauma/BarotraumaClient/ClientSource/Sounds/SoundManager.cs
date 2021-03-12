@@ -798,6 +798,8 @@ namespace Barotrauma.Sounds
             }
             sourcePools[(int)SourcePoolIndex.Default]?.Dispose();
             sourcePools[(int)SourcePoolIndex.Voice]?.Dispose();
+
+            SoundBuffers.ClearPool();
         }
 
         public void Dispose()

@@ -498,8 +498,8 @@ namespace Barotrauma
         private bool CanStartEventSet(EventSet eventSet)
         {
             ISpatialEntity refEntity = GetRefEntity();
-            float distFromStart = Vector2.Distance(refEntity.WorldPosition, level.StartPosition);
-            float distFromEnd = Vector2.Distance(refEntity.WorldPosition, level.EndPosition);
+            float distFromStart = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.StartExitPosition.ToPoint(), level.StartPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
+            float distFromEnd = (float)Math.Sqrt(MathUtils.LineSegmentToPointDistanceSquared(level.EndExitPosition.ToPoint(), level.EndPosition.ToPoint(), refEntity.WorldPosition.ToPoint()));
 
             //don't create new events if within 50 meters of the start/end of the level
             if (!eventSet.AllowAtStart)

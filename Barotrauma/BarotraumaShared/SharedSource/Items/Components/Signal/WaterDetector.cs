@@ -96,13 +96,13 @@ namespace Barotrauma.Items.Components
             string signalOut = isInWater ? Output : FalseOutput;
             if (!string.IsNullOrEmpty(signalOut))
             {
-                item.SendSignal(0, signalOut, "signal_out", null);
+                item.SendSignal(signalOut, "signal_out");
             }
 
             if (item.CurrentHull != null)
             {
                 int waterPercentage = MathHelper.Clamp((int)Math.Round(item.CurrentHull.WaterPercentage), 0, 100);
-                item.SendSignal(0, waterPercentage.ToString(), "water_%", null);
+                item.SendSignal(waterPercentage.ToString(), "water_%");
             }
         }
     }

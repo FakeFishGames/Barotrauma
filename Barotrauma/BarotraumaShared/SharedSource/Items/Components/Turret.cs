@@ -767,6 +767,7 @@ namespace Barotrauma.Items.Components
             TryLaunch(deltaTime, ignorePower: true);
         }
 
+        private bool outOfAmmo;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget &&
@@ -1187,12 +1188,13 @@ namespace Barotrauma.Items.Components
             UpdateTransformedBarrelPos();
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
+            Character sender = signal.sender;
             switch (connection.Name)
             {
                 case "position_in":
-                    if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
+                    if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newRotation))
                     {
                         if (!MathUtils.IsValid(newRotation)) { return; }
                         targetRotation = MathHelper.ToRadians(newRotation);
@@ -1202,7 +1204,7 @@ namespace Barotrauma.Items.Components
                     resetUserTimer = 10.0f;
                     break;
                 case "trigger_in":
-                    if (signal == "0") { return; }
+                    if (signal.value == "0") { return; }
                     item.Use((float)Timing.Step, sender);
                     user = sender;
                     resetUserTimer = 10.0f;
@@ -1214,7 +1216,7 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "toggle_light":
-                    if (lightComponent != null && signal != "0")
+                    if (lightComponent != null && signal.value != "0")
                     {
                         lightComponent.IsOn = !lightComponent.IsOn;
                     }
@@ -1222,7 +1224,7 @@ namespace Barotrauma.Items.Components
                 case "set_light":
                     if (lightComponent != null)
                     {
-                        lightComponent.IsOn = signal != "0";
+                        lightComponent.IsOn = signal.value != "0";
                     }
                     break;
             }

@@ -1895,50 +1895,63 @@ namespace Barotrauma
             return controller != null;
         }
 
-        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
+        public void SendSignal(string signal, string connectionName)
         {
-            if (connections == null) { return; }
-            if (!connections.TryGetValue(connectionName, out Connection c)) { return; }
-            SendSignal(stepsTaken, signal, c, sender, power, source ?? this, signalStrength);           
+            SendSignal(new Signal(signal), connectionName);
         }
 
-        public void SendSignal(int stepsTaken, string signal, Connection connection, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
+        public void SendSignal(Signal signal, string connectionName)
+        {
+            if (connections == null) { return; }
+            if (!connections.TryGetValue(connectionName, out Connection connection)) { return; }
+
+            signal.source ??= this;
+            SendSignal(signal, connection);
+        }
+
+        public void SendSignal(Signal signal, Connection connection)
         {
             LastSentSignalRecipients.Clear();
             if (connections == null || connection == null) { return; }
 
-            stepsTaken++;
+            signal.stepsTaken++;
             
-            if (stepsTaken > 10)
+            if (signal.stepsTaken > 10)
             {
                 //if the signal has been passed through this item multiple times already, interrupt it to prevent infinite loops
-                if (source != null)
+                if (signal.source != null)
                 {
-                    if (source.LastSentSignalRecipients.Count(recipient => recipient == this) > 2)
+                    if (signal.source.LastSentSignalRecipients.Count(recipient => recipient == this) > 2)
                     {
                         return;
                     }
                 }
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(SendSignal(signal, connection, sender, power, signalStrength));
+                CoroutineManager.StartCoroutine(DelaySignal(signal, connection));
             }
             else
             {
                 foreach (StatusEffect effect in connection.Effects)
                 {
                     if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
-                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
+                    if (signal.value != "0" && !string.IsNullOrEmpty(signal.value)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
                 }
-                connection.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
+
+                signal.source ??= this;
+                connection.SendSignal(signal);
             }
+
         }
-        private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+
+        private IEnumerable<object> DelaySignal(Signal signal, Connection connection)
         {
             //wait one frame
             yield return CoroutineStatus.Running;
 
-            connection.SendSignal(0, signal, this, sender, power, signalStrength);
+            signal.stepsTaken = 0;
+            signal.source = this;
+            connection.SendSignal(signal);
 
             yield return CoroutineStatus.Success;
         }

@@ -351,7 +351,12 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+                    if (GameMain.GameSession?.Missions.Any(m => !m.AllowUndocking) ?? false)
+                    {
+                        new GUIMessageBox("", TextManager.Get("undockingdisabledbymission"));
+                        return false;
+                    }
+                    else if (GameMain.GameSession?.Campaign is CampaignMode campaign)
                     {
                         if (Level.IsLoadedOutpost &&
                             DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
@@ -398,7 +403,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GameMain.Client == null)
                 {
-                    item.SendSignal(0, "1", "toggle_docking", sender: null);
+                    item.SendSignal("1", "toggle_docking");
                 }
                 else
                 {
@@ -914,7 +919,7 @@ namespace Barotrauma.Items.Components
 
             if (dockingButtonClicked)
             {
-                item.SendSignal(0, "1", "toggle_docking", sender: null);
+                item.SendSignal("1", "toggle_docking");
             }
 
             if (autoPilot)

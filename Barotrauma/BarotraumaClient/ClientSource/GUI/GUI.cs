@@ -2248,7 +2248,7 @@ namespace Barotrauma
                             OnClicked = (btn, userdata) =>
                             {
                                 if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
-                                if (GameMain.GameSession.GameMode is CampaignMode || (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition))
+                                if (GameMain.GameSession.GameMode is CampaignMode || (!Submarine.MainSub.AtStartExit && !Submarine.MainSub.AtEndExit))
                                 {
                                     var msgBox = new GUIMessageBox("", 
                                         TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd"), 

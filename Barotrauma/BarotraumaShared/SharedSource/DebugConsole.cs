@@ -79,6 +79,11 @@ namespace Barotrauma
 
                 OnExecute(args);
             }
+
+            public override int GetHashCode()
+            {
+                return names[0].GetHashCode();
+            }
         }
 
         private static readonly Queue<ColoredText> queuedMessages = new Queue<ColoredText>();

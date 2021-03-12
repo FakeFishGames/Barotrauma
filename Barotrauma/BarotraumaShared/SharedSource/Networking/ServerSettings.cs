@@ -628,6 +628,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool LockAllDefaultWires
+        {
+            get;
+            set;
+        }
+
         [Serialize(true, true)]
         public bool AllowFriendlyFire
         {

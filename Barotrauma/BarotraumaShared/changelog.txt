@@ -1,4 +1,41 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.2 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added current player balance to tab menu.
+- Added tab menu button to the HUD and modified the top left button layout.
+- Captain and engineer hints now also self-assign 'steer' and 'operate reactor' orders, respectively.
+- Removed hotkey for closing hints.
+- Don't allow undocking when playing an abandoned outpost mission in mission mode.
+- Hostage rescue missions fail if any of the hostages die.
+- Reputation values are displayed in the tab menu.
+- The requirements to unlock a path from biome to another a displayed on the campaign map.
+- Powered the O2 generator in abandoned outposts.
+- improved backwards compatibility with old campaign saves (place hunting grounds on paths, turn lairs into abandoned outposts).
+- Locations turn back to their original type and destroyed hunting grounds reappear after finishing the campaign.
+- Added a screen distortion effect for radiation sickness.
+- Reworked exit points at uninhabited locations: there's a hole/tunnel above the start/end of the level the sub needs to enter to leave.
+- Added a server setting for locking all default wiring in subs.
+- Added favorite button to the server lobby.
+- Show whether a server is player-hosted or dedicated in the server list.
+- Show whether a server is public or private in the server lobby.
+
+Fixes:
+- Fixed monsters steering towards abyss when idling.
+- Fixed bots spamming "xxx has been resuscitated" when there's characters with minor injuries in the crew.
+- Fixed bot count text not updating in the server lobby when the value is changed.
+- Changed the way the nav terminal calculates the vertical velocity again. The previous method prevented the ballast from emptying/filling completely when using a very large/small ballast.
+- Fixed items being unable to receive a signal that originated from the item itself (e.g. terminal output that gets processed somehow and sent back to the terminal).
+- The "gate outposts" between biomes can never be abandoned.
+- Fixed biome sometimes not changing in the passageway immediately after the "gate outpost".
+- Fixed crashing when trying to toggle a spawnpoint's type past "Enemy" in the sub editor.
+- Fixed command-spawned characters not getting the "job" tag on their id cards.
+- Fixed repair icons appearing in abandoned outposts in multiplayer.
+- Fixed players getting prompted to download subs when the server has disabled file transfers.
+- Fixed mineral scanner not working in the abyss.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.1 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

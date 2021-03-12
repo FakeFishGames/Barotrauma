@@ -24,7 +24,6 @@ namespace Barotrauma
         private int buyTotal, sellTotal;
 
         private GUITextBlock merchantBalanceBlock;
-        private GUILayoutGroup valueChangeGroup;
         private GUITextBlock currentSellValueBlock, newSellValueBlock;
         private GUIImage sellValueChangeArrow;
         private GUIDropDown sortingDropDown;
@@ -158,7 +157,7 @@ namespace Barotrauma
             };
 
             // Store header ------------------------------------------------
-            var headerGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f / 14.0f), storeContent.RectTransform), isHorizontal: true)
+            var headerGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.95f / 14.0f), storeContent.RectTransform), isHorizontal: true)
             {
                 RelativeSpacing = 0.005f
             };
@@ -209,7 +208,7 @@ namespace Barotrauma
             // Item sell value ------------------------------------------------
             var sellValueContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), balanceAndValueGroup.RectTransform))
             {
-                CanBeFocused = false,
+                CanBeFocused = true,
                 RelativeSpacing = 0.005f
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform),
@@ -220,9 +219,9 @@ namespace Barotrauma
                 ForceUpperCase = true
             };
 
-            valueChangeGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var valueChangeGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
-                CanBeFocused = true,
+                CanBeFocused = false,
                 RelativeSpacing = 0.02f
             };
             float blockWidth = GUI.IsFourByThree() ? 0.32f : 0.28f;
@@ -247,7 +246,7 @@ namespace Barotrauma
                             {
                                 string tooltipTag = newStatus.SellPriceModifier > CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier ?
                                     "campaingstore.valueincreasetooltip" : "campaingstore.valuedecreasetooltip";
-                                valueChangeGroup.ToolTip = TextManager.Get(tooltipTag);
+                                sellValueContainer.ToolTip = TextManager.Get(tooltipTag);
                                 currentSellValueBlock.TextColor = newStatus.Color;
                                 sellValueChangeArrow.Color = newStatus.Color;
                                 sellValueChangeArrow.Visible = true;
@@ -256,7 +255,7 @@ namespace Barotrauma
                                 return $"{(CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
                             }
                         }
-                        valueChangeGroup.ToolTip = null;
+                        sellValueContainer.ToolTip = TextManager.Get("campaignstore.sellvaluetooltip");
                         currentSellValueBlock.TextColor = CurrentLocation.BalanceColor;
                         sellValueChangeArrow.Visible = false;
                         newSellValueBlock.Text = null;
@@ -264,7 +263,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        valueChangeGroup.ToolTip = null;
+                        sellValueContainer.ToolTip = null;
                         sellValueChangeArrow.Visible = false;
                         newSellValueBlock.Text = null;
                         return null;
@@ -293,7 +292,7 @@ namespace Barotrauma
             newSellValueBlock.Padding = newPadding;
 
             // Store mode buttons ------------------------------------------------
-            var modeButtonFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f / 14.0f), storeContent.RectTransform), style: null);
+            var modeButtonFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f / 14.0f), storeContent.RectTransform), style: null);
             var modeButtonContainer = new GUILayoutGroup(new RectTransform(Vector2.One, modeButtonFrame.RectTransform), isHorizontal: true);
 
             var tabs = Enum.GetValues(typeof(StoreTab));

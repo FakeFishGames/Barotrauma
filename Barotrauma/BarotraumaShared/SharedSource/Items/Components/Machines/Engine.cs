@@ -201,17 +201,17 @@ namespace Barotrauma.Items.Components
             PropellerPos = new Vector2(PropellerPos.X, -PropellerPos.Y);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+            base.ReceiveSignal(signal, connection);
 
             if (connection.Name == "set_force")
             {
-                if (float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
+                if (float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float tempForce))
                 {
                     controlLockTimer = 0.1f;
                     targetForce = MathHelper.Clamp(tempForce, -100.0f, 100.0f);
-                    User = sender;
+                    User = signal.sender;
                 }
             }  
         }

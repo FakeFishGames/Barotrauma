@@ -56,22 +56,21 @@ namespace Barotrauma.Items.Components
         {
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in":
-                    string signalOut = (signal == TargetSignal) ? Output : FalseOutput;
-
-                    if (string.IsNullOrWhiteSpace(signalOut)) return;
-                    item.SendSignal(stepsTaken, signalOut, "signal_out", sender, signalStrength, source);
-
+                    string signalOut = (signal.value == TargetSignal) ? Output : FalseOutput;
+                    if (string.IsNullOrWhiteSpace(signalOut)) { return; }
+                    signal.value = signalOut;
+                    item.SendSignal(signal, "signal_out");
                     break;
                 case "set_output":
-                    Output = signal;
+                    Output = signal.value;
                     break;
                 case "set_targetsignal":
-                    TargetSignal = signal;
+                    TargetSignal = signal.value;
                     break;
             }
         }

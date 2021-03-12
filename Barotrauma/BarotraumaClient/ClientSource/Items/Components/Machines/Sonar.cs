@@ -133,7 +133,7 @@ namespace Barotrauma.Items.Components
 
         public static Vector2 GUISizeCalculation => Vector2.One * Math.Min(GUI.RelativeHorizontalAspectRatio, 1f) * sonarAreaSize;
 
-        private List<Tuple<Vector2, List<Item>>> MineralClusters { get; set; }
+        private List<(Vector2 center, List<Item> resources)> MineralClusters { get; set; }
 
         private readonly List<GUITextBlock> textBlocksToScaleAndNormalize = new List<GUITextBlock>();
 
@@ -471,25 +471,26 @@ namespace Barotrauma.Items.Components
             {
                 if (MineralClusters == null)
                 {
-                    MineralClusters = new List<Tuple<Vector2, List<Item>>>();
-                    foreach (var p in Level.Loaded.PathPoints)
+                    MineralClusters = new List<(Vector2, List<Item>)>();
+                    Level.Loaded.PathPoints.ForEach(p => p.ClusterLocations.ForEach(c => AddIfValid(c)));
+                    Level.Loaded.AbyssResources.ForEach(c => AddIfValid(c));
+
+                    void AddIfValid(Level.ClusterLocation c)
                     {
-                        foreach (var c in p.ClusterLocations)
+                        if (c.Resources == null) { return; }
+                        if (c.Resources.None(i => i != null && !i.Removed && i.Tags.Contains("ore"))) { return; }
+                        var pos = Vector2.Zero;
+                        foreach (var r in c.Resources)
                         {
-                            if (c.Resources.None(i => i != null && !i.Removed && i.Tags.Contains("ore"))) { continue; }
-                            var pos = Vector2.Zero;
-                            foreach (var r in c.Resources)
-                            {
-                                pos += r.WorldPosition;
-                            }
-                            pos /= c.Resources.Count;
-                            MineralClusters.Add(new Tuple<Vector2, List<Item>>(pos, c.Resources));
+                            pos += r.WorldPosition;
                         }
+                        pos /= c.Resources.Count;
+                        MineralClusters.Add((center: pos, resources: c.Resources));
                     }
                 }
                 else
                 {
-                    MineralClusters.RemoveAll(t => t.Item2 == null || t.Item2.None() || t.Item2.All(i => i == null || i.Removed));
+                    MineralClusters.RemoveAll(c => c.resources == null || c.resources.None() || c.resources.All(i => i == null || i.Removed));
                 }
             }
 
@@ -864,7 +865,7 @@ namespace Barotrauma.Items.Components
                     Level.Loaded.StartLocation.Name,
                     Level.Loaded.StartOutpost != null ? "outpost" : "location",
                     Level.Loaded.StartLocation.Name,
-                    Level.Loaded.StartPosition, transducerCenter,
+                    Level.Loaded.StartExitPosition, transducerCenter,
                     displayScale, center, DisplayRadius);
             }
 
@@ -874,7 +875,7 @@ namespace Barotrauma.Items.Components
                     Level.Loaded.EndLocation.Name,
                     Level.Loaded.EndOutpost != null ? "outpost" : "location",
                     Level.Loaded.EndLocation.Name,
-                    Level.Loaded.EndPosition, transducerCenter,
+                    Level.Loaded.EndExitPosition, transducerCenter,
                     displayScale, center, DisplayRadius);
             }
 
@@ -924,16 +925,16 @@ namespace Barotrauma.Items.Components
 
             if (AllowUsingMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null)
             {
-                foreach (var t in MineralClusters)
+                foreach (var c in MineralClusters)
                 {
-                    var unobtainedMinerals = t.Item2.Where(i => i != null && i.GetRootInventoryOwner() == i);
+                    var unobtainedMinerals = c.resources.Where(i => i != null && i.GetRootInventoryOwner() == i);
                     if (unobtainedMinerals.None()) { continue; }
-                    if (!CheckResourceMarkerVisibility(t.Item1, transducerCenter)) { continue; }
+                    if (!CheckResourceMarkerVisibility(c.center, transducerCenter)) { continue; }
                     var i = unobtainedMinerals.FirstOrDefault();
                     if (i == null) { continue; }
                     DrawMarker(spriteBatch,
                         i.Name, "mineral", i,
-                        t.Item1, transducerCenter,
+                        c.center, transducerCenter,
                         displayScale, center, DisplayRadius * 0.95f,
                         onlyShowTextOnMouseOver: true);
                 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Barotrauma
@@ -13,7 +14,7 @@ namespace Barotrauma
         protected Level level;
 
         protected int state;
-        public int State
+        public virtual int State
         {
             get { return state; }
             protected set
@@ -39,14 +40,14 @@ namespace Barotrauma
             get { return Prefab.Name; }
         }
 
-        private string successMessage;
+        private readonly string successMessage;
         public virtual string SuccessMessage
         {
             get { return successMessage; }
             //private set { successMessage = value; }
         }
 
-        private string failureMessage;
+        private readonly string failureMessage;
         public virtual string FailureMessage
         {
             get { return failureMessage; }
@@ -58,6 +59,11 @@ namespace Barotrauma
         {
             get { return description; }
             //private set { description = value; }
+        }
+
+        public virtual bool AllowUndocking
+        {
+            get { return true; }
         }
 
         public int Reward
@@ -119,20 +125,21 @@ namespace Barotrauma
             for (int n = 0; n < 2; n++)
             {
                 string locationName = $"‖color:gui.orange‖{locations[n].Name}‖end‖";
-                if (description != null) description = description.Replace("[location" + (n + 1) + "]", locationName);
-                if (successMessage != null) successMessage = successMessage.Replace("[location" + (n + 1) + "]", locationName);
-                if (failureMessage != null) failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locationName);
+                if (description != null) { description = description.Replace("[location" + (n + 1) + "]", locationName); }
+                if (successMessage != null) { successMessage = successMessage.Replace("[location" + (n + 1) + "]", locationName); }
+                if (failureMessage != null) { failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locationName); }
                 for (int m = 0; m < Messages.Count; m++)
                 {
                     Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locationName);
                 }
             }
-            if (description != null) description = description.Replace("[reward]", Reward.ToString("N0"));
-            if (successMessage != null) successMessage = successMessage.Replace("[reward]", Reward.ToString("N0"));
-            if (failureMessage != null) failureMessage = failureMessage.Replace("[reward]", Reward.ToString("N0"));
+            string rewardText = $"‖color:gui.orange‖{string.Format(CultureInfo.InvariantCulture, "{0:N0}", Reward)}‖end‖";
+            if (description != null) { description = description.Replace("[reward]", rewardText); }
+            if (successMessage != null) { successMessage = successMessage.Replace("[reward]", rewardText); }
+            if (failureMessage != null) { failureMessage = failureMessage.Replace("[reward]", rewardText); }
             for (int m = 0; m < Messages.Count; m++)
             {
-                Messages[m] = Messages[m].Replace("[reward]", Reward.ToString("N0"));
+                Messages[m] = Messages[m].Replace("[reward]", rewardText);
             }
         }
         public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)

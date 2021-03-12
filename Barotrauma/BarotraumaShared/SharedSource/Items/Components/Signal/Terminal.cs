@@ -44,15 +44,15 @@ namespace Barotrauma.Items.Components
 
         partial void ShowOnDisplay(string input);
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection.Name != "signal_in") { return; }
-            if (signal.Length > MaxMessageLength)
+            if (signal.value.Length > MaxMessageLength)
             {
-                signal = signal.Substring(0, MaxMessageLength);
+                signal.value = signal.value.Substring(0, MaxMessageLength);
             }
 
-            string inputSignal = signal.Replace("\\n", "\n");
+            string inputSignal = signal.value.Replace("\\n", "\n");
             ShowOnDisplay(inputSignal);
         }
 

@@ -720,7 +720,7 @@ namespace Barotrauma
                     int dmgPerSecond = Math.Sign(a2.DamagePerSecond - a1.DamagePerSecond);
                     return dmgPerSecond != 0 ? dmgPerSecond : Math.Sign(a1.Strength - a1.Strength);
                 });
-                HintManager.OnAfflictionDisplayed(Character, currentDisplayedAfflictions.FirstOrDefault());
+                HintManager.OnAfflictionDisplayed(Character, currentDisplayedAfflictions);
                 updateDisplayedAfflictionsTimer = UpdateDisplayedAfflictionsInterval;
             }
             
@@ -740,6 +740,7 @@ namespace Barotrauma
             float distortSpeed = 0.0f;
             float radialDistortStrength = 0.0f;
             float chromaticAberrationStrength = 0.0f;
+            float grainStrength = 0.0f;
 
             if (Character.IsUnconscious)
             {
@@ -760,6 +761,7 @@ namespace Barotrauma
                 blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
                 radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
                 chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
+                grainStrength = Math.Max(grainStrength, affliction.GetScreenGrainStrength());
             }
             foreach (LimbHealth limbHealth in limbHealths)
             {
@@ -774,6 +776,7 @@ namespace Barotrauma
 
             Character.RadialDistortStrength = radialDistortStrength;
             Character.ChromaticAberrationStrength = chromaticAberrationStrength;
+            Character.GrainStrength = grainStrength;
             if (blurStrength > 0.0f)
             {
                 distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;

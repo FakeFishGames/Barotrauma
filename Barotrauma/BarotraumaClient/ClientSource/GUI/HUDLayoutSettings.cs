@@ -139,7 +139,9 @@ namespace Barotrauma
             int objectiveAnchorOffsetY = (int)(150 * GUI.Scale);
             ObjectiveAnchor = new Rectangle(Padding, ChatBoxArea.Y - objectiveAnchorOffsetY, objectiveAnchorWidth, 0);
 
-            CrewArea = new Rectangle(Padding, Padding, (int)Math.Max(400 * GUI.Scale, 220), ObjectiveAnchor.Top - Padding * 2);
+            int crewAreaY = ButtonAreaTop.Bottom + Padding;
+            int crewAreaHeight = ObjectiveAnchor.Top - Padding - crewAreaY;
+            CrewArea = new Rectangle(Padding, crewAreaY, (int)Math.Max(400 * GUI.Scale, 220), crewAreaHeight);
 
             InventoryAreaLower = new Rectangle(ChatBoxArea.Right + Padding * 7, inventoryTopY, GameMain.GraphicsWidth - Padding * 9 - ChatBoxArea.Width, GameMain.GraphicsHeight - inventoryTopY);
 

@@ -115,6 +115,17 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (requireRescue.Any(r => r.Removed || r.IsDead))
+            {
+#if SERVER
+                if (!(GameMain.GameSession.GameMode is CampaignMode) && GameMain.Server != null)
+                {
+                    GameMain.Server.EndGame();                        
+                }
+#endif
+                return;
+            }
+
             switch (state)
             {
                 case 0:
@@ -140,7 +151,7 @@ namespace Barotrauma
                 case 1:
                     if (!(GameMain.GameSession.GameMode is CampaignMode) && GameMain.Server != null)
                     {
-                        if (!Submarine.MainSub.AtStartPosition || (wasDocked && !Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost)))
+                        if (!Submarine.MainSub.AtStartExit || (wasDocked && !Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost)))
                         {
                             GameMain.Server.EndGame();
                             State = 2;

@@ -547,7 +547,7 @@ namespace Barotrauma
             [Serialize(true, true, "Is the creature allowed to navigate from and into the depths of the abyss? When enabled, the creatures will try to avoid the depths."), Editable]
             public bool AvoidAbyss { get; set; }
 
-            [Serialize(true, true, "Does the creature try to keep in the abyss? Has effect only when AvoidAbyss is false."), Editable]
+            [Serialize(false, true, "Does the creature try to keep in the abyss? Has effect only when AvoidAbyss is false."), Editable]
             public bool StayInAbyss { get; set; }
 
             [Serialize(0f, true, description: ""), Editable]

@@ -326,7 +326,7 @@ namespace Barotrauma
 
                     sub.SetPosition((linkedPort.Item.WorldPosition - portDiff) - offset);
 
-                    myPort.Dock(linkedPort);   
+                    myPort.Dock(linkedPort);
                     myPort.Lock(isNetworkMessage: true, applyEffects: false);
                 }
             }
@@ -402,14 +402,14 @@ namespace Barotrauma
                 bool leaveBehind = false;
                 if (!sub.DockedTo.Contains(Submarine.MainSub))
                 {
-                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEndPosition || Submarine.MainSub.AtStartPosition);
-                    if (Submarine.MainSub.AtEndPosition)
+                    System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEndExit || Submarine.MainSub.AtStartExit);
+                    if (Submarine.MainSub.AtEndExit)
                     {
-                        leaveBehind = sub.AtEndPosition != Submarine.MainSub.AtEndPosition;
+                        leaveBehind = sub.AtEndExit != Submarine.MainSub.AtEndExit;
                     }
                     else
                     {
-                        leaveBehind = sub.AtStartPosition != Submarine.MainSub.AtStartPosition;
+                        leaveBehind = sub.AtStartExit != Submarine.MainSub.AtStartExit;
                     }
                 }
 

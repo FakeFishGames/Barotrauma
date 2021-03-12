@@ -444,8 +444,16 @@ namespace Barotrauma.Networking
                     Steamworks.BeginAuthResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
                     if (authSessionStartState != Steamworks.BeginAuthResult.OK)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: " + authSessionStartState.ToString());
-                        return;
+                        if (requireSteamAuth)
+                        {
+                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: " + authSessionStartState.ToString());
+                            return;
+                        }
+                        else
+                        {
+                            steamId = 0;
+                            pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
+                        }
                     }
                     pendingClient.SteamID = steamId;
                     pendingClient.Connection.Name = name;

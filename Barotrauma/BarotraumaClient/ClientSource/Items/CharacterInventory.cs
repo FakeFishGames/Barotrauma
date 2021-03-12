@@ -843,6 +843,13 @@ namespace Barotrauma
             
             if (item.ParentInventory != this)
             {
+                if (Screen.Selected == GameMain.GameScreen)
+                {
+                    if (item.NonInteractable || item.NonPlayerTeamInteractable)
+                    {
+                        return QuickUseAction.None;
+                    }
+                }
                 if (item.ParentInventory == null || item.ParentInventory.Locked)
                 {
                     return QuickUseAction.None;

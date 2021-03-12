@@ -15,12 +15,26 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Xml.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab { NewGame = 1, LoadGame = 2, HostServer = 3, Settings = 4, Tutorials = 5, JoinServer = 6, CharacterEditor = 7, SubmarineEditor = 8, QuickStartDev = 9, ProfilingTestBench = 10, SteamWorkshop = 11, Credits = 12, Empty = 13 }
+        public enum Tab
+        {
+            NewGame = 0,
+            LoadGame = 1,
+            HostServer = 2,
+            Settings = 3,
+            Tutorials = 4,
+            JoinServer = 5,
+            CharacterEditor = 6,
+            SubmarineEditor = 7,
+            SteamWorkshop = 8,
+            Credits = 9,
+            Empty = 10
+        }
 
         private readonly GUIComponent buttonsParent;
 
@@ -29,8 +43,7 @@ namespace Barotrauma
         private CampaignSetupUI campaignSetupUI;
 
         private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
-        private GUITickBox isPublicBox, wrongPasswordBanBox, karmaEnabledBox;
-        private GUIDropDown karmaPresetDD;
+        private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
         private readonly GUIFrame downloadingModsContainer, enableModsContainer;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
@@ -41,7 +54,7 @@ namespace Barotrauma
         private GUIComponent remoteContentContainer;
         private XDocument remoteContentDoc;
 
-        private Tab selectedTab;
+        private Tab selectedTab = Tab.Empty;
 
         private Sprite backgroundSprite;
 
@@ -353,10 +366,13 @@ namespace Barotrauma
                 "Quickstart (dev)", style: "GUIButtonLarge", color: GUI.Style.Red)
             {
                 IgnoreLayoutGroups = true,
-                UserData = Tab.QuickStartDev,
+                UserData = Tab.Empty,
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
+
+                    QuickStart();
+
                     return true;
                 }
             };
@@ -364,11 +380,32 @@ namespace Barotrauma
                 "Profiling", style: "GUIButtonLarge", color: GUI.Style.Red)
             {
                 IgnoreLayoutGroups = true,
-                UserData = Tab.ProfilingTestBench,
+                UserData = Tab.Empty,
                 ToolTip = "Enables performance indicators and starts the game with a fixed sub, crew and level to make it easier to compare the performance between sessions.",
                 OnClicked = (tb, userdata) =>
                 {
                     SelectTab(tb, userdata);
+
+                    QuickStart(fixedSeed: true);
+                    GameMain.ShowPerf = true;
+                    GameMain.ShowFPS = true;
+
+                    return true;
+                }
+            };
+            new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 180) },
+                "Join Localhost", style: "GUIButtonLarge", color: GUI.Style.Red)
+            {
+                IgnoreLayoutGroups = true,
+                UserData = Tab.Empty,
+                ToolTip = "Connects to a locally hosted dedicated server, assuming default port.",
+                OnClicked = (tb, userdata) =>
+                {
+                    SelectTab(tb, userdata);
+
+                    GameMain.Client = new GameClient(string.IsNullOrEmpty(GameMain.Config.PlayerName) ? SteamManager.GetUsername() : GameMain.Config.PlayerName,
+                                                     IPAddress.Loopback.ToString(), 0, "localhost", 0, false);
+
                     return true;
                 }
             };
@@ -538,13 +575,13 @@ namespace Barotrauma
                 case Tab.NewGame:
                     if (GameMain.Config.ShowTutorialSkipWarning)
                     {
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         ShowTutorialSkipWarning(Tab.NewGame);
                         return true;
                     }
                     if (!GameMain.Config.CampaignDisclaimerShown)
                     {
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
                         return true;
                     }
@@ -564,13 +601,13 @@ namespace Barotrauma
                 case Tab.JoinServer:
                     if (GameMain.Config.ShowTutorialSkipWarning)
                     {
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         ShowTutorialSkipWarning(Tab.JoinServer);
                         return true;
                     }
                     if (!GameMain.Config.CampaignDisclaimerShown)
                     {
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.JoinServer); });
                         return true;
                     }
@@ -580,18 +617,18 @@ namespace Barotrauma
                     if (GameMain.Config.ContentPackageSelectionDirty)
                     {
                         new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("ServerRestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         return false;
                     }
                     if (GameMain.Config.ShowTutorialSkipWarning)
                     {
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         ShowTutorialSkipWarning(tab);
                         return true;
                     }
                     if (!GameMain.Config.CampaignDisclaimerShown)
                     {
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
                         return true;
                     }
@@ -599,7 +636,7 @@ namespace Barotrauma
                 case Tab.Tutorials:
                     if (!GameMain.Config.CampaignDisclaimerShown)
                     {
-                        selectedTab = 0;
+                        selectedTab = Tab.Empty;
                         GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
                         return true;
                     }
@@ -612,14 +649,6 @@ namespace Barotrauma
                 case Tab.SubmarineEditor:
                     CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SubEditorScreen));
                     break;
-                case Tab.QuickStartDev:
-                    QuickStart();
-                    break;
-                case Tab.ProfilingTestBench:
-                    QuickStart(fixedSeed: true);
-                    GameMain.ShowPerf = true;
-                    GameMain.ShowFPS = true;
-                    break;
                 case Tab.SteamWorkshop:
                     if (!Steam.SteamManager.IsInitialized) return false;
                     CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SteamWorkshopScreen));
@@ -630,7 +659,7 @@ namespace Barotrauma
                     break;
                 case Tab.Empty:
                     titleText.Visible = true;
-                    selectedTab = 0;
+                    selectedTab = Tab.Empty;
                     break;
             }
 
@@ -886,8 +915,8 @@ namespace Barotrauma
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
                                    " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
-                                   " -karmaenabled " + karmaEnabledBox.Selected.ToString() +
-                                   " -karmapreset " + (karmaPresetDD.SelectedData?.ToString() ?? "default") +
+                                   " -karmaenabled " + (!karmaBox.Selected).ToString() +
+                                   " -karmapreset default" +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
@@ -946,7 +975,7 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             Frame.AddToGUIUpdateList();
-            if (selectedTab > 0 && menuTabs[(int)selectedTab] != null)
+            if (selectedTab < Tab.Empty && menuTabs[(int)selectedTab] != null)
             {
                 menuTabs[(int)selectedTab].AddToGUIUpdateList();
             }
@@ -1142,9 +1171,11 @@ namespace Barotrauma
         {
             menuTabs[(int)Tab.HostServer].ClearChildren();
 
-            int port = NetConfig.DefaultPort;
-            int queryPort = NetConfig.DefaultQueryPort;
+            string name = "";
+            string password = "";
             int maxPlayers = 8;
+            bool isPublic = true;
+            bool banAfterWrongPassword = false;
             bool karmaEnabled = true;
             string selectedKarmaPreset = "";
             PlayStyle selectedPlayStyle = PlayStyle.Casual;
@@ -1153,8 +1184,10 @@ namespace Barotrauma
                 XDocument settingsDoc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
                 if (settingsDoc != null)
                 {
-                    port = settingsDoc.Root.GetAttributeInt("port", port);
-                    queryPort = settingsDoc.Root.GetAttributeInt("queryport", queryPort);
+                    name = settingsDoc.Root.GetAttributeString("name", name);
+                    password = settingsDoc.Root.GetAttributeString("password", password);
+                    isPublic = settingsDoc.Root.GetAttributeBool("public", isPublic);
+                    banAfterWrongPassword = settingsDoc.Root.GetAttributeBool("banafterwrongpassword", banAfterWrongPassword);
 
                     int maxPlayersElement = settingsDoc.Root.GetAttributeInt("maxplayers", maxPlayers);
                     if (maxPlayersElement > NetConfig.MaxPlayers)
@@ -1256,30 +1289,12 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
 
             var label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerName"), textAlignment: textAlignment);
-            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            serverNameBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: name, textAlignment: textAlignment)
             { 
                 MaxTextLength = NetConfig.ServerNameMaxLength,
                 OverflowClip = true
             };
             label.RectTransform.MaxSize = serverNameBox.RectTransform.MaxSize;
- 
-            /* TODO: allow lidgren servers from client?
-            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerPort"), textAlignment: textAlignment);
-            portBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
-            {
-                Text = port.ToString(),
-                ToolTip = TextManager.Get("ServerPortToolTip")
-            };
-
-#if USE_STEAM
-            label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("ServerQueryPort"), textAlignment: textAlignment);
-            queryPortBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
-            {
-                Text = queryPort.ToString(),
-                ToolTip = TextManager.Get("ServerQueryPortToolTip")
-            };
-#endif
-            */
 
             var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
             var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
@@ -1305,7 +1320,7 @@ namespace Barotrauma
             maxPlayersLabel.RectTransform.MaxSize = maxPlayersBox.RectTransform.MaxSize;
 
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
-            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), textAlignment: textAlignment)
+            passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: password, textAlignment: textAlignment)
             {
                 Censor = true
             };
@@ -1317,10 +1332,14 @@ namespace Barotrauma
 
             isPublicBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaUpper.RectTransform), TextManager.Get("PublicServer"))
             {
+                Selected = isPublic,
                 ToolTip = TextManager.Get("PublicServerToolTip")
             };
 
-            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaUpper.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"));
+            wrongPasswordBanBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaUpper.RectTransform), TextManager.Get("ServerSettingsBanAfterWrongPassword"))
+            {
+                Selected = banAfterWrongPassword
+            };
 
             tickboxAreaUpper.RectTransform.MaxSize = isPublicBox.RectTransform.MaxSize;
 
@@ -1328,31 +1347,13 @@ namespace Barotrauma
 
             var tickboxAreaLower = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
 
-            karmaEnabledBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaLower.RectTransform), TextManager.Get("ServerSettingsUseKarma"))
+            karmaBox = new GUITickBox(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaLower.RectTransform), TextManager.Get("HostServerKarmaSetting"))
             {
-                ToolTip = TextManager.Get("karmaexplanation"),
-                OnSelected = (tb) =>
-                {
-                    karmaPresetDD.Enabled = karmaPresetDD.ButtonEnabled = tb.Selected;
-                    return true;
-                }                
+                Selected = !karmaEnabled,
+                ToolTip = TextManager.Get("hostserverkarmasettingtooltip")
             };
-            karmaPresetDD = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), tickboxAreaLower.RectTransform))
-            {
-                ButtonEnabled = false,
-                Enabled = false
-            };
-            var tempKarmaManager = new KarmaManager();
-            foreach (string karmaPreset in tempKarmaManager.Presets.Keys)
-            {
-                karmaPresetDD.AddItem(TextManager.Get("KarmaPreset." + karmaPreset), karmaPreset);
-                if (karmaPreset == selectedKarmaPreset) { karmaPresetDD.SelectItem(karmaPreset); }
-            }
-            if (karmaPresetDD.SelectedIndex == -1) { karmaPresetDD.Select(0); }
 
-            karmaEnabledBox.Selected = karmaEnabled;
-
-            tickboxAreaLower.RectTransform.MaxSize = karmaEnabledBox.RectTransform.MaxSize;
+            tickboxAreaLower.RectTransform.MaxSize = karmaBox.RectTransform.MaxSize;
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);

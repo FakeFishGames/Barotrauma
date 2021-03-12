@@ -18,6 +18,8 @@ namespace Barotrauma
         protected Color overlayTextColor;
         protected Sprite overlaySprite;
 
+        private TransitionType prevCampaignUIAutoOpenType;
+
         protected GUIButton endRoundButton;
 
         public GUIButton ReadyCheckButton;
@@ -199,7 +201,19 @@ namespace Barotrauma
 
             if (endRoundButton.Visible)
             {
-                if (!AllowedToEndRound()) { buttonText = TextManager.Get("map"); }
+                if (!AllowedToEndRound()) 
+                { 
+                    buttonText = TextManager.Get("map"); 
+                }
+                else if (prevCampaignUIAutoOpenType != availableTransition && 
+                        (availableTransition == TransitionType.ProgressToNextEmptyLocation || availableTransition == TransitionType.ReturnToPreviousEmptyLocation))
+                {
+                    HintManager.OnAvailableTransition(availableTransition);
+                    //opening the campaign map pauses the game and prevents HintManager from running -> update it manually to get the hint to show up immediately
+                    HintManager.Update();
+                    endRoundButton.OnClicked(EndRoundButton, null);
+                    prevCampaignUIAutoOpenType = availableTransition;
+                }
                 endRoundButton.Text = ToolBox.LimitString(buttonText, endRoundButton.Font, endRoundButton.Rect.Width - 5);
                 if (endRoundButton.Text != buttonText)
                 {

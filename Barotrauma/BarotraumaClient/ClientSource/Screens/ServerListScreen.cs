@@ -487,7 +487,10 @@ namespace Barotrauma
                 filterTickBoxes.ForEach(t => t.Value.Text = t.Value.UserData as string);
                 gameModeTickBoxes.ForEach(tb => tb.Value.Text = tb.Value.ToolTip);
                 playStyleTickBoxes.ForEach(tb => tb.Value.Text = tb.Value.ToolTip);
-                GUITextBlock.AutoScaleAndNormalize(filterTickBoxes.Values.Select(tb => tb.TextBlock), defaultScale: 1.0f);
+                GUITextBlock.AutoScaleAndNormalize(
+                    filterTickBoxes.Values.Select(tb => tb.TextBlock)
+                    .Concat(ternaryFilters.Values.Select(dd => dd.Parent.GetChild<GUITextBlock>())),
+                    defaultScale: 1.0f);
                 if (filterTickBoxes.Values.First().TextBlock.TextScale < 0.8f)
                 {
                     filterTickBoxes.ForEach(t => t.Value.TextBlock.TextScale = 1.0f);
@@ -858,6 +861,11 @@ namespace Barotrauma
             }
 
             WriteServerMemToFile(recentServersFile, recentServers);
+        }
+
+        public bool IsFavorite(ServerInfo info)
+        {
+            return favoriteServers.Any(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
         }
 
         public void AddToFavoriteServers(ServerInfo info)

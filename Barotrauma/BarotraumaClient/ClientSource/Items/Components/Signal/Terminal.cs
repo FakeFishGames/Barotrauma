@@ -63,8 +63,8 @@ namespace Barotrauma.Items.Components
             }
 
             OutputValue = input;
-            item.SendSignal(0, input, "signal_out", null);
             ShowOnDisplay(input);
+            item.SendSignal(input, "signal_out");
         }
 
         partial void ShowOnDisplay(string input)

@@ -338,13 +338,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float targetLevel = targetVelocity.X;
-            if (controlledSub != null && controlledSub.FlippedX) { targetLevel *= -1; }
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_x_out", user);
+            float velX = targetVelocity.X;
+            if (controlledSub != null && controlledSub.FlippedX) { velX *= -1; }
+            item.SendSignal(new Signal(velX.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_x_out");
 
-            targetLevel = -targetVelocity.Y;
-            targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", user);
+            float velY = MathHelper.Lerp((neutralBallastLevel * 100 - 50) * 2, -100 * Math.Sign(targetVelocity.Y), Math.Abs(targetVelocity.Y) / 100.0f);
+            item.SendSignal(new Signal(velY.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_y_out");
         }
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
@@ -670,7 +669,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {
@@ -685,7 +684,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {
@@ -705,18 +704,18 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection.Name == "velocity_in")
             {
                 steeringAdjustSpeed = DefaultSteeringAdjustSpeed;
-                steeringInput = XMLExtensions.ParseVector2(signal, errorMessages: false);
+                steeringInput = XMLExtensions.ParseVector2(signal.value, errorMessages: false);
                 steeringInput.X = MathHelper.Clamp(steeringInput.X, -100.0f, 100.0f);
                 steeringInput.Y = MathHelper.Clamp(steeringInput.Y, -100.0f, 100.0f);
             }
             else
             {
-                base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+                base.ReceiveSignal(signal, connection);
             }
         }
     }

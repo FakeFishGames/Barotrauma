@@ -23,7 +23,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            item.SendSignal(0, output, "signal_out", null);
+            item.SendSignal(output, "signal_out");
         }
 
         private void UpdateOutput()
@@ -47,24 +47,24 @@ namespace Barotrauma.Items.Components
             output += "," + signalA.ToString("G", CultureInfo.InvariantCulture);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_r":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
                     UpdateOutput();
                     break;
                 case "signal_g":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
                     UpdateOutput();
                     break;
                 case "signal_b":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[2]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[2]);
                     UpdateOutput();
                     break;
                 case "signal_a":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[3]);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[3]);
                     UpdateOutput();
                     break;
             }

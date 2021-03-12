@@ -31,26 +31,26 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            item.SendSignal(0, Value, "signal_out", null);
+            item.SendSignal(Value, "signal_out");
         }
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in":
                     if (writeable) 
                     {
-                        if (Value == signal) { return; }
-                        Value = signal;
+                        if (Value == signal.value) { return; }
+                        Value = signal.value;
                         OnStateChanged();
                     }
                     break;
                 case "signal_store":
                 case "lock_state":
-                    writeable = signal == "1";
+                    writeable = signal.value == "1";
                     break;
             }
         }

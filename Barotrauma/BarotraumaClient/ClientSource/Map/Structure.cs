@@ -31,13 +31,16 @@ namespace Barotrauma
                 return HasBody ? ShowWalls : ShowStructures;
             }
         }
-        
-        private string specialTag;
+
+#if DEBUG
         [Editable, Serialize("", true)]
+#else
+        [Serialize("", true)]
+#endif
         public string SpecialTag
         {
-            get { return specialTag; }
-            set { specialTag = value; }
+            get;
+            set;
         }        
 
         partial void InitProjSpecific()

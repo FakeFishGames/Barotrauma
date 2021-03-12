@@ -77,10 +77,6 @@ namespace Barotrauma
             set
             {
                 if (gameSession == value) { return; }
-                if (value == null && Screen.Selected == GameScreen && gameSession.GameMode is CampaignMode)
-                {
-                    DebugConsole.AddWarning("GameSession set to null while in the game screen\n" + Environment.StackTrace.CleanupStackTrace());
-                }
                 if (gameSession?.GameMode != null && gameSession.GameMode != value?.GameMode)
                 {
                     gameSession.GameMode.Remove();

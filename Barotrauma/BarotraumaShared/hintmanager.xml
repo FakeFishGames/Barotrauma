@@ -9,6 +9,7 @@
   <onautopilotreachedoutpost/>
   <onavailabletransition>
     <progresstonextemptylocation/>
+    <returntopreviousemptylocation/>
   </onavailabletransition>
   <ondivinggearoutofoxygen/>
   <onhandcuffed/>
@@ -30,8 +31,8 @@
   <onstartedcontrolling>
     <job>
       <assistant/>
-      <captain/>
-      <engineer/>
+      <captain order="steer" orderoption="navigatetodestination"/>
+      <engineer order="operatereactor" orderoption="powerup"/>
       <mechanic/>
       <medicaldoctor/>
       <securityofficer/>
@@ -56,6 +57,7 @@
   <reminder timebeforereminders="300" remindercooldown="120">
     <characterchange/>
     <commandinterface/>
+    <tabmenu/>
     <toolbelt/>
   </reminder>
   

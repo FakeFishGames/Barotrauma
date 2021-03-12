@@ -83,23 +83,23 @@ namespace Barotrauma.Items.Components
             string signalOut = sendOutput ? output : falseOutput;
             if (string.IsNullOrEmpty(signalOut)) return;
 
-            item.SendSignal(0, signalOut, "signal_out", null);
+            item.SendSignal(signalOut, "signal_out");
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in1":
-                    if (signal == "0") return;
+                    if (signal.value == "0") return;
                     timeSinceReceived[0] = 0.0f;
                     break;
                 case "signal_in2":
-                    if (signal == "0") return;
+                    if (signal.value == "0") return;
                     timeSinceReceived[1] = 0.0f;
                     break;
                 case "set_output":
-                    output = signal;
+                    output = signal.value;
                     break;
             }
         }

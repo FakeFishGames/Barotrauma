@@ -131,6 +131,7 @@ namespace Barotrauma.Networking
             MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
             IsPublic = incMsg.ReadBoolean();
+            GameMain.NetLobbyScreen.SetPublic(IsPublic);
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
@@ -725,6 +726,10 @@ namespace Barotrauma.Networking
             var destructibleOutposts = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsDestructibleOutposts"));
             GetPropertyData("DestructibleOutposts").AssignGUIComponent(destructibleOutposts);
+
+            var lockAllDefaultWires = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
+                TextManager.Get("ServerSettingsLockAllDefaultWires"));
+            GetPropertyData("LockAllDefaultWires").AssignGUIComponent(lockAllDefaultWires);
 
             var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowRewiring"));

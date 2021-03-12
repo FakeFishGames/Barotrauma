@@ -432,27 +432,27 @@ namespace Barotrauma.Items.Components
         //called then the item is dropped or dragged out of a "limbslot"
         public virtual void Unequip(Character character) { }
 
-        public virtual void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public virtual void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "activate":
                 case "use":
                 case "trigger_in":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
-                        item.Use(1.0f, sender);
+                        item.Use(1.0f, signal.sender);
                     }
                     break;
                 case "toggle":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
                         IsActive = !isActive;
                     }
                     break;
                 case "set_active":
                 case "set_state":
-                    IsActive = signal != "0";
+                    IsActive = signal.value != "0";
                     break;
             }
         }

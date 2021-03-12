@@ -82,7 +82,11 @@ namespace Barotrauma
             if (!HumanAIController.IsFriendly(character, target, onlySameTeam: true)) { return false; }
             if (character.AIController is HumanAIController humanAI)
             {
-                if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target)) { return false; }
+                if (GetVitalityFactor(target) >= GetVitalityThreshold(humanAI.ObjectiveManager, character, target) ||
+                    target.CharacterHealth.GetAllAfflictions().All(a => a.Strength < a.Prefab.TreatmentThreshold)) 
+                {
+                    return false; 
+                }
                 if (!humanAI.ObjectiveManager.HasOrder<AIObjectiveRescueAll>())
                 {
                     if (!character.IsMedic && target != character)

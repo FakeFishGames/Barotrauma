@@ -15,7 +15,23 @@ namespace Barotrauma
         protected readonly HashSet<Character> requireKill = new HashSet<Character>();
         protected readonly HashSet<Character> requireRescue = new HashSet<Character>();
 
+        protected const int HostagesKilledState = 5;
+
+        private readonly string hostagesKilledMessage;
+
+        private const float EndDelay = 5.0f;
+        private float endTimer;
+
         public override bool AllowRespawn => false;
+
+        public override bool AllowUndocking
+        {
+            get 
+            {
+                if (GameMain.GameSession.GameMode is CampaignMode) { return true; }
+                return state > 0;
+            }
+        }
 
         protected bool wasDocked;
 
@@ -23,34 +39,39 @@ namespace Barotrauma
             base(prefab, locations)
         {
             characterConfig = prefab.ConfigElement.Element("Characters");
+
+            string msgTag = prefab.ConfigElement.GetAttributeString("hostageskilledmessage", "");
+            hostagesKilledMessage = TextManager.Get(msgTag, returnNull: true) ?? msgTag;
         }
 
         protected override void StartMissionSpecific(Level level)
         {
+            failed = false;
+            endTimer = 0.0f;
             characters.Clear();
             characterItems.Clear();
             requireKill.Clear();
             requireRescue.Clear();
-            if (!IsClient)
-            {
-                InitCharacters();
-            }
-
-            wasDocked = Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost);
-        }
-
-        private void InitCharacters()
-        {
-            characters.Clear();
-            characterItems.Clear();
-
-            if (characterConfig == null) { return; }
 
             var submarine = Submarine.Loaded.Find(s => s.Info.Type == SubmarineType.Outpost) ?? Submarine.MainSub;
             if (submarine.Info.Type == SubmarineType.Outpost)
             {
                 submarine.TeamID = CharacterTeamType.None;
             }
+            if (!IsClient)
+            {
+                InitCharacters(submarine);
+            }
+
+            wasDocked = Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost);
+        }
+
+        private void InitCharacters(Submarine submarine)
+        {
+            characters.Clear();
+            characterItems.Clear();
+
+            if (characterConfig == null) { return; }
 
             foreach (XElement element in characterConfig.Elements())
             {
@@ -159,9 +180,32 @@ namespace Barotrauma
 
         public override void Update(float deltaTime)
         {
+            if (State != HostagesKilledState)
+            {
+                if (requireRescue.Any(r => r.Removed || r.IsDead))
+                {
+                    State = HostagesKilledState;
+                    return;
+                }
+            }
+            else
+            {
+                endTimer += deltaTime;
+                if (endTimer > EndDelay)
+                {
+#if SERVER
+                    if (!(GameMain.GameSession.GameMode is CampaignMode) && GameMain.Server != null)
+                    {
+                        GameMain.Server.EndGame();                        
+                    }
+#endif
+                }
+            }
+
             switch (state)
             {
                 case 0:
+
                     if (requireKill.All(c => c.Removed || c.IsDead) &&
                         requireRescue.All(c => c.Submarine?.Info.Type == SubmarineType.Player))
                     {
@@ -172,7 +216,7 @@ namespace Barotrauma
                 case 1:
                     if (!(GameMain.GameSession.GameMode is CampaignMode) && GameMain.Server != null)
                     {
-                        if (!Submarine.MainSub.AtStartPosition || (wasDocked && !Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost)))
+                        if (!Submarine.MainSub.AtStartExit || (wasDocked && !Submarine.MainSub.DockedTo.Contains(Level.Loaded.StartOutpost)))
                         {
                             GameMain.Server.EndGame();
                             State = 2;
@@ -186,7 +230,7 @@ namespace Barotrauma
 
         public override void End()
         {
-            completed = State > 0;
+            completed = State > 0 && State != HostagesKilledState;
             if (completed)
             {
                 if (Prefab.LocationTypeChangeOnCompleted != null)
@@ -194,6 +238,10 @@ namespace Barotrauma
                     ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
                 }
                 GiveReward();
+            }
+            else
+            {
+                failed = requireRescue.Any(r => r.Removed || r.IsDead);
             }
         }
     }

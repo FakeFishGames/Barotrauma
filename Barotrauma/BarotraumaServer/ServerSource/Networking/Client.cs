@@ -163,7 +163,7 @@ namespace Barotrauma.Networking
 
         public void RemovePermission(ClientPermissions permission)
         {
-            if (this.Permissions.HasFlag(permission)) this.Permissions &= ~permission;
+            this.Permissions &= ~permission;
         }
 
         public bool HasPermission(ClientPermissions permission)

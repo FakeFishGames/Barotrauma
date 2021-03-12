@@ -239,7 +239,6 @@ namespace Barotrauma.Items.Components
             OnDocked = null;
         }
 
-
         public void Lock(bool isNetworkMessage, bool applyEffects = true)
         {
 #if CLIENT
@@ -269,10 +268,10 @@ namespace Barotrauma.Items.Components
                     item.Submarine.SubBody.SetPosition(item.Submarine.SubBody.Position + ConvertUnits.ToDisplayUnits(jointDiff));
                 }
                 else if (DockingTarget.item.Submarine.PhysicsBody.Mass < item.Submarine.PhysicsBody.Mass ||
-                    item.Submarine.Info.IsOutpost)
+                   item.Submarine.Info.IsOutpost)
                 {
                     DockingTarget.item.Submarine.SubBody.SetPosition(DockingTarget.item.Submarine.SubBody.Position - ConvertUnits.ToDisplayUnits(jointDiff));
-                }                
+                }
 
                 ConnectWireBetweenPorts();
                 CreateJoint(true);
@@ -936,10 +935,9 @@ namespace Barotrauma.Items.Components
             if (DockingTarget == null)
             {
                 dockingState = MathHelper.Lerp(dockingState, 0.0f, deltaTime * 10.0f);
-                if (dockingState < 0.01f) docked = false;
-
-                item.SendSignal(0, "0", "state_out", null);
-                item.SendSignal(0, (FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor", null);
+                if (dockingState < 0.01f) { docked = false; }
+                item.SendSignal("0", "state_out");
+                item.SendSignal((FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor");
             }
             else
             {
@@ -997,7 +995,7 @@ namespace Barotrauma.Items.Components
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }
 
-                item.SendSignal(0, IsLocked ? "1" : "0", "state_out", null);
+                item.SendSignal(IsLocked ? "1" : "0", "state_out");
             }
             if (!obstructedWayPointsDisabled && dockingState >= 0.99f)
             {
@@ -1102,7 +1100,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
@@ -1114,29 +1112,29 @@ namespace Barotrauma.Items.Components
             switch (connection.Name)
             {
                 case "toggle":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
                         Docked = !docked;
                     }
                     break;
                 case "set_active":
                 case "set_state":
-                    Docked = signal != "0";
+                    Docked = signal.value != "0";
                     break;
             }
 
 #if SERVER
-            if (sender != null && docked != wasDocked)
+            if (signal.sender != null && docked != wasDocked)
             {
                 if (docked)
                 {
                     if (item.Submarine != null && DockingTarget?.item?.Submarine != null)
-                        GameServer.Log(GameServer.CharacterLogName(sender) + " docked " + item.Submarine.Info.Name + " to " + DockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(signal.sender) + " docked " + item.Submarine.Info.Name + " to " + DockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
                 else
                 {
                     if (item.Submarine != null && prevDockingTarget?.item?.Submarine != null)
-                        GameServer.Log(GameServer.CharacterLogName(sender) + " undocked " + item.Submarine.Info.Name + " from " + prevDockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log(GameServer.CharacterLogName(signal.sender) + " undocked " + item.Submarine.Info.Name + " from " + prevDockingTarget.item.Submarine.Info.Name, ServerLog.MessageType.ItemInteraction);
                 }
             }
 #endif

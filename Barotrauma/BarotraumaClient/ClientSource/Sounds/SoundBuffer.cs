@@ -30,6 +30,12 @@ namespace Barotrauma.Sounds
             AlMuffledBuffer = 0;
         }
 
+        public static void ClearPool()
+        {
+            bufferPool.ForEach(b => Al.DeleteBuffer(b));
+            bufferPool.Clear();
+        }
+
         public bool RequestAlBuffers()
         {
             if (AlBuffer != 0) { return false; }

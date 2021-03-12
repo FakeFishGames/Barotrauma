@@ -68,8 +68,6 @@ namespace Barotrauma
         public (LocationTypeChange typeChange, int delay, MissionPrefab parentMission)? PendingLocationTypeChange;
         public int LocationTypeChangeCooldown;
 
-        public readonly int ZoneIndex;
-
         public string BaseName { get => baseName; }
 
         public string Name { get; private set; }
@@ -79,6 +77,8 @@ namespace Barotrauma
         public Vector2 MapPosition { get; private set; }
 
         public LocationType Type { get; private set; }
+
+        public LocationType OriginalType { get; private set; }
 
         public LevelData LevelData { get; set; }
 
@@ -248,7 +248,7 @@ namespace Barotrauma
 
         public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, LocationType? forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
-            Type = forceLocationType ?? LocationType.Random(rand, zone, requireOutpost);
+            Type = OriginalType = forceLocationType ?? LocationType.Random(rand, zone, requireOutpost);
             Name = RandomName(Type, rand, existingLocations);
             MapPosition = mapPosition;
             PortraitId = ToolBox.StringToInt(Name);
@@ -262,11 +262,26 @@ namespace Barotrauma
             bool typeNotFound = false;
             if (Type == null)
             {
-                DebugConsole.AddWarning($"Could not find location type \"{locationType}\". Using location type \"None\" instead.");
-                Type = LocationType.List.Find(lt => lt.Identifier.Equals("None", StringComparison.OrdinalIgnoreCase));
-                Type ??= LocationType.List.First();
+                //turn lairs into abandoned outposts
+                if (locationType.Equals("lair", StringComparison.OrdinalIgnoreCase))
+                {
+                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("Abandoned", StringComparison.OrdinalIgnoreCase));
+                }
+                if (Type == null)
+                {
+                    DebugConsole.AddWarning($"Could not find location type \"{locationType}\". Using location type \"None\" instead.");
+                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("None", StringComparison.OrdinalIgnoreCase));
+                    Type ??= LocationType.List.First();
+                }
+                if (Type != null)
+                {
+                    element.SetAttributeValue("type", Type.Identifier);
+                }
                 typeNotFound = true;
             }
+
+            string originalLocationType = element.GetAttributeString("originaltype", locationType);
+            OriginalType = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase));
 
             baseName        = element.GetAttributeString("basename", "");
             Name            = element.GetAttributeString("name", "");
@@ -1015,6 +1030,7 @@ namespace Barotrauma
         {
             var locationElement = new XElement("location",
                 new XAttribute("type", Type.Identifier),
+                new XAttribute("originaltype", (Type ?? OriginalType).Identifier),
                 new XAttribute("basename", BaseName),
                 new XAttribute("name", Name),
                 new XAttribute("discovered", Discovered),

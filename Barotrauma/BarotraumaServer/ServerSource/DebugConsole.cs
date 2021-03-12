@@ -533,6 +533,13 @@ namespace Barotrauma
                         NewMessage(perm + " is not a valid permission!", Color.Red);
                         return;
                     }
+
+                    if (permission == ClientPermissions.None)
+                    {
+                        NewMessage($"No permissions were given to {client.Name}. Did you mean \"revokeperm {client.Name} All\"?");
+                        return;
+                    }
+
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     NewMessage("Granted " + perm + " permissions to " + client.Name + ".", Color.White);
@@ -736,7 +743,6 @@ namespace Barotrauma
                     {
                         NewMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", Color.White);
                     }
-
                 }, args, 1);
             });
 
@@ -1822,6 +1828,14 @@ namespace Barotrauma
                         GameMain.Server.SendConsoleMessage(perm + " is not a valid permission!", senderClient);
                         return;
                     }
+
+                    if (permission == ClientPermissions.None)
+                    {
+                        GameMain.Server.SendConsoleMessage($"No permissions were given to {client.Name}. Did you mean \"revokeperm {client.Name} All\"?", senderClient);
+                        NewMessage($"No permissions were given to {client.Name}. Did you mean \"revokeperm {client.Name} All\"?");
+                        return;
+                    }
+
                     client.GivePermission(permission);
                     GameMain.Server.UpdateClientPermissions(client);
                     GameMain.Server.SendConsoleMessage("Granted " + perm + " permissions to " + client.Name + ".", senderClient);
@@ -1975,7 +1989,6 @@ namespace Barotrauma
                     if (revokeAll)
                     {
                         revokedCommands.AddRange(commands);
-                        client.RemovePermission(ClientPermissions.ConsoleCommands);
                     }
                     else
                     {
@@ -1992,10 +2005,13 @@ namespace Barotrauma
                                 revokedCommands.Add(matchingCommand);
                             }
                         }
-                        client.GivePermission(ClientPermissions.ConsoleCommands);
                     }
 
                     client.SetPermissions(client.Permissions, client.PermittedConsoleCommands.Except(revokedCommands).ToList());
+                    if (client.PermittedConsoleCommands.Count == 0)
+                    {
+                        client.RemovePermission(ClientPermissions.ConsoleCommands);
+                    }
                     GameMain.Server.UpdateClientPermissions(client);
                     GameMain.Server.SendConsoleMessage("Revoked \"" + client.Name + "\"'s permission to use the console commands " + string.Join(", ", revokedCommands.Select(c => c.names[0])) + ".", senderClient);
                     if (revokeAll)

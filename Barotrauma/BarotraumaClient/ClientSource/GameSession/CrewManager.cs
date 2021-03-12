@@ -22,10 +22,8 @@ namespace Barotrauma
         public GUIComponent ReportButtonFrame { get; set; }
 
         private GUIFrame guiFrame;
-        private GUIComponent crewAreaWithButtons;
         private GUIFrame crewArea;
         private GUIListBox crewList;
-        private GUIButton commandButton, toggleCrewButton;
         private float crewListOpenState;
         private bool _isCrewMenuOpen = true;
         private Point crewListEntrySize;
@@ -84,70 +82,19 @@ namespace Barotrauma
 
             #region Crew Area
 
-            crewAreaWithButtons = new GUIFrame(
-                HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform),
-                style: null,
-                color: Color.Transparent)
+            crewArea = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.CrewArea, guiFrame.RectTransform), style: null, color: Color.Transparent)
             {
                 CanBeFocused = false
-            };
-
-            var commandButtonHeight = (int)(GUI.Scale * 40);
-            var buttonSize = new Point((int)(182f / 99f * commandButtonHeight), commandButtonHeight);
-            var crewListToggleButtonHeight = (int)(64f * buttonSize.X / 175f);
-
-            crewArea = new GUIFrame(
-                new RectTransform(
-                    new Point(crewAreaWithButtons.Rect.Width, crewAreaWithButtons.Rect.Height - commandButtonHeight - crewListToggleButtonHeight - 2 * HUDLayoutSettings.Padding),
-                    crewAreaWithButtons.RectTransform,
-                    Anchor.BottomLeft),
-                style: null,
-                color: Color.Transparent)
-            {
-                CanBeFocused = false
-            };
-
-            commandButton = new GUIButton(
-                new RectTransform(buttonSize, parent: crewAreaWithButtons.RectTransform),
-                style: "CommandButton")
-            {
-                // TODO: Update keybind if it's changed
-                ToolTip = TextManager.Get("inputtype.command") + " (" + GameMain.Config.KeyBindText(InputType.Command) + ")",
-                OnClicked = (button, userData) =>
-                {
-                    ToggleCommandUI();
-                    return true;
-                }
             };
 
             // AbsoluteOffset is set in UpdateProjectSpecific based on crewListOpenState
-            crewList = new GUIListBox(
-                new RectTransform(
-                    Vector2.One,
-                    crewArea.RectTransform),
-                style: null,
-                isScrollBarOnDefaultSide: false)
+            crewList = new GUIListBox(new RectTransform(Vector2.One, crewArea.RectTransform), style: null, isScrollBarOnDefaultSide: false)
             {
                 AutoHideScrollBar = false,
                 CanBeFocused = false,
                 OnSelected = (component, userData) => false,
                 SelectMultiple = false,
                 Spacing = (int)(GUI.Scale * 10)
-            };
-
-            buttonSize.Y = crewListToggleButtonHeight;
-            toggleCrewButton = new GUIButton(
-                new RectTransform(buttonSize, parent: crewAreaWithButtons.RectTransform)
-                {
-                    AbsoluteOffset = new Point(0, commandButtonHeight + HUDLayoutSettings.Padding)
-                },
-                style: "CrewListToggleButton")
-            {
-                OnClicked = (GUIButton btn, object userdata) =>
-                {
-                    IsCrewMenuOpen = !IsCrewMenuOpen;
-                    return true;
-                }
             };
 
             jobIndicatorBackground = new Sprite("Content/UI/CommandUIAtlas.png", new Rectangle(0, 512, 128, 128));
@@ -195,7 +142,8 @@ namespace Barotrauma
                             var headset = GetHeadset(Character.Controlled, true);
                             if (headset != null && headset.CanTransmit())
                             {
-                                headset.TransmitSignal(stepsTaken: 0, signal: msg, source: headset.Item, sender: Character.Controlled, sentFromChat: true);
+                                Signal s = new Signal(msg, sender: Character.Controlled, source: headset.Item);
+                                headset.TransmitSignal(s, sentFromChat: true);
                             }
                         }
                         textbox.Deselect();
@@ -1256,7 +1204,7 @@ namespace Barotrauma
                 }
             }
 
-            crewAreaWithButtons.Visible = !(GameMain.GameSession?.GameMode is CampaignMode campaign) || (!campaign.ForceMapUI && !campaign.ShowCampaignUI);
+            crewArea.Visible = !(GameMain.GameSession?.GameMode is CampaignMode campaign) || (!campaign.ForceMapUI && !campaign.ShowCampaignUI);
 
             guiFrame.AddToGUIUpdateList();
         }
@@ -1489,19 +1437,6 @@ namespace Barotrauma
                 clicklessSelectionActive = false;
             }
 
-            // TODO: Expand crew list to use command button's space when it's not visible
-            if (!IsSinglePlayer && commandButton != null)
-            {
-                if (!CanIssueOrders && commandButton.Visible)
-                {
-                    commandButton.Visible = false;
-                }
-                else if (CanIssueOrders && !commandButton.Visible)
-                {
-                    commandButton.Visible = true;
-                }
-            }
-
             #endregion
 
             if (ChatBox != null)
@@ -1686,7 +1621,7 @@ namespace Barotrauma
         private const int maxShortCutNodeCount = 4;
 
         private bool WasCommandInterfaceDisabledThisUpdate { get; set; }
-        private bool CanIssueOrders
+        public static bool CanIssueOrders
         {
             get
             {
@@ -1843,7 +1778,7 @@ namespace Barotrauma
             HintManager.OnShowCommandInterface();
         }
 
-        private void ToggleCommandUI()
+        public void ToggleCommandUI()
         {
             if (commandFrame == null)
             {

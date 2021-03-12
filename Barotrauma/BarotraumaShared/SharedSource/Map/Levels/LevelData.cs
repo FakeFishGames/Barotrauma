@@ -29,7 +29,7 @@ namespace Barotrauma
         public bool HasBeaconStation;
         public bool IsBeaconActive;
 
-        public bool HasHuntingGrounds;
+        public bool HasHuntingGrounds, OriginallyHadHuntingGrounds;
 
         public OutpostGenerationParams ForceOutpostGenerationParams;
 
@@ -89,6 +89,7 @@ namespace Barotrauma
             IsBeaconActive = element.GetAttributeBool("isbeaconactive", false);
 
             HasHuntingGrounds = element.GetAttributeBool("hashuntinggrounds", false);
+            OriginallyHadHuntingGrounds = element.GetAttributeBool("originallyhadhuntinggrounds", HasHuntingGrounds);
 
             string generationParamsId = element.GetAttributeString("generationparams", "");
             GenerationParams = LevelGenerationParams.LevelParams.Find(l => l.Identifier == generationParamsId || l.OldIdentifier == generationParamsId);
@@ -231,8 +232,12 @@ namespace Barotrauma
             if (HasHuntingGrounds)
             {
                 newElement.Add(
-                    new XAttribute("hashuntinggrounds", HasHuntingGrounds.ToString()));
-
+                    new XAttribute("hashuntinggrounds", true));
+            }
+            if (HasHuntingGrounds || OriginallyHadHuntingGrounds)
+            {
+                newElement.Add(
+                    new XAttribute("originallyhadhuntinggrounds", true));
             }
 
             if (Type == LevelType.Outpost)

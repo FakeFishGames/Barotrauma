@@ -51,7 +51,7 @@ namespace Barotrauma.Items.Components
 
             if (dockingButtonClicked)
             {
-                item.SendSignal(0, "1", "toggle_docking", sender: null);
+                item.SendSignal("1", "toggle_docking");
                 GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), true });
             }
 

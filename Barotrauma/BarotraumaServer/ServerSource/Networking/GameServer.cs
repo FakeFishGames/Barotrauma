@@ -302,7 +302,7 @@ namespace Barotrauma.Networking
 
             LastClientListUpdateID++;
 
-            if (newClient.Connection == OwnerConnection)
+            if (newClient.Connection == OwnerConnection && OwnerConnection != null)
             {
                 newClient.GivePermission(ClientPermissions.All);
                 newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);
@@ -450,12 +450,12 @@ namespace Barotrauma.Networking
                         //or very close and someone from the crew made it inside the outpost
                         subAtLevelEnd =
                             Submarine.MainSub.DockedTo.Contains(Level.Loaded.EndOutpost) ||
-                            (Submarine.MainSub.AtEndPosition && charactersInsideOutpost > 0) ||
+                            (Submarine.MainSub.AtEndExit && charactersInsideOutpost > 0) ||
                             (charactersInsideOutpost > charactersOutsideOutpost);
                     }
                     else
                     {
-                        subAtLevelEnd = Submarine.MainSub.AtEndPosition;
+                        subAtLevelEnd = Submarine.MainSub.AtEndExit;
                     }
                 }
 
@@ -2405,6 +2405,7 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.AllowRespawn && (missionAllowRespawn || outpostAllowRespawn));
             msg.Write(serverSettings.AllowDisguises);
             msg.Write(serverSettings.AllowRewiring);
+            msg.Write(serverSettings.LockAllDefaultWires);
             msg.Write(serverSettings.AllowRagdollButton);
             msg.Write(serverSettings.UseRespawnShuttle);
             msg.Write((byte)GameMain.Config.LosMode);
@@ -3036,7 +3037,8 @@ namespace Barotrauma.Networking
             else if (type == ChatMessageType.Radio)
             {
                 //send to chat-linked wifi components
-                senderRadio.TransmitSignal(0, message, senderRadio.Item, senderCharacter, sentFromChat: true);
+                Signal s = new Signal(message, sender: senderCharacter, source: senderRadio.Item);
+                senderRadio.TransmitSignal(s, sentFromChat: true);
             }
 
             //check which clients can receive the message and apply distance effects

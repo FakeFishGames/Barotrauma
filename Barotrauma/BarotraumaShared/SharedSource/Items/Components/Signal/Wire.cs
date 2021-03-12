@@ -37,11 +37,6 @@ namespace Barotrauma.Items.Components
 
                 angle = MathUtils.VectorToAngle(end - start);
                 length = Vector2.Distance(start, end);
-
-                if (length > 5000.0f)
-                {
-                    int akjsdnfkjsadf = 1;
-                }
             }
         }
 
@@ -95,6 +90,13 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, false, description: "If enabled, the wire will not be visible in connection panels outside the submarine editor.")]
         public bool HiddenInGame
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(false, true, "If enabled, this wire will be ignored by the \"Lock all default wires\" setting.", alwaysUseInstanceValues: true)]
+        public bool NoAutoLock
         {
             get;
             set;
@@ -309,6 +311,8 @@ namespace Barotrauma.Items.Components
 
             if (Screen.Selected != GameMain.SubEditorScreen)
             {
+                if (user != null) { NoAutoLock = true; }
+
                 //cannot run wires from sub to another
                 if (item.Submarine != sub && sub != null && item.Submarine != null)
                 {

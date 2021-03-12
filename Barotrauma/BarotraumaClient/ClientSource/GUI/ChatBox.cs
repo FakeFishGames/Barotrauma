@@ -321,10 +321,7 @@ namespace Barotrauma
             float prevSize = chatBox.BarSize;
 
             string displayedText = message.TranslatedText;
-            if (message.Type == ChatMessageType.Server)
-            {
-                RichTextData.GetRichTextData(displayedText, out displayedText);
-            }
+
             string senderName = "";
             Color senderColor = Color.White;
             if (!string.IsNullOrWhiteSpace(message.SenderName))
@@ -381,9 +378,9 @@ namespace Barotrauma
             }
 
             var msgText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
-            { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameTimestamp == null ? 0 : senderNameTimestamp.Rect.Height) },
+                { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameTimestamp == null ? 0 : senderNameTimestamp.Rect.Height) },
                 displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
-                color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
+                color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, parseRichText: true)
             {
                 UserData = message.SenderName,
                 CanBeFocused = true
@@ -448,7 +445,7 @@ namespace Barotrauma
                     senderText.RectTransform.MinSize = new Point(0, senderText.Rect.Height);
                 }
                 var msgPopupText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
-                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.BottomLeft, style: null, wrap: true)
+                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.BottomLeft, style: null, wrap: true, parseRichText: true)
                 {
                     CanBeFocused = false
                 };
@@ -527,6 +524,7 @@ namespace Barotrauma
 
             if (ToggleButton != null)
             {
+                ToggleButton.Selected = ToggleOpen;
                 ToggleButton.RectTransform.AbsoluteOffset = new Point(GUIFrame.Rect.Right, GUIFrame.Rect.Y + HUDLayoutSettings.ChatBoxArea.Height - ToggleButton.Rect.Height);
             }
 

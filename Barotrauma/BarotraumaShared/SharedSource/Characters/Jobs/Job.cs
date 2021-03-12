@@ -187,16 +187,18 @@ namespace Barotrauma
                 }
             }
 
-            if (item.Prefab.Identifier == "idcard" && spawnPoint != null)
+            if (item.Prefab.Identifier == "idcard")
             {
-                foreach (string s in spawnPoint.IdCardTags)
+                if (spawnPoint != null)
                 {
-                    item.AddTag(s);
+                    foreach (string s in spawnPoint.IdCardTags)
+                    {
+                        item.AddTag(s);
+                        if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc)) { item.Description = spawnPoint.IdCardDesc; }
+                    }
                 }
                 item.AddTag("name:" + character.Name);
                 item.AddTag("job:" + Name);
-                if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc))
-                    item.Description = spawnPoint.IdCardDesc;
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
                 if (idCardComponent != null)

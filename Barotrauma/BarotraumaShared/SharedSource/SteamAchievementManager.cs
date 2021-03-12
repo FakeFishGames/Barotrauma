@@ -307,7 +307,7 @@ namespace Barotrauma
         public static void OnRoundEnded(GameSession gameSession)
         {
             //made it to the destination
-            if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndPosition)
+            if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndExit)
             {
                 float levelLengthMeters = Physics.DisplayToRealWorldRatio * Level.Loaded.Size.X;
                 float levelLengthKilometers = levelLengthMeters / 1000.0f;
@@ -356,7 +356,7 @@ namespace Barotrauma
             }
             
             //made it to the destination
-            if (gameSession.Submarine.AtEndPosition)
+            if (gameSession.Submarine.AtEndExit)
             {
                 bool noDamageRun = !roundData.SubWasDamaged && !roundData.Casualties.Any(c => !(c.AIController is EnemyAIController));
 

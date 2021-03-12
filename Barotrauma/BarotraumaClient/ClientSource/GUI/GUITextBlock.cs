@@ -259,7 +259,7 @@ namespace Barotrauma
 
         public StrikethroughSettings Strikethrough = null;
 
-        private readonly List<RichTextData> richTextData = null;
+        public readonly List<RichTextData> RichTextData = null;
 
         private readonly bool hasColorHighlight = false;
 
@@ -294,8 +294,8 @@ namespace Barotrauma
 
             if (parseRichText)
             {
-                richTextData = RichTextData.GetRichTextData(text, out text);
-                hasColorHighlight = richTextData != null;
+                RichTextData = Barotrauma.RichTextData.GetRichTextData(text, out text);
+                hasColorHighlight = RichTextData != null;
             }
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
@@ -325,7 +325,7 @@ namespace Barotrauma
         public GUITextBlock(RectTransform rectT, List<RichTextData> richTextData, string text, Color? textColor = null, ScalableFont font = null, Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false)
         : this(rectT, text, textColor, font, textAlignment, wrap, style, color, playerInput)
         {
-            this.richTextData = richTextData;
+            this.RichTextData = richTextData;
             hasColorHighlight = richTextData != null;
         }
 
@@ -651,7 +651,7 @@ namespace Barotrauma
                 else
                 {
                     Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos,
-                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, richTextData);
+                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, RichTextData);
                 }
 
                 if (Strikethrough != null)
