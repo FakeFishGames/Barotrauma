@@ -94,6 +94,7 @@ namespace Barotrauma
             SendMessages = element.GetAttributeBool("sendmessages", true);
             CauseSpeechImpediment = element.GetAttributeBool("causespeechimpediment", true);
             NeedsAir = element.GetAttributeBool("needsair", false);
+            KeepCorpse = element.GetAttributeBool("keepcorpse", false);
         }
 
         // Use any of these to define which limb the appendage is attached to.
@@ -109,6 +110,7 @@ namespace Barotrauma
         public readonly bool SendMessages;
         public readonly bool CauseSpeechImpediment;
         public readonly bool NeedsAir;
+        public readonly bool KeepCorpse;
     }
 
     class AfflictionPrefab : IPrefab, IDisposable, IHasUintIdentifier

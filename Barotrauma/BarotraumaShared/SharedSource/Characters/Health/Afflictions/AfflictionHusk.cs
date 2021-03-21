@@ -183,8 +183,11 @@ namespace Barotrauma
                 yield return CoroutineStatus.Success;
             }
 
-            character.Enabled = false;
-            Entity.Spawner.AddToRemoveQueue(character);
+            if (Prefab is AfflictionPrefabHusk { KeepCorpse: false })
+            {
+                character.Enabled = false;
+                Entity.Spawner.AddToRemoveQueue(character);
+            }
 
             string huskedSpeciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
@@ -222,18 +225,21 @@ namespace Barotrauma
                 }
             }
 
-            if (character.Inventory != null && husk.Inventory != null)
+            if (Prefab is AfflictionPrefabHusk { KeepCorpse: false })
             {
-                if (character.Inventory.Capacity != husk.Inventory.Capacity)
+                if (character.Inventory != null && husk.Inventory != null)
                 {
-                    string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                    yield return CoroutineStatus.Success;
-                }
-                for (int i = 0; i < character.Inventory.Capacity && i < husk.Inventory.Capacity; i++)
-                {
-                    character.Inventory.GetItemsAt(i).ForEachMod(item => husk.Inventory.TryPutItem(item, i, true, false, null));
+                    if (character.Inventory.Capacity != husk.Inventory.Capacity)
+                    {
+                        string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        yield return CoroutineStatus.Success;
+                    }
+                    for (int i = 0; i < character.Inventory.Capacity && i < husk.Inventory.Capacity; i++)
+                    {
+                        character.Inventory.GetItemsAt(i).ForEachMod(item => husk.Inventory.TryPutItem(item, i, true, false, null));
+                    }
                 }
             }
 
