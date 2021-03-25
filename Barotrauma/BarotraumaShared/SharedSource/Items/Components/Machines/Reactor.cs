@@ -317,7 +317,10 @@ namespace Barotrauma.Items.Components
             if (containedItems == null) {fuelLeft = 0.0f;}
             else
             {
-                fuelLeft = 100.0f;
+                foreach(Item item in containedItems)
+                {
+                    if(item.HasTag("reactorfuel")) {fuelLeft = 100.0f;}
+                }
                 foreach (Item item in containedItems)
                 {
                     if (!item.HasTag("reactorfuel")) { continue; }
