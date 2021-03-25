@@ -239,11 +239,20 @@ namespace Barotrauma
                     timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
                     yield return CoroutineStatus.Running;
                 }
+                var outpost = GameMain.GameSession.Level.StartOutpost;
+                var borders = outpost.GetDockedBorders();
+                borders.Location += outpost.WorldPosition.ToPoint();
+                GameMain.GameScreen.Cam.Position = new Vector2(borders.X + borders.Width / 2, borders.Y - borders.Height / 2);
+                float startZoom = 0.8f /
+                    ((float)Math.Max(borders.Width, borders.Height) / (float)GameMain.GameScreen.Cam.Resolution.X);
+                GameMain.GameScreen.Cam.MinZoom = Math.Min(startZoom, GameMain.GameScreen.Cam.MinZoom);
                 var transition = new CameraTransition(prevControlled, GameMain.GameScreen.Cam,
                     null, null,
                     fadeOut: false,
-                    duration: 5,
-                    startZoom: 1.5f, endZoom: 1.0f)
+                    losFadeIn: true,
+                    waitDuration: 1,
+                    panDuration: 5,
+                    startZoom: startZoom, endZoom: 1.0f)
                 {
                     AllowInterrupt = true,
                     RemoveControlFromCharacter = false
@@ -274,7 +283,8 @@ namespace Barotrauma
                 var transition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam,
                     null, null,
                     fadeOut: false,
-                    duration: 5,
+                    losFadeIn: true,
+                    panDuration: 5,
                     startZoom: 0.5f, endZoom: 1.0f)
                 {
                     AllowInterrupt = true,
@@ -327,7 +337,7 @@ namespace Barotrauma
             var endTransition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null,
                 Alignment.Center,
                 fadeOut: false,
-                duration: EndTransitionDuration);
+                panDuration: EndTransitionDuration);
             GameMain.Client.EndCinematic = endTransition;
 
             Location portraitLocation = Map?.SelectedLocation ?? Map?.CurrentLocation ?? Level.Loaded?.StartLocation;
@@ -335,7 +345,7 @@ namespace Barotrauma
             {
                 overlaySprite = portraitLocation.Type.GetPortrait(portraitLocation.PortraitId);
             }
-            float fadeOutDuration = endTransition.Duration;
+            float fadeOutDuration = endTransition.PanDuration;
             float t = 0.0f;
             while (t < fadeOutDuration || endTransition.Running)
             {
@@ -498,7 +508,7 @@ namespace Barotrauma
             var transition = new CameraTransition(endObject ?? Submarine.MainSub, GameMain.GameScreen.Cam,
                 null, Alignment.Center,
                 fadeOut: true,
-                duration: 10,
+                panDuration: 10,
                 startZoom: null, endZoom: 0.2f);
 
             while (transition.Running)

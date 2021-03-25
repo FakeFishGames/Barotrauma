@@ -1057,12 +1057,11 @@ namespace Barotrauma
                 foreach (Affliction affliction in Afflictions)
                 {
                     if (Rand.Value(Rand.RandSync.Unsynced) > affliction.Probability) { continue; }
-                    Affliction multipliedAffliction = affliction;
-                    if (!disableDeltaTime)
+                    Affliction newAffliction = affliction;
+                    if (!disableDeltaTime && !setValue)
                     {
-                        multipliedAffliction = affliction.CreateMultiplied(deltaTime);
+                        newAffliction = affliction.CreateMultiplied(deltaTime);
                     }
-
                     if (target is Character character)
                     {
                         if (character.Removed) { continue; }
@@ -1072,7 +1071,7 @@ namespace Barotrauma
                             if (limb.Removed) { continue; }
                             if (limb.IsSevered) { continue; }
                             if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
-                            AttackResult result = limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                            AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
                             limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
@@ -1082,7 +1081,7 @@ namespace Barotrauma
                     {
                         if (limb.IsSevered) { continue; }
                         if (limb.character.Removed || limb.Removed) { continue; }
-                        AttackResult result = limb.character.DamageLimb(position, limb, multipliedAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source);
+                        AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
                         limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true);
                     }
                 }
@@ -1383,7 +1382,7 @@ namespace Barotrauma
                     foreach (Affliction affliction in element.Parent.Afflictions)
                     {
                         Affliction multipliedAffliction = affliction;
-                        if (!element.Parent.disableDeltaTime) { multipliedAffliction = affliction.CreateMultiplied(deltaTime); }
+                        if (!element.Parent.disableDeltaTime && !element.Parent.setValue) { multipliedAffliction = affliction.CreateMultiplied(deltaTime); }
 
                         if (target is Character character)
                         {

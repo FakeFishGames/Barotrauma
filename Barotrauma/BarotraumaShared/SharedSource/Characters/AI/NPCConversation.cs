@@ -178,7 +178,7 @@ namespace Barotrauma
                 {
                     if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0f && 
                         speaker?.CurrentHull != null && 
-                        speaker.TeamID == CharacterTeamType.FriendlyNPC && 
+                        (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
                         currentFlags.Add("EnterOutpost"); 
@@ -187,6 +187,11 @@ namespace Barotrauma
                 if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
                 {
                     currentFlags.Add("Casual");
+                }
+
+                if (GameMain.GameSession.IsCurrentLocationRadiated())
+                {
+                    currentFlags.Add("InRadiation");
                 }
             }
 

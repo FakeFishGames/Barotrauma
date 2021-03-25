@@ -436,23 +436,28 @@ namespace Barotrauma.Items.Components
             Projectile launchedProjectile = null;
             for (int i = 0; i < ProjectileCount; i++)
             {
-                foreach (MapEntity e in item.linkedTo)
+                var projectiles = GetLoadedProjectiles(true);
+                if (projectiles.Any())
                 {
-                    //use linked projectile containers in case they have to react to the turret being launched somehow
-                    //(play a sound, spawn more projectiles)
-                    if (!(e is Item linkedItem)) { continue; }
-                    ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
-                    if (projectileContainer != null)
+                    ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();                
+                    projectileContainer?.Item.Use(deltaTime, null);                    
+                }
+                else
+                {
+                    foreach (MapEntity e in item.linkedTo)
                     {
-                        linkedItem.Use(deltaTime, null);
-                        var repairable = linkedItem.GetComponent<Repairable>();
-                        if (repairable != null && failedLaunchAttempts < 2)
+                        //use linked projectile containers in case they have to react to the turret being launched somehow
+                        //(play a sound, spawn more projectiles)
+                        if (!(e is Item linkedItem)) { continue; }
+                        ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
+                        if (projectileContainer != null)
                         {
-                            repairable.LastActiveTime = (float)Timing.TotalTime + 1.0f;
+                            linkedItem.Use(deltaTime, null);
+                            projectiles = GetLoadedProjectiles(true);
+                            if (projectiles.Any()) { break; }
                         }
                     }
                 }
-                var projectiles = GetLoadedProjectiles(true);
                 if (projectiles.Count == 0 && !LaunchWithoutProjectile)
                 {
                     //coilguns spawns ammo in the ammo boxes with the OnUse statuseffect when the turret is launched,
@@ -471,7 +476,6 @@ namespace Barotrauma.Items.Components
                 }
                 failedLaunchAttempts = 0;
                 launchedProjectile = projectiles.FirstOrDefault();
-
                 if (!ignorePower)
                 {
                     var batteries = item.GetConnectedComponents<PowerContainer>();
@@ -489,6 +493,15 @@ namespace Barotrauma.Items.Components
                             battery.Item.CreateServerEvent(battery);                        
 #endif
                         }
+                    }
+                }
+
+                if (launchedProjectile?.Item.Container != null)
+                {
+                    var repairable = launchedProjectile?.Item.Container.GetComponent<Repairable>();
+                    if (repairable != null)
+                    {
+                        repairable.LastActiveTime = (float)Timing.TotalTime + 1.0f;
                     }
                 }
 

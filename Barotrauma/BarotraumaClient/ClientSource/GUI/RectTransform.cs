@@ -94,7 +94,7 @@ namespace Barotrauma
             }
         }
 
-        private static Point maxPoint = new Point(int.MaxValue, int.MaxValue);
+        public readonly static Point MaxPoint = new Point(int.MaxValue, int.MaxValue);
         private Point? maxSize;
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Barotrauma
         /// </summary>
         public Point MaxSize
         {
-            get { return maxSize ?? maxPoint; }
+            get { return maxSize ?? MaxPoint; }
             set
             {
                 if (maxSize == value) { return; }

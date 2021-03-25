@@ -465,7 +465,7 @@ namespace Barotrauma
             Rectangle rect = mapContainer.Rect;
 
             Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
-            Vector2 edgeBuffer = rect.Size.ToVector2() / 2;
+            Vector2 edgeBuffer = new Vector2(rect.Width * 0.05f);
             DrawOffset.X = MathHelper.Clamp(DrawOffset.X, -Width - edgeBuffer.X + viewSize.X / 2.0f, edgeBuffer.X - viewSize.X / 2.0f);
             DrawOffset.Y = MathHelper.Clamp(DrawOffset.Y, -Height - edgeBuffer.Y + viewSize.Y / 2.0f, edgeBuffer.Y - viewSize.Y / 2.0f);
 
@@ -677,11 +677,10 @@ namespace Barotrauma
                 {
                     repLabelText = TextManager.Get("reputation");
                     repLabelSize = GUI.Font.MeasureString(repLabelText);
-                    size.X = Math.Max(size.X, repLabelSize.X);
-                    repBarSize = new Vector2(Math.Max(0.75f * size.X, 100), repLabelSize.Y);
-                    size.X = Math.Max(size.X, (4.0f / 3.0f) * repBarSize.X);
+                    repBarSize = new Vector2(GUI.IntScale(200), repLabelSize.Y);
                     size.Y += 2 * repLabelSize.Y + GUI.IntScale(5) + repBarSize.Y;
                     repValueText = HighlightedLocation.Reputation.GetFormattedReputationText(addColorTags: false);
+                    size.X = Math.Max(size.X, repBarSize.X + GUI.Font.MeasureString(repValueText).X + GUI.IntScale(10));
                 }
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
                     spriteBatch, new Rectangle((int)(pos.X - 60 * GUI.Scale), (int)(pos.Y - size.Y), (int)(size.X + 120 * GUI.Scale), (int)(size.Y * 2.2f)), Color.Black * hudVisibility);
@@ -696,7 +695,7 @@ namespace Barotrauma
                     topLeftPos += new Vector2(0.0f, repLabelSize.Y + GUI.IntScale(10));
                     Rectangle repBarRect = new Rectangle(new Point((int)topLeftPos.X, (int)topLeftPos.Y), new Point((int)repBarSize.X, (int)repBarSize.Y));
                     RoundSummary.DrawReputationBar(spriteBatch, repBarRect, HighlightedLocation.Reputation.NormalizedValue);
-                    GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + 4, repBarRect.Top), repValueText, Reputation.GetReputationColor(HighlightedLocation.Reputation.NormalizedValue));
+                    GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + GUI.IntScale(5), repBarRect.Top), repValueText, Reputation.GetReputationColor(HighlightedLocation.Reputation.NormalizedValue));
                 }
             }
 
@@ -912,7 +911,7 @@ namespace Barotrauma
                         Faction unlockFaction = null;
                         if (!string.IsNullOrEmpty(unlockEvent.UnlockPathFaction))
                         {
-                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.UnlockPathFaction);
+                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier.Equals(unlockEvent.UnlockPathFaction, StringComparison.OrdinalIgnoreCase));
                             unlockReputation = unlockFaction?.Reputation;
                         }
 

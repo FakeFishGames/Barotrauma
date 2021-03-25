@@ -25,12 +25,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void ShowOnDisplay(string input)
+        partial void ShowOnDisplay(string input, bool addToHistory = true)
         {
-            messageHistory.Add(input);
-            while (messageHistory.Count > MaxMessages)
+            if (addToHistory)
             {
-                messageHistory.RemoveAt(0);
+                messageHistory.Add(input);
+                while (messageHistory.Count > MaxMessages)
+                {
+                    messageHistory.RemoveAt(0);
+                }
             }
         }
 

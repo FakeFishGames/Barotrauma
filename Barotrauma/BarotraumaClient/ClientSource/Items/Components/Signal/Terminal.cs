@@ -67,17 +67,19 @@ namespace Barotrauma.Items.Components
             item.SendSignal(input, "signal_out");
         }
 
-        partial void ShowOnDisplay(string input)
+        partial void ShowOnDisplay(string input, bool addToHistory = true)
         {
-            messageHistory.Add(input);
-            while (messageHistory.Count > MaxMessages)
+            if (addToHistory)
             {
-                messageHistory.RemoveAt(0);
-            }
-
-            while (historyBox.Content.CountChildren > MaxMessages)
-            {
-                historyBox.RemoveChild(historyBox.Content.Children.First());
+                messageHistory.Add(input);
+                while (messageHistory.Count > MaxMessages)
+                {
+                    messageHistory.RemoveAt(0);
+                }
+                while (historyBox.Content.CountChildren > MaxMessages)
+                {
+                    historyBox.RemoveChild(historyBox.Content.Children.First());
+                }
             }
 
             GUITextBlock newBlock = new GUITextBlock(

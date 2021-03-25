@@ -517,6 +517,9 @@ namespace Barotrauma
             set { maxStackSize = MathHelper.Clamp(value, 1, Inventory.MaxStackSize); }
         }
 
+        [Serialize(false, false)]
+        public bool AllowDroppingOnSwap { get; private set; }
+
         public Vector2 Size => size;
 
         public bool CanBeBought => (DefaultPrice != null && DefaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));

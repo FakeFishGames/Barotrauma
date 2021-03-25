@@ -107,6 +107,11 @@ namespace Barotrauma
         }
 
         public readonly Location[] Locations;
+
+        public int? Difficulty
+        {
+            get { return Prefab.Difficulty; }
+        }
            
         public Mission(MissionPrefab prefab, Location[] locations)
         {
@@ -186,6 +191,9 @@ namespace Barotrauma
 
         public void Start(Level level)
         {
+#if CLIENT
+            shownMessages.Clear();
+#endif
             foreach (string categoryToShow in Prefab.UnhideEntitySubCategories)
             {
                 foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.prefab?.HasSubCategory(categoryToShow) ?? false))

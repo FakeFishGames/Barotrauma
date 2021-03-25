@@ -961,6 +961,20 @@ namespace Barotrauma
         public void Rename(string newName)
         {
             if (string.IsNullOrEmpty(newName)) { return; }
+            // Replace the name tag of any existing id cards or duffel bags
+            foreach (var item in Item.ItemList)
+            {
+                if (item.Prefab.Identifier != "idcard" && !item.Tags.Contains("despawncontainer")) { continue; }
+                foreach (var tag in item.Tags.Split(','))
+                {
+                    var splitTag = tag.Split(":");
+                    if (splitTag.Length < 2) { continue; }
+                    if (splitTag[0] != "name") { continue; }
+                    if (splitTag[1] != Name) { continue; }
+                    item.ReplaceTag(tag, $"name:{newName}");
+                    break;
+                }
+            }
             Name = newName;
         }
 

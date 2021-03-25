@@ -50,6 +50,11 @@ namespace Barotrauma
                 float reduction = IsPriority ? 1 : isSelected ? 2 : 3;
                 float max = AIObjectiveManager.LowestOrderPriority - reduction;
                 Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (distanceFactor * PriorityModifier), 0, 1));
+                if (decontainObjective == null)
+                {
+                    // Halve the priority until there's a decontain objective (a valid container was found).
+                    Priority /= 2;
+                }
             }
             return Priority;
         }
@@ -125,6 +130,14 @@ namespace Barotrauma
             ignoredContainers.Clear();
             itemIndex = 0;
             decontainObjective = null;
+        }
+
+        public void DropTarget()
+        {
+            if (item != null && character.HasItem(item))
+            {
+                item.Drop(character);
+            }
         }
     }
 }

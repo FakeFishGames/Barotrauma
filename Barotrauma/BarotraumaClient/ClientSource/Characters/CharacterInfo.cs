@@ -100,7 +100,22 @@ namespace Barotrauma
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
 
                     var skillName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.Get("SkillName." + skill.Identifier), textColor: textColor, font: font) { Padding = Vector4.Zero };
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+
+                    float modifiedSkillLevel = skill.Level;
+                    if (Character != null)
+                    {
+                        modifiedSkillLevel = Character.GetSkillLevel(skill.Identifier);
+                    }
+                    if (!MathUtils.NearlyEqual(MathF.Round(modifiedSkillLevel), MathF.Round(skill.Level)))
+                    {
+                        int skillChange = (int)MathF.Round(modifiedSkillLevel - skill.Level);
+                        string changeText = $"{(skillChange > 0 ? "+" : "") + skillChange}";
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), $"{(int)skill.Level} ({changeText})", textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                    }
+                    else
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), skillName.RectTransform), ((int)skill.Level).ToString(), textColor: textColor, font: font, textAlignment: Alignment.CenterRight);
+                    }
                 }
             }
             else if (Character != null && Character.IsDead)

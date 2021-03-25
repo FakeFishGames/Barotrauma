@@ -175,7 +175,7 @@ namespace Barotrauma.Items.Components
             Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale;
             foreach (Character character in Character.CharacterList)
             {
-                if (character.Submarine != null || !character.Enabled || character.Removed) { continue; }
+                if (!character.Enabled || character.Removed) { continue; }
                 float distSqr = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
                 if (distSqr > scaledDamageRange * scaledDamageRange) { continue; }
                 character.LastDamageSource = item;

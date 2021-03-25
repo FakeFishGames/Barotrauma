@@ -124,22 +124,22 @@ namespace Barotrauma
                 {
                     var backgroundSprite = GUI.Style.GetComponentStyle("CommandBackground").GetDefaultSprite();
                     Vector2 centerPos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2;
+                    string wrappedText = ToolBox.WrapText(overlayText, GameMain.GraphicsWidth / 3, GUI.Font);
+                    Vector2 textSize = GUI.Font.MeasureString(wrappedText);
+                    Vector2 textPos = centerPos - textSize / 2;
                     backgroundSprite.Draw(spriteBatch, 
                         centerPos, 
                         Color.White * (overlayTextColor.A / 255.0f), 
                         origin: backgroundSprite.size / 2,
                         rotate: 0.0f,
-                        scale: new Vector2(1.5f, 0.7f) * (GameMain.GraphicsWidth / 3 / backgroundSprite.size.X));
+                        scale: new Vector2(GameMain.GraphicsWidth / 2 / backgroundSprite.size.X, textSize.Y / backgroundSprite.size.Y * 1.5f));
 
-                    string wrappedText = ToolBox.WrapText(overlayText, GameMain.GraphicsWidth / 3, GUI.Font);
-                    Vector2 textSize = GUI.Font.MeasureString(wrappedText);
-                    Vector2 textPos = centerPos - textSize / 2;
                     GUI.DrawString(spriteBatch, textPos + Vector2.One, wrappedText, Color.Black * (overlayTextColor.A / 255.0f));
                     GUI.DrawString(spriteBatch, textPos, wrappedText, overlayTextColor);
 
                     if (!string.IsNullOrEmpty(overlayTextBottom))
                     {
-                        Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y + 30 * GUI.Scale) - GUI.Font.MeasureString(overlayTextBottom) / 2;
+                        Vector2 bottomTextPos = centerPos + new Vector2(0.0f, textSize.Y / 2 + 40 * GUI.Scale) - GUI.Font.MeasureString(overlayTextBottom) / 2;
                         GUI.DrawString(spriteBatch, bottomTextPos + Vector2.One, overlayTextBottom, Color.Black * (overlayTextColor.A / 255.0f));
                         GUI.DrawString(spriteBatch, bottomTextPos, overlayTextBottom, overlayTextColor);
                     }
@@ -152,7 +152,7 @@ namespace Barotrauma
                 if (ReadyCheckButton != null) { ReadyCheckButton.Visible = false; }
                 return; 
             }
-            if (Submarine.MainSub == null) { return; }
+            if (Submarine.MainSub == null || Level.Loaded == null) { return; }
 
             endRoundButton.Visible = false;
             var availableTransition = GetAvailableTransition(out _, out Submarine leavingSub);
@@ -211,6 +211,7 @@ namespace Barotrauma
                     HintManager.OnAvailableTransition(availableTransition);
                     //opening the campaign map pauses the game and prevents HintManager from running -> update it manually to get the hint to show up immediately
                     HintManager.Update();
+                    Map.SelectLocation(-1);
                     endRoundButton.OnClicked(EndRoundButton, null);
                     prevCampaignUIAutoOpenType = availableTransition;
                 }

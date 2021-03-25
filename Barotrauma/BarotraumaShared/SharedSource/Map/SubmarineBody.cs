@@ -450,11 +450,20 @@ namespace Barotrauma
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
 #endif
             if (Level.Loaded == null) { return; }
-            float submarineDepth = submarine.RealWorldDepth;
-            if (!Submarine.AtDamageDepth) { return; }
+
+            //camera shake and sounds start playing 500 meters before crush depth
+            float depthEffectThreshold = 500.0f;
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            {
+                return;
+            }
 
             depthDamageTimer -= deltaTime;
             if (depthDamageTimer > 0.0f) { return; }
+
+#if CLIENT
+            SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
+#endif
 
             foreach (Structure wall in Structure.WallList)
             {
@@ -463,12 +472,14 @@ namespace Barotrauma
                 float wallCrushDepth = wall.CrushDepth;
                 if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { wallCrushDepth *= 1.2f; }
                 float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
-                if (pastCrushDepth < 0) { return; }
-                Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
+                if (pastCrushDepth > 0)
+                {
+                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
+                }
                 if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
                 {
-                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, Math.Min(pastCrushDepth * 0.001f, 50.0f));
-                }                
+                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Clamp(pastCrushDepth * 0.001f, 1.0f, 50.0f));
+                }
             }
 
             depthDamageTimer = 10.0f;

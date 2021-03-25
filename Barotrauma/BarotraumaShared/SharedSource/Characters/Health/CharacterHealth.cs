@@ -190,11 +190,13 @@ namespace Barotrauma
             set { bloodlossAffliction.Strength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
 
-        public float StunTimer
+        public float Stun
         {
             get { return stunAffliction.Strength; }
             set { stunAffliction.Strength = MathHelper.Clamp(value, 0.0f, stunAffliction.Prefab.MaxStrength); }
         }
+
+        public float StunTimer { get; private set; }
 
         public Affliction PressureAffliction
         {
@@ -488,7 +490,7 @@ namespace Barotrauma
             CalculateVitality();
         }
 
-        public void ApplyDamage(Limb hitLimb, AttackResult attackResult)
+        public void ApplyDamage(Limb hitLimb, AttackResult attackResult, bool allowStacking = true)
         {
             if (Unkillable || Character.GodMode) { return; }
             if (hitLimb.HealthIndex < 0 || hitLimb.HealthIndex >= limbHealths.Count)
@@ -502,11 +504,11 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab.LimbSpecific)
                 {
-                    AddLimbAffliction(hitLimb, newAffliction);
+                    AddLimbAffliction(hitLimb, newAffliction, allowStacking);
                 }
                 else
                 {
-                    AddAffliction(newAffliction);
+                    AddAffliction(newAffliction, allowStacking);
                 }
             }            
         }
@@ -573,7 +575,7 @@ namespace Barotrauma
             CalculateVitality();
         }
 
-        private void AddLimbAffliction(Limb limb, Affliction newAffliction)
+        private void AddLimbAffliction(Limb limb, Affliction newAffliction, bool allowStacking = true)
         {
             if (!newAffliction.Prefab.LimbSpecific || limb == null) { return; }
             if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count)
@@ -582,10 +584,10 @@ namespace Barotrauma
                     "\" only has health configured for" + limbHealths.Count + " limbs but the limb " + limb.type + " is targeting index " + limb.HealthIndex);
                 return;
             }
-            AddLimbAffliction(limbHealths[limb.HealthIndex], newAffliction);
+            AddLimbAffliction(limbHealths[limb.HealthIndex], newAffliction, allowStacking);
         }
 
-        private void AddLimbAffliction(LimbHealth limbHealth, Affliction newAffliction)
+        private void AddLimbAffliction(LimbHealth limbHealth, Affliction newAffliction, bool allowStacking = true)
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
@@ -594,7 +596,15 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    affliction.Strength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + (newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier))));
+                    float newStrength = newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier));
+                    if (allowStacking)
+                    {
+                        // Add the existing strength
+                        newStrength += affliction.Strength;
+                    }
+                    newStrength = Math.Min(affliction.Prefab.MaxStrength, newStrength);
+                    if (affliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
+                    affliction.Strength = newStrength;
                     affliction.Source = newAffliction.Source;
                     CalculateVitality();
                     if (Vitality <= MinVitality)
@@ -624,13 +634,12 @@ namespace Barotrauma
 #endif
         }
 
-        private void AddAffliction(Affliction newAffliction)
+        private void AddAffliction(Affliction newAffliction, bool allowStacking = true)
         {
             if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
-            if (newAffliction.Prefab.AfflictionType == "huskinfection")
+            if (newAffliction.Prefab is AfflictionPrefabHusk huskPrefab)
             {
-                var huskPrefab = newAffliction.Prefab as AfflictionPrefabHusk;
                 if (huskPrefab.TargetSpecies.None(s => s.Equals(Character.SpeciesName, StringComparison.OrdinalIgnoreCase)))
                 {
                     return;
@@ -640,7 +649,13 @@ namespace Barotrauma
             {
                 if (newAffliction.Prefab == affliction.Prefab)
                 {
-                    float newStrength = Math.Min(affliction.Prefab.MaxStrength, affliction.Strength + (newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier))));
+                    float newStrength = newAffliction.Strength * (100.0f / MaxVitality) * (1f - GetResistance(affliction.Prefab.Identifier));
+                    if (allowStacking)
+                    {
+                        // Add the existing strength
+                        newStrength += affliction.Strength;
+                    }
+                    newStrength = Math.Min(affliction.Prefab.MaxStrength, newStrength);
                     if (affliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                     affliction.Strength = newStrength;
                     affliction.Source = newAffliction.Source;
@@ -675,6 +690,8 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             UpdateOxygen(deltaTime);
+
+            StunTimer = Stun > 0 ? StunTimer + deltaTime : 0;
 
             for (int i = 0; i < limbHealths.Count; i++)
             {
@@ -795,6 +812,13 @@ namespace Barotrauma
                 Vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
             }
+
+#if CLIENT
+            if (IsUnconscious)
+            {
+                HintManager.OnCharacterUnconscious(Character);
+            }
+#endif
         }
 
         private void Kill()

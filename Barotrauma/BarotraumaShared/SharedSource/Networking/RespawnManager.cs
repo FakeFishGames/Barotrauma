@@ -24,7 +24,7 @@ namespace Barotrauma.Networking
 
         //items created during respawn
         //any respawn items left in the shuttle are removed when the shuttle despawns
-        private List<Item> respawnItems = new List<Item>();
+        private readonly List<Item> respawnItems = new List<Item>();
 
         public bool UsingShuttle
         {

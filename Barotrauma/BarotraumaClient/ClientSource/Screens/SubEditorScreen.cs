@@ -533,20 +533,6 @@ namespace Barotrauma
                 OnSelected = (GUITickBox obj) =>
                 {
                     lightingEnabled = obj.Selected;
-                    if (lightingEnabled)
-                    {
-                        //turn off lights that are inside containers
-                        foreach (Item item in Item.ItemList)
-                        {
-                            foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
-                            {
-                                lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
-                                    Color.Transparent :
-                                    lightComponent.LightColor;
-                                lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
-                            }
-                        }
-                    }
                     return true;
                 }
             };
@@ -2704,16 +2690,6 @@ namespace Barotrauma
             cam.Position = Submarine.MainSub.Position + Submarine.MainSub.HiddenSubPosition;
 
             loadFrame = null;
-        
-            //turn off lights that are inside an inventory (cabinet for example)
-            foreach (Item item in Item.ItemList)
-            {
-                var lightComponent = item.GetComponent<LightComponent>();
-                if (lightComponent != null)
-                {
-                    lightComponent.Light.Enabled = item.ParentInventory == null;
-                }
-            }
         }
 
         private bool LoadSub(GUIButton button, object obj)
@@ -2748,16 +2724,6 @@ namespace Barotrauma
 
             loadFrame = null;
             
-            //turn off lights that are inside an inventory (cabinet for example)
-            foreach (Item item in Item.ItemList)
-            {
-                var lightComponent = item.GetComponent<LightComponent>();
-                if (lightComponent != null)
-                {
-                    lightComponent.Light.Enabled = item.ParentInventory == null;
-                }
-            }
-
             if (selectedSub.Info.GameVersion < new Version("0.8.9.0"))
             {
                 var adjustLightsPrompt = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("AdjustLightsPrompt"), 
@@ -2857,8 +2823,8 @@ namespace Barotrauma
             
             categorizedEntityList.UpdateScrollBarSize();
             categorizedEntityList.BarScroll = 0.0f;
-            categorizedEntityList.Visible = true;
-            allEntityList.Visible = false;
+            // categorizedEntityList.Visible = true;
+            // allEntityList.Visible = false;
         }
 
         private void FilterEntities(string filter)
@@ -3047,6 +3013,37 @@ namespace Barotrauma
 
         public static GUIMessageBox CreatePropertyColorPicker(Color originalColor, SerializableProperty property, ISerializableEntity entity)
         {
+            var entities = new List<(ISerializableEntity Entity, Color OriginalColor, SerializableProperty Property)> { (entity, originalColor, property) };
+
+            foreach (ISerializableEntity selectedEntity in MapEntity.SelectedList.Where(selectedEntity => selectedEntity is ISerializableEntity && entity != selectedEntity).Cast<ISerializableEntity>())
+            {
+                switch (entity)
+                {
+                    case ItemComponent _ when selectedEntity is Item item:
+                        foreach (var component in item.Components)
+                        {
+                            if (component.GetType() == entity.GetType() && component != entity)
+                            {
+                                entities.Add((component, (Color) property.GetValue(component), property));
+                            }
+                        }
+                        break;
+                    default:
+                        if (selectedEntity.GetType() == entity.GetType())
+                        {
+                            entities.Add((selectedEntity, (Color) property.GetValue(selectedEntity), property));
+                        }
+                        else if (selectedEntity is { SerializableProperties: { } props} )
+                        {
+                            if (props.TryGetValue(property.NameToLowerInvariant, out SerializableProperty foundProp))
+                            {
+                                entities.Add((selectedEntity, (Color) foundProp.GetValue(selectedEntity), foundProp));
+                            }
+                        }
+                        break;
+                }
+            }
+            
             bool setValues = true;
             object sliderMutex     = new object(),
                    sliderTextMutex = new object(),
@@ -3142,9 +3139,22 @@ namespace Barotrauma
                 colorPicker.DisposeTextures();
                 msgBox.Close();
 
-                if (entity is MapEntity { Removed: true } me) { return true; }
                 Color newColor = SetColor(null);
-                StoreCommand(new PropertyCommand(entity, property.Name, newColor, originalColor));
+
+                Dictionary<object, List<ISerializableEntity>> oldProperties = new Dictionary<object, List<ISerializableEntity>>();
+
+                foreach (var (sEntity, color, _) in entities)
+                {
+                    if (sEntity is MapEntity { Removed: true }) { continue; }
+                    if (!oldProperties.ContainsKey(color))
+                    {
+                        oldProperties.Add(color, new List<ISerializableEntity>());
+                    }
+                    oldProperties[color].Add(sEntity);
+                }
+
+                List<ISerializableEntity> affected = entities.Select(t => t.Entity).Where(se => se is MapEntity { Removed: false }).ToList();
+                StoreCommand(new PropertyCommand(affected, property.Name, newColor, oldProperties));
 
                 if (MapEntity.EditingHUD != null && (MapEntity.EditingHUD.UserData == entity || (!(entity is ItemComponent ic) || MapEntity.EditingHUD.UserData == ic.Item)))
                 {
@@ -3170,8 +3180,12 @@ namespace Barotrauma
             {
                 colorPicker.DisposeTextures();
                 msgBox.Close();
-                if (entity is MapEntity { Removed: true } me) { return true; }
-                property.SetValue(entity, originalColor);
+
+                foreach (var (e, color, prop) in entities)
+                {
+                    if (e is MapEntity { Removed: true }) { continue; }
+                    prop.TrySetValue(e, color);
+                }
                 return true;
             };
 
@@ -3218,8 +3232,12 @@ namespace Barotrauma
                 }
 
                 Color color = ToolBox.HSVToRGB(colorPicker.SelectedHue, colorPicker.SelectedSaturation, colorPicker.SelectedValue);
-                color.A = originalColor.A;
-                property.TrySetValue(entity, color);
+                foreach (var (e, origColor, prop) in entities)
+                {
+                    if (e is MapEntity { Removed: true }) { continue; }
+                    color.A = origColor.A;
+                    prop.TrySetValue(e, color);
+                }
                 return color;
 
                 void SetSliders(Vector3 hsv)
@@ -3238,9 +3256,11 @@ namespace Barotrauma
 
                 void SetColorPicker(Vector3 hsv)
                 {
+                    bool hueChanged = !MathUtils.NearlyEqual(colorPicker.SelectedHue, hsv.X);
                     colorPicker.SelectedHue = hsv.X;
                     colorPicker.SelectedSaturation = hsv.Y;
                     colorPicker.SelectedValue = hsv.Z;
+                    if (hueChanged) { colorPicker.RefreshHue(); }
                 }
 
                 void SetHex(Vector3 hsv)
@@ -3496,6 +3516,8 @@ namespace Barotrauma
         
         private bool SelectPrefab(GUIComponent component, object obj)
         {
+            allEntityList.Deselect();
+            categorizedEntityList.Deselect();
             if (GUI.MouseOn is GUIButton || GUI.MouseOn?.Parent is GUIButton) { return false; }
 
             AddPreviouslyUsed(obj as MapEntityPrefab);
@@ -3586,7 +3608,7 @@ namespace Barotrauma
                 SoundPlayer.PlayUISound(GUISoundType.PickItem);
                 MapEntityPrefab.SelectPrefab(obj);
             }
-            
+
             return false;
         }
 
@@ -4332,6 +4354,17 @@ namespace Barotrauma
 
             if (lightingEnabled)
             {
+                //turn off lights that are inside containers
+                foreach (Item item in Item.ItemList)
+                {
+                    foreach (LightComponent lightComponent in item.GetComponents<LightComponent>())
+                    {
+                        lightComponent.Light.Color = item.Container != null || (item.body != null && !item.body.Enabled) ?
+                            Color.Transparent :
+                            lightComponent.LightColor;
+                        lightComponent.Light.LightSpriteEffect = lightComponent.Item.SpriteEffects;
+                    }
+                }                
                 GameMain.LightManager?.Update((float)deltaTime);
             }
 

@@ -18,7 +18,7 @@ namespace Barotrauma
         private static UISprite spectateIcon, disconnectedIcon;
         private static Sprite ownerIcon, moderatorIcon;
 
-        private enum InfoFrameTab { Crew, Mission, Reputation, MyCharacter, Traitor };
+        private enum InfoFrameTab { Crew, Mission, Reputation, MyCharacter, Traitor, Submarine };
         private static InfoFrameTab selectedTab;
         private GUIFrame infoFrame, contentFrame;
 
@@ -181,77 +181,79 @@ namespace Barotrauma
             infoFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
             new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, infoFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
-            Vector2 contentFrameSize = selectedTab switch
+            //this used to be a switch expression but i changed it because it killed enc :(
+            Vector2 contentFrameSize;
+            switch (selectedTab)
             {
-                InfoFrameTab.MyCharacter => new Vector2(0.33f, 0.5f),
-                _ => new Vector2(0.33f, 0.667f)
-            };
+                case InfoFrameTab.MyCharacter:
+                    contentFrameSize = new Vector2(0.45f, 0.5f);
+                    break;
+                default:
+                    contentFrameSize = new Vector2(0.45f, 0.667f);
+                    break;
+            }
             contentFrame = new GUIFrame(new RectTransform(contentFrameSize, infoFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { RelativeOffset = new Vector2(0.025f, 0.12f) });
 
-            var innerLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.958f, 0.943f), contentFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, GUI.IntScale(17.5f)) })
-            {
-                RelativeSpacing = 0.01f,
-                Stretch = true
-            };
-            var buttonArea = new GUILayoutGroup(new RectTransform(new Point(innerLayoutGroup.Rect.Width, GUI.IntScale(25f)), parent: innerLayoutGroup.RectTransform), isHorizontal: true)
+            var horizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.958f, 0.943f), contentFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, GUI.IntScale(25f)) }, isHorizontal: true)
             {
                 RelativeSpacing = 0.01f
             };
 
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(0.07f, 1f), parent: horizontalLayoutGroup.RectTransform), isHorizontal: false)
+            {
+                AbsoluteSpacing = GUI.IntScale(5f)
+            };
+            var innerLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.92f, 1f), horizontalLayoutGroup.RectTransform))
+            {
+                RelativeSpacing = 0.01f,
+                Stretch = true
+            };
+
             float absoluteSpacing = innerLayoutGroup.RelativeSpacing * innerLayoutGroup.Rect.Height;
             int multiplier = GameMain.GameSession?.GameMode is CampaignMode ? 2 : 1;
-            int infoFrameHolderHeight = Math.Min((int)(0.926f * innerLayoutGroup.Rect.Height), (int)(innerLayoutGroup.Rect.Height - multiplier * (GUI.IntScale(25f) + absoluteSpacing)));
+            int infoFrameHolderHeight = Math.Min((int)(0.97f * innerLayoutGroup.Rect.Height), (int)(innerLayoutGroup.Rect.Height - multiplier * (GUI.IntScale(15f) + absoluteSpacing)));
             infoFrameHolder = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: null);
 
-            var crewButton = new GUIButton(new RectTransform(new Vector2(0.245f, 1.0f), buttonArea.RectTransform), TextManager.Get("Crew"), style: "GUITabButton")
+            GUIButton createTabButton(InfoFrameTab tab, string textTag)
             {
-                UserData = InfoFrameTab.Crew,
-                OnClicked = SelectInfoFrameTab
-            };
-            tabButtons.Add(crewButton);
+                var newButton = new GUIButton(new RectTransform(Vector2.One, buttonArea.RectTransform, scaleBasis: ScaleBasis.BothWidth), style: $"InfoFrameTabButton.{tab}")
+                {
+                    UserData = tab,
+                    ToolTip = TextManager.Get(textTag),
+                    OnClicked = SelectInfoFrameTab
+                };
+                tabButtons.Add(newButton);
+                return newButton;
+            }
 
-            var missionButton = new GUIButton(new RectTransform(new Vector2(0.245f, 1.0f), buttonArea.RectTransform), TextManager.Get("Mission"), style: "GUITabButton")
-            {
-                UserData = InfoFrameTab.Mission,
-                OnClicked = SelectInfoFrameTab
-            };
-            tabButtons.Add(missionButton);
+            var crewButton = createTabButton(InfoFrameTab.Crew, "crew");
+
+            var missionButton = createTabButton(InfoFrameTab.Mission, "mission");
 
             if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
             {
-                var reputationButton = new GUIButton(new RectTransform(new Vector2(0.245f, 1.0f), buttonArea.RectTransform), TextManager.Get("reputation"), style: "GUITabButton")
-                {
-                    UserData = InfoFrameTab.Reputation,
-                    OnClicked = SelectInfoFrameTab
-                };
-                tabButtons.Add(reputationButton);
+                var reputationButton = createTabButton(InfoFrameTab.Reputation, "reputation");
 
-                var balanceFrame = new GUIFrame(new RectTransform(new Point(buttonArea.RectTransform.NonScaledSize.X, (int)(buttonArea.RectTransform.NonScaledSize.Y * 1.5f)), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
+                var submarineButton = createTabButton(InfoFrameTab.Submarine, "submarine");
+
+                var balanceFrame = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, innerLayoutGroup.Rect.Height - infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
                 new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), "", textAlignment: Alignment.Right, parseRichText: true)
                 {
                     TextGetter = () => TextManager.GetWithVariable("campaignmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", campaignMode.Money))
                 };
             }
-
-            bool isTraitor = GameMain.Client?.Character?.IsTraitor ?? false;
-            if (isTraitor && GameMain.Client.TraitorMission != null)
+            else
             {
-                var traitorButton = new GUIButton(new RectTransform(new Vector2(0.245f, 1.0f), buttonArea.RectTransform), TextManager.Get("tabmenu.traitor"), style: "GUITabButton")
+                bool isTraitor = GameMain.Client?.Character?.IsTraitor ?? false;
+                if (isTraitor && GameMain.Client.TraitorMission != null)
                 {
-                    UserData = InfoFrameTab.Traitor,
-                    OnClicked = SelectInfoFrameTab
-                };
-                tabButtons.Add(traitorButton);
+                    var traitorButton = createTabButton(InfoFrameTab.Traitor, "tabmenu.traitor");
+                }
             }
 
             if (GameMain.NetworkMember != null)
             {
-                var myCharacterButton = new GUIButton(new RectTransform(new Vector2(0.245f, 1.0f), buttonArea.RectTransform), TextManager.Get("tabmenu.character"), style: "GUITabButton")
-                {
-                    UserData = InfoFrameTab.MyCharacter,
-                    OnClicked = SelectInfoFrameTab
-                };
-                tabButtons.Add(myCharacterButton);
+                var myCharacterButton = createTabButton(InfoFrameTab.MyCharacter, "tabmenu.character");
             }
         }
 
@@ -287,6 +289,9 @@ namespace Barotrauma
                 case InfoFrameTab.MyCharacter:
                     if (GameMain.NetworkMember == null) { return false; }
                     GameMain.NetLobbyScreen.CreatePlayerFrame(infoFrameHolder);
+                    break;
+                case InfoFrameTab.Submarine:
+                    CreateSubmarineInfo(infoFrameHolder, Submarine.MainSub);
                     break;
             }
 
@@ -879,13 +884,16 @@ namespace Barotrauma
                     UserData = line
                 };
                 textBlock.CalculateHeightFromText();
-                foreach (var data in textBlock.RichTextData)
+                if (textBlock.HasColorHighlight)
                 {
-                    textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
+                    foreach (var data in textBlock.RichTextData)
                     {
-                        Data = data,
-                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
-                    });
+                        textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
+                        {
+                            Data = data,
+                            OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                        });
+                    }
                 }
             }
         }
@@ -930,27 +938,38 @@ namespace Barotrauma
                 foreach (Mission mission in GameMain.GameSession.Missions)
                 {
                     GUIFrame missionDescriptionHolder = new GUIFrame(new RectTransform(Vector2.One, missionList.Content.RectTransform), style: null);
-                    GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.744f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.225f, 0f) }, false, childAnchor: Anchor.TopLeft);
-
+                    GUILayoutGroup missionTextGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.744f, 0f), missionDescriptionHolder.RectTransform, Anchor.CenterLeft) { RelativeOffset = new Vector2(0.225f, 0f) }, false, childAnchor: Anchor.TopLeft)
+                    {
+                        AbsoluteSpacing = GUI.IntScale(5)
+                    };
+                    string descriptionText = mission.Description;
+                    foreach (string missionMessage in mission.ShownMessages)
+                    {
+                        descriptionText += "\n\n" + missionMessage;
+                    }
                     string rewardText = mission.GetMissionRewardText();
                     string reputationText = mission.GetReputationRewardText(mission.Locations[0]);
 
                     var missionNameRichTextData = RichTextData.GetRichTextData(mission.Name, out string missionNameString);
-                    var missionDescriptionRichTextData = RichTextData.GetRichTextData(mission.Description, out string missionDescriptionString);
                     var missionRewardRichTextData = RichTextData.GetRichTextData(rewardText, out string missionRewardString);
                     var missionReputationRichTextData = RichTextData.GetRichTextData(reputationText, out string missionReputationString);
+                    var missionDescriptionRichTextData = RichTextData.GetRichTextData(descriptionText, out string missionDescriptionString);
 
                     missionNameString = ToolBox.WrapText(missionNameString, missionTextGroup.Rect.Width, GUI.LargeFont);
-                    missionDescriptionString = ToolBox.WrapText(missionDescriptionString, missionTextGroup.Rect.Width, GUI.Font);
                     missionRewardString = ToolBox.WrapText(missionRewardString, missionTextGroup.Rect.Width, GUI.Font);
                     missionReputationString = ToolBox.WrapText(missionReputationString, missionTextGroup.Rect.Width, GUI.Font);
+                    missionDescriptionString = ToolBox.WrapText(missionDescriptionString, missionTextGroup.Rect.Width, GUI.Font);
 
                     Vector2 missionNameSize = GUI.LargeFont.MeasureString(missionNameString);
                     Vector2 missionDescriptionSize = GUI.Font.MeasureString(missionDescriptionString);
                     Vector2 missionRewardSize = GUI.Font.MeasureString(missionRewardString);
                     Vector2 missionReputationSize = GUI.Font.MeasureString(missionReputationString);
 
-                    missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)(missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y + missionReputationSize.Y));
+                    float ySize = missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y + missionReputationSize.Y + missionTextGroup.AbsoluteSpacing * 4;
+                    bool displayDifficulty = mission.Difficulty.HasValue;
+                    if (displayDifficulty) { ySize += missionRewardSize.Y; }
+                    
+                    missionDescriptionHolder.RectTransform.NonScaledSize = new Point(missionDescriptionHolder.RectTransform.NonScaledSize.X, (int)ySize);
                     missionTextGroup.RectTransform.NonScaledSize = new Point(missionTextGroup.RectTransform.NonScaledSize.X, missionDescriptionHolder.RectTransform.NonScaledSize.Y);
 
                     if (mission.Prefab.Icon != null)
@@ -960,10 +979,38 @@ namespace Barotrauma
                         int iconHeight = Math.Max(missionTextGroup.RectTransform.NonScaledSize.Y, (int)(iconWidth * iconAspectRatio));
                         Point iconSize = new Point(iconWidth, iconHeight);
 
-                        new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) { Color = mission.Prefab.IconColor, CanBeFocused = false };
+                        new GUIImage(new RectTransform(iconSize, missionDescriptionHolder.RectTransform), mission.Prefab.Icon, null, true) 
+                        { 
+                            Color = mission.Prefab.IconColor,
+                            HoverColor = mission.Prefab.IconColor,
+                            SelectedColor = mission.Prefab.IconColor,
+                            CanBeFocused = false
+                        };
                     }
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameRichTextData, missionNameString, font: GUI.LargeFont);
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardRichTextData, missionRewardString);
+                    GUILayoutGroup difficultyIndicatorGroup = null;
+                    if (displayDifficulty)
+                    {
+                        difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(new Point(missionTextGroup.Rect.Width, (int)missionRewardSize.Y), parent: missionTextGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                        {
+                            AbsoluteSpacing = 1
+                        };
+                        var difficultyColor = mission.GetDifficultyColor();
+                        for (int i = 0; i < mission.Difficulty.Value; i++)
+                        {
+                            new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest), "DifficultyIndicator", scaleToFit: true)
+                            {
+                                CanBeFocused = false,
+                                Color = difficultyColor
+                            };
+                        }
+                    }
+                    var rewardTextBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionRewardRichTextData, missionRewardString);
+                    if (difficultyIndicatorGroup != null)
+                    {
+                        difficultyIndicatorGroup.RectTransform.Resize(new Point((int)(difficultyIndicatorGroup.Rect.Width - rewardTextBlock.Padding.X - rewardTextBlock.Padding.Z), difficultyIndicatorGroup.Rect.Height));
+                        difficultyIndicatorGroup.RectTransform.AbsoluteOffset = new Point((int)rewardTextBlock.Padding.X, 0);
+                    }
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionReputationRichTextData, missionReputationString);
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionRichTextData, missionDescriptionString);
                 }
@@ -1003,6 +1050,85 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionNameString, font: GUI.LargeFont);
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextGroup.RectTransform), missionDescriptionString);
+        }
+
+        private void CreateSubmarineInfo(GUIFrame infoFrame, Submarine sub)
+        {
+            GUIFrame subInfoFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
+            GUIFrame paddedFrame = new GUIFrame(new RectTransform(Vector2.One * 0.97f, subInfoFrame.RectTransform, Anchor.Center), style: null);
+
+            var previewButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.43f), paddedFrame.RectTransform), style: null)
+            {
+                OnClicked = (btn, obj) => { SubmarinePreview.Create(sub.Info); return false; },
+            };
+
+            var previewImage = sub.Info.PreviewImage ?? SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.Equals(sub.Info.Name, StringComparison.OrdinalIgnoreCase))?.PreviewImage;
+            if (previewImage == null)
+            {
+                new GUITextBlock(new RectTransform(Vector2.One, previewButton.RectTransform), TextManager.Get("SubPreviewImageNotFound"));
+            }
+            else
+            {
+                var submarinePreviewBackground = new GUIFrame(new RectTransform(Vector2.One, previewButton.RectTransform), style: null)
+                {
+                    Color = Color.Black,
+                    HoverColor = Color.Black,
+                    SelectedColor = Color.Black,
+                    PressedColor = Color.Black,
+                    CanBeFocused = false,
+                };
+                new GUIImage(new RectTransform(new Vector2(0.98f), submarinePreviewBackground.RectTransform, Anchor.Center), previewImage, scaleToFit: true) { CanBeFocused = false };
+                new GUIFrame(new RectTransform(Vector2.One, submarinePreviewBackground.RectTransform), "InnerGlow", color: Color.Black) { CanBeFocused = false };
+            }
+
+            new GUIFrame(new RectTransform(Vector2.One * 0.12f, previewButton.RectTransform, anchor: Anchor.BottomRight, pivot: Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight)
+            {
+                AbsoluteOffset = new Point((int)(0.03f * previewButton.Rect.Height))
+            },
+                "ExpandButton", Color.White)
+            {
+                Color = Color.White,
+                HoverColor = Color.White,
+                PressedColor = Color.White
+            };
+
+            var subInfoTextLayout = new GUILayoutGroup(new RectTransform(Vector2.One, paddedFrame.RectTransform));
+
+            string className = !sub.Info.HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{sub.Info.SubmarineClass}") : TextManager.Get("shuttle");
+
+            int nameHeight = (int)GUI.LargeFont.MeasureString(sub.Info.DisplayName, true).Y;
+            int classHeight = (int)GUI.SubHeadingFont.MeasureString(className).Y;
+
+            var submarineNameText = new GUITextBlock(new RectTransform(new Point(subInfoTextLayout.Rect.Width, nameHeight + HUDLayoutSettings.Padding / 2), subInfoTextLayout.RectTransform), sub.Info.DisplayName, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont) { CanBeFocused = false };
+            submarineNameText.RectTransform.MinSize = new Point(0, (int)submarineNameText.TextSize.Y);
+            var submarineClassText = new GUITextBlock(new RectTransform(new Point(subInfoTextLayout.Rect.Width, classHeight), subInfoTextLayout.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont) { CanBeFocused = false };
+            submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
+
+            if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+            {
+                var upgradeRootLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.57f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), true);
+
+                var upgradeCategoryPanel = UpgradeStore.CreateUpgradeCategoryList(new RectTransform(new Vector2(0.4f, 1f), upgradeRootLayout.RectTransform));
+                upgradeCategoryPanel.HideChildrenOutsideFrame = true;
+                UpgradeStore.UpdateCategoryList(upgradeCategoryPanel, campaign, sub, UpgradeStore.GetApplicableCategories(sub).ToArray());
+                GUIComponent[] toRemove = upgradeCategoryPanel.Content.FindChildren(c => !c.Enabled).ToArray();
+                toRemove.ForEach(c => upgradeCategoryPanel.RemoveChild(c));
+
+                var upgradePanel = new GUIListBox(new RectTransform(new Vector2(0.6f, 1f), upgradeRootLayout.RectTransform));
+                upgradeCategoryPanel.OnSelected = (component, userData) =>
+                {
+                    upgradePanel.ClearChildren();
+                    if (userData is UpgradeStore.CategoryData categoryData && Submarine.MainSub != null)
+                    {
+                        foreach (UpgradePrefab prefab in categoryData.Prefabs)
+                        {
+                            var frame = UpgradeStore.CreateUpgradeFrame(prefab, categoryData.Category, campaign, new RectTransform(new Vector2(1f, 0.3f), upgradePanel.Content.RectTransform), addBuyButton: false);
+                            UpgradeStore.UpdateUpgradeEntry(frame, prefab, categoryData.Category, campaign);
+                        }
+                    }
+                    return true;
+                };
+            }
         }
     }
 }

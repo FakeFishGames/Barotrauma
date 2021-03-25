@@ -224,8 +224,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (NeedsAir &&
-                        pressureProtection < 80.0f &&
+                    if (NeedsAir && !IsProtectedFromPressure() &&
                         (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
@@ -382,19 +381,44 @@ namespace Barotrauma
 
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
         {
+            HintManager.OnCharacterKilled(this);
+
             if (GameMain.NetworkMember != null && controlled == this)
             {
                 string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
                     CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
                     TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), fallBackTag: "Self_CauseOfDeathDescription.Damage");
 
-                if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
+                if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
+
+                if (GameMain.GameSession?.GameMode is CampaignMode && GameMain.NetworkMember.RespawnManager != null && Level.Loaded?.Type != LevelData.LevelType.Outpost)
+                {
+                    CoroutineManager.InvokeAfter(() =>
+                    {
+                        if (controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
+                        var respawnPrompt = new GUIMessageBox(
+                            TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
+                            new string[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") });
+                        respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                        {
+                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
+                            respawnPrompt.Close();
+                            return true;
+                        };
+                        respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                        {
+                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
+                            respawnPrompt.Close();
+                            return true;
+                        };
+                    }, delay: 5.0f);
+                }
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
             }
-            
+
             PlaySound(CharacterSound.SoundType.Die);
         }
 

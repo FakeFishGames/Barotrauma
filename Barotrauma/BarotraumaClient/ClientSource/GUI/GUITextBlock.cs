@@ -261,7 +261,7 @@ namespace Barotrauma
 
         public readonly List<RichTextData> RichTextData = null;
 
-        private readonly bool hasColorHighlight = false;
+        public bool HasColorHighlight => RichTextData != null;
 
         public struct ClickableArea
         {
@@ -295,7 +295,6 @@ namespace Barotrauma
             if (parseRichText)
             {
                 RichTextData = Barotrauma.RichTextData.GetRichTextData(text, out text);
-                hasColorHighlight = RichTextData != null;
             }
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
@@ -326,7 +325,6 @@ namespace Barotrauma
         : this(rectT, text, textColor, font, textAlignment, wrap, style, color, playerInput)
         {
             this.RichTextData = richTextData;
-            hasColorHighlight = richTextData != null;
         }
 
         public void CalculateHeightFromText(int padding = 0, bool removeExtraSpacing = false)
@@ -634,7 +632,7 @@ namespace Barotrauma
                     currentTextColor = selectedTextColor;
                 }
 
-                if (!hasColorHighlight)
+                if (!HasColorHighlight)
                 {
                     string textToShow = Censor ? censoredText : (Wrap ? wrappedText : text);
                     Color colorToShow = currentTextColor * (currentTextColor.A / 255.0f);

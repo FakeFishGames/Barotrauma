@@ -63,10 +63,8 @@ namespace Barotrauma.Sounds
             get { return soundChannel?.CurrentAmplitude ?? 0.0f; }
         }
 
-        public VoipSound(string name, SoundManager owner, VoipQueue q) : base(owner, "voip", true, true)
+        public VoipSound(string name, SoundManager owner, VoipQueue q) : base(owner, $"VoIP ({name})", true, true, getFullPath: false)
         {
-            Filename = $"VoIP ({name})";
-
             VoipConfig.SetupEncoding();
 
             ALFormat = Al.FormatMono16;

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -258,22 +259,32 @@ namespace Barotrauma
 
                 if (levelData.HasBeaconStation && !levelData.IsBeaconActive)
                 {
-                    var beaconMissionPrefab = MissionPrefab.List.Find(m => m.Tags.Any(t => t.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase)));
-                    if (beaconMissionPrefab != null && !Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
+                    var beaconMissionPrefabs = MissionPrefab.List.FindAll(m => m.Tags.Any(t => t.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase)));
+                    if (beaconMissionPrefabs.Any())
                     {
-                        extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                        Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
+                        var beaconMissionPrefab = beaconMissionPrefabs.GetRandom(rand);
+                        if (!Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
+                        {
+                            extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                        }
                     }
                 }
                 if (levelData.HasHuntingGrounds)
                 {
-                    var huntingGroundsMissionPrefab = MissionPrefab.List.Find(m => m.Tags.Any(t => t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)));
-                    if (huntingGroundsMissionPrefab == null)
+                    var huntingGroundsMissionPrefabs = MissionPrefab.List.FindAll(m => m.Tags.Any(t => t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)));
+                    if (!huntingGroundsMissionPrefabs.Any())
                     {
                         DebugConsole.AddWarning("Could not find a hunting grounds mission for the level. No mission with the tag \"huntinggroundsnoreward\" found.");
                     }
-                    else if (!Missions.Any(m => m.Prefab.Type == huntingGroundsMissionPrefab.Type))
+                    else
                     {
-                        extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                        Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
+                        var huntingGroundsMissionPrefab = huntingGroundsMissionPrefabs.GetRandom(rand);
+                        if (!Missions.Any(m => m.Prefab.Type == huntingGroundsMissionPrefab.Type))
+                        {
+                            extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                        }
                     }
                 }
             }
@@ -524,11 +535,13 @@ namespace Barotrauma
                     takenItems.Add(item);
                 }
             }
-            map.CurrentLocation.RegisterTakenItems(takenItems);
-
-            map.CurrentLocation.AddToStock(CargoManager.SoldItems);
-            CargoManager.ClearSoldItemsProjSpecific();
-            map.CurrentLocation.RemoveFromStock(CargoManager.PurchasedItems);
+            if (map != null && CargoManager != null)
+            {
+                map.CurrentLocation.RegisterTakenItems(takenItems);
+                map.CurrentLocation.AddToStock(CargoManager.SoldItems);
+                CargoManager.ClearSoldItemsProjSpecific();
+                map.CurrentLocation.RemoveFromStock(CargoManager.PurchasedItems);
+            }
             if (GameMain.NetworkMember == null)
             {
                 CargoManager.ClearItemsInBuyCrate();
@@ -538,11 +551,11 @@ namespace Barotrauma
             {
                 if (GameMain.NetworkMember.IsServer)
                 {
-                    CargoManager.ClearItemsInBuyCrate();
+                    CargoManager?.ClearItemsInBuyCrate();
                 }
                 else if (GameMain.NetworkMember.IsClient)
                 {
-                    CargoManager.ClearItemsInSellCrate();
+                    CargoManager?.ClearItemsInSellCrate();
                 }
             }
 
@@ -601,7 +614,11 @@ namespace Barotrauma
             }
             foreach (Location location in Map.Locations)
             {
-                location.ChangeType(location.OriginalType);
+                if (location.Type != location.OriginalType)
+                {
+                    location.ChangeType(location.OriginalType);
+                    location.PendingLocationTypeChange = null;
+                }
                 location.CreateStore(force: true);
                 location.ClearMissions();
                 location.Discovered = false;

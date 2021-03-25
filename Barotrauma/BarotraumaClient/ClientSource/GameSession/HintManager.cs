@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
@@ -21,41 +22,16 @@ namespace Barotrauma
         private static GUIMessageBox ActiveHintMessageBox { get; set; }
         private static Action OnUpdate { get; set; }
         private static double TimeStoppedInteracting { get; set; }
-
+        private static double TimeRoundStarted { get; set; }
         /// <summary>
         /// Seconds before any reminders can be shown
         /// </summary>
         private static int TimeBeforeReminders { get; set; }
-
         /// <summary>
         /// Seconds before another reminder can be shown
         /// </summary>
         private static int ReminderCooldown { get; set; }
-
         private static double TimeReminderLastDisplayed { get; set; }
-
-        private static Queue<HintInfo> HintQueue { get; } = new Queue<HintInfo>();
-
-        public struct HintInfo
-        {
-            public string Identifier { get; }
-            public string Text { get; }
-            public Sprite Icon { get; }
-            public Color? IconColor { get; }
-            public Action OnDisplay { get; }
-            public Action OnUpdate { get; }
-
-            public HintInfo(string hintIdentifier, string text, Sprite icon, Color? iconColor, Action onDisplay, Action onUpdate)
-            {
-                Identifier = hintIdentifier;
-                Text = text;
-                Icon = icon;
-                IconColor = iconColor;
-                OnDisplay = onDisplay;
-                OnUpdate = onUpdate;
-            }
-        }
-
         private static HashSet<Hull> BallastHulls { get; } = new HashSet<Hull>();
 
         public static void Init()
@@ -127,15 +103,6 @@ namespace Barotrauma
                     return;
                 }
             }
-            else if (HintQueue.TryDequeue(out var hint))
-            {
-                ActiveHintMessageBox = new GUIMessageBox(hint.Identifier, hint.Text, hint.Icon);
-                if (hint.IconColor.HasValue) { ActiveHintMessageBox.IconColor = hint.IconColor.Value; }
-                OnUpdate = hint.OnUpdate;
-                ActiveHintMessageBox.InnerFrame.Flash(color: hint.IconColor ?? Color.Orange, flashDuration: 0.75f);
-                SoundPlayer.PlayUISound(GUISoundType.UIMessage);
-                hint.OnDisplay?.Invoke();
-            }
 
             CheckIsInteracting();
             CheckIfDivingGearOutOfOxygen();
@@ -166,21 +133,21 @@ namespace Barotrauma
             // onstartedinteracting.brokenitem
             if (item.Repairables.Any(r => item.ConditionPercentage < r.RepairThreshold))
             {
-                if (EnqueueHint($"{hintIdentifierBase}.brokenitem")) { return; }
+                if (DisplayHint($"{hintIdentifierBase}.brokenitem")) { return; }
             }
 
             // onstartedinteracting.lootingisstealing
             if (item.Submarine?.Info?.Type == SubmarineType.Outpost &&
                 item.ContainedItems.Any(i => i.SpawnedInOutpost))
             {
-                if (EnqueueHint($"{hintIdentifierBase}.lootingisstealing")) { return; }
+                if (DisplayHint($"{hintIdentifierBase}.lootingisstealing")) { return; }
             }
 
             // onstartedinteracting.turretperiscope
             if (item.HasTag("periscope") &&
                 item.GetConnectedComponents<Turret>().FirstOrDefault(t => t.Item.HasTag("turret")) is Turret)
             {
-                if (EnqueueHint($"{hintIdentifierBase}.turretperiscope",
+                if (DisplayHint($"{hintIdentifierBase}.turretperiscope",
                         variableTags: new string[] { "[shootkey]", "[deselectkey]", },
                         variableValues: new string[] { GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.Deselect) }))
                 { return; }
@@ -193,7 +160,7 @@ namespace Barotrauma
                 if (!hintIdentifier.StartsWith(hintIdentifierBase)) { continue; }
                 if (!HintTags.TryGetValue(hintIdentifier, out var hintTags)) { continue; }
                 if (!item.HasTag(hintTags)) { continue; }
-                if (EnqueueHint(hintIdentifier)) { return; }
+                if (DisplayHint(hintIdentifier)) { return; }
             }
         }
 
@@ -206,7 +173,7 @@ namespace Barotrauma
                 Character.Controlled.SelectedConstruction.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
                 containedItems.Count(i => i.HasTag("reactorfuel")) > 1)
             {
-                if (EnqueueHint("onisinteracting.reactorwithextrarods")) { return; }
+                if (DisplayHint("onisinteracting.reactorwithextrarods")) { return; }
             }
         }
 
@@ -214,6 +181,7 @@ namespace Barotrauma
         {
             // Make sure everything's been reset properly, OnRoundEnded() isn't always called when exiting a game
             Reset();
+            TimeRoundStarted = GameMain.GameScreen.GameTime;
 
             var initRoundHandle = CoroutineManager.StartCoroutine(InitRound(), "HintManager.InitRound");
             if (!CanDisplayHints(requireGameScreen: false, requireControllingCharacter: false)) { return; }
@@ -252,10 +220,15 @@ namespace Barotrauma
 
                 OnStartedControlling();
 
+                while (ActiveHintMessageBox != null)
+                {
+                    yield return CoroutineStatus.Running;
+                }
+
                 if (!GameMain.GameSession.GameMode.IsSinglePlayer &&
                     GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Disabled)
                 {
-                    EnqueueHint("onroundstarted.voipdisabled", onUpdate: () =>
+                    DisplayHint("onroundstarted.voipdisabled", onUpdate: () =>
                     {
                         if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Disabled) { return; }
                         ActiveHintMessageBox.Close();
@@ -281,7 +254,6 @@ namespace Barotrauma
                 ActiveHintMessageBox = null;
             }
             OnUpdate = null;
-            HintQueue.Clear();
             HintsIgnoredThisRound.Clear();
         }
 
@@ -292,7 +264,7 @@ namespace Barotrauma
             if (spottedCharacter == null || spottedCharacter.Removed || spottedCharacter.IsDead) { return; }
             if (Character.Controlled.SelectedConstruction != sonar) { return; }
             if (HumanAIController.IsFriendly(Character.Controlled, spottedCharacter)) { return; }
-            EnqueueHint("onsonarspottedenemy");
+            DisplayHint("onsonarspottedenemy");
         }
 
         public static void OnAfflictionDisplayed(Character character, List<Affliction> displayedAfflictions)
@@ -305,7 +277,8 @@ namespace Barotrauma
                 if (affliction.Prefab.IsBuff) { continue; }
                 if (affliction.Prefab == AfflictionPrefab.OxygenLow) { continue; }
                 if (affliction.Prefab == AfflictionPrefab.RadiationSickness && (GameMain.GameSession.Map?.Radiation?.IsEntityRadiated(character) ?? false)) { continue; }
-                EnqueueHint("onafflictiondisplayed",
+                if (affliction.Strength < affliction.Prefab.ShowIconThreshold) { continue; }
+                DisplayHint("onafflictiondisplayed",
                     variableTags: new string[1] { "[key]" },
                     variableValues: new string[1] { GameMain.Config.KeyBindText(InputType.Health) },
                     icon: affliction.Prefab.Icon,
@@ -325,12 +298,13 @@ namespace Barotrauma
             if (character != Character.Controlled) { return; }
             if (character.SelectedConstruction != null || character.FocusedItem != null) { return; }
             if (item == null || !item.IsShootable || !item.RequireAimToUse) { return; }
-            if (GUI.MouseOn != null) { return; }
             if (TimeStoppedInteracting + 1 > Timing.TotalTime) { return; }
+            if (GUI.MouseOn != null) { return; }
+            if (Character.Controlled.Inventory?.visualSlots != null && Character.Controlled.Inventory.visualSlots.Any(s => s.InteractRect.Contains(PlayerInput.MousePosition))) { return; }
             string hintIdentifier = "onshootwithoutaiming";
             if (!HintTags.TryGetValue(hintIdentifier, out var tags)) { return; }
             if (!item.HasTag(tags)) { return; }
-            EnqueueHint(hintIdentifier,
+            DisplayHint(hintIdentifier,
                 variableTags: new string[1] { "[key]" },
                 variableValues: new string[1] { GameMain.Config.KeyBindText(InputType.Aim) },
                 onUpdate: () =>
@@ -347,14 +321,14 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
             if (door == null || door.Stuck < 20.0f) { return; }
-            EnqueueHint("onweldingdoor");
+            DisplayHint("onweldingdoor");
         }
 
         public static void OnTryOpenStuckDoor(Character character)
         {
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
-            EnqueueHint("ontryopenstuckdoor");
+            DisplayHint("ontryopenstuckdoor");
         }
 
         public static void OnShowCampaignInterface(CampaignMode.InteractionType interactionType)
@@ -362,36 +336,34 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             if (interactionType == CampaignMode.InteractionType.None) { return; }
             string hintIdentifier = $"onshowcampaigninterface.{interactionType.ToString().ToLowerInvariant()}";
-            EnqueueHint(hintIdentifier,
-                onUpdate: () =>
-                {
+            DisplayHint(hintIdentifier, onUpdate: () =>
+            {
 
-                    if (!(GameMain.GameSession?.Campaign is CampaignMode campaign) ||
-                        (!campaign.ShowCampaignUI && !campaign.ForceMapUI) ||
-                        campaign.CampaignUI?.SelectedTab != CampaignMode.InteractionType.Map)
-                    {
-                        ActiveHintMessageBox.Close();
-                    }
-                });
+                if (!(GameMain.GameSession?.Campaign is CampaignMode campaign) ||
+                    (!campaign.ShowCampaignUI && !campaign.ForceMapUI) ||
+                    campaign.CampaignUI?.SelectedTab != CampaignMode.InteractionType.Map)
+                {
+                    ActiveHintMessageBox.Close();
+                }
+            });
         }
 
         public static void OnShowCommandInterface()
         {
             IgnoreReminder("commandinterface");
             if (!CanDisplayHints()) { return; }
-            EnqueueHint("onshowcommandinterface",
-                onUpdate: () =>
-                {
-                    if (CrewManager.IsCommandInterfaceOpen) { return; }
-                    ActiveHintMessageBox.Close();
-                });
+            DisplayHint("onshowcommandinterface", onUpdate: () =>
+            {
+                if (CrewManager.IsCommandInterfaceOpen) { return; }
+                ActiveHintMessageBox.Close();
+            });
         }
 
         public static void OnShowHealthInterface()
         {
             if (!CanDisplayHints()) { return; }
             if (CharacterHealth.OpenHealthWindow == null) { return; }
-            EnqueueHint("onshowhealthinterface", onUpdate: () =>
+            DisplayHint("onshowhealthinterface", onUpdate: () =>
             {
                 if (CharacterHealth.OpenHealthWindow != null) { return; }
                 ActiveHintMessageBox.Close();
@@ -408,7 +380,7 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
             if (item == null || !item.SpawnedInOutpost || !item.StolenDuringRound) { return; }
-            EnqueueHint("onstoleitem", onUpdate: () =>
+            DisplayHint("onstoleitem", onUpdate: () =>
             {
                 if (item == null || item.Removed || item.GetRootInventoryOwner() != character)
                 {
@@ -421,7 +393,7 @@ namespace Barotrauma
         {
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled || !character.LockHands) { return; }
-            EnqueueHint("onhandcuffed", onUpdate: () =>
+            DisplayHint("onhandcuffed", onUpdate: () =>
             {
                 if (character != null && !character.Removed && character.LockHands) { return; }
                 ActiveHintMessageBox.Close();
@@ -434,7 +406,7 @@ namespace Barotrauma
             if (reactor == null) { return; }
             if (reactor.Item.Submarine?.Info?.Type != SubmarineType.Player || reactor.Item.Submarine.TeamID != Character.Controlled.TeamID) { return; }
             if (!HasValidJob("engineer")) { return; }
-            EnqueueHint("onreactoroutoffuel", onUpdate: () =>
+            DisplayHint("onreactoroutoffuel", onUpdate: () =>
             {
                 if (reactor?.Item != null && !reactor.Item.Removed && reactor.AvailableFuel < 1) { return; }
                 ActiveHintMessageBox.Close();
@@ -445,7 +417,7 @@ namespace Barotrauma
         {
             if (!CanDisplayHints()) { return; }
             if (transitionType == CampaignMode.TransitionType.None) { return; }
-            EnqueueHint($"onavailabletransition.{transitionType.ToString().ToLowerInvariant()}");
+            DisplayHint($"onavailabletransition.{transitionType.ToString().ToLowerInvariant()}");
         }
 
         public static void OnShowSubInventory(Item item)
@@ -462,12 +434,31 @@ namespace Barotrauma
             IgnoreReminder("characterchange");
         }
 
+        public static void OnCharacterUnconscious(Character character)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character != Character.Controlled) { return; }
+            if (character.IsDead) { return; }
+            if (character.CharacterHealth != null && character.Vitality < character.CharacterHealth.MinVitality) { return; }
+            DisplayHint("oncharacterunconscious");
+        }
+
+        public static void OnCharacterKilled(Character character)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character != Character.Controlled) { return; }
+            if (GameMain.IsMultiplayer) { return; }
+            if (GameMain.GameSession?.CrewManager == null) { return; }
+            if (GameMain.GameSession.CrewManager.GetCharacters().None(c => !c.IsDead)) { return; }
+            DisplayHint("oncharacterkilled");
+        }
+
         private static void OnStartedControlling()
         {
             if (Level.IsLoadedOutpost) { return; }
             if (Character.Controlled?.Info?.Job?.Prefab == null) { return; }
             string hintIdentifier = $"onstartedcontrolling.job.{Character.Controlled.Info.Job.Prefab.Identifier}";
-            EnqueueHint(hintIdentifier,
+            DisplayHint(hintIdentifier,
                 icon: Character.Controlled.Info.Job.Prefab.Icon,
                 iconColor: Character.Controlled.Info.Job.Prefab.UIColor,
                 onDisplay: () =>
@@ -500,7 +491,7 @@ namespace Barotrauma
             if (!steering.SteeringPath.Finished && steering.SteeringPath.NextNode != null) { return; }
             if (steering.LevelStartSelected && (Level.Loaded.StartOutpost == null || !steering.Item.Submarine.AtStartExit)) { return; }
             if (steering.LevelEndSelected && (Level.Loaded.EndOutpost == null || !steering.Item.Submarine.AtEndExit)) { return; }
-            EnqueueHint("onautopilotreachedoutpost");
+            DisplayHint("onautopilotreachedoutpost");
         }
 
         public static void OnStatusEffectApplied(ItemComponent component, ActionType actionType, Character character)
@@ -509,7 +500,7 @@ namespace Barotrauma
             if (character != Character.Controlled) { return; }
             // Could make this more generic if there will ever be any other status effect related hints
             if (!(component is Repairable) || actionType != ActionType.OnFailure) { return; }
-            EnqueueHint("onrepairfailed");
+            DisplayHint("onrepairfailed");
         }
 
         private static void CheckIfDivingGearOutOfOxygen()
@@ -517,12 +508,12 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             var divingGear = Character.Controlled.GetEquippedItem("diving");
             if (divingGear?.OwnInventory == null) { return; }
-            if (divingGear.GetContainedItemConditionPercentage() > 0.05f) { return; }
-            EnqueueHint("ondivinggearoutofoxygen", onUpdate: () =>
+            if (divingGear.GetContainedItemConditionPercentage() > 0.0f) { return; }
+            DisplayHint("ondivinggearoutofoxygen", onUpdate: () =>
             {
                 if (divingGear == null || divingGear.Removed ||
                     Character.Controlled == null || !Character.Controlled.HasEquippedItem(divingGear) ||
-                    divingGear.GetContainedItemConditionPercentage() > 0.05f)
+                    divingGear.GetContainedItemConditionPercentage() > 0.0f)
                 {
                     ActiveHintMessageBox.Close();
                 }
@@ -535,15 +526,21 @@ namespace Barotrauma
             if (Character.Controlled.CurrentHull == null) { return; }
             foreach (var gap in Character.Controlled.CurrentHull.ConnectedGaps)
             {
-                if (!gap.IsRoomToRoom) { continue; }
                 if (gap.ConnectedDoor == null || gap.ConnectedDoor.Impassable) { continue; }
                 if (Vector2.DistanceSquared(Character.Controlled.WorldPosition, gap.ConnectedDoor.Item.WorldPosition) > 400 * 400) { continue; }
+                if (!gap.IsRoomToRoom)
+                {
+                    if (!(Character.Controlled.GetEquippedItem("deepdiving") is Item)) { continue; }
+                    if (Character.Controlled.IsProtectedFromPressure()) { continue; }
+                    if (DisplayHint("divingsuitwarning", extendTextTag: false)) { return; }
+                    continue;
+                }
                 foreach (var me in gap.linkedTo)
                 {
                     if (me == Character.Controlled.CurrentHull) { continue; }
                     if (!(me is Hull adjacentHull)) { continue; }
-                    if (adjacentHull.LethalPressure > 5.0f && EnqueueHint("onadjacenthull.highpressure")) { return; }
-                    if (adjacentHull.WaterPercentage > 75 && !BallastHulls.Contains(adjacentHull) && EnqueueHint("onadjacenthull.highwaterpercentage")) { return; }
+                    if (adjacentHull.LethalPressure > 5.0f && DisplayHint("onadjacenthull.highpressure")) { return; }
+                    if (adjacentHull.WaterPercentage > 75 && !BallastHulls.Contains(adjacentHull) && DisplayHint("onadjacenthull.highwaterpercentage")) { return; }
                 }
             }
         }
@@ -552,23 +549,23 @@ namespace Barotrauma
         {
             if (!CanDisplayHints()) { return; }
             if (Level.Loaded == null) { return; }
-            if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + TimeBeforeReminders) { return; }
-            if (Timing.TotalTime < TimeReminderLastDisplayed + ReminderCooldown) { return; }
+            if (GameMain.GameScreen.GameTime < TimeRoundStarted + TimeBeforeReminders) { return; }
+            if (GameMain.GameScreen.GameTime < TimeReminderLastDisplayed + ReminderCooldown) { return; }
 
             string hintIdentifierBase = "reminder";
 
             if (GameMain.GameSession.GameMode.IsSinglePlayer)
             {
-                if (EnqueueHint($"{hintIdentifierBase}.characterchange"))
+                if (DisplayHint($"{hintIdentifierBase}.characterchange"))
                 {
-                    TimeReminderLastDisplayed = Timing.TotalTime;
+                    TimeReminderLastDisplayed = GameMain.GameScreen.GameTime;
                     return;
                 }
             }
 
             if (Level.Loaded.Type != LevelData.LevelType.Outpost)
             {
-                if (EnqueueHint($"{hintIdentifierBase}.commandinterface",
+                if (DisplayHint($"{hintIdentifierBase}.commandinterface",
                         variableTags: new string[] { "[commandkey]" },
                         variableValues: new string[] { GameMain.Config.KeyBindText(InputType.Command) },
                         onUpdate: () =>
@@ -577,12 +574,12 @@ namespace Barotrauma
                             ActiveHintMessageBox.Close();
                         }))
                 {
-                    TimeReminderLastDisplayed = Timing.TotalTime;
+                    TimeReminderLastDisplayed = GameMain.GameScreen.GameTime;
                     return;
                 }
             }
 
-            if (EnqueueHint($"{hintIdentifierBase}.tabmenu",
+            if (DisplayHint($"{hintIdentifierBase}.tabmenu",
                     variableTags: new string[] { "[infotabkey]" },
                     variableValues: new string[] { GameMain.Config.KeyBindText(InputType.InfoTab) },
                     onUpdate: () =>
@@ -591,21 +588,21 @@ namespace Barotrauma
                         ActiveHintMessageBox.Close();
                     }))
             {
-                TimeReminderLastDisplayed = Timing.TotalTime;
+                TimeReminderLastDisplayed = GameMain.GameScreen.GameTime;
                 return;
             }
 
             if (Character.Controlled.Inventory?.GetItemInLimbSlot(InvSlotType.Bag)?.Prefab?.Identifier == "toolbelt")
             {
-                if (EnqueueHint($"{hintIdentifierBase}.toolbelt"))
+                if (DisplayHint($"{hintIdentifierBase}.toolbelt"))
                 {
-                    TimeReminderLastDisplayed = Timing.TotalTime;
+                    TimeReminderLastDisplayed = GameMain.GameScreen.GameTime;
                     return;
                 }
             }
         }
 
-        private static bool EnqueueHint(string hintIdentifier, string[] variableTags = null, string[] variableValues = null, Sprite icon = null, Color? iconColor = null, Action onDisplay = null, Action onUpdate = null)
+        private static bool DisplayHint(string hintIdentifier, bool extendTextTag = true, string[] variableTags = null, string[] variableValues = null, Sprite icon = null, Color? iconColor = null, Action onDisplay = null, Action onUpdate = null)
         {
             if (string.IsNullOrEmpty(hintIdentifier)) { return false; }
             if (!HintIdentifiers.Contains(hintIdentifier)) { return false; }
@@ -613,7 +610,7 @@ namespace Barotrauma
             if (HintsIgnoredThisRound.Contains(hintIdentifier)) { return false; }
 
             string text;
-            string textTag = $"hint.{hintIdentifier}";
+            string textTag = extendTextTag ? $"hint.{hintIdentifier}" : hintIdentifier;
             if (variableTags != null && variableTags != null && variableTags.Length > 0 && variableTags.Length == variableValues.Length)
             {
                 text = TextManager.GetWithVariables(textTag, variableTags, variableValues, returnNull: true);
@@ -631,9 +628,16 @@ namespace Barotrauma
                 return false;
             }
 
-            var hint = new HintInfo(hintIdentifier, text, icon, iconColor, onDisplay, onUpdate);
-            HintQueue.Enqueue(hint);
             HintsIgnoredThisRound.Add(hintIdentifier);
+
+            ActiveHintMessageBox = new GUIMessageBox(hintIdentifier, text, icon);
+            if (iconColor.HasValue) { ActiveHintMessageBox.IconColor = iconColor.Value; }
+            OnUpdate = onUpdate;
+
+            SoundPlayer.PlayUISound(GUISoundType.UIMessage);
+            ActiveHintMessageBox.InnerFrame.Flash(color: iconColor ?? Color.Orange, flashDuration: 0.75f);
+            onDisplay?.Invoke();
+
             return true;
         }
 
@@ -678,6 +682,7 @@ namespace Barotrauma
         {
             if (HintIdentifiers == null) { return false; }
             if (GameMain.Config.DisableInGameHints) { return false; }
+            if (ActiveHintMessageBox != null) { return false; }
             if (requireControllingCharacter && Character.Controlled == null) { return false; }
             var gameMode = GameMain.GameSession?.GameMode;
             if (!(gameMode is CampaignMode || gameMode is MissionMode)) { return false; }

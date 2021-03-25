@@ -172,6 +172,15 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// The monster won't try to damage these submarines
+        /// </summary>
+        public HashSet<Submarine> UnattackableSubmarines
+        {
+            get;
+            private set;
+        } = new HashSet<Submarine>();
+
         public bool IsBeingChasedBy(Character c) => c.AIController is EnemyAIController enemyAI && enemyAI.SelectedAiTarget?.Entity is Character && (enemyAI.State == AIState.Aggressive || enemyAI.State == AIState.Attack);
         private bool IsBeingChased => SelectedAiTarget?.Entity is Character targetCharacter && IsBeingChasedBy(targetCharacter);
 
@@ -2150,7 +2159,13 @@ namespace Barotrauma
                 else
                 {
                     // Ignore all structures, items, and hulls inside wrecks and beacons
-                    if (aiTarget.Entity.Submarine != null && (aiTarget.Entity.Submarine.Info.IsWreck || aiTarget.Entity.Submarine.Info.IsBeacon)) { continue; }
+                    if (aiTarget.Entity.Submarine != null) 
+                    { 
+                        if (aiTarget.Entity.Submarine.Info.IsWreck || aiTarget.Entity.Submarine.Info.IsBeacon || UnattackableSubmarines.Contains(aiTarget.Entity.Submarine))
+                        {
+                            continue;
+                        }
+                    }
                     if (aiTarget.Entity is Hull hull)
                     {
                         // Ignore the target if it's a room and the character is already inside a sub
@@ -2439,13 +2454,23 @@ namespace Barotrauma
                         }
                     }
                 }
-                // Don't target characters that are outside of the allowed zone, unless attacking or escaping
-                if (targetParams.State != AIState.Attack && targetParams.State != AIState.Escape && targetParams.State != AIState.Avoid)
+
+                // Don't target characters that are outside of the allowed zone, unless chasing or escaping.
+                switch (targetParams.State)
                 {
-                    if (!IsPositionInsideAllowedZone(aiTarget.WorldPosition, out _))
-                    {
-                        continue;
-                    }
+                    case AIState.Escape:
+                    case AIState.Avoid:
+                        break;
+                    default:
+                        if (targetParams.State == AIState.Attack)
+                        {
+                            if (State == targetParams.State && SelectedAiTarget == aiTarget) { break; }
+                        }
+                        if (!IsPositionInsideAllowedZone(aiTarget.WorldPosition, out _))
+                        {
+                            continue;
+                        }
+                        break;
                 }
 
                 valueModifier *= targetMemory.Priority / (float)Math.Sqrt(dist);

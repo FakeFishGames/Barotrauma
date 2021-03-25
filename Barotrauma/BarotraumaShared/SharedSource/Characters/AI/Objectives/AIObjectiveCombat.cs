@@ -457,7 +457,7 @@ namespace Barotrauma
                         priority /= 2;
                     }
                 }
-                if (Enemy.Stun > 1)
+                if (Enemy.IsKnockedDown)
                 {
                     // Enemy is stunned, reduce the priority of stunner weapons.
                     Attack attack = GetAttackDefinition(weapon);
@@ -730,11 +730,12 @@ namespace Barotrauma
                 {
                     IgnoreIfTargetDead = true,
                     DialogueIdentifier = "dialogcannotreachtarget",
-                    TargetName = Enemy.DisplayName
+                    TargetName = Enemy.DisplayName,
+                    AlwaysUseEuclideanDistance = false
                 },
                 onAbandon: () => Abandon = true);
             if (followTargetObjective == null) { return; }
-            if (Mode == CombatMode.Arrest && Enemy.Stun > 2)
+            if (Mode == CombatMode.Arrest && (Enemy.Stun > 1 || Enemy.IsKnockedDown))
             {
                 if (HumanAIController.HasItem(character, "handlocker", out _))
                 {
@@ -742,8 +743,8 @@ namespace Barotrauma
                     {
                         arrestingRegistered = true;
                         followTargetObjective.Completed += OnArrestTargetReached;
+                        followTargetObjective.CloseEnough = 100;
                     }
-                    followTargetObjective.CloseEnough = 100;
                 }
                 else
                 {
@@ -759,7 +760,7 @@ namespace Barotrauma
                     SteeringManager.Reset();
                 }
             }
-            if (followTargetObjective != null)
+            if (!arrestingRegistered && followTargetObjective != null)
             {
                 followTargetObjective.CloseEnough =
                     WeaponComponent is RangedWeapon ? 1000 :
@@ -782,7 +783,7 @@ namespace Barotrauma
 
         private void OnArrestTargetReached()
         {
-            if (HumanAIController.HasItem(character, "handlocker", out IEnumerable<Item> matchingItems) && Enemy.Stun > 0 && character.CanInteractWith(Enemy))
+            if (HumanAIController.HasItem(character, "handlocker", out IEnumerable<Item> matchingItems) && !Enemy.IsUnconscious && Enemy.IsKnockedDown && character.CanInteractWith(Enemy))
             {
                 var handCuffs = matchingItems.First();
                 if (!HumanAIController.TakeItem(handCuffs, Enemy.Inventory, equip: true))
@@ -802,8 +803,8 @@ namespace Barotrauma
                     }
                 }
                 character.Speak(TextManager.Get("DialogTargetArrested"), null, 3.0f, "targetarrested", 30.0f);
-                IsCompleted = true;
             }
+            IsCompleted = true;
         }
 
         /// <summary>
@@ -937,7 +938,14 @@ namespace Barotrauma
                 return;
             }
             if (reloadTimer > 0) { return; }
-            if (Mode == CombatMode.Arrest && isLethalWeapon && Enemy.Stun > 1) { return; }
+            if (Mode == CombatMode.Arrest)
+            {
+                // If the target is arrested or if it's stunned and we can't lock the target up, consider the objective done.
+                if (Enemy.IsKnockedDown && !HumanAIController.HasItem(character, "handlocker", out _, requireEquipped: false) || HumanAIController.HasItem(Enemy, "handlocker", out _, requireEquipped: true))
+                {
+                    IsCompleted = true;
+                }
+            }
             if (holdFireCondition != null && holdFireCondition()) { return; }
             float sqrDist = Vector2.DistanceSquared(character.Position, Enemy.Position);
             if (WeaponComponent is MeleeWeapon meleeWeapon)
@@ -1017,6 +1025,8 @@ namespace Barotrauma
 
         private void UseWeapon(float deltaTime)
         {
+            // Never allow to attack characters with deadly weapons while trying to arrest.
+            if (Mode == CombatMode.Arrest && isLethalWeapon) { return; }
             float reloadTime = 0;
             if (WeaponComponent is RangedWeapon rangedWeapon)
             {
@@ -1038,10 +1048,16 @@ namespace Barotrauma
             reloadTimer = Math.Max(reloadTime, reloadTime * Rand.Range(1f, 1.25f) / AimSpeed);
         }
 
+        private bool ShouldUnequipWeapon =>
+            Weapon != null &&
+            character.Submarine != null &&
+            character.Submarine.TeamID == character.TeamID &&
+            Character.CharacterList.None(c => c.Submarine == character.Submarine && HumanAIController.IsActive(c) && !HumanAIController.IsFriendly(character, c) && HumanAIController.VisibleHulls.Contains(c.CurrentHull));
+
         protected override void OnCompleted()
         {
             base.OnCompleted();
-            if (Weapon != null)
+            if (ShouldUnequipWeapon)
             {
                 Unequip();
             }
@@ -1051,7 +1067,7 @@ namespace Barotrauma
         protected override void OnAbandon()
         {
             base.OnAbandon();
-            if (Weapon != null)
+            if (ShouldUnequipWeapon)
             {
                 Unequip();
             }

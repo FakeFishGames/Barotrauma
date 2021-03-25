@@ -473,7 +473,36 @@ namespace Barotrauma
                                 SelectedColor = MapGenerationParams.Instance.IndicatorColor,
                                 HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f)
                             };
-                            missionName.Padding = new Vector4(missionName.Padding.X + icon.Rect.Width * 1.5f, missionName.Padding.Y, missionName.Padding.Z, missionName.Padding.W);
+                            icon.RectTransform.IsFixedSize = true;
+
+                            GUILayoutGroup difficultyIndicatorGroup = null;
+                            if (mission.Difficulty.HasValue)
+                            {
+                                difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.Z, 0) },
+                                    isHorizontal: true, childAnchor: Anchor.CenterRight)
+                                {
+                                    AbsoluteSpacing = 1,
+                                    UserData = "difficulty"
+                                };
+                                var difficultyColor = mission.GetDifficultyColor();
+                                for (int i = 0; i < mission.Difficulty; i++)
+                                {
+                                    new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest) { IsFixedSize = true }, "DifficultyIndicator", scaleToFit: true)
+                                    {
+                                        Color = difficultyColor * 0.5f,
+                                        SelectedColor = difficultyColor,
+                                        HoverColor = Color.Lerp(difficultyColor, Color.White, 0.5f)
+                                    };
+                                }
+                            }
+                            
+                            float extraPadding = 0.5f * icon.Rect.Width;
+                            float extraZPadding = difficultyIndicatorGroup != null ? mission.Difficulty.Value * (difficultyIndicatorGroup.Children.First().Rect.Width + difficultyIndicatorGroup.AbsoluteSpacing) : 0;
+                            missionName.Padding = new Vector4(missionName.Padding.X + icon.Rect.Width + extraPadding,
+                                missionName.Padding.Y,
+                                missionName.Padding.Z + extraZPadding + extraPadding,
+                                missionName.Padding.W);
+                            missionName.CalculateHeightFromText();
                         }
 
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(), wrap: true, parseRichText: true);
@@ -494,6 +523,10 @@ namespace Barotrauma
                     missionPanel.OnAddedToGUIUpdateList = (c) =>
                     {
                         missionTextContent.Children.ForEach(child => child.State = c.State);
+                        if (missionTextContent.FindChild("difficulty", recursive: true) is GUILayoutGroup group)
+                        {
+                            group.State = c.State;
+                        }
                     };
 
                     if (mission != availableMissions.Last())

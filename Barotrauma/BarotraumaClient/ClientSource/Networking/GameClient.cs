@@ -159,6 +159,12 @@ namespace Barotrauma.Networking
             get { return entityEventManager; }
         }
 
+        public bool? WaitForNextRoundRespawn
+        {
+            get;
+            set;
+        }
+
         private readonly object serverEndpoint;
         private readonly int ownerKey;
         private readonly bool steamP2POwner;
@@ -185,10 +191,10 @@ namespace Barotrauma.Networking
                 CanBeFocused = false
             };
 
-            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), inGameHUD.RectTransform, anchor: Anchor.TopCenter)
+            cameraFollowsSub = new GUITickBox(new RectTransform(new Vector2(0.05f, 0.05f), inGameHUD.RectTransform, anchor: Anchor.TopCenter, pivot: Pivot.CenterLeft)
             {
-                AbsoluteOffset = new Point(0, 5),
-                MaxSize = new Point(25, 25)
+                AbsoluteOffset = new Point(0, HUDLayoutSettings.ButtonAreaTop.Y + HUDLayoutSettings.ButtonAreaTop.Height / 2),
+                MaxSize = new Point(GUI.IntScale(25))
             }, TextManager.Get("CamFollowSubmarine"))
             {
                 Selected = Camera.FollowSub,
@@ -1424,6 +1430,8 @@ namespace Barotrauma.Networking
 
             EndVoteTickBox.Selected = false;
 
+            WaitForNextRoundRespawn = null;
+
             roundInitStatus = RoundInitStatus.Starting;
 
             int seed = inc.ReadInt32();
@@ -1690,13 +1698,15 @@ namespace Barotrauma.Networking
                 }
                 foreach (Submarine sub in Submarine.MainSubs[i].DockedTo)
                 {
+                    if (sub.Info.Type == SubmarineType.Outpost) { continue; }
                     sub.TeamID = teamID;
                 }
             }
 
-            if (respawnAllowed) 
-            { 
-                respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle && gameMode != GameModePreset.MultiPlayerCampaign ? GameMain.NetLobbyScreen.SelectedShuttle : null);
+            if (respawnAllowed)
+            {
+                bool isOutpost = GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && Level.Loaded?.Type == LevelData.LevelType.Outpost;
+                respawnManager = new RespawnManager(this, GameMain.NetLobbyScreen.UsingShuttle && !isOutpost ? GameMain.NetLobbyScreen.SelectedShuttle : null);
             }
 
             gameStarted = true;
@@ -1739,6 +1749,7 @@ namespace Barotrauma.Networking
 
             gameStarted = false;
             Character.Controlled = null;
+            WaitForNextRoundRespawn = null;
             SpawnAsTraitor = false;
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
@@ -1965,14 +1976,19 @@ namespace Barotrauma.Networking
                 }
                 foreach (Client client in ConnectedClients)
                 {
-                    if (!previouslyConnectedClients.Any(c => c.ID == client.ID))
+                    int index = previouslyConnectedClients.FindIndex(c => c.ID == client.ID);
+                    if (index < 0)
                     {
-                        while (previouslyConnectedClients.Count > 100)
+                        if (previouslyConnectedClients.Count > 100)
                         {
-                            previouslyConnectedClients.RemoveAt(0);
+                            previouslyConnectedClients.RemoveRange(0, previouslyConnectedClients.Count - 100);
                         }
-                        previouslyConnectedClients.Add(client);
                     }
+                    else
+                    {
+                        previouslyConnectedClients.RemoveAt(index);
+                    }
+                    previouslyConnectedClients.Add(client);
                 }
                 if (updateClientListId) { LastClientListUpdateID = listId; }
 
@@ -2450,6 +2466,15 @@ namespace Barotrauma.Networking
             chatMessage.NetStateID = lastQueueChatMsgID;
 
             chatMsgQueue.Add(chatMessage);
+        }
+
+        public void SendRespawnPromptResponse(bool waitForNextRoundRespawn)
+        {
+            WaitForNextRoundRespawn = waitForNextRoundRespawn;
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.Write((byte)ClientPacketHeader.READY_TO_SPAWN);
+            msg.Write((bool)waitForNextRoundRespawn);
+            clientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
 
         public void RequestFile(FileTransferType fileType, string file, string fileHash)
@@ -3143,11 +3168,11 @@ namespace Barotrauma.Networking
 
                     cameraFollowsSub.Visible = Character.Controlled == null;
                 }
-                if (Character.Controlled == null || Character.Controlled.IsDead)
+                /*if (Character.Controlled == null || Character.Controlled.IsDead)
                 {
                     GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
                     GameMain.LightManager.LosEnabled = false;
-                }
+                }*/
             }
 
             //tab doesn't autoselect the chatbox when debug console is open,
@@ -3255,9 +3280,10 @@ namespace Barotrauma.Networking
 
             if (respawnManager != null)
             {
-                string respawnText = "";
+                string respawnText = string.Empty;
                 float textScale = 1.0f;
                 Color textColor = Color.White;
+                bool canChooseRespawn = GameMain.GameSession.GameMode is CampaignMode && Character.Controlled == null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
                     respawnManager.RespawnCountdownStarted)
                 {
@@ -3275,18 +3301,18 @@ namespace Barotrauma.Networking
                     {
                         //oscillate between 0-1
                         float phase = (float)(Math.Sin(timeLeft * MathHelper.Pi) + 1.0f) * 0.5f;
-                        textScale = 1.0f + phase * 0.5f;
+                        //textScale = 1.0f + phase * 0.5f;
                         textColor = Color.Lerp(GUI.Style.Red, Color.White, 1.0f - phase);
                     }
+                    canChooseRespawn = false;
                 }
-                
-                if (!string.IsNullOrEmpty(respawnText))
-                {
-                    GUI.SmallFont.DrawString(spriteBatch, respawnText, new Vector2(120.0f, 10), textColor, 0.0f, Vector2.Zero, textScale, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0.0f);
-                }
+
+                GameMain.GameSession?.SetRespawnInfo(
+                    visible: !string.IsNullOrEmpty(respawnText) || canChooseRespawn, text: respawnText, textColor: textColor, 
+                    buttonsVisible: canChooseRespawn, waitForNextRoundRespawn: (WaitForNextRoundRespawn ?? true));                
             }
 
-            if (!ShowNetStats) return;
+            if (!ShowNetStats) { return; }
 
             NetStats.Draw(spriteBatch, new Rectangle(300, 10, 300, 150));
 

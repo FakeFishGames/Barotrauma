@@ -310,7 +310,7 @@ namespace Barotrauma
             {
                 foreach (Character npc in Character.CharacterList)
                 {
-                    if (npc.TeamID != CharacterTeamType.FriendlyNPC || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
+                    if ((npc.TeamID != CharacterTeamType.FriendlyNPC && npc.TeamID != CharacterTeamType.None) || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
                     if (npc.AIController is HumanAIController humanAI && (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() || humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()))
                     {
                         continue;
@@ -327,10 +327,12 @@ namespace Barotrauma
                                 {
                                     if (npc.TeamID == CharacterTeamType.None)
                                     {
+                                        dialogFlags.Remove("OutpostNPC");
                                         dialogFlags.Add("Bandit");
                                     }
                                     else if (npc.TeamID == CharacterTeamType.FriendlyNPC)
                                     {
+                                        dialogFlags.Remove("OutpostNPC");
                                         dialogFlags.Add("Hostage");
                                     }
                                 }

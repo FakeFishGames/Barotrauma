@@ -330,6 +330,8 @@ namespace Barotrauma
                                 GameMain.Client.HasSpawned = true;
                                 GameMain.Client.Character = this;
                                 GameMain.LightManager.LosEnabled = true;
+                                GameMain.LightManager.LosAlpha = 1f;
+                                GameMain.Client.WaitForNextRoundRespawn = null;
                             }
                             else
                             {
@@ -516,6 +518,7 @@ namespace Barotrauma
                     if (!character.IsDead) { Controlled = character; }
 
                     GameMain.LightManager.LosEnabled = true;
+                    GameMain.LightManager.LosAlpha = 1f;
 
                     character.memInput.Clear();
                     character.memState.Clear();

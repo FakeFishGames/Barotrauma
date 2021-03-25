@@ -30,6 +30,7 @@ namespace Barotrauma.Sounds
         public override int FillStreamBuffer(int samplePos, short[] buffer)
         {
             if (!Stream) throw new Exception("Called FillStreamBuffer on a non-streamed sound!");
+            if (reader == null) throw new Exception("Called FillStreamBuffer when the reader is null!");
 
             if (samplePos >= reader.TotalSamples * reader.Channels * 2) return 0;
 
@@ -73,6 +74,8 @@ namespace Barotrauma.Sounds
         {
             if (!Stream)
             {
+                reader ??= new VorbisReader(Filename);
+
                 reader.DecodedPosition = 0;
 
                 int bufferSize = (int)reader.TotalSamples * reader.Channels;
@@ -126,7 +129,7 @@ namespace Barotrauma.Sounds
         {
             if (Stream)
             {
-                reader.Dispose();
+                reader?.Dispose();
             }
 
             base.Dispose();

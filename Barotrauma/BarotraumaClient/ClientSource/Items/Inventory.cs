@@ -302,7 +302,7 @@ namespace Barotrauma
                     }
                     if (!string.IsNullOrEmpty(description)) { toolTip += '\n' + description; }
                 }
-                if (itemsInSlot.Count() > 2)
+                if (itemsInSlot.Count() > 1)
                 {
                     string colorStr = XMLExtensions.ColorToString(GUI.Style.Blue);
                     toolTip += $"\n‖color:{colorStr}‖[{GameMain.Config.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
@@ -569,47 +569,41 @@ namespace Barotrauma
 
                 if (!DraggingItems.Any())
                 {
-                    if (PlayerInput.PrimaryMouseButtonDown() && slots[slotIndex].Any())
+                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => !it.NonInteractable && !it.NonPlayerTeamInteractable) : slots[slotIndex].Items;
+                    if (PlayerInput.PrimaryMouseButtonDown() && interactableItems.Any())
                     {
                         if (PlayerInput.KeyDown(InputType.TakeHalfFromInventorySlot))
                         {
-                            DraggingItems.AddRange(slots[slotIndex].Items.Skip(slots[slotIndex].ItemCount / 2));
+                            DraggingItems.AddRange(interactableItems.Skip(interactableItems.Count() / 2));
                         }
                         else if (PlayerInput.KeyDown(InputType.TakeOneFromInventorySlot))
                         {
-                            DraggingItems.Add(slots[slotIndex].First());
+                            DraggingItems.Add(interactableItems.First());
                         }
                         else
                         {
-                            DraggingItems.AddRange(slots[slotIndex].Items);
-                        }
-                        if (Screen.Selected == GameMain.GameScreen)
-                        {
-                            DraggingItems.RemoveAll(it => it.NonInteractable || it.NonPlayerTeamInteractable);
+                            DraggingItems.AddRange(interactableItems);
                         }
                         DraggingSlot = slot;
                     }
                 }
                 else if (PlayerInput.PrimaryMouseButtonReleased())
                 {
-                    if (PlayerInput.DoubleClicked() && slots[slotIndex].Any())
+                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => !it.NonInteractable && !it.NonPlayerTeamInteractable) : slots[slotIndex].Items;
+                    if (PlayerInput.DoubleClicked() && interactableItems.Any())
                     {
                         doubleClickedItems.Clear();
                         if (PlayerInput.KeyDown(InputType.TakeHalfFromInventorySlot))
                         {
-                            doubleClickedItems.AddRange(slots[slotIndex].Items.Skip(slots[slotIndex].ItemCount / 2));
+                            doubleClickedItems.AddRange(interactableItems.Skip(interactableItems.Count() / 2));
                         }
                         else if (PlayerInput.KeyDown(InputType.TakeOneFromInventorySlot))
                         {
-                            doubleClickedItems.Add(slots[slotIndex].First());
+                            doubleClickedItems.Add(interactableItems.First());
                         }
                         else
                         {
-                            doubleClickedItems.AddRange(slots[slotIndex].Items);
-                        }
-                        if (Screen.Selected == GameMain.GameScreen)
-                        {
-                            doubleClickedItems.RemoveAll(it => it.NonInteractable || it.NonPlayerTeamInteractable);
+                            doubleClickedItems.AddRange(interactableItems);
                         }
                     }
                 }

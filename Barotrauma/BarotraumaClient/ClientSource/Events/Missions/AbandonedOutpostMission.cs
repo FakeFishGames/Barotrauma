@@ -14,10 +14,7 @@ namespace Barotrauma
                     base.State = value;
                     if (state == HostagesKilledState && !string.IsNullOrEmpty(hostagesKilledMessage))
                     {
-                        new GUIMessageBox(string.Empty, hostagesKilledMessage, buttons: new string[0], type: GUIMessageBox.Type.InGame, icon: Prefab.Icon, parseRichText: true)
-                        {
-                            IconColor = Prefab.IconColor
-                        };
+                        CreateMessageBox(string.Empty, hostagesKilledMessage);
                     }
                 }
             }
@@ -43,6 +40,15 @@ namespace Barotrauma
                 for (int j = 0; j < itemCount; j++)
                 {
                     Item.ReadSpawnData(msg);
+                }
+                if (character.Submarine != null && character.AIController is EnemyAIController enemyAi)
+                {
+                    enemyAi.UnattackableSubmarines.Add(character.Submarine);
+                    enemyAi.UnattackableSubmarines.Add(Submarine.MainSub);
+                    foreach (Submarine sub in Submarine.MainSub.DockedTo)
+                    {
+                        enemyAi.UnattackableSubmarines.Add(sub);
+                    }
                 }
             }
             if (characters.Contains(null))

@@ -663,13 +663,29 @@ namespace Barotrauma
                     existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(),user, CharacterInventory.anySlot, createNetworkEvent))                    
                     &&
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
+
+                if (!swapSuccessful && existingItems.Count == 1 && existingItems[0].Prefab.AllowDroppingOnSwap)
+                {
+                    existingItems[0].Drop(user, createNetworkEvent);
+                    swapSuccessful = stackedItems.Distinct().Any(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
+#if CLIENT
+                    if (swapSuccessful)
+                    {
+                        SoundPlayer.PlayUISound(GUISoundType.DropItem);
+                        if (otherInventory.visualSlots != null && otherIndex > -1)
+                        {
+                            otherInventory.visualSlots[otherIndex].ShowBorderHighlight(Color.Transparent, 0.1f, 0.1f);
+                        }
+                    }
+#endif
+                }
             }
 
             //if the item in the slot can be moved to the slot of the moved item
             if (swapSuccessful)
             {
                 System.Diagnostics.Debug.Assert(slots[index].Contains(item), "Something when wrong when swapping items, item is not present in the inventory.");
-                System.Diagnostics.Debug.Assert(otherInventory.Contains(existingItems.FirstOrDefault()), "Something when wrong when swapping items, item is not present in the other inventory.");
+                System.Diagnostics.Debug.Assert(!existingItems.Any(it => !it.Prefab.AllowDroppingOnSwap && !otherInventory.Contains(it)), "Something when wrong when swapping items, item is not present in the other inventory.");
 #if CLIENT
                 if (visualSlots != null)
                 {

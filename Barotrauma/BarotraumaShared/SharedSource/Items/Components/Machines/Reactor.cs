@@ -581,10 +581,9 @@ namespace Barotrauma.Items.Components
                         return false;
                     }
                     aiUpdateTimer = AIUpdateInterval;
-
                     // load more fuel if the current maximum output is only 50% of the current load
                     // or if the fuel rod is (almost) deplenished 
-                    float minCondition = fuelConsumptionRate * MathUtils.Pow((degreeOfSuccess - refuelLimit) * 2, 2);
+                    float minCondition = fuelConsumptionRate * MathUtils.Pow2((degreeOfSuccess - refuelLimit) * 2);
                     if (NeedMoreFuel(minimumOutputRatio: 0.5f, minCondition: minCondition))
                     {
                         bool outOfFuel = false;

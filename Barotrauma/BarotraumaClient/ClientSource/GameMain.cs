@@ -1229,13 +1229,19 @@ namespace Barotrauma
             base.OnExiting(sender, args);
         }
 
-        public void ShowOpenUrlInWebBrowserPrompt(string url)
+        public void ShowOpenUrlInWebBrowserPrompt(string url, string promptExtensionTag = null)
         {
             if (string.IsNullOrEmpty(url)) { return; }
             if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
 
-            var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url),
-                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            string text = TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url);
+            string extensionText = TextManager.Get(promptExtensionTag, returnNull: true, useEnglishAsFallBack: false);
+            if (!string.IsNullOrEmpty(extensionText))
+            {   
+                text += $"\n\n{extensionText}";
+            }
+
+            var msgBox = new GUIMessageBox("", text, new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
             {
                 UserData = "verificationprompt"
             };

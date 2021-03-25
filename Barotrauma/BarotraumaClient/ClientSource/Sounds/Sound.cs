@@ -14,35 +14,15 @@ namespace Barotrauma.Sounds
             get { return disposed; }
         }
 
-        public SoundManager Owner
-        {
-            get;
-            protected set;
-        }
+        public readonly SoundManager Owner;
 
-        public string Filename
-        {
-            get;
-            protected set;
-        }
+        public readonly string Filename;
 
-        public XElement XElement
-        {
-            get;
-            protected set;
-        }
+        public readonly XElement XElement;
 
-        public bool Stream
-        {
-            get;
-            protected set;
-        }
+        public readonly bool Stream;
 
-        public bool StreamsReliably
-        {
-            get;
-            protected set;
-        }
+        public readonly bool StreamsReliably;
 
         public virtual SoundManager.SourcePoolIndex SourcePoolIndex
         {
@@ -79,10 +59,10 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
 
-        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement=null)
+        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement=null, bool getFullPath=true)
         {
             Owner = owner;
-            Filename = Path.GetFullPath(filename.CleanUpPath()).CleanUpPath();
+            Filename = getFullPath ? Path.GetFullPath(filename.CleanUpPath()).CleanUpPath() : filename;
             Stream = stream;
             StreamsReliably = streamsReliably;
             XElement = xElement;

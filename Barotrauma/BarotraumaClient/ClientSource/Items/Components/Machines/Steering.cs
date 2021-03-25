@@ -727,7 +727,19 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.8f;
+            pressureWarningText.Visible = item.Submarine != null && Timing.TotalTime % 1.0f < 0.8f;
+            float depthEffectThreshold = 500.0f;
+            if (Level.Loaded != null && pressureWarningText.Visible && 
+                item.Submarine.RealWorldDepth > Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && item.Submarine.RealWorldDepth > item.Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            {
+                pressureWarningText.Visible = true;
+                pressureWarningText.Text = item.Submarine.AtDamageDepth ? TextManager.Get("SteeringDepthWarning") : TextManager.Get("SteeringDepthWarningLow").Replace("[crushdepth]", ((int)item.Submarine.RealWorldCrushDepth).ToString());
+            }
+            else
+            {
+                pressureWarningText.Visible = false;
+            }
+
             iceSpireWarningText.Visible = item.Submarine != null && !pressureWarningText.Visible && showIceSpireWarning && Timing.TotalTime % 1.0f < 0.8f;
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)

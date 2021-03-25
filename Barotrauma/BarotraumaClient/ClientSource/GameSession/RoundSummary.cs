@@ -266,7 +266,9 @@ namespace Barotrauma
                     displayedMission.Description;
                 GUIImage missionIcon = new GUIImage(new RectTransform(new Point((int)(missionContentHorizontal.Rect.Height)), missionContentHorizontal.RectTransform), displayedMission.Prefab.Icon, scaleToFit: true)
                 {
-                    Color = displayedMission.Prefab.IconColor
+                    Color = displayedMission.Prefab.IconColor,
+                    HoverColor = displayedMission.Prefab.IconColor,
+                    SelectedColor = displayedMission.Prefab.IconColor
                 }; 
                 missionIcon.RectTransform.MinSize = new Point((int)(missionContentHorizontal.Rect.Height * 0.9f));
                 if (selectedMissions.Contains(displayedMission))
@@ -278,8 +280,27 @@ namespace Barotrauma
                 {
                     RelativeSpacing = 0.05f
                 };
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
+                var missionNameTextBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
                     displayedMission.Name, font: GUI.SubHeadingFont);
+                if (displayedMission.Difficulty.HasValue)
+                {
+                    var groupSize = missionNameTextBlock.Rect.Size;
+                    groupSize.X -= (int)(missionNameTextBlock.Padding.X + missionNameTextBlock.Padding.Z);
+                    var indicatorGroup = new GUILayoutGroup(new RectTransform(groupSize, missionTextContent.RectTransform) { AbsoluteOffset = new Point((int)missionNameTextBlock.Padding.X, 0) },
+                        isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                    {
+                        AbsoluteSpacing = 1
+                    };
+                    var difficultyColor = displayedMission.GetDifficultyColor();
+                    for (int i = 0; i < displayedMission.Difficulty; i++)
+                    {
+                        new GUIImage(new RectTransform(Vector2.One, indicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest) { IsFixedSize = true }, "DifficultyIndicator", scaleToFit: true)
+                        {
+                            CanBeFocused = false,
+                            Color = difficultyColor
+                        };
+                    }
+                }
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
                     missionMessage, wrap: true, parseRichText: true);
                 if (selectedMissions.Contains(displayedMission) && displayedMission.Completed && displayedMission.Reward > 0)
@@ -430,7 +451,7 @@ namespace Barotrauma
                             Faction unlockFaction = null;
                             if (!string.IsNullOrEmpty(unlockEvent.UnlockPathFaction))
                             {
-                                unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.UnlockPathFaction);
+                                unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier.Equals(unlockEvent.UnlockPathFaction, StringComparison.OrdinalIgnoreCase));
                                 unlockReputation = unlockFaction?.Reputation;
                             }
                             float normalizedUnlockReputation = MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation);

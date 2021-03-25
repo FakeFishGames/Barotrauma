@@ -168,6 +168,7 @@ namespace Barotrauma
             {
                 chatBox.ToggleButton = new GUIButton(new RectTransform(new Point((int)(182f * GUI.Scale * 0.4f), (int)(99f * GUI.Scale * 0.4f)), chatBox.GUIFrame.Parent.RectTransform), style: "ChatToggleButton")
                 {
+                    ToolTip = TextManager.Get("chat"),
                     ClampMouseRectToParent = false
                 };
                 chatBox.ToggleButton.RectTransform.AbsoluteOffset = new Point(0, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height);
@@ -289,19 +290,7 @@ namespace Barotrauma
                 new RectTransform(crewListEntrySize, parent: crewList.Content.RectTransform, anchor: Anchor.TopRight),
                 style: "CrewListBackground")
             {
-                UserData = character,
-                OnSecondaryClicked = (comp, data) =>
-                {
-                    if (data == null) { return false; }
-                    
-                    var client = GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character == data);
-                    if (client != null)
-                    {
-                        CreateModerationContextMenu(PlayerInput.MousePosition.ToPoint(), client);
-                        return true;
-                    }
-                    return false;
-                }
+                UserData = character
             };
 
             var iconRelativeWidth = (float)crewListEntrySize.Y / background.Rect.Width;
@@ -379,7 +368,17 @@ namespace Barotrauma
                     background.RectTransform),
                 style: null)
             {
-                UserData = character
+                UserData = character,
+                OnSecondaryClicked = (comp, data) =>
+                {
+                    if (data == null) { return false; }
+                    if (GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character == data) is Client client)
+                    {
+                        CreateModerationContextMenu(PlayerInput.MousePosition.ToPoint(), client);
+                        return true;
+                    }
+                    return false;
+                }
             };
             SetCharacterButtonTooltip(characterButton);
 
@@ -389,7 +388,6 @@ namespace Barotrauma
             }
             else
             {
-                characterButton.CanBeFocused = false;
                 characterButton.CanBeSelected = false;
             }
 
@@ -1089,7 +1087,8 @@ namespace Barotrauma
         public void CreateModerationContextMenu(Point mousePos, Client client)
         {
             if (GUIContextMenu.CurrentContextMenu != null) { return; }
-            if (IsSinglePlayer || client == null || (!GameMain.Client?.PreviouslyConnectedClients?.Contains(client) ?? true)) { return; }
+            if (IsSinglePlayer || client == null || ((!GameMain.Client?.PreviouslyConnectedClients?.Contains(client)) ?? true)) { return; }
+
 
             bool hasSteam = client.SteamID > 0 && SteamManager.IsInitialized,
                  canKick  = GameMain.Client.HasPermission(ClientPermissions.Kick),
@@ -1638,7 +1637,8 @@ namespace Barotrauma
 #if DEBUG
             if (Character.Controlled == null) { return true; }
 #endif
-            return Character.Controlled != null && characters.Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled));
+            return Character.Controlled != null && 
+                (characters.Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled)) || GetOrderableFriendlyNPCs().Any(c => c != Character.Controlled && c.CanHearCharacter(Character.Controlled)));
         }
 
         private Entity FindEntityContext()

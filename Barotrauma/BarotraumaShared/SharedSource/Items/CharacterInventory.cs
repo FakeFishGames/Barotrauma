@@ -150,6 +150,44 @@ namespace Barotrauma
             return false;
         }
 
+        public override void RemoveItem(Item item)
+        {
+            RemoveItem(item, tryEquipFromSameStack: false);
+        }
+
+        public void RemoveItem(Item item, bool tryEquipFromSameStack)
+        {
+            if (!Contains(item)) { return; }
+
+            bool wasEquipped = character.HasEquippedItem(item);
+            var indices = FindIndices(item);
+
+            base.RemoveItem(item);
+#if CLIENT
+            CreateSlots();
+#endif
+            //if the item was equipped and there are more items in the same stack, equip one of those items
+            if (tryEquipFromSameStack && wasEquipped)
+            {
+                int limbSlot = indices.Find(j => SlotTypes[j] != InvSlotType.Any);
+                foreach (int i in indices)
+                {
+                    var itemInSameSlot = GetItemAt(i);
+                    if (itemInSameSlot != null)
+                    {
+                        if (TryPutItem(itemInSameSlot, limbSlot, allowSwapping: false, allowCombine: false, character))
+                        {
+#if CLIENT
+                            visualSlots[i].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.412f);
+#endif
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+
         /// <summary>
         /// If there is no room in the generic inventory (InvSlotType.Any), check if the item can be auto-equipped into its respective limbslot
         /// </summary>
@@ -162,6 +200,19 @@ namespace Barotrauma
                 if (wearable != null && !wearable.AutoEquipWhenFull && CheckIfAnySlotAvailable(item, false) == -1)
                 {
                     return false;
+                }
+            }
+
+            if (allowedSlots != null && !allowedSlots.Contains(InvSlotType.Any))
+            {
+                int slot = FindLimbSlot(allowedSlots.First());
+                if (slot > -1 && slots[slot].Items.Any(it => it != item) && slots[slot].First().Prefab.AllowDroppingOnSwap)
+                {
+                    foreach (Item existingItem in slots[slot].Items.ToList())
+                    {
+                        existingItem.Drop(user);
+                        if (existingItem.ParentInventory != null) { existingItem.ParentInventory.RemoveItem(existingItem); }
+                    }
                 }
             }
 

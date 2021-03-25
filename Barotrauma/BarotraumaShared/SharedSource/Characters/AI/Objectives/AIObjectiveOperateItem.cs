@@ -69,10 +69,9 @@ namespace Barotrauma
                 {
                     if (!isOrder)
                     {
-                        if (reactor.LastUserWasPlayer && character.TeamID != CharacterTeamType.FriendlyNPC ||
-                            HumanAIController.IsTrueForAnyCrewMember(c =>
-                                c.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.GetTarget() == target))
+                        if (reactor.LastUserWasPlayer && character.TeamID != CharacterTeamType.FriendlyNPC)
                         {
+                            // The reactor was previously operated by a player -> ignore.
                             Priority = 0;
                             return Priority;
                         }
@@ -89,7 +88,6 @@ namespace Barotrauma
                         case "powerup":
                             // Check that we don't already have another order that is targeting the same item.
                             // Without this the autonomous objective will tell the bot to turn the reactor on again.
-
                             if (IsAnotherOrderTargetingSameItem(objectiveManager.ForcedOrder) || objectiveManager.CurrentOrders.Any(o => IsAnotherOrderTargetingSameItem(o.Objective)))
                             {
                                 Priority = 0;
@@ -177,9 +175,9 @@ namespace Barotrauma
             }
             if (operateTarget != null)
             {
-                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
+                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
                 {
-                    // Another crew member is already targeting this entity.
+                    // Another crew member is already targeting this entity (leak).
                     Abandon = true;
                     return;
                 }

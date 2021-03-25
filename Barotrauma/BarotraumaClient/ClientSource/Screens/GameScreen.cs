@@ -171,10 +171,7 @@ namespace Barotrauma
                 Character.Controlled.ObstructVision && 
                 (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null);
 
-            if (Character.Controlled != null)
-            {
-                GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
-            }
+            GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled?.CursorWorldPosition ?? Vector2.Zero);
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
@@ -334,12 +331,13 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
-            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Character.Controlled != null)
+            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Lights.LightManager.ViewTarget != null)
             {
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
+                GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
 
                 Color losColor;
                 if (GameMain.LightManager.LosMode == LosMode.Transparent)

@@ -72,6 +72,8 @@ namespace Barotrauma
         public readonly List<Tuple<string, object, SetDataAction.OperationType>> DataRewards = new List<Tuple<string, object, SetDataAction.OperationType>>();
 
         public readonly int Commonness;
+        public readonly int? Difficulty;
+        public const int MinDifficulty = 1, MaxDifficulty = 4;
 
         public readonly int Reward;
 
@@ -156,6 +158,11 @@ namespace Barotrauma
             AllowRetry  = element.GetAttributeBool("allowretry", false);
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
             Commonness  = element.GetAttributeInt("commonness", 1);
+            if (element.GetAttribute("difficulty") != null)
+            {
+                int difficulty = element.GetAttributeInt("difficulty", MinDifficulty);
+                Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
+            }
 
             SuccessMessage  = TextManager.Get("MissionSuccess." + TextIdentifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
             FailureMessage  = TextManager.Get("MissionFailure." + TextIdentifier, true) ?? "";

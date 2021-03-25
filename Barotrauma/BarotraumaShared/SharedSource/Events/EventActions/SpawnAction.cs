@@ -253,8 +253,8 @@ namespace Barotrauma
             };
 
             potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && !wp.isObstructed);
-            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false).ToList();
 
+            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false).ToList();
             if (moduleFlags != null && moduleFlags.Any())
             {
                 List<WayPoint> spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Any(moduleFlags.Contains) ?? false).ToList();
@@ -301,6 +301,12 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Could not find a spawn point of the correct type for a SpawnAction (spawn location: {spawnLocation}, type: {spawnPointType}, module flags: {((moduleFlags == null || !moduleFlags.Any()) ? "none" : string.Join(", ", moduleFlags))})");
                 return potentialSpawnPoints.GetRandom();
+            }
+
+            //avoid using waypoints if there's any actual spawnpoints available
+            if (validSpawnPoints.Any(wp => wp.SpawnType != SpawnType.Path))
+            {
+                validSpawnPoints = validSpawnPoints.Where(wp => wp.SpawnType != SpawnType.Path);
             }
 
             //if not trying to spawn at a tagged spawnpoint, favor spawnpoints without tags

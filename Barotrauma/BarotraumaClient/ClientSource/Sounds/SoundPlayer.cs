@@ -21,12 +21,14 @@ namespace Barotrauma
 
         public readonly string requiredTag;
 
-        public DamageSound(Sound sound, Vector2 damageRange, string damageType, string requiredTag = "")
+        public bool ignoreMuffling;
+
+        public DamageSound(Sound sound, Vector2 damageRange, string damageType, bool ignoreMuffling, string requiredTag = "")
         {
             this.sound = sound;
             this.damageRange = damageRange;
             this.damageType = damageType;
-
+            this.ignoreMuffling = ignoreMuffling;
             this.requiredTag = requiredTag;
         }
     }
@@ -269,6 +271,7 @@ namespace Barotrauma
                                 damageSound,
                                 soundElement.GetAttributeVector2("damagerange", Vector2.Zero),
                                 damageSoundType,
+                                soundElement.GetAttributeBool("ignoremuffling", false),
                                 soundElement.GetAttributeString("requiredtag", "")));
 
                             break;
@@ -531,7 +534,7 @@ namespace Barotrauma
                 Vector2 diff = gap.WorldPosition - listenerPos;
                 if (Math.Abs(diff.X) < FlowSoundRange && Math.Abs(diff.Y) < FlowSoundRange)
                 {
-                    if (gap.Open < 0.01f) { continue; }
+                    if (gap.Open < 0.01f || gap.LerpedFlowForce.LengthSquared() < 100.0f) { continue; }
                     float gapFlow = Math.Abs(gap.LerpedFlowForce.X) + Math.Abs(gap.LerpedFlowForce.Y) * 2.5f;
                     if (!gap.IsRoomToRoom) { gapFlow *= 2.0f; }
                     if (gapFlow < 10.0f) { continue; }
@@ -1123,7 +1126,11 @@ namespace Barotrauma
                     tempList.Add(s);
                 }
             }
-            tempList.GetRandom().sound?.Play(1.0f, range, position, muffle: ShouldMuffleSound(Character.Controlled, position, range, null));
+            var damageSound = tempList.GetRandom();
+            if (damageSound.sound != null)
+            {
+                damageSound.sound.Play(1.0f, range, position, muffle: !damageSound.ignoreMuffling && ShouldMuffleSound(Character.Controlled, position, range, null));
+            }
         }
 
         public static void PlayUISound(GUISoundType soundType)

@@ -348,6 +348,16 @@ namespace Barotrauma
                 CanBeFocused = false
             };
 
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("EditorDisclaimerWikiLink"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            {
+                ForceUpperCase = true,
+                OnClicked = (button, userData) =>
+                {
+                    string url = TextManager.Get("EditorDisclaimerWikiUrl", returnNull: true) ?? "https://barotraumagame.com/wiki";
+                    GameMain.Instance.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
+                    return true;
+                }
+            };
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("CreditsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = true,

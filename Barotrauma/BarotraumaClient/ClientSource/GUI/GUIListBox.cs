@@ -194,6 +194,8 @@ namespace Barotrauma
         public bool ScrollBarEnabled { get; set; } = true;
         public bool KeepSpaceForScrollBar { get; set; }
 
+        public bool CanTakeKeyBoardFocus { get; set; } = true;
+
         public bool ScrollBarVisible
         {
             get
@@ -891,7 +893,7 @@ namespace Barotrauma
             }
 
             // If one of the children is the subscriber, we don't want to register, because it will unregister the child.
-            if (takeKeyBoardFocus && RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
+            if (takeKeyBoardFocus && CanTakeKeyBoardFocus && RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
             {
                 Selected = true;
                 GUI.KeyboardDispatcher.Subscriber = this;

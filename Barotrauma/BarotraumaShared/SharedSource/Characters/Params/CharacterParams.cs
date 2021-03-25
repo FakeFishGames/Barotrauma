@@ -79,6 +79,9 @@ namespace Barotrauma
         [Serialize(0f, true), Editable]
         public float SonarDisruption { get; set; }
 
+        [Serialize(0f, true), Editable]
+        public float DistantSonarRange { get; set; }
+
         [Serialize(25000f, true, "If the character is farther than this (in pixels) from the sub and the players, it will be disabled. The halved value is used for triggering simple physics where the ragdoll is disabled and only the main collider is updated."), Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
         public float DisableDistance { get; set; }
 

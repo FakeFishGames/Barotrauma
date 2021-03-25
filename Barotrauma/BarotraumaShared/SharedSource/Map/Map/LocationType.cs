@@ -27,6 +27,8 @@ namespace Barotrauma
 
         public readonly float BeaconStationChance;
 
+        public readonly CharacterTeamType OutpostTeam;
+
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
 
         public readonly List<string> MissionIdentifiers = new List<string>();
@@ -89,6 +91,9 @@ namespace Barotrauma
             HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", new string[0]).ToList();
 
             ReplaceInRadiation = element.GetAttributeString(nameof(ReplaceInRadiation).ToLower(), "");
+
+            string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
+            Enum.TryParse(teamStr, out OutpostTeam);
 
             string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
             try

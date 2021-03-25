@@ -73,6 +73,7 @@ namespace Barotrauma.Networking
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
+        public bool? WaitForNextRoundRespawn;
 
         public int KarmaKickCount;
 

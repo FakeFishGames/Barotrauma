@@ -565,34 +565,26 @@ namespace Barotrauma
                     }
                     else
                     {
-                        string guiScaleString = $"GUI.Scale: {Scale}";
-                        string guixScaleString = $"GUI.xScale: {xScale}";
-                        string guiyScaleString = $"GUI.yScale: {yScale}";
-                        string relativeHorizontalAspectRatioString = $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}";
-                        string relativeVerticalAspectRatioString = $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}";
-                        Vector2 guiScaleStringSize = SmallFont.MeasureString(guiScaleString);
-                        Vector2 guixScaleStringSize = SmallFont.MeasureString(guixScaleString);
-                        Vector2 guiyScaleStringSize = SmallFont.MeasureString(guiyScaleString);
-                        Vector2 relativeHorizontalAspectRatioStringSize = SmallFont.MeasureString(relativeHorizontalAspectRatioString);
-                        Vector2 relativeVerticalAspectRatioStringSize = SmallFont.MeasureString(relativeVerticalAspectRatioString);
+                        string[] strings = new string[]
+                        {
+                            $"GUI.Scale: {Scale}",
+                            $"GUI.xScale: {xScale}",
+                            $"GUI.yScale: {yScale}",
+                            $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}",
+                            $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}",
+                            $"Cam.Zoom: {Screen.Selected.Cam?.Zoom ?? 0f}",
+                        };
 
                         int padding = IntScale(10);
                         int yPos = padding;
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiScaleStringSize.X - padding, yPos), guiScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guiScaleStringSize.Y + padding / 2;
+                        foreach (string str in strings)
+                        {
+                            Vector2 stringSize = SmallFont.MeasureString(str);
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guixScaleStringSize.X - padding, yPos), guixScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guixScaleStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiyScaleStringSize.X - padding, yPos), guiyScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guiyScaleStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeHorizontalAspectRatioStringSize.X - padding, yPos), relativeHorizontalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)relativeHorizontalAspectRatioStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
+                            DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)stringSize.X - padding, yPos), str, Color.LightGreen, Color.Black, 0, SmallFont);
+                            yPos += (int)stringSize.Y + padding / 2;
+                        }
                     }
                 }
 

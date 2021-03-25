@@ -87,7 +87,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
     internal partial class BallastFloraBehavior : ISerializableEntity
     {
-#if DEBUG || UNSTABLE
+#if DEBUG
         public List<Tuple<Vector2, Vector2>> debugSearchLines = new List<Tuple<Vector2, Vector2>>();
 #endif
 

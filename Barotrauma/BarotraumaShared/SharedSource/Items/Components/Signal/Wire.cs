@@ -102,6 +102,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, true, "If enabled, this wire will use the sprite depth instead of a constant depth.")]
+        public bool UseSpriteDepth
+        {
+            get;
+            set;
+        }
+        
         public Wire(Item item, XElement element)
             : base(item, element)
         {

@@ -381,15 +381,11 @@ namespace Barotrauma.Items.Components
 
         private void DrawOutputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
-            if (!outputContainer.Inventory.IsEmpty()) { return; }
-
             overlayComponent.RectTransform.SetAsLastChild();
 
             FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
             if (targetItem != null)
             {
-                var itemIcon = targetItem.TargetItem.InventoryIcon ?? targetItem.TargetItem.sprite;
-
                 Rectangle slotRect = outputContainer.Inventory.visualSlots[0].Rect;
 
                 if (fabricatedItem != null)
@@ -402,11 +398,15 @@ namespace Barotrauma.Items.Components
                         GUI.Style.Green * 0.5f, isFilled: true);
                 }
 
-                itemIcon.Draw(
-                    spriteBatch,
-                    slotRect.Center.ToVector2(),
-                    color: targetItem.TargetItem.InventoryIconColor * 0.4f,
-                    scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y) * 0.9f);
+                if (outputContainer.Inventory.IsEmpty())
+                {
+                    var itemIcon = targetItem.TargetItem.InventoryIcon ?? targetItem.TargetItem.sprite;
+                    itemIcon.Draw(
+                        spriteBatch,
+                        slotRect.Center.ToVector2(),
+                        color: targetItem.TargetItem.InventoryIconColor * 0.4f,
+                        scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y) * 0.9f);
+                }
             }
             
             if (tooltip != null)

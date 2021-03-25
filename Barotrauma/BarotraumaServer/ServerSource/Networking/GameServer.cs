@@ -486,6 +486,11 @@ namespace Barotrauma.Networking
                     endRoundTimer += deltaTime;
 #endif
                 }
+                else if (isCrewDead && (GameMain.GameSession?.GameMode is CampaignMode))
+                {
+                    endRoundDelay = 1.0f;
+                    endRoundTimer += deltaTime;
+                }
                 else
                 {
                     endRoundTimer = 0.0f;
@@ -505,9 +510,13 @@ namespace Barotrauma.Networking
                     {
                         Log("Ending round (submarine reached the end of the level)", ServerLog.MessageType.ServerMessage);
                     }
-                    else
+                    else if (respawnManager == null)
                     {
                         Log("Ending round (no living players left and respawning is not enabled during this round)", ServerLog.MessageType.ServerMessage);
+                    }
+                    else
+                    {
+                        Log("Ending round (no living players left)", ServerLog.MessageType.ServerMessage);
                     }
                     EndGame();
                     return;
@@ -818,6 +827,9 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPacketHeader.READY_CHECK:
                     ReadyCheck.ServerRead(inc, connectedClient);
+                    break;
+                case ClientPacketHeader.READY_TO_SPAWN:
+                    ReadReadyToSpawnMessage(inc, connectedClient);
                     break;
                 case ClientPacketHeader.FILE_REQUEST:
                     if (serverSettings.AllowFileTransfers)
@@ -1189,6 +1201,15 @@ namespace Barotrauma.Networking
             if (GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
             {
                 mpCampaign.ServerReadCrew(inc, sender);
+            }
+        }
+        private void ReadReadyToSpawnMessage(IReadMessage inc, Client sender)
+        {
+            sender.SpectateOnly = inc.ReadBoolean() && (serverSettings.AllowSpectating || sender.Connection == OwnerConnection);
+            sender.WaitForNextRoundRespawn = inc.ReadBoolean();
+            if (!(GameMain.GameSession?.GameMode is CampaignMode))
+            {
+                sender.WaitForNextRoundRespawn = null;
             }
         }
         
@@ -2145,12 +2166,12 @@ namespace Barotrauma.Networking
             }
 
             MissionMode missionMode = GameMain.GameSession.GameMode as MissionMode;
-            bool missionAllowRespawn = GameMain.GameSession.Campaign == null && (missionMode == null || !missionMode.Missions.Any(m => !m.AllowRespawn));
-            bool outpostAllowRespawn = GameMain.GameSession.Campaign != null && Level.Loaded?.Type == LevelData.LevelType.Outpost;
+            bool missionAllowRespawn = missionMode == null || !missionMode.Missions.Any(m => !m.AllowRespawn);
+            bool isOutpost = campaign != null && campaign.NextLevel?.Type == LevelData.LevelType.Outpost;
 
-            if (serverSettings.AllowRespawn && (missionAllowRespawn || outpostAllowRespawn))
+            if (serverSettings.AllowRespawn && missionAllowRespawn)
             { 
-                respawnManager = new RespawnManager(this, serverSettings.UseRespawnShuttle && !outpostAllowRespawn ? selectedShuttle : null); 
+                respawnManager = new RespawnManager(this, serverSettings.UseRespawnShuttle && !isOutpost ? selectedShuttle : null); 
             }
 
             Level.Loaded?.SpawnNPCs();
@@ -2400,9 +2421,8 @@ namespace Barotrauma.Networking
             msg.Write((byte)ServerPacketHeader.STARTGAME);
             msg.Write(seed);
             msg.Write(gameSession.GameMode.Preset.Identifier);
-            bool missionAllowRespawn = campaign == null && (missionMode == null || !missionMode.Missions.Any(m => !m.AllowRespawn));
-            bool outpostAllowRespawn = campaign != null && campaign.NextLevel?.Type == LevelData.LevelType.Outpost;
-            msg.Write(serverSettings.AllowRespawn && (missionAllowRespawn || outpostAllowRespawn));
+            bool missionAllowRespawn = missionMode == null || !missionMode.Missions.Any(m => !m.AllowRespawn);
+            msg.Write(serverSettings.AllowRespawn && missionAllowRespawn);
             msg.Write(serverSettings.AllowDisguises);
             msg.Write(serverSettings.AllowRewiring);
             msg.Write(serverSettings.LockAllDefaultWires);
@@ -2563,6 +2583,7 @@ namespace Barotrauma.Networking
                     client.Character = null;
                     client.HasSpawned = false;
                     client.InGame = false;
+                    client.WaitForNextRoundRespawn = null;
                 }
             }
 
@@ -2798,6 +2819,7 @@ namespace Barotrauma.Networking
 
             client.Character = null;
             client.HasSpawned = false;
+            client.WaitForNextRoundRespawn = null;
             client.InGame = false;
 
             if (string.IsNullOrWhiteSpace(msg)) { msg = $"ServerMessage.ClientLeftServer~[client]={ClientLogName(client)}"; }

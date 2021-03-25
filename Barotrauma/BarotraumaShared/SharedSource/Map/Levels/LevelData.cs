@@ -145,8 +145,11 @@ namespace Barotrauma
             var rand = new MTRandom(ToolBox.StringToInt(Seed));
             InitialDepth = (int)MathHelper.Lerp(GenerationParams.InitialDepthMin, GenerationParams.InitialDepthMax, (float)rand.NextDouble());
 
+            //minimum difficulty of the level before hunting grounds can appear
+            float huntingGroundsDifficultyThreshold = 25;
+            //probability of hunting grounds appearing in 100% difficulty levels
             float maxHuntingGroundsProbability = 0.3f;
-            HasHuntingGrounds = rand.NextDouble() < Difficulty / 100.0f * maxHuntingGroundsProbability;
+            HasHuntingGrounds = OriginallyHadHuntingGrounds = rand.NextDouble() < MathUtils.InverseLerp(huntingGroundsDifficultyThreshold, 100.0f, Difficulty) * maxHuntingGroundsProbability;
 
             HasBeaconStation = !HasHuntingGrounds && rand.NextDouble() < locationConnection.Locations.Select(l => l.Type.BeaconStationChance).Max();              
             IsBeaconActive = false;

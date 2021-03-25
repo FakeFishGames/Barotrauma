@@ -54,10 +54,6 @@ namespace Barotrauma
             requireRescue.Clear();
 
             var submarine = Submarine.Loaded.Find(s => s.Info.Type == SubmarineType.Outpost) ?? Submarine.MainSub;
-            if (submarine.Info.Type == SubmarineType.Outpost)
-            {
-                submarine.TeamID = CharacterTeamType.None;
-            }
             if (!IsClient)
             {
                 InitCharacters(submarine);
@@ -148,6 +144,10 @@ namespace Barotrauma
             }
             humanPrefab.InitializeCharacter(spawnedCharacter, spawnPos);
             humanPrefab.GiveItems(spawnedCharacter, Submarine.MainSub, Rand.RandSync.Server, createNetworkEvents: false);
+            if (spawnPos is WayPoint wp)
+            {
+                spawnedCharacter.GiveIdCardTags(wp);
+            }
             if (element.GetAttributeBool("requirekill", false))
             {
                 requireKill.Add(spawnedCharacter);
@@ -174,6 +174,15 @@ namespace Barotrauma
             if (spawnedCharacter.Inventory != null)
             {
                 characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
+            }
+            if (submarine != null && spawnedCharacter.AIController is EnemyAIController enemyAi)
+            {
+                enemyAi.UnattackableSubmarines.Add(submarine);
+                enemyAi.UnattackableSubmarines.Add(Submarine.MainSub);
+                foreach (Submarine sub in Submarine.MainSub.DockedTo)
+                {
+                    enemyAi.UnattackableSubmarines.Add(sub);
+                }
             }
         }
 

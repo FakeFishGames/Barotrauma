@@ -6,11 +6,16 @@ namespace Barotrauma
 {
     class TagAction : EventAction
     {
+        public enum SubType { Any= 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8 }
+
         [Serialize("", true)]
         public string Criteria { get; set; }
 
         [Serialize("", true)]
         public string Tag { get; set; }
+
+        [Serialize(SubType.Any, true)]
+        public SubType SubmarineType { get; set; }
 
         [Serialize(true, true)]
         public bool IgnoreIncapacitatedCharacters { get; set; }
@@ -63,17 +68,37 @@ namespace Barotrauma
 
         private void TagStructuresByIdentifier(string identifier)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && s.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
         private void TagItemsByIdentifier(string identifier)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && it.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
         }
 
         private void TagItemsByTag(string tag)
         {
-            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && it.HasTag(tag));
+            ParentEvent.AddTargetPredicate(Tag, e => e is Item it && SubmarineTypeMatches(it.Submarine) && it.HasTag(tag));
+        }
+
+        private bool SubmarineTypeMatches(Submarine sub)
+        {
+            if (SubmarineType == SubType.Any) { return true; }
+            if (sub == null) { return false; }
+            switch (sub.Info.Type)
+            {
+                case Barotrauma.SubmarineType.Player:
+                    return SubmarineType.HasFlag(SubType.Player);
+                case Barotrauma.SubmarineType.Outpost:
+                case Barotrauma.SubmarineType.OutpostModule:
+                    return SubmarineType.HasFlag(SubType.Outpost);
+                case Barotrauma.SubmarineType.Wreck:
+                    return SubmarineType.HasFlag(SubType.Wreck);
+                case Barotrauma.SubmarineType.BeaconStation:
+                    return SubmarineType.HasFlag(SubType.BeaconStation);
+                default:
+                    return false;
+            }
         }
 
         public override void Update(float deltaTime)
@@ -113,7 +138,7 @@ namespace Barotrauma
 
         public override string ToDebugString()
         {
-            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TagAction)} -> (Criteria: {Criteria.ColorizeObject()}, Tag: {Tag.ColorizeObject()})";
+            return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(TagAction)} -> (Criteria: {Criteria.ColorizeObject()}, Tag: {Tag.ColorizeObject()}, Sub: {SubmarineType.ColorizeObject()})";
         }
     }
 }

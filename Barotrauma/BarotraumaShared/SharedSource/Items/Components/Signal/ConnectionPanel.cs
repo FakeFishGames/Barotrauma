@@ -65,10 +65,10 @@ namespace Barotrauma.Items.Components
             }
 
             base.IsActive = true;
-            InitProjSpecific(element);
+            InitProjSpecific();
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific();
 
         private bool linksInitialized;
         public override void OnMapLoaded()

@@ -1,4 +1,100 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.3 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added respawning mid-round in the multiplayer campaign mode. Respawning gives you an affliction that can be healed for a cost at outposts. You can also choose not to respawn mid-round, and instead wait for the next round to spawn normally without the affliction, just like before.
+- Added a distant sonar effect for the abyss monsters.
+- Abyss diving suits protect from high pressure, consume oxygen tanks more slowly and reduce movement speed.
+- Combat diving suits are less resistant to pressure, protect from damage and reduce movement speed less than the other types of suits.
+- Make characters grabbable and the inventories accessible after a half a second delay. Fixes abusing the toy hammer to access NPC inventories.
+- Adjustments on incremental stun, stun baton, and stun gun.
+- Disabled beacon mission events (beacon missions are now purely optional side objectives).
+- Made abandoned outposts a bit more common.
+- Hunting grounds don't appear in the first quarter of the campaign map.
+- No additional abyss monsters spawn in levels with a hunting grounds mission.
+- Secure cabinets in abandoned outposts can now be accessed with the outpost NPCs' ID cards.
+- Trying to pick up a diving suit when you're already wearing one swaps the suits.
+- Monsters in abandoned outposts don't target the items/structures in the outpost or the sub.
+- Made monster eggs glow to make them easier to spot in caves and abandoned outposts.
+- Exploding oxygen/fuel tanks don't make other tanks explode.
+- Added a delay to oxygen/fuel tank explosions.
+- Show a warning on the sonar if the sub is 500 meters or less from crush depth.
+- Disconnect wires from beacon stations instead of deleting the wires completely.
+- The mid-round mission messages (e.g. "the monster is dead, navigate out...") are shown in the tab menu's mission tab.
+- The tab menu can be closed with esc.
+- When using an equipped item from a stack (e.g. a medical item), another item from the same stack is automatically equipped.
+- Abyss monsters are now less aggressive in hunting other creatures: they shouldn't any longer attack outside of the abyss, unless they are chasing a target that was selected when it was in the abyss. Addresses #5163.
+- Display the mission difficulty in the available missions list, the info tab, and the round summary.
+- Added hints for falling unconscious, dying, and leaving the sub with an insufficient diving suit.
+- Disabled hint stacking: hints are now ignored when there is an active hint on the screen, instead of being queued up when triggered.
+- Added a link to the wiki to the main menu.
+- Changed the camera animation at the start of the campaign to show the entire outpost.
+- Drop empty/used oxygen tank from diving suit when trying to swap in a new one when the inventory is full.
+- Added a submarine tab to the in-game tab menu.
+- Changed the layout of the in-game tab menu: now the tabs are icons on the left side.
+
+Fixes:
+- Removed duplicate damage modifiers from diving suit. #5204.
+- Fixed a draw order issue in Endworm's armor plates (drawn over the head sprite).
+- Fixed status effects with "set value" not actually setting the affliction strength but adding to the strength instead.
+- Fixed affliction visual effects not working right when the effect's min and max strengths were equal (for example both 1).
+- Fixed path unlock tooltips after the 1st biome displaying location reputation instead of coalition reputation.
+- Fixed hunting grounds disappearing from the map if you complete the campaign without saving and loading (e.g. by teleporting straight to the end with console commands).
+- Fixed path unlocking requiring a reputation _greater_ than the specified value, as opposed to greater or equal.
+- Changed how the hole next to the end outpost is generated to prevent the outpost from blocking the hole.
+- Fixed islands sometimes blocking the exit tunnels.
+- Fixed bugged exit tunnel in the final level.
+- Fixed junction boxes being unable to pass signals.
+- Fixed locations with no connections sometimes generating on the campaign map.
+- Fixed completing a hunting grounds mission not removing the hunting grounds from the map.
+- Fixed fabricator's green progress indicator not being displayed when there's already an item in the output slot.
+- Fixed fabricator displaying the "not enough room in the input inventory" error even if the items fit in the input inventory by stacking.
+- Fixed signal check components being unable to output whitespace.
+- Fixed inability to edit smoke detector's parameters in-game.
+- Fixed smoke detectors outputting empty signals.
+- Fixed "engineers are special" outpost event not giving a price discount.
+- Fixed afflictions caused by status effects being multiplied by deltatime even when setvalue="true". The only vanilla statuseffect affected by this was incremental stun, which would stun the player for 1 frame instead of 1 second, but this may have affected some mods as well.
+- Fixed errors when trying to load a beacon station with no reactor.
+- Fixed terminal's welcome message getting cleared when using the test mode in the sub editor.
+- Fixed inability to cut alien walls/hatches.
+- Fixed non-ruin artifacts sometimes spawning on top of the sub.
+- Fixed melee weapons failing to damage walls if the item is not inside the wall when the impact is registered.
+- Allow engine propellers to do damage inside the sub.
+- Fixed new lights being displayed as off in the sub editor until you toggle the lighting.
+- Fixed stacking keybinds not being shown in the tooltip when hovering over a stack with just 2 items.
+- Fixed water flow sounds activating before the particles.
+- Fixed shuttles that are a part of a wreck or beacon station being visible on the sonar.
+- Fixed all subs/shuttles being hidden on the sonar in PvP (as opposed to just the subs/shuttles of the enemy team).
+- Fixed ID cards and duffel bags not being updated when a crew member is renamed.
+- Fixed wiring interface label overlapping when using a high text scale.
+- Fixed dismissing a player order in the crew list opening the moderation menu in multiplayer.
+- Fixed top left buttons (crew list, command interface, info tab) not scaling when adjusting the HUD scale.
+- Fixed issues with the hints for running out of oxygen and trying to shoot without aiming.
+- Fixed maximum camera zoom increasing on lower resolutions.
+- Fixed coilguns consuming ammo faster than they should when linked to multiple loaders.
+
+Bots:
+- Fixed bots failing to fix leaks when they were not swimming (caused by a change in the previous unstable version). #5205.
+- Fixed security officers standing idle next to the stunned target and doing nothing when they don't have handcuffs. Only happened while trying to arrest the target.
+- Fixed multiple bots occasionally trying to operate the reactor at the same time (#5259).
+- Fixed bots "stealing" stuff while cleaning up. Happened when the objective changed (= they decided or were ordered to do something else while cleaning up). Idle bots are no longer allowed to take items from purchased containers. #5138.
+- Fixed bots running headlessly around while trying to find the container for items while following the clean up order. Now they should walk around instead and only run when the target container is found.
+- Fixes and adjustments to security officer reactions for damage done by friendlies.
+- Fixed bots sometimes not moving while targeting the player (caused by a change in v0.1300.0.1, doesn't happen in the release build).
+- Bots no longer automatically unequip weapons after combat if they are outside of a friendly submarine.
+- Fixed bots having difficulties in leaving the ruins via gaps (#4717).
+- Allow bots to use gaps also to exit the sub, but only when following a player character.
+- Fixed bots always trying to reach the closest item even when it's unreachable (#3332).
+- Make bots find items faster.
+- Fixed bots sometimes continuing their movement (e.g. walking towards a wall) when they fail to find the diving gear they need to continue with the go to objective (e.g. follow).
+
+Modding:
+- Changed husk affliction's type to "alieninfection" because using "huskinfection" as both the identifier and type makes it impossible to add custom husk infections and reference just the custom one in conditionals or statuseffects.
+- Fixed affliction statuseffects targeting NearbyItems or NearbyCharacters causing a crash.
+- Corpses don't spawn in wrecks that contain no waypoints/spawnpoints.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.2 (unstable)
 ---------------------------------------------------------------------------------------------------------
 
@@ -34,6 +130,12 @@ Fixes:
 - Fixed repair icons appearing in abandoned outposts in multiplayer.
 - Fixed players getting prompted to download subs when the server has disabled file transfers.
 - Fixed mineral scanner not working in the abyss.
+- Fixed bots sometimes failing to reach targets that are on the ground level. For example when trying to handcuff targets (This change causes the bots not to be able to reach and fix leaks while standing on ground. Now fixed in v0.1300.0.3.)
+- Fixed unarmed bots with the fight intruders objective not reacting when attacked.
+- Fixed a crash in the monster AI in the sub editor test mode.
+- Monsters now ignore beacons.
+- Fixed some waypoint issues in abandoned outposts.
+- Added missing waypoints to BeaconStation1. There was no waypoints generated, which caused navigation issues with all AI controlled characters.
 
 ---------------------------------------------------------------------------------------------------------
 v0.1300.0.1 (unstable)
@@ -54,8 +156,6 @@ Changes:
 - Fabricators now display remaining time when fabricating.
 - Endworm now groans when the tail is cut.
 - Beacon stations' reactors don't deteriorate or consuming fuel to prevent the station from going back down when the player is travelling out from the level.
-- Irradiated outposts become abandoned instead of simply disappearing.
-- Fabricator displays the time until ready when fabrication is in progress.
 - The output length of all signal components is now restricted to 200 characters by default to prevent performance and networking issues if the output is set to an excessively long value (such as the entire dialog of the Bee Movie). The limit can be increased in the sub editor.
 - Stunning still works on friendly characters even if friendly fire has been disabled on a server.
 - Made radiation sickness's icon appear before it starts causing burns (instead of working the other way around).

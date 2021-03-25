@@ -288,7 +288,7 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(waitBeforeFade);
 
-            var endCinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null, Alignment.Center, duration: fadeOutTime);
+            var endCinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: fadeOutTime);
             currentTutorialCompleted = Completed = true;
             while (endCinematic.Running) yield return null;
             Stop();

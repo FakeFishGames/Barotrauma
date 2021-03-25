@@ -121,11 +121,10 @@ namespace Barotrauma.Items.Components
 
             inputContainer = containers[0];
             outputContainer = containers[1];
-                        
+
             foreach (var recipe in fabricationRecipes)
             {
-                int ingredientCount = recipe.RequiredItems.Sum(it => it.Amount);
-                if (ingredientCount > inputContainer.Capacity)
+                if (recipe.RequiredItems.Count > inputContainer.Capacity)
                 {
                     DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + recipe.TargetItem.Name + "\"!");
                 }

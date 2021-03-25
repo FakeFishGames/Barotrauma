@@ -134,6 +134,8 @@ namespace Barotrauma
             public float MinSpeedMultiplier, MaxSpeedMultiplier;
             public float MinBuffMultiplier, MaxBuffMultiplier;
 
+            public float MinSkillMultiplier, MaxSkillMultiplier;
+
             public float MinResistance, MaxResistance;
             public string ResistanceFor;
             public string DialogFlag;
@@ -171,6 +173,9 @@ namespace Barotrauma
                 MinScreenBlurStrength = element.GetAttributeFloat("minscreenblur", 0.0f);
                 MaxScreenBlurStrength = element.GetAttributeFloat("maxscreenblur", 0.0f);
                 MaxScreenBlurStrength = Math.Max(MinScreenBlurStrength, MaxScreenBlurStrength);
+
+                MinSkillMultiplier = element.GetAttributeFloat("minskillmultiplier", 1.0f);
+                MaxSkillMultiplier = element.GetAttributeFloat("maxskillmultiplier", 1.0f);
 
                 ResistanceFor = element.GetAttributeString("resistancefor", "");
                 MinResistance = element.GetAttributeFloat("minresistance", 0.0f);
@@ -291,6 +296,8 @@ namespace Barotrauma
         //how high the strength has to be for the affliction icon to be shown to others with a health scanner or via the health interface
         public readonly float ShowIconToOthersThreshold = 0.05f;
         public readonly float MaxStrength = 100.0f;
+
+        public readonly float GrainBurst;
 
         //how high the strength has to be for the affliction icon to be shown with a health scanner
         public readonly float ShowInHealthScannerThreshold = 0.05f;
@@ -451,6 +458,7 @@ namespace Barotrauma
                         prefab = new AfflictionPrefab(sourceElement, file.Path, typeof(AfflictionBleeding));
                         break;
                     case "huskinfection":
+                    case "alieninfection":
                         prefab = new AfflictionPrefabHusk(sourceElement, file.Path, typeof(AfflictionHusk));
                         break;
                     case "cprsettings":
@@ -521,7 +529,7 @@ namespace Barotrauma
 
                 if (prefab != null)
                 {
-                    loadedAfflictions.Add((prefab, element));
+                    loadedAfflictions.Add((prefab, sourceElement));
                     Prefabs.Add(prefab, isOverride);
                     prefab.CalculatePrefabUIntIdentifier(Prefabs);
                 }
@@ -582,6 +590,7 @@ namespace Barotrauma
             ShowIconThreshold   = element.GetAttributeFloat("showiconthreshold", Math.Max(ActivationThreshold, 0.05f));
             ShowIconToOthersThreshold   = element.GetAttributeFloat("showicontoothersthreshold", ShowIconThreshold);
             MaxStrength         = element.GetAttributeFloat("maxstrength", 100.0f);
+            GrainBurst          = element.GetAttributeFloat(nameof(GrainBurst).ToLower(), 0.0f);
 
             ShowInHealthScannerThreshold = element.GetAttributeFloat("showinhealthscannerthreshold", Math.Max(ActivationThreshold, 0.05f));
             TreatmentThreshold = element.GetAttributeFloat("treatmentthreshold", Math.Max(ActivationThreshold, 5.0f));

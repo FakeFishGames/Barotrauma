@@ -134,7 +134,7 @@ namespace Barotrauma
             if (level?.LevelData?.Type == LevelData.LevelType.Outpost)
             {
                 //if the outpost is connected to a locked connection, create an event to unlock it
-                if (level.StartLocation?.Connections.Any(c => c.Locked) ?? false)
+                if (level.StartLocation?.Connections.Any(c => c.Locked && level.StartLocation.MapPosition.X < c.OtherLocation(level.StartLocation).MapPosition.X) ?? false)
                 {
                     var unlockPathPrefabs = EventSet.PrefabList.FindAll(e => e.UnlockPathEvent);
                     var unlockPathPrefabsForBiome = unlockPathPrefabs.FindAll(e => 
@@ -166,11 +166,14 @@ namespace Barotrauma
                 void AddChildEvents(EventSet eventSet)
                 {
                     if (eventSet == null) { return; }
-                    foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.First))
+                    if (eventSet.OncePerOutpost)
                     {
-                        if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
+                        foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.First))
                         {
-                            level.LevelData.NonRepeatableEvents.Add(ep);
+                            if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
+                            {
+                                level.LevelData.NonRepeatableEvents.Add(ep);
+                            }
                         }
                     }
                     foreach (EventSet childSet in eventSet.ChildSets)
@@ -373,6 +376,8 @@ namespace Barotrauma
         private void CreateEvents(EventSet eventSet, Random rand)
         {
             if (level == null) { return; }
+            if (level.LevelData.HasHuntingGrounds && eventSet.DisableInHuntingGrounds) { return; }
+
             int applyCount = 1;
             List<Func<Level.InterestingPosition, bool>> spawnPosFilter = new List<Func<Level.InterestingPosition, bool>>();
             if (eventSet.PerRuin)

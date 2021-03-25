@@ -445,7 +445,7 @@ namespace Barotrauma
                         extraDistanceWhileSwimming = 100,
                         AllowGoingOutside = true,
                         IgnoreIfTargetDead = true,
-                        followControlledCharacter = orderGiver == character,
+                        followControlledCharacter = true,
                         mimic = true,
                         DialogueIdentifier = "dialogcannotreachplace"
                     };

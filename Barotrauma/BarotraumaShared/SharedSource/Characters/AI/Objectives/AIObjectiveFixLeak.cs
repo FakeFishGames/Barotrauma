@@ -38,7 +38,7 @@ namespace Barotrauma
                 Priority = 0;
                 Abandon = true;
             }
-            else if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeak>()?.Leak == Leak))
+            else if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeak>()?.Leak == Leak))
             {
                 Priority = 0;
                 Abandon = true;

@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,6 +8,19 @@ namespace Barotrauma
 {
     abstract partial class Mission
     {
+        private readonly List<string> shownMessages = new List<string>();
+        public IEnumerable<string> ShownMessages
+        {
+            get { return shownMessages; }
+        }
+
+        public Color GetDifficultyColor()
+        {
+            int v = Difficulty ?? MissionPrefab.MinDifficulty;
+            float t = MathUtils.InverseLerp(MissionPrefab.MinDifficulty, MissionPrefab.MaxDifficulty, v);
+            return ToolBox.GradientLerp(t, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
+        }
+
         public string GetMissionRewardText()
         {
             string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", Reward));
@@ -71,6 +85,7 @@ namespace Barotrauma
 
         protected void CreateMessageBox(string header, string message)
         {
+            shownMessages.Add(message);
             new GUIMessageBox(header, message, buttons: new string[0], type: GUIMessageBox.Type.InGame, icon: Prefab.Icon, parseRichText: true)
             {
                 IconColor = Prefab.IconColor

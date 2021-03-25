@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -83,27 +84,93 @@ namespace Barotrauma
             };
 
             var innerFrame = new GUIFrame(new RectTransform(Vector2.One * 0.9f, previewFrame.RectTransform, Anchor.Center));
-            var verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One * 0.95f, innerFrame.RectTransform, Anchor.Center), isHorizontal: false);
-            var topLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), verticalLayout.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-
-            new GUITextBlock(new RectTransform(new Vector2(0.95f, 1f), topLayout.RectTransform), subInfo.DisplayName, font: GUI.LargeFont);
-            new GUIButton(new RectTransform(new Vector2(0.05f, 1f), topLayout.RectTransform), TextManager.Get("Close"))
+            int innerPadding = GUI.IntScale(100f);
+            var innerPadded = new GUIFrame(new RectTransform(new Point(innerFrame.Rect.Width - innerPadding, innerFrame.Rect.Height - innerPadding), previewFrame.RectTransform, Anchor.Center), style: null)
             {
-                OnClicked = (btn, obj) => { Dispose(); return false; }
+                OutlineColor = Color.Black,
+                OutlineThickness = 2
             };
 
-            new GUICustomComponent(new RectTransform(new Vector2(1f, 0.9f), verticalLayout.RectTransform, Anchor.Center),
-                (spriteBatch, component) => { camera.UpdateTransform(true); RenderSubmarine(spriteBatch, component.Rect); },
+            GUITextBlock titleText = null;
+            GUIListBox specsContainer = null;
+
+            new GUICustomComponent(new RectTransform(Vector2.One, innerPadded.RectTransform, Anchor.Center),
+                (spriteBatch, component) => {
+                    camera.UpdateTransform(interpolate: true, updateListener: false);
+                    Rectangle drawRect = new Rectangle(component.Rect.X + 1, component.Rect.Y + 1, component.Rect.Width - 2, component.Rect.Height - 2);
+                    RenderSubmarine(spriteBatch, drawRect);
+                },
                 (deltaTime, component) => {
-                    camera.MoveCamera(deltaTime, overrideMouseOn: component.Rect);
-                    if (component.Rect.Contains(PlayerInput.MousePosition) &&
+                    bool isMouseOnComponent = GUI.MouseOn == component;
+                    camera.MoveCamera(deltaTime, allowZoom: isMouseOnComponent);
+                    if (isMouseOnComponent &&
                         (PlayerInput.MidButtonHeld() || PlayerInput.LeftButtonHeld()))
                     {
                         Vector2 moveSpeed = PlayerInput.MouseSpeed * (float)deltaTime * 60.0f / camera.Zoom;
                         moveSpeed.X = -moveSpeed.X;
                         camera.Position += moveSpeed;
                     }
+                    
+                    if (titleText != null && specsContainer != null)
+                    {
+                        specsContainer.Visible = GUI.IsMouseOn(titleText);
+                    }
                 });
+
+            var topContainer = new GUIFrame(new RectTransform(new Vector2(1f, 0.07f), innerPadded.RectTransform, Anchor.TopLeft), style: null)
+            {
+                Color = Color.Black * 0.65f
+            };
+            var topLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.97f, 5f / 7f), topContainer.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+
+            titleText = new GUITextBlock(new RectTransform(new Vector2(0.95f, 1f), topLayout.RectTransform), subInfo.DisplayName, font: GUI.LargeFont);
+            new GUIButton(new RectTransform(new Vector2(0.05f, 1f), topLayout.RectTransform), TextManager.Get("Close"))
+            {
+                OnClicked = (btn, obj) => { Dispose(); return false; }
+            };
+
+            specsContainer = new GUIListBox(new RectTransform(new Vector2(0.4f, 1f), innerPadded.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(0.015f, 0.07f) })
+            {
+                Color = Color.Black * 0.65f,
+                ScrollBarEnabled = false,
+                ScrollBarVisible = false,
+                Spacing = 5
+            };
+            subInfo.CreateSpecsWindow(specsContainer, GUI.Font, includeTitle: false, includesDescription: true);
+            int width = specsContainer.Rect.Width;
+            void recalculateSpecsContainerHeight()
+            {
+                int totalSize = 0;
+                var children = specsContainer.Content.Children.Where(c => c.Visible);
+                foreach (GUIComponent child in children)
+                {
+                    totalSize += child.Rect.Height;
+                }
+                totalSize += specsContainer.Content.CountChildren * specsContainer.Spacing;
+                if (specsContainer.PadBottom)
+                {
+                    GUIComponent last = specsContainer.Content.Children.LastOrDefault();
+                    if (last != null)
+                    {
+                        totalSize += specsContainer.Rect.Height - last.Rect.Height;
+                    }
+                }
+                specsContainer.RectTransform.Resize(new Point(width, totalSize), true);
+                specsContainer.RecalculateChildren();
+            }
+            //hell
+            recalculateSpecsContainerHeight();
+            specsContainer.Content.GetAllChildren<GUITextBlock>().ForEach(c =>
+            {
+                var firstChild = c.Children.FirstOrDefault() as GUITextBlock;
+                if (firstChild != null)
+                {
+                    firstChild.CalculateHeightFromText(); firstChild.SetTextPos();
+                    c.RectTransform.MinSize = new Point(0, firstChild.Rect.Height);
+                }
+                c.CalculateHeightFromText(); c.SetTextPos();
+            });
+            recalculateSpecsContainerHeight();
 
             GeneratePreviewMeshes();
         }

@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
 
         public static void ClientRead(IReadMessage msg)
         {
-            UInt16 ID = msg.ReadUInt16();
+            UInt16 id = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
             PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None;
             string txt = "";
@@ -114,7 +114,7 @@ namespace Barotrauma.Networking
                     if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                     {
                         DebugConsole.ThrowError("Invalid order message - order index out of bounds.");
-                        if (NetIdUtils.IdMoreRecent(ID, LastID)) { LastID = ID; }
+                        if (NetIdUtils.IdMoreRecent(id, LastID)) { LastID = id; }
                         return;
                     }
                     else
@@ -155,11 +155,11 @@ namespace Barotrauma.Networking
                         }
                     }
 
-                    if (NetIdUtils.IdMoreRecent(ID, LastID))
+                    if (NetIdUtils.IdMoreRecent(id, LastID))
                     {
                         GameMain.Client.AddChatMessage(
                             new OrderChatMessage(orderPrefab, orderOption, orderPriority, txt, orderTargetPosition ?? targetEntity as ISpatialEntity, targetCharacter, senderCharacter));
-                        LastID = ID;
+                        LastID = id;
                     }
                     return;
                 case ChatMessageType.ServerMessageBox:
@@ -171,7 +171,7 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            if (NetIdUtils.IdMoreRecent(ID, LastID))
+            if (NetIdUtils.IdMoreRecent(id, LastID))
             {
                 switch (type)
                 {
@@ -200,7 +200,7 @@ namespace Barotrauma.Networking
                         GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter, changeType);
                         break;
                 }
-                LastID = ID;
+                LastID = id;
             }
         }
     }

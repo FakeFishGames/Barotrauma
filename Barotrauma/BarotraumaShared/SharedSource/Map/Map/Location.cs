@@ -361,6 +361,11 @@ namespace Barotrauma
                         if (subElement.Attribute("index") != null)
                         {
                             int locationTypeChangeIndex = subElement.GetAttributeInt("index", 0);
+                            if (locationTypeChangeIndex < 0 || locationTypeChangeIndex >= Type.CanChangeTo.Count)
+                            {
+                                DebugConsole.AddWarning($"Failed to activate a location type change in the location \"{Name}\". Location index out of bounds ({locationTypeChangeIndex}).");
+                                continue;
+                            }
                             PendingLocationTypeChange = (Type.CanChangeTo[locationTypeChangeIndex], timer, null);
                         }
                         else
@@ -1059,12 +1064,21 @@ namespace Barotrauma
                 if (PendingLocationTypeChange.Value.parentMission != null)
                 {
                     changeElement.Add(new XAttribute("missionidentifier", PendingLocationTypeChange.Value.parentMission.Identifier));
+                    locationElement.Add(changeElement);
                 }
                 else
                 {
-                    changeElement.Add(new XAttribute("index", Type.CanChangeTo.IndexOf(PendingLocationTypeChange.Value.typeChange)));
+                    int index = Type.CanChangeTo.IndexOf(PendingLocationTypeChange.Value.typeChange);
+                    changeElement.Add(new XAttribute("index", index));
+                    if (index == -1)
+                    {
+                        DebugConsole.AddWarning($"Invalid location type change in the location \"{Name}\". Unknown type change ({PendingLocationTypeChange.Value.typeChange.ChangeToType}).");
+                    }
+                    else
+                    {
+                        locationElement.Add(changeElement);
+                    }
                 }
-                locationElement.Add(changeElement);
             }
 
             if (LocationTypeChangeCooldown > 0)

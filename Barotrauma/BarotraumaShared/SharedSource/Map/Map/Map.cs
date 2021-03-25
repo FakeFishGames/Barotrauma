@@ -316,19 +316,12 @@ namespace Barotrauma
                     if (connection2.Locations[1] == connection.Locations[0]) { connection2.Locations[1] = connection.Locations[1]; }
                 }
             }
-            
-            HashSet<Location> connectedLocations = new HashSet<Location>();
+
             foreach (LocationConnection connection in Connections)
             {
                 connection.Locations[0].Connections.Add(connection);
                 connection.Locations[1].Connections.Add(connection);
-
-                connectedLocations.Add(connection.Locations[0]);
-                connectedLocations.Add(connection.Locations[1]);
             }
-
-            //remove orphans
-            Locations.RemoveAll(c => !connectedLocations.Contains(c));
 
             //remove locations that are too close to each other
             float minLocationDistanceSqr = generationParams.MinLocationDistance * generationParams.MinLocationDistance;
@@ -442,6 +435,9 @@ namespace Barotrauma
                     }
                 }
             }
+
+            //remove orphans
+            Locations.RemoveAll(l => !Connections.Any(c => c.Locations.Contains(l)));
 
             foreach (LocationConnection connection in Connections)
             {
@@ -654,10 +650,12 @@ namespace Barotrauma
             CurrentLocation.CreateStore();
             OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
 
-            if (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.CampaignMetadata is { } metadata)
+            if (GameMain.GameSession is { Campaign: { CampaignMetadata: { } metadata } })
             {
                 metadata.SetValue("campaign.location.id", CurrentLocationIndex);
                 metadata.SetValue("campaign.location.name", CurrentLocation.Name);
+                metadata.SetValue("campaign.location.biome", CurrentLocation.Biome?.Identifier ?? "null");
+                metadata.SetValue("campaign.location.type", CurrentLocation.Type?.Identifier ?? "null");
             }
         }
 

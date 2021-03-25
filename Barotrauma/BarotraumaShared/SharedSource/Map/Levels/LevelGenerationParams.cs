@@ -181,6 +181,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(true, true, "Should the generator force a hole to the bottom of the level to ensure there's a way to the abyss."), Editable]
+        public bool CreateHoleToAbyss
+        {
+            get;
+            set;
+        }
+
         [Serialize(1000, true, description: "The total number of level objects (vegetation, vents, etc) in the level."), Editable(MinValueInt = 0, MaxValueInt = 100000)]
         public int LevelObjectAmount
         {

@@ -471,13 +471,15 @@ namespace Barotrauma
             }
         }
 
+        private double pressureProtectionLastSet;
         private float pressureProtection;
         public float PressureProtection
         {
             get { return pressureProtection; }
             set
             {
-                pressureProtection = MathHelper.Clamp(value, 0.0f, 100.0f);
+                pressureProtection = Math.Max(value, 0.0f);
+                pressureProtectionLastSet = Timing.TotalTime;
             }
         }
 
@@ -528,11 +530,10 @@ namespace Barotrauma
         
         public float Stun
         {
-            get { return IsRagdolled ? 1.0f : CharacterHealth.StunTimer; }
+            get { return IsRagdolled ? 1.0f : CharacterHealth.Stun; }
             set
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) return;
-
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
                 SetStun(value, true);
             }
         }
@@ -697,7 +698,7 @@ namespace Barotrauma
             {
                 if (!canBeDragged) { return false; }
                 if (Removed || !AnimController.Draggable) { return false; }
-                return IsDead || Stun > 0.0f || LockHands || IsIncapacitated || IsPet;
+                return IsKnockedDown || LockHands || IsPet;
             }
             set { canBeDragged = value; }
         }
@@ -715,7 +716,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    return IsDead || Stun > 0.0f || LockHands || IsIncapacitated;
+                    return IsKnockedDown || LockHands;
                 }
             }
             set { canInventoryBeAccessed = value; }
@@ -1016,7 +1017,7 @@ namespace Barotrauma
             {
                 // Get the non husked name and find the ragdoll with it
                 var matchingAffliction = AfflictionPrefab.List
-                    .Where(p => p.AfflictionType == "huskinfection")
+                    .Where(p => p is AfflictionPrefabHusk)
                     .Select(p => p as AfflictionPrefabHusk)
                     .FirstOrDefault(p => p.TargetSpecies.Any(t => t.Equals(AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p), StringComparison.OrdinalIgnoreCase)));
                 string nonHuskedSpeciesName = string.Empty;
@@ -1052,7 +1053,7 @@ namespace Barotrauma
             else
             {
                 AnimController = new FishAnimController(this, seed, ragdollParams as FishRagdollParams);
-                PressureProtection = 100.0f;
+                PressureProtection = int.MaxValue;
             }
 
             AnimController.SetPosition(ConvertUnits.ToSimUnits(position));
@@ -1271,7 +1272,13 @@ namespace Barotrauma
 
         public float GetSkillLevel(string skillIdentifier)
         {
-            return (Info == null || Info.Job == null) ? 0.0f : Info.Job.GetSkillLevel(skillIdentifier);
+            if (Info?.Job == null) { return 0.0f; }
+            float skillLevel = Info.Job.GetSkillLevel(skillIdentifier);
+            foreach (Affliction affliction in CharacterHealth.GetAllAfflictions())
+            {
+                skillLevel *= affliction.GetSkillMultiplier();
+            }
+            return skillLevel;
         }
 
         // TODO: reposition? there's also the overrideTargetMovement variable, but it's not in the same manner
@@ -2466,11 +2473,8 @@ namespace Barotrauma
 
             if (NeedsAir)
             {
-                bool protectedFromPressure = PressureProtection > 0.0f;
-                //cannot be protected from pressure when below crush depth
-                protectedFromPressure = protectedFromPressure && WorldPosition.Y > CharacterHealth.CrushDepth;
                 //implode if not protected from pressure, and either outside or in a high-pressure hull
-                if (!protectedFromPressure &&
+                if (!IsProtectedFromPressure() &&
                     (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f))
                 {
                     if (CharacterHealth.PressureKillDelay <= 0.0f)
@@ -2656,7 +2660,10 @@ namespace Barotrauma
         {
             if (NeedsAir)
             {
-                PressureProtection -= deltaTime * 100.0f;
+                if (Timing.TotalTime > pressureProtectionLastSet + 0.1)
+                {
+                    PressureProtection = 0.0f;
+                }
             }
             if (NeedsWater)
             {
@@ -3281,7 +3288,7 @@ namespace Barotrauma
             GameMain.Config.RecentlyEncounteredCreatures.Add(other.SpeciesName);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true)
         {
             if (Removed) { return new AttackResult(); }
 
@@ -3327,7 +3334,7 @@ namespace Barotrauma
             bool wasDead = IsDead;
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound, damageMultiplier: damageMultiplier);
-            CharacterHealth.ApplyDamage(hitLimb, attackResult);
+            CharacterHealth.ApplyDamage(hitLimb, attackResult, allowStacking);
             if (attacker != this)
             {
                 OnAttacked?.Invoke(attacker, attackResult);
@@ -3382,6 +3389,12 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Is the character knocked down regardless whether the technical state is dead, unconcious, paralyzed, or stunned. 
+        /// With stunning, the parameter uses a half a second delay before the character is treated as knocked down. The purpose of this is to ignore minor stunning. If you don't want to to ignore any stun, use the Stun property.
+        /// </summary>
+        public bool IsKnockedDown => IsDead || IsIncapacitated || CharacterHealth.StunTimer > 0.5f;
+
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) { return; }
@@ -3391,7 +3404,7 @@ namespace Barotrauma
             {
                 AnimController.ResetPullJoints();
             }
-            CharacterHealth.StunTimer = newStun;
+            CharacterHealth.Stun = newStun;
             if (newStun > 0.0f)
             {
                 SelectedConstruction = null;
@@ -3964,5 +3977,10 @@ namespace Barotrauma
         public bool IsWatchman => HasJob("watchman");
 
         public bool HasJob(string identifier) => Info?.Job?.Prefab.Identifier == identifier;
+
+        public bool IsProtectedFromPressure()
+        {
+            return PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 0.0f);
+        }
     }
 }

@@ -997,8 +997,8 @@ namespace Barotrauma
 
             cprButton.Visible =
                 Character == Character.Controlled?.SelectedCharacter
-                && (Character.IsUnconscious || Character.Stun > 0.0f)
                 && !Character.IsDead
+                && Character.IsKnockedDown
                 && openHealthWindow == this;
             cprButton.IgnoreLayoutGroups = !cprButton.Visible;
             cprButton.Selected =  

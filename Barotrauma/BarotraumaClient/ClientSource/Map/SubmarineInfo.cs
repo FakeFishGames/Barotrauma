@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -32,24 +33,45 @@ namespace Barotrauma
             }
         }
 
-
         public void CreatePreviewWindow(GUIComponent parent)
         {
-            var content = new GUIButton(new RectTransform(Vector2.One, parent.RectTransform), style: null)
+            var content = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform), style: null);
+
+            var previewButton = new GUIButton(new RectTransform(new Vector2(1f, 0.5f), content.RectTransform), style: null)
             {
-                OnClicked = (btn, obj) => { SubmarinePreview.Create(this); return false; }
+                OnClicked = (btn, obj) => { SubmarinePreview.Create(this); return false; },
             };
 
-            if (PreviewImage == null)
+            var previewImage = PreviewImage ?? savedSubmarines.Find(s => s.Name.Equals(Name, StringComparison.OrdinalIgnoreCase))?.PreviewImage;
+            if (previewImage == null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), TextManager.Get(SavedSubmarines.Contains(this) ? "SubPreviewImageNotFound" : "SubNotDownloaded"));
+                new GUITextBlock(new RectTransform(Vector2.One, previewButton.RectTransform), TextManager.Get(SavedSubmarines.Contains(this) ? "SubPreviewImageNotFound" : "SubNotDownloaded"));
             }
             else
             {
-                var submarinePreviewBackground = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), content.RectTransform), style: null) { Color = Color.Black };
-                new GUIImage(new RectTransform(new Vector2(0.98f), submarinePreviewBackground.RectTransform, Anchor.Center), PreviewImage, scaleToFit: true);
-                new GUIFrame(new RectTransform(Vector2.One, submarinePreviewBackground.RectTransform), "InnerGlow", color: Color.Black);
+                var submarinePreviewBackground = new GUIFrame(new RectTransform(Vector2.One, previewButton.RectTransform), style: null)
+                {
+                    Color = Color.Black,
+                    HoverColor = Color.Black,
+                    SelectedColor = Color.Black,
+                    PressedColor = Color.Black,
+                    CanBeFocused = false,
+                };
+                new GUIImage(new RectTransform(new Vector2(0.98f), submarinePreviewBackground.RectTransform, Anchor.Center), previewImage, scaleToFit: true) { CanBeFocused = false };
+                new GUIFrame(new RectTransform(Vector2.One, submarinePreviewBackground.RectTransform), "InnerGlow", color: Color.Black) { CanBeFocused = false };
             }
+
+            new GUIFrame(new RectTransform(Vector2.One * 0.12f, previewButton.RectTransform, anchor: Anchor.BottomRight, pivot: Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight)
+            {
+                AbsoluteOffset = new Point((int)(0.03f * previewButton.Rect.Height))
+            },
+                "ExpandButton", Color.White)
+            {
+                Color = Color.White,
+                HoverColor = Color.White,
+                PressedColor = Color.White
+            };
+
             var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.5f), content.RectTransform, Anchor.BottomCenter))
             {
                 UserData = "descriptionbox",
@@ -59,36 +81,25 @@ namespace Barotrauma
             
             ScalableFont font = parent.Rect.Width < 350 ? GUI.SmallFont : GUI.Font;
 
-            CreateSpecsWindow(descriptionBox, font);
-
-            //space
-            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), descriptionBox.Content.RectTransform), style: null);
-
-            if (!string.IsNullOrEmpty(Description))
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform),
-                    TextManager.Get("SaveSubDialogDescription", fallBackTag: "WorkshopItemDescription"), font: GUI.Font, wrap: true)
-                { CanBeFocused = false, ForceUpperCase = true };
-            }
-
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionBox.Content.RectTransform), Description, font: font, wrap: true)
-            {
-                CanBeFocused = false
-            };
+            CreateSpecsWindow(descriptionBox, font, includesDescription: true);
         }
 
-        public void CreateSpecsWindow(GUIListBox parent, ScalableFont font)
+        public void CreateSpecsWindow(GUIListBox parent, ScalableFont font, bool includeTitle = true, bool includesDescription = false)
         {
             float leftPanelWidth = 0.6f;
-            float rightPanelWidth = 0.4f / leftPanelWidth;
+            float rightPanelWidth = 0.4f;
             string className = !HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{SubmarineClass}") : TextManager.Get("shuttle");
 
-            int nameHeight = (int)GUI.LargeFont.MeasureString(DisplayName, true).Y;
             int classHeight = (int)GUI.SubHeadingFont.MeasureString(className).Y;
             int leftPanelWidthInt = (int)(parent.Rect.Width * leftPanelWidth);
 
-            var submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont) { CanBeFocused = false };
-            submarineNameText.RectTransform.MinSize = new Point(0, (int)submarineNameText.TextSize.Y);
+            GUITextBlock submarineNameText = null;
+            if (includeTitle)
+            {
+                int nameHeight = (int)GUI.LargeFont.MeasureString(DisplayName, true).Y;
+                submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont) { CanBeFocused = false };
+                submarineNameText.RectTransform.MinSize = new Point(0, (int)submarineNameText.TextSize.Y);
+            }
             var submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont) { CanBeFocused = false };
             submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
 
@@ -152,8 +163,30 @@ namespace Barotrauma
                 versionText.RectTransform.MinSize = new Point(0, versionText.Children.First().Rect.Height);
             }
 
-            submarineNameText.AutoScaleHorizontal = true;
-            GUITextBlock.AutoScaleAndNormalize(parent.Content.Children.Where(c => c is GUITextBlock && c != submarineNameText).Cast<GUITextBlock>());
+            if (submarineNameText != null)
+            {
+                submarineNameText.AutoScaleHorizontal = true;
+            }
+
+            GUITextBlock descBlock = null;
+            if (includesDescription)
+            {
+                //space
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), parent.Content.RectTransform), style: null);
+
+                if (!string.IsNullOrEmpty(Description))
+                {
+                    var wsItemDesc = new GUITextBlock(new RectTransform(new Vector2(1, 0), parent.Content.RectTransform),
+                        TextManager.Get("SaveSubDialogDescription", fallBackTag: "WorkshopItemDescription"), font: GUI.Font, wrap: true)
+                    { CanBeFocused = false, ForceUpperCase = true };
+
+                    descBlock = new GUITextBlock(new RectTransform(new Vector2(1, 0), parent.Content.RectTransform), Description, font: font, wrap: true)
+                    {
+                        CanBeFocused = false
+                    };
+                }
+            }
+            GUITextBlock.AutoScaleAndNormalize(parent.Content.GetAllChildren<GUITextBlock>().Where(c => c != submarineNameText && c != descBlock));
         }
     }
 }

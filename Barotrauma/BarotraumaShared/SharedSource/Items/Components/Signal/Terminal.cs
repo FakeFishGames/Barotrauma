@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(XElement element);
 
-        partial void ShowOnDisplay(string input);
+        partial void ShowOnDisplay(string input, bool addToHistory = true);
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
@@ -58,13 +58,18 @@ namespace Barotrauma.Items.Components
 
         public override void OnItemLoaded()
         {
+            bool isSubEditor = false;
+#if CLIENT
+            isSubEditor = Screen.Selected != GameMain.SubEditorScreen || GameMain.GameSession?.GameMode is TestGameMode;
+#endif
+
             base.OnItemLoaded();
             if (!string.IsNullOrEmpty(DisplayedWelcomeMessage))
             {
-                ShowOnDisplay(DisplayedWelcomeMessage);
+                ShowOnDisplay(DisplayedWelcomeMessage, addToHistory: !isSubEditor);
                 DisplayedWelcomeMessage = "";
                 //remove welcome message if a game session is running so it doesn't reappear on successive rounds
-                if (GameMain.GameSession != null)
+                if (GameMain.GameSession != null && !isSubEditor)
                 {
                     welcomeMessage = null;
                 }

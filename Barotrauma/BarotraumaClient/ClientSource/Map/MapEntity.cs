@@ -20,9 +20,6 @@ namespace Barotrauma
         
         public static Vector2 StartMovingPos => startMovingPos;
 
-        // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
-        private Memento<Rectangle> rectMemento;
-
         public event Action<Rectangle> Resized;
 
         private static bool resizing;
@@ -64,8 +61,6 @@ namespace Barotrauma
                 return editingHUD;
             }
         }
-
-        //protected bool isSelected;
 
         private static bool disableSelect;
         public static bool DisableSelect

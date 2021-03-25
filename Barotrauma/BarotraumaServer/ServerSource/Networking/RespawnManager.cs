@@ -18,13 +18,12 @@ namespace Barotrauma.Networking
                 if (!c.InGame) { continue; }
                 if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { continue; }
                 if (c.Character != null && !c.Character.IsDead) { continue; }
-
+  
                 //don't allow respawning if the client has previously disconnected and their corpse is still present on the server
                 var matchingData = campaign?.GetClientCharacterData(c);
-                if (matchingData != null && matchingData.HasSpawned && 
-                    Character.CharacterList.Any(c => c.Info == matchingData.CharacterInfo && c.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
+                if (matchingData != null && matchingData.HasSpawned)
                 {
-                    continue;
+                    if (!c.WaitForNextRoundRespawn.HasValue || c.WaitForNextRoundRespawn.Value) { continue; }                   
                 }
 
                 yield return c;
@@ -77,25 +76,24 @@ namespace Barotrauma.Networking
 
         partial void UpdateWaiting(float deltaTime)
         {
+            if (RespawnShuttle != null)
+            {
+                RespawnShuttle.Velocity = Vector2.Zero;
+            }
+
             bool respawnPending = RespawnPending();
             if (respawnPending != RespawnCountdownStarted)
             {
                 RespawnCountdownStarted = respawnPending;
-                RespawnTime = DateTime.Now + new TimeSpan(0,0,0,0, (int)(GameMain.Server.ServerSettings.RespawnInterval * 1000.0f));
+                RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(GameMain.Server.ServerSettings.RespawnInterval * 1000.0f));
                 GameMain.Server.CreateEntityEvent(this);
             }
 
-            if (!RespawnCountdownStarted) { return; }
-
-            if (DateTime.Now > RespawnTime)
+            if (RespawnCountdownStarted && DateTime.Now > RespawnTime)
             {
                 DispatchShuttle();
                 RespawnCountdownStarted = false;
             }
-
-            if (RespawnShuttle == null) { return; }
-
-            RespawnShuttle.Velocity = Vector2.Zero;
         }
 
         private void DispatchShuttle()
@@ -183,7 +181,6 @@ namespace Barotrauma.Networking
 
         partial void UpdateTransportingProjSpecific(float deltaTime)
         {
-
             if (!ReturnCountdownStarted)
             {
                 //if there are no living chracters inside, transporting can be stopped immediately
@@ -229,6 +226,8 @@ namespace Barotrauma.Networking
             {
                 //get rid of the existing character
                 c.Character?.DespawnNow();
+
+                c.WaitForNextRoundRespawn = null;
 
                 var matchingData = campaign?.GetClientCharacterData(c);
                 if (matchingData != null && !matchingData.HasSpawned)
@@ -332,6 +331,15 @@ namespace Barotrauma.Networking
                 }
 
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
+                if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost)
+                {
+                    var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
+                    if (respawnPenaltyAffliction != null)
+                    {
+                        character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction.Instantiate(10.0f));
+                    }
+                }
+
                 if (characterData == null || characterData.HasSpawned)
                 {
                     //give the character the items they would've gotten if they had spawned in the main sub

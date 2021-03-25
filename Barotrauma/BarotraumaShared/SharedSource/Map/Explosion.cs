@@ -27,6 +27,7 @@ namespace Barotrauma
         private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
         private bool playTinnitus;
         private bool applyFireEffects;
+        private string[] ignoreFireEffectsForTags;
         private bool ignoreCover;
         private bool onlyInside;
         private bool onlyOutside;
@@ -53,6 +54,7 @@ namespace Barotrauma
             smoke = true;
             flames = true;
             underwaterBubble = true;
+            ignoreFireEffectsForTags = new string[0];
         }
         
         public Explosion(XElement element, string parentDebugName)
@@ -70,6 +72,8 @@ namespace Barotrauma
             playTinnitus = element.GetAttributeBool("playtinnitus", true);
 
             applyFireEffects = element.GetAttributeBool("applyfireeffects", flames);
+            ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", new string[0], convertToLowerInvariant: true);
+
             ignoreCover = element.GetAttributeBool("ignorecover", false);
             onlyInside = element.GetAttributeBool("onlyinside", false);
             onlyOutside = element.GetAttributeBool("onlyoutside", false);
@@ -192,7 +196,7 @@ namespace Barotrauma
                     dist = Math.Max(0.0f, dist - ConvertUnits.ToDisplayUnits(itemRadius));
                     if (dist > Attack.Range) { continue; }
 
-                    if (dist < Attack.Range * 0.5f && applyFireEffects && !item.FireProof)
+                    if (dist < Attack.Range * 0.5f && applyFireEffects && !item.FireProof && ignoreFireEffectsForTags.None(t => item.HasTag(t)))
                     {
                         //don't apply OnFire effects if the item is inside a fireproof container
                         //(or if it's inside a container that's inside a fireproof container, etc)

@@ -495,7 +495,7 @@ namespace Barotrauma
                     foreach (Item item in Item.ItemList)
                     {
                         if (item.CurrentHull != hull) { continue; }
-                        if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true) && !ignoredItems.Contains(item))
+                        if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true, allowUnloading: false) && !ignoredItems.Contains(item))
                         {
                             itemsToClean.Add(item);
                         }
@@ -539,6 +539,18 @@ namespace Barotrauma
             itemsToClean.Clear();
             ignoredItems.Clear();
             autonomousObjectiveRetryTimer = 10;
+        }
+
+        public override void OnDeselected()
+        {
+            base.OnDeselected();
+            foreach (var subObjective in SubObjectives)
+            {
+                if (subObjective is AIObjectiveCleanupItem cleanUpObjective)
+                {
+                    cleanUpObjective.DropTarget();
+                }
+            }
         }
     }
 }

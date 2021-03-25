@@ -160,13 +160,6 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        public override void RemoveItem(Item item)
-        {
-            if (!Contains(item)) { return; }
-            base.RemoveItem(item);
-            CreateSlots();
-        }
-
         public override void CreateSlots()
         {
             if (visualSlots == null) { visualSlots = new VisualSlot[capacity]; }

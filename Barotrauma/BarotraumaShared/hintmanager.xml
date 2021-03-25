@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <hintmanager>
-  
+
+  <divingsuitwarning/>
   <onadjacenthull>
     <highpressure/>
     <highwaterpercentage/>
@@ -11,6 +12,8 @@
     <progresstonextemptylocation/>
     <returntopreviousemptylocation/>
   </onavailabletransition>
+  <oncharacterkilled/>
+  <oncharacterunconscious/>
   <ondivinggearoutofoxygen/>
   <onhandcuffed/>
   <onisinteracting>

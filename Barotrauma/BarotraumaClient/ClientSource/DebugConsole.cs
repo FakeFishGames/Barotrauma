@@ -1247,6 +1247,7 @@ namespace Barotrauma
                     GameMain.DebugDraw = false;
                     GameMain.LightManager.LightingEnabled = true;
                     GameMain.LightManager.LosEnabled = true;
+                    GameMain.LightManager.LosAlpha = 1f;
                 }
                 NewMessage(HumanAIController.debugai ? "AI debug info visible" : "AI debug info hidden", Color.White);
             });

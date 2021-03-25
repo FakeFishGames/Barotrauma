@@ -2807,7 +2807,14 @@ namespace Barotrauma
 
             if (parentInventory != null)
             {
-                parentInventory.RemoveItem(this);
+                if (parentInventory is CharacterInventory characterInventory)
+                {
+                    characterInventory.RemoveItem(this, tryEquipFromSameStack: true);
+                }
+                else
+                {
+                    parentInventory.RemoveItem(this);
+                }
                 parentInventory = null;
             }
 

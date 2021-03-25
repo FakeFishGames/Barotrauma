@@ -1012,11 +1012,6 @@ namespace Barotrauma
                         }
                         else
                         {
-                            bool allowOffensive = HasItem(attacker, "handlocker", out _, requireEquipped: true);
-                            if (attackResult.Afflictions.Any(a => a is AfflictionHusk))
-                            {
-                                cumulativeDamage = 100;
-                            }
                             // Don't react to minor (accidental) dmg done by characters that are in the same team
                             if (cumulativeDamage < 10)
                             {
@@ -1027,7 +1022,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage, dmgThreshold: 20, allowOffensive: allowOffensive), attacker, GetReactionTime() * 2);
+                                AddCombatObjective(DetermineCombatMode(Character, cumulativeDamage, dmgThreshold: 50), attacker, GetReactionTime() * 2);
                             }
                         }
                     }
@@ -1056,7 +1051,7 @@ namespace Barotrauma
                     if (!otherHumanAI.IsFriendly(Character)) { continue; }
                     bool isWitnessing = otherHumanAI.VisibleHulls.Contains(Character.CurrentHull) || otherHumanAI.VisibleHulls.Contains(attacker.CurrentHull);
                     if (!isWitnessing && !CheckReportRange(Character, otherCharacter, ReportRange)) { continue; }
-                    var combatMode = DetermineCombatMode(otherCharacter, cumulativeDamage, isWitnessing);
+                    var combatMode = DetermineCombatMode(otherCharacter, cumulativeDamage, isWitnessing, dmgThreshold: attacker.TeamID == Character.TeamID ? 50 : 10);
                     float delay = isWitnessing ? GetReactionTime() : Rand.Range(2.0f, 5.0f, Rand.RandSync.Unsynced);
                     otherHumanAI.AddCombatObjective(combatMode, attacker, delay);
                 }
@@ -1099,6 +1094,15 @@ namespace Barotrauma
                     }
                     else
                     {
+                        if (c.AIController is HumanAIController humanAI && humanAI.ObjectiveManager.GetActiveObjective<AIObjectiveCombat>()?.Enemy == attacker)
+                        {
+                            // Already targeting the attacker -> treat as a more serious threat.
+                            cumulativeDamage *= 2;
+                        }
+                        if (attackResult.Afflictions.Any(a => a is AfflictionHusk))
+                        {
+                            cumulativeDamage = 100;
+                        }
                         if (cumulativeDamage > dmgThreshold)
                         {
                             if (c.IsSecurity)
@@ -1154,7 +1158,7 @@ namespace Barotrauma
                     HoldPosition = 
                         Character.Info?.Job?.Prefab.Identifier == "watchman" || 
                         Character.CurrentHull == null ||
-                        Character.IsOnPlayerTeam && ObjectiveManager.GetActiveObjective<AIObjectiveGoTo>()?.Target is Character followTarget && followTarget.IsPlayer,
+                        Character.IsOnPlayerTeam && !target.IsPlayer && ObjectiveManager.GetActiveObjective<AIObjectiveGoTo>()?.Target is Character followTarget && followTarget.IsPlayer,
                     abortCondition = abortCondition,
                     allowHoldFire = allowHoldFire,
                 };
@@ -1841,15 +1845,14 @@ namespace Barotrauma
                 if (character == null) { continue; }
                 if (c == character) { continue; }
                 if (c.IsDead || c.IsIncapacitated) { continue; }
-                if (c.SelectedConstruction != target.Item) { continue; }
                 if (!IsFriendly(character, c, onlySameTeam: true)) { continue; }
                 operatingCharacter = c;
-                // If the other character is player, don't try to operate
-                if (c.IsPlayer) { return true; }
                 if (c.AIController is HumanAIController controllingHumanAi)
                 {
                     Item otherTarget = controllingHumanAi.objectiveManager.GetActiveObjective<AIObjectiveOperateItem>()?.Component.Item ?? c.SelectedConstruction;
                     if (otherTarget != target.Item) { continue; }
+                    // If the other character is player, don't try to operate
+                    if (c.IsPlayer) { return true; }
                     // If the other character is ordered to operate the item, let him do it
                     if (controllingHumanAi.ObjectiveManager.IsCurrentOrder<AIObjectiveOperateItem>())
                     {
@@ -1874,8 +1877,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Shouldn't go here, unless we allow non-humans to operate items
-                    return false;
+                    return c.SelectedConstruction == target.Item;
                 }
 
             }

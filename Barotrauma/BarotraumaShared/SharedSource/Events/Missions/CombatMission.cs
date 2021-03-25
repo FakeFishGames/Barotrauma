@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -99,18 +100,18 @@ namespace Barotrauma
             }
             
             subs = new Submarine[] { Submarine.MainSubs[0], Submarine.MainSubs[1] };
-            subs[0].TeamID = CharacterTeamType.Team1; subs[1].TeamID = CharacterTeamType.Team2;
-            subs[0].NeutralizeBallast(); subs[1].NeutralizeBallast();
+
+            subs[0].NeutralizeBallast(); 
+            subs[0].TeamID = CharacterTeamType.Team1;
+            subs[0].DockedTo.ForEach(s => s.TeamID = CharacterTeamType.Team1);
+
+            subs[1].NeutralizeBallast();
+            subs[1].TeamID = CharacterTeamType.Team2;
+            subs[1].DockedTo.ForEach(s => s.TeamID = CharacterTeamType.Team2);
             subs[1].SetPosition(subs[1].FindSpawnPos(Level.Loaded.EndPosition));
             subs[1].FlipX();
 
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
-
-            foreach (Submarine submarine in Submarine.Loaded)
-            {
-                //hide all subs from sonar to make sneak attacks possible
-                submarine.ShowSonarMarker = false;
-            }
         }
 
         public override void End()

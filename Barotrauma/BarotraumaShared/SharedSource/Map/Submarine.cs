@@ -185,10 +185,6 @@ namespace Barotrauma
                 {
                     return -WorldPosition.Y * Physics.DisplayToRealWorldRatio;
                 }
-                else if (GameMain.GameSession?.Campaign == null)
-                {
-                    return (-(WorldPosition.Y - Level.Loaded.GenerationParams.Height) + 80000.0f) * Physics.DisplayToRealWorldRatio;
-                }
                 return Level.Loaded.GetRealWorldDepth(WorldPosition.Y);
             }
         }
@@ -254,7 +250,7 @@ namespace Barotrauma
             get 
             {
                 if (Level.Loaded == null || subBody == null) { return false; }
-                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth & RealWorldDepth > RealWorldCrushDepth;
+                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth && RealWorldDepth > RealWorldCrushDepth;
             }
         }
 
@@ -324,6 +320,7 @@ namespace Barotrauma
         {
             Info.Type = SubmarineType.Wreck;
             ShowSonarMarker = false;
+            DockedTo.ForEach(s => s.ShowSonarMarker = false);
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = CharacterTeamType.None;
 

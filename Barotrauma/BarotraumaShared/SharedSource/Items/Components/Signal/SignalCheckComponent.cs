@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             {
                 case "signal_in":
                     string signalOut = (signal.value == TargetSignal) ? Output : FalseOutput;
-                    if (string.IsNullOrWhiteSpace(signalOut)) { return; }
+                    if (string.IsNullOrEmpty(signalOut)) { return; }
                     signal.value = signalOut;
                     item.SendSignal(signal, "signal_out");
                     break;
