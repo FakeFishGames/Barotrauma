@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -25,7 +23,7 @@ namespace Barotrauma
 
         private bool subscribedToDeathEvent = false;
 
-        private bool staySubscribed = false;
+        private bool ringedThatDamnedBell = false;
 
         [Serialize(0f, true), Editable]
         public virtual float Strength
@@ -279,14 +277,14 @@ namespace Barotrauma
             // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
 
-            staySubscribed = false;
+            ringedThatDamnedBell = false;
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
                 ApplyStatusEffect(statusEffect, deltaTime, characterHealth, targetLimb);
             }
 
-            // Unsubscribe if no OnDeath statuseffect has been found in currentEffect
-            if (!staySubscribed && subscribedToDeathEvent)
+            // Unsubscribe if no OnDeath statuseffect has been found when looping over statuseffects in currenteffect
+            if (!ringedThatDamnedBell && subscribedToDeathEvent)
             {
                 if (character != null) {
                     character.OnDeath -= ApplyStatusEffectsOnDeath;
@@ -324,7 +322,7 @@ namespace Barotrauma
                         character.OnDeath += ApplyStatusEffectsOnDeath;
                         subscribedToDeathEvent = true;
                     }
-                    staySubscribed = true;
+                    ringedThatDamnedBell = true;
                 }
                 else
                 {
