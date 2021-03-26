@@ -353,12 +353,11 @@ namespace Barotrauma
             if (currentEffect == null) { return; }
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
-                // Apply OnDeath statuseffects on target character (afflicted)
+                // Apply OnDeath statuseffects on the afflicted character
                 if (statusEffect.type == ActionType.OnDeath && statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     statusEffect.Apply(ActionType.OnDeath, 1.0f, character, character);
-                }                
-                //statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
+                }             
             }
         }
 
