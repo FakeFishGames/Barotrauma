@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -18,6 +20,12 @@ namespace Barotrauma
         public float AdditionStrength { get; set; }
 
         protected float _strength;
+
+        private Character character;
+
+        private bool subscribedToDeathEvent = false;
+
+        private bool staySubscribed = false;
 
         [Serialize(0f, true), Editable]
         public virtual float Strength
@@ -271,9 +279,19 @@ namespace Barotrauma
             // Don't use the property, because it's virtual and some afflictions like husk overload it for external use.
             _strength = MathHelper.Clamp(_strength, 0.0f, Prefab.MaxStrength);
 
+            staySubscribed = false;
             foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
             {
                 ApplyStatusEffect(statusEffect, deltaTime, characterHealth, targetLimb);
+            }
+
+            // Unsubscribe if no OnDeath statuseffect has been found in currentEffect
+            if (!staySubscribed && subscribedToDeathEvent)
+            {
+                if (character != null) {
+                    character.OnDeath -= ApplyStatusEffectsOnDeath;
+                    subscribedToDeathEvent = false;
+                }
             }
 
             float amount = deltaTime;
@@ -297,7 +315,21 @@ namespace Barotrauma
             statusEffect.SetUser(Source);
             if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
             {
-                statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
+                if(statusEffect.type == ActionType.OnDeath)
+                {
+                    character = characterHealth.Character;
+                    if (character == null) { return; }
+                    if (!subscribedToDeathEvent)
+                    {
+                        character.OnDeath += ApplyStatusEffectsOnDeath;
+                        subscribedToDeathEvent = true;
+                    }
+                    staySubscribed = true;
+                }
+                else
+                {
+                    statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
+                }
             }
             if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
             {
@@ -313,6 +345,22 @@ namespace Barotrauma
                 var targets = new List<ISerializableEntity>();
                 statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets);
                 statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, targets);
+            }
+        }
+
+        public void ApplyStatusEffectsOnDeath(Character character, CauseOfDeath causeOfDeath)
+        {
+            if (Strength <= 0 || character.Removed) { return; }
+            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            if (currentEffect == null) { return; }
+            foreach (StatusEffect statusEffect in currentEffect.StatusEffects)
+            {
+                // Apply OnDeath statuseffects on target character (afflicted)
+                if (statusEffect.type == ActionType.OnDeath && statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                {
+                    statusEffect.Apply(ActionType.OnDeath, 1.0f, character, character);
+                }                
+                //statusEffect.Apply(ActionType.OnActive, deltaTime, characterHealth.Character, characterHealth.Character);
             }
         }
 
