@@ -767,6 +767,10 @@ namespace Barotrauma
                 else if (orderInfo.MatchesOrder(order, option))
                 {
                     icon.UserData = new OrderInfo(order, option, priority);
+                    if (icon is GUIImage image)
+                    {
+                        image.Sprite = GetOrderIconSprite(order, option);
+                    }
                     updatedExistingIcon = true;
                 }
             }

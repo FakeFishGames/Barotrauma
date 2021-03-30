@@ -55,6 +55,11 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
+                if ((!(controlled is null)) && (!(Screen.Selected?.Cam is null)) && value is null)
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
                 controlled = value;
                 if (controlled != null) controlled.Enabled = true;
                 CharacterHealth.OpenHealthWindow = null;                
@@ -121,6 +126,9 @@ namespace Barotrauma
         {
             get { return gibEmitters; }
         }
+
+        public static bool IsMouseOnUI => GUI.MouseOn != null ||
+                    (CharacterInventory.IsMouseOnInventory() && !CharacterInventory.DraggingItemToWorld);
 
         public class ObjectiveEntity
         {
@@ -291,6 +299,10 @@ namespace Barotrauma
                             cam.OffsetAmount = targetOffsetAmount = 0.0f;
                         }
                     }
+                    else if (IsMouseOnUI)
+                    {
+                        targetOffsetAmount = cam.OffsetAmount;
+                    }
                     else if (Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                     {
                         Body body = Submarine.CheckVisibility(AnimController.Limbs[0].SimPosition, mouseSimPos);
@@ -417,6 +429,11 @@ namespace Barotrauma
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
+                if (!(Screen.Selected?.Cam is null))
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
             }
 
             PlaySound(CharacterSound.SoundType.Die);
@@ -424,7 +441,15 @@ namespace Barotrauma
 
         partial void DisposeProjSpecific()
         {
-            if (controlled == this) controlled = null;
+            if (controlled == this)
+            {
+                controlled = null;
+                if (!(Screen.Selected?.Cam is null))
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
+            }
 
             if (GameMain.GameSession?.CrewManager != null &&
                 GameMain.GameSession.CrewManager.GetCharacters().Contains(this))

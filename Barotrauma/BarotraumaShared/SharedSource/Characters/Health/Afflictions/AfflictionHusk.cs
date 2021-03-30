@@ -148,10 +148,9 @@ namespace Barotrauma
             }
         }
 
-        public void Remove()
+        public void UnsubscribeFromDeathEvent()
         {
-            if (character == null) { return; }
-            DeactivateHusk();
+            if (character == null || !subscribedToDeathEvent) { return; }
             character.OnDeath -= CharacterDead;
             subscribedToDeathEvent = false;
         }
@@ -159,7 +158,11 @@ namespace Barotrauma
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (Strength < ActiveThreshold || character.Removed) { return; }
+            if (Strength < ActiveThreshold || character.Removed) 
+            {
+                UnsubscribeFromDeathEvent();
+                return; 
+            }
 
             //don't turn the character into a husk if any of its limbs are severed
             if (character.AnimController?.LimbJoints != null)
@@ -185,6 +188,7 @@ namespace Barotrauma
 
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
+            UnsubscribeFromDeathEvent();
 
             string huskedSpeciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);

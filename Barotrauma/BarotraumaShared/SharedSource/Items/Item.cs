@@ -348,7 +348,7 @@ namespace Barotrauma
             {
                 if (AiTarget != null)
                 {
-                    AiTarget.SonarLabel = value;
+                    AiTarget.SonarLabel = !string.IsNullOrEmpty(value) && value.Length > 200 ? value.Substring(200) : value;
                 }
             }
         }

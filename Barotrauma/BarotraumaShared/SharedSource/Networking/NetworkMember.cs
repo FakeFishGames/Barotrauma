@@ -237,9 +237,9 @@ namespace Barotrauma.Networking
             return radioComponent.HasRequiredContainedItems(sender, addMessage: false);
         }
 
-        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
+        public void AddChatMessage(string message, ChatMessageType type, string senderName = "", Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
         {
-            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, changeType: changeType));
+            AddChatMessage(ChatMessage.Create(senderName, message, type, senderCharacter, senderClient, changeType: changeType));
         }
 
         public virtual void AddChatMessage(ChatMessage message)
@@ -250,6 +250,18 @@ namespace Barotrauma.Networking
             {
                 message.Sender.ShowSpeechBubble(2.0f, ChatMessage.MessageColor[(int)message.Type]);
             }
+        }
+
+        public static string ClientLogName(Client client, string name = null)
+        {
+            if (client == null) { return name; }
+            string retVal = "‖";
+            if (client.Karma < 40.0f)
+            {
+                retVal += "color:#ff9900;";
+            }
+            retVal += "metadata:" + (client.SteamID != 0 ? client.SteamID.ToString() : client.ID.ToString()) + "‖" + (name ?? client.Name).Replace("‖", "") + "‖end‖";
+            return retVal;
         }
 
         public virtual void KickPlayer(string kickedName, string reason) { }

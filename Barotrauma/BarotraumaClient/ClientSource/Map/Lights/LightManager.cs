@@ -496,8 +496,6 @@ namespace Barotrauma.Lights
             if ((!LosEnabled || LosMode == LosMode.None) && !ObstructVision) return;
             if (ViewTarget == null) return;
 
-            if (Character.Controlled == null) { DebugConsole.NewMessage("aaa", Color.Orange); }
-
             graphics.SetRenderTarget(LosTexture);
 
             if (ObstructVision)

@@ -22,7 +22,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-            return "ScriptedEvent (" + prefab.EventType.ToString() +")";
+            return $"ScriptedEvent ({prefab.Identifier})";
         }
         
         public ScriptedEvent(EventPrefab prefab) : base(prefab)

@@ -111,7 +111,7 @@ namespace Barotrauma
         public override bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
         {
             bool wasPut = base.TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent);
-            if (wasPut)
+            if (wasPut && item.ParentInventory == this)
             {
                 foreach (Character c in Character.CharacterList)
                 {

@@ -82,7 +82,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : SenderName + ": " + TranslatedText;
+                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : NetworkMember.ClientLogName(SenderClient, SenderName) + ": " + TranslatedText;
             }
         }
 

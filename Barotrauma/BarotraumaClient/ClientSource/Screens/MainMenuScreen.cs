@@ -1173,7 +1173,10 @@ namespace Barotrauma
                 (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
                 campaignSetupUI.StartButton.RectTransform.MinSize.Y);
             startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
-            campaignSetupUI.EnableRadiationToggle.RectTransform.Parent = startButtonContainer.RectTransform;
+            if (campaignSetupUI.EnableRadiationToggle != null)
+            {
+                campaignSetupUI.EnableRadiationToggle.RectTransform.Parent = startButtonContainer.RectTransform;
+            }
             campaignSetupUI.InitialMoneyText.RectTransform.Parent = startButtonContainer.RectTransform;
         }
 

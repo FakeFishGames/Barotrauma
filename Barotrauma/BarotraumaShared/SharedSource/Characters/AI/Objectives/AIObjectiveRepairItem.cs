@@ -122,7 +122,7 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                // Eject empty tanks
+                HumanAIController.UnequipContainedItems(repairTool.Item, it => !it.HasTag("weldingfuel"));
                 HumanAIController.UnequipEmptyItems(repairTool.Item);
                 RelatedItem item = null;
                 Item fuel = null;

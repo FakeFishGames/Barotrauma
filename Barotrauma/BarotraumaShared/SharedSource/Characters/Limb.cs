@@ -1125,6 +1125,16 @@ namespace Barotrauma
             foreach (StatusEffect statusEffect in statusEffects)
             {
                 if (statusEffect.type != actionType) { continue; }
+                if (statusEffect.type == ActionType.OnDamaged)
+                {
+                    if (statusEffect.OnlyPlayerTriggered)
+                    {
+                        if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)
+                        {
+                            continue;
+                        }
+                    }
+                }
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {

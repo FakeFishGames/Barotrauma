@@ -16,8 +16,8 @@ namespace Barotrauma
 
         private Location furthestDiscoveredLocation;
 
-        public int Width => generationParams.Width;
-        public int Height => generationParams.Height;
+        public int Width { get; private set; }
+        public int Height { get; private set; }
 
         public Action<Location, LocationConnection> OnLocationSelected;
         /// <summary>
@@ -62,12 +62,17 @@ namespace Barotrauma
         public Map(CampaignSettings settings)
         {
             generationParams = MapGenerationParams.Instance;
+            Width = generationParams.Width;
+            Height = generationParams.Height;
             Locations = new List<Location>();
             Connections = new List<LocationConnection>();
-            Radiation = new Radiation(this, generationParams.RadiationParams)
+            if (generationParams.RadiationParams != null)
             {
-                Enabled = settings.RadiationEnabled
-            };
+                Radiation = new Radiation(this, generationParams.RadiationParams)
+                {
+                    Enabled = settings.RadiationEnabled
+                };
+            }
         }
 
         /// <summary>
@@ -77,6 +82,9 @@ namespace Barotrauma
         {
             Seed = element.GetAttributeString("seed", "a");
             Rand.SetSyncedSeed(ToolBox.StringToInt(Seed));
+
+            Width = element.GetAttributeInt("width", Width);
+            Height = element.GetAttributeInt("height", Height);
 
             bool lairsFound = false;
 
@@ -179,6 +187,12 @@ namespace Barotrauma
                     connectionElements[i].SetAttributeValue("hashuntinggrounds", true);
                 }
             }
+
+            //backwards compatibility: if locations go out of bounds (map saved with different generation parameters before width/height were included in the xml)
+            float maxX = Locations.Select(l => l.MapPosition.X).Max();
+            if (maxX > Width) { Width = (int)(maxX + 10); }
+            float maxY = Locations.Select(l => l.MapPosition.Y).Max();
+            if (maxY > Height) { Height = (int)(maxY + 10); }
 
             InitProjectSpecific();
         }
@@ -405,6 +419,7 @@ namespace Barotrauma
                 int zone1 = GetZoneIndex(Connections[i].Locations[0].MapPosition.X);
                 int zone2 = GetZoneIndex(Connections[i].Locations[1].MapPosition.X);
                 if (zone1 == zone2) { continue; }
+                if (zone2 == generationParams.DifficultyZones) { continue; }
 
                 if (!connectionsBetweenZones.Contains(Connections[i]))
                 {
@@ -416,9 +431,9 @@ namespace Barotrauma
                         Connections[i].Locations[0].MapPosition.X < Connections[i].Locations[1].MapPosition.X ?
                         Connections[i].Locations[0] :
                         Connections[i].Locations[1];
-                    if (!leftMostLocation.Type.HasOutpost)
+                    if (!leftMostLocation.Type.HasOutpost || leftMostLocation.Type.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase))
                     {
-                        leftMostLocation.ChangeType(LocationType.List.First(lt => lt.HasOutpost));
+                        leftMostLocation.ChangeType(LocationType.List.First(lt => lt.HasOutpost && !lt.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase)));
                     }
                     leftMostLocation.IsGateBetweenBiomes = true;
                     Connections[i].Locked = true;
@@ -708,8 +723,9 @@ namespace Barotrauma
             }
 
             SelectedLocation = Locations[index];
+            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
             SelectedConnection = 
-                Connections.Find(c => c.Locations.Contains(GameMain.GameSession?.Campaign?.CurrentDisplayLocation) && c.Locations.Contains(SelectedLocation)) ??
+                Connections.Find(c => c.Locations.Contains(currentDisplayLocation) && c.Locations.Contains(SelectedLocation)) ??
                 Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
             if (SelectedConnection?.Locked ?? false)
             {
@@ -796,7 +812,7 @@ namespace Barotrauma
                 ProgressWorld();
             }
 
-            Radiation.OnStep(steps);
+            Radiation?.OnStep(steps);
         }
 
         private void ProgressWorld()
@@ -1092,6 +1108,8 @@ namespace Barotrauma
                     mapElement.Add(new XAttribute("currentlocationconnection", Connections.IndexOf(Connections.Find(c => c.LevelData == Level.Loaded.LevelData))));
                 }
             }
+            mapElement.Add(new XAttribute("width", Width));
+            mapElement.Add(new XAttribute("height", Height));
             mapElement.Add(new XAttribute("selectedlocation", SelectedLocationIndex));
             mapElement.Add(new XAttribute("startlocation", Locations.IndexOf(StartLocation)));
             mapElement.Add(new XAttribute("endlocation", Locations.IndexOf(EndLocation)));
@@ -1118,7 +1136,10 @@ namespace Barotrauma
                 mapElement.Add(connectionElement);
             }
 
-            mapElement.Add(Radiation.Save());
+            if (Radiation != null)
+            {
+                mapElement.Add(Radiation.Save());
+            }
 
             element.Add(mapElement);
         }

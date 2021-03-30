@@ -514,6 +514,18 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public void MoveSoundToPosition(Sound sound, int pos)
+        {
+            lock (loadedSounds)
+            {
+                int index = loadedSounds.IndexOf(sound);
+                if (index >= 0)
+                {
+                    loadedSounds.SiftElement(index, pos);
+                }
+            }
+        }
+
         public void SetCategoryGainMultiplier(string category, float gain, int index=0)
         {
             if (Disabled) { return; }

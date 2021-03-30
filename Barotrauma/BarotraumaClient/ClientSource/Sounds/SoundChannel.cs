@@ -491,8 +491,10 @@ namespace Barotrauma.Sounds
                 mutex = new object();
             }
 
+#if !DEBUG
             try
             {
+#endif
                 if (mutex != null) { Monitor.Enter(mutex); }
                 if (sound.Owner.CountPlayingInstances(sound) < sound.MaxSimultaneousInstances)
                 {
@@ -513,15 +515,6 @@ namespace Barotrauma.Sounds
                         if (Sound.Buffers.RequestAlBuffers())
                         {
                             Sound.FillBuffers();
-                        }
-
-                        if (!Al.IsBuffer(sound.Buffers.AlBuffer))
-                        {
-                            throw new Exception(sound.Filename + " has an invalid buffer!");
-                        }
-                        if (!Al.IsBuffer(sound.Buffers.AlMuffledBuffer))
-                        {
-                            throw new Exception(sound.Filename + " has an invalid muffled buffer!");
                         }
 
                         uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffled ? Sound.Buffers.AlMuffledBuffer : Sound.Buffers.AlBuffer;
@@ -587,6 +580,7 @@ namespace Barotrauma.Sounds
                 this.Near = near;
                 this.Far = far;
                 this.Category = category;
+#if !DEBUG
             }
             catch
             {
@@ -594,8 +588,11 @@ namespace Barotrauma.Sounds
             }
             finally
             {
+#endif
                 if (mutex != null) { Monitor.Exit(mutex); }
+#if !DEBUG
             }
+#endif
 
             Sound.Owner.Update();
         }

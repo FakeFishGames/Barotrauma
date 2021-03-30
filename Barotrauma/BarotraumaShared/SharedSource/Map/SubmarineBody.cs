@@ -453,7 +453,7 @@ namespace Barotrauma
 
             //camera shake and sounds start playing 500 meters before crush depth
             float depthEffectThreshold = 500.0f;
-            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
             {
                 return;
             }

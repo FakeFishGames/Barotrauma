@@ -771,17 +771,11 @@ namespace Barotrauma
                             targetHull = hull;
                         }
                     }
-                    foreach (var ballastFlora in MapCreatures.Behavior.BallastFloraBehavior.EntityList)
+                    if (IsBallastFloraNoticeable(Character, hull))
                     {
-                        if (ballastFlora.Parent?.Submarine != Character.Submarine) { continue; }
-                        if (!ballastFlora.HasBrokenThrough) { continue; }
-                        // Don't react to the first two branches, because they are usually in the very edges of the room.
-                        if (ballastFlora.Branches.Count(b => !b.Removed && b.Health > 0 && b.CurrentHull == hull) > 2)
-                        {
-                            var orderPrefab = Order.GetPrefab("reportballastflora");
-                            newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
-                            targetHull = hull;
-                        }
+                        var orderPrefab = Order.GetPrefab("reportballastflora");
+                        newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                        targetHull = hull;
                     }
                     if (!isFighting)
                     {
@@ -846,6 +840,21 @@ namespace Barotrauma
 #endif
                 }
             }
+        }
+
+        public static bool IsBallastFloraNoticeable(Character character, Hull hull)
+        {
+            foreach (var ballastFlora in MapCreatures.Behavior.BallastFloraBehavior.EntityList)
+            {
+                if (ballastFlora.Parent?.Submarine != character.Submarine) { continue; }
+                if (!ballastFlora.HasBrokenThrough) { continue; }
+                // Don't react to the first two branches, because they are usually in the very edges of the room.
+                if (ballastFlora.Branches.Count(b => !b.Removed && b.Health > 0 && b.CurrentHull == hull) > 2)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static void ReportProblem(Character reporter, Order order)

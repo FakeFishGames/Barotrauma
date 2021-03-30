@@ -299,6 +299,13 @@ namespace Barotrauma
                         System.Diagnostics.Debug.Assert(spawnPoint.ParentRuin == chosenPosition.Ruin);
                         spawnPos = spawnPoint.WorldPosition; 
                     }
+                    else
+                    {                        
+                        //no suitable position found, disable the event
+                        spawnPos = null;
+                        Finished();
+                        return;                        
+                    }
                 }
                 else if ((chosenPosition.PositionType == Level.PositionType.MainPath || chosenPosition.PositionType == Level.PositionType.SidePath)
                     && offset > 0)

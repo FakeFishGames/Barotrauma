@@ -32,6 +32,7 @@
                     GUI.KeyboardDispatcher.Subscriber = null;
                     GUI.ScreenChanged = true;
                 }
+                SubmarinePreview.Close();
 #endif
             }
             selected = this;

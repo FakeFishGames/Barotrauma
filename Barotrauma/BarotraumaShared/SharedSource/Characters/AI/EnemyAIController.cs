@@ -181,6 +181,7 @@ namespace Barotrauma
             private set;
         } = new HashSet<Submarine>();
 
+        public bool IsTargetingPlayer => SelectedAiTarget?.Entity?.Submarine != null && SelectedAiTarget.Entity.Submarine.Info.IsPlayer || SelectedAiTarget?.Entity is Character targetCharacter && targetCharacter.IsPlayer;
         public bool IsBeingChasedBy(Character c) => c.AIController is EnemyAIController enemyAI && enemyAI.SelectedAiTarget?.Entity is Character && (enemyAI.State == AIState.Aggressive || enemyAI.State == AIState.Attack);
         private bool IsBeingChased => SelectedAiTarget?.Entity is Character targetCharacter && IsBeingChasedBy(targetCharacter);
 

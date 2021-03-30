@@ -103,13 +103,6 @@ namespace Barotrauma
             };
         }
 #endif
-        public Location CurrentDisplayLocation
-        {
-            get 
-            {
-                return GameMain.GameSession.Campaign.CurrentDisplayLocation;
-            }
-        }
 
         partial void InitProjectSpecific()
         {
@@ -263,24 +256,26 @@ namespace Barotrauma
         {
             Rectangle rect = mapContainer.Rect;
 
-            if (CurrentDisplayLocation != null)
+            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
+
+            if (currentDisplayLocation != null)
             {
-                if (!CurrentDisplayLocation.Discovered)
+                if (!currentDisplayLocation.Discovered)
                 {
-                    RemoveFogOfWar(CurrentDisplayLocation);
-                    CurrentDisplayLocation.Discovered = true;
-                    if (CurrentDisplayLocation.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                    RemoveFogOfWar(currentDisplayLocation);
+                    currentDisplayLocation.Discovered = true;
+                    if (currentDisplayLocation.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                     {
-                        furthestDiscoveredLocation = CurrentDisplayLocation;
+                        furthestDiscoveredLocation = currentDisplayLocation;
                     }
                 }
             }
 
-            Vector2 currentPosition = CurrentDisplayLocation.MapPosition;
+            Vector2 currentPosition = currentDisplayLocation.MapPosition;
             if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection && Level.Loaded.StartLocation != null && Level.Loaded.EndLocation != null)
             {
-                Vector2 startPos = CurrentDisplayLocation == Level.Loaded.StartLocation ? Level.Loaded.StartLocation.MapPosition : Level.Loaded.EndLocation.MapPosition;
-                int moveDir = CurrentDisplayLocation == Level.Loaded.StartLocation ? 1 : -1;
+                Vector2 startPos = currentDisplayLocation == Level.Loaded.StartLocation ? Level.Loaded.StartLocation.MapPosition : Level.Loaded.EndLocation.MapPosition;
+                int moveDir = currentDisplayLocation == Level.Loaded.StartLocation ? 1 : -1;
 
                 Vector2 diff = Level.Loaded.EndLocation.MapPosition - Level.Loaded.StartLocation.MapPosition;
                 currentPosition = startPos + 
@@ -330,14 +325,14 @@ namespace Barotrauma
                 for (int i = 0; i < Locations.Count; i++)
                 {
                     Location location = Locations[i];
-                    if (IsInFogOfWar(location) && !(CurrentDisplayLocation?.Connections.Any(c => c.Locations.Contains(location)) ?? false) && !GameMain.DebugDraw) { continue; }
+                    if (IsInFogOfWar(location) && !(currentDisplayLocation?.Connections.Any(c => c.Locations.Contains(location)) ?? false) && !GameMain.DebugDraw) { continue; }
 
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
                     if (!rect.Contains(pos)) { continue; }
 
                     Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
                     float iconScale = generationParams.LocationIconSize / locationSprite.size.X;
-                    if (location == CurrentDisplayLocation) { iconScale *= 1.2f; }
+                    if (location == currentDisplayLocation) { iconScale *= 1.2f; }
 
                     Rectangle drawRect = locationSprite.SourceRect;
                     drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
@@ -383,9 +378,9 @@ namespace Barotrauma
             {
                 foreach (LocationConnection connection in Connections)
                 {
-                    if (HighlightedLocation != CurrentDisplayLocation &&
+                    if (HighlightedLocation != currentDisplayLocation &&
                         connection.Locations.Contains(HighlightedLocation) && 
-                        connection.Locations.Contains(CurrentDisplayLocation))
+                        connection.Locations.Contains(currentDisplayLocation))
                     {
                         if (PlayerInput.PrimaryMouseButtonClicked() &&
                             SelectedLocation != HighlightedLocation && HighlightedLocation != null)
@@ -418,13 +413,13 @@ namespace Barotrauma
                 {
                     if (PlayerInput.DoubleClicked() && HighlightedLocation != null)
                     {
-                        var passedConnection = CurrentDisplayLocation.Connections.Find(c => c.OtherLocation(CurrentDisplayLocation) == HighlightedLocation);
+                        var passedConnection = currentDisplayLocation.Connections.Find(c => c.OtherLocation(currentDisplayLocation) == HighlightedLocation);
                         if (passedConnection != null)
                         {
                             passedConnection.Passed = true;
                         }
 
-                        Location prevLocation = CurrentDisplayLocation;
+                        Location prevLocation = currentDisplayLocation;
                         CurrentLocation = HighlightedLocation;
                         Level.Loaded.DebugSetStartLocation(CurrentLocation);
                         Level.Loaded.DebugSetEndLocation(null);
@@ -436,7 +431,7 @@ namespace Barotrauma
                         {
                             CurrentLocation.CreateStore();
                             ProgressWorld();
-                            Radiation.OnStep(1);
+                            Radiation?.OnStep(1);
                         }
                         else
                         {
@@ -461,6 +456,7 @@ namespace Barotrauma
         public void Draw(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
             tooltip = null;
+            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
 
             Rectangle rect = mapContainer.Rect;
 
@@ -531,14 +527,14 @@ namespace Barotrauma
             float rawNoiseScale = 1.0f + PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
             DrawNoise(spriteBatch, rect, rawNoiseScale);
 
-            Radiation.Draw(spriteBatch, rect, zoom);
+            Radiation?.Draw(spriteBatch, rect, zoom);
 
             if (generationParams.ShowLocations)
             {
                 foreach (LocationConnection connection in Connections)
                 {
                     if (IsInFogOfWar(connection.Locations[0]) && IsInFogOfWar(connection.Locations[1])) { continue; }
-                    DrawConnection(spriteBatch, connection, rect, viewOffset);
+                    DrawConnection(spriteBatch, connection, rect, viewOffset, currentDisplayLocation);
                 }
                 
                 for (int i = 0; i < Locations.Count; i++)
@@ -557,12 +553,12 @@ namespace Barotrauma
 
                     Color color = location.Type.SpriteColor;
                     if (!location.Discovered) { color = Color.White; }
-                    if (location.Connections.Find(c => c.Locations.Contains(CurrentDisplayLocation)) == null)
+                    if (location.Connections.Find(c => c.Locations.Contains(currentDisplayLocation)) == null)
                     {
                         color *= 0.5f;
                     }
 
-                    float iconScale = location == CurrentDisplayLocation ? 1.2f : 1.0f;
+                    float iconScale = location == currentDisplayLocation ? 1.2f : 1.0f;
                     if (location == HighlightedLocation)
                     {
                         iconScale *= 1.2f;
@@ -571,7 +567,7 @@ namespace Barotrauma
                     locationSprite.Draw(spriteBatch, pos, color, 
                         scale: generationParams.LocationIconSize / locationSprite.size.X * iconScale * zoom);
 
-                    if (location == CurrentDisplayLocation)
+                    if (location == currentDisplayLocation)
                     {
                         if (SelectedLocation != null)
                         {
@@ -701,7 +697,7 @@ namespace Barotrauma
 
             if (drawRadiationTooltip)
             {
-                Radiation.DrawFront(spriteBatch);
+                Radiation?.DrawFront(spriteBatch);
             }
 
             spriteBatch.End();
@@ -736,7 +732,7 @@ namespace Barotrauma
 
         private static float GetPerlinNoise() => PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
 
-        private void DrawConnection(SpriteBatch spriteBatch, LocationConnection connection, Rectangle viewArea, Vector2 viewOffset, Color? overrideColor = null)
+        private void DrawConnection(SpriteBatch spriteBatch, LocationConnection connection, Rectangle viewArea, Vector2 viewOffset, Location currentDisplayLocation, Color? overrideColor = null)
         {
             Color connectionColor;
             if (GameMain.DebugDraw)
@@ -765,15 +761,15 @@ namespace Barotrauma
                 width = (int)(width * 1.5f);
             }
             //selected connection
-            if (SelectedLocation != CurrentDisplayLocation &&
-                connection.Locations.Contains(SelectedLocation) && connection.Locations.Contains(CurrentDisplayLocation))
+            if (SelectedLocation != currentDisplayLocation &&
+                connection.Locations.Contains(SelectedLocation) && connection.Locations.Contains(currentDisplayLocation))
             {
                 connectionColor = generationParams.HighlightedConnectionColor;
                 width *= 2;
             }
             //highlighted connection
-            else if (HighlightedLocation != CurrentDisplayLocation &&
-                    connection.Locations.Contains(HighlightedLocation) && connection.Locations.Contains(CurrentDisplayLocation))
+            else if (HighlightedLocation != currentDisplayLocation &&
+                    connection.Locations.Contains(HighlightedLocation) && connection.Locations.Contains(currentDisplayLocation))
             {
                 connectionColor = generationParams.HighlightedConnectionColor;
                 width *= 2;
@@ -834,7 +830,7 @@ namespace Barotrauma
                 if (connection == SelectedConnection)
                 {
                     float t = (i - startIndex) / (float)(endIndex - startIndex - 1);
-                    if (CurrentDisplayLocation == connection.Locations[1]) { t = 1.0f - t; }
+                    if (currentDisplayLocation == connection.Locations[1]) { t = 1.0f - t; }
                     if (t > connectionHighlightState) 
                     { 
                         segmentWidth /= 2; 

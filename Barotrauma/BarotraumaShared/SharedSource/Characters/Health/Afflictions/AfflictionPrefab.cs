@@ -613,9 +613,6 @@ namespace Barotrauma
                     case "icon":
                         Icon = new Sprite(subElement);
                         break;
-                    case "periodiceffect":
-                        periodicEffects.Add(new PeriodicEffect(subElement, Name));
-                        break;
                 }
             }
 
@@ -648,6 +645,9 @@ namespace Barotrauma
                 {
                     case "effect":
                         effects.Add(new Effect(subElement, Name));
+                        break;
+                    case "periodiceffect":
+                        periodicEffects.Add(new PeriodicEffect(subElement, Name));
                         break;
                 }
             }

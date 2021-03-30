@@ -110,13 +110,14 @@ namespace Barotrauma
 
         public Decal CreateDecal(string decalName, float scale, Vector2 worldPosition, Hull hull, int? spriteIndex = null)
         {
-            if (!Prefabs.ContainsKey(decalName.ToLowerInvariant()))
+            string lowerCaseDecalName = decalName.ToLowerInvariant();
+            if (!Prefabs.ContainsKey(lowerCaseDecalName))
             {
                 DebugConsole.ThrowError("Decal prefab " + decalName + " not found!");
                 return null;
             }
 
-            DecalPrefab prefab = Prefabs[decalName];
+            DecalPrefab prefab = Prefabs[lowerCaseDecalName];
 
             return new Decal(prefab, scale, worldPosition, hull, spriteIndex);
         }

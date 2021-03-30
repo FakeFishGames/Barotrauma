@@ -55,6 +55,10 @@ namespace Barotrauma
                 {
                     chatBox.ToggleOpen = wasChatBoxOpen;
                 }
+                if (!value && CampaignUI?.SelectedTab == InteractionType.PurchaseSub)
+                {
+                    SubmarinePreview.Close();
+                }
                 showCampaignUI = value;
             }
         }

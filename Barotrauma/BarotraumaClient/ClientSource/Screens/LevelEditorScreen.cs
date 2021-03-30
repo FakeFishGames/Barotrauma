@@ -843,7 +843,7 @@ namespace Barotrauma
             pointerLightSource.Position = cam.ScreenToWorld(PlayerInput.MousePosition);
             pointerLightSource.Enabled = cursorLightEnabled.Selected;
             pointerLightSource.IsBackground = true;
-            cam.MoveCamera((float)deltaTime);
+            cam.MoveCamera((float)deltaTime, allowZoom: GUI.MouseOn == null);
             cam.UpdateTransform();
             Level.Loaded?.Update((float)deltaTime, cam);
 

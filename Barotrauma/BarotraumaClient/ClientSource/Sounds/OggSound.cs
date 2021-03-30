@@ -105,7 +105,7 @@ namespace Barotrauma.Sounds
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set regular buffer data for non-streamed audio! " + Al.GetErrorString(alError));
                 }
 
                 MuffleBuffer(floatBuffer, SampleRate, reader.Channels);
@@ -118,7 +118,7 @@ namespace Barotrauma.Sounds
                 alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set muffled buffer data for non-streamed audio! " + Al.GetErrorString(alError));
                 }
 
                 reader.Dispose(); reader = null;

@@ -539,52 +539,42 @@ namespace Barotrauma
                         }
                     }
 
+                    IEnumerable<string> strings;
                     if (MouseOn != null)
                     {
                         RectTransform mouseOnRect = MouseOn.RectTransform;
                         bool isAbsoluteOffsetInUse = mouseOnRect.AbsoluteOffset != Point.Zero || mouseOnRect.RelativeOffset == Vector2.Zero;
 
-                        string selectedString = $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}";
-                        string offsetString = $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}";
-                        string anchorPivotString = $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}";
-                        Vector2 selectedStringSize = SmallFont.MeasureString(selectedString);
-                        Vector2 offsetStringSize = SmallFont.MeasureString(offsetString);
-                        Vector2 anchorPivotStringSize = SmallFont.MeasureString(anchorPivotString);
-
-                        int padding = IntScale(10);
-                        int yPos = padding;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)selectedStringSize.X - padding, yPos), selectedString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)selectedStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)offsetStringSize.X - padding, yPos), offsetString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)offsetStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)anchorPivotStringSize.Y + padding / 2;
+                        strings = new string[]
+                        {
+                            $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}",
+                            $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}",
+                            $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}"
+                        };
                     }
                     else
                     {
-                        string[] strings = new string[]
+                        strings = new string[]
                         {
                             $"GUI.Scale: {Scale}",
                             $"GUI.xScale: {xScale}",
                             $"GUI.yScale: {yScale}",
                             $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}",
                             $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}",
-                            $"Cam.Zoom: {Screen.Selected.Cam?.Zoom ?? 0f}",
                         };
+                    }
 
-                        int padding = IntScale(10);
-                        int yPos = padding;
+                    strings = strings.Concat(new string[] { $"Cam.Zoom: {Screen.Selected.Cam?.Zoom ?? 0f}" });
 
-                        foreach (string str in strings)
-                        {
-                            Vector2 stringSize = SmallFont.MeasureString(str);
+                    int padding = IntScale(10);
+                    int yPos = padding;
 
-                            DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)stringSize.X - padding, yPos), str, Color.LightGreen, Color.Black, 0, SmallFont);
-                            yPos += (int)stringSize.Y + padding / 2;
-                        }
+                    foreach (string str in strings)
+                    {
+                        Vector2 stringSize = SmallFont.MeasureString(str);
+
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)stringSize.X - padding, yPos), str, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)stringSize.Y + padding / 2;
                     }
                 }
 
@@ -1037,7 +1027,7 @@ namespace Barotrauma
                         }
                     }
                 
-                    if (parent != null)
+                    if (parent != null && parent.CanBeFocused)
                     {
                         if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
                     }

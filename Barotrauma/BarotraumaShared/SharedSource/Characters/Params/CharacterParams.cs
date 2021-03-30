@@ -49,6 +49,9 @@ namespace Barotrauma
         [Serialize(false, false), Editable]
         public bool CanSpeak { get; set; }
 
+        [Serialize(false, true), Editable]
+        public bool UseBossHealthBar { get; private set; }
+
         [Serialize(100f, true, description: "How much noise the character makes when moving?"), Editable(minValue: 0f, maxValue: 100000f)]
         public float Noise { get; set; }
 

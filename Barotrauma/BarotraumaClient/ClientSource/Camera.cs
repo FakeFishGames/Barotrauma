@@ -251,7 +251,7 @@ namespace Barotrauma
         /// </summary>
         public bool Freeze { get; set; }
 
-        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true)
+        public void MoveCamera(float deltaTime, bool allowMove = true, bool allowZoom = true, bool? followSub = null)
         {
             prevPosition = position;
             prevZoom = zoom;
@@ -278,7 +278,7 @@ namespace Barotrauma
                     velocity = Vector2.Lerp(velocity, moveInput, deltaTime * 10.0f);
                     moveCam = velocity * moveSpeed * deltaTime * FreeCamMoveSpeed * 60.0f;
 
-                    if (Screen.Selected == GameMain.GameScreen && FollowSub)
+                    if (Screen.Selected == GameMain.GameScreen && (followSub ?? FollowSub))
                     {
                         var closestSub = Submarine.FindClosest(WorldViewCenter);
                         if (closestSub != null)
@@ -313,9 +313,10 @@ namespace Barotrauma
             {
                 Vector2 mousePos = PlayerInput.MousePosition;
                 Vector2 offset = mousePos - Resolution.ToVector2() / 2;
-                offset.X = offset.X / (Resolution.X * 0.6f);
-                offset.Y = -offset.Y / (Resolution.Y * 0.6f);
+                offset.X = offset.X / (Resolution.X * 0.4f);
+                offset.Y = -offset.Y / (Resolution.Y * 0.3f);
                 if (offset.LengthSquared() > 1.0f) offset.Normalize();
+                float offsetUnscaledLen = offset.Length();
                 offset *= OffsetAmount;
                 // Freeze the camera movement by default, when the cursor is on top of an ui element.
                 // Setting a positive value to the OffsetAmount, will override this behaviour.
@@ -330,21 +331,20 @@ namespace Barotrauma
                 }
                 if (Freeze)
                 {
-                    offset = previousOffset;
+                    if (offset.LengthSquared() > 0.001f) { offset = previousOffset; }
                 }
                 else
                 {
                     previousOffset = offset;
                 }
 
-                //TODO: remove magic numbers
-                float minMultiplier = OffsetAmount > 0f ? ((DefaultZoom * 8f * 250f) / OffsetAmount) : 15f;
-
-                //how much to zoom out (0.0 = Default zoom, 1.0 = zoom completely out)
+                //how much to zoom out (zoom completely out when offset is 1000)
                 float zoomOutAmount = GetZoomAmount(offset);
-                float newZoom = MathHelper.Lerp(DefaultZoom, MinZoom * minMultiplier, zoomOutAmount) * globalZoomScale;
+                //scaled zoom amount
+                float scaledZoom = MathHelper.Lerp(DefaultZoom, MinZoom, zoomOutAmount) * globalZoomScale;
                 //zoom in further if zoomOutAmount is low and resolution is lower than reference
-                newZoom *= MathHelper.Lerp(0.5f * (1f - Math.Min(globalZoomScale, 1f)), 0f, zoomOutAmount) + 1f;
+                float newZoom = scaledZoom * (MathHelper.Lerp(0.3f * (1f - Math.Min(globalZoomScale, 1f)), 0f,
+                    (GameMain.Config == null || GameMain.Config.EnableMouseLook) ? (float)Math.Sqrt(offsetUnscaledLen) : 0.3f) + 1f);
 
                 Zoom += (newZoom - zoom) / ZoomSmoothness;
 
@@ -416,7 +416,7 @@ namespace Barotrauma
 
         private float GetZoomAmount(Vector2 offset)
         {
-            return Math.Min(offset.Length() / Math.Max(1f, OffsetAmount), 1.0f);
+            return Math.Min(offset.Length() / 1000.0f, 1.0f);
         }
 
         public float GetZoomAmountFromPrevious()

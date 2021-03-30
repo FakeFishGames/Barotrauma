@@ -533,7 +533,7 @@ namespace Barotrauma
 
             base.Update(deltaTime);
             
-            Map?.Radiation.UpdateRadiation(deltaTime);
+            Map?.Radiation?.UpdateRadiation(deltaTime);
 
             if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))

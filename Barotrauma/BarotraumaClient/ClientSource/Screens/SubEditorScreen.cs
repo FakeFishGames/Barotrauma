@@ -4291,7 +4291,7 @@ namespace Barotrauma
 
                 if (PlayerInput.IsCtrlDown() && MapEntity.StartMovingPos == Vector2.Zero)
                 {
-                    cam.MoveCamera((float) deltaTime, allowMove: false);
+                    cam.MoveCamera((float) deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
                     // Save menu
                     if (PlayerInput.KeyHit(Keys.S))
                     {
@@ -4330,12 +4330,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    cam.MoveCamera((float) deltaTime, allowMove: true);
+                    cam.MoveCamera((float) deltaTime, allowMove: true, allowZoom: GUI.MouseOn == null);
                 }
             }
             else
             {
-                cam.MoveCamera((float) deltaTime, allowMove: false);
+                cam.MoveCamera((float) deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             }
 
             if (PlayerInput.MidButtonHeld())

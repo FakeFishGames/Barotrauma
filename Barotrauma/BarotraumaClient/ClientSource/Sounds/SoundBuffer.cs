@@ -34,6 +34,7 @@ namespace Barotrauma.Sounds
         {
             bufferPool.ForEach(b => Al.DeleteBuffer(b));
             bufferPool.Clear();
+            BuffersGenerated = 0;
         }
 
         public bool RequestAlBuffers()
@@ -81,10 +82,37 @@ namespace Barotrauma.Sounds
                 if (otherSound.IsPlaying()) { continue; }
                 if (otherSound.Buffers == null) { continue; }
                 if (otherSound.Buffers.AlBuffer == 0) { continue; }
+
+                // Dispose all channels that are holding
+                // a reference to these buffers, otherwise
+                // an INVALID_OPERATION error will be thrown
+                // when attempting to set the buffer data later.
+                // Having the sources not play is not enough,
+                // as OpenAL assumes that you may want to call
+                // alSourcePlay without reassigning the buffer.
+                otherSound.Owner.KillChannels(otherSound);
+
                 AlBuffer = otherSound.Buffers.AlBuffer;
                 AlMuffledBuffer = otherSound.Buffers.AlMuffledBuffer;
                 otherSound.Buffers.AlBuffer = 0;
                 otherSound.Buffers.AlMuffledBuffer = 0;
+
+                // For performance reasons, sift the current sound to
+                // the end of the loadedSounds list, that way it'll
+                // be less likely to have its buffers stolen, which
+                // means less reuploads for frequently played sounds.
+                sound.Owner.MoveSoundToPosition(sound, sound.Owner.LoadedSoundCount-1);
+
+                if (!Al.IsBuffer(AlBuffer))
+                {
+                    throw new Exception(sound.Filename + " has an invalid buffer!");
+                }
+                if (!Al.IsBuffer(AlMuffledBuffer))
+                {
+                    throw new Exception(sound.Filename + " has an invalid muffled buffer!");
+                }
+
+
                 return true;
             }
 

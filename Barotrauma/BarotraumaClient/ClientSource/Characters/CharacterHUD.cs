@@ -12,6 +12,40 @@ namespace Barotrauma
 {
     class CharacterHUD
     {
+        const float BossHealthBarDuration = 30.0f;
+        class BossHealthBar
+        {
+            public readonly Character Character;
+            public float FadeTimer;
+
+            public readonly GUIComponent TopContainer;
+            public readonly GUIComponent SideContainer;
+
+            public readonly GUIProgressBar TopHealthBar;
+            public readonly GUIProgressBar SideHealthBar;
+
+            public BossHealthBar(Character character)
+            {
+                Character = character;
+                FadeTimer = BossHealthBarDuration;
+
+                TopContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.18f, 0.03f), HUDFrame.RectTransform, Anchor.TopCenter)
+                {
+                    MinSize = new Point(100, 50),
+                    RelativeOffset = new Vector2(0.0f, 0.01f)
+                }, isHorizontal: false, childAnchor: Anchor.TopCenter);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), TopContainer.RectTransform), character.DisplayName, textAlignment: Alignment.Center, textColor: GUI.Style.Red);
+                TopHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.6f), TopContainer.RectTransform), barSize: 0.0f, style: "CharacterHealthBarCentered");
+
+                SideContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), bossHealthContainer.RectTransform)
+                {
+                    MinSize = new Point(80, 60)
+                }, isHorizontal: false, childAnchor: Anchor.TopRight);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), SideContainer.RectTransform), character.DisplayName, textAlignment: Alignment.CenterRight, textColor: GUI.Style.Red);
+                SideHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.7f), SideContainer.RectTransform), barSize: 0.0f, style: "CharacterHealthBar");
+            }
+        }
+
         private static readonly Dictionary<ISpatialEntity, int> orderIndicatorCount = new Dictionary<ISpatialEntity, int>();
         const float ItemOverlayDelay = 1.0f;
         private static Item focusedItem;
@@ -20,7 +54,11 @@ namespace Barotrauma
         private static readonly List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
 
+        private static readonly List<BossHealthBar> bossHealthBars = new List<BossHealthBar>();
+
         private static readonly Dictionary<string, string> cachedHudTexts = new Dictionary<string, string>();
+
+        private static GUILayoutGroup bossHealthContainer;
 
         private static GUIFrame hudFrame;
         public static GUIFrame HUDFrame
@@ -33,6 +71,13 @@ namespace Barotrauma
                     hudFrame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
                     {
                         CanBeFocused = false
+                    };
+                    bossHealthContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.15f, 0.5f), hudFrame.RectTransform, Anchor.CenterRight)
+                    {
+                        RelativeOffset = new Vector2(0.005f, 0.0f)
+                    })
+                    {
+                        AbsoluteSpacing = GUI.IntScale(10)
                     };
                 }
                 return hudFrame;
@@ -71,7 +116,7 @@ namespace Barotrauma
         
         public static void AddToGUIUpdateList(Character character)
         {
-            if (GUI.DisableHUD) return;
+            if (GUI.DisableHUD) { return; }
             
             if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
             {
@@ -84,7 +129,7 @@ namespace Barotrauma
 
                         foreach (ItemComponent ic in item.Components)
                         {
-                            if (ic.DrawHudWhenEquipped) ic.AddToGUIUpdateList();
+                            if (ic.DrawHudWhenEquipped) { ic.AddToGUIUpdateList(); }
                         }
                     }
                 }
@@ -100,13 +145,14 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character, Camera cam)
         {
+            UpdateBossHealthBars(deltaTime);
+
             if (GUI.DisableHUD)
             {
                 if (character.Inventory != null && !LockInventory(character))
                 {
                     character.Inventory.UpdateSlotInput();
                 }
-
                 return;
             }
 
@@ -486,6 +532,92 @@ namespace Barotrauma
             {
                 GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.customInteractHUDText, GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
                 textPos.Y += textSize.Y;
+            }
+        }
+
+        public static void ShowBossHealthBar(Character character)
+        {
+            var existingBar = bossHealthBars.Find(b => b.Character == character);
+            if (existingBar != null)
+            {
+                existingBar.FadeTimer = BossHealthBarDuration;
+                return;
+            }
+
+            if (bossHealthBars.Count > 5)
+            {
+                BossHealthBar oldestHealthBar = bossHealthBars.First();
+                foreach (var bar in bossHealthBars)
+                {
+                    if (bar.TopHealthBar.BarSize < oldestHealthBar.TopHealthBar.BarSize)
+                    {
+                        oldestHealthBar = bar;
+                    }
+                }
+                oldestHealthBar.FadeTimer = Math.Min(oldestHealthBar.FadeTimer, 1.0f);
+            }
+
+            bossHealthBars.Add(new BossHealthBar(character));
+        }
+
+        public static void UpdateBossHealthBars(float deltaTime)
+        {
+            for (int i = 0; i < bossHealthBars.Count; i++)
+            {
+                var bossHealthBar = bossHealthBars[i];
+
+                bool showTopBar = i == 0;
+                if (showTopBar != bossHealthBar.TopContainer.Visible)
+                {
+                    bossHealthContainer.Recalculate();
+                }
+
+                bossHealthBar.TopContainer.Visible = showTopBar;
+                bossHealthBar.SideContainer.Visible = !bossHealthBar.TopContainer.Visible;
+
+                float health =  bossHealthBar.Character.Vitality / bossHealthBar.Character.MaxVitality;
+
+                float alpha = Math.Min(bossHealthBar.FadeTimer, 1.0f);
+                foreach (var c in bossHealthBar.TopContainer.GetAllChildren())
+                {
+                    c.Color = new Color(c.Color, (byte)(alpha * 255));
+                    if (c is GUITextBlock textBlock)
+                    {
+                        textBlock.TextColor = new Color(textBlock.TextColor, (byte)(alpha * 255));
+                    }
+                }
+
+                foreach (var c in bossHealthBar.SideContainer.GetAllChildren())
+                {
+                    c.Color = new Color(c.Color, (byte)(alpha * 255));
+                    if (c is GUITextBlock textBlock)
+                    {
+                        textBlock.TextColor = new Color(textBlock.TextColor, (byte)(alpha * 255));
+                    }
+                }
+
+                bossHealthBar.TopHealthBar.BarSize = bossHealthBar.SideHealthBar.BarSize = health;
+
+                bossHealthBar.TopHealthBar.Color = bossHealthBar.SideHealthBar.Color = 
+                    ToolBox.GradientLerp(health, GUI.Style.HealthBarColorLow, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorHigh) * alpha;
+
+                if (bossHealthBar.Character.IsDead || bossHealthBar.Character.Removed)
+                {
+                    bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 1.0f);
+                }
+                bossHealthBar.FadeTimer -= deltaTime;
+            }
+
+            for (int i = bossHealthBars.Count - 1; i >= 0 ; i--)
+            {
+                var bossHealthBar = bossHealthBars[i];
+                if (bossHealthBar.FadeTimer <= 0)
+                {
+                    bossHealthBar.SideContainer.Parent?.RemoveChild(bossHealthBar.SideContainer);
+                    bossHealthBar.TopContainer.Parent?.RemoveChild(bossHealthBar.TopContainer);
+                    bossHealthBars.RemoveAt(i);
+                    bossHealthContainer.Recalculate();
+                }
             }
         }
 

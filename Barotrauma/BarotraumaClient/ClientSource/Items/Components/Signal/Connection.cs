@@ -238,7 +238,8 @@ namespace Barotrauma.Items.Components
 
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
-                    if (GameMain.NetworkMember != null || panel.CheckCharacterSuccess(Character.Controlled))
+                    if ((GameMain.NetworkMember != null || panel.CheckCharacterSuccess(Character.Controlled)) &&
+                        Wires.Count(w => w != null) < MaxPlayerConnectableWires)
                     {
                         //find an empty cell for the new connection
                         int index = FindEmptyIndex();

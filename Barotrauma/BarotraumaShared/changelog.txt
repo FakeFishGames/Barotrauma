@@ -1,4 +1,54 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.4 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Adjustments on Moloch. Improve the feedback.
+- Certain large monsters' (endworm, charybdis, boss variants of molochs and hammerheads) health bars become visible at the top of the screen when you damage them.
+- Readjusted abyss and combat diving suits. They are now essentially better versions of the normal diving suit (as opposed to just alternatives with their own pros and cons), making normal suits obsolete later in the campaign. Both suits now have a high resistance to pressure, although an abyss suit may still be required at the very end of the campaign.
+- Replaced legacy small pumps with the new ones in Orca.
+- Adjusted stun gun's effect. It basically works like incremental stun, but inversed: the strength increases rapidly to the max, after which we remove progressive stun and add full incremental stun that will wear off with time.
+- Restrict the length of the text that can be entered as a sonar beacon's sonar label.
+- The probability of disconnected wires in beacon stations is relative to the level's difficulty, and no wires are removed if the difficulty is less than 20.
+- Added a hint for encountering ballast flora.
+- Added submarine preview to campaign outpost submarine selection.
+- Allow fabricating fresh fuel rods, welding fuel and coilgun ammunition using depleted ones.
+- Abyss monsters only emit distant sonar "waves" while chasing the player, not always.
+
+Fixes:
+- Fixed players being able to take the respawn shuttle with them from the levels in the multiplayer campaign, which would lead to "entity not found" errors during the next round.
+- Fixed respawn shuttle always having the default crush depth of 3500 meters, making it unusable at later stages of the campaign.
+- Fixed creaking hull sounds triggering when 500 meters above a non-upgraded sub's crush depth, even if the current sub can withstand more.
+- Fixed Kastrull's drone airlock not flooding correctly.
+- Don't restrict signal components' output length when the sub is being loaded. Fixes all outputs being restricted to 200 characters in subs from previous versions and output getting cut off when saving and loading the sub.
+- Fixed crashing if you try to press the server log button in the lobby when connection to the server has been lost.
+- Fixed item disappearing from the character's hand when you combine it with an item in a container in a way that doesn't fully deplete/remove it.
+- Fixed gaps in the "backwall pipes" sprite.
+- Fixed dedicated servers restricting player count to 1 less than the MaxPlayer setting.
+- Fixed crashing when you try to preview a sub you don't have in the server lobby.
+- Fixed "gate outpost" sometimes generating as abandoned outposts.
+- Fixed clients being unable to vote for subs they don't have.
+- Fixed a bunch of non-suitable items (such as devices that can't be deattached) being displayed in the "extra cargo" menu in the server lobby.
+- Fixed Operate Weapons icon not updating when assigned again while targeting a weapon of different type.
+- Fixed being able to assign the same order to a character multiple times with different options.
+- Fixed highlighted client names in chat messages not opening the player info dialog when clicked.
+
+Bots:
+- Fixed bots not knowing how to swap out welding fuel from diving gear and oxygen tanks from welding tools (#4380).
+- Fixed bots sometimes yelling that they can't enter an airlock when the sub is docked.
+
+Modding:
+- Fixed level editor crashing when it tries to place a wreck that contains linked subs in the level.
+- Added "onlyplayertriggered" condition for status effects. Currently only implemented for OnDamaged.
+- Monster events don't spawn monsters in wrecks that don't contain enemy spawnpoints.
+- Fixed crashing if you try to create a decal with incorrect casing.
+- Fixed affliction's periodic effects being unable to reference afflictions defined later in the affliction xml.
+- Fixed crashes if radiation parameters aren't defined in the map generation xml.
+- Fixed crashing if you save a campaign with a large map and try to load it with map generation parameters where the map is smaller.
+- Fixed explosions not damaging level walls if their structure damage is set to 0.
+- Fixed reduce affliction status effects using delta time even when "setvalue" is true.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.3 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

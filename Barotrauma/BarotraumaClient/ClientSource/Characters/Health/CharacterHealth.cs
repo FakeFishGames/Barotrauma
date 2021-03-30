@@ -297,6 +297,7 @@ namespace Barotrauma
                 barSize: 1.0f, color: GUI.Style.HealthBarColorHigh, style: horizontal ? "CharacterHealthBar" : "GUIProgressBarVertical")
             {
                 HoverCursor = CursorState.Hand,
+                ToolTip = TextManager.GetWithVariable("hudbutton.healthinterface", "[key]", GameMain.Config.KeyBindText(InputType.Health)),
                 Enabled = true,
                 IsHorizontal = horizontal
             };

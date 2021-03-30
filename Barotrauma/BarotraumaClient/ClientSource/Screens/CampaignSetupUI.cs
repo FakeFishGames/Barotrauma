@@ -173,7 +173,15 @@ namespace Barotrauma
                     string savePath = SaveUtil.CreateSavePath(isMultiplayer ? SaveUtil.SaveType.Multiplayer : SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
                     bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
 
-                    CampaignSettings settings = new CampaignSettings { RadiationEnabled = EnableRadiationToggle?.Selected ?? GameMain.NetLobbyScreen.IsRadiationEnabled() };
+                    CampaignSettings settings = new CampaignSettings();
+                    if (isMultiplayer)
+                    {
+                        settings.RadiationEnabled = GameMain.NetLobbyScreen.IsRadiationEnabled();
+                    }
+                    else
+                    {
+                        settings.RadiationEnabled = EnableRadiationToggle?.Selected ?? false;
+                    }
 
                     if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
                     {
@@ -257,11 +265,14 @@ namespace Barotrauma
 
             if (!isMultiplayer)
             {
-                EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 1f), buttonContainer.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                if (MapGenerationParams.Instance.RadiationParams != null)
                 {
-                    Selected = true,
-                    ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
-                };
+                    EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 1f), buttonContainer.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                    {
+                        Selected = true,
+                        ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
+                    };
+                }
 
                 var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
                 {

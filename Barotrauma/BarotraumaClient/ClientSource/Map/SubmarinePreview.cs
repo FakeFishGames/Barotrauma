@@ -60,8 +60,13 @@ namespace Barotrauma
 
         public static void Create(SubmarineInfo submarineInfo)
         {
-            instance?.Dispose();
+            Close();
             instance = new SubmarinePreview(submarineInfo);
+        }
+
+        public static void Close()
+        {
+            instance?.Dispose();
         }
 
         private SubmarinePreview(SubmarineInfo subInfo)
@@ -102,7 +107,7 @@ namespace Barotrauma
                 },
                 (deltaTime, component) => {
                     bool isMouseOnComponent = GUI.MouseOn == component;
-                    camera.MoveCamera(deltaTime, allowZoom: isMouseOnComponent);
+                    camera.MoveCamera(deltaTime, allowZoom: isMouseOnComponent, followSub: false);
                     if (isMouseOnComponent &&
                         (PlayerInput.MidButtonHeld() || PlayerInput.LeftButtonHeld()))
                     {
@@ -136,7 +141,7 @@ namespace Barotrauma
                 ScrollBarVisible = false,
                 Spacing = 5
             };
-            subInfo.CreateSpecsWindow(specsContainer, GUI.Font, includeTitle: false, includesDescription: true);
+            subInfo.CreateSpecsWindow(specsContainer, GUI.Font, includeTitle: false, includeDescription: true);
             int width = specsContainer.Rect.Width;
             void recalculateSpecsContainerHeight()
             {

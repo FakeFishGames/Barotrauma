@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -11,7 +10,10 @@ namespace Barotrauma.Items.Components
         //how many wires can be linked to connectors by default
         private const int DefaultMaxWires = 5;
 
-        //how many wires can be linked to this connection
+        //how many wires a player can link to this connection
+        public readonly int MaxPlayerConnectableWires = 5;
+
+        //how many wires can be linked to this connection in total
         public readonly int MaxWires = 5;
 
         public readonly string Name;
@@ -81,6 +83,7 @@ namespace Barotrauma.Items.Components
             item = connectionPanel.Item;
 
             MaxWires = element.GetAttributeInt("maxwires", DefaultMaxWires);
+            MaxPlayerConnectableWires = element.GetAttributeInt("maxplayerconnectablewires", MaxWires);
             wires = new Wire[MaxWires];
 
             IsOutput = element.Name.ToString() == "output";

@@ -142,7 +142,7 @@ namespace Barotrauma
 
             if (displayRange < 0.1f) { return; }
 
-            if (Attack.GetStructureDamage(1.0f) > 0.0f)
+            if (Attack.GetStructureDamage(1.0f) > 0.0f || Attack.GetLevelWallDamage(1.0f) > 0.0f)
             {
                 RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker);
             }

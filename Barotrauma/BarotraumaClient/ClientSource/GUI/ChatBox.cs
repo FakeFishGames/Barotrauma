@@ -383,8 +383,20 @@ namespace Barotrauma
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, parseRichText: true)
             {
                 UserData = message.SenderName,
-                CanBeFocused = true
+                CanBeFocused = false
             };
+            msgText.CalculateHeightFromText();
+            if (msgText.RichTextData != null)
+            {
+                foreach (var data in msgText.RichTextData)
+                {
+                    msgText.ClickableAreas.Add(new GUITextBlock.ClickableArea()
+                    {
+                        Data = data,
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                    });
+                }
+            }
 
             if (message is OrderChatMessage orderChatMsg &&
                 Character.Controlled != null &&

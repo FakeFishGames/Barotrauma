@@ -648,7 +648,14 @@ namespace Barotrauma.Networking
 
             foreach (ItemPrefab ip in ItemPrefab.Prefabs)
             {
-                if (!ip.CanBeBought && !ip.Tags.Contains("smallitem")) continue;
+                if (ip.AllowAsExtraCargo.HasValue)
+                {
+                    if (!ip.AllowAsExtraCargo.Value) { continue; }
+                }
+                else
+                {
+                    if (!ip.CanBeBought) { continue; }
+                }
 
                 var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {

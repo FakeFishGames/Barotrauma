@@ -573,8 +573,9 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true) && Rect.Contains(PlayerInput.MousePosition))
+            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true))
             {
+                if (!Rect.Contains(PlayerInput.MousePosition)) { return; }
                 int index = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
                 foreach (ClickableArea clickableArea in ClickableAreas)
                 {

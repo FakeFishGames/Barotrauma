@@ -1805,8 +1805,10 @@ namespace Barotrauma.Networking
                 var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.Hash == subHash);
                 if (matchingSub == null)
                 {
-                    matchingSub = new SubmarineInfo(Path.Combine(SubmarineInfo.SavePath, subName) + ".sub", subHash, tryLoad: false);
-                    matchingSub.SubmarineClass = (SubmarineClass)subClass;
+                    matchingSub = new SubmarineInfo(Path.Combine(SubmarineInfo.SavePath, subName) + ".sub", subHash, tryLoad: false)
+                    {
+                        SubmarineClass = (SubmarineClass)subClass
+                    };
                 }
                 matchingSub.RequiredContentPackagesInstalled = requiredContentPackagesInstalled;
                 ServerSubmarines.Add(matchingSub);
@@ -3577,6 +3579,10 @@ namespace Barotrauma.Networking
             if (GameMain.GameSession?.Submarine != null)
             {
                 errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Info.Name);
+            }
+            if (GameMain.NetworkMember?.RespawnManager?.RespawnShuttle != null)
+            {
+                errorLines.Add("Respawn shuttle: " + GameMain.NetworkMember.RespawnManager.RespawnShuttle.Info.Name);
             }
             if (Level.Loaded != null)
             {

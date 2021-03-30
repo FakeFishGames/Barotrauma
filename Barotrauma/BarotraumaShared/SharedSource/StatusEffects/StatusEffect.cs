@@ -281,6 +281,8 @@ namespace Barotrauma
 
         public readonly bool OnlyInside;
         public readonly bool OnlyOutside;
+        // Currently only used for OnDamaged. TODO: is there a better, more generic way to do this?
+        public readonly bool OnlyPlayerTriggered;
 
         public HashSet<string> TargetIdentifiers
         {
@@ -351,6 +353,7 @@ namespace Barotrauma
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
+            OnlyPlayerTriggered = element.GetAttributeBool("onlyplayertriggered", false);
 
             Range = element.GetAttributeFloat("range", 0.0f);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
@@ -1088,7 +1091,7 @@ namespace Barotrauma
 
                 foreach (Pair<string, float> reduceAffliction in ReduceAffliction)
                 {
-                    float reduceAmount = disableDeltaTime ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
+                    float reduceAmount = disableDeltaTime || setValue ? reduceAffliction.Second : reduceAffliction.Second * deltaTime;
                     Limb targetLimb = null;
                     Character targetCharacter = null;
                     if (target is Character character)

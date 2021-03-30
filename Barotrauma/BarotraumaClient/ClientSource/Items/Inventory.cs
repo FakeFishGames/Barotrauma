@@ -319,10 +319,10 @@ namespace Barotrauma
         {
             get
             {
-                return DraggingItems.Any() &&
-                  Character.Controlled != null &&
+                return Character.Controlled != null &&
                   Character.Controlled.SelectedConstruction == null &&
-                  CharacterHealth.OpenHealthWindow == null;
+                  CharacterHealth.OpenHealthWindow == null &&
+                  DraggingItems.Any();
             }
         }
 

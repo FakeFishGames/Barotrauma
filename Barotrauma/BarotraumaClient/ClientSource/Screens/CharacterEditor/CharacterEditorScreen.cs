@@ -711,7 +711,7 @@ namespace Barotrauma.CharacterEditor
                 }
             }
             // Camera
-            Cam.MoveCamera((float)deltaTime, allowMove: false);
+            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Vector2 targetPos = character.WorldPosition;
             if (PlayerInput.MidButtonHeld())
             {

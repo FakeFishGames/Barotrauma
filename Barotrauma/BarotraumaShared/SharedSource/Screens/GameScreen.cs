@@ -244,7 +244,7 @@ namespace Barotrauma
                 cam.TargetPos = targetPos;
             }
 
-            cam.MoveCamera((float)deltaTime);
+            cam.MoveCamera((float)deltaTime, allowZoom: GUI.MouseOn == null);
 #endif
 
             foreach (Submarine sub in Submarine.Loaded)

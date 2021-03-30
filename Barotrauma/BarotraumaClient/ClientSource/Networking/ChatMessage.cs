@@ -29,6 +29,14 @@ namespace Barotrauma.Networking
 
             string senderName = msg.ReadString();
             Character senderCharacter = null;
+            Client senderClient = null;
+            bool hasSenderClient = msg.ReadBoolean();
+            if (hasSenderClient)
+            {
+                UInt64 clientId = msg.ReadUInt64();
+                senderClient = GameMain.Client.ConnectedClients.Find(c => c.SteamID == clientId || c.ID == clientId);
+                if (senderClient != null) { senderName = senderClient.Name; }
+            }
             bool hasSenderCharacter = msg.ReadBoolean();
             if (hasSenderCharacter)
             {
@@ -38,6 +46,7 @@ namespace Barotrauma.Networking
                     senderName = senderCharacter.Name;
                 }
             }
+            msg.ReadPadBits();
 
             switch (type)
             {
@@ -197,7 +206,7 @@ namespace Barotrauma.Networking
                         GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
                         break;
                     default:
-                        GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter, changeType);
+                        GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType);
                         break;
                 }
                 LastID = id;

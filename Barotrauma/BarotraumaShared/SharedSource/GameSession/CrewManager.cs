@@ -71,10 +71,13 @@ namespace Barotrauma
             else if (!isUnignoreOrder)
             {
                 ActiveOrders.Add(new Pair<Order, float?>(order, fadeOutTime));
+#if CLIENT
+                HintManager.OnActiveOrderAdded(order);
+#endif
                 return true;
             }
 
-            bool MatchesTarget(Entity existingTarget, Entity newTarget)
+            static bool MatchesTarget(Entity existingTarget, Entity newTarget)
             {
                 if (existingTarget == newTarget) { return true; }
                 if (existingTarget is Hull existingHullTarget && newTarget is Hull newHullTarget)

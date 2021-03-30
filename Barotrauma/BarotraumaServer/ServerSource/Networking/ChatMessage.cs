@@ -230,12 +230,16 @@ namespace Barotrauma.Networking
                             2 + //(UInt16)NetStateID
                             1 + //(byte)Type
                             Encoding.UTF8.GetBytes(Text).Length + 2;
-
+            
+            if (SenderClient != null)
+            {
+                length += 8; //SteamID or local ID (ulong)
+            }
             if (Sender != null && c.InGame)
             {
                 length += 2; //sender ID (UInt16)
             }
-            else if (SenderName != null)
+            if (SenderName != null)
             {
                 length += Encoding.UTF8.GetBytes(SenderName).Length + 2;
             }
@@ -252,11 +256,16 @@ namespace Barotrauma.Networking
             msg.Write(Text);
 
             msg.Write(SenderName);
+            msg.Write(SenderClient != null);
+            msg.Write(SenderClient != null ?
+                        ((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID) :
+                        0);
             msg.Write(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {
                 msg.Write(Sender.ID);
             }
+            msg.WritePadBits();
             if (Type == ChatMessageType.ServerMessageBoxInGame)
             {
                 msg.Write(IconStyle);

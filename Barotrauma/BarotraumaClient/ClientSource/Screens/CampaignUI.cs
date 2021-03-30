@@ -306,7 +306,7 @@ namespace Barotrauma
         {
             var map = GameMain.GameSession?.Map;
             if (map == null) { return; }
-            if (selectedLocation != null && selectedLocation == map.CurrentDisplayLocation)
+            if (selectedLocation != null && selectedLocation == GameMain.GameSession.Campaign.GetCurrentDisplayLocation())
             {
                 map.SelectLocation(-1);
             }
@@ -438,7 +438,7 @@ namespace Barotrauma
             };
 
             SelectedLevel = connection?.LevelData;
-            Location currentDisplayLocation = Campaign.CurrentDisplayLocation;
+            Location currentDisplayLocation = Campaign.GetCurrentDisplayLocation();
             if (connection != null && connection.Locations.Contains(currentDisplayLocation))
             {
                 List<Mission> availableMissions = currentDisplayLocation.GetMissionsInConnection(connection).ToList();

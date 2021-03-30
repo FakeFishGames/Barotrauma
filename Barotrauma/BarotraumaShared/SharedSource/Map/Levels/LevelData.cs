@@ -117,8 +117,7 @@ namespace Barotrauma
             EventHistory.AddRange(EventSet.PrefabList.Where(p => prefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
 
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
-            NonRepeatableEvents.AddRange(EventSet.PrefabList.Where(p => prefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
-
+            NonRepeatableEvents.AddRange(EventSet.PrefabList.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
         }
 
 
