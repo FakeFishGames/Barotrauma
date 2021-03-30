@@ -319,7 +319,11 @@ namespace Barotrauma.Items.Components
             {
                 foreach(Item item in containedItems)
                 {
-                    if(item.HasTag("reactorfuel")) {fuelLeft = 100.0f;}
+                    if(item.HasTag("reactorfuel")) 
+                    {
+                        fuelLeft = 100.0f;
+                        break;
+                    }
                 }
                 foreach (Item item in containedItems)
                 {
