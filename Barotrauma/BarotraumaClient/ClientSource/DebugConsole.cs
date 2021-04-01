@@ -1721,6 +1721,15 @@ namespace Barotrauma
             {
                 GameMain.Client?.ForceTimeOut();
             }, isCheat: false));
+            commands.Add(new Command("bumpitem", "", (string[] args) =>
+            {
+                float vel = 10.0f;
+                if (args.Length > 0)
+                {
+                    float.TryParse(args[0], NumberStyles.Number, CultureInfo.InvariantCulture, out vel);
+                }
+                Character.Controlled?.FocusedItem?.body?.ApplyLinearImpulse(Rand.Vector(vel));
+            }, isCheat: false));
 
 #endif
 
@@ -2275,12 +2284,15 @@ namespace Barotrauma
                 "revokeperm",
                 (string[] args) =>
                 {
-                    if (args.Length < 1) return;
+                    if (args.Length < 1) { return; }
 
-                    NewMessage("Valid permissions are:", Color.White);
-                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    if (args.Length < 2)
                     {
-                        NewMessage(" - " + permission.ToString(), Color.White);
+                        NewMessage("Valid permissions are:", Color.White);
+                        foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                        {
+                            NewMessage(" - " + permission.ToString(), Color.White);
+                        }
                     }
 
                     ShowQuestionPrompt("Permission to revoke from client " + args[0] + "?", (perm) =>

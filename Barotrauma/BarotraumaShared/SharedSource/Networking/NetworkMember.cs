@@ -173,7 +173,7 @@ namespace Barotrauma.Networking
 #endif
         
         protected ServerSettings serverSettings;
-        
+
         protected TimeSpan updateInterval;
         protected DateTime updateTimer;
 

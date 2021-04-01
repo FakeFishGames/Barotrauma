@@ -257,9 +257,10 @@ namespace Barotrauma.Networking
 
             msg.Write(SenderName);
             msg.Write(SenderClient != null);
-            msg.Write(SenderClient != null ?
-                        ((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID) :
-                        0);
+            if (SenderClient != null)
+            {
+                msg.Write((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID);
+            }
             msg.Write(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {

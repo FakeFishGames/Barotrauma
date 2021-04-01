@@ -593,13 +593,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// A list of items the last signal sent by this item went through
+        /// A list of connections the last signal sent by this item went through
         /// </summary>
-        public List<Item> LastSentSignalRecipients
+        public List<Connection> LastSentSignalRecipients
         {
             get;
             private set;
-        } = new List<Item>(20);
+        } = new List<Connection>(20);
 
         public string ConfigFile
         {
@@ -1921,7 +1921,7 @@ namespace Barotrauma
                 //if the signal has been passed through this item multiple times already, interrupt it to prevent infinite loops
                 if (signal.source != null)
                 {
-                    if (signal.source.LastSentSignalRecipients.Count(recipient => recipient == this) > 2)
+                    if (signal.source.LastSentSignalRecipients.Count(recipient => recipient == connection) > 2)
                     {
                         return;
                     }

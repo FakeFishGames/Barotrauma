@@ -181,9 +181,11 @@ namespace Barotrauma
             private set;
         } = new HashSet<Submarine>();
 
-        public bool IsTargetingPlayer => SelectedAiTarget?.Entity?.Submarine != null && SelectedAiTarget.Entity.Submarine.Info.IsPlayer || SelectedAiTarget?.Entity is Character targetCharacter && targetCharacter.IsPlayer;
+        public bool IsTargetingPlayerTeam => IsTargetInPlayerTeam(SelectedAiTarget);
         public bool IsBeingChasedBy(Character c) => c.AIController is EnemyAIController enemyAI && enemyAI.SelectedAiTarget?.Entity is Character && (enemyAI.State == AIState.Aggressive || enemyAI.State == AIState.Attack);
         private bool IsBeingChased => SelectedAiTarget?.Entity is Character targetCharacter && IsBeingChasedBy(targetCharacter);
+
+        private bool IsTargetInPlayerTeam(AITarget target) => target?.Entity?.Submarine != null && target.Entity.Submarine.Info.IsPlayer || target?.Entity is Character targetCharacter && targetCharacter.IsOnPlayerTeam;
 
         private bool reverse;
         public bool Reverse 
@@ -2465,11 +2467,17 @@ namespace Barotrauma
                     default:
                         if (targetParams.State == AIState.Attack)
                         {
+                            // In the attack state allow going into non-allowed zone only when chasing a target.
                             if (State == targetParams.State && SelectedAiTarget == aiTarget) { break; }
                         }
                         if (!IsPositionInsideAllowedZone(aiTarget.WorldPosition, out _))
                         {
-                            continue;
+                            // If we have recently been damaged by the target (or another player/bot in the same team) allow targeting it even when we are in the idle state.
+                            bool isTargetInPlayerTeam = IsTargetInPlayerTeam(aiTarget);
+                            if (Character.LastAttackers.None(a => a.Damage > 0 && a.Character != null && (a.Character == aiTarget.Entity || a.Character.IsOnPlayerTeam && isTargetInPlayerTeam)))
+                            {
+                                continue;
+                            }
                         }
                         break;
                 }

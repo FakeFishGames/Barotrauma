@@ -55,6 +55,14 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
+        public bool UseRespawnPrompt
+        {
+            get
+            {
+                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
+            }
+        }
+
         private float maxTransportTime;
 
         private float updateReturnTimer;

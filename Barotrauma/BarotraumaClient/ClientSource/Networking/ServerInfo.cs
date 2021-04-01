@@ -567,5 +567,10 @@ namespace Barotrauma.Networking
                 (other.LobbyID == LobbyID || other.LobbyID == 0 || LobbyID == 0) &&
                 ((OwnerID == 0) ? (other.IP == IP && other.Port == Port) : true);
         }
+
+        public bool MatchesByEndpoint(ServerInfo other)
+        {
+            return OwnerID == other.OwnerID && (OwnerID != 0 ? true : (IP == other.IP && Port == other.Port));
+        }
     }
 }

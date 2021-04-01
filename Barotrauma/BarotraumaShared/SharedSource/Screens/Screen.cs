@@ -33,6 +33,12 @@
                     GUI.ScreenChanged = true;
                 }
                 SubmarinePreview.Close();
+
+                // Make sure the saving indicator is disabled when returning to main menu or lobby
+                if (this == GameMain.MainMenuScreen || this == GameMain.NetLobbyScreen)
+                {
+                    GUI.DisableSavingIndicatorDelayed();
+                }
 #endif
             }
             selected = this;

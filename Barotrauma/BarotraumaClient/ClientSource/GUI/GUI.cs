@@ -218,6 +218,21 @@ namespace Barotrauma
 
         public static bool DisableHUD, DisableUpperHUD, DisableItemHighlights, DisableCharacterNames;
 
+        private static bool isSavingIndicatorEnabled;
+        private static Color savingIndicatorColor = Color.Transparent;
+        private static bool IsSavingIndicatorVisible => savingIndicatorColor.A > 0;
+        private static float savingIndicatorSpriteIndex;
+        private static float savingIndicatorColorLerpAmount;
+        private static SavingIndicatorState savingIndicatorState = SavingIndicatorState.None;
+        private static float? timeUntilSavingIndicatorDisabled;
+
+        private enum SavingIndicatorState
+        {
+            None,
+            FadingIn,
+            FadingOut
+        }
+
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GraphicsDevice = graphicsDevice;
@@ -345,7 +360,11 @@ namespace Barotrauma
             }
 #endif
 
-                if (DisableHUD) { return; }
+                if (DisableHUD)
+                {
+                    DrawSavingIndicator(spriteBatch);
+                    return;
+                }
 
                 if (GameMain.ShowFPS || GameMain.DebugDraw)
                 {
@@ -626,6 +645,8 @@ namespace Barotrauma
                             }
                     }
                 }
+
+                DrawSavingIndicator(spriteBatch);
 
                 if (GameMain.WindowActive && !HideCursor)
                 {
@@ -1206,6 +1227,7 @@ namespace Barotrauma
                 Debug.Assert(updateList.Count == updateListSet.Count);
                 updateList.ForEach(c => c.UpdateAuto(deltaTime));
                 UpdateMessages(deltaTime);
+                UpdateSavingIndicator(deltaTime);
             }            
         }
 
@@ -1248,6 +1270,58 @@ namespace Barotrauma
                 messages.RemoveAll(m => m.Timer <= 0.0f);
             }
             
+        }
+
+        private static void UpdateSavingIndicator(float deltaTime)
+        {
+            lock (mutex)
+            {
+                if (timeUntilSavingIndicatorDisabled.HasValue)
+                {
+                    timeUntilSavingIndicatorDisabled -= deltaTime;
+                    if (timeUntilSavingIndicatorDisabled <= 0.0f)
+                    {
+                        isSavingIndicatorEnabled = false;
+                        timeUntilSavingIndicatorDisabled = null;
+                    }
+                }
+                if (isSavingIndicatorEnabled)
+                {
+                    if (savingIndicatorColor == Color.Transparent)
+                    {
+                        savingIndicatorState = SavingIndicatorState.FadingIn;
+                        savingIndicatorColorLerpAmount = 0.0f;
+                    }
+                    else if (savingIndicatorColor == Color.White)
+                    {
+                        savingIndicatorState = SavingIndicatorState.None;
+                    }
+                }
+                else
+                {
+                    if (savingIndicatorColor == Color.White)
+                    {
+                        savingIndicatorState = SavingIndicatorState.FadingOut;
+                        savingIndicatorColorLerpAmount = 0.0f;
+                    }
+                    else if (savingIndicatorColor == Color.Transparent)
+                    {
+                        savingIndicatorState = SavingIndicatorState.None;
+                    }
+                }
+                if (savingIndicatorState != SavingIndicatorState.None)
+                {
+                    bool isFadingIn = savingIndicatorState == SavingIndicatorState.FadingIn;
+                    Color lerpStartColor = isFadingIn ? Color.Transparent : Color.White;
+                    Color lerpTargetColor = isFadingIn ? Color.White : Color.Transparent;
+                    savingIndicatorColorLerpAmount += (isFadingIn ? 2.0f : 0.5f) * deltaTime;
+                    savingIndicatorColor = Color.Lerp(lerpStartColor, lerpTargetColor, savingIndicatorColorLerpAmount);
+                }
+                if (IsSavingIndicatorVisible)
+                {
+                    savingIndicatorSpriteIndex = (savingIndicatorSpriteIndex + 15.0f * deltaTime) % (Style.SavingIndicator.FrameCount + 1);
+                }
+            }
         }
 
         #region Element drawing
@@ -1573,6 +1647,14 @@ namespace Barotrauma
                 }
                 ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
             }
+        }
+
+        private static void DrawSavingIndicator(SpriteBatch spriteBatch)
+        {
+            if (!IsSavingIndicatorVisible) { return; }
+            var sheet = Style.SavingIndicator;
+            Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
+            sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
         #endregion
 
@@ -2326,6 +2408,21 @@ namespace Barotrauma
         {
             float aspectRatio = HorizontalAspectRatio;
             return aspectRatio > 1.3f && aspectRatio < 1.4f;
+        }
+
+        public static void SetSavingIndicatorState(bool enabled)
+        {
+            if (enabled)
+            {
+                timeUntilSavingIndicatorDisabled = null;
+            }
+            isSavingIndicatorEnabled = enabled;
+        }
+
+        public static void DisableSavingIndicatorDelayed(float delay = 3.0f)
+        {
+            if (!isSavingIndicatorEnabled) { return; }
+            timeUntilSavingIndicatorDisabled = delay;
         }
         #endregion
     }

@@ -215,7 +215,7 @@ namespace Barotrauma
                     float dist = Vector2.DistanceSquared(pos, refSub.WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
-                        if (sub.Info.Type != SubmarineType.Player) { continue; }
+                        if (sub.Info.Type != SubmarineType.Player && sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
                         
                         float minDistToSub = GetMinDistanceToSub(sub);
                         if (dist < minDistToSub * minDistToSub) { continue; }

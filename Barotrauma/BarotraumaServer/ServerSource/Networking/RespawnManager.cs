@@ -19,11 +19,13 @@ namespace Barotrauma.Networking
                 if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { continue; }
                 if (c.Character != null && !c.Character.IsDead) { continue; }
   
-                //don't allow respawning if the client has previously disconnected and their corpse is still present on the server
-                var matchingData = campaign?.GetClientCharacterData(c);
-                if (matchingData != null && matchingData.HasSpawned)
+                if (UseRespawnPrompt)
                 {
-                    if (!c.WaitForNextRoundRespawn.HasValue || c.WaitForNextRoundRespawn.Value) { continue; }                   
+                    var matchingData = campaign?.GetClientCharacterData(c);
+                    if (matchingData != null && matchingData.HasSpawned)
+                    {
+                        if (!c.WaitForNextRoundRespawn.HasValue || c.WaitForNextRoundRespawn.Value) { continue; }
+                    }
                 }
 
                 yield return c;

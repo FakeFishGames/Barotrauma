@@ -11,8 +11,9 @@ using System.Linq;
 namespace Barotrauma
 {
     class CharacterHUD
-    {
-        const float BossHealthBarDuration = 30.0f;
+    {        
+        const float BossHealthBarDuration = 1200.0f;
+
         class BossHealthBar
         {
             public readonly Character Character;
@@ -35,14 +36,25 @@ namespace Barotrauma
                     RelativeOffset = new Vector2(0.0f, 0.01f)
                 }, isHorizontal: false, childAnchor: Anchor.TopCenter);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), TopContainer.RectTransform), character.DisplayName, textAlignment: Alignment.Center, textColor: GUI.Style.Red);
-                TopHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.6f), TopContainer.RectTransform), barSize: 0.0f, style: "CharacterHealthBarCentered");
+                TopHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.6f), TopContainer.RectTransform)
+                {
+                    MinSize = new Point(100, HUDLayoutSettings.HealthBarArea.Size.Y)
+                }, barSize: 0.0f, style: "CharacterHealthBarCentered")
+                {
+                    Color = GUI.Style.Red
+                };
 
                 SideContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), bossHealthContainer.RectTransform)
                 {
                     MinSize = new Point(80, 60)
                 }, isHorizontal: false, childAnchor: Anchor.TopRight);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), SideContainer.RectTransform), character.DisplayName, textAlignment: Alignment.CenterRight, textColor: GUI.Style.Red);
-                SideHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.7f), SideContainer.RectTransform), barSize: 0.0f, style: "CharacterHealthBar");
+                SideHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.7f), SideContainer.RectTransform), barSize: 0.0f, style: "CharacterHealthBar")
+                {
+                    Color = GUI.Style.Red
+                };
+
+                TopContainer.Visible = SideContainer.Visible = false;
             }
         }
 
@@ -537,6 +549,8 @@ namespace Barotrauma
 
         public static void ShowBossHealthBar(Character character)
         {
+            if (character == null || character.IsDead || character.Removed) { return; }
+
             var existingBar = bossHealthBars.Find(b => b.Character == character);
             if (existingBar != null)
             {
@@ -578,32 +592,28 @@ namespace Barotrauma
                 float health =  bossHealthBar.Character.Vitality / bossHealthBar.Character.MaxVitality;
 
                 float alpha = Math.Min(bossHealthBar.FadeTimer, 1.0f);
-                foreach (var c in bossHealthBar.TopContainer.GetAllChildren())
+                foreach (var c in bossHealthBar.SideContainer.GetAllChildren().Concat(bossHealthBar.TopContainer.GetAllChildren()))
                 {
                     c.Color = new Color(c.Color, (byte)(alpha * 255));
                     if (c is GUITextBlock textBlock)
                     {
-                        textBlock.TextColor = new Color(textBlock.TextColor, (byte)(alpha * 255));
-                    }
-                }
-
-                foreach (var c in bossHealthBar.SideContainer.GetAllChildren())
-                {
-                    c.Color = new Color(c.Color, (byte)(alpha * 255));
-                    if (c is GUITextBlock textBlock)
-                    {
-                        textBlock.TextColor = new Color(textBlock.TextColor, (byte)(alpha * 255));
+                        textBlock.TextColor = new Color(bossHealthBar.Character.IsDead ? Color.Gray : textBlock.TextColor, (byte)(alpha * 255));
                     }
                 }
 
                 bossHealthBar.TopHealthBar.BarSize = bossHealthBar.SideHealthBar.BarSize = health;
 
-                bossHealthBar.TopHealthBar.Color = bossHealthBar.SideHealthBar.Color = 
-                    ToolBox.GradientLerp(health, GUI.Style.HealthBarColorLow, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorHigh) * alpha;
-
-                if (bossHealthBar.Character.IsDead || bossHealthBar.Character.Removed)
+                if (bossHealthBar.Character.Removed || !bossHealthBar.Character.Enabled)
                 {
                     bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 1.0f);
+                }
+                else if (bossHealthBar.Character.IsDead)
+                {
+                    bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 5.0f);
+                }
+                else if (bossHealthBar.Character.AIController is EnemyAIController enemyAI && !enemyAI.IsTargetingPlayerTeam)
+                {
+                    bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 10.0f);
                 }
                 bossHealthBar.FadeTimer -= deltaTime;
             }

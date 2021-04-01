@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
         {
             string signalOut = MotionDetected ? Output : FalseOutput;
 
-            if (!string.IsNullOrEmpty(signalOut)) item.SendSignal( new Signal(signalOut, 1), "state_out");
+            if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(new Signal(signalOut, 1), "state_out"); }
 
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) return;

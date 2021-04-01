@@ -353,7 +353,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (recipient.Item == item || recipient.Item == signal.source) { continue; }
 
-                    signal.source?.LastSentSignalRecipients.Add(recipient.Item);
+                    signal.source?.LastSentSignalRecipients.Add(recipient);
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {

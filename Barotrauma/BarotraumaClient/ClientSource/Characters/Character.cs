@@ -403,7 +403,7 @@ namespace Barotrauma
 
                 if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
 
-                if (GameMain.GameSession?.GameMode is CampaignMode && GameMain.NetworkMember.RespawnManager != null && Level.Loaded?.Type != LevelData.LevelType.Outpost)
+                if (GameMain.NetworkMember.RespawnManager?.UseRespawnPrompt ?? false)
                 {
                     CoroutineManager.InvokeAfter(() =>
                     {

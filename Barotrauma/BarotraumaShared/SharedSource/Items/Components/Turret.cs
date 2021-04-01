@@ -439,8 +439,8 @@ namespace Barotrauma.Items.Components
                 var projectiles = GetLoadedProjectiles(true);
                 if (projectiles.Any())
                 {
-                    ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();                
-                    projectileContainer?.Item.Use(deltaTime, null);                    
+                    ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();
+                    if (projectileContainer?.Item != item) { projectileContainer?.Item.Use(deltaTime, null); }
                 }
                 else
                 {

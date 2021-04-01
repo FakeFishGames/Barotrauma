@@ -683,7 +683,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("addtofavorites"),
                 OnSelected = (tickbox) =>
                 {
-                    ServerInfo info = GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection.EndPointString, GameMain.Client.ServerSettings);
+                    ServerInfo info = GameMain.Client.ServerSettings.GetServerListInfo();
                     if (tickbox.Selected)
                     {
                         GameMain.ServerListScreen.AddToFavoriteServers(info);

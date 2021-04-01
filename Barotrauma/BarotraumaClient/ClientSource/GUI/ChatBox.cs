@@ -390,11 +390,15 @@ namespace Barotrauma
             {
                 foreach (var data in msgText.RichTextData)
                 {
-                    msgText.ClickableAreas.Add(new GUITextBlock.ClickableArea()
+                    var clickableArea = new GUITextBlock.ClickableArea()
                     {
-                        Data = data,
-                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
-                    });
+                        Data = data
+                    };
+                    if (GameMain.NetLobbyScreen != null && GameMain.NetworkMember != null)
+                    {
+                        clickableArea.OnClick = GameMain.NetLobbyScreen.SelectPlayer;
+                    }
+                    msgText.ClickableAreas.Add(clickableArea);
                 }
             }
 

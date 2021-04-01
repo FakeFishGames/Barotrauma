@@ -1,4 +1,48 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.6 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Fixes:
+- Fixed bots trying to clean up items that have changed place and shouldn't be allowed to clean up anymore. Fixes #5400
+
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.0.5 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Moloch: adjust the sounds a bit.
+- Added and adjusted sounds for Endworm and Charybdis.
+- Increased the audio ranges for Watcher and Hammerhead Matriarch.
+- More polished versions of the textures for Endworm and Charybdis.
+- Visual tweaks to the boss health bars.
+- Hide the boss health bar when the creature is not targeting the player.
+- Allow a monster to attack the player even when it's in the restricted area (abyss for non-abyss creatures or non-abyss for abyss creatures) if the player has lately made some damage to the monster.
+- Reduced knockback cooldown for submarine impacts (previously there was a 30 second cooldown before an impact could throw characters around again, now it's reduced to 5 seconds).
+- Show an indicator when the campaign is saved.
+
+Fixes:
+- Fixed frequent "unknown object header, previous header: CHAT_MESSAGE" networking errors.
+- Fixed crash when a location changes it's type in the single player campaign.
+- Fixes/improvements to item position syncing. When trying to pick up an item whose position has gotten desynced, the server should correct the item's position immediately.
+- Fixed respawns not working in outpost levels.
+- Fixed missing sonar icon for minerals for the sonar monitor.
+- Fixed overlap for "Follow Submarine" tickbox and end round button in campaign mode.
+- Fixed hints staying visible when the HUD is disabled.
+- Fixed boss health bar showing up briefly when you damage a dead boss monster.
+- Fixed crashing when a turret that spawns it's own projectiles (e.g. alien turret) is fired.
+- Fixed crashing when you exit a multiplayer campaign round during the text that pops up at the beginning of a new campaign.
+- Fixed monsters sometimes spawning very close (or even inside) the respawn shuttle.
+- Fixed linked sub's file path not being saved in the sub editor.
+- Fixed ruins sometimes getting placed too close to the start/end outpost.
+- Fixed characters not getting crushed by pressure in sub test mode.
+- Fixed crashing when accessing server settings of a server you've lost connection to.
+
+Modding:
+- Fixed inability to load more than 5 wires per connection even if the connection is set to allow more.
+- Added "MaxRadiation" parameter to radiation params.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.4 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

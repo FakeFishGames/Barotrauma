@@ -477,7 +477,7 @@ namespace Barotrauma
             }
         }
 
-        public const float KnockbackCooldown = 30.0f;
+        public const float KnockbackCooldown = 5.0f;
         public float KnockbackCooldownTimer;
 
         private float ragdollingLockTimer;
@@ -3310,7 +3310,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (attacker == Controlled && Controlled != null && Params.UseBossHealthBar)
+            if (Params.UseBossHealthBar && Controlled != null && Controlled.teamID == attacker?.teamID)
             {
                 CharacterHUD.ShowBossHealthBar(this);
             }
@@ -3990,7 +3990,7 @@ namespace Barotrauma
 
         public bool IsProtectedFromPressure()
         {
-            return PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 0.0f);
+            return PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f);
         }
     }
 }

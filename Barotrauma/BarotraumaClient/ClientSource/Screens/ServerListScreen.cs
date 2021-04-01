@@ -138,7 +138,7 @@ namespace Barotrauma
 
         private bool masterServerResponded;
         private IRestResponse masterServerResponse;
-        
+
         private readonly float[] columnRelativeWidth = new float[] { 0.1f, 0.1f, 0.7f, 0.12f, 0.08f, 0.08f };
         private readonly string[] columnLabel = new string[] { "ServerListCompatible", "ServerListHasPassword", "ServerListName", "ServerListRoundStarted", "ServerListPlayers", "ServerListPing" };
         
@@ -779,28 +779,19 @@ namespace Barotrauma
             doc.SaveSafe(file);
         }
 
-        public ServerInfo UpdateServerInfoWithServerSettings(object endpoint, ServerSettings serverSettings)
+        public ServerInfo UpdateServerInfoWithServerSettings(NetworkConnection endpoint, ServerSettings serverSettings)
         {
             UInt64 steamId = 0;
             string ip = ""; string port = "";
-            if (endpoint is UInt64 id) { steamId = id; }
-            else if (endpoint is string strEndpoint)
+            if (endpoint is SteamP2PConnection steamP2PConnection) { steamId = steamP2PConnection.SteamID; }
+            else if (endpoint is LidgrenConnection lidgrenConnection)
             {
-                string[] address = strEndpoint.Split(':');
-                if (address.Length == 1)
-                {
-                    ip = strEndpoint;
-                    port = NetConfig.DefaultPort.ToString();
-                }
-                else
-                {
-                    ip = string.Join(":", address.Take(address.Length - 1));
-                    port = address[address.Length - 1];
-                }
+                ip = lidgrenConnection.IPString;
+                port = lidgrenConnection.Port.ToString();
             }
 
             bool isInfoNew = false;
-            ServerInfo info = serverList.Content.FindChild(d => (d.UserData is ServerInfo serverInfo) && serverInfo != null &&
+            ServerInfo info = serverList.Content.FindChild(d => (d.UserData is ServerInfo serverInfo) &&
                                                         (steamId != 0 ? steamId == serverInfo.OwnerID : (ip == serverInfo.IP && port == serverInfo.Port)))?.UserData as ServerInfo;
             if (info == null)
             {
@@ -849,7 +840,7 @@ namespace Barotrauma
             }
 
             info.Recent = true;
-            ServerInfo existingInfo = recentServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+            ServerInfo existingInfo = recentServers.Find(info.MatchesByEndpoint);
             if (existingInfo == null)
             {
                 recentServers.Add(info);
@@ -865,13 +856,13 @@ namespace Barotrauma
 
         public bool IsFavorite(ServerInfo info)
         {
-            return favoriteServers.Any(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+            return favoriteServers.Any(info.MatchesByEndpoint);
         }
 
         public void AddToFavoriteServers(ServerInfo info)
         {
             info.Favorite = true;
-            ServerInfo existingInfo = favoriteServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+            ServerInfo existingInfo = favoriteServers.Find(info.MatchesByEndpoint);
             if (existingInfo == null)
             {
                 favoriteServers.Add(info);
@@ -888,7 +879,7 @@ namespace Barotrauma
         public void RemoveFromFavoriteServers(ServerInfo info)
         {
             info.Favorite = false;
-            ServerInfo existingInfo = favoriteServers.Find(serverInfo => info.OwnerID == serverInfo.OwnerID && (info.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+            ServerInfo existingInfo = favoriteServers.Find(info.MatchesByEndpoint);
             if (existingInfo != null)
             {
                 favoriteServers.Remove(existingInfo);
@@ -1263,8 +1254,7 @@ namespace Barotrauma
                 };
 
                 var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                info.OwnerID == serverInfo.OwnerID &&
-                                                                (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+                                                                info.MatchesByEndpoint(serverInfo));
 
                 if (serverFrame != null)
                 {

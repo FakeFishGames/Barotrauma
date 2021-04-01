@@ -217,6 +217,7 @@ namespace Barotrauma
 
             if (!savedOnStart)
             {
+                GUI.SetSavingIndicatorState(true);
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                 savedOnStart = true;
             }
@@ -228,6 +229,8 @@ namespace Barotrauma
             {
                 PetBehavior.LoadPets(petsElement);
             }
+
+            GUI.DisableSavingIndicatorDelayed();
         }
 
         protected override void LoadInitialLevel()
@@ -293,6 +296,11 @@ namespace Barotrauma
                         {
                             break;
                         }
+                    }
+                    if (GameMain.GameSession == null)
+                    {
+                        GUI.DisableHUD = false;
+                        yield return CoroutineStatus.Success;
                     }
                     overlayTextColor = Color.Lerp(Color.Transparent, Color.White, (timer - 1.0f) / fadeInDuration);
                     timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
@@ -377,6 +385,7 @@ namespace Barotrauma
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
             SoundPlayer.OverrideMusicType = success ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
+            GUI.SetSavingIndicatorState(success);
             crewDead = false;
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
@@ -486,6 +495,7 @@ namespace Barotrauma
                 overlayColor = Color.Transparent;
             });
 
+            GUI.SetSavingIndicatorState(false);
             yield return CoroutineStatus.Success;
         }
 

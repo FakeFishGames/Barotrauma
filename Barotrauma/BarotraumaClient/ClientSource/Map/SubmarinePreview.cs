@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -268,7 +269,7 @@ namespace Barotrauma
             {
                 foreach (string idStr in itemIdStrings[i].Split(';'))
                 {
-                    if (!int.TryParse(idStr, out int id)) { continue; }
+                    if (!int.TryParse(idStr, NumberStyles.Any, CultureInfo.InvariantCulture, out int id)) { continue; }
                     if (id != 0 && !ids.Contains(id)) { ids.Add(id); }
                 }
             }
@@ -304,7 +305,9 @@ namespace Barotrauma
 
             float rotation = element.GetAttributeFloat("rotation", 0f);
 
-            MapEntityPrefab prefab = MapEntityPrefab.List.First(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            MapEntityPrefab prefab = MapEntityPrefab.List.FirstOrDefault(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            if (prefab == null) { return; }
+
             var texture = prefab.sprite.Texture;
             var srcRect = prefab.sprite.SourceRect;
 
@@ -366,6 +369,12 @@ namespace Barotrauma
                 }
                 else if (itemPrefab != null)
                 {
+                    bool usePrefabValues = element.GetAttributeBool("isoverride", false) != itemPrefab.IsOverride;
+                    if (usePrefabValues)
+                    {
+                        scale = itemPrefab.ConfigElement.GetAttributeFloat(scale, "scale", "Scale");
+                    }
+
                     ParseUpgrades(itemPrefab.ConfigElement, ref scale);
 
                     if (prefab.ResizeVertical || prefab.ResizeHorizontal)
@@ -494,7 +503,7 @@ namespace Barotrauma
                         var doorSpriteElem = subElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("sprite", StringComparison.OrdinalIgnoreCase));
                         if (doorSpriteElem != null)
                         {
-                            string texturePath = subElement.GetAttributeString("texture", "");
+                            string texturePath = doorSpriteElem.GetAttributeString("texture", "");
                             Vector2 pos = rect.Location.ToVector2() * new Vector2(1f, -1f);
                             if (subElement.GetAttributeBool("horizontal", false))
                             {
@@ -539,11 +548,17 @@ namespace Barotrauma
 
                     if (scaleModifier.StartsWith("*"))
                     {
-                        scale *= float.Parse(scaleModifier.Substring(1));
+                        if (float.TryParse(scaleModifier.Substring(1), NumberStyles.Any, CultureInfo.InvariantCulture, out float parsedScale))
+                        {
+                            scale *= parsedScale;
+                        }
                     }
                     else
                     {
-                        scale = float.Parse(scaleModifier);
+                        if (float.TryParse(scaleModifier, NumberStyles.Any, CultureInfo.InvariantCulture, out float parsedScale))
+                        {
+                            scale = parsedScale;
+                        }
                     }
                 }
             }
@@ -557,14 +572,19 @@ namespace Barotrauma
             
             if (!spriteRecorder.ReadyToRender)
             {
-                string waitText = "Generating preview...";
+                string waitText = !loadTask.IsCompleted ?
+                    "Generating preview..." :
+                    (loadTask.Exception?.ToString() ?? "Task completed without marking as ready to render");
+                Vector2 origin = (GUI.Font.MeasureString(waitText) * 0.5f);
+                origin.X = MathF.Round(origin.X);
+                origin.Y = MathF.Round(origin.Y);
                 GUI.Font.DrawString(
                     spriteBatch,
                     waitText,
                     scissorRectangle.Center.ToVector2(),
                     Color.White,
                     0f,
-                    GUI.Font.MeasureString(waitText) * 0.5f,
+                    origin,
                     1f,
                     SpriteEffects.None,
                     0f);

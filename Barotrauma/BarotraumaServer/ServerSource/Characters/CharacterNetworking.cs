@@ -105,6 +105,14 @@ namespace Barotrauma
                             focusedItem = item;
                             FocusedCharacter = null;
                         }
+                        else
+                        {
+                            //failed to interact with the item 
+                            // -> correct the position and the state of the Holdable component (in case the item was deattached client-side)
+                            item.PositionUpdateInterval = 0.0f;
+                            var holdable = item.GetComponent<Items.Components.Holdable>();
+                            holdable.Item?.CreateServerEvent(holdable);
+                        }
                     }
                     else if (closestEntity is Character character)
                     {

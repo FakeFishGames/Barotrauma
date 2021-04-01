@@ -126,6 +126,8 @@ namespace Barotrauma.Networking
 
         public void ClientRead(IReadMessage incMsg)
         {
+            cachedServerListInfo = null;
+
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
             MaxPlayers = incMsg.ReadByte();
@@ -928,6 +930,7 @@ namespace Barotrauma.Networking
 
         public bool ToggleSettingsFrame(GUIButton button, object obj)
         {
+            if (GameMain.NetworkMember == null) { return false; }
             if (settingsFrame == null)
             {
                 CreateSettingsFrame();
@@ -948,6 +951,13 @@ namespace Barotrauma.Networking
             }
 
             return false;
+        }
+
+        private ServerInfo cachedServerListInfo = null;
+        public ServerInfo GetServerListInfo()
+        {
+            cachedServerListInfo ??= GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection, this);
+            return cachedServerListInfo;
         }
     }
 }

@@ -870,10 +870,10 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != submarine || item.CurrentHull == null || 
-                    item.body == null || !item.body.Enabled) continue;
+                if (item.Submarine != submarine || item.CurrentHull == null || item.body == null || !item.body.Enabled) { continue; }
 
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse, 10.0f);
+                item.PositionUpdateInterval = 0.0f;
             }
 
             float dmg = applyDamage ? impact * ImpactDamageMultiplier : 0.0f;

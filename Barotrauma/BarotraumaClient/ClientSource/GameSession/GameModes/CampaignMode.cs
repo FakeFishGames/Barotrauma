@@ -233,15 +233,20 @@ namespace Barotrauma
                 {
                     endRoundButton.RectTransform.ScreenSpaceOffset = new Point(0, Character.Controlled.CharacterHealth.SuicideButton.Rect.Height);
                 }
+                else if (GameMain.Client != null && GameMain.Client.IsFollowSubTickBoxVisible)
+                {
+                    endRoundButton.RectTransform.ScreenSpaceOffset = new Point(0, HUDLayoutSettings.Padding + GameMain.Client.FollowSubTickBox.Rect.Height);
+                }
                 else
                 {
                     endRoundButton.RectTransform.ScreenSpaceOffset = Point.Zero;
                 }
             }
             endRoundButton.DrawManually(spriteBatch);
-            if (this is MultiPlayerCampaign)
+            if (this is MultiPlayerCampaign && ReadyCheckButton != null)
             {
-                ReadyCheckButton?.DrawManually(spriteBatch);
+                ReadyCheckButton.RectTransform.ScreenSpaceOffset = endRoundButton.RectTransform.ScreenSpaceOffset;
+                ReadyCheckButton.DrawManually(spriteBatch);
             }
         }
 

@@ -443,6 +443,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+
                 //not attached -> pick the item instantly, ignoring picking time
                 return OnPicked(picker);
             }
@@ -450,6 +451,10 @@ namespace Barotrauma.Items.Components
 
         public override bool OnPicked(Character picker)
         {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                return false;
+            }
             if (base.OnPicked(picker))
             {
                 DeattachFromWall();

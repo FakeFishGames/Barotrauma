@@ -37,6 +37,8 @@ namespace Barotrauma
         public UISprite RadiationSprite { get; private set; }
         public SpriteSheet RadiationAnimSpriteSheet { get; private set; }
 
+        public SpriteSheet SavingIndicator { get; private set; }
+
         public UISprite UIGlow { get; private set; }
         public UISprite UIGlowCircular { get; private set; }
 
@@ -247,6 +249,9 @@ namespace Barotrauma
                         break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
+                        break;
+                    case "savingindicator":
+                        SavingIndicator = new SpriteSheet(subElement);
                         break;
                     case "font":
                         Font = LoadFont(subElement, graphicsDevice);

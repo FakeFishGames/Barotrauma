@@ -705,7 +705,7 @@ namespace Barotrauma.Items.Components
                     if (c.Params.HideInSonar) { continue; }
 
                     if (!c.IsUnconscious && c.Params.DistantSonarRange > 0.0f &&
-                        c.AIController is EnemyAIController enemyAI && enemyAI.IsTargetingPlayer &&
+                        c.AIController is EnemyAIController enemyAI && enemyAI.IsTargetingPlayerTeam &&
                         ((c.WorldPosition - transducerCenter) * displayScale).LengthSquared() > DisplayRadius * DisplayRadius)
                     {
                         float dist = Vector2.Distance(c.WorldPosition, transducerCenter);

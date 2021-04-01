@@ -56,6 +56,11 @@ namespace Barotrauma.Networking
         public readonly NetStats NetStats;
 
         protected GUITickBox cameraFollowsSub;
+        public GUITickBox FollowSubTickBox => cameraFollowsSub;
+
+        public bool IsFollowSubTickBoxVisible =>
+            gameStarted && Screen.Selected == GameMain.GameScreen &&
+            cameraFollowsSub != null && cameraFollowsSub.Visible;
 
         public CameraTransition EndCinematic;
 
@@ -2095,7 +2100,7 @@ namespace Barotrauma.Networking
                                 serverSettings.ClientRead(settingsBuf);
                                 if (!IsServerOwner)
                                 {
-                                    ServerInfo info = GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(serverEndpoint, serverSettings);
+                                    ServerInfo info = serverSettings.GetServerListInfo();
                                     GameMain.ServerListScreen.AddToRecentServers(info);
                                     GameMain.NetLobbyScreen.Favorite.Visible = true;
                                     GameMain.NetLobbyScreen.Favorite.Selected = GameMain.ServerListScreen.IsFavorite(info);

@@ -101,6 +101,7 @@ namespace Barotrauma
             sl.filePath = filePath;
             sl.saveElement = doc.Root;
             sl.saveElement.Name = "LinkedSubmarine";
+            sl.saveElement.SetAttributeValue("filepath", filePath);
 
             return sl;
         }
