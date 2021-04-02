@@ -317,18 +317,16 @@ namespace Barotrauma.Items.Components
             if (containedItems == null) {fuelLeft = 0.0f;}
             else
             {
-                foreach(Item item in containedItems)
-                {
-                    if(item.HasTag("reactorfuel")) 
-                    {
-                        fuelLeft = 100.0f;
-                        break;
-                    }
-                }
+                bool fuelcheck = true;
                 foreach (Item item in containedItems)
                 {
                     if (!item.HasTag("reactorfuel")) { continue; }
                     if(fissionRate > 0.0f) {item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;}
+                    if(fuelcheck) 
+                    {
+                        fuelLeft = 100.0f;
+                        fuelcheck = false;
+                    }
                     if(item.Condition < fuelLeft){fuelLeft = item.Condition;}
                 }
             }
