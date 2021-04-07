@@ -419,7 +419,7 @@ namespace Barotrauma
                 int zone1 = GetZoneIndex(Connections[i].Locations[0].MapPosition.X);
                 int zone2 = GetZoneIndex(Connections[i].Locations[1].MapPosition.X);
                 if (zone1 == zone2) { continue; }
-                if (zone2 == generationParams.DifficultyZones) { continue; }
+                if (zone1 == generationParams.DifficultyZones || zone2 == generationParams.DifficultyZones) { continue; }
 
                 if (!connectionsBetweenZones.Contains(Connections[i]))
                 {
@@ -464,7 +464,10 @@ namespace Barotrauma
 
             foreach (Location location in Locations)
             {
-                location.LevelData = new LevelData(location);
+                location.LevelData = new LevelData(location)
+                {
+                    Difficulty = MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f)
+                };
                 if (location.Type.MissionIdentifiers.Any())
                 {
                     location.UnlockMissionByIdentifier(location.Type.MissionIdentifiers.GetRandom());

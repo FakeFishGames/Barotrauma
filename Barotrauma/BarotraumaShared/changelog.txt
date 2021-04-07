@@ -1,10 +1,43 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.7 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Bandit outfits aren't sold at outposts.
+- Charybdis: Increased the attack cooldown from 3 to 4. Tweaked the texture. Adjusted the ragdoll and the animations. More tentacles.
+- Molochs: Boosted the structural damage slightly. Increased the attack and damage ranges slightly to help the attacks to hit the target.
+- Added black moloch mission variants.
+- Icons for previous orders can now be removed from crew list by right-clicking on them.
+- Diving suits have an effect on underwater scooter speed (slower movement when wearing an abyss suit, faster when wearing a combat suit).
+- Abyss/combat diving suits aren't sold in outpost for the first quarter of the campaign.
+- Nerfed nuclear shell's EMP effect.
+
+Fixes:
+- Fixed entity IDs getting messed up when purchasing items in the MP campaign, which lead to disconnects with an "entity not found" error message. Happened because the server created the purchased items before loading the respawn shuttle, while the clients did it the other way around.
+- Fixed clients not getting the prompt to download a custom sub they don't have unless they have permissions to edit server settings.
+- Fixed edge of the chatbox stealing cursor focus when the chatbox is hidden (preventing firing turrets when the cursor is in the bottom-left corner of the screen).
+- Fixed inconsistency in the way vertical velocity in/out signals are handled by the nav terminals. Previously "velocity_in" would interpret positive y as upwards, even though "velocity_y_out" outputs a negative value when going up. Now positive is always down (= corresponds with the "descent velocity" value displayed on the terminal).
+- Fixed non-repeatable outpost events starting to repeat once all of them have been triggered.
+- Fixed gate outpost still sometimes generating before the last level/biome.
+- Reduced the amount of clown gear in the "Praise the Honkmother" mission to fit everything in the crate.
+- Fixed boss health bars not appearing in multiplayer when damaging a boss monster with a turret.
+- Fixed clients not getting notified when a path between biomes is unlocked, preventing them from proceeding without saving and reloading the campaign.
+- Fixed crashing on startup with the error message "unable to load shared library 'freetype6' or one of its dependencies" on some Linux systems.
+- Fixed monsters trying to follow the last target while in the idle state even when the target is outside of the allowed area (only unstable).
+- Fixed multiple issues regarding bots targeting the reactor.
+- Fixed OnDamaged status effect triggering from burns, poisons etc. Only afflictions of type "damage" can now trigger it. Fixes Moloch spawning a lot of particles after being hit with a nuclear shell (#5412).
+- Fixed black moloch doing only 62.5% of the structure damage compared to the regular moloch.
+- Fixes to R-29: fixed top docking port's control circuit, adjustments to pre-placed supplies, adjusted discharge coil power consumption, minor visual fixes.
+- Fixed wall damage particles sometimes spawning at an incorrect position.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.6 (unstable)
 ---------------------------------------------------------------------------------------------------------
 
 Fixes:
 - Fixed bots trying to clean up items that have changed place and shouldn't be allowed to clean up anymore. Fixes #5400
-
+- Fixed "attempted to set SoundRange to NaN" error when a reactor's maximum power output is 0.
+- Fixed nullref exception when forcing an item position correction upon interaction failure.
 
 ---------------------------------------------------------------------------------------------------------
 v0.1300.0.5 (unstable)

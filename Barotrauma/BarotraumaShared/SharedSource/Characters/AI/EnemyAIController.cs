@@ -765,7 +765,7 @@ namespace Barotrauma
                     {
                         var location = memory.Location;
                         float dist = Vector2.DistanceSquared(WorldPosition, location);
-                        if (dist < 50 * 50)
+                        if (dist < 50 * 50 || !IsPositionInsideAllowedZone(WorldPosition, out _))
                         {
                             // Target is gone
                             ResetAITarget();

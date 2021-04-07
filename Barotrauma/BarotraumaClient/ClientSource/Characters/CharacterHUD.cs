@@ -55,6 +55,10 @@ namespace Barotrauma
                 };
 
                 TopContainer.Visible = SideContainer.Visible = false;
+                TopContainer.CanBeFocused = false;
+                TopContainer.Children.ForEach(c => c.CanBeFocused = false);
+                SideContainer.CanBeFocused = false;
+                SideContainer.Children.ForEach(c => c.CanBeFocused = false);
             }
         }
 

@@ -587,7 +587,7 @@ namespace Barotrauma.Items.Components
             //ID ushort.MaxValue = launched without a projectile
             if (projectileID == ushort.MaxValue)
             {
-                Launch(null);
+                Launch(null, user);
             }
             else
             {
@@ -596,7 +596,7 @@ namespace Barotrauma.Items.Components
                     DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");
                     return;
                 }
-                Launch(projectile, launchRotation: newTargetRotation);
+                Launch(projectile, user, launchRotation: newTargetRotation);
             }
         }
     }

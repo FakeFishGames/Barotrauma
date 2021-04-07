@@ -2177,6 +2177,11 @@ namespace Barotrauma.Networking
             { 
                 respawnManager = new RespawnManager(this, serverSettings.UseRespawnShuttle && !isOutpost ? selectedShuttle : null); 
             }
+            if (campaign != null)
+            {
+                campaign.CargoManager.CreatePurchasedItems();
+                campaign.SendCrewState(null, default, null);
+            }
 
             Level.Loaded?.SpawnNPCs();
             Level.Loaded?.SpawnCorpses();

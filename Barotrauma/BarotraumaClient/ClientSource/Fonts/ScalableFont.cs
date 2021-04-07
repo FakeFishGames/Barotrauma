@@ -465,7 +465,7 @@ namespace Barotrauma
 
                 if (currentRichTextData != null && currentRichTextData.StartIndex + lineNum <= i + rtdOffset && i + rtdOffset <= currentRichTextData.EndIndex + lineNum)
                 {
-                    currentTextColor = currentRichTextData.Color ?? color;
+                    currentTextColor = currentRichTextData.Color * currentRichTextData.Alpha ?? color;
                     if (!string.IsNullOrEmpty(currentRichTextData.Metadata))
                     {
                         currentTextColor = Color.Lerp(currentTextColor, Color.White, 0.5f);

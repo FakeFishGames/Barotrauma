@@ -819,16 +819,12 @@ namespace Barotrauma
                 }
                 for (int i = 1; i <= particleAmount; i++)
                 {
+                    var worldRect = section.WorldRect;
                     Vector2 particlePos = new Vector2(
-                        Rand.Range(section.rect.X, section.rect.Right),
-                        Rand.Range(section.rect.Y - section.rect.Height, section.rect.Y));
+                        Rand.Range(worldRect.X, worldRect.Right),
+                        Rand.Range(worldRect.Y - worldRect.Height, worldRect.Y));
 
-                    if (Submarine != null)
-                    {
-                        particlePos += Submarine.DrawPosition;
-                    }
-
-                    var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)));
+                    var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, Rand.Vector(Rand.Range(1.0f, 50.0f)), collisionIgnoreTimer: 1f);
                     if (particle == null) break;
                 }
             }

@@ -478,13 +478,6 @@ namespace Barotrauma
                 }
                 if (GameMode is MultiPlayerCampaign mpCampaign)
                 {
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                    {
-                        mpCampaign.CargoManager.CreatePurchasedItems();
-#if SERVER
-                        mpCampaign.SendCrewState(null, default, null);
-#endif
-                    }
                     mpCampaign.UpgradeManager.ApplyUpgrades();
                     mpCampaign.UpgradeManager.SanityCheckUpgrades(Submarine);
                 }

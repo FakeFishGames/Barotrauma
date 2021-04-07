@@ -1,13 +1,10 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Xml.Linq;
 using System.Linq;
-using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
-using Voronoi2;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -1077,7 +1074,10 @@ namespace Barotrauma
             priceInfo = null;
             if (location?.Type == null) { return false; }
             priceInfo = GetPriceInfo(location);
-            return priceInfo != null && priceInfo.CanBeBought;
+            return 
+                priceInfo != null && 
+                priceInfo.CanBeBought && 
+                (location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
         }
 
         public static ItemPrefab Find(string name, string identifier)

@@ -1127,6 +1127,7 @@ namespace Barotrauma
                 if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
+                    if (character.LastDamage.Afflictions == null || character.LastDamage.Afflictions.None(a => a.Prefab.AfflictionType == "damage")) { continue; }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)

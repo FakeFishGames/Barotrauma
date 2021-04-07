@@ -1343,6 +1343,22 @@ namespace Barotrauma
         /// </summary>
         public float SpeedMultiplier { get; private set; } = 1;
 
+
+        private double propulsionSpeedMultiplierLastSet;
+        private float propulsionSpeedMultiplier;
+        /// <summary>
+        /// Can be used to modify the speed at which Propulsion ItemComponents move the character via StatusEffects (e.g. heavy suit can slow down underwater scooters)
+        /// </summary>
+        public float PropulsionSpeedMultiplier 
+        {
+            get { return propulsionSpeedMultiplier; }
+            set
+            {
+                propulsionSpeedMultiplier = value;
+                propulsionSpeedMultiplierLastSet = Timing.TotalTime;
+            }
+        }
+
         public void StackSpeedMultiplier(float val)
         {
             if (val < 1f)
@@ -1365,6 +1381,10 @@ namespace Barotrauma
         {
             greatestPositiveSpeedMultiplier = 1f;
             greatestNegativeSpeedMultiplier = 1f;
+            if (Timing.TotalTime > propulsionSpeedMultiplierLastSet + 0.1)
+            {
+                propulsionSpeedMultiplier = 1.0f;
+            }
         }
 
         private float greatestNegativeHealthMultiplier = 1f;
@@ -3420,6 +3440,7 @@ namespace Barotrauma
                 if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
+                    if (LastDamage.Afflictions == null || LastDamage.Afflictions.None(a => a.Prefab.AfflictionType == "damage")) { continue; }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (LastAttacker == null || !LastAttacker.IsPlayer)

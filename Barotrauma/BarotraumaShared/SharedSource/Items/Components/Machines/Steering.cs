@@ -711,7 +711,7 @@ namespace Barotrauma.Items.Components
                 steeringAdjustSpeed = DefaultSteeringAdjustSpeed;
                 steeringInput = XMLExtensions.ParseVector2(signal.value, errorMessages: false);
                 steeringInput.X = MathHelper.Clamp(steeringInput.X, -100.0f, 100.0f);
-                steeringInput.Y = MathHelper.Clamp(steeringInput.Y, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(-steeringInput.Y, -100.0f, 100.0f);
             }
             else
             {

@@ -121,7 +121,7 @@ namespace Barotrauma
                     {
                         float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
                         float max = AIObjectiveManager.LowestOrderPriority - 1;
-                        if (reactor != null && reactor.PowerOn && Option == "powerup")
+                        if (reactor != null && reactor.PowerOn && reactor.FissionRate > 1 && Option == "powerup")
                         {
                             // Decrease the priority when targeting a reactor that is already on.
                             value /= 2;

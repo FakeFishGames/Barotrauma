@@ -134,6 +134,7 @@ namespace Barotrauma.Networking
             HasPassword = incMsg.ReadBoolean();
             IsPublic = incMsg.ReadBoolean();
             GameMain.NetLobbyScreen.SetPublic(IsPublic);
+            AllowFileTransfers = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;

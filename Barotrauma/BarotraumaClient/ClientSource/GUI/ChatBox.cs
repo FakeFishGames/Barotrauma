@@ -584,6 +584,7 @@ namespace Barotrauma
 
             if (ToggleOpen)
             {
+                GUIFrame.CanBeFocused = true;
                 openState += deltaTime * 5.0f;
                 //delete all popup messages when the chatbox is open
                 foreach (var popupMsg in popupMessages)
@@ -594,6 +595,7 @@ namespace Barotrauma
             }
             else
             {
+                GUIFrame.CanBeFocused = false;
                 openState -= deltaTime * 5.0f;
 
                 int yOffset = 0;

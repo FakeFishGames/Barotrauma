@@ -917,6 +917,13 @@ namespace Barotrauma
                     var orderInfo = (OrderInfo)userData;
                     SetCharacterOrder(character, orderInfo.Order, orderInfo.OrderOption, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
                     return true;
+                },
+                OnSecondaryClicked = (button, userData) =>
+                {
+                    if (previousOrderIconGroup == null) { return false; }
+                    previousOrderIconGroup.RemoveChild(button);
+                    previousOrderIconGroup.Recalculate();
+                    return true;
                 }
             };
             prevOrderFrame.RectTransform.IsFixedSize = true;

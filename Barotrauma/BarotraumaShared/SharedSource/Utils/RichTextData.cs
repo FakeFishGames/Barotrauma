@@ -9,6 +9,8 @@ namespace Barotrauma
         public Color? Color;
         public string Metadata;
 
+        public float Alpha = 1.0f;
+
         private const char definitionIndicator = '‖';
         private const char attributeSeparator = ';';
         private const char keyValueSeparator = ':';
