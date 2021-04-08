@@ -419,6 +419,9 @@ namespace Barotrauma
                         for (int j = 0; j < eventSet.EventCount; j++)
                         {
                             var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => CalculateCommonness(e)).ToList(), rand);
+
+
+                            DebugConsole.ThrowError("Checkpoint Reached " + unusedEvents.Select(e => CalculateCommonness(e)).ToList());
                             if (eventPrefab != null)
                             {
                                 var newEvent = eventPrefab.First.CreateInstance();

@@ -163,6 +163,7 @@ namespace Barotrauma
         public static ScalableFont SubHeadingFont => Style?.SubHeadingFont;
         public static ScalableFont DigitalFont => Style?.DigitalFont;
         public static ScalableFont HotkeyFont => Style?.HotkeyFont;
+        public static ScalableFont MonospacedFont => Style?.MonospacedFont;
 
         public static ScalableFont CJKFont { get; private set; }
 
