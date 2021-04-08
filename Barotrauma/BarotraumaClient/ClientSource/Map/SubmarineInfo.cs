@@ -20,7 +20,7 @@ namespace Barotrauma
                     {
                         var texture = TextureLoader.FromStream(mem, path: FilePath, compress: false);
                         if (texture == null) { throw new Exception("PreviewImage texture returned null"); }
-                        PreviewImage = new Sprite(texture, null, null);
+                        PreviewImage = new Sprite(texture, sourceRectangle: null, newOffset: null, path: FilePath);
                     }
                 }
                 catch (Exception e)
@@ -39,6 +39,7 @@ namespace Barotrauma
 
             var previewButton = new GUIButton(new RectTransform(new Vector2(1f, 0.5f), content.RectTransform), style: null)
             {
+                CanBeFocused = SubmarineElement != null,
                 OnClicked = (btn, obj) => { SubmarinePreview.Create(this); return false; },
             };
 
@@ -61,16 +62,19 @@ namespace Barotrauma
                 new GUIFrame(new RectTransform(Vector2.One, submarinePreviewBackground.RectTransform), "InnerGlow", color: Color.Black) { CanBeFocused = false };
             }
 
-            new GUIFrame(new RectTransform(Vector2.One * 0.12f, previewButton.RectTransform, anchor: Anchor.BottomRight, pivot: Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight)
+            if (SubmarineElement != null)
             {
-                AbsoluteOffset = new Point((int)(0.03f * previewButton.Rect.Height))
-            },
-                "ExpandButton", Color.White)
-            {
-                Color = Color.White,
-                HoverColor = Color.White,
-                PressedColor = Color.White
-            };
+                new GUIFrame(new RectTransform(Vector2.One * 0.12f, previewButton.RectTransform, anchor: Anchor.BottomRight, pivot: Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight)
+                {
+                    AbsoluteOffset = new Point((int)(0.03f * previewButton.Rect.Height))
+                },
+                    "ExpandButton", Color.White)
+                {
+                    Color = Color.White,
+                    HoverColor = Color.White,
+                    PressedColor = Color.White
+                };
+            }
 
             var descriptionBox = new GUIListBox(new RectTransform(new Vector2(1, 0.5f), content.RectTransform, Anchor.BottomCenter))
             {
@@ -81,10 +85,10 @@ namespace Barotrauma
             
             ScalableFont font = parent.Rect.Width < 350 ? GUI.SmallFont : GUI.Font;
 
-            CreateSpecsWindow(descriptionBox, font, includesDescription: true);
+            CreateSpecsWindow(descriptionBox, font, includeDescription: true);
         }
 
-        public void CreateSpecsWindow(GUIListBox parent, ScalableFont font, bool includeTitle = true, bool includesDescription = false)
+        public void CreateSpecsWindow(GUIListBox parent, ScalableFont font, bool includeTitle = true, bool includeClass = true, bool includeDescription = false)
         {
             float leftPanelWidth = 0.6f;
             float rightPanelWidth = 0.4f;
@@ -94,15 +98,18 @@ namespace Barotrauma
             int leftPanelWidthInt = (int)(parent.Rect.Width * leftPanelWidth);
 
             GUITextBlock submarineNameText = null;
+            GUITextBlock submarineClassText = null;
             if (includeTitle)
             {
                 int nameHeight = (int)GUI.LargeFont.MeasureString(DisplayName, true).Y;
                 submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUI.LargeFont) { CanBeFocused = false };
                 submarineNameText.RectTransform.MinSize = new Point(0, (int)submarineNameText.TextSize.Y);
             }
-            var submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont) { CanBeFocused = false };
-            submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
-
+            if (includeClass)
+            {
+                submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont) { CanBeFocused = false };
+                submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
+            }
             Vector2 realWorldDimensions = Dimensions * Physics.DisplayToRealWorldRatio;
             if (realWorldDimensions != Vector2.Zero)
             {
@@ -169,7 +176,7 @@ namespace Barotrauma
             }
 
             GUITextBlock descBlock = null;
-            if (includesDescription)
+            if (includeDescription)
             {
                 //space
                 new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), parent.Content.RectTransform), style: null);

@@ -695,6 +695,7 @@ namespace Barotrauma
                 if (firstItem != null && !DraggingItems.Contains(firstItem) && Character.Controlled?.Inventory == this &&
                     GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen && PlayerInput.InventoryKeyHit(visualSlots[i].InventoryKeyIndex))
                 {
+                    if (SubEditorScreen.IsSubEditor() && SubEditorScreen.SkipInventorySlotUpdate) { continue; }
 #if LINUX
                     // some window managers on Linux use windows key + number to change workspaces or perform other actions
                     if (PlayerInput.KeyDown(Keys.RightWindows) || PlayerInput.KeyDown(Keys.LeftWindows)) { continue; }

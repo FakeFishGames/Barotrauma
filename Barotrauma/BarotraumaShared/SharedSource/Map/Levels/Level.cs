@@ -1887,7 +1887,9 @@ namespace Barotrauma
                         }
                     }
                     shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startPosition.X, (double)startPosition.Y));
+                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startExitPosition.X, (double)borders.Bottom));
                     shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endPosition.X, (double)endPosition.Y));
+                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endExitPosition.X, (double)borders.Bottom));
                     distanceField.Add((point, Math.Sqrt(shortestDistSqr)));
                 }
             }
@@ -3603,31 +3605,36 @@ namespace Barotrauma
                     }
 
                     //remove wires
-                    foreach (Item item in beaconItems.Where(it => it.GetComponent<Wire>() != null).ToList())
+                    float removeWireMinDifficulty = 20.0f;
+                    float removeWireProbability = MathUtils.InverseLerp(removeWireMinDifficulty, 100.0f, LevelData.Difficulty) * 0.5f;
+                    if (removeWireProbability > 0.0f)
                     {
-                        if (item.NonInteractable) { continue; }
-                        Wire wire = item.GetComponent<Wire>();
-                        if (wire.Locked) { continue; }
-                        if (wire.Connections[0] != null && (wire.Connections[0].Item.NonInteractable || wire.Connections[0].Item.GetComponent<ConnectionPanel>().Locked))
+                        foreach (Item item in beaconItems.Where(it => it.GetComponent<Wire>() != null).ToList())
                         {
-                            continue;
-                        }
-                        if (wire.Connections[1] != null && (wire.Connections[1].Item.NonInteractable || wire.Connections[1].Item.GetComponent<ConnectionPanel>().Locked))
-                        {
-                            continue;
-                        }
-                        if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.25f)
-                        {
-                            foreach (Connection connection in wire.Connections)
+                            if (item.NonInteractable) { continue; }
+                            Wire wire = item.GetComponent<Wire>();
+                            if (wire.Locked) { continue; }
+                            if (wire.Connections[0] != null && (wire.Connections[0].Item.NonInteractable || wire.Connections[0].Item.GetComponent<ConnectionPanel>().Locked))
                             {
-                                if (connection != null)
+                                continue;
+                            }
+                            if (wire.Connections[1] != null && (wire.Connections[1].Item.NonInteractable || wire.Connections[1].Item.GetComponent<ConnectionPanel>().Locked))
+                            {
+                                continue;
+                            }
+                            if (Rand.Range(0f, 1.0f, Rand.RandSync.Unsynced) < removeWireProbability)
+                            {
+                                foreach (Connection connection in wire.Connections)
                                 {
-                                    connection.ConnectionPanel.DisconnectedWires.Add(wire);
-                                    wire.RemoveConnection(connection.Item);
+                                    if (connection != null)
+                                    {
+                                        connection.ConnectionPanel.DisconnectedWires.Add(wire);
+                                        wire.RemoveConnection(connection.Item);
 #if SERVER
                                     connection.ConnectionPanel.Item.CreateServerEvent(connection.ConnectionPanel);
                                     wire.CreateNetworkEvent();
 #endif
+                                    }
                                 }
                             }
                         }

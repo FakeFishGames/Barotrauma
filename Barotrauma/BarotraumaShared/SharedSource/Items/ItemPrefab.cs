@@ -1,13 +1,10 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Xml.Linq;
 using System.Linq;
-using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
-using Voronoi2;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -525,6 +522,11 @@ namespace Barotrauma
         public bool CanBeBought => (DefaultPrice != null && DefaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
 
         /// <summary>
+        /// Can the item be chosen as extra cargo in multiplayer. If not set, the item is available if it can be bought from outposts in the campaign.
+        /// </summary>
+        public bool? AllowAsExtraCargo;
+
+        /// <summary>
         /// Any item with a Price element in the definition can be sold everywhere.
         /// </summary>
         public bool CanBeSold => DefaultPrice != null;
@@ -718,6 +720,11 @@ namespace Barotrauma
             DeconstructItems    = new List<DeconstructItem>();
             FabricationRecipes  = new List<FabricationRecipe>();
             DeconstructTime     = 1.0f;
+
+            if (element.Attribute("allowasextracargo") != null)
+            {
+                AllowAsExtraCargo = element.GetAttributeBool("allowasextracargo", false);
+            }
 
             Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
             if (!Tags.Any())
@@ -1067,7 +1074,10 @@ namespace Barotrauma
             priceInfo = null;
             if (location?.Type == null) { return false; }
             priceInfo = GetPriceInfo(location);
-            return priceInfo != null && priceInfo.CanBeBought;
+            return 
+                priceInfo != null && 
+                priceInfo.CanBeBought && 
+                (location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
         }
 
         public static ItemPrefab Find(string name, string identifier)

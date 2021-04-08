@@ -35,7 +35,7 @@ namespace Barotrauma
             WayPointID = Waypoint.ID;
         }
 
-        public static List<PathNode> GenerateNodes(List<WayPoint> wayPoints)
+        public static List<PathNode> GenerateNodes(List<WayPoint> wayPoints, bool removeOrphans)
         {
             var nodes = new Dictionary<int, PathNode>();
             foreach (WayPoint wayPoint in wayPoints)
@@ -63,7 +63,10 @@ namespace Barotrauma
             }
 
             var nodeList = nodes.Values.ToList();
-            nodeList.RemoveAll(n => n.connections.Count == 0);
+            if (removeOrphans)
+            {
+                nodeList.RemoveAll(n => n.connections.Count == 0);
+            }
             foreach (PathNode node in nodeList)
             {
                 node.distances = new List<float>();
@@ -90,7 +93,7 @@ namespace Barotrauma
 
         public PathFinder(List<WayPoint> wayPoints, bool indoorsSteering = false)
         {
-            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.Submarine != null == indoorsSteering));
+            nodes = PathNode.GenerateNodes(wayPoints.FindAll(w => w.Submarine != null == indoorsSteering), removeOrphans: true);
 
             foreach (WayPoint wp in wayPoints)
             {

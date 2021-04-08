@@ -26,7 +26,6 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
-            GameMain.GameSession?.Map?.CurrentLocation?.Connections.ForEach(c => c.Locked = false);
             if (GameMain.GameSession?.Map?.CurrentLocation?.Connections != null)
             {
                 foreach (LocationConnection connection in GameMain.GameSession?.Map?.CurrentLocation?.Connections)

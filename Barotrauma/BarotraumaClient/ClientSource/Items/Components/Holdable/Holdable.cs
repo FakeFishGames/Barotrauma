@@ -106,6 +106,11 @@ namespace Barotrauma.Items.Components
 
                     DeattachFromWall();
                 }
+                else
+                {
+                    item.SetTransform(simPosition, 0.0f);
+                    item.Submarine = sub;
+                }
             }
         }
     }

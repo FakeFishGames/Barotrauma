@@ -147,7 +147,7 @@ namespace Barotrauma
 #if DEBUG
             DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
 #endif
-            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder != null && DialogueIdentifier != null && SpeakIfFails)
+            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective && DialogueIdentifier != null && SpeakIfFails)
             {
                 string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
                 if (msg != null)

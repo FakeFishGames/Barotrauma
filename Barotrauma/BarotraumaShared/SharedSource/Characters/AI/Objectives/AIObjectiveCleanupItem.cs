@@ -61,13 +61,22 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            // Only continue when the get item sub objectives have been completed.
-            if (subObjectives.Any()) { return; }
             if (item.IgnoreByAI)
             {
                 Abandon = true;
                 return;
             }
+            if (item.ParentInventory != null)
+            {
+                if (item.Container != null && !AIObjectiveCleanupItems.IsValidContainer(item.Container, character, allowUnloading: objectiveManager.HasOrders()))
+                {
+                    // Target was picked up or moved by someone.
+                    Abandon = true;
+                    return;
+                }
+            }
+            // Only continue when the get item sub objectives have been completed.
+            if (subObjectives.Any()) { return; }
             if (HumanAIController.FindSuitableContainer(character, item, ignoredContainers, ref itemIndex, out Item suitableContainer))
             {
                 itemIndex = 0;

@@ -227,6 +227,11 @@ namespace Barotrauma
                 float timer = 0.0f;
                 while (timer < textDuration)
                 {
+                    if (GameMain.GameSession == null || Screen.Selected != GameMain.GameScreen)
+                    {
+                        GUI.DisableHUD = false;
+                        yield return CoroutineStatus.Success;
+                    }
                     // Try to grab the controlled here to prevent inputs, assigned late on multiplayer
                     if (Character.Controlled != null)
                     {
@@ -321,6 +326,7 @@ namespace Barotrauma
             Level prevLevel = Level.Loaded;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+            GUI.SetSavingIndicatorState(success);
             crewDead = false;
 
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
@@ -378,6 +384,7 @@ namespace Barotrauma
                 }
             }
 
+            GUI.SetSavingIndicatorState(false);
             yield return CoroutineStatus.Success;
         }
 

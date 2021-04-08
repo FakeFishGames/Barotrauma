@@ -100,6 +100,7 @@
   <Character file="Content/Characters/Spineling/Spineling.xml" />
   <Character file="Content/Characters/Variants/Swarmcrawler.xml" />
   <Character file="Content/Characters/Variants/Moloch_m.xml" />
+  <Character file="Content/Characters/Variants/Molochblack_m.xml" />
   <Character file="Content/Characters/Variants/Hammerhead_m.xml" />
   <Character file="Content/Characters/Variants/Hammerheadgold_m.xml" />
   <Character file="Content/Characters/Variants/Crawler_hatchling/Crawler_hatchling.xml" />

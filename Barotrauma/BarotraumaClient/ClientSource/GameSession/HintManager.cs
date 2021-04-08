@@ -106,7 +106,7 @@ namespace Barotrauma
 
             CheckIsInteracting();
             CheckIfDivingGearOutOfOxygen();
-            CheckAdjacentHulls();
+            CheckHulls();
             CheckReminders();
         }
 
@@ -503,6 +503,19 @@ namespace Barotrauma
             DisplayHint("onrepairfailed");
         }
 
+        public static void OnActiveOrderAdded(Order order)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (order == null) { return; }
+
+            if (order.Identifier == "reportballastflora" &&
+                order.TargetEntity is Hull h &&
+                h.Submarine?.TeamID == Character.Controlled.TeamID)
+            {
+                DisplayHint("onballastflorainfected");
+            }
+        }
+
         private static void CheckIfDivingGearOutOfOxygen()
         {
             if (!CanDisplayHints()) { return; }
@@ -520,10 +533,14 @@ namespace Barotrauma
             });
         }
 
-        private static void CheckAdjacentHulls()
+        private static void CheckHulls()
         {
             if (!CanDisplayHints()) { return; }
             if (Character.Controlled.CurrentHull == null) { return; }
+            if (HumanAIController.IsBallastFloraNoticeable(Character.Controlled, Character.Controlled.CurrentHull))
+            {
+                if (DisplayHint("onballastflorainfected")) { return; }
+            }
             foreach (var gap in Character.Controlled.CurrentHull.ConnectedGaps)
             {
                 if (gap.ConnectedDoor == null || gap.ConnectedDoor.Impassable) { continue; }

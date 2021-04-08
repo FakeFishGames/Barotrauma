@@ -40,6 +40,7 @@ namespace Barotrauma
         public void SetRadiationEnabled(bool enabled)
         {
 #if CLIENT
+            if (radiationEnabledTickBox == null) { return; }
             radiationEnabledTickBox.Selected = enabled;
 #endif
         }
@@ -47,7 +48,7 @@ namespace Barotrauma
         public bool IsRadiationEnabled()
         {
 #if CLIENT
-            return radiationEnabledTickBox.Selected;
+            return radiationEnabledTickBox != null && radiationEnabledTickBox.Selected;
 #elif SERVER
             return GameMain.Server.ServerSettings.RadiationEnabled;
 #endif

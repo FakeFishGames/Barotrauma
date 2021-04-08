@@ -567,10 +567,13 @@ namespace Barotrauma
                     return;
                 }
 
-                NewMessage("Valid permissions are:", Color.White);
-                foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                if (args.Length < 2)
                 {
-                    NewMessage(" - " + permission.ToString(), Color.White);
+                    NewMessage("Valid permissions are:", Color.White);
+                    foreach (ClientPermissions permission in Enum.GetValues(typeof(ClientPermissions)))
+                    {
+                        NewMessage(" - " + permission.ToString(), Color.White);
+                    }
                 }
                 ShowQuestionPrompt("Permission to revoke from \"" + client.Name + "\"?", (perm) =>
                 {

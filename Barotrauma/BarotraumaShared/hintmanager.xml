@@ -12,6 +12,7 @@
     <progresstonextemptylocation/>
     <returntopreviousemptylocation/>
   </onavailabletransition>
+  <onballastflorainfected/>
   <oncharacterkilled/>
   <oncharacterunconscious/>
   <ondivinggearoutofoxygen/>

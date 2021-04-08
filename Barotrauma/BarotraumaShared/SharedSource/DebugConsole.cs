@@ -344,7 +344,7 @@ namespace Barotrauma
                     return new string[][]
                     {
                         GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                        commands.Select(c => c.names[0]).ToArray()
+                        commands.Select(c => c.names[0]).Union(new string[]{ "All" }).ToArray()
                     };
                 }));
 
@@ -356,7 +356,7 @@ namespace Barotrauma
                     return new string[][]
                     {
                         GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                        new string[0]
+                        commands.Select(c => c.names[0]).Union(new string[]{ "All" }).ToArray()
                     };
                 }));
 

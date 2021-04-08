@@ -83,7 +83,7 @@ namespace Barotrauma.Items.Components
             {
                 if (value == null) { return; }
                 output = value;
-                if (output.Length > MaxOutputLength)
+                if (output.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
                 {
                     output = output.Substring(0, MaxOutputLength);
                 }
@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
             {
                 if (value == null) { return; }
                 falseOutput = value;
-                if (falseOutput.Length > MaxOutputLength)
+                if (falseOutput.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
                 {
                     falseOutput = falseOutput.Substring(0, MaxOutputLength);
                 }
@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
         {
             string signalOut = MotionDetected ? Output : FalseOutput;
 
-            if (!string.IsNullOrEmpty(signalOut)) item.SendSignal( new Signal(signalOut, 1), "state_out");
+            if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(new Signal(signalOut, 1), "state_out"); }
 
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) return;

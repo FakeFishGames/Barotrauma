@@ -591,9 +591,9 @@ namespace Barotrauma
 
         public bool IsCriticallyRadiated()
         {
-            if (GameMain.GameSession is { Campaign: { Map: { } map } })
+            if (GameMain.GameSession?.Map?.Radiation != null)
             {
-                return TurnsInRadiation > map.Radiation.Params.CriticalRadiationThreshold;
+                return TurnsInRadiation > GameMain.GameSession.Map.Radiation.Params.CriticalRadiationThreshold;
             }
 
             return false;
@@ -708,7 +708,7 @@ namespace Barotrauma
             }
         }
 
-        public bool IsRadiated() => GameMain.GameSession is { Campaign: { Map: { Radiation: { Enabled: true } radiation } } } && radiation.Contains(this);
+        public bool IsRadiated() => GameMain.GameSession?.Map?.Radiation != null && GameMain.GameSession.Map.Radiation.Enabled && GameMain.GameSession.Map.Radiation.Contains(this);
 
         private List<PurchasedItem> CreateStoreStock()
         {

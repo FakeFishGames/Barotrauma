@@ -55,6 +55,14 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
+        public bool UseRespawnPrompt
+        {
+            get
+            {
+                return GameMain.GameSession?.GameMode is CampaignMode && Level.Loaded != null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
+            }
+        }
+
         private float maxTransportTime;
 
         private float updateReturnTimer;
@@ -70,6 +78,8 @@ namespace Barotrauma.Networking
             {
                 RespawnShuttle = new Submarine(shuttleInfo, true);
                 RespawnShuttle.PhysicsBody.FarseerBody.OnCollision += OnShuttleCollision;
+                //set crush depth slightly deeper than the main sub's
+                RespawnShuttle.RealWorldCrushDepth = Math.Max(RespawnShuttle.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth * 1.2f);
 
                 //prevent wifi components from communicating between the respawn shuttle and other subs
                 List<WifiComponent> wifiComponents = new List<WifiComponent>();

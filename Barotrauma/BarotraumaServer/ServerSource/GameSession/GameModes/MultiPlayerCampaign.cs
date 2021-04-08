@@ -367,7 +367,7 @@ namespace Barotrauma
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition")) { return; }
 
-            Map?.Radiation.UpdateRadiation(deltaTime);
+            Map?.Radiation?.UpdateRadiation(deltaTime);
 
             base.Update(deltaTime);
             if (Level.Loaded != null)

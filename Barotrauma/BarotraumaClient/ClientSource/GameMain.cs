@@ -1066,6 +1066,8 @@ namespace Barotrauma
         {
             if (save)
             {
+                GUI.SetSavingIndicatorState(true);
+                
                 if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
                 {
                     GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);

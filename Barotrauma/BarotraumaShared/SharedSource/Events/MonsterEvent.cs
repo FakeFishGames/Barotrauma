@@ -215,7 +215,7 @@ namespace Barotrauma
                     float dist = Vector2.DistanceSquared(pos, refSub.WorldPosition);
                     foreach (Submarine sub in Submarine.Loaded)
                     {
-                        if (sub.Info.Type != SubmarineType.Player) { continue; }
+                        if (sub.Info.Type != SubmarineType.Player && sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
                         
                         float minDistToSub = GetMinDistanceToSub(sub);
                         if (dist < minDistToSub * minDistToSub) { continue; }
@@ -298,6 +298,13 @@ namespace Barotrauma
                         System.Diagnostics.Debug.Assert(spawnPoint.Submarine == chosenPosition.Submarine);
                         System.Diagnostics.Debug.Assert(spawnPoint.ParentRuin == chosenPosition.Ruin);
                         spawnPos = spawnPoint.WorldPosition; 
+                    }
+                    else
+                    {                        
+                        //no suitable position found, disable the event
+                        spawnPos = null;
+                        Finished();
+                        return;                        
                     }
                 }
                 else if ((chosenPosition.PositionType == Level.PositionType.MainPath || chosenPosition.PositionType == Level.PositionType.SidePath)

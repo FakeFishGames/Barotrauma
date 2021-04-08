@@ -263,6 +263,8 @@ namespace Barotrauma
 
         public bool HasColorHighlight => RichTextData != null;
 
+        public bool OverrideRichTextDataAlpha = true;
+
         public struct ClickableArea
         {
             public RichTextData Data;
@@ -573,8 +575,9 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true) && Rect.Contains(PlayerInput.MousePosition))
+            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true))
             {
+                if (!Rect.Contains(PlayerInput.MousePosition)) { return; }
                 int index = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
                 foreach (ClickableArea clickableArea in ClickableAreas)
                 {
@@ -644,10 +647,13 @@ namespace Barotrauma
                     }
 
                     Font.DrawString(spriteBatch, textToShow, pos, colorToShow, 0.0f, origin, TextScale, SpriteEffects.None, textDepth);
-
                 }
                 else
                 {
+                    if (OverrideRichTextDataAlpha)
+                    {
+                        RichTextData.ForEach(rt => rt.Alpha = currentTextColor.A / 255.0f);
+                    }
                     Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos,
                         currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, RichTextData);
                 }

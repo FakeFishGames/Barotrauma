@@ -767,6 +767,10 @@ namespace Barotrauma
                 else if (orderInfo.MatchesOrder(order, option))
                 {
                     icon.UserData = new OrderInfo(order, option, priority);
+                    if (icon is GUIImage image)
+                    {
+                        image.Sprite = GetOrderIconSprite(order, option);
+                    }
                     updatedExistingIcon = true;
                 }
             }
@@ -912,6 +916,13 @@ namespace Barotrauma
                     if (!CanIssueOrders) { return false; }
                     var orderInfo = (OrderInfo)userData;
                     SetCharacterOrder(character, orderInfo.Order, orderInfo.OrderOption, CharacterInfo.HighestManualOrderPriority, Character.Controlled);
+                    return true;
+                },
+                OnSecondaryClicked = (button, userData) =>
+                {
+                    if (previousOrderIconGroup == null) { return false; }
+                    previousOrderIconGroup.RemoveChild(button);
+                    previousOrderIconGroup.Recalculate();
                     return true;
                 }
             };

@@ -101,6 +101,7 @@ namespace Barotrauma
             sl.filePath = filePath;
             sl.saveElement = doc.Root;
             sl.saveElement.Name = "LinkedSubmarine";
+            sl.saveElement.SetAttributeValue("filepath", filePath);
 
             return sl;
         }
@@ -183,10 +184,10 @@ namespace Barotrauma
             else
             {
                 string levelSeed = element.GetAttributeString("location", "");
-                LevelData levelData = GameMain.GameSession.Campaign?.NextLevel ?? GameMain.GameSession.LevelData;
+                LevelData levelData = GameMain.GameSession?.Campaign?.NextLevel ?? GameMain.GameSession?.LevelData;
                 linkedSub = new LinkedSubmarine(submarine, idRemap.AssignMaxId())
                 {
-                    purchasedLostShuttles = GameMain.GameSession.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,
+                    purchasedLostShuttles = GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,
                     saveElement = element
                 };
 

@@ -144,7 +144,7 @@ namespace Barotrauma
 
             DebugConsole.Log("Created waypoint (" + ID + ")");
 
-            CurrentHull = Hull.FindHull(WorldPosition);
+            FindHull();
         }
 
         public override MapEntity Clone()
@@ -791,7 +791,7 @@ namespace Barotrauma
         public override void OnMapLoaded()
         {
             InitializeLinks();
-            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
+            FindHull();
             FindStairs();
         }
 

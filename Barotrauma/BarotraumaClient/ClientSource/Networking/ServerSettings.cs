@@ -126,12 +126,15 @@ namespace Barotrauma.Networking
 
         public void ClientRead(IReadMessage incMsg)
         {
+            cachedServerListInfo = null;
+
             ServerName = incMsg.ReadString();
             ServerMessageText = incMsg.ReadString();
             MaxPlayers = incMsg.ReadByte();
             HasPassword = incMsg.ReadBoolean();
             IsPublic = incMsg.ReadBoolean();
             GameMain.NetLobbyScreen.SetPublic(IsPublic);
+            AllowFileTransfers = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
             GameMain.NetworkMember.TickRate = TickRate;
@@ -648,7 +651,14 @@ namespace Barotrauma.Networking
 
             foreach (ItemPrefab ip in ItemPrefab.Prefabs)
             {
-                if (!ip.CanBeBought && !ip.Tags.Contains("smallitem")) continue;
+                if (ip.AllowAsExtraCargo.HasValue)
+                {
+                    if (!ip.AllowAsExtraCargo.Value) { continue; }
+                }
+                else
+                {
+                    if (!ip.CanBeBought) { continue; }
+                }
 
                 var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {
@@ -921,6 +931,7 @@ namespace Barotrauma.Networking
 
         public bool ToggleSettingsFrame(GUIButton button, object obj)
         {
+            if (GameMain.NetworkMember == null) { return false; }
             if (settingsFrame == null)
             {
                 CreateSettingsFrame();
@@ -941,6 +952,13 @@ namespace Barotrauma.Networking
             }
 
             return false;
+        }
+
+        private ServerInfo cachedServerListInfo = null;
+        public ServerInfo GetServerListInfo()
+        {
+            cachedServerListInfo ??= GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection, this);
+            return cachedServerListInfo;
         }
     }
 }

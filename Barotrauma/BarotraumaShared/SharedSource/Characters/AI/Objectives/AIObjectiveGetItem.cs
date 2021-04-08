@@ -415,7 +415,7 @@ namespace Barotrauma
 #if DEBUG
             DebugConsole.NewMessage($"{character.Name}: Get item failed to reach {moveToTarget}", Color.Yellow);
 #endif
-            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder != null)
+            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
             {
                 string TargetName = (moveToTarget as MapEntity)?.Name ?? (moveToTarget as Character)?.Name ?? moveToTarget.ToString();
                 string msg = TargetName == null ? TextManager.Get("dialogcannotreachtarget", true) : TextManager.GetWithVariable("dialogcannotreachtarget", "[name]", TargetName, formatCapitals: !(moveToTarget is Character));

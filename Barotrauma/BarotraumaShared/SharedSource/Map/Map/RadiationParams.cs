@@ -30,6 +30,9 @@ namespace Barotrauma
         [Serialize(defaultValue: 1f, isSaveable: false, "How much is the radiation affliction increased by while in a radiated zone.")]
         public float RadiationDamageAmount { get; set; }
 
+        [Serialize(defaultValue: -1.0f, isSaveable: false, "Maximum amount of radiation.")]
+        public float MaxRadiation { get; set; }
+
         [Serialize(defaultValue: "139,0,0,85", isSaveable: false, "The color of the radiated area.")]
         public Color RadiationAreaColor { get; set; }
 

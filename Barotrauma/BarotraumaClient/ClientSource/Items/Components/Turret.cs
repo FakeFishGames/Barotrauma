@@ -130,12 +130,15 @@ namespace Barotrauma.Items.Components
                 }
             }
             
-            powerIndicator = new GUIProgressBar(new RectTransform(new Vector2(0.18f, 0.03f), GUI.Canvas, Anchor.TopCenter)
+            powerIndicator = new GUIProgressBar(new RectTransform(new Vector2(0.18f, 0.03f), GUI.Canvas, Anchor.BottomCenter)
             {
-                MinSize = new Point(100,20),
+                MinSize = new Point(100, 20),
                 RelativeOffset = new Vector2(0.0f, 0.01f)
-            }, 
-            barSize: 0.0f, style: "DeviceProgressBar");
+            },
+            barSize: 0.0f, style: "DeviceProgressBar")
+            {
+                CanBeFocused = false
+            };
         }
 
         public override void Move(Vector2 amount)
@@ -497,9 +500,15 @@ namespace Barotrauma.Items.Components
             foreach (MapEntity e in item.linkedTo)
             {
                 if (!(e is Item linkedItem)) { continue; }
-                availableAmmo.AddRange(linkedItem.ContainedItems);                
-            }            
-                        
+                var itemContainer = linkedItem.GetComponent<ItemContainer>();
+                if (itemContainer == null) { continue; }
+                availableAmmo.AddRange(itemContainer.Inventory.AllItems);
+                for (int i = 0; i < itemContainer.Inventory.Capacity - itemContainer.Inventory.AllItems.Count(); i++)
+                {
+                    availableAmmo.Add(null);
+                }
+            }
+
             float chargeRate = 
                 powerConsumption <= 0.0f ? 
                 1.0f : 
@@ -534,7 +543,7 @@ namespace Barotrauma.Items.Components
                 int spacing = 5;
                 int slotsPerRow = Math.Min(availableAmmo.Count, 6);
                 int totalWidth = slotSize.X * slotsPerRow + spacing * (slotsPerRow - 1);
-                Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, (int)(60 * GUI.Scale));
+                Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, powerIndicator.Rect.Y - (int)(75 * GUI.Scale));
                 for (int i = 0; i < availableAmmo.Count; i++)
                 {
                     // TODO: Optimize? Creates multiple new objects per frame?
@@ -578,7 +587,7 @@ namespace Barotrauma.Items.Components
             //ID ushort.MaxValue = launched without a projectile
             if (projectileID == ushort.MaxValue)
             {
-                Launch(null);
+                Launch(null, user);
             }
             else
             {
@@ -587,7 +596,7 @@ namespace Barotrauma.Items.Components
                     DebugConsole.ThrowError("Failed to launch a projectile - item with the ID \"" + projectileID + " not found");
                     return;
                 }
-                Launch(projectile, launchRotation: newTargetRotation);
+                Launch(projectile, user, launchRotation: newTargetRotation);
             }
         }
     }

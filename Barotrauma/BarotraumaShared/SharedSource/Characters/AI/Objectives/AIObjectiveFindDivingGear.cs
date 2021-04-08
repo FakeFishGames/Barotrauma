@@ -58,16 +58,10 @@ namespace Barotrauma
             }
             else
             {
-                if (!EjectEmptyTanks(character, targetItem, out var containedItems))
-                {
-#if DEBUG
-                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFindDivingGear failed - the item \"" + targetItem + "\" has no proper inventory");
-#endif
-                    Abandon = true;
-                    return;
-                }
+                HumanAIController.UnequipContainedItems(targetItem, it => !it.HasTag("oxygensource"));
+                HumanAIController.UnequipEmptyItems(targetItem);
                 float min = character.Submarine == null ? 0.01f : MIN_OXYGEN;
-                if (containedItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
+                if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
                 {
                     // No valid oxygen source loaded.
                     // Seek oxygen that has at least 10% condition left.

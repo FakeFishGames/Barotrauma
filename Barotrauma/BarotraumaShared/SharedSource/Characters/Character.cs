@@ -69,8 +69,8 @@ namespace Barotrauma
         /// </summary>
         public bool IsRemotelyControlled
         {
-            get 
-            { 
+            get
+            {
                 if (GameMain.NetworkMember == null)
                 {
                     return false;
@@ -145,14 +145,8 @@ namespace Barotrauma
         }
 
         private readonly List<Attacker> lastAttackers = new List<Attacker>();
-        public IEnumerable<Attacker> LastAttackers
-        {
-            get { return lastAttackers; }
-        }
-        public Character LastAttacker
-        {
-            get { return lastAttackers.Count > 0 ? lastAttackers[lastAttackers.Count - 1].Character : null; }
-        }
+        public IEnumerable<Attacker> LastAttackers => lastAttackers;
+        public Character LastAttacker => lastAttackers.LastOrDefault()?.Character;
 
         public Entity LastDamageSource;
 
@@ -203,7 +197,7 @@ namespace Barotrauma
 
         public bool IsTraitor
         {
-            get; 
+            get;
             set;
         }
 
@@ -442,7 +436,7 @@ namespace Barotrauma
         /// </summary>
         public IEnumerable<Item> HeldItems
         {
-            get 
+            get
             {
                 var item1 = Inventory?.GetItemInLimbSlot(InvSlotType.RightHand);
                 var item2 = Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand);
@@ -483,7 +477,7 @@ namespace Barotrauma
             }
         }
 
-        public const float KnockbackCooldown = 30.0f;
+        public const float KnockbackCooldown = 5.0f;
         public float KnockbackCooldownTimer;
 
         private float ragdollingLockTimer;
@@ -527,7 +521,7 @@ namespace Barotrauma
         }
 
         public bool UseHullOxygen { get; set; } = true;
-        
+
         public float Stun
         {
             get { return IsRagdolled ? 1.0f : CharacterHealth.Stun; }
@@ -601,7 +595,7 @@ namespace Barotrauma
         {
             get;
             set;
-        }       
+        }
 
         /// <summary>
         /// Current speed of the character's collider. Can be used by status effects to check if the character is moving.
@@ -655,11 +649,11 @@ namespace Barotrauma
         }
 
         private bool isDead;
-        public bool IsDead 
-        { 
+        public bool IsDead
+        {
             get { return isDead; }
-            set 
-            { 
+            set
+            {
                 if (isDead == value) { return; }
                 if (value)
                 {
@@ -822,7 +816,7 @@ namespace Barotrauma
                 speciesName = Path.GetFileNameWithoutExtension(speciesName).ToLowerInvariant();
             }
 
-            var prefab = CharacterPrefab.FindBySpeciesName(speciesName);      
+            var prefab = CharacterPrefab.FindBySpeciesName(speciesName);
             if (prefab == null)
             {
                 DebugConsole.ThrowError($"Failed to create character \"{speciesName}\". Matching prefab not found.\n" + Environment.StackTrace);
@@ -1349,6 +1343,22 @@ namespace Barotrauma
         /// </summary>
         public float SpeedMultiplier { get; private set; } = 1;
 
+
+        private double propulsionSpeedMultiplierLastSet;
+        private float propulsionSpeedMultiplier;
+        /// <summary>
+        /// Can be used to modify the speed at which Propulsion ItemComponents move the character via StatusEffects (e.g. heavy suit can slow down underwater scooters)
+        /// </summary>
+        public float PropulsionSpeedMultiplier 
+        {
+            get { return propulsionSpeedMultiplier; }
+            set
+            {
+                propulsionSpeedMultiplier = value;
+                propulsionSpeedMultiplierLastSet = Timing.TotalTime;
+            }
+        }
+
         public void StackSpeedMultiplier(float val)
         {
             if (val < 1f)
@@ -1371,6 +1381,10 @@ namespace Barotrauma
         {
             greatestPositiveSpeedMultiplier = 1f;
             greatestNegativeSpeedMultiplier = 1f;
+            if (Timing.TotalTime > propulsionSpeedMultiplierLastSet + 0.1)
+            {
+                propulsionSpeedMultiplier = 1.0f;
+            }
         }
 
         private float greatestNegativeHealthMultiplier = 1f;
@@ -2191,8 +2205,7 @@ namespace Barotrauma
 #if CLIENT
             if (isLocalPlayer)
             {
-                if (GUI.MouseOn == null &&
-                    (!CharacterInventory.IsMouseOnInventory() || CharacterInventory.DraggingItemToWorld))
+                if (!IsMouseOnUI)
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
@@ -2910,7 +2923,7 @@ namespace Barotrauma
                 }
             }
 
-            // Prevent adding duplicate orders (same identifier and same option)
+            // Prevent adding duplicate orders
             RemoveDuplicateOrders(order, orderOption);
 
             OrderInfo newOrderInfo = new OrderInfo(order, orderOption, priority);
@@ -2971,7 +2984,7 @@ namespace Barotrauma
             for (int i = CurrentOrders.Count - 1; i >= 0; i--)
             {
                 var orderInfo = CurrentOrders[i];
-                if (orderInfo.MatchesOrder(order, option))
+                if (order?.Identifier == orderInfo.Order?.Identifier)
                 {
                     priorityOfRemoved = orderInfo.ManualPriority;
                     CurrentOrders.RemoveAt(i);
@@ -3316,6 +3329,13 @@ namespace Barotrauma
                 if (attacker.TeamID == TeamID) { return new AttackResult(); }
             }
 
+#if CLIENT
+            if (Params.UseBossHealthBar && Controlled != null && Controlled.teamID == attacker?.teamID)
+            {
+                CharacterHUD.ShowBossHealthBar(this);
+            }
+#endif
+
             Vector2 dir = hitLimb.WorldPosition - worldPosition;
             if (Math.Abs(attackImpulse) > 0.0f)
             {
@@ -3351,14 +3371,14 @@ namespace Barotrauma
             if (attackResult.Damage > 0)
             {
                 LastDamage = attackResult;
-                ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
-                hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 if (attacker != null)
                 {
                     AddAttacker(attacker, attackResult.Damage);
                     AddEncounter(attacker);
                     attacker.AddEncounter(this);
                 }
+                ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
+                hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
             }
             return attackResult;
         }
@@ -3418,6 +3438,17 @@ namespace Barotrauma
             foreach (StatusEffect statusEffect in statusEffects)
             {
                 if (statusEffect.type != actionType) { continue; }
+                if (statusEffect.type == ActionType.OnDamaged)
+                {
+                    if (LastDamage.Afflictions == null || LastDamage.Afflictions.None(a => a.Prefab.AfflictionType == "damage")) { continue; }
+                    if (statusEffect.OnlyPlayerTriggered)
+                    {
+                        if (LastAttacker == null || !LastAttacker.IsPlayer)
+                        {
+                            continue;
+                        }
+                    }
+                }
                 if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
@@ -3980,7 +4011,7 @@ namespace Barotrauma
 
         public bool IsProtectedFromPressure()
         {
-            return PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 0.0f);
+            return PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f);
         }
     }
 }

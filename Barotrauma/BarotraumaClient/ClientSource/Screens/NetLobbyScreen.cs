@@ -485,6 +485,7 @@ namespace Barotrauma
                     if (socialHolder != null) { socialHolder.Visible = false; }
                     if (!(serverLogHolder?.Visible ?? true))
                     {
+                        if (GameMain.Client?.ServerSettings?.ServerLog == null) { return false; }
                         serverLogHolder.Visible = true;
                         GameMain.Client.ServerSettings.ServerLog.AssignLogFrame(serverLogReverseButton, serverLogBox, serverLogFilterTicks.Content, serverLogFilter);
                     }
@@ -682,7 +683,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("addtofavorites"),
                 OnSelected = (tickbox) =>
                 {
-                    ServerInfo info = GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection.EndPointString, GameMain.Client.ServerSettings);
+                    ServerInfo info = GameMain.Client.ServerSettings.GetServerListInfo();
                     if (tickbox.Selected)
                     {
                         GameMain.ServerListScreen.AddToFavoriteServers(info);
@@ -1134,15 +1135,19 @@ namespace Barotrauma
                 }
             };
 
-            radiationEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+            if (MapGenerationParams.Instance.RadiationParams != null)
             {
-                Selected = true,
-                OnSelected = box =>
+                radiationEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
                 {
-                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, radiationEnabled: box.Selected);
-                    return true;
-                }
-            };
+                    Selected = true,
+                    OnSelected = box =>
+                    {
+                        GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, radiationEnabled: box.Selected);
+                        return true;
+                    }
+                };
+            }
+
 
             List<GUIComponent> settingsElements = settingsContent.Children.ToList();
             for (int i = 0; i < settingsElements.Count; i++)
@@ -1292,7 +1297,10 @@ namespace Barotrauma
             }
             SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            radiationEnabledTickBox.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            if (radiationEnabledTickBox != null)
+            {
+                radiationEnabledTickBox.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            }
             traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled = 
                 !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
@@ -2611,6 +2619,18 @@ namespace Barotrauma
                 UserData = message,
                 CanBeFocused = false
             };
+            msg.CalculateHeightFromText();
+            if (msg.RichTextData != null)
+            {
+                foreach (var data in msg.RichTextData)
+                {
+                    msg.ClickableAreas.Add(new GUITextBlock.ClickableArea()
+                    {
+                        Data = data,
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                    });
+                }
+            }
             msg.RectTransform.SizeChanged += Recalculate;
             void Recalculate()
             {

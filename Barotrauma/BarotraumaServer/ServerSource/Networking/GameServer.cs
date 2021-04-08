@@ -938,6 +938,10 @@ namespace Barotrauma.Networking
             {
                 errorLines.Add("Submarine: " + GameMain.GameSession.Submarine.Info.Name);
             }
+            if (GameMain.NetworkMember?.RespawnManager?.RespawnShuttle != null)
+            {
+                errorLines.Add("Respawn shuttle: " + GameMain.NetworkMember.RespawnManager.RespawnShuttle.Info.Name);
+            }
             if (Level.Loaded != null)
             {
                 errorLines.Add("Level: " + Level.Loaded.Seed + ", " + string.Join(", ", Level.Loaded.EqualityCheckValues.Select(cv => cv.ToString("X"))));
@@ -2173,6 +2177,11 @@ namespace Barotrauma.Networking
             { 
                 respawnManager = new RespawnManager(this, serverSettings.UseRespawnShuttle && !isOutpost ? selectedShuttle : null); 
             }
+            if (campaign != null)
+            {
+                campaign.CargoManager.CreatePurchasedItems();
+                campaign.SendCrewState(null, default, null);
+            }
 
             Level.Loaded?.SpawnNPCs();
             Level.Loaded?.SpawnCorpses();
@@ -3111,7 +3120,7 @@ namespace Barotrauma.Networking
                 string myReceivedMessage = type == ChatMessageType.Server || type == ChatMessageType.Error ? TextManager.GetServerMessage(message) : message;
                 if (!string.IsNullOrWhiteSpace(myReceivedMessage))
                 {
-                    AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderCharacter);
+                    AddChatMessage(myReceivedMessage, (ChatMessageType)type, senderName, senderClient, senderCharacter);
                 }
             }
         }
@@ -3776,18 +3785,6 @@ namespace Barotrauma.Networking
                 msg.Write((ushort)state);
                 serverPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
-        }
-
-        public static string ClientLogName(Client client, string name = null)
-        {
-            if (client == null) { return name; }
-            string retVal = "‖";
-            if (client.Karma < 40.0f)
-            {
-                retVal += "color:#ff9900;";
-            }
-            retVal += "metadata:" + (client.SteamID != 0 ? client.SteamID.ToString() : client.ID.ToString()) + "‖" + (name ?? client.Name).Replace("‖","") + "‖end‖";
-            return retVal;
         }
 
         public static string CharacterLogName(Character character)

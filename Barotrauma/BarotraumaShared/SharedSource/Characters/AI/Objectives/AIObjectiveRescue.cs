@@ -78,14 +78,14 @@ namespace Barotrauma
                     // Check if the character needs more oxygen
                     if (!ignoreOxygen && character.SelectedCharacter == targetCharacter || character.CanInteractWith(targetCharacter))
                     {
-                        // Replace empty oxygen tank
-                        // First remove empty tanks
+                        // Replace empty oxygen and welding fuel.
                         if (HumanAIController.HasItem(targetCharacter, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out IEnumerable<Item> suits, requireEquipped: true))
                         {
                             Item suit = suits.FirstOrDefault();
                             if (suit != null)
                             {
-                                AIObjectiveFindDivingGear.EjectEmptyTanks(character, suit, out _);
+                                AIController.UnequipEmptyItems(character, suit);
+                                AIController.UnequipContainedItems(character, suit, it => it.HasTag("weldingfuel"));
                             }
                         }
                         else if (HumanAIController.HasItem(targetCharacter, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out IEnumerable<Item> masks, requireEquipped: true))
@@ -93,7 +93,8 @@ namespace Barotrauma
                             Item mask = masks.FirstOrDefault();
                             if (mask != null)
                             {
-                                AIObjectiveFindDivingGear.EjectEmptyTanks(character, mask, out _);
+                                AIController.UnequipEmptyItems(character, mask);
+                                AIController.UnequipContainedItems(character, mask, it => it.HasTag("weldingfuel"));
                             }
                         }
                         bool ShouldRemoveDivingSuit() => targetCharacter.OxygenAvailable < CharacterHealth.InsufficientOxygenThreshold && targetCharacter.CurrentHull?.LethalPressure <= 0;

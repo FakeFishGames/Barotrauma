@@ -418,6 +418,7 @@ namespace Barotrauma
                         List<Pair<EventPrefab, float>> unusedEvents = new List<Pair<EventPrefab, float>>(suitablePrefabs);
                         for (int j = 0; j < eventSet.EventCount; j++)
                         {
+                            if (unusedEvents.All(e => CalculateCommonness(e) <= 0.0f)) { break; }
                             var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => CalculateCommonness(e)).ToList(), rand);
 
 

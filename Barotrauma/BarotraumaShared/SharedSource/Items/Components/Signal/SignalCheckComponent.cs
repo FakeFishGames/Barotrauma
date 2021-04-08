@@ -14,7 +14,7 @@ namespace Barotrauma.Items.Components
             {
                 if (value == null) { return; }
                 output = value;
-                if (output.Length > MaxOutputLength)
+                if (output.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
                 {
                     output = output.Substring(0, MaxOutputLength);
                 }
@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
             {
                 if (value == null) { return; }
                 falseOutput = value;
-                if (falseOutput.Length > MaxOutputLength)
+                if (falseOutput.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
                 {
                     falseOutput = falseOutput.Substring(0, MaxOutputLength);
                 }

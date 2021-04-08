@@ -148,28 +148,26 @@ namespace Barotrauma
         /// The location that's displayed as the "current one" in the map screen. Normally the current outpost or the location at the start of the level,
         /// but when selecting the next destination at the end of the level at an uninhabited location we use the location at the end
         /// </summary>
-        public Location CurrentDisplayLocation
+        public Location GetCurrentDisplayLocation()
         {
-            get
+            if (Level.Loaded?.EndLocation != null && !Level.Loaded.Generating &&
+                Level.Loaded.Type == LevelData.LevelType.LocationConnection &&
+                GetAvailableTransition(out _, out _) == TransitionType.ProgressToNextEmptyLocation)
             {
-                if (Level.Loaded?.EndLocation != null && !Level.Loaded.Generating &&
-                    Level.Loaded.Type == LevelData.LevelType.LocationConnection &&
-                    GetAvailableTransition(out _, out _) == TransitionType.ProgressToNextEmptyLocation)
-                {
-                    return Level.Loaded.EndLocation;
-                }
-                return Level.Loaded?.StartLocation ?? Map.CurrentLocation;
+                return Level.Loaded.EndLocation;
             }
+            return Level.Loaded?.StartLocation ?? Map.CurrentLocation;            
         }
 
         public List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
         {
             //leave subs behind if they're not docked to the leaving sub and not at the same exit
-            return Submarine.Loaded.FindAll(s =>
-                s != leavingSub &&
-                !leavingSub.DockedTo.Contains(s) &&
-                s.Info.Type == SubmarineType.Player &&
-                (s.AtEndExit != leavingSub.AtEndExit || s.AtStartExit != leavingSub.AtStartExit));
+            return Submarine.Loaded.FindAll(sub =>
+                sub != leavingSub &&
+                !leavingSub.DockedTo.Contains(sub) &&
+                sub.Info.Type == SubmarineType.Player &&
+                sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                (sub.AtEndExit != leavingSub.AtEndExit || sub.AtStartExit != leavingSub.AtStartExit));
         }
 
         public override void Start()
@@ -476,7 +474,7 @@ namespace Barotrauma
             {
                 if (Level.Loaded.StartOutpost == null)
                 {
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartExitPosition, ignoreOutposts: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -490,7 +488,7 @@ namespace Barotrauma
 
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
                     if (Level.Loaded.Type == LevelData.LevelType.LocationConnection && !leavingPlayers.Any(s => s.Submarine == Level.Loaded.StartOutpost)) { return null; }
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartOutpost.WorldPosition, ignoreOutposts: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartOutpost.WorldPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
                     if (closestSub == null || !closestSub.AtStartExit) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
@@ -503,7 +501,7 @@ namespace Barotrauma
 
                 if (Level.Loaded.EndOutpost == null)
                 {
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndPosition, ignoreOutposts: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -517,7 +515,7 @@ namespace Barotrauma
 
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
                     if (Level.Loaded.Type == LevelData.LevelType.LocationConnection && !leavingPlayers.Any(s => s.Submarine == Level.Loaded.EndOutpost)) { return null; }
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndOutpost.WorldPosition, ignoreOutposts: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndOutpost.WorldPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
                     if (closestSub == null || !closestSub.AtEndExit) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
@@ -625,7 +623,10 @@ namespace Barotrauma
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
-            Map.Radiation.Amount = Map.Radiation.Params.StartingRadiation;
+            if (Map.Radiation != null)
+            {
+                Map.Radiation.Amount = Map.Radiation.Params.StartingRadiation;
+            }
             foreach (Location location in Map.Locations)
             {
                 location.TurnsInRadiation = 0;

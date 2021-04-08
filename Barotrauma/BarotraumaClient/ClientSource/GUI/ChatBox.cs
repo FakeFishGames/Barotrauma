@@ -383,8 +383,24 @@ namespace Barotrauma
                 color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, parseRichText: true)
             {
                 UserData = message.SenderName,
-                CanBeFocused = true
+                CanBeFocused = false
             };
+            msgText.CalculateHeightFromText();
+            if (msgText.RichTextData != null)
+            {
+                foreach (var data in msgText.RichTextData)
+                {
+                    var clickableArea = new GUITextBlock.ClickableArea()
+                    {
+                        Data = data
+                    };
+                    if (GameMain.NetLobbyScreen != null && GameMain.NetworkMember != null)
+                    {
+                        clickableArea.OnClick = GameMain.NetLobbyScreen.SelectPlayer;
+                    }
+                    msgText.ClickableAreas.Add(clickableArea);
+                }
+            }
 
             if (message is OrderChatMessage orderChatMsg &&
                 Character.Controlled != null &&
@@ -568,6 +584,7 @@ namespace Barotrauma
 
             if (ToggleOpen)
             {
+                GUIFrame.CanBeFocused = true;
                 openState += deltaTime * 5.0f;
                 //delete all popup messages when the chatbox is open
                 foreach (var popupMsg in popupMessages)
@@ -578,6 +595,7 @@ namespace Barotrauma
             }
             else
             {
+                GUIFrame.CanBeFocused = false;
                 openState -= deltaTime * 5.0f;
 
                 int yOffset = 0;

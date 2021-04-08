@@ -29,7 +29,16 @@ namespace Barotrauma
             get { return texture != null && !cannotBeLoaded; }
         }
 
-        public Sprite(Texture2D texture, Rectangle? sourceRectangle, Vector2? newOffset, float newRotation = 0.0f)
+        public Sprite(Sprite other) : this(other.texture, other.sourceRect, other.offset, other.rotation)
+        {
+            FilePath = other.FilePath;
+            FullPath = other.FullPath;
+            Compress = other.Compress;
+            size = other.size;
+            effects = other.effects;
+        }
+
+        public Sprite(Texture2D texture, Rectangle? sourceRectangle, Vector2? newOffset, float newRotation = 0.0f, string path = null)
         {
             this.texture = texture;
 
@@ -44,6 +53,8 @@ namespace Barotrauma
             effects = SpriteEffects.None;
 
             rotation = newRotation;
+
+            FilePath = path;
 
             AddToList(this);
         }

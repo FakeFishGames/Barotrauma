@@ -173,11 +173,11 @@ namespace Barotrauma.Items.Components
                 
                 if (signal.source != null)
                 {
-                    foreach (Item receiverItem in wifiComp.item.LastSentSignalRecipients)
+                    foreach (Connection receiver in wifiComp.item.LastSentSignalRecipients)
                     {
-                        if (!signal.source.LastSentSignalRecipients.Contains(receiverItem))
+                        if (!signal.source.LastSentSignalRecipients.Contains(receiver))
                         {
-                            signal.source.LastSentSignalRecipients.Add(receiverItem);
+                            signal.source.LastSentSignalRecipients.Add(receiver);
                         }
                     }
                 }

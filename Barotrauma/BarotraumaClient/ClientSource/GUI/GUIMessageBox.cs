@@ -427,6 +427,9 @@ namespace Barotrauma
 
             foreach (var type in messageBoxTypes)
             {
+                // Don't display hints when HUD is disabled
+                if (type == Type.Hint && GUI.DisableHUD) { continue; } 
+
                 for (int i = 0; i < MessageBoxes.Count; i++)
                 {
                     if (MessageBoxes[i] == null) { continue; }
@@ -506,7 +509,7 @@ namespace Barotrauma
                 else
                 {
                     initialPos = new Vector2(GUI.IntScale(64), -InnerFrame.Rect.Height);
-                    defaultPos = new Vector2(initialPos.X, HUDLayoutSettings.MessageAreaTop.Height + GUI.IntScale(64));
+                    defaultPos = new Vector2(initialPos.X, HUDLayoutSettings.ButtonAreaTop.Height + GUI.IntScale(64));
                     endPos = new Vector2(-InnerFrame.Rect.Width, defaultPos.Y);
                 }
 

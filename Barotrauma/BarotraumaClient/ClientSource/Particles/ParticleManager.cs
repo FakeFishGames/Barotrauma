@@ -115,12 +115,12 @@ namespace Barotrauma.Particles
             Prefabs.RemoveByFile(configFile);
         }
 
-        public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null)
+        public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null, float collisionIgnoreTimer = 0f)
         {
-            return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle, hullGuess);
+            return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle, hullGuess, collisionIgnoreTimer);
         }
 
-        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null)
+        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, float collisionIgnoreTimer = 0f)
         {
             ParticlePrefab prefab = FindPrefab(prefabName);
 
@@ -130,10 +130,10 @@ namespace Barotrauma.Particles
                 return null;
             }
 
-            return CreateParticle(prefab, position, velocity, rotation, hullGuess);
+            return CreateParticle(prefab, position, velocity, rotation, hullGuess, collisionIgnoreTimer: collisionIgnoreTimer);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f)
         {
             if (particleCount >= MaxParticles || prefab == null || prefab.Sprites.Count == 0) { return null; }
 
@@ -149,7 +149,7 @@ namespace Barotrauma.Particles
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop);
+            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer);
 
             particleCount++;
 
@@ -181,10 +181,10 @@ namespace Barotrauma.Particles
 
             for (int i = 0; i < particleCount; i++)
             {
-                bool remove = false;
+                bool remove;
                 try
                 {
-                    remove = !particles[i].Update(deltaTime);
+                    remove = particles[i].Update(deltaTime) == Particle.UpdateResult.Delete;
                 }
                 catch (Exception e)
                 {

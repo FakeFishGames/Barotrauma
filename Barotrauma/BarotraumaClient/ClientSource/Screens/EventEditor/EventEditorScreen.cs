@@ -953,7 +953,7 @@ namespace Barotrauma
                 CreateGUI();
             }
 
-            Cam.MoveCamera((float) deltaTime, true, true);
+            Cam.MoveCamera((float) deltaTime, allowMove: true, allowZoom: GUI.MouseOn == null);
             Vector2 mousePos = Cam.ScreenToWorld(PlayerInput.MousePosition);
             mousePos.Y = -mousePos.Y;
 

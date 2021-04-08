@@ -333,7 +333,7 @@ namespace Barotrauma.Items.Components
                 if (item.CurrentHull != null)
                 {
                     var aiTarget = item.CurrentHull.AiTarget;
-                    if (aiTarget != null)
+                    if (aiTarget != null && MaxPowerOutput > 0)
                     {
                         float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
                         float noise = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
@@ -341,7 +341,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                if (item.AiTarget != null)
+                if (item.AiTarget != null && MaxPowerOutput > 0)
                 {
                     var aiTarget = item.AiTarget;
                     float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;

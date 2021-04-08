@@ -705,6 +705,7 @@ namespace Barotrauma.Items.Components
                     if (c.Params.HideInSonar) { continue; }
 
                     if (!c.IsUnconscious && c.Params.DistantSonarRange > 0.0f &&
+                        c.AIController is EnemyAIController enemyAI && enemyAI.IsTargetingPlayerTeam &&
                         ((c.WorldPosition - transducerCenter) * displayScale).LengthSquared() > DisplayRadius * DisplayRadius)
                     {
                         float dist = Vector2.Distance(c.WorldPosition, transducerCenter);
@@ -1099,6 +1100,7 @@ namespace Barotrauma.Items.Components
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                 if (dockingPort.Item.Submarine == null) { continue; }
                 if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
+                if (!dockingPort.Item.Submarine.ShowSonarMarker && !dockingPort.Item.Submarine.Info.IsOutpost) { continue; }
 
                 //don't show the docking ports of the opposing team on the sonar
                 if (item.Submarine != null)

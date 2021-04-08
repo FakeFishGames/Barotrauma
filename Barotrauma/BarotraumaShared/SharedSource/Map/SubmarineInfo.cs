@@ -275,7 +275,7 @@ namespace Barotrauma
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
             }
 #if CLIENT
-            PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage.Texture, null, null) : null;
+            PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage) : null;
 #endif
         }
 

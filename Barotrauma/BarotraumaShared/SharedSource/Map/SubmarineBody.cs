@@ -453,7 +453,7 @@ namespace Barotrauma
 
             //camera shake and sounds start playing 500 meters before crush depth
             float depthEffectThreshold = 500.0f;
-            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
             {
                 return;
             }
@@ -870,10 +870,10 @@ namespace Barotrauma
 
             foreach (Item item in Item.ItemList)
             {
-                if (item.Submarine != submarine || item.CurrentHull == null || 
-                    item.body == null || !item.body.Enabled) continue;
+                if (item.Submarine != submarine || item.CurrentHull == null || item.body == null || !item.body.Enabled) { continue; }
 
                 item.body.ApplyLinearImpulse(item.body.Mass * impulse, 10.0f);
+                item.PositionUpdateInterval = 0.0f;
             }
 
             float dmg = applyDamage ? impact * ImpactDamageMultiplier : 0.0f;

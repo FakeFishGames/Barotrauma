@@ -48,7 +48,14 @@ namespace Barotrauma
             if (!Enabled) { return; }
             if (steps <= 0) { return; }
 
-            IncreaseRadiation(Params.RadiationStep * steps);
+            float increaseAmount = Params.RadiationStep * steps;
+
+            if (Params.MaxRadiation > 0 && Params.MaxRadiation < Amount + increaseAmount)
+            {
+                increaseAmount = Params.MaxRadiation - Amount;
+            }
+
+            IncreaseRadiation(increaseAmount);
 
             int amountOfOutposts = Map.Locations.Count(location => location.Type.HasOutpost && !location.IsCriticallyRadiated());
 

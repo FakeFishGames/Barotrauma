@@ -16,13 +16,18 @@ namespace Barotrauma.Items.Components
 
             [Serialize("", false, translationTextTag: "Label.", description: "The text displayed on this button/tickbox."), Editable]
             public string Label { get; set; }
+
             [Serialize("1", false, description: "The signal sent out when this button is pressed or this tickbox checked."), Editable]
             public string Signal { get; set; }
 
             public string PropertyName { get; }
             public bool TargetOnlyParentProperty { get; }
+
             public int NumberInputMin { get; }
             public int NumberInputMax { get; }
+
+            public int MaxTextLength { get; }
+
             public const int DefaultNumberInputMin = 0, DefaultNumberInputMax = 99;
             public bool IsIntegerInput { get; }
             public bool HasPropertyName { get; }
@@ -46,7 +51,7 @@ namespace Barotrauma.Items.Components
                 TargetOnlyParentProperty = element.GetAttributeBool("targetonlyparentproperty", false);
                 NumberInputMin = element.GetAttributeInt("min", DefaultNumberInputMin);
                 NumberInputMax = element.GetAttributeInt("max", DefaultNumberInputMax);
-
+                MaxTextLength = element.GetAttributeInt("maxtextlength", int.MaxValue);
                 HasPropertyName = !string.IsNullOrEmpty(PropertyName);
                 IsIntegerInput = HasPropertyName && element.Name.ToString().ToLowerInvariant() == "integerinput";
 

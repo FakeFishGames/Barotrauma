@@ -86,10 +86,9 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                // Drop empty tanks
+                HumanAIController.UnequipContainedItems(weldingTool, it => !it.HasTag("weldingfuel"));
                 HumanAIController.UnequipEmptyItems(weldingTool);
-
-                if (weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
+                if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
                     TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC),
                         onAbandon: () =>

@@ -50,7 +50,8 @@ namespace Barotrauma.Items.Components
                         var textBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), ciElement.Signal, style: "GUITextBoxNoIcon")
                         {
                             OverflowClip = true,
-                            UserData = ciElement
+                            UserData = ciElement,
+                            MaxTextLength = ciElement.MaxTextLength
                         };
                         //reset size restrictions set by the Style to make sure the elements can fit the interface
                         textBox.RectTransform.MinSize = textBox.Frame.RectTransform.MinSize = new Point(0, 0);

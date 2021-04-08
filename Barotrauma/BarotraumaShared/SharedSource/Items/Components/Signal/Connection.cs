@@ -1,5 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -11,7 +10,10 @@ namespace Barotrauma.Items.Components
         //how many wires can be linked to connectors by default
         private const int DefaultMaxWires = 5;
 
-        //how many wires can be linked to this connection
+        //how many wires a player can link to this connection
+        public readonly int MaxPlayerConnectableWires = 5;
+
+        //how many wires can be linked to this connection in total
         public readonly int MaxWires = 5;
 
         public readonly string Name;
@@ -81,6 +83,9 @@ namespace Barotrauma.Items.Components
             item = connectionPanel.Item;
 
             MaxWires = element.GetAttributeInt("maxwires", DefaultMaxWires);
+            MaxWires = Math.Max(element.Elements().Count(e => e.Name.ToString().Equals("link", StringComparison.OrdinalIgnoreCase)), MaxWires);
+
+            MaxPlayerConnectableWires = element.GetAttributeInt("maxplayerconnectablewires", MaxWires);
             wires = new Wire[MaxWires];
 
             IsOutput = element.Name.ToString() == "output";
@@ -149,19 +154,15 @@ namespace Barotrauma.Items.Components
                         int index = -1;
                         for (int i = 0; i < MaxWires; i++)
                         {
-                            if (wireId[i] < 1) index = i;
+                            if (wireId[i] < 1) { index = i; }
                         }
-                        if (index == -1) break;
+                        if (index == -1) { break; }
 
                         int id = subElement.GetAttributeInt("w", 0);
-                        if (id < 0)
-                        {
-                            id = 0;
-                        }
+                        if (id < 0) { id = 0; }
                         wireId[index] = idRemap.GetOffsetId(id);
 
                         break;
-
                     case "statuseffect":
                         Effects.Add(StatusEffect.Load(subElement, item.Name + ", connection " + Name));
                         break;
@@ -260,9 +261,9 @@ namespace Barotrauma.Items.Components
 
                 Connection recipient = wires[i].OtherConnection(this);
                 if (recipient == null) { continue; }
-                if (recipient.item == this.item || signal.source?.LastSentSignalRecipients.LastOrDefault() == recipient.item) { continue; }
+                if (recipient.item == this.item || signal.source?.LastSentSignalRecipients.LastOrDefault() == recipient) { continue; }
 
-                signal.source?.LastSentSignalRecipients.Add(recipient.item);
+                signal.source?.LastSentSignalRecipients.Add(recipient);
 
                 Connection connection = recipient;
 

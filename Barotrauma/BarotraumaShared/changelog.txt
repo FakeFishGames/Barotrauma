@@ -1,4 +1,131 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.7 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Bandit outfits aren't sold at outposts.
+- Charybdis: Increased the attack cooldown from 3 to 4. Tweaked the texture. Adjusted the ragdoll and the animations. More tentacles.
+- Molochs: Boosted the structural damage slightly. Increased the attack and damage ranges slightly to help the attacks to hit the target.
+- Added black moloch mission variants.
+- Icons for previous orders can now be removed from crew list by right-clicking on them.
+- Diving suits have an effect on underwater scooter speed (slower movement when wearing an abyss suit, faster when wearing a combat suit).
+- Abyss/combat diving suits aren't sold in outpost for the first quarter of the campaign.
+- Nerfed nuclear shell's EMP effect.
+
+Fixes:
+- Fixed entity IDs getting messed up when purchasing items in the MP campaign, which lead to disconnects with an "entity not found" error message. Happened because the server created the purchased items before loading the respawn shuttle, while the clients did it the other way around.
+- Fixed clients not getting the prompt to download a custom sub they don't have unless they have permissions to edit server settings.
+- Fixed edge of the chatbox stealing cursor focus when the chatbox is hidden (preventing firing turrets when the cursor is in the bottom-left corner of the screen).
+- Fixed inconsistency in the way vertical velocity in/out signals are handled by the nav terminals. Previously "velocity_in" would interpret positive y as upwards, even though "velocity_y_out" outputs a negative value when going up. Now positive is always down (= corresponds with the "descent velocity" value displayed on the terminal).
+- Fixed non-repeatable outpost events starting to repeat once all of them have been triggered.
+- Fixed gate outpost still sometimes generating before the last level/biome.
+- Reduced the amount of clown gear in the "Praise the Honkmother" mission to fit everything in the crate.
+- Fixed boss health bars not appearing in multiplayer when damaging a boss monster with a turret.
+- Fixed clients not getting notified when a path between biomes is unlocked, preventing them from proceeding without saving and reloading the campaign.
+- Fixed crashing on startup with the error message "unable to load shared library 'freetype6' or one of its dependencies" on some Linux systems.
+- Fixed monsters trying to follow the last target while in the idle state even when the target is outside of the allowed area (only unstable).
+- Fixed multiple issues regarding bots targeting the reactor.
+- Fixed OnDamaged status effect triggering from burns, poisons etc. Only afflictions of type "damage" can now trigger it. Fixes Moloch spawning a lot of particles after being hit with a nuclear shell (#5412).
+- Fixed black moloch doing only 62.5% of the structure damage compared to the regular moloch.
+- Fixes to R-29: fixed top docking port's control circuit, adjustments to pre-placed supplies, adjusted discharge coil power consumption, minor visual fixes.
+- Fixed wall damage particles sometimes spawning at an incorrect position.
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.0.6 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Fixes:
+- Fixed bots trying to clean up items that have changed place and shouldn't be allowed to clean up anymore. Fixes #5400
+- Fixed "attempted to set SoundRange to NaN" error when a reactor's maximum power output is 0.
+- Fixed nullref exception when forcing an item position correction upon interaction failure.
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.0.5 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Moloch: adjust the sounds a bit.
+- Added and adjusted sounds for Endworm and Charybdis.
+- Increased the audio ranges for Watcher and Hammerhead Matriarch.
+- More polished versions of the textures for Endworm and Charybdis.
+- Visual tweaks to the boss health bars.
+- Hide the boss health bar when the creature is not targeting the player.
+- Allow a monster to attack the player even when it's in the restricted area (abyss for non-abyss creatures or non-abyss for abyss creatures) if the player has lately made some damage to the monster.
+- Reduced knockback cooldown for submarine impacts (previously there was a 30 second cooldown before an impact could throw characters around again, now it's reduced to 5 seconds).
+- Show an indicator when the campaign is saved.
+
+Fixes:
+- Fixed frequent "unknown object header, previous header: CHAT_MESSAGE" networking errors.
+- Fixed crash when a location changes it's type in the single player campaign.
+- Fixes/improvements to item position syncing. When trying to pick up an item whose position has gotten desynced, the server should correct the item's position immediately.
+- Fixed respawns not working in outpost levels.
+- Fixed missing sonar icon for minerals for the sonar monitor.
+- Fixed overlap for "Follow Submarine" tickbox and end round button in campaign mode.
+- Fixed hints staying visible when the HUD is disabled.
+- Fixed boss health bar showing up briefly when you damage a dead boss monster.
+- Fixed crashing when a turret that spawns it's own projectiles (e.g. alien turret) is fired.
+- Fixed crashing when you exit a multiplayer campaign round during the text that pops up at the beginning of a new campaign.
+- Fixed monsters sometimes spawning very close (or even inside) the respawn shuttle.
+- Fixed linked sub's file path not being saved in the sub editor.
+- Fixed ruins sometimes getting placed too close to the start/end outpost.
+- Fixed characters not getting crushed by pressure in sub test mode.
+- Fixed crashing when accessing server settings of a server you've lost connection to.
+
+Modding:
+- Fixed inability to load more than 5 wires per connection even if the connection is set to allow more.
+- Added "MaxRadiation" parameter to radiation params.
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.0.4 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Adjustments on Moloch. Improve the feedback.
+- Certain large monsters' (endworm, charybdis, boss variants of molochs and hammerheads) health bars become visible at the top of the screen when you damage them.
+- Readjusted abyss and combat diving suits. They are now essentially better versions of the normal diving suit (as opposed to just alternatives with their own pros and cons), making normal suits obsolete later in the campaign. Both suits now have a high resistance to pressure, although an abyss suit may still be required at the very end of the campaign.
+- Replaced legacy small pumps with the new ones in Orca.
+- Adjusted stun gun's effect. It basically works like incremental stun, but inversed: the strength increases rapidly to the max, after which we remove progressive stun and add full incremental stun that will wear off with time.
+- Restrict the length of the text that can be entered as a sonar beacon's sonar label.
+- The probability of disconnected wires in beacon stations is relative to the level's difficulty, and no wires are removed if the difficulty is less than 20.
+- Added a hint for encountering ballast flora.
+- Added submarine preview to campaign outpost submarine selection.
+- Allow fabricating fresh fuel rods, welding fuel and coilgun ammunition using depleted ones.
+- Abyss monsters only emit distant sonar "waves" while chasing the player, not always.
+
+Fixes:
+- Fixed players being able to take the respawn shuttle with them from the levels in the multiplayer campaign, which would lead to "entity not found" errors during the next round.
+- Fixed respawn shuttle always having the default crush depth of 3500 meters, making it unusable at later stages of the campaign.
+- Fixed creaking hull sounds triggering when 500 meters above a non-upgraded sub's crush depth, even if the current sub can withstand more.
+- Fixed Kastrull's drone airlock not flooding correctly.
+- Don't restrict signal components' output length when the sub is being loaded. Fixes all outputs being restricted to 200 characters in subs from previous versions and output getting cut off when saving and loading the sub.
+- Fixed crashing if you try to press the server log button in the lobby when connection to the server has been lost.
+- Fixed item disappearing from the character's hand when you combine it with an item in a container in a way that doesn't fully deplete/remove it.
+- Fixed gaps in the "backwall pipes" sprite.
+- Fixed dedicated servers restricting player count to 1 less than the MaxPlayer setting.
+- Fixed crashing when you try to preview a sub you don't have in the server lobby.
+- Fixed "gate outpost" sometimes generating as abandoned outposts.
+- Fixed clients being unable to vote for subs they don't have.
+- Fixed a bunch of non-suitable items (such as devices that can't be deattached) being displayed in the "extra cargo" menu in the server lobby.
+- Fixed Operate Weapons icon not updating when assigned again while targeting a weapon of different type.
+- Fixed being able to assign the same order to a character multiple times with different options.
+- Fixed highlighted client names in chat messages not opening the player info dialog when clicked.
+
+Bots:
+- Fixed bots not knowing how to swap out welding fuel from diving gear and oxygen tanks from welding tools (#4380).
+- Fixed bots sometimes yelling that they can't enter an airlock when the sub is docked.
+
+Modding:
+- Fixed level editor crashing when it tries to place a wreck that contains linked subs in the level.
+- Added "onlyplayertriggered" condition for status effects. Currently only implemented for OnDamaged.
+- Monster events don't spawn monsters in wrecks that don't contain enemy spawnpoints.
+- Fixed crashing if you try to create a decal with incorrect casing.
+- Fixed affliction's periodic effects being unable to reference afflictions defined later in the affliction xml.
+- Fixed crashes if radiation parameters aren't defined in the map generation xml.
+- Fixed crashing if you save a campaign with a large map and try to load it with map generation parameters where the map is smaller.
+- Fixed explosions not damaging level walls if their structure damage is set to 0.
+- Fixed reduce affliction status effects using delta time even when "setvalue" is true.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.3 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

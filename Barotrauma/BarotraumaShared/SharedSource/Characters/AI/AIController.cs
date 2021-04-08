@@ -265,16 +265,22 @@ namespace Barotrauma
             }
         }
 
-        public void UnequipEmptyItems(Item item, bool avoidDroppingInSea = true) => UnequipEmptyItems(Character, item, avoidDroppingInSea);
+        public void UnequipEmptyItems(Item parentItem, bool avoidDroppingInSea = true) => UnequipEmptyItems(Character, parentItem, avoidDroppingInSea);
 
-        public static void UnequipEmptyItems(Character character, Item item, bool avoidDroppingInSea = true)
+        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea);
+
+        public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingInSea = true) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingInSea);
+
+        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true)
         {
-            if (item.OwnInventory.AllItems.Any(it => it.Condition <= 0.0f))
+            var inventory = parentItem.OwnInventory;
+            if (inventory == null) { return; }
+            if (inventory.AllItems.Any(predicate))
             {
-                foreach (Item containedItem in item.OwnInventory.AllItemsMod)
+                foreach (Item containedItem in inventory.AllItemsMod)
                 {
                     if (containedItem == null) { continue; }
-                    if (containedItem.Condition <= 0.0f)
+                    if (predicate(containedItem))
                     {
                         if (character.Submarine == null && avoidDroppingInSea)
                         {

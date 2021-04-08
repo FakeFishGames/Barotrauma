@@ -111,6 +111,8 @@ namespace Barotrauma
 
         public static bool TransparentWiringMode = true;
 
+        public static bool SkipInventorySlotUpdate;
+
         private static object bulkItemBufferinUse;
 
         public static object BulkItemBufferInUse
@@ -4109,6 +4111,7 @@ namespace Barotrauma
         /// </summary>
         public override void Update(double deltaTime)
         {
+            SkipInventorySlotUpdate = false;
             ImageManager.Update((float) deltaTime);
 
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
@@ -4222,11 +4225,15 @@ namespace Barotrauma
                         }
 
                         List<Keys> numberKeys = PlayerInput.NumberKeys;
-                        if (numberKeys.Find(PlayerInput.KeyHit) is { } key)
+                        if (numberKeys.Find(PlayerInput.KeyHit) is { } key && key != Keys.None)
                         {
                             // treat 0 as the last key instead of first
                             int index = key == Keys.D0 ? numberKeys.Count : numberKeys.IndexOf(key) - 1;
-                            listBox.Select(index, force: false, autoScroll: true, takeKeyBoardFocus: false);
+                            if (index > -1 && index < listBox.Content.CountChildren)
+                            {
+                                listBox.Select(index, force: false, autoScroll: true, takeKeyBoardFocus: false);
+                                SkipInventorySlotUpdate = true;
+                            }
                         }
                     }
                 }
@@ -4291,7 +4298,7 @@ namespace Barotrauma
 
                 if (PlayerInput.IsCtrlDown() && MapEntity.StartMovingPos == Vector2.Zero)
                 {
-                    cam.MoveCamera((float) deltaTime, allowMove: false);
+                    cam.MoveCamera((float) deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
                     // Save menu
                     if (PlayerInput.KeyHit(Keys.S))
                     {
@@ -4330,12 +4337,12 @@ namespace Barotrauma
                 }
                 else
                 {
-                    cam.MoveCamera((float) deltaTime, allowMove: true);
+                    cam.MoveCamera((float) deltaTime, allowMove: true, allowZoom: GUI.MouseOn == null);
                 }
             }
             else
             {
-                cam.MoveCamera((float) deltaTime, allowMove: false);
+                cam.MoveCamera((float) deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             }
 
             if (PlayerInput.MidButtonHeld())

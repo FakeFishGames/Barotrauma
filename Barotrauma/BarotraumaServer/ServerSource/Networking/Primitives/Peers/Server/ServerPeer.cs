@@ -212,7 +212,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (connectedClients.Count >= serverSettings.MaxPlayers - 1)
+            if (connectedClients.Count >= serverSettings.MaxPlayers)
             {
                 RemovePendingClient(pendingClient, DisconnectReason.ServerFull, "");
             }

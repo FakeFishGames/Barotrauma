@@ -100,7 +100,7 @@ namespace Barotrauma
                     {
                         spawnPos = new Vector2(
                             MathHelper.Clamp(wp.WorldPosition.X + Rand.Range(-200, 200), wp.CurrentHull.WorldRect.X, wp.CurrentHull.WorldRect.Right),
-                            wp.CurrentHull.WorldRect.Y - wp.CurrentHull.Rect.Height + 10.0f);
+                            wp.CurrentHull.WorldRect.Y - wp.CurrentHull.Rect.Height + 16.0f);
                     }
                     var item = new Item(itemPrefab, spawnPos, null);
                     items.Add(item);

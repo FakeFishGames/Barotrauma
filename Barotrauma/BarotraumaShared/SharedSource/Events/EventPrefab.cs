@@ -66,5 +66,10 @@ namespace Barotrauma
 
             return (Event)instance;
         }
+
+        public override string ToString()
+        {
+            return $"EventPrefab ({Identifier})";
+        }
     }
 }

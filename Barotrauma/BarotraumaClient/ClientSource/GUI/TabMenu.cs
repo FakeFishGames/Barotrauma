@@ -192,7 +192,7 @@ namespace Barotrauma
                     contentFrameSize = new Vector2(0.45f, 0.667f);
                     break;
             }
-            contentFrame = new GUIFrame(new RectTransform(contentFrameSize, infoFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { RelativeOffset = new Vector2(0.025f, 0.12f) });
+            contentFrame = new GUIFrame(new RectTransform(contentFrameSize, infoFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.12f) });
 
             var horizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.958f, 0.943f), contentFrame.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, GUI.IntScale(25f)) }, isHorizontal: true)
             {
@@ -234,8 +234,6 @@ namespace Barotrauma
             {
                 var reputationButton = createTabButton(InfoFrameTab.Reputation, "reputation");
 
-                var submarineButton = createTabButton(InfoFrameTab.Submarine, "submarine");
-
                 var balanceFrame = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, innerLayoutGroup.Rect.Height - infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
                 new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), "", textAlignment: Alignment.Right, parseRichText: true)
                 {
@@ -250,6 +248,8 @@ namespace Barotrauma
                     var traitorButton = createTabButton(InfoFrameTab.Traitor, "tabmenu.traitor");
                 }
             }
+
+            var submarineButton = createTabButton(InfoFrameTab.Submarine, "submarine");
 
             if (GameMain.NetworkMember != null)
             {
@@ -722,7 +722,7 @@ namespace Barotrauma
             GUIComponent existingPreview = infoFrameHolder.FindChild("SelectedCharacter");
             if (existingPreview != null) infoFrameHolder.RemoveChild(existingPreview);
 
-            GUIFrame background = new GUIFrame(new RectTransform(new Vector2(0.543f, 0.717f), infoFrameHolder.RectTransform, Anchor.TopLeft, Pivot.TopRight) { RelativeOffset = new Vector2(-0.061f, 0) })
+            GUIFrame background = new GUIFrame(new RectTransform(new Vector2(0.543f, 0.717f), infoFrameHolder.RectTransform, Anchor.TopLeft, Pivot.TopRight) { RelativeOffset = new Vector2(-0.145f, 0) })
             {
                 UserData = "SelectedCharacter"
             };
@@ -1106,7 +1106,11 @@ namespace Barotrauma
 
             if (GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
-                var upgradeRootLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.57f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), true);
+                GUILayoutGroup headerLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.09f), paddedFrame.RectTransform) { RelativeOffset = new Vector2(0f, 0.43f) }, isHorizontal: true) { Stretch = true };
+                GUIImage headerIcon = new GUIImage(new RectTransform(Vector2.One, headerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "SubmarineIcon");
+                new GUITextBlock(new RectTransform(Vector2.One, headerLayout.RectTransform), TextManager.Get("uicategory.upgrades"), font: GUI.LargeFont);
+
+                var upgradeRootLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.48f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft), isHorizontal: true);
 
                 var upgradeCategoryPanel = UpgradeStore.CreateUpgradeCategoryList(new RectTransform(new Vector2(0.4f, 1f), upgradeRootLayout.RectTransform));
                 upgradeCategoryPanel.HideChildrenOutsideFrame = true;
@@ -1128,6 +1132,11 @@ namespace Barotrauma
                     }
                     return true;
                 };
+            }
+            else
+            {
+                var specsListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.57f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft));
+                sub.Info.CreateSpecsWindow(specsListBox, GUI.Font, includeTitle: false, includeClass: false, includeDescription: true);
             }
         }
     }

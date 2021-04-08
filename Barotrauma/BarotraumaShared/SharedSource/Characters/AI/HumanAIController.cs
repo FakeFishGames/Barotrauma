@@ -771,17 +771,11 @@ namespace Barotrauma
                             targetHull = hull;
                         }
                     }
-                    foreach (var ballastFlora in MapCreatures.Behavior.BallastFloraBehavior.EntityList)
+                    if (IsBallastFloraNoticeable(Character, hull))
                     {
-                        if (ballastFlora.Parent?.Submarine != Character.Submarine) { continue; }
-                        if (!ballastFlora.HasBrokenThrough) { continue; }
-                        // Don't react to the first two branches, because they are usually in the very edges of the room.
-                        if (ballastFlora.Branches.Count(b => !b.Removed && b.Health > 0 && b.CurrentHull == hull) > 2)
-                        {
-                            var orderPrefab = Order.GetPrefab("reportballastflora");
-                            newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
-                            targetHull = hull;
-                        }
+                        var orderPrefab = Order.GetPrefab("reportballastflora");
+                        newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
+                        targetHull = hull;
                     }
                     if (!isFighting)
                     {
@@ -846,6 +840,21 @@ namespace Barotrauma
 #endif
                 }
             }
+        }
+
+        public static bool IsBallastFloraNoticeable(Character character, Hull hull)
+        {
+            foreach (var ballastFlora in MapCreatures.Behavior.BallastFloraBehavior.EntityList)
+            {
+                if (ballastFlora.Parent?.Submarine != character.Submarine) { continue; }
+                if (!ballastFlora.HasBrokenThrough) { continue; }
+                // Don't react to the first two branches, because they are usually in the very edges of the room.
+                if (ballastFlora.Branches.Count(b => !b.Removed && b.Health > 0 && b.CurrentHull == hull) > 2)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static void ReportProblem(Character reporter, Order order)
@@ -1839,49 +1848,68 @@ namespace Barotrauma
         public static bool IsItemOperatedByAnother(Character character, ItemComponent target, out Character operatingCharacter)
         {
             operatingCharacter = null;
+            if (character == null) { return false; }
             if (target?.Item == null) { return false; }
+            bool isOrder = IsOrderedToOperateThis(character.AIController);
             foreach (var c in Character.CharacterList)
             {
-                if (character == null) { continue; }
                 if (c == character) { continue; }
                 if (c.IsDead || c.IsIncapacitated) { continue; }
                 if (!IsFriendly(character, c, onlySameTeam: true)) { continue; }
                 operatingCharacter = c;
-                if (c.AIController is HumanAIController controllingHumanAi)
+                if (c.IsPlayer)
                 {
-                    Item otherTarget = controllingHumanAi.objectiveManager.GetActiveObjective<AIObjectiveOperateItem>()?.Component.Item ?? c.SelectedConstruction;
-                    if (otherTarget != target.Item) { continue; }
-                    // If the other character is player, don't try to operate
-                    if (c.IsPlayer) { return true; }
-                    // If the other character is ordered to operate the item, let him do it
-                    if (controllingHumanAi.ObjectiveManager.IsCurrentOrder<AIObjectiveOperateItem>())
+                    if (c.SelectedConstruction == target.Item)
                     {
+                        // If the other character is player, don't try to operate
+                        return true;
+                    }
+                }
+                else if (c.AIController is HumanAIController operatingAI)
+                {
+                    if (operatingAI.ObjectiveManager.Objectives.None(o => o is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item))
+                    {
+                        // Not targeting the same item.
+                        continue;
+                    }
+                    bool isTargetOrdered = IsOrderedToOperateThis(c.AIController);
+                    if (!isOrder && isTargetOrdered)
+                    {
+                        // If the other bot is ordered to operate the item, let him do it, unless we are ordered too
                         return true;
                     }
                     else
                     {
-                        if (character == null)
+                        if (isOrder && !isTargetOrdered)
                         {
-                            return true;
-                        }
-                        else if (target is Steering)
-                        {
-                            // Steering is hard-coded -> cannot use the required skills collection defined in the xml
-                            return character.GetSkillLevel("helm") <= c.GetSkillLevel("helm");
+                            // We are ordered and the target is not -> allow to operate
+                            continue;
                         }
                         else
                         {
-                            return target.DegreeOfSuccess(character) <= target.DegreeOfSuccess(c);
+                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder == operatingAI.ObjectiveManager.CurrentObjective)
+                            {
+                                // The other bot is ordered to do something else
+                                continue;
+                            }
+                            if (target is Steering)
+                            {
+                                // Steering is hard-coded -> cannot use the required skills collection defined in the xml
+                                if (character.GetSkillLevel("helm") <= c.GetSkillLevel("helm"))
+                                {
+                                    return true;
+                                }
+                            }
+                            else if (target.DegreeOfSuccess(character) <= target.DegreeOfSuccess(c))
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
-                else
-                {
-                    return c.SelectedConstruction == target.Item;
-                }
-
             }
             return false;
+            bool IsOrderedToOperateThis(AIController ai) => ai is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item;
         }
 
         #region Wrappers
