@@ -28,14 +28,14 @@ namespace Barotrauma.Items.Components
 
             // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
             // This could be removed if GUIListBox supported aligning its children
-            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty, font: GUI.MonospacedFont)
+            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
             {
                 CanBeFocused = false
             };
 
             new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
 
-            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen, font: GUI.MonospacedFont)
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
             {
                 MaxTextLength = MaxMessageLength,
                 OverflowClip = true,
@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: Color.LimeGreen, wrap: true)
+                    textColor: Color.LimeGreen, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
             {
                 CanBeFocused = false
             };
