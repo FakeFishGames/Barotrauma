@@ -288,7 +288,7 @@ namespace Barotrauma
                         }
                     }
 
-                    string colorStr = XMLExtensions.ColorToString(item.SpawnedInOutpost ? GUI.Style.Red : Color.White);
+                    string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
 
                     toolTip = $"‖color:{colorStr}‖{item.Name}‖color:end‖";
                     if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
@@ -1552,7 +1552,7 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if (item.SpawnedInOutpost && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if (!item.AllowStealing && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
                     Vector2 iconSize = new Vector2(25 * GUI.Scale);

@@ -527,6 +527,8 @@ namespace Barotrauma
             }
         }
 
+        public bool AllowStealing = true;
+
         private string originalOutpost;
         [Serialize("", true, alwaysUseInstanceValues: true)]
         public string OriginalOutpost

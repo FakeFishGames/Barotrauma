@@ -1,13 +1,11 @@
 ﻿using Barotrauma.Networking;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class MemoryComponent : ItemComponent, IServerSerializable
     {
-        const int MaxValueLength = ChatMessage.MaxLength;
-
-
         private string value;
 
         [InGameEditable, Serialize("", true, description: "The currently stored signal the item outputs.", alwaysUseInstanceValues: true)]
@@ -17,10 +15,25 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (value == null) { return; }
-                this.value = value.Length <= MaxValueLength ? value : value.Substring(0, MaxValueLength);
+                this.value = value;
+                if (this.value.Length > MaxValueLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    this.value = this.value.Substring(0, MaxValueLength);
+                }
             }
         }
-        
+
+        private int maxValueLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the stored value. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxValueLength
+        {
+            get { return maxValueLength; }
+            set
+            {
+                maxValueLength = Math.Max(value, 0);
+            }
+        }
+
         protected bool writeable = true;
 
         public MemoryComponent(Item item, XElement element)
@@ -43,9 +56,12 @@ namespace Barotrauma.Items.Components
                 case "signal_in":
                     if (writeable) 
                     {
-                        if (Value == signal.value) { return; }
+                        string prevValue = Value;
                         Value = signal.value;
-                        OnStateChanged();
+                        if (Value != prevValue)
+                        {
+                            OnStateChanged();
+                        }
                     }
                     break;
                 case "signal_store":

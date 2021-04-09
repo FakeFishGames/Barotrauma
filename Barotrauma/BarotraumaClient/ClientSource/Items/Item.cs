@@ -1464,6 +1464,7 @@ namespace Barotrauma
 
             byte bodyType           = msg.ReadByte();
             bool spawnedInOutpost   = msg.ReadBoolean();
+            bool allowStealing      = msg.ReadBoolean();
             byte teamID             = msg.ReadByte();
             bool tagsChanged        = msg.ReadBoolean();
             string tags = "";
@@ -1535,7 +1536,8 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, pos, sub, id: itemId)
             {
-                SpawnedInOutpost = spawnedInOutpost
+                SpawnedInOutpost = spawnedInOutpost,
+                AllowStealing = allowStealing
             };
 
             if (item.body != null)

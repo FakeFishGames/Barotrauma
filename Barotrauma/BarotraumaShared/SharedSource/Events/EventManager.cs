@@ -321,14 +321,23 @@ namespace Barotrauma
                             }
                         }
                         RagdollParams ragdollParams;
-                        if (humanoid)
+                        try
                         {
-                            ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(speciesName);
+                            if (humanoid)
+                            {
+                                ragdollParams = RagdollParams.GetRagdollParams<HumanRagdollParams>(characterPrefab.VariantOf ?? speciesName);
+                            }
+                            else
+                            {
+                                ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(characterPrefab.VariantOf ?? speciesName);
+                            }
                         }
-                        else
+                        catch (Exception e)
                         {
-                            ragdollParams = RagdollParams.GetRagdollParams<FishRagdollParams>(speciesName);
+                            DebugConsole.ThrowError($"Failed to preload a ragdoll file for the character \"{characterPrefab.Name}\"", e);
+                            continue;
                         }
+
                         if (ragdollParams != null)
                         {
                             HashSet<string> texturePaths = new HashSet<string>

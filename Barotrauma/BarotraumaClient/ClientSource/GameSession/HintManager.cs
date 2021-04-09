@@ -138,7 +138,7 @@ namespace Barotrauma
 
             // onstartedinteracting.lootingisstealing
             if (item.Submarine?.Info?.Type == SubmarineType.Outpost &&
-                item.ContainedItems.Any(i => i.SpawnedInOutpost))
+                item.ContainedItems.Any(i => !i.AllowStealing))
             {
                 if (DisplayHint($"{hintIdentifierBase}.lootingisstealing")) { return; }
             }
@@ -379,7 +379,7 @@ namespace Barotrauma
         {
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
-            if (item == null || !item.SpawnedInOutpost || !item.StolenDuringRound) { return; }
+            if (item == null || item.AllowStealing || !item.StolenDuringRound) { return; }
             DisplayHint("onstoleitem", onUpdate: () =>
             {
                 if (item == null || item.Removed || item.GetRootInventoryOwner() != character)

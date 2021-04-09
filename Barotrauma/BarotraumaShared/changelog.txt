@@ -1,4 +1,23 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.8 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Increased the delay with which the boss health bar is faded from 10 to 60 seconds.
+- Modding: Allow to define afflictions (types or identifiers) to trigger the OnDamaged status effects only from certain afflictions and not all that do the damage. If the afflictions property is not defined, no restrictions are used (works as it used to).
+- Added MaxValueLength property to memory component.
+
+Fixes:
+- Fixed networking errors when the server tries to send an update for a Holdable component that's not attachable, leading to various issues (disconnects, "failed to read ..." errors).
+- Fixed "enter location" button not appearing in some levels where there's no outpost at the destination and a beacon station near the exit.
+- Fixed event to heal Reaper's Tax not triggering in outposts.
+- Fixed server starting the respawn countdown when a disconnected client whose character is still alive rejoins.
+- Removed outdated steamclient.so file from the dedicated server (no longer needed because it's automatically installed by Steamworks). Should fix inability to host dedicated servers on Linux.
+- Fixed job preferences not having an effect on who gets assigned as the captain.
+- Fixed items taken from abandoned outposts reappearing when you leave and re-enter the outpost.
+- Fixed crashing/disconnects when preloading content at the start of a round if random events contain character variants. In practice, mods that used character variants in random events occasionally prevented rounds from starting.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.7 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

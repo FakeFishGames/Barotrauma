@@ -1425,7 +1425,8 @@ namespace Barotrauma
                 humanPrefab.GiveItems(npc, outpost, Rand.RandSync.Server);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
-                    item.SpawnedInOutpost = !outpost.Info.OutpostGenerationParams.AllowStealing;
+                    item.AllowStealing = outpost.Info.OutpostGenerationParams.AllowStealing;
+                    item.SpawnedInOutpost = true;
                 }
                 npc.GiveIdCardTags(gotoTarget as WayPoint);
                 humanPrefab.InitializeCharacter(npc, gotoTarget);

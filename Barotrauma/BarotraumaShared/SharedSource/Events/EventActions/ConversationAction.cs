@@ -190,6 +190,7 @@ namespace Barotrauma
                 humanAI.ClearForcedOrder();
                 if (prevIdleObjective != null) { humanAI.ObjectiveManager.AddObjective(prevIdleObjective); }
                 if (prevGotoObjective != null) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
+                humanAI.ObjectiveManager.SortObjectives();
             }
         }
 

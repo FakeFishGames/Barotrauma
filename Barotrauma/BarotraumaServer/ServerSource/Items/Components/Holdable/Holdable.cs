@@ -8,7 +8,10 @@ namespace Barotrauma.Items.Components
         public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
         {
             base.ServerWrite(msg, c, extraData);
-            if (!attachable || body == null) { return; }
+
+            bool writeAttachData = attachable && body != null;
+            msg.Write(writeAttachData);
+            if (!writeAttachData) { return; }
 
             msg.Write(Attached);
             msg.Write(body.SimPosition.X);

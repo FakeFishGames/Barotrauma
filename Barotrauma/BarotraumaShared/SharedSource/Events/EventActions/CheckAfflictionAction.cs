@@ -27,25 +27,24 @@ namespace Barotrauma
             if (string.IsNullOrWhiteSpace(Identifier) || string.IsNullOrWhiteSpace(TargetTag)) { return false; }
             List<Character> targets = ParentEvent.GetTargets(TargetTag).OfType<Character>().ToList();
 
-            if (!(targets.FirstOrDefault() is { } target)) { return false; }
-
-            if (TargetLimb == LimbType.None)
+            foreach (var target in targets)
             {
-                Affliction? affliction = target.CharacterHealth?.GetAffliction(Identifier, AllowLimbAfflictions);
-                return affliction != null;
+                if (target.CharacterHealth == null) { continue; }
+                if (TargetLimb == LimbType.None)
+                {
+                    if (target.CharacterHealth.GetAffliction(Identifier, AllowLimbAfflictions) != null) { return true; }
+                }
+                IEnumerable<Affliction> afflictions = target.CharacterHealth.GetAllAfflictions().Where(affliction =>
+                {
+                    LimbType? limbType = target.CharacterHealth.GetAfflictionLimb(affliction)?.type;
+                    if (limbType == null) { return false; }
+
+                    return limbType == TargetLimb || true;
+                });
+
+                if (afflictions.Any(a => a.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase))) { return true; }
             }
-
-            if (target.CharacterHealth == null) { return false; }
-
-            IEnumerable<Affliction> afflictions = target.CharacterHealth.GetAllAfflictions().Where(affliction =>
-            {
-                LimbType? limbType = target.CharacterHealth.GetAfflictionLimb(affliction)?.type;
-                if (limbType == null) { return false; }
-
-                return limbType == TargetLimb || true;
-            });
-
-            return afflictions.Any(a => a.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase));
+            return false;
         }
 
         public override string ToDebugString()

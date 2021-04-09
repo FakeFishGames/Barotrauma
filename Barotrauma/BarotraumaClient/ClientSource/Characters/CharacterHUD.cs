@@ -617,7 +617,7 @@ namespace Barotrauma
                 }
                 else if (bossHealthBar.Character.AIController is EnemyAIController enemyAI && !enemyAI.IsTargetingPlayerTeam)
                 {
-                    bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 10.0f);
+                    bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 60.0f);
                 }
                 bossHealthBar.FadeTimer -= deltaTime;
             }

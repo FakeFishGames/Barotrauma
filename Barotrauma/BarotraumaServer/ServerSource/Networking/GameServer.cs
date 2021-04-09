@@ -3752,11 +3752,11 @@ namespace Barotrauma.Networking
 
         private Client FindClientWithJobPreference(List<Client> clients, JobPrefab job, bool forceAssign = false)
         {
-            int bestPreference = 0;
+            int bestPreference = int.MaxValue;
             Client preferredClient = null;
             foreach (Client c in clients)
             {
-                if (c.Karma < job.MinKarma) { continue; }
+                if (ServerSettings.KarmaEnabled && c.Karma < job.MinKarma) { continue; }
                 int index = c.JobPreferences.IndexOf(c.JobPreferences.Find(j => j.First == job));
                 if (index > -1 && index < bestPreference)
                 {

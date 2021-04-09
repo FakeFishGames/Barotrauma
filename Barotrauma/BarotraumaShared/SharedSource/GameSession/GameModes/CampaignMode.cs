@@ -461,12 +461,15 @@ namespace Barotrauma
                 leavingSubAtStart ??= Submarine.MainSub;
                 leavingSubAtEnd ??= Submarine.MainSub;            
             }
-            int playersInSubAtStart = leavingSubAtStart == null ? 0 :
+            int playersInSubAtStart = leavingSubAtStart == null || !leavingSubAtStart.AtStartExit ? 0 :
                 leavingPlayers.Count(c => c.Submarine == leavingSubAtStart || leavingSubAtStart.DockedTo.Contains(c.Submarine) || (Level.Loaded.StartOutpost != null && c.Submarine == Level.Loaded.StartOutpost));
-            int playersInSubAtEnd = leavingSubAtEnd == null ? 0 :
+            int playersInSubAtEnd = leavingSubAtEnd == null || !leavingSubAtStart.AtEndExit ? 0 :
                 leavingPlayers.Count(c => c.Submarine == leavingSubAtEnd || leavingSubAtEnd.DockedTo.Contains(c.Submarine) || (Level.Loaded.EndOutpost != null && c.Submarine == Level.Loaded.EndOutpost));
 
-            if (playersInSubAtStart == 0 && playersInSubAtEnd == 0) { return null; }
+            if (playersInSubAtStart == 0 && playersInSubAtEnd == 0) 
+            {
+                return null; 
+            }
 
             return playersInSubAtStart > playersInSubAtEnd ? leavingSubAtStart : leavingSubAtEnd;
 
@@ -474,7 +477,7 @@ namespace Barotrauma
             {
                 if (Level.Loaded.StartOutpost == null)
                 {
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -488,7 +491,7 @@ namespace Barotrauma
 
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
                     if (Level.Loaded.Type == LevelData.LevelType.LocationConnection && !leavingPlayers.Any(s => s.Submarine == Level.Loaded.StartOutpost)) { return null; }
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartOutpost.WorldPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartOutpost.WorldPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
                     if (closestSub == null || !closestSub.AtStartExit) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
@@ -501,7 +504,7 @@ namespace Barotrauma
 
                 if (Level.Loaded.EndOutpost == null)
                 {
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -515,7 +518,7 @@ namespace Barotrauma
 
                     //nothing docked, check if there's a sub close enough to the outpost and someone inside the outpost
                     if (Level.Loaded.Type == LevelData.LevelType.LocationConnection && !leavingPlayers.Any(s => s.Submarine == Level.Loaded.EndOutpost)) { return null; }
-                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndOutpost.WorldPosition, ignoreOutposts: true, ignoreRespawnShuttle: true);
+                    Submarine closestSub = Submarine.FindClosest(Level.Loaded.EndOutpost.WorldPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
                     if (closestSub == null || !closestSub.AtEndExit) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
@@ -528,7 +531,8 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (!item.SpawnedInOutpost || item.OriginalModuleIndex < 0) { continue; }
-                if ((!(item.GetRootInventoryOwner()?.Submarine?.Info?.IsOutpost ?? false)) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
+                var owner = item.GetRootInventoryOwner();
+                if ((!(owner?.Submarine?.Info?.IsOutpost ?? false)) || (owner is Character character && character.TeamID == CharacterTeamType.Team1) || item.Submarine == null || !item.Submarine.Info.IsOutpost)
                 {
                     takenItems.Add(item);
                 }

@@ -18,10 +18,17 @@ namespace Barotrauma.Networking
                 if (!c.InGame) { continue; }
                 if (c.SpectateOnly && (GameMain.Server.ServerSettings.AllowSpectating || GameMain.Server.OwnerConnection == c.Connection)) { continue; }
                 if (c.Character != null && !c.Character.IsDead) { continue; }
-  
+
+                //don't allow respawn if the client already has a character (they'll regain control once they're in sync)
+                var matchingData = campaign?.GetClientCharacterData(c);
+                if (matchingData != null && matchingData.HasSpawned &&
+                    Character.CharacterList.Any(c => c.Info == matchingData.CharacterInfo && !c.IsDead))
+                {
+                    continue;
+                }
+
                 if (UseRespawnPrompt)
                 {
-                    var matchingData = campaign?.GetClientCharacterData(c);
                     if (matchingData != null && matchingData.HasSpawned)
                     {
                         if (!c.WaitForNextRoundRespawn.HasValue || c.WaitForNextRoundRespawn.Value) { continue; }

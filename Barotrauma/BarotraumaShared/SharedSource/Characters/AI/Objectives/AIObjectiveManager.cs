@@ -320,6 +320,7 @@ namespace Barotrauma
         public void ClearForcedOrder()
         {
             ForcedOrder = null;
+            SortObjectives();
         }
 
         private CoroutineHandle speakRoutine;

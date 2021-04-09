@@ -289,6 +289,8 @@ namespace Barotrauma
             get { return targetIdentifiers; }
         }
 
+        public HashSet<string> AllowedAfflictions { get; private set; }
+
         public List<Affliction> Afflictions
         {
             get;
@@ -419,6 +421,14 @@ namespace Barotrauma
                         for (int i = 0; i < identifiers.Length; i++)
                         {
                             targetIdentifiers.Add(identifiers[i].Trim().ToLowerInvariant());
+                        }
+                        break;
+                    case "allowedafflictions":
+                        string[] types = attribute.Value.Split(',');
+                        AllowedAfflictions = new HashSet<string>();
+                        for (int i = 0; i < types.Length; i++)
+                        {
+                            AllowedAfflictions.Add(types[i].Trim().ToLowerInvariant());
                         }
                         break;
                     case "duration":
