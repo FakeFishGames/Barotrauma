@@ -1334,6 +1334,11 @@ namespace Barotrauma
                 OnSelected = (tickBox) =>
                 {
                     DisableInGameHints = tickBox.Selected;
+                    if (!DisableInGameHints && GameMain.Config?.IgnoredHints != null)
+                    {
+                        // Reset the ignored hints when the hints are re-enabled (to-be-replaced by a separate button)
+                        GameMain.Config.IgnoredHints.Clear();
+                    }
                     UnsavedSettings = true;
                     return true;
                 }

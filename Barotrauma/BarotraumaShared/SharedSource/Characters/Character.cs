@@ -612,10 +612,11 @@ namespace Barotrauma
             set
             {
 #if CLIENT
-                HintManager.OnSetSelectedConstruction(this, _selectedConstruction, value);
+                var prevSelectedConstruction = _selectedConstruction;
 #endif
                 _selectedConstruction = value;
 #if CLIENT
+                HintManager.OnSetSelectedConstruction(this, prevSelectedConstruction, _selectedConstruction);
                 if (Controlled == this)
                 {
                     if (_selectedConstruction == null)
@@ -3814,6 +3815,10 @@ namespace Barotrauma
                             break;
                         }
                     }
+                }
+                else
+                {
+                    canBePutInOriginalInventory = inventory.CanBePut(newItem, slotIndices[0]);
                 }
 
                 if (canBePutInOriginalInventory)

@@ -3598,10 +3598,13 @@ namespace Barotrauma
                 if (!(GameMain.NetworkMember?.IsClient ?? false))
                 {
                     //empty the reactor
-                    foreach (Item item in reactorContainer.Inventory.AllItems)
+                    if (reactorContainer != null)
                     {
-                        if (item.NonInteractable) { continue; }
-                        Spawner.AddToRemoveQueue(item);
+                        foreach (Item item in reactorContainer.Inventory.AllItems)
+                        {
+                            if (item.NonInteractable) { continue; }
+                            Spawner.AddToRemoveQueue(item);
+                        }
                     }
 
                     //remove wires

@@ -1,4 +1,43 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.9 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Re-enabling in-game hints now resets hints previously set not be shown again.
+- Reduced the stun duration of Molochs' and Hammerheads' attacks. Also add some bitewounds damage on the Molochs' attacks so that they trigger all the AI reactions and don't get treated as failed attacks.
+
+Fixes:
+- Fixed occasional "mission mismatch" errors when entering a hunting grounds level in the multiplayer campaign.
+- Fixed camera shaking/vibrating when moving at high speed.
+- Fixed monsters being able to attack through ruin walls.
+- Fixed overlapping vending machine & light switch in CrewModule_02.
+- Fixed respawn shuttle maintaining an incorrect position after getting dispatched.
+- Fixed selected mission carrying over to whichever level you choose in the campaign.
+- Fixed diving suit's vision obstructing effect disappearing if you also wear a diving mask.
+- Removed unnecessary extra light components from large and normal engine.
+- Fixed "attempted to select a locked connection" error when a player joins mid-round after the path to the next biome has been unlocked.
+- Fixed campaign map crush depth warnings being always calculated for the currently docked submarine, not taking a possible pending submarine switch into account.
+- Fixed Hammerhead Spawns not targeting decoys.
+- Fixed the abyss monsters not targeting "provocative" items, like flares, glowsticks, scooters etc.
+- Fixed Hammerhead Matriarch constantly fleeing from divers. It's intentional that that the matriarch avoids the divers, but not as much. Now they should flee briefly only when shot by the player, making it possible for the divers to reach it (#5449).
+- Fixed distant sonar waves not being visible in multiplayer.
+- Fixed distant sonar waves being visible from too far away.
+- Fixed the boss health bar vanishing too quickly in the multiplayer game mode.
+- Fixed bots sometimes getting stuck while trying to find a safer room, if they fail to find any oxygen tanks. They should run to a safety instead.
+- Fixed monsters moving weirdly in multiplayer game (only unstable).
+
+Modding:
+- Fixed custom loading screen tips not showing up if the vanilla content package is enabled.
+- Fixed crashing when loading a save where a stack contains more items than the maximum stack size for the item/container.
+
+Bots:
+- Fixed bots reporting unnecessarily when they abort a cleaning up task (#5400). Also fixes (much more rare) unnecessary reporting with the other orders.
+- Fixed some inconsistencies in the automatic crew selection logic used for assigning orders without specifying the target.
+- Fixed bots putting multiple fuel rods in the reactor if there's more than one rod in the reactor (#5213). Fixed bots swapping out full fuel rods from the reactor (#5503). Both issues closely related.
+- Fixed job specific autonomous objectives being broken in the sub test mode.
+- Fixed bots taking items from fabricators and deconstructors (#5431).
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.8 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

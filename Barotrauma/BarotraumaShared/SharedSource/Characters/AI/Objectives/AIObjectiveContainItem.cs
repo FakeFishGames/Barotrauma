@@ -141,7 +141,8 @@ namespace Barotrauma
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
-                        abortCondition = obj => !ItemToContain.IsOwnedBy(character)
+                        abortCondition = obj => !ItemToContain.IsOwnedBy(character),
+                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));

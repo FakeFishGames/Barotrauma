@@ -1082,6 +1082,7 @@ namespace Barotrauma
             int currentLocationConnection = element.GetAttributeInt("currentlocationconnection", -1);
             if (currentLocationConnection >= 0)
             {
+                Connections[currentLocationConnection].Locked = false;
                 SelectLocation(Connections[currentLocationConnection].OtherLocation(CurrentLocation));
             }
             else

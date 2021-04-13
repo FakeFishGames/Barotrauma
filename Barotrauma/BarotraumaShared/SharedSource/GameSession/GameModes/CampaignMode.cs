@@ -115,7 +115,11 @@ namespace Barotrauma
             {
                 if (Map.CurrentLocation?.SelectedMission != null)
                 {
-                    yield return Map.CurrentLocation.SelectedMission;
+                    if (Map.CurrentLocation.SelectedMission.Locations[0] == Map.CurrentLocation.SelectedMission.Locations[1] ||
+                        Map.CurrentLocation.SelectedMission.Locations.Contains(Map.SelectedLocation))
+                    {
+                        yield return Map.CurrentLocation.SelectedMission;
+                    }
                 }
                 foreach (Mission mission in extraMissions)
                 {
@@ -279,7 +283,7 @@ namespace Barotrauma
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
                         var huntingGroundsMissionPrefab = huntingGroundsMissionPrefabs.GetRandom(rand);
-                        if (!Missions.Any(m => m.Prefab.Type == huntingGroundsMissionPrefab.Type))
+                        if (!Missions.Any(m => m.Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))))
                         {
                             extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
                         }

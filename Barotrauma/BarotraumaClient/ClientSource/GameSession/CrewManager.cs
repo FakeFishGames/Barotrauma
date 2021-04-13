@@ -3198,10 +3198,10 @@ namespace Barotrauma
             return characters.Where(c => Character.Controlled == null || ((includeSelf || c != Character.Controlled) && c.TeamID == Character.Controlled.TeamID)).Union(GetOrderableFriendlyNPCs())
                     // 1. Prioritize those who are on the same submarine than the controlled character
                     .OrderByDescending(c => Character.Controlled == null || c.Submarine == Character.Controlled.Submarine)
-                    // 2. Prioritize those who are already ordered to operate the item target of the new 'operate' order, or given the same maintenance order as now issued
+                    // 2. Prioritize those who have been given the same maintenance or operate order as now issued
                     .ThenByDescending(c => c.CurrentOrders.Any(o =>
                         o.Order != null && o.Order.Identifier == order.Identifier &&
-                        (order.Category == OrderCategory.Maintenance || (order.Category == OrderCategory.Operate && o.Order.TargetSpatialEntity == order.TargetSpatialEntity))))
+                        (order.Category == OrderCategory.Maintenance || order.Category == OrderCategory.Operate)))
                     // 3. Prioritize those with the appropriate job for the order
                     .ThenByDescending(c => order.HasAppropriateJob(c))
                     // 4. Prioritize bots over player controlled characters

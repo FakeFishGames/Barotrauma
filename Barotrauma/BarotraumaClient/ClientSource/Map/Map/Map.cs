@@ -70,6 +70,8 @@ namespace Barotrauma
         private List<RichTextData> tooltipRichTextData;
         private string prevTooltip;
 
+        private (SubmarineInfo pendingSub, float realWorldCrushDepth) pendingSubInfo;
+
         /*private (Rectangle targetArea, string tip)? connectionTooltip;
         private string sanitizedConnectionTooltip;
         private List<RichTextData> connectionTooltipRichTextData;
@@ -855,7 +857,21 @@ namespace Barotrauma
                 if (connection.LevelData.HasHuntingGrounds) { iconCount++; }
                 if (connection.Locked) { iconCount++; }
                 string tooltip = null;
-                var subCrushDepth = Submarine.MainSub?.RealWorldCrushDepth ?? Level.DefaultRealWorldCrushDepth;
+                float subCrushDepth = Level.DefaultRealWorldCrushDepth;
+                var currentOrPendingSub = SubmarineSelection.CurrentOrPendingSubmarine();
+                if (Submarine.MainSub != null && Submarine.MainSub.Info == currentOrPendingSub)
+                {
+                    subCrushDepth = Submarine.MainSub.RealWorldCrushDepth;
+                }
+                else if (currentOrPendingSub != null)
+                {
+                    if (pendingSubInfo.pendingSub != currentOrPendingSub)
+                    {
+                        // Store the real world crush depth for the pending sub so that we don't have to calculate it again every time
+                        pendingSubInfo = (currentOrPendingSub, currentOrPendingSub.GetRealWorldCrushDepth());
+                    }
+                    subCrushDepth = pendingSubInfo.realWorldCrushDepth;
+                }
                 if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
                 {
                     var hullUpgradePrefab =  UpgradePrefab.Find("increasewallhealth");

@@ -87,6 +87,7 @@ namespace Barotrauma
                     },
                     onAbandon: () =>
                     {
+                        getOxygen = null;
                         int remainingTanks = ReportOxygenTankCount();
                         // Try to seek any oxygen sources.
                         TryAddSubObjective(ref getOxygen, () =>

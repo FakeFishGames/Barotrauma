@@ -165,10 +165,7 @@ namespace Barotrauma
                         if (structure.Submarine != this || !structure.HasBody || structure.Indestructible) { continue; }
                         realWorldCrushDepth = Math.Min(structure.CrushDepth, realWorldCrushDepth.Value);
                     }
-                    if (Info.SubmarineClass == SubmarineClass.DeepDiver)
-                    {
-                        realWorldCrushDepth *= 1.2f;
-                    }
+                    realWorldCrushDepth *= Info.GetRealWorldCrushDepthMultiplier();
                 }
                 return realWorldCrushDepth.Value;
             }
@@ -1060,6 +1057,7 @@ namespace Barotrauma
                 }
 
                 steering.MaintainPos = true;
+                steering.PosToMaintain = WorldPosition;
                 steering.AutoPilot = true;
 #if SERVER
                 steering.UnsentChanges = true;

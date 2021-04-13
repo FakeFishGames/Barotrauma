@@ -898,11 +898,11 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);    
-                            if (structureBody?.UserData as string == "ruinroom")
+                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true, customPredicate:                             
+                            (Fixture f) =>
                             {
-                                structureBody = null;
-                            }
+                                return f?.Body?.UserData as string != "ruinroom";
+                            });
                             if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
                             {
                                 // If the attack is aimed to an item and hits an item, it's successful.

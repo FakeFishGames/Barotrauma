@@ -224,7 +224,7 @@ namespace Barotrauma
             if (Character.Controlled != null && 
                 Lights.LightManager.ViewTarget != null)
             {
-                Vector2 targetPos = Lights.LightManager.ViewTarget.DrawPosition;
+                Vector2 targetPos = Lights.LightManager.ViewTarget.WorldPosition;
                 if (Lights.LightManager.ViewTarget == Character.Controlled &&
                     (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen || ConversationAction.IsDialogOpen))
                 {

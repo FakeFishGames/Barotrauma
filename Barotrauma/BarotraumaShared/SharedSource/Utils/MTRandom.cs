@@ -84,6 +84,22 @@ namespace Barotrauma
             return retval;
         }
 
+        public override int Next(int minValue, int maxValue)
+        {
+            int range = maxValue - minValue;
+            return minValue + Next(range);
+        }
+
+        public override void NextBytes(byte[] buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void NextBytes(Span<byte> buffer)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Returns a random value is greater or equal than 0 and less than maxValue
         /// </summary>

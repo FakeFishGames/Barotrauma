@@ -12,7 +12,7 @@ namespace Barotrauma
 {
     class CharacterHUD
     {        
-        const float BossHealthBarDuration = 1200.0f;
+        const float BossHealthBarDuration = 120.0f;
 
         class BossHealthBar
         {
@@ -614,10 +614,6 @@ namespace Barotrauma
                 else if (bossHealthBar.Character.IsDead)
                 {
                     bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 5.0f);
-                }
-                else if (bossHealthBar.Character.AIController is EnemyAIController enemyAI && !enemyAI.IsTargetingPlayerTeam)
-                {
-                    bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 60.0f);
                 }
                 bossHealthBar.FadeTimer -= deltaTime;
             }
