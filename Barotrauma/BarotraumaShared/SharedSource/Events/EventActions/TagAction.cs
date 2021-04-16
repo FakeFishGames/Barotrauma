@@ -45,15 +45,15 @@ namespace Barotrauma
             }
         }
 
-        private void TagBots()
+        private void TagBots(bool playerCrewOnly)
         {
             if (IgnoreIncapacitatedCharacters)
             {
-                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot && !c.IsIncapacitated);
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot && !c.IsIncapacitated && (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1));
             }
             else
             {
-                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot);
+                ParentEvent.AddTargetPredicate(Tag, e => e is Character c && c.IsBot && (!playerCrewOnly || c.TeamID == CharacterTeamType.Team1));
             }
         }
 
@@ -62,7 +62,8 @@ namespace Barotrauma
 #if CLIENT
             GameMain.GameSession.CrewManager.GetCharacters().ForEach(c => ParentEvent.AddTarget(Tag, c));
 #else
-            TagPlayers(); TagBots(); //TODO: this seems like it would tag more than it should, fix
+            TagPlayers(); 
+            TagBots(playerCrewOnly: true);
 #endif
         }
 
@@ -116,7 +117,7 @@ namespace Barotrauma
                         TagPlayers();
                         break;
                     case "bot":
-                        TagBots();
+                        TagBots(playerCrewOnly: false);
                         break;
                     case "crew":
                         TagCrew();

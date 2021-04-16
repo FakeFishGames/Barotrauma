@@ -53,7 +53,7 @@ namespace Barotrauma
             campaign.Map.OnLocationSelected += SelectLocation;
             campaign.Map.OnMissionSelected += (connection, mission) => 
             {
-                missionList.Select(mission);
+                missionList?.Select(mission);
             };
         }
 

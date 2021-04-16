@@ -590,8 +590,7 @@ namespace Barotrauma.Items.Components
                         var container = item.GetComponent<ItemContainer>();
                         if (objective.SubObjectives.None())
                         {
-                            int itemCount = item.ContainedItems.Count(i => i != null && container.ContainableItems.Any(ri => ri.MatchesItem(i))) + 1;
-                            var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount, equip: false, removeEmpty: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC, dropItemOnDeselected: true);
+                            var containObjective = AIContainItems<Reactor>(container, character, objective, itemCount: 1, equip: true, removeEmpty: true, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC, dropItemOnDeselected: true);
                             containObjective.Completed += ReportFuelRodCount;
                             containObjective.Abandoned += ReportFuelRodCount;
                             character.Speak(TextManager.Get("DialogReactorFuel"), null, 0.0f, "reactorfuel", 30.0f);
@@ -613,19 +612,15 @@ namespace Barotrauma.Items.Components
                         }
                         return outOfFuel;
                     }
-                    else if (TooMuchFuel())
+                    else
                     {
-                        if (item.OwnInventory?.AllItems != null)
+                        if (TooMuchFuel())
                         {
-                            var container = item.GetComponent<ItemContainer>();
-                            foreach (Item item in item.OwnInventory.AllItemsMod)
-                            {
-                                if (container.ContainableItems.Any(ri => ri.MatchesItem(item)))
-                                {
-                                    item.Drop(character);
-                                    break;
-                                }
-                            }
+                            DropFuel(minCondition: 0.1f, maxCondition: 100);
+                        }
+                        else
+                        {
+                            DropFuel(minCondition: 0, maxCondition: 0);
                         }
                     }
                 }
@@ -692,6 +687,23 @@ namespace Barotrauma.Items.Components
                 aiUpdateTimer = AIUpdateInterval;
                 return false;
             }
+
+
+            void DropFuel(float minCondition, float maxCondition)
+            {
+                if (item.OwnInventory?.AllItems != null)
+                {
+                    var container = item.GetComponent<ItemContainer>();
+                    foreach (Item item in item.OwnInventory.AllItemsMod)
+                    {
+                        if (item.ConditionPercentage <= maxCondition && item.ConditionPercentage >= minCondition)
+                        {
+                            item.Drop(character);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         public override void OnMapLoaded()
@@ -735,6 +747,5 @@ namespace Barotrauma.Items.Components
                     break;
             }
         }
-
     }
 }

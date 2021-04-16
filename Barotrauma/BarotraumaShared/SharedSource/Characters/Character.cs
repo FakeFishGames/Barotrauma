@@ -612,10 +612,11 @@ namespace Barotrauma
             set
             {
 #if CLIENT
-                HintManager.OnSetSelectedConstruction(this, _selectedConstruction, value);
+                var prevSelectedConstruction = _selectedConstruction;
 #endif
                 _selectedConstruction = value;
 #if CLIENT
+                HintManager.OnSetSelectedConstruction(this, prevSelectedConstruction, _selectedConstruction);
                 if (Controlled == this)
                 {
                     if (_selectedConstruction == null)
@@ -3440,7 +3441,10 @@ namespace Barotrauma
                 if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
-                    if (LastDamage.Afflictions == null || LastDamage.Afflictions.None(a => a.Prefab.AfflictionType == "damage")) { continue; }
+                    if (statusEffect.AllowedAfflictions != null && (LastDamage.Afflictions == null || LastDamage.Afflictions.None(a => statusEffect.AllowedAfflictions.Contains(a.Prefab.AfflictionType) || statusEffect.AllowedAfflictions.Contains(a.Prefab.Identifier))))
+                    {
+                        continue;
+                    }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (LastAttacker == null || !LastAttacker.IsPlayer)
@@ -3811,6 +3815,10 @@ namespace Barotrauma
                             break;
                         }
                     }
+                }
+                else
+                {
+                    canBePutInOriginalInventory = inventory.CanBePut(newItem, slotIndices[0]);
                 }
 
                 if (canBePutInOriginalInventory)

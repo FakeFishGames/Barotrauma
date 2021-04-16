@@ -117,6 +117,7 @@ namespace Barotrauma
                         foreach (Item item in newCharacter.Inventory.AllItems)
                         {
                             item.SpawnedInOutpost = true;
+                            item.AllowStealing = false;
                         }
                     }
                     humanPrefab.InitializeCharacter(newCharacter, spawnPos);

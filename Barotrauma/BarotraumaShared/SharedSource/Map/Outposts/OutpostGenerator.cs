@@ -1104,8 +1104,35 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"Failed to connect waypoints between outpost modules. No waypoint in the {GetOpposingGapPosition(module.ThisGapPosition).ToString().ToLower()} gap of the module \"{module.PreviousModule.Info.Name}\".");
                         continue;
                     }
-                    startWaypoint.linkedTo.Add(endWaypoint);
-                    endWaypoint.linkedTo.Add(startWaypoint);
+
+                    if (startWaypoint.WorldPosition.X > endWaypoint.WorldPosition.X)
+                    {
+                        var temp = startWaypoint;
+                        startWaypoint = endWaypoint;
+                        endWaypoint = temp;
+                    }
+
+                    if (hallwayLength > 100 && isHorizontal)
+                    {
+                        WayPoint prevWayPoint = startWaypoint;
+                        for (float x = leftHull.Rect.Right + 50; x < rightHull.Rect.X - 50; x += 100.0f)
+                        {
+                            var newWayPoint = new WayPoint(new Vector2(x, hullBounds.Y + 110.0f), SpawnType.Path, sub);
+                            prevWayPoint.linkedTo.Add(newWayPoint);
+                            newWayPoint.linkedTo.Add(prevWayPoint);
+                            prevWayPoint = newWayPoint;
+                        }
+                        if (prevWayPoint != null)
+                        {
+                            prevWayPoint.linkedTo.Add(endWaypoint);
+                            endWaypoint.linkedTo.Add(prevWayPoint);
+                        }
+                    }
+                    else
+                    {
+                        startWaypoint.linkedTo.Add(endWaypoint);
+                        endWaypoint.linkedTo.Add(startWaypoint);
+                    }
 
                     WayPoint closestWaypoint = null;
                     float closestDistSqr = 30.0f * 30.0f;
@@ -1425,7 +1452,8 @@ namespace Barotrauma
                 humanPrefab.GiveItems(npc, outpost, Rand.RandSync.Server);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
-                    item.SpawnedInOutpost = !outpost.Info.OutpostGenerationParams.AllowStealing;
+                    item.AllowStealing = outpost.Info.OutpostGenerationParams.AllowStealing;
+                    item.SpawnedInOutpost = true;
                 }
                 npc.GiveIdCardTags(gotoTarget as WayPoint);
                 humanPrefab.InitializeCharacter(npc, gotoTarget);

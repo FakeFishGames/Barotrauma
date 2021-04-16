@@ -898,11 +898,11 @@ namespace Barotrauma
                     case HitDetection.Distance:
                         if (dist < attack.DamageRange)
                         {
-                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true);    
-                            if (structureBody?.UserData as string == "ruinroom")
+                            structureBody = Submarine.PickBody(simPos, attackSimPos, collisionCategory: Physics.CollisionWall | Physics.CollisionLevel, allowInsideFixture: true, customPredicate:                             
+                            (Fixture f) =>
                             {
-                                structureBody = null;
-                            }
+                                return f?.Body?.UserData as string != "ruinroom";
+                            });
                             if (damageTarget is Item i && i.GetComponent<Items.Components.Door>() != null)
                             {
                                 // If the attack is aimed to an item and hits an item, it's successful.
@@ -1127,7 +1127,10 @@ namespace Barotrauma
                 if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
-                    if (character.LastDamage.Afflictions == null || character.LastDamage.Afflictions.None(a => a.Prefab.AfflictionType == "damage")) { continue; }
+                    if (statusEffect.AllowedAfflictions != null && (character.LastDamage.Afflictions == null || character.LastDamage.Afflictions.None(a => statusEffect.AllowedAfflictions.Contains(a.Prefab.AfflictionType) || statusEffect.AllowedAfflictions.Contains(a.Prefab.Identifier))))
+                    {
+                        continue;
+                    }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)

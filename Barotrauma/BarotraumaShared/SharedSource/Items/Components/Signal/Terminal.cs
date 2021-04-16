@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -33,6 +34,19 @@ namespace Barotrauma.Items.Components
 
         [Editable, Serialize(false, true, description: "The terminal will use a monospace font if this box is ticked.", alwaysUseInstanceValues: true)]
         public bool UseMonospaceFont { get; set; }
+
+        /// <summary>
+        /// Can be used to display messages on the terminal via status effects
+        /// </summary>
+        public string ShowMessage
+        {
+            get { return messageHistory.Count == 0 ? string.Empty : messageHistory.Last(); }
+            set
+            {
+                if (string.IsNullOrEmpty(value)) { return; }
+                ShowOnDisplay(value);
+            }
+        }
 
         private string OutputValue { get; set; }
 

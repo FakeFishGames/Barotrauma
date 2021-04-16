@@ -1401,7 +1401,7 @@ namespace Barotrauma
             Character thief = character;
             bool someoneSpoke = false;
 
-            if (item.SpawnedInOutpost && thief.TeamID != CharacterTeamType.FriendlyNPC && !item.HasTag("handlocker"))
+            if (item.SpawnedInOutpost && !item.AllowStealing && thief.TeamID != CharacterTeamType.FriendlyNPC && !item.HasTag("handlocker"))
             {
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
@@ -1453,7 +1453,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (item.OwnInventory?.FindItem(it => it.SpawnedInOutpost, true) is { } foundItem)
+            else if (item.OwnInventory?.FindItem(it => it.SpawnedInOutpost && !item.AllowStealing, true) is { } foundItem)
             {
                 ItemTaken(foundItem, character);
             }

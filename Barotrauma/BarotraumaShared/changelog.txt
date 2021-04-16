@@ -1,4 +1,90 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.10 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Only allow dropping a diving suit when trying to swap it with another suit, not when trying to swap it with for example body armor (#5519).
+- Don't show the "respawn with penalty" tickbox when spawning as a returning player.
+- Made abandoned outposts a bit more common.
+- Once the respawn countdown starts, it doesn't stop even if some players change their mind and decide to wait for the next round as long as there's at least one player waiting to respawn.
+
+Fixes:
+- Fixed logbooks being empty in the wreck salvage missions.
+- Addressed the lag spikes occasionally caused by Spineling's spikes when they hit/get stuck to something.
+- Fixed bots throw full oxygen tanks away when they are not in the main sub (e.g. in wrecks), resulting in suffocation because they can't use the oxygen (#5525).
+- Fixed bots waiting for the oxygen tanks to be entirely drained before swapping new tanks in (#5524).
+- Fixed water particle effects not showing up when water flows between certain rooms in Remora.
+- Fixed misaligned trigger area on Remora's smaller engine (#5514).
+- Fixed players who spawn as their previous character mid-round always getting the Reaper's Tax affliction in mp campaign (#5517).
+- Fixed resizeable outpost hallway modules not having waypoints and thus causing navigation issues.
+- Fixed bots abandoning the combat objectives when the target is farther than 2000px away. The behavior was only intended for non-friendly npcs, like bandits or outpost security.
+- Fixed items that are being held in both hands (e.g. underwater scooter) getting duffelbagged between campaign rounds (#5511).
+- Fixed clients failing to select the correct connection if you teleport from an empty location to another with console commands (#5510).
+- Revert the previous fix to prevent the bots to take items contained inside fabricators/deconstructors (#5431) and use "donttakeitems" tag to fix it.
+- Fixed bots saying "Can't reach target [name]".
+- Fixed inventory tooltip not changing when the cursor is hovered on the slot and the condition of the item changes (#5508).
+- Fixed waypoints not being able to find hulls that have been added since the sub was last saved in the sub editor, causing them to appear blue (#5194).
+- Fixed abyss islands not showing up on sonar in mirrored levels.
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.0.9 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Re-enabling in-game hints now resets hints previously set not be shown again.
+- Reduced the stun duration of Molochs' and Hammerheads' attacks. Also add some bitewounds damage on the Molochs' attacks so that they trigger all the AI reactions and don't get treated as failed attacks.
+
+Fixes:
+- Fixed occasional "mission mismatch" errors when entering a hunting grounds level in the multiplayer campaign.
+- Fixed camera shaking/vibrating when moving at high speed.
+- Fixed monsters being able to attack through ruin walls.
+- Fixed overlapping vending machine & light switch in CrewModule_02.
+- Fixed respawn shuttle maintaining an incorrect position after getting dispatched.
+- Fixed selected mission carrying over to whichever level you choose in the campaign.
+- Fixed diving suit's vision obstructing effect disappearing if you also wear a diving mask.
+- Removed unnecessary extra light components from large and normal engine.
+- Fixed "attempted to select a locked connection" error when a player joins mid-round after the path to the next biome has been unlocked.
+- Fixed campaign map crush depth warnings being always calculated for the currently docked submarine, not taking a possible pending submarine switch into account.
+- Fixed Hammerhead Spawns not targeting decoys.
+- Fixed the abyss monsters not targeting "provocative" items, like flares, glowsticks, scooters etc.
+- Fixed Hammerhead Matriarch constantly fleeing from divers. It's intentional that that the matriarch avoids the divers, but not as much. Now they should flee briefly only when shot by the player, making it possible for the divers to reach it (#5449).
+- Fixed distant sonar waves not being visible in multiplayer.
+- Fixed distant sonar waves being visible from too far away.
+- Fixed the boss health bar vanishing too quickly in the multiplayer game mode.
+- Fixed bots sometimes getting stuck while trying to find a safer room, if they fail to find any oxygen tanks. They should run to a safety instead.
+- Fixed monsters moving weirdly in multiplayer game (only unstable).
+
+Modding:
+- Fixed custom loading screen tips not showing up if the vanilla content package is enabled.
+- Fixed crashing when loading a save where a stack contains more items than the maximum stack size for the item/container.
+
+Bots:
+- Fixed bots reporting unnecessarily when they abort a cleaning up task (#5400). Also fixes (much more rare) unnecessary reporting with the other orders.
+- Fixed some inconsistencies in the automatic crew selection logic used for assigning orders without specifying the target.
+- Fixed bots putting multiple fuel rods in the reactor if there's more than one rod in the reactor (#5213). Fixed bots swapping out full fuel rods from the reactor (#5503). Both issues closely related.
+- Fixed job specific autonomous objectives being broken in the sub test mode.
+- Fixed bots taking items from fabricators and deconstructors (#5431).
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.0.8 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Increased the delay with which the boss health bar is faded from 10 to 60 seconds.
+- Modding: Allow to define afflictions (types or identifiers) to trigger the OnDamaged status effects only from certain afflictions and not all that do the damage. If the afflictions property is not defined, no restrictions are used (works as it used to).
+- Added MaxValueLength property to memory component.
+
+Fixes:
+- Fixed networking errors when the server tries to send an update for a Holdable component that's not attachable, leading to various issues (disconnects, "failed to read ..." errors).
+- Fixed "enter location" button not appearing in some levels where there's no outpost at the destination and a beacon station near the exit.
+- Fixed event to heal Reaper's Tax not triggering in outposts.
+- Fixed server starting the respawn countdown when a disconnected client whose character is still alive rejoins.
+- Removed outdated steamclient.so file from the dedicated server (no longer needed because it's automatically installed by Steamworks). Should fix inability to host dedicated servers on Linux.
+- Fixed job preferences not having an effect on who gets assigned as the captain.
+- Fixed items taken from abandoned outposts reappearing when you leave and re-enter the outpost.
+- Fixed crashing/disconnects when preloading content at the start of a round if random events contain character variants. In practice, mods that used character variants in random events occasionally prevented rounds from starting.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.7 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

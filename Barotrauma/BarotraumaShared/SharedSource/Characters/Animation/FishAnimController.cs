@@ -429,8 +429,7 @@ namespace Barotrauma
                 float t = 0.5f;
                 if (!SimplePhysicsEnabled && CurrentSwimParams.RotateTowardsMovement)
                 {
-                    float offset = mainLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
-                    Vector2 forward = VectorExtensions.Forward(mainLimb.body.TransformedRotation - offset * Character.AnimController.Dir);
+                    Vector2 forward = VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2);
                     float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
                     if (dot < 0)
                     {

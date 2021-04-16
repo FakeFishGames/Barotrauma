@@ -4,6 +4,7 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -202,6 +203,8 @@ namespace Barotrauma
             return false;
         }
 
+        private static readonly List<string> availableTexts = new List<string>();
+
         public static string Get(string textTag, bool returnNull = false, string fallBackTag = null, bool useEnglishAsFallBack = true)
         {
             lock (mutex)
@@ -228,11 +231,19 @@ namespace Barotrauma
                     return textTag;
                 }
 #endif
-
+                availableTexts.Clear();
                 foreach (TextPack textPack in textPacks[Language])
                 {
-                    string text = textPack.Get(textTag);
-                    if (text != null) { return text; }
+                    var texts = textPack.GetAll(textTag);
+                    if (texts != null)
+                    {
+                        availableTexts.AddRange(texts);
+                    }
+                }
+
+                if (availableTexts.Any())
+                {
+                    return availableTexts.GetRandom().Replace(@"\n", "\n");
                 }
 
                 if (!string.IsNullOrEmpty(fallBackTag))

@@ -267,7 +267,7 @@ namespace Barotrauma
 
         public void UnequipEmptyItems(Item parentItem, bool avoidDroppingInSea = true) => UnequipEmptyItems(Character, parentItem, avoidDroppingInSea);
 
-        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea);
+        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingInSea = true) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea);
 
         public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingInSea = true) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingInSea);
 
@@ -275,14 +275,14 @@ namespace Barotrauma
         {
             var inventory = parentItem.OwnInventory;
             if (inventory == null) { return; }
-            if (inventory.AllItems.Any(predicate))
+            if (predicate == null || inventory.AllItems.Any(predicate))
             {
                 foreach (Item containedItem in inventory.AllItemsMod)
                 {
                     if (containedItem == null) { continue; }
-                    if (predicate(containedItem))
+                    if (predicate == null || predicate(containedItem))
                     {
-                        if (character.Submarine == null && avoidDroppingInSea)
+                        if (character.Submarine != Submarine.MainSub && avoidDroppingInSea)
                         {
                             // If we are outside of main sub, try to put the item in the inventory instead dropping it in the sea.
                             if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))

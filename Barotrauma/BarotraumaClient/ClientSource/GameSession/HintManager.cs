@@ -113,14 +113,16 @@ namespace Barotrauma
         public static void OnSetSelectedConstruction(Character character, Item oldConstruction, Item newConstruction)
         {
             if (oldConstruction == newConstruction) { return; }
+
             if (Character.Controlled != null && Character.Controlled == character && oldConstruction != null && oldConstruction.GetComponent<Ladder>() == null)
             {
                 TimeStoppedInteracting = Timing.TotalTime;
             }
-            if (newConstruction != null && newConstruction.GetComponent<Ladder>() == null)
-            {
-                OnStartedInteracting(character, newConstruction);
-            }
+
+            if (newConstruction == null) { return; }
+            if (newConstruction.GetComponent<Ladder>() != null) { return; }
+            if (newConstruction.GetComponent<ConnectionPanel>() is ConnectionPanel cp && cp.User == character) { return; }
+            OnStartedInteracting(character, newConstruction);
         }
 
         private static void OnStartedInteracting(Character character, Item item)
@@ -136,9 +138,12 @@ namespace Barotrauma
                 if (DisplayHint($"{hintIdentifierBase}.brokenitem")) { return; }
             }
 
+            // Don't display other item-related hints if the repair interface is displayed
+            if (item.Repairables.Any(r => r.ShouldDrawHUD(character))) { return; }
+
             // onstartedinteracting.lootingisstealing
             if (item.Submarine?.Info?.Type == SubmarineType.Outpost &&
-                item.ContainedItems.Any(i => i.SpawnedInOutpost))
+                item.ContainedItems.Any(i => !i.AllowStealing))
             {
                 if (DisplayHint($"{hintIdentifierBase}.lootingisstealing")) { return; }
             }
@@ -379,7 +384,7 @@ namespace Barotrauma
         {
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
-            if (item == null || !item.SpawnedInOutpost || !item.StolenDuringRound) { return; }
+            if (item == null || item.AllowStealing || !item.StolenDuringRound) { return; }
             DisplayHint("onstoleitem", onUpdate: () =>
             {
                 if (item == null || item.Removed || item.GetRootInventoryOwner() != character)

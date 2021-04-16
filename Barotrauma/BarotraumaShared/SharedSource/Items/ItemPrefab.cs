@@ -517,6 +517,12 @@ namespace Barotrauma
         [Serialize(false, false)]
         public bool AllowDroppingOnSwap { get; private set; }
 
+        private readonly HashSet<string> allowDroppingOnSwapWith = new HashSet<string>();
+        public IEnumerable<string> AllowDroppingOnSwapWith
+        {
+            get { return allowDroppingOnSwapWith; }
+        }
+
         public Vector2 Size => size;
 
         public bool CanBeBought => (DefaultPrice != null && DefaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
@@ -657,7 +663,7 @@ namespace Barotrauma
             {
                 category = MapEntityCategory.Misc;
             }
-            Category = category;            
+            Category = category;
 
             var parentType = element.Parent?.GetAttributeString("itemtype", "") ?? string.Empty;
 
@@ -695,7 +701,7 @@ namespace Barotrauma
                     identifier = GenerateLegacyIdentifier(originalName);
                 }
             }
-            
+
             if (string.Equals(parentType, "wrecked", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.IsNullOrEmpty(name))
@@ -703,7 +709,7 @@ namespace Barotrauma
                     name = TextManager.GetWithVariable("wreckeditemformat", "[name]", name);
                 }
             }
-            
+
             if (string.IsNullOrEmpty(name))
             {
                 DebugConsole.ThrowError($"Unnamed item ({identifier}) in {filePath}!");
@@ -715,11 +721,11 @@ namespace Barotrauma
                 (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
                 element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
             Aliases.Add(originalName.ToLowerInvariant());
-            
-            Triggers            = new List<Rectangle>();
-            DeconstructItems    = new List<DeconstructItem>();
-            FabricationRecipes  = new List<FabricationRecipe>();
-            DeconstructTime     = 1.0f;
+
+            Triggers = new List<Rectangle>();
+            DeconstructItems = new List<DeconstructItem>();
+            FabricationRecipes = new List<FabricationRecipe>();
+            DeconstructTime = 1.0f;
 
             if (element.Attribute("allowasextracargo") != null)
             {
@@ -752,6 +758,16 @@ namespace Barotrauma
                 else
                 {
                     Description = TextManager.Get("EntityDescription." + nameIdentifier, true) ?? string.Empty;
+                }
+            }
+
+            var allowDroppingOnSwapWith = element.GetAttributeStringArray("allowdroppingonswapwith", new string[0]);
+            if (allowDroppingOnSwapWith.Any())
+            {
+                AllowDroppingOnSwap = true;
+                foreach (string tag in allowDroppingOnSwapWith)
+                {
+                    this.allowDroppingOnSwapWith.Add(tag);
                 }
             }
 

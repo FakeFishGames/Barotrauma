@@ -183,7 +183,8 @@ namespace Barotrauma
 
             //reputation panel -------------------------------------------------------------------------------
 
-            if (gameMode is CampaignMode campaignMode)
+            var campaignMode = gameMode as CampaignMode;
+            if (campaignMode != null)
             {
                 GUIFrame reputationframe = new GUIFrame(new RectTransform(crewFrame.RectTransform.RelativeSize, background.RectTransform, Anchor.TopCenter, minSize: crewFrame.RectTransform.MinSize));
                 rightPanels.Add(reputationframe);
@@ -217,7 +218,14 @@ namespace Barotrauma
             };
 
             List<Mission> missionsToDisplay = new List<Mission>(selectedMissions);
-            if (!selectedMissions.Any() && startLocation?.SelectedMission != null) { missionsToDisplay.Add(startLocation.SelectedMission); }
+            if (!selectedMissions.Any() && startLocation?.SelectedMission != null) 
+            { 
+                if (startLocation.SelectedMission.Locations[0] == startLocation.SelectedMission.Locations[1] ||
+                    startLocation.SelectedMission.Locations.Contains(campaignMode?.Map.SelectedLocation))
+                {
+                    missionsToDisplay.Add(startLocation.SelectedMission);
+                }
+            }
 
             if (missionsToDisplay.Any())
             {
@@ -461,6 +469,7 @@ namespace Barotrauma
                                 new string[] { Reputation.GetFormattedReputationText(normalizedUnlockReputation, unlockEvent.UnlockPathReputation, addColorTags: true), $"‖color:gui.orange‖{connection.LevelData.Biome.DisplayName}‖end‖" });
                             var unlockInfoPanel = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), reputationFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, GUI.IntScale(30)), AbsoluteOffset = new Point(0, GUI.IntScale(3)) },
                                 unlockText, style: "GUIButtonRound", textAlignment: Alignment.Center, textColor: GUI.Style.TextColor, parseRichText: true);
+                            unlockInfoPanel.Color = Color.Lerp(unlockInfoPanel.Color, Color.Black, 0.8f);
                             if (unlockInfoPanel.TextSize.X > unlockInfoPanel.Rect.Width * 0.7f)
                             {
                                 unlockInfoPanel.Font = GUI.SmallFont;

@@ -1066,6 +1066,7 @@ namespace Barotrauma
                     case "connection":
                         int connectionIndex = subElement.GetAttributeInt("i", 0);
                         Connections[connectionIndex].Passed = subElement.GetAttributeBool("passed", false);
+                        Connections[connectionIndex].Locked = subElement.GetAttributeBool("locked", false);
                         break;
                     case "radiation":
                         Radiation = new Radiation(this, generationParams.RadiationParams, subElement);
@@ -1081,6 +1082,7 @@ namespace Barotrauma
             int currentLocationConnection = element.GetAttributeInt("currentlocationconnection", -1);
             if (currentLocationConnection >= 0)
             {
+                Connections[currentLocationConnection].Locked = false;
                 SelectLocation(Connections[currentLocationConnection].OtherLocation(CurrentLocation));
             }
             else

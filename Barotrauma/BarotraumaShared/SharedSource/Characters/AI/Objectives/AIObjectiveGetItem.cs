@@ -279,9 +279,13 @@ namespace Barotrauma
                     if (character.TeamID == CharacterTeamType.FriendlyNPC != item.SpawnedInOutpost) { continue; }
                 }
                 if (!CheckItem(item)) { continue; }
-                if (ignoredContainerIdentifiers != null && item.Container != null)
+                if (item.Container != null)
                 {
-                    if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
+                    if (item.Container.HasTag("donttakeitems")) { continue; }
+                    if (ignoredContainerIdentifiers != null)
+                    {
+                        if (ignoredContainerIdentifiers.Contains(item.ContainerIdentifier)) { continue; }
+                    }
                 }
                 // Don't allow going into another sub, unless it's connected and of the same team and type.
                 if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { continue; }
@@ -354,6 +358,7 @@ namespace Barotrauma
 #if DEBUG
                         DebugConsole.NewMessage($"{character.Name}: Cannot find an item with the following identifier(s) or tag(s): {string.Join(", ", identifiersOrTags)}", Color.Yellow);
 #endif
+                        SpeakCannotFind();
                         Abandon = true;
                     }
                 }
@@ -415,6 +420,24 @@ namespace Barotrauma
 #if DEBUG
             DebugConsole.NewMessage($"{character.Name}: Get item failed to reach {moveToTarget}", Color.Yellow);
 #endif
+        }
+
+        private void SpeakCannotFind()
+        {
+            // TODO: Use the item name as the variable here.
+            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
+            {
+                string msg = TextManager.Get("dialogcannotfinditem", true);
+                if (msg != null)
+                {
+                    character.Speak(msg, identifier: "dialogcannotfinditem", minDurationBetweenSimilar: 20.0f);
+                }
+            }
+        }
+
+        // TODO: remove?
+        private void SpeakCannotReach()
+        {
             if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
             {
                 string TargetName = (moveToTarget as MapEntity)?.Name ?? (moveToTarget as Character)?.Name ?? moveToTarget.ToString();

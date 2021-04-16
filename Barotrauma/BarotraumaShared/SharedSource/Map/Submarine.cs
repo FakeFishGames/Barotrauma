@@ -165,10 +165,7 @@ namespace Barotrauma
                         if (structure.Submarine != this || !structure.HasBody || structure.Indestructible) { continue; }
                         realWorldCrushDepth = Math.Min(structure.CrushDepth, realWorldCrushDepth.Value);
                     }
-                    if (Info.SubmarineClass == SubmarineClass.DeepDiver)
-                    {
-                        realWorldCrushDepth *= 1.2f;
-                    }
+                    realWorldCrushDepth *= Info.GetRealWorldCrushDepthMultiplier();
                 }
                 return realWorldCrushDepth.Value;
             }
@@ -1060,6 +1057,7 @@ namespace Barotrauma
                 }
 
                 steering.MaintainPos = true;
+                steering.PosToMaintain = WorldPosition;
                 steering.AutoPilot = true;
 #if SERVER
                 steering.UnsentChanges = true;
@@ -1175,7 +1173,8 @@ namespace Barotrauma
             subBody.SetPosition(subBody.Position + amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true, bool ignoreRespawnShuttle = false)
+        /// <param name="teamType">If has value, the sub must match the team type.</param>
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true, bool ignoreRespawnShuttle = false, CharacterTeamType? teamType = null)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
@@ -1187,6 +1186,7 @@ namespace Barotrauma
                 {
                     if (sub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
                 }
+                if (teamType.HasValue && sub.TeamID != teamType) { continue; }
                 float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {
@@ -1359,7 +1359,8 @@ namespace Barotrauma
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInOutpost = info.OutpostGenerationParams != null && !info.OutpostGenerationParams.AllowStealing;
+                            item.SpawnedInOutpost = info.OutpostGenerationParams != null;
+                            item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
                             if (item.GetComponent<Repairable>() != null && indestructible)
                             {
                                 item.Indestructible = true;

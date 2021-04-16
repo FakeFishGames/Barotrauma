@@ -166,7 +166,11 @@ namespace Barotrauma
             coroutine = CoroutineManager.InvokeAfter(() =>
             {
                 //round ended before the coroutine finished
+#if CLIENT
+                if (GameMain.GameSession == null || Level.Loaded == null && !(GameMain.GameSession.GameMode is TestGameMode)) { return; }
+#else
                 if (GameMain.GameSession == null || Level.Loaded == null) { return; }
+#endif
                 DelayedObjectives.Remove(objective);
                 AddObjective(objective);
                 callback?.Invoke();
@@ -320,6 +324,7 @@ namespace Barotrauma
         public void ClearForcedOrder()
         {
             ForcedOrder = null;
+            SortObjectives();
         }
 
         private CoroutineHandle speakRoutine;

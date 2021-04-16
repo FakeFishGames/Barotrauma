@@ -786,6 +786,13 @@ namespace Barotrauma
         public void FindHull()
         {
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
+#if CLIENT
+            //we may not be able to find the hull with the optimized method in the sub editor if new hulls have been added, use the unoptimized method
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                CurrentHull ??= Hull.FindHullUnoptimized(WorldPosition);
+            }
+#endif
         }
 
         public override void OnMapLoaded()

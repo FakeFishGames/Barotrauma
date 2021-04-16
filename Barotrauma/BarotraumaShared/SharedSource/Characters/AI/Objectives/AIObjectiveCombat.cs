@@ -186,11 +186,14 @@ namespace Barotrauma
             {
                 findSafety.Priority = 0;
             }
-            distanceTimer -= deltaTime;
-            if (distanceTimer < 0)
+            if (!character.IsOnPlayerTeam && !objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
             {
-                distanceTimer = distanceCheckInterval;
-                sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
+                distanceTimer -= deltaTime;
+                if (distanceTimer < 0)
+                {
+                    distanceTimer = distanceCheckInterval;
+                    sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
+                }
             }
         }
 

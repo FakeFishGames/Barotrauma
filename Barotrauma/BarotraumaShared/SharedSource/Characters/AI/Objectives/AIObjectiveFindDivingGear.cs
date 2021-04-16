@@ -60,11 +60,12 @@ namespace Barotrauma
             {
                 HumanAIController.UnequipContainedItems(targetItem, it => !it.HasTag("oxygensource"));
                 HumanAIController.UnequipEmptyItems(targetItem);
-                float min = character.Submarine == null ? 0.01f : MIN_OXYGEN;
+                // Seek oxygen that has at least 10% condition left, if we are inside a friendly sub.
+                // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
+                // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
+                float min = character.Submarine != Submarine.MainSub ? 0.01f : MIN_OXYGEN;
                 if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
                 {
-                    // No valid oxygen source loaded.
-                    // Seek oxygen that has at least 10% condition left.
                     TryAddSubObjective(ref getOxygen, () =>
                     {
                         if (character.IsOnPlayerTeam)
@@ -82,19 +83,22 @@ namespace Barotrauma
                         {
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
-                            ConditionLevel = MIN_OXYGEN
+                            ConditionLevel = MIN_OXYGEN,
+                            RemoveExisting = true
                         };
                     },
                     onAbandon: () =>
                     {
+                        getOxygen = null;
                         int remainingTanks = ReportOxygenTankCount();
-                        // Try to seek any oxygen sources.
+                        // Try to seek any oxygen sources, even if they have minimal amount of oxygen.
                         TryAddSubObjective(ref getOxygen, () =>
                         {
                             return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                             {
                                 AllowToFindDivingGear = false,
-                                AllowDangerousPressure = true
+                                AllowDangerousPressure = true,
+                                RemoveExisting = true
                             };
                         },
                         onAbandon: () =>

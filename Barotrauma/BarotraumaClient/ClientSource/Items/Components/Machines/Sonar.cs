@@ -705,11 +705,12 @@ namespace Barotrauma.Items.Components
                     if (c.Params.HideInSonar) { continue; }
 
                     if (!c.IsUnconscious && c.Params.DistantSonarRange > 0.0f &&
-                        c.AIController is EnemyAIController enemyAI && enemyAI.IsTargetingPlayerTeam &&
                         ((c.WorldPosition - transducerCenter) * displayScale).LengthSquared() > DisplayRadius * DisplayRadius)
                     {
-                        float dist = Vector2.Distance(c.WorldPosition, transducerCenter);
-                        Vector2 targetDir = (c.WorldPosition - transducerCenter) / dist;
+                        Vector2 targetVector = c.WorldPosition - transducerCenter;
+                        if (targetVector.LengthSquared() > MathUtils.Pow2(c.Params.DistantSonarRange)) { continue; }
+                        float dist = targetVector.Length();
+                        Vector2 targetDir = targetVector / dist;
                         int blipCount = (int)MathHelper.Clamp(c.Mass, 50, 200);
                         for (int i = 0; i < blipCount; i++)
                         {

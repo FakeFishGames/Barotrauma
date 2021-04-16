@@ -215,8 +215,10 @@ namespace Barotrauma
             public Inventory Inventory;
             public readonly Item Item;
             public readonly bool IsSubSlot;
-            public string Tooltip;
-            public List<RichTextData> TooltipRichTextData;
+            public string Tooltip { get; private set; }
+            public List<RichTextData> TooltipRichTextData { get; private set;}
+
+            public int tooltipDisplayedCondition;
 
             public SlotReference(Inventory parentInventory, VisualSlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
@@ -227,13 +229,26 @@ namespace Barotrauma
                 IsSubSlot = isSubSlot;
                 Item = ParentInventory.GetItemAt(slotIndex);
 
-                IEnumerable<Item> itemsInSlot = null;
-                if (parentInventory != null && Item != null)
-                {
-                    itemsInSlot = parentInventory.GetItemsAt(slotIndex);
-                }
+                RefreshTooltip();
+            }
 
-                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, itemsInSlot), out Tooltip);
+            public bool TooltipNeedsRefresh()
+            {
+                if (Item == null) { return false; }
+                return (int)Item.ConditionPercentage != tooltipDisplayedCondition;
+            }
+
+            public void RefreshTooltip()
+            {
+                if (Item == null) { return; }
+                IEnumerable<Item> itemsInSlot = null;
+                if (ParentInventory != null && Item != null)
+                {
+                    itemsInSlot = ParentInventory.GetItemsAt(SlotIndex);
+                }
+                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, itemsInSlot), out string newTooltip);
+                Tooltip = newTooltip;
+                tooltipDisplayedCondition = (int)Item.ConditionPercentage;
             }
 
             private string GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
@@ -288,7 +303,7 @@ namespace Barotrauma
                         }
                     }
 
-                    string colorStr = XMLExtensions.ColorToString(item.SpawnedInOutpost ? GUI.Style.Red : Color.White);
+                    string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
 
                     toolTip = $"‖color:{colorStr}‖{item.Name}‖color:end‖";
                     if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
@@ -1370,6 +1385,10 @@ namespace Barotrauma
             {
                 Rectangle slotRect = selectedSlot.Slot.Rect;
                 slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
+                if (selectedSlot.TooltipNeedsRefresh())
+                {
+                    selectedSlot.RefreshTooltip();
+                }
                 DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipRichTextData);
             }
         }
@@ -1552,7 +1571,7 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if (item.SpawnedInOutpost && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if (!item.AllowStealing && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
                     Vector2 iconSize = new Vector2(25 * GUI.Scale);

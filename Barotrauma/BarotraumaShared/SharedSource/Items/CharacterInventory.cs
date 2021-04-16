@@ -124,7 +124,7 @@ namespace Barotrauma
         public override bool CanBePut(Item item, int i)
         {
             return 
-                base.CanBePut(item, i) && item.AllowedSlots.Contains(SlotTypes[i]) && 
+                base.CanBePut(item, i) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && 
                 (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 
@@ -206,7 +206,7 @@ namespace Barotrauma
             if (allowedSlots != null && !allowedSlots.Contains(InvSlotType.Any))
             {
                 int slot = FindLimbSlot(allowedSlots.First());
-                if (slot > -1 && slots[slot].Items.Any(it => it != item) && slots[slot].First().Prefab.AllowDroppingOnSwap)
+                if (slot > -1 && slots[slot].Items.Any(it => it != item) && slots[slot].First().AllowDroppingOnSwapWith(item))
                 {
                     foreach (Item existingItem in slots[slot].Items.ToList())
                     {

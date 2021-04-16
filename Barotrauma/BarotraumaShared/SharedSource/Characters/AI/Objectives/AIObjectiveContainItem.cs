@@ -34,6 +34,7 @@ namespace Barotrauma
         public float ConditionLevel { get; set; } = 1;
         public bool Equip { get; set; }
         public bool RemoveEmpty { get; set; } = true;
+        public bool RemoveExisting { get; set; }
 
         public bool MoveWholeStack { get; set; }
 
@@ -105,7 +106,11 @@ namespace Barotrauma
                 }
                 if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
-                    if (RemoveEmpty)
+                    if (RemoveExisting)
+                    {
+                        HumanAIController.UnequipContainedItems(container.Item);
+                    }
+                    else if (RemoveEmpty)
                     {
                         HumanAIController.UnequipEmptyItems(container.Item);
                     }
@@ -128,7 +133,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (ItemToContain.ParentInventory == character.Inventory)
+                        if (ItemToContain.ParentInventory == character.Inventory && character.Submarine == Submarine.MainSub)
                         {
                             ItemToContain.Drop(character);
                         }
@@ -141,7 +146,8 @@ namespace Barotrauma
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
-                        abortCondition = obj => !ItemToContain.IsOwnedBy(character)
+                        abortCondition = obj => !ItemToContain.IsOwnedBy(character),
+                        SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
                     },
                     onAbandon: () => Abandon = true,
                     onCompleted: () => RemoveSubObjective(ref goToObjective));

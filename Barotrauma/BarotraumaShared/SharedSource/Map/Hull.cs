@@ -990,7 +990,13 @@ namespace Barotrauma
             return float.MaxValue;
         }
 
-        //returns the water block which contains the point (or null if it isn't inside any)
+        /// <summary>
+        /// Returns the hull which contains the point (or null if it isn't inside any)
+        /// </summary>
+        /// <param name="position">The position to check</param>
+        /// <param name="guess">This hull is checked first: if the current hull is known, this can be used as an optimization</param>
+        /// <param name="useWorldCoordinates">Should world coordinates or the sub's local coordinates be used?</param>
+        /// <param name="inclusive">Does being exactly at the edge of the hull count as being inside?</param>
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             if (EntityGrids == null) return null;
@@ -1038,20 +1044,19 @@ namespace Barotrauma
             return null;
         }
 
-        //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
+        /// <summary>
+        /// Returns the hull which contains the point (or null if it isn't inside any). The difference to FindHull is that this method goes through all hulls without trying
+        /// to first find the sub the point is inside and checking the hulls in that sub. 
+        /// = This is slower, use with caution in situations where the sub's extents or hulls may have changed after it was loaded.
+        /// </summary>
+        public static Hull FindHullUnoptimized(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
-            return FindHullOld(position, hullList, guess, useWorldCoordinates, inclusive);
-        }
-
-        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
-        {
-            if (guess != null && hulls.Contains(guess))
+            if (guess != null && hullList.Contains(guess))
             {
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
             }
 
-            foreach (Hull hull in hulls)
+            foreach (Hull hull in hullList)
             {
                 if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position, inclusive)) return hull;
             }
