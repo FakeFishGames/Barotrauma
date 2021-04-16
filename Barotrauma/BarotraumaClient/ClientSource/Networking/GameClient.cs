@@ -3288,9 +3288,12 @@ namespace Barotrauma.Networking
             if (respawnManager != null)
             {
                 string respawnText = string.Empty;
-                float textScale = 1.0f;
                 Color textColor = Color.White;
-                bool canChooseRespawn = GameMain.GameSession.GameMode is CampaignMode && Character.Controlled == null && Level.Loaded?.Type != LevelData.LevelType.Outpost;
+                bool canChooseRespawn = 
+                    GameMain.GameSession.GameMode is CampaignMode && 
+                    Character.Controlled == null && 
+                    Level.Loaded?.Type != LevelData.LevelType.Outpost &&
+                    (characterInfo == null || HasSpawned);
                 if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
                     respawnManager.RespawnCountdownStarted)
                 {

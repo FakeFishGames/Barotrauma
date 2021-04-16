@@ -12,10 +12,10 @@ namespace Barotrauma.Items.Components
 {
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
+        public const float AutopilotMinDistToPathNode = 30.0f;
+
         private const float AutopilotRayCastInterval = 0.5f;
         private const float RecalculatePathInterval = 5.0f;
-
-        private const float AutopilotMinDistToPathNode = 30.0f;
 
         private const float AutoPilotSteeringLerp = 0.1f;
 

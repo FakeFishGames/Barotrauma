@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -28,6 +29,19 @@ namespace Barotrauma.Items.Components
                 if (welcomeMessage == value) { return; }
                 welcomeMessage = value;
                 DisplayedWelcomeMessage = TextManager.Get(welcomeMessage, returnNull: true) ?? welcomeMessage.Replace("\\n", "\n");
+            }
+        }
+
+        /// <summary>
+        /// Can be used to display messages on the terminal via status effects
+        /// </summary>
+        public string ShowMessage
+        {
+            get { return messageHistory.Count == 0 ? string.Empty : messageHistory.Last(); }
+            set
+            {
+                if (string.IsNullOrEmpty(value)) { return; }
+                ShowOnDisplay(value);
             }
         }
 

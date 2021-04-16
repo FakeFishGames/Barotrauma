@@ -215,8 +215,10 @@ namespace Barotrauma
             public Inventory Inventory;
             public readonly Item Item;
             public readonly bool IsSubSlot;
-            public string Tooltip;
-            public List<RichTextData> TooltipRichTextData;
+            public string Tooltip { get; private set; }
+            public List<RichTextData> TooltipRichTextData { get; private set;}
+
+            public int tooltipDisplayedCondition;
 
             public SlotReference(Inventory parentInventory, VisualSlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
@@ -227,13 +229,26 @@ namespace Barotrauma
                 IsSubSlot = isSubSlot;
                 Item = ParentInventory.GetItemAt(slotIndex);
 
-                IEnumerable<Item> itemsInSlot = null;
-                if (parentInventory != null && Item != null)
-                {
-                    itemsInSlot = parentInventory.GetItemsAt(slotIndex);
-                }
+                RefreshTooltip();
+            }
 
-                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, itemsInSlot), out Tooltip);
+            public bool TooltipNeedsRefresh()
+            {
+                if (Item == null) { return false; }
+                return (int)Item.ConditionPercentage != tooltipDisplayedCondition;
+            }
+
+            public void RefreshTooltip()
+            {
+                if (Item == null) { return; }
+                IEnumerable<Item> itemsInSlot = null;
+                if (ParentInventory != null && Item != null)
+                {
+                    itemsInSlot = ParentInventory.GetItemsAt(SlotIndex);
+                }
+                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, itemsInSlot), out string newTooltip);
+                Tooltip = newTooltip;
+                tooltipDisplayedCondition = (int)Item.ConditionPercentage;
             }
 
             private string GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
@@ -1370,6 +1385,10 @@ namespace Barotrauma
             {
                 Rectangle slotRect = selectedSlot.Slot.Rect;
                 slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
+                if (selectedSlot.TooltipNeedsRefresh())
+                {
+                    selectedSlot.RefreshTooltip();
+                }
                 DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipRichTextData);
             }
         }

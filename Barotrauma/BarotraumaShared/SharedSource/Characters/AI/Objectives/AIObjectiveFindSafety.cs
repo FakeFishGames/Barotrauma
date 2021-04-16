@@ -50,7 +50,10 @@ namespace Barotrauma
             }
             else
             {
-                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out _) && !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN))
+                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out bool needsSuit) && 
+                    (needsSuit ? 
+                    !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN) : 
+                    !HumanAIController.HasDivingMask(character, conditionPercentage: AIObjectiveFindDivingGear.MIN_OXYGEN)))
                 {
                     Priority = 100;
                 }

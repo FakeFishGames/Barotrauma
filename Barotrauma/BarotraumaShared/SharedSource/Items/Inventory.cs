@@ -659,12 +659,12 @@ namespace Barotrauma
             else
             {
                 swapSuccessful =
-                    (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) || 
-                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(),user, CharacterInventory.anySlot, createNetworkEvent))                    
+                    (existingItems.All(existingItem => otherInventory.TryPutItem(existingItem, otherIndex, false, false, user, createNetworkEvent)) ||
+                    existingItems.Count == 1 && otherInventory.TryPutItem(existingItems.First(), user, CharacterInventory.anySlot, createNetworkEvent))
                     &&
                     stackedItems.Distinct().All(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
 
-                if (!swapSuccessful && existingItems.Count == 1 && existingItems[0].Prefab.AllowDroppingOnSwap)
+                if (!swapSuccessful && existingItems.Count == 1 && existingItems[0].AllowDroppingOnSwapWith(item))
                 {
                     existingItems[0].Drop(user, createNetworkEvent);
                     swapSuccessful = stackedItems.Distinct().Any(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));

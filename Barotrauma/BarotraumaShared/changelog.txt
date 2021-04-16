@@ -1,4 +1,32 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1300.0.10 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Only allow dropping a diving suit when trying to swap it with another suit, not when trying to swap it with for example body armor (#5519).
+- Don't show the "respawn with penalty" tickbox when spawning as a returning player.
+- Made abandoned outposts a bit more common.
+- Once the respawn countdown starts, it doesn't stop even if some players change their mind and decide to wait for the next round as long as there's at least one player waiting to respawn.
+
+Fixes:
+- Fixed logbooks being empty in the wreck salvage missions.
+- Addressed the lag spikes occasionally caused by Spineling's spikes when they hit/get stuck to something.
+- Fixed bots throw full oxygen tanks away when they are not in the main sub (e.g. in wrecks), resulting in suffocation because they can't use the oxygen (#5525).
+- Fixed bots waiting for the oxygen tanks to be entirely drained before swapping new tanks in (#5524).
+- Fixed water particle effects not showing up when water flows between certain rooms in Remora.
+- Fixed misaligned trigger area on Remora's smaller engine (#5514).
+- Fixed players who spawn as their previous character mid-round always getting the Reaper's Tax affliction in mp campaign (#5517).
+- Fixed resizeable outpost hallway modules not having waypoints and thus causing navigation issues.
+- Fixed bots abandoning the combat objectives when the target is farther than 2000px away. The behavior was only intended for non-friendly npcs, like bandits or outpost security.
+- Fixed items that are being held in both hands (e.g. underwater scooter) getting duffelbagged between campaign rounds (#5511).
+- Fixed clients failing to select the correct connection if you teleport from an empty location to another with console commands (#5510).
+- Revert the previous fix to prevent the bots to take items contained inside fabricators/deconstructors (#5431) and use "donttakeitems" tag to fix it.
+- Fixed bots saying "Can't reach target [name]".
+- Fixed inventory tooltip not changing when the cursor is hovered on the slot and the condition of the item changes (#5508).
+- Fixed waypoints not being able to find hulls that have been added since the sub was last saved in the sub editor, causing them to appear blue (#5194).
+- Fixed abyss islands not showing up on sonar in mirrored levels.
+
+---------------------------------------------------------------------------------------------------------
 v0.1300.0.9 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

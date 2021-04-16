@@ -1333,15 +1333,23 @@ namespace Barotrauma.Networking
                         else if (mpCampaign != null)
                         {
                             var availableTransition = mpCampaign.GetAvailableTransition(out _, out _);
+                            //don't force location if we've teleported
+                            bool forceLocation = !mpCampaign.Map.AllowDebugTeleport || mpCampaign.Map.CurrentLocation == Level.Loaded.StartLocation;
                             switch (availableTransition)
                             {
                                 case CampaignMode.TransitionType.ReturnToPreviousEmptyLocation:
-                                    mpCampaign.Map.SelectLocation(
-                                        mpCampaign.Map.CurrentLocation.Connections.Find(c => c.LevelData == Level.Loaded?.LevelData).OtherLocation(mpCampaign.Map.CurrentLocation));
+                                    if (forceLocation)
+                                    {
+                                        mpCampaign.Map.SelectLocation(
+                                            mpCampaign.Map.CurrentLocation.Connections.Find(c => c.LevelData == Level.Loaded?.LevelData).OtherLocation(mpCampaign.Map.CurrentLocation));
+                                    }
                                     mpCampaign.LoadNewLevel();
                                     break;
                                 case CampaignMode.TransitionType.ProgressToNextEmptyLocation:
-                                    mpCampaign.Map.SetLocation(mpCampaign.Map.Locations.IndexOf(Level.Loaded.EndLocation));
+                                    if (forceLocation)
+                                    {
+                                        mpCampaign.Map.SetLocation(mpCampaign.Map.Locations.IndexOf(Level.Loaded.EndLocation));
+                                    }
                                     mpCampaign.LoadNewLevel();
                                     break;
                                 case CampaignMode.TransitionType.None:

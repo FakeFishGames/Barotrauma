@@ -1102,6 +1102,27 @@ namespace Barotrauma
             if (findNewHull) { FindHull(); }
         }
 
+        /// <summary>
+        /// Is dropping the item allowed when trying to swap it with the other item
+        /// </summary>
+        public bool AllowDroppingOnSwapWith(Item otherItem)
+        {
+            if (!Prefab.AllowDroppingOnSwap || otherItem == null) { return false; }
+            if (Prefab.AllowDroppingOnSwapWith.Any())
+            {
+                foreach (string tagOrIdentifier in Prefab.AllowDroppingOnSwapWith)
+                {
+                    if (otherItem.prefab.Identifier.Equals(tagOrIdentifier, StringComparison.OrdinalIgnoreCase)) { return true; }
+                    if (otherItem.HasTag(tagOrIdentifier)) { return true; }
+                }
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         public void SetActiveSprite()
         {
             SetActiveSpriteProjSpecific();

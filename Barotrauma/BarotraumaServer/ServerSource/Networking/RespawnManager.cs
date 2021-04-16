@@ -76,9 +76,14 @@ namespace Barotrauma.Networking
             return botsToRespawn;
         }
 
-        private bool RespawnPending()
+        private bool ShouldStartRespawnCountdown()
         {
             int characterToRespawnCount = GetClientsToRespawn().Count();
+            return ShouldStartRespawnCountdown(characterToRespawnCount);
+        }
+
+        private bool ShouldStartRespawnCountdown(int characterToRespawnCount)
+        {
             int totalCharacterCount = GameMain.Server.ConnectedClients.Count;
             return (float)characterToRespawnCount >= Math.Max((float)totalCharacterCount * GameMain.Server.ServerSettings.MinRespawnRatio, 1.0f);
         }
@@ -90,12 +95,27 @@ namespace Barotrauma.Networking
                 RespawnShuttle.Velocity = Vector2.Zero;
             }
 
-            bool respawnPending = RespawnPending();
-            if (respawnPending != RespawnCountdownStarted)
+            int clientsToRespawn = GetClientsToRespawn().Count();
+            if (RespawnCountdownStarted)
             {
-                RespawnCountdownStarted = respawnPending;
-                RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(GameMain.Server.ServerSettings.RespawnInterval * 1000.0f));
-                GameMain.Server.CreateEntityEvent(this);
+                if (clientsToRespawn == 0)
+                {
+                    RespawnCountdownStarted = false;
+                    GameMain.Server.CreateEntityEvent(this);
+                }
+            }
+            else
+            {
+                bool shouldStartCountdown = ShouldStartRespawnCountdown(clientsToRespawn);       
+                if (shouldStartCountdown)
+                {
+                    RespawnCountdownStarted = true;
+                    if (RespawnTime < DateTime.Now)
+                    {
+                        RespawnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, (int)(GameMain.Server.ServerSettings.RespawnInterval * 1000.0f));
+                    }
+                    GameMain.Server.CreateEntityEvent(this); 
+                }              
             }
 
             if (RespawnCountdownStarted && DateTime.Now > RespawnTime)
@@ -198,7 +218,7 @@ namespace Barotrauma.Networking
                     ReturnTime = DateTime.Now;
                     ReturnCountdownStarted = true;
                 }
-                else if (!RespawnPending())
+                else if (!ShouldStartRespawnCountdown())
                 {
                     //don't start counting down until someone else needs to respawn
                     ReturnTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, milliseconds: (int)(maxTransportTime * 1000));
@@ -340,7 +360,7 @@ namespace Barotrauma.Networking
                 }
 
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
-                if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost)
+                if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
                 {
                     var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
                     if (respawnPenaltyAffliction != null)

@@ -166,7 +166,7 @@ namespace Barotrauma
 
         public class AbyssIsland
         {
-            public readonly Rectangle Area;
+            public Rectangle Area;
             public readonly List<VoronoiCell> Cells;
 
             public AbyssIsland(Rectangle area, List<VoronoiCell> cells)
@@ -844,6 +844,11 @@ namespace Barotrauma
                     }
                 }
 
+                foreach (AbyssIsland island in AbyssIslands)
+                {
+                    island.Area = new Rectangle(borders.Width - island.Area.Right, island.Area.Y, island.Area.Width, island.Area.Height);
+                }
+
                 foreach (Cave cave in Caves)
                 {
                     cave.Area = new Rectangle(borders.Width - cave.Area.Right, cave.Area.Y, cave.Area.Width, cave.Area.Height);
@@ -1328,7 +1333,6 @@ namespace Barotrauma
             for (int i = 0; i < tunnel.Cells.Count; i++)
             {
                 tunnel.Cells[i].CellType = CellType.Path;
-
                 var newWaypoint = new WayPoint(new Rectangle((int)tunnel.Cells[i].Site.Coord.X, (int)tunnel.Cells[i].Center.Y, 10, 10), null)
                 {
                     Tunnel = tunnel
@@ -1385,8 +1389,23 @@ namespace Barotrauma
                     ConvertUnits.ToSimUnits(wayPoint.WorldPosition),
                     ConvertUnits.ToSimUnits(closestWaypoint.WorldPosition), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) == null)
                 {
-                    wayPoint.linkedTo.Add(closestWaypoint);
-                    closestWaypoint.linkedTo.Add(wayPoint);
+                    Vector2 diff = closestWaypoint.WorldPosition - wayPoint.WorldPosition;
+                    float dist = diff.Length();
+                    float step = ConvertUnits.ToDisplayUnits(Steering.AutopilotMinDistToPathNode) * 0.8f;
+
+                    WayPoint prevWaypoint = wayPoint;
+                    for (float x = step; x < dist - step; x += step)
+                    {
+                        var newWaypoint = new WayPoint(wayPoint.WorldPosition + (diff / dist * x), SpawnType.Path, submarine: null)
+                        {
+                            Tunnel = tunnel
+                        };
+                        prevWaypoint.linkedTo.Add(newWaypoint);
+                        newWaypoint.linkedTo.Add(prevWaypoint);
+                        prevWaypoint = newWaypoint;
+                    }
+                    prevWaypoint.linkedTo.Add(closestWaypoint);
+                    closestWaypoint.linkedTo.Add(prevWaypoint);
                 }
             }
         }
