@@ -64,6 +64,9 @@ namespace Barotrauma
         [Serialize("waterblood", true), Editable]
         public string BleedParticleWater { get; private set; }
 
+        [Serialize(false, true, description: "Can the creature eat bodies? Used by player controlled creatures to allow them to eat."), Editable]
+        public bool CanEat { get; set; }
+
         [Serialize(10f, true, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
 
