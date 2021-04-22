@@ -35,7 +35,7 @@ namespace Barotrauma
                 Abandon = true;
                 return Priority;
             }
-            bool isOrder = objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>();
+            bool isOrder = objectiveManager.HasOrder<AIObjectiveExtinguishFires>();
             if (!isOrder && Character.CharacterList.Any(c => c.CurrentHull == targetHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c)))
             {
                 // Don't go into rooms with any enemies, unless it's an order
@@ -78,7 +78,7 @@ namespace Barotrauma
             {
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
-                    if (!character.HasEquippedItem("fireextinguisher", allowBroken: false))
+                    if (character.IsOnPlayerTeam && !character.HasEquippedItem("fireextinguisher", allowBroken: false))
                     {
                         character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
                     }
@@ -88,7 +88,7 @@ namespace Barotrauma
                         // If the item is inside an unsafe hull, decrease the priority
                         GetItemPriority = i => HumanAIController.UnsafeHulls.Contains(i.CurrentHull) ? 0.1f : 1
                     };
-                    if (objectiveManager.IsCurrentOrder<AIObjectiveExtinguishFires>())
+                    if (objectiveManager.HasOrder<AIObjectiveExtinguishFires>())
                     {
                         getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindfireextinguisher"), null, 0.0f, "dialogcannotfindfireextinguisher", 10.0f);
                     };

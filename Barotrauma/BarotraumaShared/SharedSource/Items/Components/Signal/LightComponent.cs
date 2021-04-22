@@ -308,12 +308,12 @@ namespace Barotrauma.Items.Components
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "toggle":
-                    if (signal != "0")
+                    if (signal.value != "0")
                     {
                         if (!IgnoreContinuousToggle || lastToggleSignalTime < Timing.TotalTime - 0.1)
                         {
@@ -323,10 +323,10 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "set_state":
-                    IsOn = signal != "0";
+                    IsOn = signal.value != "0";
                     break;
                 case "set_color":
-                    LightColor = XMLExtensions.ParseColor(signal, false);
+                    LightColor = XMLExtensions.ParseColor(signal.value, false);
                     break;
             }
         }

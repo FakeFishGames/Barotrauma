@@ -351,14 +351,19 @@ namespace Barotrauma.Items.Components
             {
                 OnClicked = (btn, userdata) =>
                 {
-                    if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+                    if (GameMain.GameSession?.Missions.Any(m => !m.AllowUndocking) ?? false)
+                    {
+                        new GUIMessageBox("", TextManager.Get("undockingdisabledbymission"));
+                        return false;
+                    }
+                    else if (GameMain.GameSession?.Campaign is CampaignMode campaign)
                     {
                         if (Level.IsLoadedOutpost &&
                             DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
                         {
                             // Undocking from an outpost
-                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
                             campaign.ShowCampaignUI = true;
+                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map); 
                             return false;
                         }
                         else if (!Level.IsLoadedOutpost && DockingModeEnabled && ActiveDockingSource != null &&
@@ -398,7 +403,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GameMain.Client == null)
                 {
-                    item.SendSignal(0, "1", "toggle_docking", sender: null);
+                    item.SendSignal("1", "toggle_docking");
                 }
                 else
                 {
@@ -722,7 +727,19 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            pressureWarningText.Visible = item.Submarine != null && item.Submarine.AtDamageDepth && Timing.TotalTime % 1.0f < 0.8f;
+            pressureWarningText.Visible = item.Submarine != null && Timing.TotalTime % 1.0f < 0.8f;
+            float depthEffectThreshold = 500.0f;
+            if (Level.Loaded != null && pressureWarningText.Visible && 
+                item.Submarine.RealWorldDepth > Level.Loaded.RealWorldCrushDepth - depthEffectThreshold && item.Submarine.RealWorldDepth > item.Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            {
+                pressureWarningText.Visible = true;
+                pressureWarningText.Text = item.Submarine.AtDamageDepth ? TextManager.Get("SteeringDepthWarning") : TextManager.Get("SteeringDepthWarningLow").Replace("[crushdepth]", ((int)item.Submarine.RealWorldCrushDepth).ToString());
+            }
+            else
+            {
+                pressureWarningText.Visible = false;
+            }
+
             iceSpireWarningText.Visible = item.Submarine != null && !pressureWarningText.Visible && showIceSpireWarning && Timing.TotalTime % 1.0f < 0.8f;
 
             if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
@@ -748,7 +765,7 @@ namespace Barotrauma.Items.Components
             }
             if (!AutoPilot && Character.DisableControls && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                steeringAdjustSpeed = character == null ? 0.2f : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
+                steeringAdjustSpeed = character == null ? DefaultSteeringAdjustSpeed : MathHelper.Lerp(0.2f, 1.0f, character.GetSkillLevel("helm") / 100.0f);
                 Vector2 input = Vector2.Zero;
                 if (PlayerInput.KeyDown(InputType.Left)) { input -= Vector2.UnitX; }
                 if (PlayerInput.KeyDown(InputType.Right)) { input += Vector2.UnitX; }
@@ -914,7 +931,7 @@ namespace Barotrauma.Items.Components
 
             if (dockingButtonClicked)
             {
-                item.SendSignal(0, "1", "toggle_docking", sender: null);
+                item.SendSignal("1", "toggle_docking");
             }
 
             if (autoPilot)

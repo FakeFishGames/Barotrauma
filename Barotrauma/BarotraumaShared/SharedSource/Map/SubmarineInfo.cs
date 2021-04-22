@@ -95,8 +95,9 @@ namespace Barotrauma
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
 
-        public bool IsOutpost => Type == SubmarineType.Outpost;
+        public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
         public bool IsWreck => Type == SubmarineType.Wreck;
+        public bool IsBeacon => Type == SubmarineType.BeaconStation;
         public bool IsPlayer => Type == SubmarineType.Player;
 
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
@@ -274,7 +275,7 @@ namespace Barotrauma
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
             }
 #if CLIENT
-            PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage.Texture, null, null) : null;
+            PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage) : null;
 #endif
         }
 
@@ -463,6 +464,49 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Calculated from <see cref="SubmarineElement"/>. Can be used when the sub hasn't been loaded and we can't access <see cref="Submarine.RealWorldCrushDepth"/>.
+        /// </summary>
+        public float GetRealWorldCrushDepth()
+        {
+            if (SubmarineElement == null) { return Level.DefaultRealWorldCrushDepth; }
+            bool structureCrushDepthsDefined = false;
+            float realWorldCrushDepth = float.PositiveInfinity;
+            foreach (var structureElement in SubmarineElement.GetChildElements("structure"))
+            {
+                string name = structureElement.Attribute("name")?.Value ?? "";
+                string identifier = structureElement.GetAttributeString("identifier", "");
+                var structurePrefab = Structure.FindPrefab(name, identifier);
+                if (structurePrefab == null || !structurePrefab.Body) { continue; }
+                if (!structureCrushDepthsDefined && structureElement.Attribute("crushdepth") != null)
+                {
+                    structureCrushDepthsDefined = true;
+                }
+                float structureCrushDepth = structureElement.GetAttributeFloat("crushdepth", float.PositiveInfinity);
+                realWorldCrushDepth = Math.Min(structureCrushDepth, realWorldCrushDepth);
+            }
+            if (!structureCrushDepthsDefined)
+            {
+                realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
+            }
+            realWorldCrushDepth *= GetRealWorldCrushDepthMultiplier();
+            return realWorldCrushDepth;
+        }
+
+        /// <summary>
+        /// Based on <see cref="SubmarineClass"/>
+        /// </summary>
+        public float GetRealWorldCrushDepthMultiplier()
+        {
+            if (SubmarineClass == SubmarineClass.DeepDiver)
+            {
+                return 1.2f;
+            }
+            else
+            {
+                return 1.0f;
+            }
+        }
 
         //saving/loading ----------------------------------------------------
         public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)

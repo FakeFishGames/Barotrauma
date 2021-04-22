@@ -142,7 +142,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
         
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (Hijacked) { return; }
 
@@ -153,12 +153,12 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "set_active")
             {
-                IsActive = signal != "0";
+                IsActive = signal.value != "0";
                 isActiveLockTimer = 0.1f;
             }
             else if (connection.Name == "set_speed")
             {
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
+                if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     flowPercentage = MathHelper.Clamp(tempSpeed, -100.0f, 100.0f);
                     TargetLevel = null;
@@ -167,9 +167,9 @@ namespace Barotrauma.Items.Components
             }
             else if (connection.Name == "set_targetlevel")
             {
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
+                if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempTarget))
                 {
-                    TargetLevel = MathHelper.Clamp(tempTarget + 50.0f, 0.0f, 100.0f);
+                    TargetLevel = MathUtils.InverseLerp(-100.0f, 100.0f, tempTarget) * 100.0f;
                     pumpSpeedLockTimer = 0.1f;
                 }
             }

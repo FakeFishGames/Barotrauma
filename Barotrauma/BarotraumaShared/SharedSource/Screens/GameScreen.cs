@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System.Threading;
 using FarseerPhysics.Dynamics;
 #if DEBUG && CLIENT
+using System;
 using Microsoft.Xna.Framework.Input;
 #endif
 
@@ -115,6 +116,37 @@ namespace Barotrauma
                     }
                 }
             }
+            
+#if LINUX
+            // disgusting
+            if (PlayerInput.KeyDown(Keys.RightShift) && Character.Controlled is { CharacterHealth: { } health } && PlayerInput.MouseSpeed != Vector2.Zero)
+            {
+                AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
+                float afflictionAmount = (PlayerInput.MousePosition.X / GameMain.GraphicsWidth) * radiationPrefab.MaxStrength;
+                Affliction affliction = health.GetAffliction(radiationPrefab.Identifier, true);
+
+                if (affliction == null)
+                {
+                    health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(afflictionAmount)));
+                }
+                else
+                {
+                    float diff = affliction.Strength - afflictionAmount;
+
+                    if (!MathUtils.NearlyEqual(diff, 0))
+                    {
+                        if (diff > 0)
+                        {
+                            health.ReduceAffliction(null, radiationPrefab.Identifier, Math.Abs(diff));
+                        }
+                        else if (diff < 0)
+                        {
+                            health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(diff)));
+                        }
+                    }
+                }
+            }
+#endif
 #endif
 
 #if CLIENT
@@ -192,7 +224,7 @@ namespace Barotrauma
             if (Character.Controlled != null && 
                 Lights.LightManager.ViewTarget != null)
             {
-                Vector2 targetPos = Lights.LightManager.ViewTarget.DrawPosition;
+                Vector2 targetPos = Lights.LightManager.ViewTarget.WorldPosition;
                 if (Lights.LightManager.ViewTarget == Character.Controlled &&
                     (CharacterHealth.OpenHealthWindow != null || CrewManager.IsCommandInterfaceOpen || ConversationAction.IsDialogOpen))
                 {
@@ -212,7 +244,7 @@ namespace Barotrauma
                 cam.TargetPos = targetPos;
             }
 
-            cam.MoveCamera((float)deltaTime);
+            cam.MoveCamera((float)deltaTime, allowZoom: GUI.MouseOn == null);
 #endif
 
             foreach (Submarine sub in Submarine.Loaded)

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -96,6 +97,12 @@ namespace Barotrauma.Items.Components
                     fabricationRecipes.Add(recipe);
                 }
             }
+            fabricationRecipes.Sort((r1, r2) =>
+            {
+                int hash1 = (int)r1.TargetItem.UIntIdentifier;
+                int hash2 = (int)r2.TargetItem.UIntIdentifier;
+                return hash1 - hash2;
+            });
 
             state = FabricatorState.Stopped;
 
@@ -114,11 +121,10 @@ namespace Barotrauma.Items.Components
 
             inputContainer = containers[0];
             outputContainer = containers[1];
-                        
+
             foreach (var recipe in fabricationRecipes)
             {
-                int ingredientCount = recipe.RequiredItems.Sum(it => it.Amount);
-                if (ingredientCount > inputContainer.Capacity)
+                if (recipe.RequiredItems.Count > inputContainer.Capacity)
                 {
                     DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + recipe.TargetItem.Name + "\"!");
                 }
@@ -205,6 +211,7 @@ namespace Barotrauma.Items.Components
 
             progressState = 0.0f;
             timeUntilReady = 0.0f;
+            UpdateRequiredTimeProjSpecific();
             inputContainer.Inventory.Locked = false;
             outputContainer.Inventory.Locked = false;
 
@@ -272,6 +279,7 @@ namespace Barotrauma.Items.Components
             if (powerConsumption <= 0) { Voltage = 1.0f; }
 
             timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f);
+            UpdateRequiredTimeProjSpecific();
 
             if (timeUntilReady > 0.0f) { return; }
 
@@ -352,6 +360,8 @@ namespace Barotrauma.Items.Components
                 CancelFabricating();
             }
         }
+
+        partial void UpdateRequiredTimeProjSpecific();
 
         private bool CanBeFabricated(FabricationRecipe fabricableItem)
         {

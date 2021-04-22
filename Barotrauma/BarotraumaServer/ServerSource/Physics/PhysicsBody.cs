@@ -18,7 +18,7 @@ namespace Barotrauma
             if (Math.Abs(FarseerBody.LinearVelocity.X) > MaxVel || 
                 Math.Abs(FarseerBody.LinearVelocity.Y) > MaxVel)
             {
-                DebugConsole.ThrowError("Item velocity out of range (" + FarseerBody.LinearVelocity + ")");
+                DebugConsole.ThrowError($"Entity velocity out of range ({(UserData?.ToString() ?? "null")}, {FarseerBody.LinearVelocity})");
             }
 #endif
 

@@ -59,13 +59,14 @@ namespace Barotrauma
             InitCampaignData();
         }
 
-        public static MultiPlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub)
+        public static MultiPlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
         {
             MultiPlayerCampaign campaign = new MultiPlayerCampaign();
             //only the server generates the map, the clients load it from a save file
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                campaign.map = new Map(campaign, mapSeed);
+                campaign.map = new Map(campaign, mapSeed, settings);
+                campaign.Settings = settings;
             }
             campaign.InitProjSpecific();
             return campaign;
@@ -128,11 +129,14 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "campaignsettings":
+                        Settings = new CampaignSettings(subElement);
+                        break;
                     case "map":
                         if (map == null)
                         {
                             //map not created yet, loading this campaign for the first time
-                            map = Map.Load(this, subElement);
+                            map = Map.Load(this, subElement, Settings);
                         }
                         else
                         {

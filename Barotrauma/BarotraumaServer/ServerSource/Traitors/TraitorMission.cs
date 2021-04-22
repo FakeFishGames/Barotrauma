@@ -249,7 +249,7 @@ namespace Barotrauma
                 {
                     return;
                 }
-                if (Traitors.Values.Any(traitor => traitor.Character?.IsDead ?? true || traitor.Character.Removed))
+                if (Traitors.Values.Any(traitor => traitor.Character == null || traitor.Character.IsDead || traitor.Character.Removed))
                 {
                     Traitors.Values.ForEach(traitor => traitor.UpdateCurrentObjective("", Identifier));
                     pendingObjectives.Clear();

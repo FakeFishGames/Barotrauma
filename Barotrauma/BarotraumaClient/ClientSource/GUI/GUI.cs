@@ -218,6 +218,21 @@ namespace Barotrauma
 
         public static bool DisableHUD, DisableUpperHUD, DisableItemHighlights, DisableCharacterNames;
 
+        private static bool isSavingIndicatorEnabled;
+        private static Color savingIndicatorColor = Color.Transparent;
+        private static bool IsSavingIndicatorVisible => savingIndicatorColor.A > 0;
+        private static float savingIndicatorSpriteIndex;
+        private static float savingIndicatorColorLerpAmount;
+        private static SavingIndicatorState savingIndicatorState = SavingIndicatorState.None;
+        private static float? timeUntilSavingIndicatorDisabled;
+
+        private enum SavingIndicatorState
+        {
+            None,
+            FadingIn,
+            FadingOut
+        }
+
         public static void Init(GameWindow window, IEnumerable<ContentPackage> selectedContentPackages, GraphicsDevice graphicsDevice)
         {
             GraphicsDevice = graphicsDevice;
@@ -345,7 +360,11 @@ namespace Barotrauma
             }
 #endif
 
-                if (DisableHUD) { return; }
+                if (DisableHUD)
+                {
+                    DrawSavingIndicator(spriteBatch);
+                    return;
+                }
 
                 if (GameMain.ShowFPS || GameMain.DebugDraw)
                 {
@@ -539,60 +558,42 @@ namespace Barotrauma
                         }
                     }
 
+                    IEnumerable<string> strings;
                     if (MouseOn != null)
                     {
                         RectTransform mouseOnRect = MouseOn.RectTransform;
                         bool isAbsoluteOffsetInUse = mouseOnRect.AbsoluteOffset != Point.Zero || mouseOnRect.RelativeOffset == Vector2.Zero;
 
-                        string selectedString = $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}";
-                        string offsetString = $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}";
-                        string anchorPivotString = $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}";
-                        Vector2 selectedStringSize = SmallFont.MeasureString(selectedString);
-                        Vector2 offsetStringSize = SmallFont.MeasureString(offsetString);
-                        Vector2 anchorPivotStringSize = SmallFont.MeasureString(anchorPivotString);
-
-                        int padding = IntScale(10);
-                        int yPos = padding;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)selectedStringSize.X - padding, yPos), selectedString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)selectedStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)offsetStringSize.X - padding, yPos), offsetString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)offsetStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)anchorPivotStringSize.X - padding, yPos), anchorPivotString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)anchorPivotStringSize.Y + padding / 2;
+                        strings = new string[]
+                        {
+                            $"Selected UI Element: {MouseOn.GetType().Name} ({ MouseOn.Style?.Element.Name.LocalName ?? "no style" }, {MouseOn.Rect}",
+                            $"Relative Offset: {mouseOnRect.RelativeOffset} | Absolute Offset: {(isAbsoluteOffsetInUse ? mouseOnRect.AbsoluteOffset : mouseOnRect.ParentRect.MultiplySize(mouseOnRect.RelativeOffset))}{(isAbsoluteOffsetInUse ? "" : " (Calculated from RelativeOffset)")}",
+                            $"Anchor: {mouseOnRect.Anchor} | Pivot: {mouseOnRect.Pivot}"
+                        };
                     }
                     else
                     {
-                        string guiScaleString = $"GUI.Scale: {Scale}";
-                        string guixScaleString = $"GUI.xScale: {xScale}";
-                        string guiyScaleString = $"GUI.yScale: {yScale}";
-                        string relativeHorizontalAspectRatioString = $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}";
-                        string relativeVerticalAspectRatioString = $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}";
-                        Vector2 guiScaleStringSize = SmallFont.MeasureString(guiScaleString);
-                        Vector2 guixScaleStringSize = SmallFont.MeasureString(guixScaleString);
-                        Vector2 guiyScaleStringSize = SmallFont.MeasureString(guiyScaleString);
-                        Vector2 relativeHorizontalAspectRatioStringSize = SmallFont.MeasureString(relativeHorizontalAspectRatioString);
-                        Vector2 relativeVerticalAspectRatioStringSize = SmallFont.MeasureString(relativeVerticalAspectRatioString);
+                        strings = new string[]
+                        {
+                            $"GUI.Scale: {Scale}",
+                            $"GUI.xScale: {xScale}",
+                            $"GUI.yScale: {yScale}",
+                            $"RelativeHorizontalAspectRatio: {RelativeHorizontalAspectRatio}",
+                            $"RelativeVerticalAspectRatio: {RelativeVerticalAspectRatio}",
+                        };
+                    }
 
-                        int padding = IntScale(10);
-                        int yPos = padding;
+                    strings = strings.Concat(new string[] { $"Cam.Zoom: {Screen.Selected.Cam?.Zoom ?? 0f}" });
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiScaleStringSize.X - padding, yPos), guiScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guiScaleStringSize.Y + padding / 2;
+                    int padding = IntScale(10);
+                    int yPos = padding;
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guixScaleStringSize.X - padding, yPos), guixScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guixScaleStringSize.Y + padding / 2;
+                    foreach (string str in strings)
+                    {
+                        Vector2 stringSize = SmallFont.MeasureString(str);
 
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)guiyScaleStringSize.X - padding, yPos), guiyScaleString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)guiyScaleStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeHorizontalAspectRatioStringSize.X - padding, yPos), relativeHorizontalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)relativeHorizontalAspectRatioStringSize.Y + padding / 2;
-
-                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)relativeVerticalAspectRatioStringSize.X - padding, yPos), relativeVerticalAspectRatioString, Color.LightGreen, Color.Black, 0, SmallFont);
-                        yPos += (int)relativeVerticalAspectRatioStringSize.Y + padding / 2;
+                        DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth - (int)stringSize.X - padding, yPos), str, Color.LightGreen, Color.Black, 0, SmallFont);
+                        yPos += (int)stringSize.Y + padding / 2;
                     }
                 }
 
@@ -644,6 +645,8 @@ namespace Barotrauma
                             }
                     }
                 }
+
+                DrawSavingIndicator(spriteBatch);
 
                 if (GameMain.WindowActive && !HideCursor)
                 {
@@ -855,6 +858,7 @@ namespace Barotrauma
             lock (mutex)
             {
                 GUIMessageBox.AddActiveToGUIUpdateList();
+                GUIContextMenu.AddActiveToGUIUpdateList();
 
                 if (pauseMenuOpen)
                 {
@@ -921,6 +925,7 @@ namespace Barotrauma
                             if ((!PlayerInput.PrimaryMouseButtonHeld() && !PlayerInput.PrimaryMouseButtonClicked()) || c == prevMouseOn)
                             {
                                 MouseOn = c;
+                                var sakdjfnsjkd = c.MouseRect;
                             }
                             break;
                         }
@@ -1043,7 +1048,7 @@ namespace Barotrauma
                         }
                     }
                 
-                    if (parent != null)
+                    if (parent != null && parent.CanBeFocused)
                     {
                         if (!parent.Rect.Equals(monitorRect)) { return parent.HoverCursor; }
                     }
@@ -1222,6 +1227,7 @@ namespace Barotrauma
                 Debug.Assert(updateList.Count == updateListSet.Count);
                 updateList.ForEach(c => c.UpdateAuto(deltaTime));
                 UpdateMessages(deltaTime);
+                UpdateSavingIndicator(deltaTime);
             }            
         }
 
@@ -1266,6 +1272,58 @@ namespace Barotrauma
             
         }
 
+        private static void UpdateSavingIndicator(float deltaTime)
+        {
+            lock (mutex)
+            {
+                if (timeUntilSavingIndicatorDisabled.HasValue)
+                {
+                    timeUntilSavingIndicatorDisabled -= deltaTime;
+                    if (timeUntilSavingIndicatorDisabled <= 0.0f)
+                    {
+                        isSavingIndicatorEnabled = false;
+                        timeUntilSavingIndicatorDisabled = null;
+                    }
+                }
+                if (isSavingIndicatorEnabled)
+                {
+                    if (savingIndicatorColor == Color.Transparent)
+                    {
+                        savingIndicatorState = SavingIndicatorState.FadingIn;
+                        savingIndicatorColorLerpAmount = 0.0f;
+                    }
+                    else if (savingIndicatorColor == Color.White)
+                    {
+                        savingIndicatorState = SavingIndicatorState.None;
+                    }
+                }
+                else
+                {
+                    if (savingIndicatorColor == Color.White)
+                    {
+                        savingIndicatorState = SavingIndicatorState.FadingOut;
+                        savingIndicatorColorLerpAmount = 0.0f;
+                    }
+                    else if (savingIndicatorColor == Color.Transparent)
+                    {
+                        savingIndicatorState = SavingIndicatorState.None;
+                    }
+                }
+                if (savingIndicatorState != SavingIndicatorState.None)
+                {
+                    bool isFadingIn = savingIndicatorState == SavingIndicatorState.FadingIn;
+                    Color lerpStartColor = isFadingIn ? Color.Transparent : Color.White;
+                    Color lerpTargetColor = isFadingIn ? Color.White : Color.Transparent;
+                    savingIndicatorColorLerpAmount += (isFadingIn ? 2.0f : 0.5f) * deltaTime;
+                    savingIndicatorColor = Color.Lerp(lerpStartColor, lerpTargetColor, savingIndicatorColorLerpAmount);
+                }
+                if (IsSavingIndicatorVisible)
+                {
+                    savingIndicatorSpriteIndex = (savingIndicatorSpriteIndex + 15.0f * deltaTime) % (Style.SavingIndicator.FrameCount + 1);
+                }
+            }
+        }
+
         #region Element drawing
 
         private static List<float> usedIndicatorAngles = new List<float>();
@@ -1278,7 +1336,7 @@ namespace Barotrauma
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
 
-            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier;
+            float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier * Scale;
 
             if (overrideAlpha.HasValue || dist > hideDist)
             {
@@ -1336,9 +1394,9 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
+        public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, float width = 1)
         {
-            DrawLine(sb, t, start, end, clr, depth, width);
+            DrawLine(sb, t, start, end, clr, depth, (int)width);
         }
 
         public static void DrawLine(SpriteBatch sb, Sprite sprite, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, int width = 1)
@@ -1405,7 +1463,7 @@ namespace Barotrauma
             font.DrawStringWithColors(sb, text, pos, color, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, depth, richTextData);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
+        public static void DrawRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, bool isFilled = false, float depth = 0.0f, float thickness = 1)
         {
             if (size.X < 0)
             {
@@ -1420,7 +1478,7 @@ namespace Barotrauma
             DrawRectangle(sb, new Rectangle((int)start.X, (int)start.Y, (int)size.X, (int)size.Y), clr, isFilled, depth, thickness);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, bool isFilled = false, float depth = 0.0f, int thickness = 1)
+        public static void DrawRectangle(SpriteBatch sb, Rectangle rect, Color clr, bool isFilled = false, float depth = 0.0f, float thickness = 1)
         {
             if (isFilled)
             {
@@ -1428,15 +1486,15 @@ namespace Barotrauma
             }
             else
             {
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X + thickness, rect.Y + rect.Height - thickness, rect.Width - thickness * 2, thickness), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-
-                sb.Draw(t, new Rectangle(rect.X, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
-                sb.Draw(t, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), null, clr, 0.0f, Vector2.Zero, SpriteEffects.None, depth);
+                Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+                sb.Draw(t, new Vector2(rect.X, rect.Y), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height), SpriteEffects.None, depth);
+                sb.Draw(t, new Vector2(rect.X + thickness, rect.Y), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
+                sb.Draw(t, new Vector2(rect.X + thickness, rect.Bottom - thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
+                sb.Draw(t, new Vector2(rect.Right - thickness, rect.Y + thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height - thickness * 2f), SpriteEffects.None, depth);
             }
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, int thickness = 1)
+        public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, float thickness = 1)
         {
             Matrix rotate = Matrix.CreateRotationZ(rotation);
 
@@ -1453,7 +1511,7 @@ namespace Barotrauma
             DrawLine(sb, bottomLeft, topLeft, clr, depth, thickness);
         }
 
-        public static void DrawRectangle(SpriteBatch sb, Vector2[] corners, Color clr, float depth = 0.0f, int thickness = 1)
+        public static void DrawRectangle(SpriteBatch sb, Vector2[] corners, Color clr, float depth = 0.0f, float thickness = 1)
         {
             if (corners.Length != 4)
             {
@@ -1589,6 +1647,14 @@ namespace Barotrauma
                 }
                 ShapeExtensions.DrawPoint(spriteBatch, pos, color, dotSize);
             }
+        }
+
+        private static void DrawSavingIndicator(SpriteBatch spriteBatch)
+        {
+            if (!IsSavingIndicatorVisible) { return; }
+            var sheet = Style.SavingIndicator;
+            Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
+            sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
         #endregion
 
@@ -2246,7 +2312,7 @@ namespace Barotrauma
                             OnClicked = (btn, userdata) =>
                             {
                                 if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
-                                if (GameMain.GameSession.GameMode is CampaignMode || (!Submarine.MainSub.AtStartPosition && !Submarine.MainSub.AtEndPosition))
+                                if (GameMain.GameSession.GameMode is CampaignMode || (!Submarine.MainSub.AtStartExit && !Submarine.MainSub.AtEndExit))
                                 {
                                     var msgBox = new GUIMessageBox("", 
                                         TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd"), 
@@ -2342,6 +2408,21 @@ namespace Barotrauma
         {
             float aspectRatio = HorizontalAspectRatio;
             return aspectRatio > 1.3f && aspectRatio < 1.4f;
+        }
+
+        public static void SetSavingIndicatorState(bool enabled)
+        {
+            if (enabled)
+            {
+                timeUntilSavingIndicatorDisabled = null;
+            }
+            isSavingIndicatorEnabled = enabled;
+        }
+
+        public static void DisableSavingIndicatorDelayed(float delay = 3.0f)
+        {
+            if (!isSavingIndicatorEnabled) { return; }
+            timeUntilSavingIndicatorDisabled = delay;
         }
         #endregion
     }

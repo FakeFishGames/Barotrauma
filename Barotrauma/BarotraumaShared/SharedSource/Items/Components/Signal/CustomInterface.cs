@@ -16,13 +16,18 @@ namespace Barotrauma.Items.Components
 
             [Serialize("", false, translationTextTag: "Label.", description: "The text displayed on this button/tickbox."), Editable]
             public string Label { get; set; }
+
             [Serialize("1", false, description: "The signal sent out when this button is pressed or this tickbox checked."), Editable]
             public string Signal { get; set; }
 
             public string PropertyName { get; }
             public bool TargetOnlyParentProperty { get; }
+
             public int NumberInputMin { get; }
             public int NumberInputMax { get; }
+
+            public int MaxTextLength { get; }
+
             public const int DefaultNumberInputMin = 0, DefaultNumberInputMax = 99;
             public bool IsIntegerInput { get; }
             public bool HasPropertyName { get; }
@@ -46,7 +51,7 @@ namespace Barotrauma.Items.Components
                 TargetOnlyParentProperty = element.GetAttributeBool("targetonlyparentproperty", false);
                 NumberInputMin = element.GetAttributeInt("min", DefaultNumberInputMin);
                 NumberInputMax = element.GetAttributeInt("max", DefaultNumberInputMax);
-
+                MaxTextLength = element.GetAttributeInt("maxtextlength", int.MaxValue);
                 HasPropertyName = !string.IsNullOrEmpty(PropertyName);
                 IsIntegerInput = HasPropertyName && element.Name.ToString().ToLowerInvariant() == "integerinput";
 
@@ -244,7 +249,7 @@ namespace Barotrauma.Items.Components
             if (btnElement == null) return;
             if (btnElement.Connection != null)
             {
-                item.SendSignal(0, btnElement.Signal, btnElement.Connection, sender: null, source: item);
+                item.SendSignal(new Signal(btnElement.Signal, 0, null, item), btnElement.Connection);
             }
             foreach (StatusEffect effect in btnElement.StatusEffects)
             {
@@ -303,7 +308,7 @@ namespace Barotrauma.Items.Components
                 //TODO: allow changing output when a tickbox is not selected
                 if (!string.IsNullOrEmpty(ciElement.Signal) && ciElement.Connection != null)
                 {
-                    item.SendSignal(0, ciElement.State ? ciElement.Signal : "0", ciElement.Connection, sender: null, source: item);
+                    item.SendSignal(new Signal(ciElement.State ? ciElement.Signal : "0", source: item), ciElement.Connection);
                 }
 
                 foreach (StatusEffect effect in ciElement.StatusEffects)

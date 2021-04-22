@@ -12,7 +12,8 @@ namespace Barotrauma.Items.Components
 {
     partial class RangedWeapon : ItemComponent
     {
-        private float reload, reloadTimer;
+        private float reload;
+        public float ReloadTimer { get; private set; }
 
         private Vector2 barrelPos;
 
@@ -75,17 +76,17 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            reloadTimer = Math.Min(reload, 1.0f);
+            ReloadTimer = Math.Min(reload, 1.0f);
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
-            reloadTimer -= deltaTime;
+            ReloadTimer -= deltaTime;
 
-            if (reloadTimer < 0.0f)
+            if (ReloadTimer < 0.0f)
             {
-                reloadTimer = 0.0f;
+                ReloadTimer = 0.0f;
                 IsActive = false;
             }
         }
@@ -101,10 +102,10 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) { return false; }
-            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || reloadTimer > 0.0f) { return false; }
+            if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || ReloadTimer > 0.0f) { return false; }
 
             IsActive = true;
-            reloadTimer = reload;
+            ReloadTimer = reload;
 
             if (item.AiTarget != null)
             {

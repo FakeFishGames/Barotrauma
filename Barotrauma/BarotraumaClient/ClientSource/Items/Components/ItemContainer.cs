@@ -179,6 +179,23 @@ namespace Barotrauma.Items.Components
             {
                 CanBeFocused = false
             };
+
+            // Expand the frame vertically if it's too small to fit the text
+            if (label != null && label.RectTransform.RelativeSize.Y > 0.5f)
+            {
+                int newHeight = (int)(GuiFrame.Rect.Height + (2 * (label.RectTransform.RelativeSize.Y - 0.5f) * content.Rect.Height));
+                if (newHeight > GuiFrame.RectTransform.MaxSize.Y)
+                {
+                    Point newMaxSize = GuiFrame.RectTransform.MaxSize;
+                    newMaxSize.Y = newHeight;
+                    GuiFrame.RectTransform.MaxSize = newMaxSize;
+                }
+                GuiFrame.RectTransform.Resize(new Point(GuiFrame.Rect.Width, newHeight));
+                content.RectTransform.Resize(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin);
+                label.CalculateHeightFromText();
+                guiCustomComponent.RectTransform.Resize(new Vector2(1.0f, Math.Max(1.0f - label.RectTransform.RelativeSize.Y, minInventoryAreaSize)));
+            }
+
             Inventory.RectTransform = guiCustomComponent.RectTransform;
         }
 

@@ -141,7 +141,7 @@ namespace Barotrauma
                     {
                         return;
                     }
-                    if (GameMain.GameSession.Mission is CombatMission)
+                    if (GameMain.GameSession.Missions.Any(m => m is CombatMission))
                     {
                         var teamIds = new[] { CharacterTeamType.Team1, CharacterTeamType.Team2 };
                         foreach (var teamId in teamIds)

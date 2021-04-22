@@ -49,6 +49,7 @@ namespace Barotrauma.Networking
             outMsg.Write((byte)MaxPlayers);
             outMsg.Write(HasPassword);
             outMsg.Write(IsPublic);
+            outMsg.Write(AllowFileTransfers);
             outMsg.WritePadBits();
             outMsg.WriteRangedInteger(TickRate, 1, 60);
 
@@ -158,6 +159,8 @@ namespace Barotrauma.Networking
                 {
                     AutoRestart = autoRestart;
                 }
+
+                RadiationEnabled = incMsg.ReadBoolean();
 
                 changed |= true;
             }

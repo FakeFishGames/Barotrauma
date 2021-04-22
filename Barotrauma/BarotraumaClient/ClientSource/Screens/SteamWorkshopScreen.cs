@@ -410,9 +410,9 @@ namespace Barotrauma
                 if (sub.HasTag(SubmarineTag.HideInMenus)) { continue; }
                 string subPath = Path.GetFullPath(sub.FilePath);
 
-                //ignore subs that are part of the vanilla content package
+                //ignore files that are part of the vanilla content package
                 if (GameMain.VanillaContent != null &&
-                    GameMain.VanillaContent.GetFilesOfType(ContentType.Submarine).Any(s => Path.GetFullPath(s) == subPath))
+                    GameMain.VanillaContent.Files.Any(s => Path.GetFullPath(s.Path) == subPath))
                 {
                     continue;
                 }

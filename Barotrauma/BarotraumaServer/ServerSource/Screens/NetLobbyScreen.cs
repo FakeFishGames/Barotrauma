@@ -11,6 +11,8 @@ namespace Barotrauma
         private SubmarineInfo selectedSub;
         private SubmarineInfo selectedShuttle;
 
+        public bool RadiationEnabled = true;
+
         public SubmarineInfo SelectedSub
         {
             get { return selectedSub; }

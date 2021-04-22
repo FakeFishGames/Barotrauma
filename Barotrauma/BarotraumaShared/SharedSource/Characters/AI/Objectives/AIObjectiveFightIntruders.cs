@@ -10,6 +10,8 @@ namespace Barotrauma
         protected override float IgnoreListClearInterval => 30;
         public override bool IgnoreUnsafeHulls => true;
 
+        protected override float TargetUpdateTimeMultiplier => 0.2f;
+
         public AIObjectiveFightIntruders(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier) { }
 
@@ -48,16 +50,14 @@ namespace Barotrauma
 
         public static bool IsValidTarget(Character target, Character character)
         {
-            if (target == null || target.IsDead || target.Removed) { return false; }
+            if (target == null || target.Removed) { return false; }
+            if (target.IsDead || target.IsUnconscious) { return false; }
             if (target == character) { return false; }
-            if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (target.Submarine == null) { return false; }
-            if (target.Submarine.TeamID != character.TeamID) { return false; }
+            if (character.Submarine == null) { return false; }
             if (target.CurrentHull == null) { return false; }
-            if (character.Submarine != null)
-            {
-                if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
-            }
+            if (HumanAIController.IsFriendly(character, target)) { return false; }
+            if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
             return true;
         }
     }

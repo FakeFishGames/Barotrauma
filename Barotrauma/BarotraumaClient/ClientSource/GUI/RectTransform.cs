@@ -94,7 +94,7 @@ namespace Barotrauma
             }
         }
 
-        private static Point maxPoint = new Point(int.MaxValue, int.MaxValue);
+        public readonly static Point MaxPoint = new Point(int.MaxValue, int.MaxValue);
         private Point? maxSize;
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Barotrauma
         /// </summary>
         public Point MaxSize
         {
-            get { return maxSize ?? maxPoint; }
+            get { return maxSize ?? MaxPoint; }
             set
             {
                 if (maxSize == value) { return; }
@@ -638,6 +638,12 @@ namespace Barotrauma
         public bool IsParentOf(RectTransform rectT, bool recursive = true)
         {
             return children.Contains(rectT) || (recursive && children.Any(c => c.IsParentOf(rectT)));
+        }
+
+        public bool IsChildOf(RectTransform rectT, bool recursive = true)
+        {
+            if (Parent == null) { return false; }
+            return Parent == rectT || (recursive && Parent.IsChildOf(rectT));
         }
 
         public void ClearChildren()

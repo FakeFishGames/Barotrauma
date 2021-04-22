@@ -114,7 +114,7 @@ namespace Barotrauma.Networking
                 return;
             }
             Permissions = permissions;
-            PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
+            PermittedConsoleCommands.Clear(); PermittedConsoleCommands.AddRange(permittedConsoleCommands);
         }
 
         public void GivePermission(ClientPermissions permission)

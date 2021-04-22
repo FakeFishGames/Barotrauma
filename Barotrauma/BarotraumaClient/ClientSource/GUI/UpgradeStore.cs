@@ -15,7 +15,7 @@ namespace Barotrauma
     
     internal class UpgradeStore
     {
-        private readonly struct CategoryData
+        public readonly struct CategoryData
         {
             public readonly UpgradeCategory Category;
             public readonly List<UpgradePrefab> Prefabs;
@@ -125,7 +125,7 @@ namespace Barotrauma
                 {
                     if (component.UserData is CategoryData data)
                     {
-                        UpdateUpgradeEntry(component, data.SinglePrefab, data.Category);
+                        UpdateUpgradeEntry(component, data.SinglePrefab, data.Category, Campaign);
                     }
                 }
             }
@@ -133,29 +133,35 @@ namespace Barotrauma
             // update the small indicator icons on the list
             if (currentStoreLayout?.Parent != null)
             {
-                foreach (GUIComponent component in currentStoreLayout.Content.Children)
-                {
-                    if (!(component.UserData is CategoryData data)) { continue; }
-                    if (component.FindChild("indicators", true) is { } indicators)
-                    {
-                        UpdateCategoryIndicators(indicators, component, data.Prefabs, data.Category);
-                    }
-                }
+                UpdateCategoryList(currentStoreLayout, Campaign, drawnSubmarine, applicableCategories);
+            }
+        }
 
-                // reset the order first
-                foreach (UpgradeCategory category in UpgradeCategory.Categories)
+        //TODO: move this somewhere else
+        public static void UpdateCategoryList(GUIListBox categoryList, CampaignMode campaign, Submarine drawnSubmarine, IEnumerable<UpgradeCategory> applicableCategories)
+        {
+            foreach (GUIComponent component in categoryList.Content.Children)
+            {
+                if (!(component.UserData is CategoryData data)) { continue; }
+                if (component.FindChild("indicators", true) is { } indicators)
                 {
-                    GUIComponent component = currentStoreLayout.Content.FindChild(c => c.UserData is CategoryData categoryData && categoryData.Category == category);
-                    component?.SetAsLastChild();
+                    UpdateCategoryIndicators(indicators, component, data.Prefabs, data.Category, campaign, drawnSubmarine, applicableCategories);
                 }
+            }
 
-                // send the disabled components to the bottom
-                List<GUIComponent> lastChilds = currentStoreLayout.Content.Children.Where(component => !component.Enabled).ToList();
+            // reset the order first
+            foreach (UpgradeCategory category in UpgradeCategory.Categories)
+            {
+                GUIComponent component = categoryList.Content.FindChild(c => c.UserData is CategoryData categoryData && categoryData.Category == category);
+                component?.SetAsLastChild();
+            }
 
-                foreach (var lastChild in lastChilds)
-                {
-                    lastChild.SetAsLastChild();
-                }
+            // send the disabled components to the bottom
+            List<GUIComponent> lastChilds = categoryList.Content.Children.Where(component => !component.Enabled).ToList();
+
+            foreach (var lastChild in lastChilds)
+            {
+                lastChild.SetAsLastChild();
             }
         }
 
@@ -511,9 +517,10 @@ namespace Barotrauma
             }
         }
 
-        private void CreateUpgradeTab()
+        //TODO: put this somewhere else
+        public static GUIListBox CreateUpgradeCategoryList(RectTransform rectTransform)
         {
-            currentStoreLayout = new GUIListBox(rectT(1.0f, 1.5f, storeLayout), style: null)
+            var upgradeCategoryList = new GUIListBox(rectTransform, style: null)
             {
                 AutoHideScrollBar = false,
                 ScrollBarVisible = false,
@@ -548,7 +555,7 @@ namespace Barotrauma
 
             foreach (var (category, prefabs) in upgrades)
             {
-                var frameChild = new GUIFrame(rectT(1, 0.15f, currentStoreLayout.Content), style: "UpgradeUIFrame")
+                var frameChild = new GUIFrame(rectT(1, 0.15f, upgradeCategoryList.Content), style: "UpgradeUIFrame")
                 {
                     UserData = new CategoryData(category, prefabs),
                     GlowOnSelect = true
@@ -565,9 +572,9 @@ namespace Barotrauma
                  * |-----------------------------|--------------------------|
                  */
                 GUILayoutGroup contentLayout = new GUILayoutGroup(rectT(0.9f, 0.85f, frameChild, Anchor.Center));
-                    var itemCategoryLabel = new GUITextBlock(rectT(1, 1, contentLayout), category.Name, font: GUI.SubHeadingFont) { CanBeFocused = false };
-                    GUILayoutGroup indicatorLayout = new GUILayoutGroup(rectT(0.5f, 0.25f, contentLayout, Anchor.BottomRight), isHorizontal: true, childAnchor: Anchor.TopRight) { UserData = "indicators", IgnoreLayoutGroups = true, RelativeSpacing = 0.01f };
-                
+                var itemCategoryLabel = new GUITextBlock(rectT(1, 1, contentLayout), category.Name, font: GUI.SubHeadingFont) { CanBeFocused = false };
+                GUILayoutGroup indicatorLayout = new GUILayoutGroup(rectT(0.5f, 0.25f, contentLayout, Anchor.BottomRight), isHorizontal: true, childAnchor: Anchor.TopRight) { UserData = "indicators", IgnoreLayoutGroups = true, RelativeSpacing = 0.01f };
+
                 foreach (var prefab in prefabs)
                 {
                     GUIImage upgradeIndicator = new GUIImage(rectT(0.1f, 1f, indicatorLayout), style: "UpgradeIndicator", scaleToFit: true) { UserData = prefab, CanBeFocused = false };
@@ -581,6 +588,13 @@ namespace Barotrauma
                 contentLayout.Recalculate();
                 indicatorLayout.Recalculate();
             }
+
+            return upgradeCategoryList;
+        }
+
+        private void CreateUpgradeTab()
+        {
+            currentStoreLayout = CreateUpgradeCategoryList(rectT(1.0f, 1.5f, storeLayout));
 
             selectedUpgradeCategoryLayout = new GUIFrame(rectT(GUI.IsFourByThree() ? 0.3f : 0.25f, 1, mainStoreLayout), style: null) { CanBeFocused = false };
 
@@ -637,7 +651,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateUpgradeEntry(UpgradePrefab prefab, UpgradeCategory category, GUIComponent parent, List<Item> itemsOnSubmarine)
+        public static GUIFrame CreateUpgradeFrame(UpgradePrefab prefab, UpgradeCategory category, CampaignMode campaign, RectTransform rectTransform, bool addBuyButton = true)
         {
             /*                        UPGRADE PREFAB ENTRY
              * |------------------------------------------------------------------|
@@ -648,8 +662,8 @@ namespace Barotrauma
              * |               | progress bar             | x / y |               |
              * |------------------------------------------------------------------|
              */
-            GUIFrame prefabFrame = new GUIFrame(rectT(1f, 0.25f, parent), style: "ListBoxElement") { SelectedColor = Color.Transparent, UserData = new CategoryData(category, prefab) };
-                GUILayoutGroup prefabLayout = new GUILayoutGroup(rectT(0.98f,0.95f, prefabFrame, Anchor.Center), isHorizontal: true);
+            GUIFrame prefabFrame = new GUIFrame(rectTransform, style: "ListBoxElement") { SelectedColor = Color.Transparent, UserData = new CategoryData(category, prefab) };
+                GUILayoutGroup prefabLayout = new GUILayoutGroup(rectT(0.98f, 0.95f, prefabFrame, Anchor.Center), isHorizontal: true) { Stretch = true };
                     GUILayoutGroup imageLayout = new GUILayoutGroup(rectT(new Point(prefabLayout.Rect.Height, prefabLayout.Rect.Height), prefabLayout), childAnchor: Anchor.Center);
                         var icon = new GUIImage(rectT(0.9f, 0.9f, imageLayout), prefab.Sprite, scaleToFit: true) { CanBeFocused = false };
                     GUILayoutGroup textLayout = new GUILayoutGroup(rectT(0.8f - imageLayout.RectTransform.RelativeSize.X, 1, prefabLayout));
@@ -659,9 +673,13 @@ namespace Barotrauma
                         GUILayoutGroup progressLayout = new GUILayoutGroup(rectT(1, 0.25f, textLayout), isHorizontal: true, childAnchor: Anchor.CenterLeft) { UserData = "progressbar" };
                             new GUIProgressBar(rectT(0.8f, 0.75f, progressLayout), 0.0f, GUI.Style.Orange);
                             new GUITextBlock(rectT(0.2f, 1, progressLayout), string.Empty, font: GUI.SmallFont, textAlignment: Alignment.Center) { Padding = Vector4.Zero };
-                    GUILayoutGroup buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, prefabLayout), childAnchor: Anchor.TopCenter) { UserData = "buybutton" };
-                        new GUITextBlock(rectT(1, 0.4f, buyButtonLayout), FormatCurrency(prefab.Price.GetBuyprice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation)), textAlignment: Alignment.Center) { Padding = Vector4.Zero };
+                    GUILayoutGroup buyButtonLayout = null;
+            if (addBuyButton)
+            {
+                    buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, prefabLayout), childAnchor: Anchor.TopCenter) { UserData = "buybutton" };
+                        new GUITextBlock(rectT(1, 0.4f, buyButtonLayout), FormatCurrency(prefab.Price.GetBuyprice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation)), textAlignment: Alignment.Center) { Padding = Vector4.Zero };
                         var buyButton = new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "UpgradeBuyButton") { Enabled = false };
+            }
 
             description.CalculateHeightFromText();
             // cut the description if it overflows and add a tooltip to it
@@ -677,14 +695,33 @@ namespace Barotrauma
             }
 
             // Recalculate everything to prevent jumping
-            if (parent is GUILayoutGroup group) { group.Recalculate(); }
+            if (rectTransform.Parent.GUIComponent is GUILayoutGroup group) { group.Recalculate(); }
 
             descriptionLayout.Recalculate();
             prefabLayout.Recalculate();
             imageLayout.Recalculate();
             textLayout.Recalculate();
             progressLayout.Recalculate();
-            buyButtonLayout.Recalculate();
+            buyButtonLayout?.Recalculate();
+
+            return prefabFrame;
+        }
+
+        private void CreateUpgradeEntry(UpgradePrefab prefab, UpgradeCategory category, GUIComponent parent, List<Item> itemsOnSubmarine)
+        {
+            GUIFrame prefabFrame = CreateUpgradeFrame(prefab, category, Campaign, rectT(1f, 0.25f, parent));
+                var prefabLayout = prefabFrame.GetChild<GUILayoutGroup>();
+                    GUILayoutGroup[] childLayouts = prefabLayout.GetAllChildren<GUILayoutGroup>().ToArray();
+                    var imageLayout = childLayouts[0];
+                        var icon = imageLayout.GetChild<GUIImage>();
+                    var textLayout = childLayouts[1];
+                        var name = textLayout.GetChild<GUITextBlock>();
+                        GUILayoutGroup[] textChildLayouts = textLayout.GetAllChildren<GUILayoutGroup>().ToArray();
+                            var descriptionLayout = textChildLayouts[0];
+                                var description = descriptionLayout.GetChild<GUITextBlock>();
+                            var progressLayout = textChildLayouts[1];
+                    var buyButtonLayout = childLayouts[2];
+                        var buyButton = buyButtonLayout.GetChild<GUIButton>();
 
             if (!HasPermission || itemsOnSubmarine != null && !itemsOnSubmarine.Any(it => category.CanBeApplied(it, prefab)))
             {
@@ -713,7 +750,7 @@ namespace Barotrauma
                 return true;
             };
 
-            UpdateUpgradeEntry(prefabFrame, prefab, category);
+            UpdateUpgradeEntry(prefabFrame, prefab, category, Campaign);
         }
 
         private void CreateItemTooltip(MapEntity entity)
@@ -778,6 +815,18 @@ namespace Barotrauma
             static string CreateListEntry(string name, int level) => TextManager.GetWithVariables("upgradeuitooltip.upgradelistelement", new[] { "[upgradename]", "[level]" }, new[] { name, $"{level}" });
         }
 
+        public static IEnumerable<UpgradeCategory> GetApplicableCategories(Submarine drawnSubmarine)
+        {
+            Item[] entitiesOnSub = drawnSubmarine.GetItems(true).Where(i => drawnSubmarine.IsEntityFoundOnThisSub(i, true)).ToArray();
+            foreach (UpgradeCategory category in UpgradeCategory.Categories)
+            {
+                if (entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
+                {
+                    yield return category;
+                }
+            }
+        }
+
         private void UpdateSubmarinePreview(float deltaTime, GUICustomComponent parent)
         {
             if (!parent.Children.Any() || Submarine.MainSub != null && Submarine.MainSub != drawnSubmarine || GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
@@ -789,16 +838,8 @@ namespace Barotrauma
                     CreateSubmarinePreview(drawnSubmarine, parent);
                     CreateHullBorderVerticies(drawnSubmarine, parent);
 
-                    List<Item> entitiesOnSub = drawnSubmarine.GetItems(true).Where(i => drawnSubmarine.IsEntityFoundOnThisSub(i, true)).ToList();
                     applicableCategories.Clear();
-
-                    foreach (UpgradeCategory category in UpgradeCategory.Categories)
-                    {
-                        if (entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
-                        {
-                            applicableCategories.Add(category);
-                        }
-                    }
+                    applicableCategories.AddRange(GetApplicableCategories(drawnSubmarine));
                 }
                 
                 screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
@@ -1002,9 +1043,9 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateUpgradeEntry(GUIComponent prefabFrame, UpgradePrefab prefab, UpgradeCategory category)
+        public static void UpdateUpgradeEntry(GUIComponent prefabFrame, UpgradePrefab prefab, UpgradeCategory category, CampaignMode campaign)
         {
-            int currentLevel = Campaign.UpgradeManager.GetUpgradeLevel(prefab, category);
+            int currentLevel = campaign.UpgradeManager.GetUpgradeLevel(prefab, category);
 
             string progressText = TextManager.GetWithVariables("upgrades.progressformat", new[] { "[level]", "[maxlevel]" }, new[] { currentLevel.ToString(), prefab.MaxLevel.ToString() });
             if (prefabFrame.FindChild("progressbar", true) is { } progressParent)
@@ -1023,7 +1064,7 @@ namespace Barotrauma
             if (prefabFrame.FindChild("buybutton", true) is { } buttonParent)
             {
                 GUITextBlock priceLabel = buttonParent.GetChild<GUITextBlock>();
-                int price = prefab.Price.GetBuyprice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyprice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
 
                 if (priceLabel != null && !WaitForServerUpdate)
                 {
@@ -1038,7 +1079,7 @@ namespace Barotrauma
                 if (button != null)
                 {
                     button.Enabled = currentLevel < prefab.MaxLevel;
-                    if (WaitForServerUpdate || !HasPermission || price > Campaign.Money)
+                    if (WaitForServerUpdate || !campaign.AllowedToManageCampaign() || price > campaign.Money)
                     {
                         button.Enabled = false;
                     }
@@ -1046,7 +1087,14 @@ namespace Barotrauma
             }
         }
 
-        private void UpdateCategoryIndicators(GUIComponent indicators, GUIComponent parent, List<UpgradePrefab> prefabs, UpgradeCategory category)
+        private static void UpdateCategoryIndicators(
+            GUIComponent indicators,
+            GUIComponent parent,
+            List<UpgradePrefab> prefabs,
+            UpgradeCategory category,
+            CampaignMode campaign,
+            Submarine drawnSubmarine,
+            IEnumerable<UpgradeCategory> applicableCategories)
         {
             // Disables the parent and only re-enables if the submarine contains valid items
             if (!category.IsWallUpgrade && drawnSubmarine != null)
@@ -1078,13 +1126,13 @@ namespace Barotrauma
                     GUIComponentStyle dimStyle = styles["upgradeindicatordim"];
                     GUIComponentStyle offStyle = styles["upgradeindicatoroff"];
 
-                    if (Campaign.UpgradeManager.GetUpgradeLevel(prefab, category) >= prefab.MaxLevel)
+                    if (campaign.UpgradeManager.GetUpgradeLevel(prefab, category) >= prefab.MaxLevel)
                     {
                         // we check this to avoid flickering from re-applying the same style
                         if (image.Style == onStyle) { continue; }
                         image.ApplyStyle(onStyle);
                     }
-                    else if (Campaign.UpgradeManager.GetUpgradeLevel(prefab, category) > 0)
+                    else if (campaign.UpgradeManager.GetUpgradeLevel(prefab, category) > 0)
                     {
                         if (image.Style == dimStyle) { continue; }
                         image.ApplyStyle(dimStyle);

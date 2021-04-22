@@ -1,10 +1,10 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -91,9 +91,10 @@ namespace Barotrauma
                 UserData = "container"
             };
 
+            int panelMaxWidth = (int)(GUI.xScale * (GUI.HorizontalAspectRatio < 1.4f ? 650 : 560));
             var availableMainGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).RectTransform)
                 {
-                    MaxSize = new Point(560, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
+                    MaxSize = new Point(panelMaxWidth, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
                 })
             {
                 Stretch = true,
@@ -149,7 +150,7 @@ namespace Barotrauma
 
             var pendingAndCrewMainGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 1.0f), campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).RectTransform, anchor: Anchor.TopRight)
             {
-                MaxSize = new Point(560, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
+                MaxSize = new Point(panelMaxWidth, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
             })
             {
                 Stretch = true,
@@ -177,7 +178,7 @@ namespace Barotrauma
             var pendingAndCrewGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), anchor: Anchor.Center,
                 parent: new GUIFrame(new RectTransform(new Vector2(1.0f, 13.25f / 14.0f), pendingAndCrewMainGroup.RectTransform)
                         {
-                            MaxSize = new Point(560, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
+                            MaxSize = new Point(panelMaxWidth, campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Rect.Height)
                         }).RectTransform));
 
             float height = 0.05f;
@@ -188,7 +189,7 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, height), pendingAndCrewGroup.RectTransform), TextManager.Get("campaignmenucrew"), font: GUI.SubHeadingFont);
-            crewList = new GUIListBox(new RectTransform(new Vector2(1.0f, (8)* height), pendingAndCrewGroup.RectTransform))
+            crewList = new GUIListBox(new RectTransform(new Vector2(1.0f, 8 * height), pendingAndCrewGroup.RectTransform))
             {
                 Spacing = 1
             };
@@ -207,7 +208,7 @@ namespace Barotrauma
             {
                 ClickSound = GUISoundType.HireRepairClick,
                 ForceUpperCase = true,
-                OnClicked = (b, o) => ValidatePendingHires(true)
+                OnClicked = (b, o) => ValidateHires(PendingHires, true)
             };
             clearAllButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), group.RectTransform), text: TextManager.Get("campaignstore.clearall"))
             {
@@ -335,9 +336,9 @@ namespace Barotrauma
                 jobColor = characterInfo.Job.Prefab.UIColor;
             }
 
-            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, 55), parent: listBox.Content.RectTransform), "ListBoxElement")
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, (int)(GUI.yScale * 55)), parent: listBox.Content.RectTransform), "ListBoxElement")
             {
-                UserData = new Tuple<CharacterInfo, float>(characterInfo, skill != null ? skill.Level : 0.0f)
+                UserData = new Tuple<CharacterInfo, float>(characterInfo, skill?.Level ?? 0.0f)
             };
             GUILayoutGroup mainGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), frame.RectTransform, anchor: Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
@@ -345,19 +346,22 @@ namespace Barotrauma
             };
 
             float portraitWidth = (0.8f * mainGroup.Rect.Height) / mainGroup.Rect.Width;
-            new GUICustomComponent(new RectTransform(new Vector2(portraitWidth, 0.8f), mainGroup.RectTransform),
+            var icon = new GUICustomComponent(new RectTransform(new Vector2(portraitWidth, 0.8f), mainGroup.RectTransform),
                 onDraw: (sb, component) => characterInfo.DrawIcon(sb, component.Rect.Center.ToVector2(), targetAreaSize: component.Rect.Size.ToVector2()))
             {
                 CanBeFocused = false
             };
 
-            GUILayoutGroup nameAndJobGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.4f - portraitWidth, 0.8f), mainGroup.RectTransform));
-            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), nameAndJobGroup.RectTransform),
-                characterInfo.Name, textColor: jobColor, textAlignment: Alignment.BottomLeft)
+            GUILayoutGroup nameAndJobGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.4f - portraitWidth, 0.8f), mainGroup.RectTransform)) { CanBeFocused = false };
+            GUILayoutGroup nameGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), nameAndJobGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { CanBeFocused = false };
+            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(Vector2.One, nameGroup.RectTransform),
+                listBox == hireableList ? characterInfo.OriginalName : characterInfo.Name,
+                textColor: jobColor, textAlignment: Alignment.BottomLeft)
             {
                 CanBeFocused = false
             };
             nameBlock.Text = ToolBox.LimitString(nameBlock.Text, nameBlock.Font, nameBlock.Rect.Width);
+
             GUITextBlock jobBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), nameAndJobGroup.RectTransform),
                 characterInfo.Job.Name, textColor: Color.White, font: GUI.SmallFont, textAlignment: Alignment.TopLeft)
             {
@@ -366,7 +370,7 @@ namespace Barotrauma
             jobBlock.Text = ToolBox.LimitString(jobBlock.Text, jobBlock.Font, jobBlock.Rect.Width);
 
             float width =  0.6f / 3;
-            if (characterInfo.Job != null)
+            if (characterInfo.Job != null && skill != null)
             {
                 GUILayoutGroup skillGroup = new GUILayoutGroup(new RectTransform(new Vector2(width, 0.6f), mainGroup.RectTransform), isHorizontal: true);
                 float iconWidth = (float)skillGroup.Rect.Height / skillGroup.Rect.Width;
@@ -383,10 +387,17 @@ namespace Barotrauma
 
             if (listBox != crewList)
             {
-                new GUITextBlock(new RectTransform(new Vector2(width, 1.0f), mainGroup.RectTransform), FormatCurrency(characterInfo.Salary), textAlignment: Alignment.Center)
+                new GUITextBlock(new RectTransform(new Vector2(width, 1.0f), mainGroup.RectTransform),
+                    FormatCurrency(characterInfo.Salary),
+                    textAlignment: Alignment.Center)
                 {
                     CanBeFocused = false
                 };
+            }
+            else
+            {
+                // Just a bit of padding to make list layouts similar
+                new GUIFrame(new RectTransform(new Vector2(width, 1.0f), mainGroup.RectTransform), style: null) { CanBeFocused = false };
             }
 
             if (listBox == hireableList)
@@ -446,6 +457,23 @@ namespace Barotrauma
                     }
                 };
             }
+
+            if (listBox == pendingList || listBox == crewList)
+            {
+                nameBlock.RectTransform.Resize(new Point(nameBlock.Rect.Width - nameBlock.Rect.Height, nameBlock.Rect.Height));
+                nameBlock.Text = ToolBox.LimitString(nameBlock.Text, nameBlock.Font, nameBlock.Rect.Width);
+                nameBlock.RectTransform.Resize(new Point((int)(nameBlock.Padding.X + nameBlock.TextSize.X + nameBlock.Padding.Z), nameBlock.Rect.Height));
+                Point size = new Point((int)(0.7f * nameBlock.Rect.Height));
+                new GUIImage(new RectTransform(size, nameGroup.RectTransform), "EditIcon") { CanBeFocused = false };
+                size = new Point(3 * mainGroup.AbsoluteSpacing + icon.Rect.Width + nameAndJobGroup.Rect.Width, mainGroup.Rect.Height);
+                new GUIButton(new RectTransform(size, frame.RectTransform) { RelativeOffset = new Vector2(0.025f) }, style: null)
+                {
+                    Enabled = HasPermission,
+                    ToolTip = TextManager.GetWithVariable("campaigncrew.givenicknametooltip", "[mouseprimary]", TextManager.Get($"input.{(PlayerInput.MouseButtonsSwapped() ? "rightmouse" : "leftmouse")}")), 
+                    UserData = characterInfo,
+                    OnClicked = CreateRenamingComponent
+                };
+            }
         }
 
         private void CreateCharacterPreviewFrame(GUIListBox listBox, GUIFrame characterFrame, CharacterInfo characterInfo)
@@ -478,7 +506,10 @@ namespace Barotrauma
             GUILayoutGroup infoValueGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), infoGroup.RectTransform)) { Stretch = true };
             float blockHeight = 1.0f / 4;
             new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoLabelGroup.RectTransform), TextManager.Get("name"));
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoValueGroup.RectTransform), characterInfo.Name);
+            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoValueGroup.RectTransform), "");
+            string name = listBox == hireableList ? characterInfo.OriginalName : characterInfo.Name;
+            nameBlock.Text = ToolBox.LimitString(name, nameBlock.Font, nameBlock.Rect.Width);
+
             if (characterInfo.HasGenders)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoLabelGroup.RectTransform), TextManager.Get("gender"));
@@ -553,9 +584,18 @@ namespace Barotrauma
             if (PendingHires.Contains(characterInfo)) { PendingHires.Remove(characterInfo); }
             pendingList.Content.RemoveChild(pendingList.Content.FindChild(c => (c.UserData as Tuple<CharacterInfo, float>).Item1 == characterInfo));
             pendingList.UpdateScrollBarSize();
-            CreateCharacterFrame(characterInfo, hireableList);
-            SortCharacters(hireableList, (SortingMethod)sortingDropDown.SelectedItemData);
-            hireableList.UpdateScrollBarSize();
+
+            // Server will reset the names to originals in multiplayer
+            if (!GameMain.IsMultiplayer) { characterInfo?.ResetName(); }
+
+            if (campaign.Map.CurrentLocation.HireManager.AvailableCharacters.Any(info => info.GetIdentifierUsingOriginalName() == characterInfo.GetIdentifierUsingOriginalName()) &&
+                hireableList.Content.Children.None(c => c.UserData is Tuple<CharacterInfo, float> userData && userData.Item1.GetIdentifierUsingOriginalName() == characterInfo.GetIdentifierUsingOriginalName()))
+            {
+                CreateCharacterFrame(characterInfo, hireableList);
+                SortCharacters(hireableList, (SortingMethod)sortingDropDown.SelectedItemData);
+                hireableList.UpdateScrollBarSize();
+            }
+            
             if (setTotalHireCost) { SetTotalHireCost(); }
             if (createNetworkMessage) { SendCrewState(true); }
             return true;
@@ -572,36 +612,41 @@ namespace Barotrauma
         {
             if (pendingList == null || totalBlock == null || validateHiresButton == null) { return; }
             int total = 0;
-            pendingList.Content.Children.ForEach(c => total += (c.UserData as Tuple<CharacterInfo, float>).Item1.Salary);
+            pendingList.Content.Children.ForEach(c =>
+            {
+                total += (c.UserData as Tuple<CharacterInfo, float>).Item1.Salary;
+            });
             totalBlock.Text = FormatCurrency(total);
             bool enoughMoney = campaign != null ? total <= campaign.Money : true;
             totalBlock.TextColor = enoughMoney ? Color.White : Color.Red;
             validateHiresButton.Enabled = enoughMoney && pendingList.Content.RectTransform.Children.Any();
         }
 
-        public bool ValidatePendingHires(bool createNetworkEvent = false)
+        public bool ValidateHires(List<CharacterInfo> hires, bool createNetworkEvent = false)
         {
-            List<CharacterInfo> hires = new List<CharacterInfo>();
-            int total = 0;
-            foreach (GUIComponent c in pendingList.Content.Children.ToList())
-            {
-                if (c.UserData is Tuple<CharacterInfo, float> info)
-                {
-                    hires.Add(info.Item1);
-                    total += info.Item1.Salary;
-                }
-            }
+            if (hires == null || hires.None()) { return false; }
 
-            if (hires.None() || total > campaign.Money) { return false; }
+            List<CharacterInfo> nonDuplicateHires = new List<CharacterInfo>();
+            hires.ForEach(hireInfo =>
+            {
+                if(campaign.CrewManager.GetCharacterInfos().None(crewInfo => crewInfo.IsNewHire && crewInfo.GetIdentifierUsingOriginalName() == hireInfo.GetIdentifierUsingOriginalName()))
+                {
+                    nonDuplicateHires.Add(hireInfo);
+                }
+            });
+
+            if (nonDuplicateHires.None()) { return false; }
+
+            int total = nonDuplicateHires.Aggregate(0, (total, info) => total + info.Salary);
+
+            if (total > campaign.Money) { return false; }
 
             bool atLeastOneHired = false;
-            foreach (CharacterInfo ci in hires)
+            foreach (CharacterInfo ci in nonDuplicateHires)
             {
                 if (campaign.TryHireCharacter(campaign.Map.CurrentLocation, ci))
                 {
                     atLeastOneHired = true;
-                    PendingHires.Remove(ci);
-                    pendingList.Content.RemoveChild(pendingList.Content.FindChild(c => (c.UserData as Tuple<CharacterInfo, float>).Item1 == ci));
                 }
                 else
                 {
@@ -628,6 +673,93 @@ namespace Barotrauma
             return false;
         }
 
+        private bool CreateRenamingComponent(GUIButton button, object userData)
+        {
+            if (!HasPermission || !(userData is CharacterInfo characterInfo)) { return false; }
+            var outerGlowFrame = new GUIFrame(new RectTransform(new Vector2(1.25f, 1.25f), parentComponent.RectTransform, Anchor.Center),
+                style: "OuterGlow", color: Color.Black * 0.7f);
+            var frame = new GUIFrame(new RectTransform(new Vector2(0.33f, 0.4f), outerGlowFrame.RectTransform, anchor: Anchor.Center)
+            {
+                MaxSize = new Point(400, 300).Multiply(GUI.Scale)
+            });
+            var layoutGroup = new GUILayoutGroup(new RectTransform((frame.Rect.Size - GUIStyle.ItemFrameMargin).Multiply(new Vector2(0.75f, 1.0f)), frame.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter)
+            {
+                RelativeSpacing = 0.02f,
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), layoutGroup.RectTransform), TextManager.Get("campaigncrew.givenickname"), font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+            var groupElementSize = new Vector2(1.0f, 0.25f);
+            var nameBox = new GUITextBox(new RectTransform(groupElementSize, layoutGroup.RectTransform))
+            {
+                MaxTextLength = Client.MaxNameLength
+            };
+            new GUIButton(new RectTransform(groupElementSize, layoutGroup.RectTransform), text: TextManager.Get("confirm"))
+            {
+                OnClicked = (button, userData) =>
+                {
+                    if (RenameCharacter(characterInfo, nameBox.Text?.Trim()))
+                    {
+                        parentComponent.RemoveChild(outerGlowFrame);
+                        return true;
+                    }
+                    else
+                    {
+                        nameBox.Flash(color: Color.Red);
+                        return false;
+                    }
+                    
+                }
+            };
+            new GUIButton(new RectTransform(groupElementSize, layoutGroup.RectTransform), text: TextManager.Get("cancel"))
+            {
+                OnClicked = (button, userData) =>
+                {
+                    parentComponent.RemoveChild(outerGlowFrame);
+                    return true;
+                }
+            };
+            layoutGroup.Recalculate();
+            return true;
+        }
+
+        public bool RenameCharacter(CharacterInfo characterInfo, string newName)
+        {
+            if (characterInfo == null || string.IsNullOrEmpty(newName)) { return false; }
+            if (newName == characterInfo.Name) { return false; }
+            if (GameMain.IsMultiplayer)
+            {
+                SendCrewState(false, renameCharacter: (characterInfo, newName));
+            }
+            else
+            {
+                var crewComponent = crewList.Content.FindChild(c => (c.UserData as Tuple<CharacterInfo, float>).Item1 == characterInfo);
+                if (crewComponent != null)
+                {
+                    crewList.Content.RemoveChild(crewComponent);
+                    campaign.CrewManager.RenameCharacter(characterInfo, newName);
+                    CreateCharacterFrame(characterInfo, crewList);
+                    SortCharacters(crewList, SortingMethod.JobAsc);
+                }
+                else
+                {
+                    var pendingComponent = pendingList.Content.FindChild(c => (c.UserData as Tuple<CharacterInfo, float>).Item1 == characterInfo);
+                    if (pendingComponent != null)
+                    {
+                        pendingList.Content.RemoveChild(pendingComponent);
+                        campaign.Map.CurrentLocation.HireManager.RenameCharacter(characterInfo, newName);
+                        CreateCharacterFrame(characterInfo, pendingList);
+                        SortCharacters(pendingList, SortingMethod.JobAsc);
+                        SetTotalHireCost();
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         private bool FireCharacter(GUIButton button, object selection)
         {
             if (!(selection is CharacterInfo characterInfo)) { return false; }
@@ -648,9 +780,10 @@ namespace Barotrauma
                 UpdateLocationView(campaign.Map.CurrentLocation, false);
             }
 
-            if ((GUI.MouseOn?.UserData as Tuple<CharacterInfo, float>)?.Item1 is CharacterInfo characterInfo)
+            (GUIComponent highlightedFrame, CharacterInfo highlightedInfo) = FindHighlightedCharacter(GUI.MouseOn);
+            if (highlightedFrame != null && highlightedInfo != null)
             {
-                if (characterPreviewFrame == null || characterInfo != characterPreviewFrame.UserData)
+                if (characterPreviewFrame == null || highlightedInfo != characterPreviewFrame.UserData)
                 {
                     GUIComponent component = GUI.MouseOn;
                     GUIListBox listBox = null;
@@ -673,7 +806,7 @@ namespace Barotrauma
 
                     if (listBox != null)
                     {
-                        SelectCharacter(listBox, GUI.MouseOn as GUIFrame, characterInfo);
+                        SelectCharacter(listBox, highlightedFrame as GUIFrame, highlightedInfo);
                     }
                 }
                 else
@@ -687,6 +820,27 @@ namespace Barotrauma
                 characterPreviewFrame.Parent?.RemoveChild(characterPreviewFrame);
                 characterPreviewFrame = null;
             }
+
+            static (GUIComponent, CharacterInfo) FindHighlightedCharacter(GUIComponent c)
+            {
+                if (c == null)
+                {
+                    return default;
+                }
+                if (c.UserData is Tuple<CharacterInfo, float> highlightedData)
+                {
+                    return (c, highlightedData.Item1);
+                }
+                if (c.Parent != null)
+                {
+                    if (c.Parent is GUIListBox)
+                    {
+                        return default;
+                    }
+                    return FindHighlightedCharacter(c.Parent);
+                }
+                return default;
+            }
         }
 
         public void SetPendingHires(List<int> characterInfos, Location location)
@@ -699,7 +853,7 @@ namespace Barotrauma
             PendingHires.Clear();
             foreach (int identifier in characterInfos)
             {
-                CharacterInfo match = location.HireManager.AvailableCharacters.Find(info => info.GetIdentifier() == identifier);
+                CharacterInfo match = location.HireManager.AvailableCharacters.Find(info => info.GetIdentifierUsingOriginalName() == identifier);
                 if (match != null)
                 {
                     PendingHires.Add(match);
@@ -716,9 +870,10 @@ namespace Barotrauma
         /// Notify the server of crew changes
         /// </summary>
         /// <param name="updatePending">When set to true will tell the server to update the pending hires</param>
+        /// <param name="renameCharacter">When not null tell the server to rename this character. Item1 is the character to rename, Item2 is the new name, Item3 indicates whether the renamed character is already a part of the crew.</param>
         /// <param name="firedCharacter">When not null tell the server to fire this character</param>
         /// <param name="validateHires">When set to true will tell the server to validate pending hires</param>
-        public void SendCrewState(bool updatePending, CharacterInfo firedCharacter = null, bool validateHires = false)
+        public void SendCrewState(bool updatePending, (CharacterInfo info, string newName) renameCharacter = default, CharacterInfo firedCharacter = null, bool validateHires = false)
         {
             if (campaign is MultiPlayerCampaign)
             {
@@ -731,11 +886,22 @@ namespace Barotrauma
                     msg.Write((ushort)PendingHires.Count);
                     foreach (CharacterInfo pendingHire in PendingHires)
                     {
-                        msg.Write(pendingHire.GetIdentifier());
+                        msg.Write(pendingHire.GetIdentifierUsingOriginalName());
                     }
                 }
 
                 msg.Write(validateHires);
+
+                bool validRenaming = renameCharacter.info != null && !string.IsNullOrEmpty(renameCharacter.newName);
+                msg.Write(validRenaming);
+                if (validRenaming)
+                {
+                    int identifier = renameCharacter.info.GetIdentifierUsingOriginalName();
+                    msg.Write(identifier);
+                    msg.Write(renameCharacter.newName);
+                    bool existingCrewMember = campaign.CrewManager?.GetCharacterInfos().Any(ci => ci.GetIdentifierUsingOriginalName() == identifier) ?? false;
+                    msg.Write(existingCrewMember);
+                }
 
                 msg.Write(firedCharacter != null);
                 if (firedCharacter != null)

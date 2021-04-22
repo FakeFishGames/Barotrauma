@@ -2,8 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace Barotrauma
 {
@@ -63,7 +63,19 @@ namespace Barotrauma
         private Sprite[,] mapTiles;
         private bool[,] tileDiscovered;
 
-        private Pair<Rectangle, string> connectionTooltip;
+        private float connectionHighlightState;
+
+        private (Rectangle targetArea, string tip)? tooltip;
+        private string sanitizedTooltip;
+        private List<RichTextData> tooltipRichTextData;
+        private string prevTooltip;
+
+        private (SubmarineInfo pendingSub, float realWorldCrushDepth) pendingSubInfo;
+
+        /*private (Rectangle targetArea, string tip)? connectionTooltip;
+        private string sanitizedConnectionTooltip;
+        private List<RichTextData> connectionTooltipRichTextData;
+        private string prevConnectionTooltip;*/
 
 #if DEBUG
         private GUIComponent editor;
@@ -93,13 +105,6 @@ namespace Barotrauma
             };
         }
 #endif
-        public Location CurrentDisplayLocation
-        {
-            get 
-            {
-                return GameMain.GameSession.Campaign.CurrentDisplayLocation;
-            }
-        }
 
         partial void InitProjectSpecific()
         {
@@ -119,7 +124,6 @@ namespace Barotrauma
             {
                 DrawOffset = -CurrentLocation.MapPosition;
             }
-
 
             Vector2 tileSize = generationParams.MapTiles.Values.First().First().size * generationParams.MapTileScale;
             int tilesX = (int)Math.Ceiling(Width / tileSize.X);
@@ -227,8 +231,8 @@ namespace Barotrauma
             if (change.Messages.Any())
             {
                 string msg = change.Messages[Rand.Range(0, change.Messages.Count)]
-                    .Replace("[previousname]", prevName)
-                    .Replace("[name]", location.Name);
+                    .Replace("[previousname]", $"‖color:gui.orange‖{prevName}‖end‖")
+                    .Replace("[name]", $"‖color:gui.orange‖{location.Name}‖end‖");
                 location.LastTypeChangeMessage = msg;
                 if (GameMain.Client != null)
                 {
@@ -254,27 +258,51 @@ namespace Barotrauma
         {
             Rectangle rect = mapContainer.Rect;
 
-            if (CurrentDisplayLocation != null)
+            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
+
+            if (currentDisplayLocation != null)
             {
-                if (!CurrentDisplayLocation.Discovered)
+                if (!currentDisplayLocation.Discovered)
                 {
-                    RemoveFogOfWar(CurrentDisplayLocation);
-                    CurrentDisplayLocation.Discovered = true;
-                    if (CurrentDisplayLocation.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                    RemoveFogOfWar(currentDisplayLocation);
+                    currentDisplayLocation.Discovered = true;
+                    if (currentDisplayLocation.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                     {
-                        furthestDiscoveredLocation = CurrentDisplayLocation;
+                        furthestDiscoveredLocation = currentDisplayLocation;
                     }
                 }
             }
 
-            currLocationIndicatorPos = Vector2.Lerp(currLocationIndicatorPos, CurrentDisplayLocation.MapPosition, deltaTime);
+            Vector2 currentPosition = currentDisplayLocation.MapPosition;
+            if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection && Level.Loaded.StartLocation != null && Level.Loaded.EndLocation != null)
+            {
+                Vector2 startPos = currentDisplayLocation == Level.Loaded.StartLocation ? Level.Loaded.StartLocation.MapPosition : Level.Loaded.EndLocation.MapPosition;
+                int moveDir = currentDisplayLocation == Level.Loaded.StartLocation ? 1 : -1;
+
+                Vector2 diff = Level.Loaded.EndLocation.MapPosition - Level.Loaded.StartLocation.MapPosition;
+                currentPosition = startPos + 
+                    Vector2.Normalize(diff) * Math.Min(100, diff.Length() * 0.2f) * moveDir;
+            }
+            else
+            {
+                currentPosition += Vector2.UnitY * 35;
+            }
+
+            currLocationIndicatorPos = Vector2.Lerp(currLocationIndicatorPos, currentPosition, deltaTime);
 #if DEBUG
             if (GameMain.DebugDraw)
             {
                 if (editor == null) CreateEditor();
                 editor.AddToGUIUpdateList(order: 1);
             }
+
+            if (PlayerInput.KeyHit(Keys.Space))
+            {
+                Radiation?.OnStep();
+            }
 #endif
+
+            Radiation?.MapUpdate(deltaTime);
 
             if (mapAnimQueue.Count > 0)
             {
@@ -299,15 +327,16 @@ namespace Barotrauma
                 for (int i = 0; i < Locations.Count; i++)
                 {
                     Location location = Locations[i];
-                    if (IsInFogOfWar(location) && !(CurrentDisplayLocation?.Connections.Any(c => c.Locations.Contains(location)) ?? false) && !GameMain.DebugDraw) { continue; }
+                    if (IsInFogOfWar(location) && !(currentDisplayLocation?.Connections.Any(c => c.Locations.Contains(location)) ?? false) && !GameMain.DebugDraw) { continue; }
 
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
                     if (!rect.Contains(pos)) { continue; }
 
-                    float iconScale = generationParams.LocationIconSize / location.Type.Sprite.size.X;
-                    if (location == CurrentDisplayLocation) { iconScale *= 1.2f; }
+                    Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
+                    float iconScale = generationParams.LocationIconSize / locationSprite.size.X;
+                    if (location == currentDisplayLocation) { iconScale *= 1.2f; }
 
-                    Rectangle drawRect = location.Type.Sprite.SourceRect;
+                    Rectangle drawRect = locationSprite.SourceRect;
                     drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
                     drawRect.Height = (int)(drawRect.Height * iconScale * zoom * 1.4f);
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
@@ -324,6 +353,15 @@ namespace Barotrauma
                 }
             }
 
+            if (SelectedConnection != null)
+            {
+                connectionHighlightState = Math.Min(connectionHighlightState + deltaTime, 1.0f);
+            }
+            else
+            {
+                connectionHighlightState = 0.0f;
+            }
+
             if (GUI.KeyboardDispatcher.Subscriber == null)
             {
                 float moveSpeed = 1000.0f;
@@ -336,21 +374,27 @@ namespace Barotrauma
             }
 
             targetZoom = MathHelper.Clamp(targetZoom, generationParams.MinZoom, generationParams.MaxZoom);
-            zoom = MathHelper.Lerp(zoom, targetZoom, 0.1f);
+            zoom = MathHelper.Lerp(zoom, targetZoom * GUI.Scale, 0.1f);
 
             if (GUI.MouseOn == mapContainer)
             {
                 foreach (LocationConnection connection in Connections)
                 {
-                    if (HighlightedLocation != CurrentDisplayLocation &&
-                        connection.Locations.Contains(HighlightedLocation) && connection.Locations.Contains(CurrentDisplayLocation))
+                    if (HighlightedLocation != currentDisplayLocation &&
+                        connection.Locations.Contains(HighlightedLocation) && 
+                        connection.Locations.Contains(currentDisplayLocation))
                     {
                         if (PlayerInput.PrimaryMouseButtonClicked() &&
                             SelectedLocation != HighlightedLocation && HighlightedLocation != null)
                         {
-                            //clients aren't allowed to select the location without a permission
-                            if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign() ?? false)
+                            if (connection.Locked)
                             {
+                                new GUIMessageBox(string.Empty, TextManager.Get("LockedPathTooltip"));
+                            }
+                            //clients aren't allowed to select the location without a permission
+                            else if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign() ?? false)
+                            {
+                                connectionHighlightState = 0.0f;
                                 SelectedConnection = connection;
                                 SelectedLocation = HighlightedLocation;
 
@@ -371,13 +415,13 @@ namespace Barotrauma
                 {
                     if (PlayerInput.DoubleClicked() && HighlightedLocation != null)
                     {
-                        var passedConnection = CurrentDisplayLocation.Connections.Find(c => c.OtherLocation(CurrentDisplayLocation) == HighlightedLocation);
+                        var passedConnection = currentDisplayLocation.Connections.Find(c => c.OtherLocation(currentDisplayLocation) == HighlightedLocation);
                         if (passedConnection != null)
                         {
                             passedConnection.Passed = true;
                         }
 
-                        Location prevLocation = CurrentDisplayLocation;
+                        Location prevLocation = currentDisplayLocation;
                         CurrentLocation = HighlightedLocation;
                         Level.Loaded.DebugSetStartLocation(CurrentLocation);
                         Level.Loaded.DebugSetEndLocation(null);
@@ -389,6 +433,7 @@ namespace Barotrauma
                         {
                             CurrentLocation.CreateStore();
                             ProgressWorld();
+                            Radiation?.OnStep(1);
                         }
                         else
                         {
@@ -412,12 +457,13 @@ namespace Barotrauma
         
         public void Draw(SpriteBatch spriteBatch, GUICustomComponent mapContainer)
         {
-            connectionTooltip = null;
+            tooltip = null;
+            var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
 
             Rectangle rect = mapContainer.Rect;
 
             Vector2 viewSize = new Vector2(rect.Width / zoom, rect.Height / zoom);
-            Vector2 edgeBuffer = rect.Size.ToVector2() / 2;
+            Vector2 edgeBuffer = new Vector2(rect.Width * 0.05f);
             DrawOffset.X = MathHelper.Clamp(DrawOffset.X, -Width - edgeBuffer.X + viewSize.X / 2.0f, edgeBuffer.X - viewSize.X / 2.0f);
             DrawOffset.Y = MathHelper.Clamp(DrawOffset.Y, -Height - edgeBuffer.Y + viewSize.Y / 2.0f, edgeBuffer.Y - viewSize.Y / 2.0f);
 
@@ -481,30 +527,16 @@ namespace Barotrauma
             }
 
             float rawNoiseScale = 1.0f + PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
-            cameraNoiseStrength = PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
+            DrawNoise(spriteBatch, rect, rawNoiseScale);
 
-            noiseOverlay.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(), 
-                startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
-                color : Color.White * cameraNoiseStrength * 0.1f,
-                textureScale: Vector2.One * rawNoiseScale);
+            Radiation?.Draw(spriteBatch, rect, zoom);
 
-            noiseOverlay.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(),
-                startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
-                color: new Color(20,20,20,50),
-                textureScale: Vector2.One * rawNoiseScale * 2);
-
-            noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight),
-                startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
-                color: Color.White * cameraNoiseStrength * 0.1f,
-                textureScale: Vector2.One * noiseScale);
-
-            Pair<Rectangle, string> tooltip = null;
             if (generationParams.ShowLocations)
             {
                 foreach (LocationConnection connection in Connections)
                 {
                     if (IsInFogOfWar(connection.Locations[0]) && IsInFogOfWar(connection.Locations[1])) { continue; }
-                    DrawConnection(spriteBatch, connection, rect, viewOffset);
+                    DrawConnection(spriteBatch, connection, rect, viewOffset, currentDisplayLocation);
                 }
                 
                 for (int i = 0; i < Locations.Count; i++)
@@ -512,19 +544,48 @@ namespace Barotrauma
                     Location location = Locations[i];
                     if (IsInFogOfWar(location)) { continue; }
                     Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
-                    
-                    Rectangle drawRect = location.Type.Sprite.SourceRect;
+
+                    Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
+
+                    Rectangle drawRect = locationSprite.SourceRect;
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
                     if (!rect.Intersects(drawRect)) { continue; }
 
-                    if (location == CurrentDisplayLocation )
+                    Color color = location.Type.SpriteColor;
+                    if (!location.Discovered) { color = Color.White; }
+                    if (location.Connections.Find(c => c.Locations.Contains(currentDisplayLocation)) == null)
                     {
+                        color *= 0.5f;
+                    }
+
+                    float iconScale = location == currentDisplayLocation ? 1.2f : 1.0f;
+                    if (location == HighlightedLocation)
+                    {
+                        iconScale *= 1.2f;
+                    }
+
+                    locationSprite.Draw(spriteBatch, pos, color, 
+                        scale: generationParams.LocationIconSize / locationSprite.size.X * iconScale * zoom);
+
+                    if (location == currentDisplayLocation)
+                    {
+                        if (SelectedLocation != null)
+                        {
+                            Vector2 dir = Vector2.Normalize(SelectedLocation.MapPosition - currLocationIndicatorPos);                                
+                            GUI.Arrow.Draw(spriteBatch, 
+                                rectCenter + (currLocationIndicatorPos + viewOffset) * zoom + dir * generationParams.LocationIconSize * 0.6f * zoom,
+                                generationParams.IndicatorColor,
+                                GUI.Arrow.Origin,
+                                rotate: MathUtils.VectorToAngle(dir) + MathHelper.PiOver2,
+                                new Vector2(0.5f, 1.0f) * zoom);
+                        }  
                         generationParams.CurrentLocationIndicator.Draw(spriteBatch,
                             rectCenter + (currLocationIndicatorPos + viewOffset) * zoom,
                             generationParams.IndicatorColor,
-                            generationParams.CurrentLocationIndicator.Origin, 0, Vector2.One * (generationParams.LocationIconSize / generationParams.CurrentLocationIndicator.size.X) * 1.7f * zoom);
+                            generationParams.CurrentLocationIndicator.Origin, 0, Vector2.One * (generationParams.LocationIconSize / generationParams.CurrentLocationIndicator.size.X) * 0.8f * zoom);
+                                                  
                     }
 
                     if (location == SelectedLocation)
@@ -535,31 +596,15 @@ namespace Barotrauma
                             generationParams.SelectedLocationIndicator.Origin, 0, Vector2.One * (generationParams.LocationIconSize / generationParams.SelectedLocationIndicator.size.X) * 1.7f * zoom);
                     }
 
-                    Color color = location.Type.SpriteColor;
-                    if (!location.Discovered) { color = Color.White; }
-                    if (location.Connections.Find(c => c.Locations.Contains(CurrentDisplayLocation)) == null)
-                    {
-                        color *= 0.5f;
-                    }
-
-                    float iconScale = location == CurrentDisplayLocation ? 1.2f : 1.0f;
-                    if (location == HighlightedLocation)
-                    {
-                        iconScale *= 1.2f;
-                    }
-
-                    location.Type.Sprite.Draw(spriteBatch, pos, color, 
-                        scale: generationParams.LocationIconSize / location.Type.Sprite.size.X * iconScale * zoom);
                     if (location.TimeSinceLastTypeChange < 1 && !string.IsNullOrEmpty(location.LastTypeChangeMessage) && generationParams.TypeChangeIcon != null)
                     {
                         Vector2 typeChangeIconPos = pos + new Vector2(1.35f, -0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
                         float typeChangeIconScale = 18.0f / generationParams.TypeChangeIcon.SourceRect.Width;
                         generationParams.TypeChangeIcon.Draw(spriteBatch, typeChangeIconPos, GUI.Style.Red, scale: typeChangeIconScale * zoom);
-                        if (Vector2.Distance(PlayerInput.MousePosition, typeChangeIconPos) < generationParams.TypeChangeIcon.SourceRect.Width * zoom)
+                        if (Vector2.Distance(PlayerInput.MousePosition, typeChangeIconPos) < generationParams.TypeChangeIcon.SourceRect.Width * zoom &&
+                            (tooltip == null || IsPreferredTooltip(typeChangeIconPos)))
                         {
-                            tooltip = new Pair<Rectangle, string>(
-                                new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), 
-                                location.LastTypeChangeMessage);
+                            tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), location.LastTypeChangeMessage);
                         }
                     }
                     if (location != CurrentLocation && CurrentLocation.AvailableMissions.Any(m => m.Locations.Contains(location)) && generationParams.MissionIcon != null)
@@ -567,16 +612,14 @@ namespace Barotrauma
                         Vector2 missionIconPos = pos + new Vector2(1.35f, 0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
                         float missionIconScale = 18.0f / generationParams.MissionIcon.SourceRect.Width;
                         generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, generationParams.IndicatorColor, scale: missionIconScale * zoom);
-                        if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom)
+                        if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom && IsPreferredTooltip(missionIconPos))
                         {
                             var availableMissions = CurrentLocation.AvailableMissions.Where(m => m.Locations.Contains(location));
-                            tooltip = new Pair<Rectangle, string>(
-                                new Rectangle(missionIconPos.ToPoint(), new Point(30)), 
-                                TextManager.Get("mission") + '\n'+ string.Join('\n', availableMissions.Select(m => "- " + m.Name)));
+                            tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), TextManager.Get("mission") + '\n'+ string.Join('\n', availableMissions.Select(m => "- " + m.Name)));
                         }
                     }
 
-                    if (GameMain.DebugDraw && location == HighlightedLocation && (!location.Discovered || !location.Type.HasOutpost))
+                    if (GameMain.DebugDraw && location == HighlightedLocation && (!location.Discovered || !location.HasOutpost()))
                     {
                         if (location.Reputation != null)
                         {
@@ -603,12 +646,27 @@ namespace Barotrauma
 
             DrawDecorativeHUD(spriteBatch, rect);
 
-            if (HighlightedLocation != null)
+            bool drawRadiationTooltip = true;
+            
+            if (tooltip != null)
             {
+                if (tooltip.Value.tip != prevTooltip)
+                {
+                    prevTooltip = tooltip.Value.tip;
+                    tooltipRichTextData = RichTextData.GetRichTextData(tooltip.Value.tip, out sanitizedTooltip);
+                }
+                GUIComponent.DrawToolTip(spriteBatch, sanitizedTooltip, tooltip.Value.targetArea, tooltipRichTextData);
+                drawRadiationTooltip = false;
+            }
+            else if (HighlightedLocation != null)
+            {
+                drawRadiationTooltip = false;
                 Vector2 pos = rectCenter + (HighlightedLocation.MapPosition + viewOffset) * zoom;
                 pos.X += 50 * zoom;
+                pos.X = (int)pos.X;
+                pos.Y = (int)pos.Y;
                 Vector2 nameSize = GUI.LargeFont.MeasureString(HighlightedLocation.Name);
-                Vector2 typeSize = GUI.Font.MeasureString(HighlightedLocation.Type.Name);
+                Vector2 typeSize = string.IsNullOrEmpty(HighlightedLocation.Type.Name) ? Vector2.Zero : GUI.Font.MeasureString(HighlightedLocation.Type.Name);
                 Vector2 size = new Vector2(Math.Max(nameSize.X, typeSize.X), nameSize.Y + typeSize.Y);
                 bool showReputation = hudVisibility > 0.0f && HighlightedLocation.Discovered && HighlightedLocation.Type.HasOutpost && HighlightedLocation.Reputation != null;
                 string repLabelText = null, repValueText = null;
@@ -616,15 +674,14 @@ namespace Barotrauma
                 if (showReputation)
                 {
                     repLabelText = TextManager.Get("reputation");
-                    repLabelSize = GUI.Font.MeasureString(repLabelText);           
-                    size.X = Math.Max(size.X, repLabelSize.X);
-                    repBarSize = new Vector2(Math.Max(0.75f * size.X, 100), repLabelSize.Y);
-                    size.X = Math.Max(size.X, (4.0f / 3.0f) * repBarSize.X);
-                    size.Y += 2 * repLabelSize.Y + 4 + repBarSize.Y;
-                    repValueText = ((int)HighlightedLocation.Reputation.Value).ToString();
+                    repLabelSize = GUI.Font.MeasureString(repLabelText);
+                    repBarSize = new Vector2(GUI.IntScale(200), repLabelSize.Y);
+                    size.Y += 2 * repLabelSize.Y + GUI.IntScale(5) + repBarSize.Y;
+                    repValueText = HighlightedLocation.Reputation.GetFormattedReputationText(addColorTags: false);
+                    size.X = Math.Max(size.X, repBarSize.X + GUI.Font.MeasureString(repValueText).X + GUI.IntScale(10));
                 }
                 GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                    spriteBatch, new Rectangle((int)(pos.X - 60 * GUI.Scale), (int)(pos.Y - size.Y), (int)(size.X + 120 * GUI.Scale), (int)(size.Y * 2.2f)), Color.Black * hudVisibility);                
+                    spriteBatch, new Rectangle((int)(pos.X - 60 * GUI.Scale), (int)(pos.Y - size.Y), (int)(size.X + 120 * GUI.Scale), (int)(size.Y * 2.2f)), Color.Black * hudVisibility);
                 var topLeftPos = pos - new Vector2(0.0f, size.Y / 2);
                 GUI.DrawString(spriteBatch, topLeftPos, HighlightedLocation.Name, GUI.Style.TextColor * hudVisibility * 1.5f, font: GUI.LargeFont);
                 topLeftPos += new Vector2(0.0f, nameSize.Y);
@@ -633,26 +690,51 @@ namespace Barotrauma
                 {
                     topLeftPos += new Vector2(0.0f, typeSize.Y + repLabelSize.Y);
                     GUI.DrawString(spriteBatch, topLeftPos, repLabelText, GUI.Style.TextColor * hudVisibility * 1.5f);
-                    topLeftPos += new Vector2(0.0f, repLabelSize.Y + 4);
+                    topLeftPos += new Vector2(0.0f, repLabelSize.Y + GUI.IntScale(10));
                     Rectangle repBarRect = new Rectangle(new Point((int)topLeftPos.X, (int)topLeftPos.Y), new Point((int)repBarSize.X, (int)repBarSize.Y));
                     RoundSummary.DrawReputationBar(spriteBatch, repBarRect, HighlightedLocation.Reputation.NormalizedValue);
-                    GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + 4, repBarRect.Top), repValueText, GUI.Style.TextColor);
+                    GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + GUI.IntScale(5), repBarRect.Top), repValueText, Reputation.GetReputationColor(HighlightedLocation.Reputation.NormalizedValue));
                 }
             }
-            if (tooltip != null)
+
+            if (drawRadiationTooltip)
             {
-                GUIComponent.DrawToolTip(spriteBatch, tooltip.Second, tooltip.First);
+                Radiation?.DrawFront(spriteBatch);
             }
-            if (connectionTooltip != null)
-            {
-                GUIComponent.DrawToolTip(spriteBatch, connectionTooltip.Second, connectionTooltip.First);
-            }
+
             spriteBatch.End();
             GameMain.Instance.GraphicsDevice.ScissorRectangle = prevScissorRect;
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
         }
 
-        private void DrawConnection(SpriteBatch spriteBatch, LocationConnection connection, Rectangle viewArea, Vector2 viewOffset, Color? overrideColor = null)
+        public static void DrawNoise(SpriteBatch spriteBatch, Rectangle rect, float strength)
+        {
+            noiseOverlay ??= new Sprite("Content/UI/noise.png", Vector2.Zero);
+
+            float noiseT = (float)(Timing.TotalTime * 0.01f);
+            float noiseScale = (float)PerlinNoise.CalculatePerlin(noiseT * 5.0f, noiseT * 2.0f, 0) * 5.0f;
+
+            float rawNoiseScale = 1.0f + GetPerlinNoise();
+
+            noiseOverlay.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(), 
+                startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
+                color : Color.White * strength * 0.1f,
+                textureScale: Vector2.One * rawNoiseScale);
+
+            noiseOverlay.DrawTiled(spriteBatch, rect.Location.ToVector2(), rect.Size.ToVector2(),
+                startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
+                color: new Color(20,20,20,50),
+                textureScale: Vector2.One * rawNoiseScale * 2);
+
+            noiseOverlay.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight),
+                startOffset: new Vector2(Rand.Range(0.0f, noiseOverlay.SourceRect.Width), Rand.Range(0.0f, noiseOverlay.SourceRect.Height)),
+                color: Color.White * strength * 0.1f,
+                textureScale: Vector2.One * noiseScale);
+        }
+
+        private static float GetPerlinNoise() => PerlinNoise.GetPerlin((int)(Timing.TotalTime * 1 - 1), (int)(Timing.TotalTime * 1 - 1));
+
+        private void DrawConnection(SpriteBatch spriteBatch, LocationConnection connection, Rectangle viewArea, Vector2 viewOffset, Location currentDisplayLocation, Color? overrideColor = null)
         {
             Color connectionColor;
             if (GameMain.DebugDraw)
@@ -674,19 +756,22 @@ namespace Barotrauma
 
             int width = (int)(generationParams.LocationConnectionWidth * zoom);
 
+            //current level
             if (Level.Loaded?.LevelData == connection.LevelData)
             {
                 connectionColor = generationParams.HighlightedConnectionColor;
                 width = (int)(width * 1.5f);
             }
-            if (SelectedLocation != CurrentDisplayLocation &&
-                (connection.Locations.Contains(SelectedLocation) && connection.Locations.Contains(CurrentDisplayLocation)))
+            //selected connection
+            if (SelectedLocation != currentDisplayLocation &&
+                connection.Locations.Contains(SelectedLocation) && connection.Locations.Contains(currentDisplayLocation))
             {
                 connectionColor = generationParams.HighlightedConnectionColor;
                 width *= 2;
             }
-            else if (HighlightedLocation != CurrentDisplayLocation &&
-                    (connection.Locations.Contains(HighlightedLocation) && connection.Locations.Contains(CurrentDisplayLocation)))
+            //highlighted connection
+            else if (HighlightedLocation != currentDisplayLocation &&
+                    connection.Locations.Contains(HighlightedLocation) && connection.Locations.Contains(currentDisplayLocation))
             {
                 connectionColor = generationParams.HighlightedConnectionColor;
                 width *= 2;
@@ -741,16 +826,52 @@ namespace Barotrauma
                 }
                 float dist = Vector2.Distance(start, end);
                 var connectionSprite = connection.Passed ? generationParams.PassedConnectionSprite : generationParams.ConnectionSprite;
+
+                Color segmentColor = connectionColor;
+                int segmentWidth = width;
+                if (connection == SelectedConnection)
+                {
+                    float t = (i - startIndex) / (float)(endIndex - startIndex - 1);
+                    if (currentDisplayLocation == connection.Locations[1]) { t = 1.0f - t; }
+                    if (t > connectionHighlightState) 
+                    { 
+                        segmentWidth /= 2; 
+                        segmentColor = connection.Passed ? generationParams.ConnectionColor : generationParams.UnvisitedConnectionColor; 
+                    }
+                    else 
+                    { 
+                    }
+                }
+
                 spriteBatch.Draw(connectionSprite.Texture,
-                    new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), width),
-                    connectionSprite.SourceRect, connectionColor * a, MathUtils.VectorToAngle(end - start),
+                    new Rectangle((int)start.X, (int)start.Y, (int)(dist - 1 * zoom), segmentWidth),
+                    connectionSprite.SourceRect, segmentColor * a, 
+                    MathUtils.VectorToAngle(end - start),
                     new Vector2(0, connectionSprite.size.Y / 2), SpriteEffects.None, 0.01f);
             }
+
+            int iconCount = 0, iconIndex = 0;
             if (connectionStart.HasValue && connectionEnd.HasValue)
-            {                
-                GUIComponentStyle crushDepthWarningIconStyle = null;
+            {
+                if (connection.LevelData.HasBeaconStation) { iconCount++; }
+                if (connection.LevelData.HasHuntingGrounds) { iconCount++; }
+                if (connection.Locked) { iconCount++; }
                 string tooltip = null;
-                var subCrushDepth = Submarine.MainSub?.RealWorldCrushDepth ?? Level.DefaultRealWorldCrushDepth;
+                float subCrushDepth = Level.DefaultRealWorldCrushDepth;
+                var currentOrPendingSub = SubmarineSelection.CurrentOrPendingSubmarine();
+                if (Submarine.MainSub != null && Submarine.MainSub.Info == currentOrPendingSub)
+                {
+                    subCrushDepth = Submarine.MainSub.RealWorldCrushDepth;
+                }
+                else if (currentOrPendingSub != null)
+                {
+                    if (pendingSubInfo.pendingSub != currentOrPendingSub)
+                    {
+                        // Store the real world crush depth for the pending sub so that we don't have to calculate it again every time
+                        pendingSubInfo = (currentOrPendingSub, currentOrPendingSub.GetRealWorldCrushDepth());
+                    }
+                    subCrushDepth = pendingSubInfo.realWorldCrushDepth;
+                }
                 if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
                 {
                     var hullUpgradePrefab =  UpgradePrefab.Find("increasewallhealth");
@@ -769,38 +890,71 @@ namespace Barotrauma
                     }
                 }
 
+                string crushDepthWarningIconStyle = null;
                 if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
-                    crushDepthWarningIconStyle = GUI.Style.GetComponentStyle("CrushDepthWarningHighIcon");
+                    iconCount++;
+                    crushDepthWarningIconStyle = "CrushDepthWarningHighIcon";
                     tooltip = "crushdepthwarninghigh";
                 }
                 else if ((connection.LevelData.InitialDepth + connection.LevelData.Size.Y) * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
-                    crushDepthWarningIconStyle = GUI.Style.GetComponentStyle("CrushDepthWarningLowIcon");
+                    iconCount++;
+                    crushDepthWarningIconStyle = "CrushDepthWarningLowIcon";
                     tooltip = "crushdepthwarninglow";
+                }
+
+                if (connection.LevelData.HasBeaconStation)
+                {
+                    var beaconStationIconStyle = connection.LevelData.IsBeaconActive ? "BeaconStationActive" : "BeaconStationInactive";
+                    DrawIcon(beaconStationIconStyle, (int)(28 * zoom), TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip"));
+                }
+
+                if (connection.Locked)
+                {
+                    var gateLocation = connection.Locations[0].IsGateBetweenBiomes ? connection.Locations[0] : connection.Locations[1];
+                    var unlockEvent =
+                        EventSet.PrefabList.Find(ep => ep.UnlockPathEvent && ep.BiomeIdentifier == gateLocation.LevelData.Biome.Identifier) ??
+                        EventSet.PrefabList.Find(ep => ep.UnlockPathEvent && string.IsNullOrEmpty(ep.BiomeIdentifier));
+
+                    if (unlockEvent != null)
+                    {
+                        Reputation unlockReputation = CurrentLocation.Reputation;
+                        Faction unlockFaction = null;
+                        if (!string.IsNullOrEmpty(unlockEvent.UnlockPathFaction))
+                        {
+                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier.Equals(unlockEvent.UnlockPathFaction, StringComparison.OrdinalIgnoreCase));
+                            unlockReputation = unlockFaction?.Reputation;
+                        }
+
+                        DrawIcon(
+                            "LockedLocationConnection", (int)(28 * zoom),
+                            TextManager.GetWithVariables(unlockEvent.UnlockPathTooltip ?? "LockedPathTooltip",
+                              new string[] { "[requiredreputation]", "[currentreputation]" },
+                              new string[] { Reputation.GetFormattedReputationText(MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation), unlockEvent.UnlockPathReputation, addColorTags: true), unlockReputation.GetFormattedReputationText(addColorTags: true) }));
+                    }
+                    else
+                    {
+                        DrawIcon("LockedLocationConnection", (int)(28 * zoom), TextManager.Get("LockedPathTooltip"));
+                    }
+
+                }
+
+                if (connection.LevelData.HasHuntingGrounds)
+                {
+                    DrawIcon("HuntingGrounds", (int)(28 * zoom), TextManager.Get("HuntingGroundsTooltip"));
                 }
 
                 if (crushDepthWarningIconStyle != null)
                 {
-                    Vector2 iconPos = (connectionStart.Value + connectionEnd.Value) / 2;
-                    float iconSize = 32.0f * GUI.Scale;
-                    bool mouseOn = HighlightedLocation == null && Vector2.DistanceSquared(iconPos, PlayerInput.MousePosition) < iconSize * iconSize;
-                    Sprite crushDepthWarningIcon = crushDepthWarningIconStyle.GetDefaultSprite();
-                    crushDepthWarningIcon.Draw(spriteBatch, iconPos, 
-                        mouseOn ? crushDepthWarningIconStyle.HoverColor : crushDepthWarningIconStyle.Color, 
-                        scale: iconSize / crushDepthWarningIcon.size.X);
-                    if (mouseOn)
-                    {
-                        connectionTooltip = new Pair<Rectangle, string>(
-                            new Rectangle(iconPos.ToPoint(), new Point((int)iconSize)), 
-                            TextManager.Get(tooltip)
-                                .Replace("[initialdepth]", ((int)(connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio)).ToString())
-                                .Replace("[submarinecrushdepth]", ((int)subCrushDepth).ToString()));
-                    }
+                    DrawIcon(crushDepthWarningIconStyle, (int)(32 * zoom), 
+                        TextManager.Get(tooltip)
+                                .Replace("[initialdepth]", $"‖color:gui.orange‖{(int)(connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio)}‖end‖")
+                                .Replace("[submarinecrushdepth]", $"‖color:gui.orange‖{(int)subCrushDepth}‖end‖"));
                 }
             }
 
-            if (GameMain.DebugDraw && zoom > 1.0f && generationParams.ShowLevelTypeNames)
+            if (GameMain.DebugDraw && zoom > (1.0f * GUI.Scale) && generationParams.ShowLevelTypeNames)
             {
                 Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                 if (viewArea.Contains(center) && connection.Biome != null)
@@ -808,6 +962,30 @@ namespace Barotrauma
                     GUI.DrawString(spriteBatch, center, connection.Biome.Identifier + " (" + connection.Difficulty + ")", Color.White);
                 }
             }
+
+            void DrawIcon(string iconStyle, int iconSize, string tooltipText)
+            {
+                Vector2 iconPos = (connectionStart.Value + connectionEnd.Value) / 2;
+                Vector2 iconDiff = Vector2.Normalize(connectionEnd.Value - connectionStart.Value) * iconSize;
+
+                iconPos += (iconDiff * -(iconCount - 1) / 2.0f) + iconDiff * iconIndex;
+
+                var style = GUI.Style.GetComponentStyle(iconStyle);
+                bool mouseOn = Vector2.DistanceSquared(iconPos, PlayerInput.MousePosition) < iconSize * iconSize && IsPreferredTooltip(iconPos);
+                Sprite iconSprite = style.GetDefaultSprite();
+                iconSprite.Draw(spriteBatch, iconPos, (mouseOn ? style.HoverColor : style.Color) * 0.7f,
+                    scale: iconSize / iconSprite.size.X);
+                if (mouseOn)
+                {
+                    tooltip = (new Rectangle((iconPos - Vector2.One * iconSize / 2).ToPoint(), new Point(iconSize)), tooltipText);
+                }
+                iconIndex++;
+            }
+        }
+
+        private bool IsPreferredTooltip(Vector2 tooltipPos)
+        {
+            return tooltip == null || Vector2.DistanceSquared(tooltipPos, PlayerInput.MousePosition) < Vector2.DistanceSquared(tooltip.Value.targetArea.Center.ToVector2(), PlayerInput.MousePosition);
         }
 
         private float hudVisibility;
@@ -828,8 +1006,8 @@ namespace Barotrauma
 
         private void UpdateMapAnim(MapAnim anim, float deltaTime)
         {
-            //pause animation while there are messageboxes on screen
-            if (GUIMessageBox.MessageBoxes.Count > 0) return;
+            //pause animation while there are messageboxes (other than hints) on screen
+            if (GUIMessageBox.MessageBoxes.Count(c => !(c is GUIMessageBox mb) || mb.MessageBoxType != GUIMessageBox.Type.Hint) > 0) { return; }
 
             if (!string.IsNullOrEmpty(anim.StartMessage))
             {
@@ -838,8 +1016,9 @@ namespace Barotrauma
                 return;
             }
 
-            if (anim.StartZoom == null) { anim.StartZoom = MathUtils.InverseLerp(generationParams.MinZoom, generationParams.MaxZoom, zoom); }
-            if (anim.EndZoom == null) { anim.EndZoom = MathUtils.InverseLerp(generationParams.MinZoom, generationParams.MaxZoom, zoom); }
+            float unscaledZoom = zoom / GUI.Scale;
+            if (anim.StartZoom == null) { anim.StartZoom = MathUtils.InverseLerp(generationParams.MinZoom, generationParams.MaxZoom, unscaledZoom); }
+            if (anim.EndZoom == null) { anim.EndZoom = MathUtils.InverseLerp(generationParams.MinZoom, generationParams.MaxZoom, unscaledZoom); }
 
             anim.StartPos = (anim.StartLocation == null) ? -DrawOffset : anim.StartLocation.MapPosition;
 
@@ -852,7 +1031,8 @@ namespace Barotrauma
 
             zoom =
                 MathHelper.Lerp(generationParams.MinZoom, generationParams.MaxZoom,
-                    MathHelper.SmoothStep(anim.StartZoom.Value, anim.EndZoom.Value, t));
+                    MathHelper.SmoothStep(anim.StartZoom.Value, anim.EndZoom.Value, t))
+                        * GUI.Scale;
 
             if (anim.Timer >= anim.Duration)
             {

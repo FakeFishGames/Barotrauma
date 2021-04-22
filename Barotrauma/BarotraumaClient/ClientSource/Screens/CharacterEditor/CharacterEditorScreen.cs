@@ -711,7 +711,7 @@ namespace Barotrauma.CharacterEditor
                 }
             }
             // Camera
-            Cam.MoveCamera((float)deltaTime, allowMove: false);
+            Cam.MoveCamera((float)deltaTime, allowMove: false, allowZoom: GUI.MouseOn == null);
             Vector2 targetPos = character.WorldPosition;
             if (PlayerInput.MidButtonHeld())
             {
@@ -766,7 +766,7 @@ namespace Barotrauma.CharacterEditor
                 if (editLimbs && !spriteSheetRect.Contains(PlayerInput.MousePosition) &&
                     MathUtils.RectangleContainsPoint(GetLimbPhysicRect(limb), PlayerInput.MousePosition)) { return CursorState.Hand; }
                 // spritesheet
-                if (GetLimbSpritesheetRect(limb).Contains(PlayerInput.MousePosition)) { return CursorState.Hand; }
+                if (showSpritesheet && GetLimbSpritesheetRect(limb).Contains(PlayerInput.MousePosition)) { return CursorState.Hand; }
             }
             return CursorState.Default;
         }
@@ -1761,9 +1761,9 @@ namespace Barotrauma.CharacterEditor
 #endif
             // Add to the selected content package
             contentPackage.AddFile(configFilePath, ContentType.Character);
-            Barotrauma.IO.Validation.DevException = true;
+            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
             contentPackage.Save(contentPackage.Path);
-            Barotrauma.IO.Validation.DevException = false;
+            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
             DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));      
 
             // Ragdoll

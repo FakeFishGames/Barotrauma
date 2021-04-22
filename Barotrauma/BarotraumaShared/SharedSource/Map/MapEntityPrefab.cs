@@ -3,14 +3,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
     [Flags]
     enum MapEntityCategory
     {
-        Structure = 1, Decorative = 2, Machine = 4, Equipment = 8, Electrical = 16, Material = 32, Misc = 64, Alien = 128, Wrecked = 256, Thalamus = 512, ItemAssembly = 1024, Legacy = 2048
+        Structure = 1, 
+        Decorative = 2, 
+        Machine = 4, 
+        Equipment = 8, 
+        Electrical = 16, 
+        Material = 32, 
+        Misc = 64, 
+        Alien = 128, 
+        Wrecked = 256, 
+        ItemAssembly = 512,
+        Legacy = 1024
     }
 
     abstract partial class MapEntityPrefab : IPrefab, IDisposable
@@ -54,6 +63,7 @@ namespace Barotrauma
         //is it possible to stretch the entity horizontally/vertically
         [Serialize(false, false)]
         public bool ResizeHorizontal { get; protected set; }
+
         [Serialize(false, false)]
         public bool ResizeVertical { get; protected set; }
 
@@ -117,6 +127,9 @@ namespace Barotrauma
 
         [Serialize(false, false)]
         public bool HideInMenus { get; set; }
+
+        [Serialize("", false)]
+        public string Subcategory { get; set; }
 
         [Serialize(false, false)]
         public bool Linkable
@@ -213,6 +226,11 @@ namespace Barotrauma
         public string[] GetAllowedUpgrades()
         {
             return string.IsNullOrWhiteSpace(AllowedUpgrades) ? new string[0] : AllowedUpgrades.Split(",");
+        }
+
+        public bool HasSubCategory(string subcategory)
+        {
+            return subcategory?.Equals(this.Subcategory, StringComparison.OrdinalIgnoreCase) ?? false;
         }
 
         protected virtual void CreateInstance(Rectangle rect)

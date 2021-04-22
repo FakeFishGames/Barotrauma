@@ -311,7 +311,7 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            cam.MoveCamera((float)deltaTime, true);
+            cam.MoveCamera((float)deltaTime, allowMove: true, allowZoom: GUI.MouseOn == null);
             
             if (selectedPrefab != null)
             {

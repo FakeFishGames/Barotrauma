@@ -939,14 +939,14 @@ namespace Barotrauma
         /// Approximate distance from this hull to the target hull, moving through open gaps without passing through walls.
         /// Uses a greedy algo and may not use the most optimal path. Returns float.MaxValue if no path is found.
         /// </summary>
-        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance)
+        public float GetApproximateDistance(Vector2 startPos, Vector2 endPos, Hull targetHull, float maxDistance, float distanceMultiplierPerClosedDoor = 0)
         {
-            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance);
+            return GetApproximateHullDistance(startPos, endPos, new HashSet<Hull>(), targetHull, 0.0f, maxDistance, distanceMultiplierPerClosedDoor);
         }
 
-        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance)
+        private float GetApproximateHullDistance(Vector2 startPos, Vector2 endPos, HashSet<Hull> connectedHulls, Hull target, float distance, float maxDistance, float distanceMultiplierFromDoors = 0)
         {
-            if (distance >= maxDistance) return float.MaxValue;
+            if (distance >= maxDistance) { return float.MaxValue; }
             if (this == target)
             {
                 return distance + Vector2.Distance(startPos, endPos);
@@ -956,12 +956,17 @@ namespace Barotrauma
 
             foreach (Gap g in ConnectedGaps)
             {
+                float distanceMultiplier = 1;
                 if (g.ConnectedDoor != null && !g.ConnectedDoor.IsBroken)
                 {
                     //gap blocked if the door is not open or the predicted state is not open
                     if ((!g.ConnectedDoor.IsOpen && !g.ConnectedDoor.IsBroken) || (g.ConnectedDoor.PredictedState.HasValue && !g.ConnectedDoor.PredictedState.Value))
                     {
-                        if (g.ConnectedDoor.OpenState < 0.1f) continue;
+                        if (g.ConnectedDoor.OpenState < 0.1f)
+                        {
+                            if (distanceMultiplierFromDoors <= 0) { continue; }
+                            distanceMultiplier *= distanceMultiplierFromDoors;
+                        }
                     }
                 }
                 else if (g.Open <= 0.0f)
@@ -973,8 +978,11 @@ namespace Barotrauma
                 {
                     if (g.linkedTo[i] is Hull hull && !connectedHulls.Contains(hull))
                     {
-                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position), maxDistance);
-                        if (dist < float.MaxValue) { return dist; }
+                        float dist = hull.GetApproximateHullDistance(g.Position, endPos, connectedHulls, target, distance + Vector2.Distance(startPos, g.Position) * distanceMultiplier, maxDistance);
+                        if (dist < float.MaxValue)
+                        {
+                            return dist;
+                        }
                     }
                 }
             }
@@ -982,7 +990,13 @@ namespace Barotrauma
             return float.MaxValue;
         }
 
-        //returns the water block which contains the point (or null if it isn't inside any)
+        /// <summary>
+        /// Returns the hull which contains the point (or null if it isn't inside any)
+        /// </summary>
+        /// <param name="position">The position to check</param>
+        /// <param name="guess">This hull is checked first: if the current hull is known, this can be used as an optimization</param>
+        /// <param name="useWorldCoordinates">Should world coordinates or the sub's local coordinates be used?</param>
+        /// <param name="inclusive">Does being exactly at the edge of the hull count as being inside?</param>
         public static Hull FindHull(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
             if (EntityGrids == null) return null;
@@ -1030,20 +1044,19 @@ namespace Barotrauma
             return null;
         }
 
-        //returns the water block which contains the point (or null if it isn't inside any)
-        public static Hull FindHullOld(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
+        /// <summary>
+        /// Returns the hull which contains the point (or null if it isn't inside any). The difference to FindHull is that this method goes through all hulls without trying
+        /// to first find the sub the point is inside and checking the hulls in that sub. 
+        /// = This is slower, use with caution in situations where the sub's extents or hulls may have changed after it was loaded.
+        /// </summary>
+        public static Hull FindHullUnoptimized(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
-            return FindHullOld(position, hullList, guess, useWorldCoordinates, inclusive);
-        }
-
-        public static Hull FindHullOld(Vector2 position, List<Hull> hulls, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
-        {
-            if (guess != null && hulls.Contains(guess))
+            if (guess != null && hullList.Contains(guess))
             {
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
             }
 
-            foreach (Hull hull in hulls)
+            foreach (Hull hull in hullList)
             {
                 if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position, inclusive)) return hull;
             }

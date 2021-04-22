@@ -222,18 +222,20 @@ namespace Barotrauma
         private bool ChangeSpawnType(GUIButton button, object obj)
         {
             GUITextBlock spawnTypeText = button.Parent.GetChildByUserData("spawntypetext") as GUITextBlock;
-            spawnType += (int)button.UserData;
-            var values = Enum.GetValues(typeof(SpawnType));
+            var values = (SpawnType[])Enum.GetValues(typeof(SpawnType));
+            int currIndex = values.IndexOf(spawnType);
+            currIndex += (int)button.UserData;
             int firstIndex = 1;
             int lastIndex = values.Length - 1;
-            if ((int)spawnType > lastIndex)
+            if (currIndex > lastIndex)
             {
-                spawnType = (SpawnType)firstIndex;
+                currIndex = firstIndex;
             }
-            if ((int)spawnType < firstIndex)
+            if (currIndex < firstIndex)
             {
-                spawnType = (SpawnType)values.GetValue(lastIndex);
+                currIndex = lastIndex;
             }
+            spawnType = values[currIndex];
             spawnTypeText.Text = spawnType.ToString();
             return true;
         }

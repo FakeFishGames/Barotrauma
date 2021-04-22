@@ -71,10 +71,13 @@ namespace Barotrauma
             else if (!isUnignoreOrder)
             {
                 ActiveOrders.Add(new Pair<Order, float?>(order, fadeOutTime));
+#if CLIENT
+                HintManager.OnActiveOrderAdded(order);
+#endif
                 return true;
             }
 
-            bool MatchesTarget(Entity existingTarget, Entity newTarget)
+            static bool MatchesTarget(Entity existingTarget, Entity newTarget)
             {
                 if (existingTarget == newTarget) { return true; }
                 if (existingTarget is Hull existingHullTarget && newTarget is Hull newHullTarget)
@@ -145,7 +148,13 @@ namespace Barotrauma
             }
 #if CLIENT
             AddCharacterToCrewList(character);
-            AddCurrentOrderIcon(character, character.CurrentOrder, character.CurrentOrderOption);
+            if (character.CurrentOrders != null)
+            {
+                foreach (var order in character.CurrentOrders)
+                {
+                    AddCurrentOrderIcon(character, order);
+                }
+            }
 #endif
             if (character.AIController is HumanAIController humanAI)
             {
@@ -175,7 +184,7 @@ namespace Barotrauma
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
 
-            if (Level.IsLoadedOutpost)
+            if (Level.IsLoadedOutpost && Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
             {
                 spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
                     wp.SpawnType == SpawnType.Human &&
@@ -236,6 +245,21 @@ namespace Barotrauma
             conversationTimer = IsSinglePlayer ? Rand.Range(5.0f, 10.0f) : Rand.Range(45.0f, 60.0f);
         }
 
+        public void RenameCharacter(CharacterInfo characterInfo, string newName)
+        {
+            int identifier = characterInfo.GetIdentifierUsingOriginalName();
+            var match = characterInfos.FirstOrDefault(ci => ci.GetIdentifierUsingOriginalName() == identifier);
+            if (match == null)
+            {
+                DebugConsole.ThrowError($"Tried to rename an invalid crew member ({identifier})");
+                return;
+            }
+            match.Rename(newName);
+            RenameCharacterProjSpecific(match);
+        }
+
+        partial void RenameCharacterProjSpecific(CharacterInfo characterInfo);
+
         public void FireCharacter(CharacterInfo characterInfo)
         {
             RemoveCharacterInfo(characterInfo);
@@ -247,7 +271,8 @@ namespace Barotrauma
             {
                 if (order.Second.HasValue) { order.Second -= deltaTime; }
             }
-            ActiveOrders.RemoveAll(o => o.Second.HasValue && o.Second <= 0.0f);
+            ActiveOrders.RemoveAll(o => (o.Second.HasValue && o.Second <= 0.0f) ||
+                (o.First.TargetEntity != null && o.First.TargetEntity.Removed));
 
             UpdateConversations(deltaTime);
             UpdateProjectSpecific(deltaTime);
@@ -270,6 +295,7 @@ namespace Barotrauma
 
         private void UpdateConversations(float deltaTime)
         {
+            if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode) { return; }
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.ServerSettings.DisableBotConversations) { return; }
 
             conversationTimer -= deltaTime;
@@ -287,7 +313,7 @@ namespace Barotrauma
             {
                 foreach (Character npc in Character.CharacterList)
                 {
-                    if (npc.TeamID != CharacterTeamType.FriendlyNPC || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
+                    if ((npc.TeamID != CharacterTeamType.FriendlyNPC && npc.TeamID != CharacterTeamType.None) || npc.CurrentHull == null || npc.IsIncapacitated) { continue; }   
                     if (npc.AIController is HumanAIController humanAI && (humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() || humanAI.ObjectiveManager.IsCurrentObjective<AIObjectiveCombat>()))
                     {
                         continue;
@@ -298,19 +324,35 @@ namespace Barotrauma
                         {
                             List<Character> availableSpeakers = new List<Character>() { npc, player };
                             List<string> dialogFlags = new List<string>() { "OutpostNPC", "EnterOutpost" };
-                            if (GameMain.GameSession?.GameMode is CampaignMode campaignMode && campaignMode.Map?.CurrentLocation?.Reputation != null)
+                            if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                             {
-                                float normalizedReputation = MathUtils.InverseLerp(
-                                    campaignMode.Map.CurrentLocation.Reputation.MinReputation,
-                                    campaignMode.Map.CurrentLocation.Reputation.MaxReputation,
-                                    campaignMode.Map.CurrentLocation.Reputation.Value);
-                                if (normalizedReputation < 0.2f)
+                                if (campaignMode.Map?.CurrentLocation?.Type?.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase) ?? false)
                                 {
-                                    dialogFlags.Add("LowReputation");
+                                    if (npc.TeamID == CharacterTeamType.None)
+                                    {
+                                        dialogFlags.Remove("OutpostNPC");
+                                        dialogFlags.Add("Bandit");
+                                    }
+                                    else if (npc.TeamID == CharacterTeamType.FriendlyNPC)
+                                    {
+                                        dialogFlags.Remove("OutpostNPC");
+                                        dialogFlags.Add("Hostage");
+                                    }
                                 }
-                                else if (normalizedReputation > 0.8f)
+                                else if (campaignMode.Map?.CurrentLocation?.Reputation != null)
                                 {
-                                    dialogFlags.Add("HighReputation");
+                                    float normalizedReputation = MathUtils.InverseLerp(
+                                        campaignMode.Map.CurrentLocation.Reputation.MinReputation,
+                                        campaignMode.Map.CurrentLocation.Reputation.MaxReputation,
+                                        campaignMode.Map.CurrentLocation.Reputation.Value);
+                                    if (normalizedReputation < 0.2f)
+                                    {
+                                        dialogFlags.Add("LowReputation");
+                                    }
+                                    else if (normalizedReputation > 0.8f)
+                                    {
+                                        dialogFlags.Add("HighReputation");
+                                    }
                                 }
                             }
                             pendingConversationLines.AddRange(NPCConversation.CreateRandom(availableSpeakers, dialogFlags));

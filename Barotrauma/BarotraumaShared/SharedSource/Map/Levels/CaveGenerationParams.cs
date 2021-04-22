@@ -101,19 +101,19 @@ namespace Barotrauma
         public Sprite WallSprite { get; private set; }
         public Sprite WallEdgeSprite { get; private set; }
 
-        public static CaveGenerationParams GetRandom(LevelGenerationParams generationParams, Rand.RandSync rand)
+        public static CaveGenerationParams GetRandom(LevelGenerationParams generationParams, bool abyss, Rand.RandSync rand)
         {
-            if (CaveParams.All(p => p.GetCommonness(generationParams) <= 0.0f))
+            if (CaveParams.All(p => p.GetCommonness(generationParams, abyss) <= 0.0f))
             {
                 return CaveParams.First();
             }
-            return ToolBox.SelectWeightedRandom(CaveParams, CaveParams.Select(p => p.GetCommonness(generationParams)).ToList(), rand);
+            return ToolBox.SelectWeightedRandom(CaveParams, CaveParams.Select(p => p.GetCommonness(generationParams, abyss)).ToList(), rand);
         }
 
-        public float GetCommonness(LevelGenerationParams generationParams)
+        public float GetCommonness(LevelGenerationParams generationParams, bool abyss)
         {
             if (generationParams?.Identifier != null &&
-                OverrideCommonness.TryGetValue(generationParams.Identifier, out float commonness))
+                OverrideCommonness.TryGetValue(abyss ? "abyss" : generationParams.Identifier, out float commonness))
             {
                 return commonness;
             }

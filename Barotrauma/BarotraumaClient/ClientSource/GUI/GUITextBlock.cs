@@ -259,9 +259,11 @@ namespace Barotrauma
 
         public StrikethroughSettings Strikethrough = null;
 
-        private readonly List<RichTextData> richTextData = null;
+        public readonly List<RichTextData> RichTextData = null;
 
-        private readonly bool hasColorHighlight = false;
+        public bool HasColorHighlight => RichTextData != null;
+
+        public bool OverrideRichTextDataAlpha = true;
 
         public struct ClickableArea
         {
@@ -279,7 +281,8 @@ namespace Barotrauma
         /// If the rectT height is set 0, the height is calculated from the text.
         /// </summary>
         public GUITextBlock(RectTransform rectT, string text, Color? textColor = null, ScalableFont font = null, 
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false) 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null,
+            bool playerInput = false, bool parseRichText = false) 
             : base(style, rectT)
         {
             if (color.HasValue)
@@ -289,7 +292,12 @@ namespace Barotrauma
             if (textColor.HasValue)
             {
                 OverrideTextColor(textColor.Value);
-            }            
+            }
+
+            if (parseRichText)
+            {
+                RichTextData = Barotrauma.RichTextData.GetRichTextData(text, out text);
+            }
 
             //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
             //use the default CJK font as a fallback
@@ -318,8 +326,7 @@ namespace Barotrauma
         public GUITextBlock(RectTransform rectT, List<RichTextData> richTextData, string text, Color? textColor = null, ScalableFont font = null, Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool playerInput = false)
         : this(rectT, text, textColor, font, textAlignment, wrap, style, color, playerInput)
         {
-            this.richTextData = richTextData;
-            hasColorHighlight = richTextData != null;
+            this.RichTextData = richTextData;
         }
 
         public void CalculateHeightFromText(int padding = 0, bool removeExtraSpacing = false)
@@ -568,8 +575,9 @@ namespace Barotrauma
         {
             base.Update(deltaTime);
 
-            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true) && Rect.Contains(PlayerInput.MousePosition))
+            if (ClickableAreas.Any() && (GUI.MouseOn?.IsParentOf(this) ?? true))
             {
+                if (!Rect.Contains(PlayerInput.MousePosition)) { return; }
                 int index = GetCaretIndexFromScreenPos(PlayerInput.MousePosition);
                 foreach (ClickableArea clickableArea in ClickableAreas)
                 {
@@ -627,7 +635,7 @@ namespace Barotrauma
                     currentTextColor = selectedTextColor;
                 }
 
-                if (!hasColorHighlight)
+                if (!HasColorHighlight)
                 {
                     string textToShow = Censor ? censoredText : (Wrap ? wrappedText : text);
                     Color colorToShow = currentTextColor * (currentTextColor.A / 255.0f);
@@ -639,12 +647,15 @@ namespace Barotrauma
                     }
 
                     Font.DrawString(spriteBatch, textToShow, pos, colorToShow, 0.0f, origin, TextScale, SpriteEffects.None, textDepth);
-
                 }
                 else
                 {
+                    if (OverrideRichTextDataAlpha)
+                    {
+                        RichTextData.ForEach(rt => rt.Alpha = currentTextColor.A / 255.0f);
+                    }
                     Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text), pos,
-                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, richTextData);
+                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, RichTextData);
                 }
 
                 if (Strikethrough != null)

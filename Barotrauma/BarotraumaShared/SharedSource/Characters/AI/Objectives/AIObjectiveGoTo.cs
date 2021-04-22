@@ -23,13 +23,14 @@ namespace Barotrauma
         /// <summary>
         /// Aborts the objective when this condition is true
         /// </summary>
-        public Func<bool> abortCondition;
+        public Func<AIObjectiveGoTo, bool> abortCondition;
         public Func<PathNode, bool> endNodeFilter;
 
         public Func<float> priorityGetter;
 
         public bool followControlledCharacter;
         public bool mimic;
+        public bool SpeakIfFails { get; set; } = true;
 
         public float extraDistanceWhileSwimming;
         public float extraDistanceOutsideSub;
@@ -66,6 +67,8 @@ namespace Barotrauma
         public bool IgnoreIfTargetDead { get; set; }
         public bool AllowGoingOutside { get; set; }
 
+        public bool AlwaysUseEuclideanDistance { get; set; } = true;
+
         public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
 
         public override bool AllowOutsideSubmarine => AllowGoingOutside;
@@ -80,19 +83,14 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            bool isOrder = objectiveManager.CurrentOrder == this;
+            bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed)
             {
                 Priority = 0;
                 Abandon = !isOrder;
                 return Priority;
             }
-            if (followControlledCharacter && Character.Controlled == null)
-            {
-                Priority = 0;
-                Abandon = !isOrder;
-            }
-            if (Target is Entity e && e.Removed)
+            if (Target == null || Target is Entity e && e.Removed)
             {
                 Priority = 0;
                 Abandon = !isOrder;
@@ -114,7 +112,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Priority = isOrder ? AIObjectiveManager.OrderPriority : 10;
+                    Priority = isOrder ? objectiveManager.GetOrderPriority(this) : 10;
                 }
             }
             return Priority;
@@ -149,7 +147,7 @@ namespace Barotrauma
 #if DEBUG
             DebugConsole.NewMessage($"{character.Name}: Cannot reach the target: {Target}", Color.Yellow);
 #endif
-            if (objectiveManager.CurrentOrder != null && DialogueIdentifier != null)
+            if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective && DialogueIdentifier != null && SpeakIfFails)
             {
                 string msg = TargetName == null ? TextManager.Get(DialogueIdentifier, true) : TextManager.GetWithVariable(DialogueIdentifier, "[name]", TargetName, formatCapitals: !(Target is Character));
                 if (msg != null)
@@ -163,13 +161,15 @@ namespace Barotrauma
         {
             if (followControlledCharacter)
             {
-                if (Character.Controlled == null)
+                if (Character.Controlled != null && HumanAIController.IsFriendly(Character.Controlled))
+                {
+                    Target = Character.Controlled;
+                }
+                if (Target == null)
                 {
                     Abandon = true;
-                    SteeringManager.Reset();
                     return;
                 }
-                Target = Character.Controlled;
             }
             if (Target == character || character.SelectedBy != null && HumanAIController.IsFriendly(character.SelectedBy))
             {
@@ -187,7 +187,6 @@ namespace Barotrauma
                 if (e.Removed)
                 {
                     Abandon = true;
-                    SteeringManager.Reset();
                     return;
                 }
                 else
@@ -199,7 +198,7 @@ namespace Barotrauma
             if (!followControlledCharacter)
             {
                 // Abandon if going through unsafe paths. Note ignores unsafe nodes when following an order or when the objective is set to ignore unsafe hulls.
-                bool containsUnsafeNodes = HumanAIController.CurrentOrder == null && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
+                bool containsUnsafeNodes = character.IsDismissed && !HumanAIController.ObjectiveManager.CurrentObjective.IgnoreUnsafeHulls
                     && PathSteering != null && PathSteering.CurrentPath != null
                     && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull));
                 if (containsUnsafeNodes || HumanAIController.UnreachableHulls.Contains(targetHull))
@@ -249,16 +248,18 @@ namespace Barotrauma
                         }
                     }
                     bool needsEquipment = false;
+                    float minOxygen = character.Submarine == null ? 0 : AIObjectiveFindDivingGear.MIN_OXYGEN;
                     if (needsDivingSuit)
                     {
-                        needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                        needsEquipment = !HumanAIController.HasDivingSuit(character, minOxygen);
                     }
                     else if (needsDivingGear)
                     {
-                        needsEquipment = !HumanAIController.HasDivingGear(character, AIObjectiveFindDivingGear.MIN_OXYGEN);
+                        needsEquipment = !HumanAIController.HasDivingGear(character, minOxygen);
                     }
                     if (needsEquipment)
                     {
+                        SteeringManager.Reset();
                         if (findDivingGear != null && !findDivingGear.CanBeCompleted)
                         {
                             TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
@@ -287,9 +288,14 @@ namespace Barotrauma
                         }
                     }
                 }
+                float maxGapDistance = 500;
+                Character targetCharacter = Target as Character;
                 if (character.AnimController.InWater)
                 {
-                    if (character.CurrentHull == null)
+                    if (character.CurrentHull == null || 
+                        followControlledCharacter && 
+                        targetCharacter != null && (targetCharacter.CurrentHull == null) != (character.CurrentHull == null) &&
+                        Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition) < maxGapDistance * maxGapDistance)
                     {
                         if (seekGapsTimer > 0)
                         {
@@ -297,7 +303,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            SeekGaps(maxDistance: 500);
+                            SeekGaps(maxGapDistance);
                             seekGapsTimer = seekGapsInterval * Rand.Range(0.1f, 1.1f);
                             if (TargetGap != null)
                             {
@@ -326,7 +332,7 @@ namespace Barotrauma
                     }
                     if (TargetGap != null)
                     {
-                        if (TargetGap.FlowTargetHull != null && HumanAIController.SteerThroughGap(TargetGap, TargetGap.FlowTargetHull.WorldPosition, deltaTime))
+                        if (TargetGap.FlowTargetHull != null && HumanAIController.SteerThroughGap(TargetGap, followControlledCharacter ? Target.WorldPosition : TargetGap.FlowTargetHull.WorldPosition, deltaTime))
                         {
                             SteeringManager.SteeringAvoid(deltaTime, avoidLookAheadDistance, weight: 1);
                             return;
@@ -346,7 +352,7 @@ namespace Barotrauma
                         float closeEnough = 250;
                         float squaredDistance = Vector2.DistanceSquared(character.WorldPosition, Target.WorldPosition);
                         bool shouldUseScooter = squaredDistance > closeEnough * closeEnough && (!mimic ||
-                            (Target is Character targetCharacter && targetCharacter.HasEquippedItem(scooterTag, allowBroken: false)) || squaredDistance > Math.Pow(closeEnough * 2, 2));
+                            (targetCharacter != null && targetCharacter.HasEquippedItem(scooterTag, allowBroken: false)) || squaredDistance > Math.Pow(closeEnough * 2, 2));
                         if (HumanAIController.HasItem(character, scooterTag, out IEnumerable<Item> equippedScooters, recursive: false, requireEquipped: true))
                         {
                             // Currently equipped scooter
@@ -527,17 +533,24 @@ namespace Barotrauma
         {
             Gap selectedGap = null;
             float selectedDistance = -1;
+            Vector2 toTargetNormalized = Vector2.Normalize(Target.WorldPosition - character.WorldPosition);
             foreach (Gap gap in Gap.GapList)
             {
                 if (gap.Open < 1) { continue; }
-                if (gap.FlowTargetHull == null) { continue; } 
-                if (gap.Submarine != Target.Submarine) { continue; }
-                float distance = Vector2.DistanceSquared(character.WorldPosition, gap.WorldPosition);
-                if (distance > maxDistance * maxDistance) { continue; }
-                if (selectedGap == null || distance < selectedDistance)
+                if (gap.Submarine == null) { continue; }
+                if (!followControlledCharacter)
+                {
+                    if (gap.FlowTargetHull == null) { continue; }
+                    if (gap.Submarine != Target.Submarine) { continue; }
+                }
+                Vector2 toGap = gap.WorldPosition - character.WorldPosition;
+                if (Vector2.Dot(Vector2.Normalize(toGap), toTargetNormalized) < 0) { continue; }
+                float squaredDistance = toGap.LengthSquared();
+                if (squaredDistance > maxDistance * maxDistance) { continue; }
+                if (selectedGap == null || squaredDistance < selectedDistance)
                 {
                     selectedGap = gap;
-                    selectedDistance = distance;
+                    selectedDistance = squaredDistance;
                 }
             }
             TargetGap = selectedGap;
@@ -554,6 +567,13 @@ namespace Barotrauma
                     //otherwise characters can let go of the ladders too soon once they're close enough to the target
                     if (PathSteering.CurrentPath.NextNode != null) { return false; }
                 }
+                if (!AlwaysUseEuclideanDistance && !character.AnimController.InWater)
+                {
+                    float yDiff = Math.Abs(Target.WorldPosition.Y - character.WorldPosition.Y);
+                    if (yDiff > CloseEnough) { return false; }
+                    float xDiff = Math.Abs(Target.WorldPosition.X - character.WorldPosition.X);
+                    return xDiff <= CloseEnough;
+                }
                 return Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
             }
         }
@@ -569,7 +589,7 @@ namespace Barotrauma
                 Abandon = true;
                 return false;
             }
-            if (abortCondition != null && abortCondition())
+            if (abortCondition != null && abortCondition(this))
             {
                 Abandon = true;
                 return false;
@@ -617,7 +637,7 @@ namespace Barotrauma
 
         private void StopMovement()
         {
-            character.AIController.SteeringManager.Reset();
+            SteeringManager.Reset();
             if (Target != null)
             {
                 character.AnimController.TargetDir = Target.WorldPosition.X > character.WorldPosition.X ? Direction.Right : Direction.Left;

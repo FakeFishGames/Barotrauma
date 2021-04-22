@@ -422,12 +422,12 @@ namespace Barotrauma
             }
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData, int rtdOffset = 0)
         {
-            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, richTextData);
+            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, richTextData, rtdOffset);
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData, int rtdOffset = 0)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
 
@@ -457,15 +457,15 @@ namespace Barotrauma
 
                 Color currentTextColor;
 
-                if (currentRichTextData != null && i > currentRichTextData.EndIndex + lineNum)
+                while (currentRichTextData != null && i + rtdOffset > currentRichTextData.EndIndex + lineNum)
                 {
                     richTextDataIndex++;
                     currentRichTextData = richTextDataIndex < richTextData.Count ? richTextData[richTextDataIndex] : null;
                 }
 
-                if (currentRichTextData != null && currentRichTextData.StartIndex + lineNum <= i && i <= currentRichTextData.EndIndex + lineNum)
+                if (currentRichTextData != null && currentRichTextData.StartIndex + lineNum <= i + rtdOffset && i + rtdOffset <= currentRichTextData.EndIndex + lineNum)
                 {
-                    currentTextColor = currentRichTextData.Color ?? color;
+                    currentTextColor = currentRichTextData.Color * currentRichTextData.Alpha ?? color;
                     if (!string.IsNullOrEmpty(currentRichTextData.Metadata))
                     {
                         currentTextColor = Color.Lerp(currentTextColor, Color.White, 0.5f);

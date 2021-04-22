@@ -215,8 +215,10 @@ namespace Barotrauma
             public Inventory Inventory;
             public readonly Item Item;
             public readonly bool IsSubSlot;
-            public string Tooltip;
-            public List<RichTextData> TooltipRichTextData;
+            public string Tooltip { get; private set; }
+            public List<RichTextData> TooltipRichTextData { get; private set;}
+
+            public int tooltipDisplayedCondition;
 
             public SlotReference(Inventory parentInventory, VisualSlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
@@ -227,16 +229,29 @@ namespace Barotrauma
                 IsSubSlot = isSubSlot;
                 Item = ParentInventory.GetItemAt(slotIndex);
 
-                int stackCount = 1;
-                if (parentInventory != null && Item != null)
-                {
-                    stackCount = parentInventory.GetItemsAt(slotIndex).Count();
-                }
-
-                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, stackCount), out Tooltip);
+                RefreshTooltip();
             }
 
-            private string GetTooltip(Item item, int stackCount)
+            public bool TooltipNeedsRefresh()
+            {
+                if (Item == null) { return false; }
+                return (int)Item.ConditionPercentage != tooltipDisplayedCondition;
+            }
+
+            public void RefreshTooltip()
+            {
+                if (Item == null) { return; }
+                IEnumerable<Item> itemsInSlot = null;
+                if (ParentInventory != null && Item != null)
+                {
+                    itemsInSlot = ParentInventory.GetItemsAt(SlotIndex);
+                }
+                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, itemsInSlot), out string newTooltip);
+                Tooltip = newTooltip;
+                tooltipDisplayedCondition = (int)Item.ConditionPercentage;
+            }
+
+            private string GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
             {
                 if (item == null) { return null; }
 
@@ -288,9 +303,13 @@ namespace Barotrauma
                         }
                     }
 
-                    string colorStr = XMLExtensions.ColorToString(item.SpawnedInOutpost ? GUI.Style.Red : Color.White);
+                    string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
 
                     toolTip = $"‖color:{colorStr}‖{item.Name}‖color:end‖";
+                    if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
+                    {
+                        toolTip += " " + TextManager.Get("connectionlocked");
+                    }
                     if (!item.IsFullCondition && !item.Prefab.HideConditionBar)
                     {
                         string conditionColorStr = XMLExtensions.ColorToString(ToolBox.GradientLerp(item.Condition / item.MaxCondition, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull));
@@ -298,7 +317,7 @@ namespace Barotrauma
                     }
                     if (!string.IsNullOrEmpty(description)) { toolTip += '\n' + description; }
                 }
-                if (stackCount > 2)
+                if (itemsInSlot.Count() > 1)
                 {
                     string colorStr = XMLExtensions.ColorToString(GUI.Style.Blue);
                     toolTip += $"\n‖color:{colorStr}‖[{GameMain.Config.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
@@ -315,10 +334,10 @@ namespace Barotrauma
         {
             get
             {
-                return DraggingItems.Any() &&
-                  Character.Controlled != null &&
+                return Character.Controlled != null &&
                   Character.Controlled.SelectedConstruction == null &&
-                  CharacterHealth.OpenHealthWindow == null;
+                  CharacterHealth.OpenHealthWindow == null &&
+                  DraggingItems.Any();
             }
         }
 
@@ -565,39 +584,41 @@ namespace Barotrauma
 
                 if (!DraggingItems.Any())
                 {
-                    if (PlayerInput.PrimaryMouseButtonDown() && slots[slotIndex].Any())
+                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => !it.NonInteractable && !it.NonPlayerTeamInteractable) : slots[slotIndex].Items;
+                    if (PlayerInput.PrimaryMouseButtonDown() && interactableItems.Any())
                     {
                         if (PlayerInput.KeyDown(InputType.TakeHalfFromInventorySlot))
                         {
-                            DraggingItems.AddRange(slots[slotIndex].Items.Skip(slots[slotIndex].ItemCount / 2));
+                            DraggingItems.AddRange(interactableItems.Skip(interactableItems.Count() / 2));
                         }
                         else if (PlayerInput.KeyDown(InputType.TakeOneFromInventorySlot))
                         {
-                            DraggingItems.Add(slots[slotIndex].First());
+                            DraggingItems.Add(interactableItems.First());
                         }
                         else
                         {
-                            DraggingItems.AddRange(slots[slotIndex].Items);
+                            DraggingItems.AddRange(interactableItems);
                         }
                         DraggingSlot = slot;
                     }
                 }
                 else if (PlayerInput.PrimaryMouseButtonReleased())
                 {
-                    if (PlayerInput.DoubleClicked() && slots[slotIndex].Any())
+                    var interactableItems = Screen.Selected == GameMain.GameScreen ? slots[slotIndex].Items.Where(it => !it.NonInteractable && !it.NonPlayerTeamInteractable) : slots[slotIndex].Items;
+                    if (PlayerInput.DoubleClicked() && interactableItems.Any())
                     {
                         doubleClickedItems.Clear();
                         if (PlayerInput.KeyDown(InputType.TakeHalfFromInventorySlot))
                         {
-                            doubleClickedItems.AddRange(slots[slotIndex].Items.Skip(slots[slotIndex].ItemCount / 2));
+                            doubleClickedItems.AddRange(interactableItems.Skip(interactableItems.Count() / 2));
                         }
                         else if (PlayerInput.KeyDown(InputType.TakeOneFromInventorySlot))
                         {
-                            doubleClickedItems.Add(slots[slotIndex].First());
+                            doubleClickedItems.Add(interactableItems.First());
                         }
                         else
                         {
-                            doubleClickedItems.AddRange(slots[slotIndex].Items);
+                            doubleClickedItems.AddRange(interactableItems);
                         }
                     }
                 }
@@ -1241,9 +1262,11 @@ namespace Barotrauma
                     if (selectedSlot.ParentInventory?.Owner != Character.Controlled &&
                        selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedCharacter &&
                        selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedConstruction &&
+                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(selectedSlot.ParentInventory?.Owner) ?? false) &&
                        rootOwner != Character.Controlled &&
                        rootOwner != Character.Controlled.SelectedCharacter &&
-                       rootOwner != Character.Controlled.SelectedConstruction)
+                       rootOwner != Character.Controlled.SelectedConstruction &&
+                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(rootOwner) ?? false))
                     {
                         selectedSlot = null;
                     }
@@ -1362,6 +1385,10 @@ namespace Barotrauma
             {
                 Rectangle slotRect = selectedSlot.Slot.Rect;
                 slotRect.Location += selectedSlot.Slot.DrawOffset.ToPoint();
+                if (selectedSlot.TooltipNeedsRefresh())
+                {
+                    selectedSlot.RefreshTooltip();
+                }
                 DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipRichTextData);
             }
         }
@@ -1533,7 +1560,7 @@ namespace Barotrauma
                 }
 
                 Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
-                if (inventory != null && inventory.Locked) { spriteColor *= 0.5f; }
+                if (inventory != null && (inventory.Locked || inventory.slots[slotIndex].Items.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))) { spriteColor *= 0.5f; }
                 if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
@@ -1544,7 +1571,7 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if (item.SpawnedInOutpost && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if (!item.AllowStealing && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
                     Vector2 iconSize = new Vector2(25 * GUI.Scale);
@@ -1559,7 +1586,7 @@ namespace Barotrauma
                 {
                     maxStackSize = Math.Min(maxStackSize, item.Container.GetComponent<ItemContainer>()?.MaxStackSize ?? maxStackSize);
                 }
-                if (maxStackSize > 1)
+                if (maxStackSize > 1 && inventory != null)
                 {
                     int itemCount = slot.MouseOn() ? inventory.slots[slotIndex].ItemCount : inventory.slots[slotIndex].Items.Where(it => !DraggingItems.Contains(it)).Count();
                     if (item.IsFullCondition || MathUtils.NearlyEqual(item.Condition, 0.0f) || itemCount > 1)

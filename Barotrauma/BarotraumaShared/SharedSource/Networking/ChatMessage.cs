@@ -8,7 +8,18 @@ namespace Barotrauma.Networking
 {
     public enum ChatMessageType
     {
-        Default, Error, Dead, Server, Radio, Private, Console, MessageBox, Order, ServerLog, ServerMessageBox, ServerMessageBoxInGame
+        Default = 0,
+        Error = 1,
+        Dead = 2,
+        Server = 3,
+        Radio = 4,
+        Private = 5,
+        Console = 6,
+        MessageBox = 7,
+        Order = 8,
+        ServerLog = 9,
+        ServerMessageBox = 10,
+        ServerMessageBoxInGame = 11
     }
 
     public enum PlayerConnectionChangeType { None = 0, Joined = 1, Kicked = 2, Disconnected = 3, Banned = 4 }
@@ -82,7 +93,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : SenderName + ": " + TranslatedText;
+                return string.IsNullOrWhiteSpace(SenderName) ? TranslatedText : NetworkMember.ClientLogName(SenderClient, SenderName) + ": " + TranslatedText;
             }
         }
 
