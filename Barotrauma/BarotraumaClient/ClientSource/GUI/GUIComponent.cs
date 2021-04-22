@@ -77,6 +77,12 @@ namespace Barotrauma
             return RectTransform.IsParentOf(component.RectTransform, recursive);
         }
 
+        public bool IsChildOf(GUIComponent component, bool recursive = true)
+        {
+            if (component == null) { return false; }
+            return RectTransform.IsChildOf(component.RectTransform, recursive);
+        }
+
         public virtual void RemoveChild(GUIComponent child)
         {
             if (child == null) { return; }
@@ -704,6 +710,29 @@ namespace Barotrauma
         {
             if (!Visible) return;
             DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect, TooltipRichTextData);
+        }
+        
+        public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Vector2 pos, List<RichTextData> richTextData = null)
+        {
+            if (Tutorials.Tutorial.ContentRunning) { return; }
+
+            int width = (int)(400 * GUI.Scale);
+            int height = (int)(18 * GUI.Scale);
+            Point padding = new Point((int)(10 * GUI.Scale));
+
+            if (toolTipBlock == null || (string)toolTipBlock.userData != toolTip)
+            {
+                toolTipBlock = new GUITextBlock(new RectTransform(new Point(width, height), null), richTextData, toolTip, font: GUI.SmallFont, wrap: true, style: "GUIToolTip");
+                toolTipBlock.RectTransform.NonScaledSize = new Point(
+                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).X + padding.X + toolTipBlock.Padding.X + toolTipBlock.Padding.Z),
+                    (int)(GUI.SmallFont.MeasureString(toolTipBlock.WrappedText).Y + padding.Y + toolTipBlock.Padding.Y + toolTipBlock.Padding.W));
+                toolTipBlock.userData = toolTip;
+            }
+
+            toolTipBlock.RectTransform.AbsoluteOffset = pos.ToPoint();
+            toolTipBlock.SetTextPos();
+
+            toolTipBlock.DrawManually(spriteBatch);
         }
 
         public static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle targetElement, List<RichTextData> richTextData = null)

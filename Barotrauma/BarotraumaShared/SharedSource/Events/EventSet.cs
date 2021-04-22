@@ -65,6 +65,8 @@ namespace Barotrauma
         //0-100
         public readonly float MinLevelDifficulty, MaxLevelDifficulty;
 
+        public readonly string BiomeIdentifier;
+
         public readonly LevelData.LevelType LevelType;
 
         public readonly string[] LocationTypeIdentifiers;
@@ -84,6 +86,7 @@ namespace Barotrauma
         public readonly bool IgnoreCoolDown;
 
         public readonly bool PerRuin, PerCave, PerWreck;
+        public readonly bool DisableInHuntingGrounds;
 
         public readonly bool OncePerOutpost;
 
@@ -111,6 +114,7 @@ namespace Barotrauma
             EventPrefabs = new List<Pair<EventPrefab, float>>();
             ChildSets = new List<EventSet>();
 
+            BiomeIdentifier = element.GetAttributeString("biome", string.Empty);
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
 
@@ -139,9 +143,10 @@ namespace Barotrauma
             PerRuin = element.GetAttributeBool("perruin", false);
             PerCave = element.GetAttributeBool("percave", false);
             PerWreck = element.GetAttributeBool("perwreck", false);
+            DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
             DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
-            OncePerOutpost = element.GetAttributeBool("perwreck", false);
+            OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
 
             Commonness[""] = 1.0f;

@@ -20,17 +20,20 @@ namespace Barotrauma.Items.Components
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
                 ShowOnDisplay(newOutputValue);
-                item.SendSignal(0, newOutputValue, "signal_out", null);
+                item.SendSignal(newOutputValue, "signal_out");
                 item.CreateServerEvent(this);
             }
         }
 
-        partial void ShowOnDisplay(string input)
+        partial void ShowOnDisplay(string input, bool addToHistory = true)
         {
-            messageHistory.Add(input);
-            while (messageHistory.Count > MaxMessages)
+            if (addToHistory)
             {
-                messageHistory.RemoveAt(0);
+                messageHistory.Add(input);
+                while (messageHistory.Count > MaxMessages)
+                {
+                    messageHistory.RemoveAt(0);
+                }
             }
         }
 

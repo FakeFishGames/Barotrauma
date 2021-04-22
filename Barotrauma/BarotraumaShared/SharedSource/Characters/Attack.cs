@@ -217,6 +217,9 @@ namespace Barotrauma
         [Serialize("0.0, 0.0", true, description: "Applied to the target, in world space coordinates(i.e. 0, -1 pushes the target downwards). The attacker's facing direction is taken into account."), Editable]
         public Vector2 TargetForceWorld { get; private set; }
 
+        [Serialize(1.0f, true, description: "Affects the strength of the impact effects the limb causes when it hits a submarine."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 100.0f)]
+        public float SubmarineImpactMultiplier { get; private set; }
+
         [Serialize(0.0f, true, description: "How likely the attack causes target limbs to be severed."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float SeverLimbsProbability { get; set; }
 
@@ -227,6 +230,9 @@ namespace Barotrauma
 
         [Serialize(0.0f, true, description: ""), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Priority { get; private set; }
+
+        [Serialize(false, true, description: ""), Editable]
+        public bool Blink { get; private set; }
 
         public IEnumerable<StatusEffect> StatusEffects
         {

@@ -24,6 +24,7 @@ namespace Barotrauma
 
         public Effect PostProcessEffect { get; private set; }
         public Effect GradientEffect { get; private set; }
+        public Effect GrainEffect { get; private set; }
 
         public GameScreen(GraphicsDevice graphics, ContentManager content)
         {
@@ -41,11 +42,13 @@ namespace Barotrauma
             damageEffect = content.Load<Effect>("Effects/damageshader_opengl");
             PostProcessEffect = content.Load<Effect>("Effects/postprocess_opengl");
             GradientEffect = content.Load<Effect>("Effects/gradientshader_opengl");
+            GrainEffect = content.Load<Effect>("Effects/grainshader_opengl");
 #else
             //var blurEffect = content.Load<Effect>("Effects/blurshader");
             damageEffect = content.Load<Effect>("Effects/damageshader");
             PostProcessEffect = content.Load<Effect>("Effects/postprocess");
             GradientEffect = content.Load<Effect>("Effects/gradientshader");
+            GrainEffect = content.Load<Effect>("Effects/grainshader");
 #endif
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
@@ -168,10 +171,7 @@ namespace Barotrauma
                 Character.Controlled.ObstructVision && 
                 (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null);
 
-            if (Character.Controlled != null)
-            {
-                GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled.CursorWorldPosition);
-            }
+            GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled?.CursorWorldPosition ?? Vector2.Zero);
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
@@ -331,12 +331,13 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
-            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Character.Controlled != null)
+            if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Lights.LightManager.ViewTarget != null)
             {
                 GameMain.LightManager.LosEffect.CurrentTechnique = GameMain.LightManager.LosEffect.Techniques["LosShader"];
 
                 GameMain.LightManager.LosEffect.Parameters["xTexture"].SetValue(renderTargetBackground);
                 GameMain.LightManager.LosEffect.Parameters["xLosTexture"].SetValue(GameMain.LightManager.LosTexture);
+                GameMain.LightManager.LosEffect.Parameters["xLosAlpha"].SetValue(GameMain.LightManager.LosAlpha);
 
                 Color losColor;
                 if (GameMain.LightManager.LosMode == LosMode.Transparent)
@@ -362,6 +363,17 @@ namespace Barotrauma
                 GameMain.LightManager.LosEffect.CurrentTechnique.Passes[0].Apply();
                 Quad.Render();
             }
+
+            float grainStrength = Character.Controlled?.GrainStrength ?? 0;
+            if (grainStrength > 0)
+            {
+                Rectangle screenRect = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
+                spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, effect: GrainEffect);
+                GUI.DrawRectangle(spriteBatch, screenRect, Color.White * grainStrength, isFilled: true);
+                GrainEffect.Parameters["seed"].SetValue(Rand.Range(0f, 1f, Rand.RandSync.Unsynced));
+                spriteBatch.End();
+            }
+
             graphics.SetRenderTarget(null);
 
             float BlurStrength = 0.0f;

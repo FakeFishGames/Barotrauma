@@ -34,6 +34,11 @@ namespace Barotrauma
 
         public readonly Sprite[] CursorSprite = new Sprite[7];
 
+        public UISprite RadiationSprite { get; private set; }
+        public SpriteSheet RadiationAnimSpriteSheet { get; private set; }
+
+        public SpriteSheet SavingIndicator { get; private set; }
+
         public UISprite UIGlow { get; private set; }
         public UISprite UIGlowCircular { get; private set; }
 
@@ -76,6 +81,12 @@ namespace Barotrauma
         public Color TextColorBright { get; private set; } = Color.White * 0.9f;
         public Color TextColorDark { get; private set; } = Color.Black * 0.9f;
         public Color TextColorDim { get; private set; } = Color.White * 0.6f;
+
+        public Color ColorReputationVeryLow { get; private set; } = Color.Red;
+        public Color ColorReputationLow { get; private set; } = Color.Orange;
+        public Color ColorReputationNeutral { get; private set; } = Color.White * 0.8f;
+        public Color ColorReputationHigh { get; private set; } = Color.LightBlue;
+        public Color ColorReputationVeryHigh { get; private set; } = Color.Blue;
 
         // Inventory
         public Color EquipmentSlotIconColor { get; private set; } = new Color(99, 70, 64);
@@ -167,6 +178,21 @@ namespace Barotrauma
                     case "textcolor":
                         TextColor = subElement.GetAttributeColor("color", TextColor);
                         break;
+                    case "colorreputationverylow":
+                        ColorReputationVeryLow = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationlow":
+                        ColorReputationLow = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationneutral":
+                        ColorReputationNeutral = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationhigh":
+                        ColorReputationHigh = subElement.GetAttributeColor("color", TextColor);
+                        break;
+                    case "colorreputationveryhigh":
+                        ColorReputationVeryHigh = subElement.GetAttributeColor("color", TextColor);
+                        break;
                     case "equipmentsloticoncolor":
                         EquipmentSlotIconColor = subElement.GetAttributeColor("color", EquipmentSlotIconColor);
                         break;
@@ -209,6 +235,12 @@ namespace Barotrauma
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
                         break;
+                    case "radiation":
+                        RadiationSprite = new UISprite(subElement);
+                        break;
+                    case "radiationanimspritesheet":
+                        RadiationAnimSpriteSheet = new SpriteSheet(subElement);
+                        break;
                     case "uiglowcircular":
                         UIGlowCircular = new UISprite(subElement);
                         break;
@@ -217,6 +249,9 @@ namespace Barotrauma
                         break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
+                        break;
+                    case "savingindicator":
+                        SavingIndicator = new SpriteSheet(subElement);
                         break;
                     case "font":
                         Font = LoadFont(subElement, graphicsDevice);

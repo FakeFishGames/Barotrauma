@@ -62,6 +62,7 @@
   <Character file="Content/Characters/Balloon/Balloon.xml" />
   <Character file="Content/Characters/Carrier/Carrier.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
+  <Character file="Content/Characters/Charybdisold/Charybdisold.xml" />
   <Character file="Content/Characters/Coelanth/Coelanth.xml" />
   <Character file="Content/Characters/Crawler/Crawler.xml" />
   <Character file="Content/Characters/Crawlerhusk/Crawlerhusk.xml" />
@@ -81,6 +82,7 @@
   <Character file="Content/Characters/Legacymoloch/Legacymoloch.xml" />
   <Character file="Content/Characters/Legacytigerthresher/Legacytigerthresher.xml" />
   <Character file="Content/Characters/Legacywatcher/Legacywatcher.xml" />
+  <Character file="Content/Characters/Legacyendworm/Legacyendworm.xml" />
   <Character file="Content/Characters/Mudraptor/Mudraptor.xml" />
   <Character file="Content/Characters/Mudraptor_unarmored/Mudraptor_unarmored.xml" />
   <Character file="Content/Characters/Mantis/Mantis.xml" />
@@ -98,6 +100,7 @@
   <Character file="Content/Characters/Spineling/Spineling.xml" />
   <Character file="Content/Characters/Variants/Swarmcrawler.xml" />
   <Character file="Content/Characters/Variants/Moloch_m.xml" />
+  <Character file="Content/Characters/Variants/Molochblack_m.xml" />
   <Character file="Content/Characters/Variants/Hammerhead_m.xml" />
   <Character file="Content/Characters/Variants/Hammerheadgold_m.xml" />
   <Character file="Content/Characters/Variants/Crawler_hatchling/Crawler_hatchling.xml" />
@@ -156,10 +159,9 @@
   <EventManagerSettings file="Content/EventManagerSettings.xml" />
   <LocationTypes file="Content/Map/locationTypes.xml" />
   <MapGenerationParameters file="Content/Map/MapGenerationParameters.xml" />
-
+  <Item file="Content/Map/Outposts/AbandonedOutpost/AbandonedOutpostDecals.xml" />
   <LevelGenerationParameters file="Content/Map/Biomes/Biomes.xml" />
-  
-  <CaveGenerationParameters file="Content/Map/Biomes//CaveGenerationParameters.xml" />
+  <CaveGenerationParameters file="Content/Map/Biomes/CaveGenerationParameters.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/IceCave/IceCaveObjects.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/RockCave/RockCaveObjects.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/MushroomCave/MushroomCaveObjects.xml" />
@@ -167,23 +169,16 @@
   <LevelObjectPrefabs file="Content/Map/Biomes/ForestCave/ForestCaveObjects.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/BioluminescentCave/BioluminescentCaveObject.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/NestObjects/NestObjects.xml" />
-
-
   <LevelGenerationParameters file="Content/Map/Biomes/AphoticPlateau/AphoticPlateau.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/AphoticPlateau/AphoticPlateauObjects.xml" />
-  
   <LevelGenerationParameters file="Content/Map/Biomes/ColdCaverns/ColdCaverns.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/ColdCaverns/ColdCavernsObjects.xml" />
-  
   <LevelGenerationParameters file="Content/Map/Biomes/EuropanRidge/EuropanRidge.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/EuropanRidge/EuropanRidgeObjects.xml" />
-  
   <LevelGenerationParameters file="Content/Map/Biomes/HydrothermalWastes/HydrothermalWastes.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/HydrothermalWastes/HydrothermalWastesObjects.xml" />
-  
   <LevelGenerationParameters file="Content/Map/Biomes/TheGreatSea/TheGreatSea.xml" />
   <LevelObjectPrefabs file="Content/Map/Biomes/TheGreatSea/TheGreatSeaObjects.xml" />
-  
   <OutpostConfig file="Content/Map/Outposts/OutpostGenerationParameters.xml" />
   <NPCSets file="Content/Map/Outposts/OutpostGenerationNpcs.xml" />
   <Missions file="Content/Missions.xml" />
@@ -217,6 +212,7 @@
   <OutpostModule file="Content/Map/Outposts/DockingModule_01.sub" />
   <OutpostModule file="Content/Map/Outposts/DockingModule_02.sub" />
   <OutpostModule file="Content/Map/Outposts/EngineeringModule_01.sub" />
+  <OutpostModule file="Content/Map/Outposts/EngineeringModule_01_Abandoned.sub" />
   <OutpostModule file="Content/Map/Outposts/EngineeringModule_02.sub" />
   <OutpostModule file="Content/Map/Outposts/CrewModule_01.sub" />
   <OutpostModule file="Content/Map/Outposts/AdminModule_01L.sub" />
@@ -228,6 +224,8 @@
   <OutpostModule file="Content/Map/Outposts/Hall4wayModule_01.sub" />
   <OutpostModule file="Content/Map/Outposts/Hall4wayModule_02.sub" />
   <OutpostModule file="Content/Map/Outposts/MineModule_01.sub" />
+  <OutpostModule file="Content/Map/Outposts/MineModule_02.sub" />
+  <OutpostModule file="Content/Map/Outposts/MineModule_03.sub" />
   <OutpostModule file="Content/Map/Outposts/ResearchModule_01.sub" />
   <OutpostModule file="Content/Map/Outposts/ResearchModule_02.sub" />
   <OutpostModule file="Content/Map/Outposts/MilCrewModule_01.sub" />
@@ -241,5 +239,17 @@
   <OutpostModule file="Content/Map/Outposts/mine_chamber_01r.sub" />
   <OutpostModule file="Content/Map/Outposts/Mine_HallwayModuleHorizontal.sub" />
   <OutpostModule file="Content/Map/Outposts/Mine_HallwayModuleVertical.sub" />
+  <OutpostModule file="Content/Map/Outposts/DockingModule_01_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/AdminModule_01_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/AdminModule_02_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/DockingModule_02_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/CrewModule_01_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/CrewModule_02_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/ResearchModule_01_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/SecurityModule_01_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/Hall4wayModule_01_Abandoned.sub" />
   <BeaconStation file="Content/Map/BeaconStations/BeaconStation1.sub" />
+  <OutpostModule file="Content/Map/Outposts/MineModule_04.sub" />
+  <OutpostModule file="Content/Map/Outposts/HallModuleHorizontal_Abandoned.sub" />
+  <OutpostModule file="Content/Map/Outposts/HallModuleVertical_Abandoned.sub" />
 </contentpackage>

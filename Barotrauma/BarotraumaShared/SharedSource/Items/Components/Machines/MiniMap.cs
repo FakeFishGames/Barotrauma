@@ -87,8 +87,9 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
+            Item source = signal.source;
             if (source == null || source.CurrentHull == null) { return; }
 
             Hull sourceHull = source.CurrentHull;
@@ -116,7 +117,7 @@ namespace Barotrauma.Items.Components
                 case "oxygen_data_in":
                     float oxy;
 
-                    if (!float.TryParse(signal, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out oxy))
+                    if (!float.TryParse(signal.value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out oxy))
                     {
                         oxy = Rand.Range(0.0f, 100.0f);
                     }

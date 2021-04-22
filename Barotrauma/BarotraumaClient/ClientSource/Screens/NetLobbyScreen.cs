@@ -27,6 +27,8 @@ namespace Barotrauma
 
         private GUIComponent jobVariantTooltip;
 
+        private SubmarinePreview submarinePreview;
+
         private readonly GUITextBox chatInput;
         private readonly GUITextBox serverLogFilter;
         public GUITextBox ChatInput
@@ -40,6 +42,8 @@ namespace Barotrauma
         private readonly GUIImage micIcon;
 
         private readonly GUIScrollBar levelDifficultyScrollBar;
+
+        private readonly GUITickBox radiationEnabledTickBox;
 
         private readonly GUIButton[] traitorProbabilityButtons;
         private readonly GUITextBlock traitorProbabilityText;
@@ -128,6 +132,12 @@ namespace Barotrauma
             get;
             private set;
         }
+
+        public GUITickBox Favorite
+        {
+            get;
+            private set;
+        }
         
         public GUITextBox ServerMessage
         {
@@ -143,6 +153,8 @@ namespace Barotrauma
 
         private readonly GUIButton showChatButton;
         private readonly GUIButton showLogButton;
+
+        private readonly GUITextBlock publicOrPrivate;
 
         public GUIListBox SubList
         {
@@ -473,6 +485,7 @@ namespace Barotrauma
                     if (socialHolder != null) { socialHolder.Visible = false; }
                     if (!(serverLogHolder?.Visible ?? true))
                     {
+                        if (GameMain.Client?.ServerSettings?.ServerLog == null) { return false; }
                         serverLogHolder.Visible = true;
                         GameMain.Client.ServerSettings.ServerLog.AssignLogFrame(serverLogReverseButton, serverLogBox, serverLogFilterTicks.Content, serverLogFilter);
                     }
@@ -663,6 +676,27 @@ namespace Barotrauma
             };
             clientReadonlyElements.Add(ServerName);
 
+            Favorite = new GUITickBox(new RectTransform(new Vector2(1.0f, 1.0f), lobbyHeader.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                "", null, "GUIServerListFavoriteTickBox")
+            {
+                Selected = false,
+                ToolTip = TextManager.Get("addtofavorites"),
+                OnSelected = (tickbox) =>
+                {
+                    ServerInfo info = GameMain.Client.ServerSettings.GetServerListInfo();
+                    if (tickbox.Selected)
+                    {
+                        GameMain.ServerListScreen.AddToFavoriteServers(info);
+                    }
+                    else
+                    {
+                        GameMain.ServerListScreen.RemoveFromFavoriteServers(info);
+                    }
+                    tickbox.ToolTip = TextManager.Get(tickbox.Selected ? "removefromfavorites" : "addtofavorites");
+                    return true;
+                }
+            };
+
             SettingsButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), lobbyHeader.RectTransform, Anchor.TopRight),
                 TextManager.Get("ServerSettingsButton"));
             clientHiddenElements.Add(SettingsButton);
@@ -686,6 +720,12 @@ namespace Barotrauma
                 HideElementsOutsideFrame = true
             };
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), serverBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.04f) },
+                "", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader")
+            {
+                CanBeFocused = false
+            };
+
+            publicOrPrivate = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), serverBanner.RectTransform, Anchor.BottomRight, Pivot.BottomRight),
                 "", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader")
             {
                 CanBeFocused = false
@@ -1095,6 +1135,20 @@ namespace Barotrauma
                 }
             };
 
+            if (MapGenerationParams.Instance.RadiationParams != null)
+            {
+                radiationEnabledTickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                {
+                    Selected = true,
+                    OnSelected = box =>
+                    {
+                        GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, radiationEnabled: box.Selected);
+                        return true;
+                    }
+                };
+            }
+
+
             List<GUIComponent> settingsElements = settingsContent.Children.ToList();
             for (int i = 0; i < settingsElements.Count; i++)
             {
@@ -1226,6 +1280,11 @@ namespace Barotrauma
 
             base.Select();
         }
+
+        public void SetPublic(bool isPublic)
+        {
+            publicOrPrivate.Text = isPublic ? TextManager.Get("PublicLobbyTag") : TextManager.Get("PrivateLobbyTag");
+        }
         
         public void RefreshEnabledElements()
         {
@@ -1238,6 +1297,10 @@ namespace Barotrauma
             }
             SeedBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             levelDifficultyScrollBar.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            if (radiationEnabledTickBox != null)
+            {
+                radiationEnabledTickBox.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            }
             traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled = 
                 !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
@@ -1250,9 +1313,9 @@ namespace Barotrauma
             StartButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ManageRound) && !GameMain.Client.GameStarted && !CampaignSetupFrame.Visible && !CampaignFrame.Visible;
             ServerName.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             ServerMessage.Readonly = !GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
-            shuttleTickBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.Voting.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));            
-            shuttleList.Enabled = shuttleList.ButtonEnabled = shuttleTickBox.Enabled = !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.SelectSub);
+            shuttleList.Enabled = shuttleList.ButtonEnabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub);
             ModeList.Enabled = GameMain.Client.ServerSettings.Voting.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
             GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
@@ -1298,7 +1361,7 @@ namespace Barotrauma
         public void CreatePlayerFrame(GUIComponent parent)
         {
             UpdatePlayerFrame(
-                playerInfoContainer.Children?.First().UserData as CharacterInfo, 
+                Character.Controlled?.Info ?? playerInfoContainer.Children?.First().UserData as CharacterInfo, 
                 allowEditing: campaignCharacterInfo == null,
                 parent: parent);
         }
@@ -1962,6 +2025,17 @@ namespace Barotrauma
             if (child != null) { playerList.RemoveChild(child); }
         }
 
+        public void SelectPlayer(GUITextBlock component, GUITextBlock.ClickableArea area)
+        {
+            if (!UInt64.TryParse(area.Data.Metadata, out UInt64 id)) { return; }
+            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
+                ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
+                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
+                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
+            if (client == null) { return; }
+            GameMain.NetLobbyScreen.SelectPlayer(client);
+        }
+
         public bool SelectPlayer(Client selectedClient)
         {
             bool myClient = selectedClient.ID == GameMain.Client.ID;
@@ -2460,6 +2534,8 @@ namespace Barotrauma
 
                 component.ToolTip = TextManager.Get("servertagdescription." + playStyle);
             }
+
+            publicOrPrivate.RectTransform.NonScaledSize = (publicOrPrivate.Font.MeasureString(publicOrPrivate.Text) + new Vector2(25, 8) * GUI.Scale).ToPoint();
         }
 
         private void DrawJobVariantItems(SpriteBatch spriteBatch, GUICustomComponent component, Pair<JobPrefab, int> jobPrefab, int itemsPerRow)
@@ -2537,11 +2613,24 @@ namespace Barotrauma
                 text: ChatMessage.GetTimeStamp() + (message.Type == ChatMessageType.Private ? TextManager.Get("PrivateMessageTag") + " " : "") + message.TextWithSender,
                 textColor: message.Color,
                 color: ((chatBox.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f,
-                wrap: true, font: GUI.SmallFont)
+                wrap: true, font: GUI.SmallFont,
+                parseRichText: true)
             {
                 UserData = message,
                 CanBeFocused = false
             };
+            msg.CalculateHeightFromText();
+            if (msg.RichTextData != null)
+            {
+                foreach (var data in msg.RichTextData)
+                {
+                    msg.ClickableAreas.Add(new GUITextBlock.ClickableArea()
+                    {
+                        Data = data,
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                    });
+                }
+            }
             msg.RectTransform.SizeChanged += Recalculate;
             void Recalculate()
             {
@@ -3463,29 +3552,35 @@ namespace Barotrauma
                     new string[3] { sub.Name, sub.MD5Hash.ShortHash, Md5Hash.GetShortHash(md5Hash) }) + " ";
             }
 
-            errorMsg += TextManager.Get("DownloadSubQuestion");
-
             //already showing a message about the same sub
             if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + subName))
             {
                 return false;
             }
 
-            var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg, 
-                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            if (GameMain.Client.ServerSettings.AllowFileTransfers)
             {
-                UserData = "request" + subName
-            };
-            requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
-            requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
-            requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
-            {
-                string[] fileInfo = (string[])userdata;
-                GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
-                return true;
-            };
-            requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+                errorMsg += TextManager.Get("DownloadSubQuestion");
 
+                var requestFileBox = new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg,
+                    new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                {
+                    UserData = "request" + subName
+                };
+                requestFileBox.Buttons[0].UserData = new string[] { subName, md5Hash };
+                requestFileBox.Buttons[0].OnClicked += requestFileBox.Close;
+                requestFileBox.Buttons[0].OnClicked += (GUIButton button, object userdata) =>
+                {
+                    string[] fileInfo = (string[])userdata;
+                    GameMain.Client?.RequestFile(FileTransferType.Submarine, fileInfo[0], fileInfo[1]);
+                    return true;
+                };
+                requestFileBox.Buttons[1].OnClicked += requestFileBox.Close;
+            }
+            else
+            {
+                new GUIMessageBox(TextManager.Get("DownloadSubLabel"), errorMsg);
+            }
             return false;            
         }
 

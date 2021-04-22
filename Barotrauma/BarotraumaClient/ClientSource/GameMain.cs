@@ -77,10 +77,6 @@ namespace Barotrauma
             set
             {
                 if (gameSession == value) { return; }
-                if (value == null && Screen.Selected == GameScreen && gameSession.GameMode is CampaignMode)
-                {
-                    DebugConsole.AddWarning("GameSession set to null while in the game screen\n" + Environment.StackTrace.CleanupStackTrace());
-                }
                 if (gameSession?.GameMode != null && gameSession.GameMode != value?.GameMode)
                 {
                     gameSession.GameMode.Remove();
@@ -465,7 +461,28 @@ namespace Barotrauma
 
                 while (Config.WaitingForAutoUpdate) { yield return CoroutineStatus.Running; }
             }
-            
+
+#if DEBUG
+            if (Config.ModBreakerMode)
+            {
+                Config.SelectCorePackage(ContentPackage.CorePackages.GetRandom());
+                foreach (var regularPackage in ContentPackage.RegularPackages)
+                {
+                    if (Rand.Range(0.0, 1.0) <= 0.5)
+                    {
+                        Config.EnableRegularPackage(regularPackage);
+                    }
+                    else
+                    {
+                        Config.DisableRegularPackage(regularPackage);
+                    }
+                }
+                ContentPackage.SortContentPackages(p =>
+                {
+                    return Rand.Int(int.MaxValue);
+                });
+            }
+#endif
 
             if (Config.AllEnabledPackages.None())
             {
@@ -535,6 +552,7 @@ namespace Barotrauma
             Order.Init();
             EventManagerSettings.Init();
             BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
+            HintManager.Init();
             TitleScreen.LoadState = 50.0f;
         yield return CoroutineStatus.Running;
 
@@ -904,7 +922,9 @@ namespace Barotrauma
                     }
 
 #if !DEBUG
-                    if (NetworkMember == null && !WindowActive && !Paused && true && Screen.Selected != MainMenuScreen && Config.PauseOnFocusLost)
+                    if (NetworkMember == null && !WindowActive && !Paused && true && Config.PauseOnFocusLost &&
+                        Screen.Selected != MainMenuScreen && Screen.Selected != ServerListScreen && Screen.Selected != NetLobbyScreen &&
+                        Screen.Selected != SubEditorScreen && Screen.Selected != LevelEditorScreen)
                     {
                         GUI.TogglePauseMenu();
                         Paused = true;
@@ -917,6 +937,8 @@ namespace Barotrauma
                     {
                         Client.AddToGUIUpdateList();
                     }
+
+                    SubmarinePreview.AddToGUIUpdateList();
 
                     FileSelection.AddToGUIUpdateList();
 
@@ -1044,6 +1066,8 @@ namespace Barotrauma
         {
             if (save)
             {
+                GUI.SetSavingIndicatorState(true);
+                
                 if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
                 {
                     GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
@@ -1073,13 +1097,6 @@ namespace Barotrauma
                 if (Tutorial.Initialized)
                 {
                     ((TutorialMode)GameSession.GameMode).Tutorial?.Stop();
-                }
-
-                if (GameSettings.SendUserStatistics)
-                {
-                    Mission mission = GameSession.Mission;
-                    GameAnalyticsManager.AddDesignEvent("QuitRound:" + (save ? "Save" : "NoSave"));
-                    GameAnalyticsManager.AddDesignEvent("EndRound:" + (mission == null ? "NoMission" : (mission.Completed ? "MissionCompleted" : "MissionFailed")));
                 }
             }
             GUIMessageBox.CloseAll();
@@ -1214,13 +1231,19 @@ namespace Barotrauma
             base.OnExiting(sender, args);
         }
 
-        public void ShowOpenUrlInWebBrowserPrompt(string url)
+        public void ShowOpenUrlInWebBrowserPrompt(string url, string promptExtensionTag = null)
         {
             if (string.IsNullOrEmpty(url)) { return; }
             if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
 
-            var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url),
-                new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
+            string text = TextManager.GetWithVariable("openlinkinbrowserprompt", "[link]", url);
+            string extensionText = TextManager.Get(promptExtensionTag, returnNull: true, useEnglishAsFallBack: false);
+            if (!string.IsNullOrEmpty(extensionText))
+            {   
+                text += $"\n\n{extensionText}";
+            }
+
+            var msgBox = new GUIMessageBox("", text, new string[] { TextManager.Get("Yes"), TextManager.Get("No") })
             {
                 UserData = "verificationprompt"
             };

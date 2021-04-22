@@ -22,7 +22,12 @@ namespace Barotrauma
         public AIObjectiveGetItem GetItemObjective => getItemObjective;
         public AIObjectiveContainItem ContainObjective => containObjective;
 
+        public Item TargetItem => targetItem;
+        public ItemContainer TargetContainer => targetContainer;
+
         public bool Equip { get; set; }
+
+        public bool TakeWholeStack { get; set; }
 
         /// <summary>
         /// If true drops the item when containing the item fails.
@@ -90,7 +95,7 @@ namespace Barotrauma
             if (getItemObjective == null && !itemToDecontain.IsOwnedBy(character))
             {
                 TryAddSubObjective(ref getItemObjective,
-                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip),
+                    constructor: () => new AIObjectiveGetItem(character, targetItem, objectiveManager, Equip) { TakeWholeStack = this.TakeWholeStack },
                     onAbandon: () => Abandon = true);
                 return;
             }
@@ -99,6 +104,7 @@ namespace Barotrauma
                 TryAddSubObjective(ref containObjective,
                     constructor: () => new AIObjectiveContainItem(character, itemToDecontain, targetContainer, objectiveManager)
                     {
+                        MoveWholeStack = TakeWholeStack,
                         Equip = Equip,
                         RemoveEmpty = false,
                         GetItemPriority = GetItemPriority,

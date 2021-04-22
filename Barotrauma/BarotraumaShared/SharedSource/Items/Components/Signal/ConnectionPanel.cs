@@ -65,10 +65,10 @@ namespace Barotrauma.Items.Components
             }
 
             base.IsActive = true;
-            InitProjSpecific(element);
+            InitProjSpecific();
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific();
 
         private bool linksInitialized;
         public override void OnMapLoaded()
@@ -352,7 +352,7 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             //do nothing
         }

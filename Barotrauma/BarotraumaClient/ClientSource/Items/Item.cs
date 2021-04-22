@@ -87,7 +87,7 @@ namespace Barotrauma
         {
             get
             {
-                if (!GameMain.SubEditorScreen.ShowThalamus && prefab.Category.HasFlag(MapEntityCategory.Thalamus))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
                 {
                     return false;
                 }
@@ -618,6 +618,7 @@ namespace Barotrauma
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
             {
+                CanTakeKeyBoardFocus = false,
                 Spacing = (int)(25 * GUI.Scale)
             };
 
@@ -1463,6 +1464,7 @@ namespace Barotrauma
 
             byte bodyType           = msg.ReadByte();
             bool spawnedInOutpost   = msg.ReadBoolean();
+            bool allowStealing      = msg.ReadBoolean();
             byte teamID             = msg.ReadByte();
             bool tagsChanged        = msg.ReadBoolean();
             string tags = "";
@@ -1534,7 +1536,8 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, pos, sub, id: itemId)
             {
-                SpawnedInOutpost = spawnedInOutpost
+                SpawnedInOutpost = spawnedInOutpost,
+                AllowStealing = allowStealing
             };
 
             if (item.body != null)

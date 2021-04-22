@@ -26,6 +26,7 @@ namespace Barotrauma
         {
             msg.Write(ID);
             msg.Write(Name);
+            msg.Write(OriginalName);
             msg.Write((byte)Gender);
             msg.Write((byte)Race);
             msg.Write((byte)HeadSpriteId);

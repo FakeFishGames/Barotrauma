@@ -62,6 +62,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
                 Attack = new Attack(subElement, item.Name + ", MeleeWeapon");
+                Attack.DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent());
             }
             item.IsShootable = true;
             // TODO: should define this in xml if we have melee weapons that don't require aim to use

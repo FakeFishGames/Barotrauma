@@ -39,6 +39,8 @@ namespace Barotrauma.Items.Components
 
         private Pair<Rectangle, string> tooltip;
 
+        private GUITextBlock requiredTimeBlock;
+
         partial void InitProjSpecific()
         {
             CreateGUI();
@@ -384,8 +386,6 @@ namespace Barotrauma.Items.Components
             FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
             if (targetItem != null)
             {
-                var itemIcon = targetItem.TargetItem.InventoryIcon ?? targetItem.TargetItem.sprite;
-
                 Rectangle slotRect = outputContainer.Inventory.visualSlots[0].Rect;
 
                 if (fabricatedItem != null)
@@ -398,11 +398,15 @@ namespace Barotrauma.Items.Components
                         GUI.Style.Green * 0.5f, isFilled: true);
                 }
 
-                itemIcon.Draw(
-                    spriteBatch,
-                    slotRect.Center.ToVector2(),
-                    color: targetItem.TargetItem.InventoryIconColor * 0.4f,
-                    scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y) * 0.9f);
+                if (outputContainer.Inventory.IsEmpty())
+                {
+                    var itemIcon = targetItem.TargetItem.InventoryIcon ?? targetItem.TargetItem.sprite;
+                    itemIcon.Draw(
+                        spriteBatch,
+                        slotRect.Center.ToVector2(),
+                        color: targetItem.TargetItem.InventoryIconColor * 0.4f,
+                        scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y) * 0.9f);
+                }
             }
             
             if (tooltip != null)
@@ -522,7 +526,7 @@ namespace Barotrauma.Items.Components
                 AutoScaleHorizontal = true,
             };
                 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), ToolBox.SecondsToReadableTime(requiredTime), 
+            requiredTimeBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), ToolBox.SecondsToReadableTime(requiredTime), 
                 font: GUI.SmallFont);
             return true;
         }
@@ -604,6 +608,12 @@ namespace Barotrauma.Items.Components
                     childContainer.GetChild<GUIImage>().Color = itemPrefab.TargetItem.InventoryIconColor * (canBeFabricated ? 1.0f : 0.5f);
                 }
             }
+        }
+
+        partial void UpdateRequiredTimeProjSpecific()
+        {
+            if (requiredTimeBlock == null) { return; }
+            requiredTimeBlock.Text = ToolBox.SecondsToReadableTime(timeUntilReady > 0.0f ? timeUntilReady : requiredTime);
         }
 
         public void ClientWrite(IWriteMessage msg, object[] extraData = null)

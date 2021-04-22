@@ -560,6 +560,22 @@ namespace Barotrauma
                         };
                     }
                     break;
+                case NetworkEventType.UNLOCKPATH:
+                    UInt16 connectionIndex = msg.ReadUInt16();
+                    if (GameMain.GameSession?.Map?.Connections != null)
+                    {
+                        if (connectionIndex >= GameMain.GameSession.Map.Connections.Count)
+                        {
+                            DebugConsole.ThrowError($"Failed to unlock a path on the campaign map. Connection index out of bounds (index: {connectionIndex}, number of connections: {GameMain.GameSession.Map.Connections.Count})");
+                        }
+                        else
+                        {
+                            GameMain.GameSession.Map.Connections[connectionIndex].Locked = false;
+                            new GUIMessageBox(string.Empty, TextManager.Get("pathunlockedgeneric"),
+                                new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "UnlockPathIcon", relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128));
+                        }
+                    }
+                    break;
             }
         }
     }

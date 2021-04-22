@@ -105,6 +105,14 @@ namespace Barotrauma
                             focusedItem = item;
                             FocusedCharacter = null;
                         }
+                        else
+                        {
+                            //failed to interact with the item 
+                            // -> correct the position and the state of the Holdable component (in case the item was deattached client-side)
+                            item.PositionUpdateInterval = 0.0f;
+                            var holdable = item.GetComponent<Items.Components.Holdable>();
+                            holdable?.Item?.CreateServerEvent(holdable);
+                        }
                     }
                     else if (closestEntity is Character character)
                     {
@@ -278,21 +286,21 @@ namespace Barotrauma
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
-                        msg.WriteRangedInteger(0, 0, 5);
+                        msg.WriteRangedInteger(0, 0, 6);
                         msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                         Inventory.ServerWrite(msg, c);
                         break;
                     case NetEntityEvent.Type.Control:
-                        msg.WriteRangedInteger(1, 0, 5);
+                        msg.WriteRangedInteger(1, 0, 6);
                         Client owner = (Client)extraData[1];
                         msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                         break;
                     case NetEntityEvent.Type.Status:
-                        msg.WriteRangedInteger(2, 0, 5);
+                        msg.WriteRangedInteger(2, 0, 6);
                         WriteStatus(msg);
                         break;
                     case NetEntityEvent.Type.UpdateSkills:
-                        msg.WriteRangedInteger(3, 0, 5);
+                        msg.WriteRangedInteger(3, 0, 6);
                         if (Info?.Job == null)
                         {
                             msg.Write((byte)0);
@@ -311,14 +319,35 @@ namespace Barotrauma
                         Limb attackLimb = extraData[1] as Limb;
                         UInt16 targetEntityID = (UInt16)extraData[2];
                         int targetLimbIndex = extraData.Length > 3 ? (int)extraData[3] : 0;
-                        msg.WriteRangedInteger(4, 0, 5);
+                        msg.WriteRangedInteger(4, 0, 6);
                         msg.Write((byte)(Removed ? 255 : Array.IndexOf(AnimController.Limbs, attackLimb)));
                         msg.Write(targetEntityID);
                         msg.Write((byte)targetLimbIndex);
                         break;
                     case NetEntityEvent.Type.AssignCampaignInteraction:
-                        msg.WriteRangedInteger(5, 0, 5);
+                        msg.WriteRangedInteger(5, 0, 6);
                         msg.Write((byte)CampaignInteractionType);
+                        break;
+                    case NetEntityEvent.Type.ObjectiveManagerOrderState:
+                        msg.WriteRangedInteger(6, 0, 6);
+                        if (!(AIController is HumanAIController controller))
+                        {
+                            msg.Write(false);
+                            break;
+                        }
+                        var currentOrderInfo = controller.ObjectiveManager.GetCurrentOrderInfo();
+                        if (!currentOrderInfo.HasValue)
+                        {
+                            msg.Write(false);
+                            break;
+                        }
+                        msg.Write(true);
+                        var orderPrefab = currentOrderInfo.Value.Order.Prefab;
+                        int orderIndex = Order.PrefabList.IndexOf(orderPrefab);
+                        msg.WriteRangedInteger(orderIndex, 0, Order.PrefabList.Count);
+                        if (!orderPrefab.HasOptions) { break; }
+                        int optionIndex = orderPrefab.Options.IndexOf(currentOrderInfo.Value.OrderOption);
+                        msg.WriteRangedInteger(optionIndex, 0, orderPrefab.Options.Length);
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
@@ -529,28 +558,27 @@ namespace Barotrauma
 
             msg.Write((byte)CampaignInteractionType);
 
-            // Current order
-            if (info.CurrentOrder != null)
+            
+            // Current orders
+            msg.Write((byte)info.CurrentOrders.Count(o => o.Order != null));
+            foreach (var orderInfo in info.CurrentOrders)
             {
-                msg.Write(true);
-                msg.Write((byte)Order.PrefabList.IndexOf(info.CurrentOrder.Prefab));
-                msg.Write(info.CurrentOrder.TargetEntity == null ? (UInt16)0 : info.CurrentOrder.TargetEntity.ID);
-                var hasOrderGiver = info.CurrentOrder.OrderGiver != null;
+                if (orderInfo.Order == null) { continue; }
+                msg.Write((byte)Order.PrefabList.IndexOf(orderInfo.Order.Prefab));
+                msg.Write(orderInfo.Order.TargetEntity == null ? (UInt16)0 : orderInfo.Order.TargetEntity.ID);
+                var hasOrderGiver = orderInfo.Order.OrderGiver != null;
                 msg.Write(hasOrderGiver);
-                if (hasOrderGiver) { msg.Write(info.CurrentOrder.OrderGiver.ID); }
-                msg.Write((byte)(string.IsNullOrWhiteSpace(info.CurrentOrderOption) ? 0 : Array.IndexOf(info.CurrentOrder.Prefab.Options, info.CurrentOrderOption)));
-                var hasTargetPosition = info.CurrentOrder.TargetPosition != null;
+                if (hasOrderGiver) { msg.Write(orderInfo.Order.OrderGiver.ID); }
+                msg.Write((byte)(string.IsNullOrWhiteSpace(orderInfo.OrderOption) ? 0 : Array.IndexOf(orderInfo.Order.Prefab.Options, orderInfo.OrderOption)));
+                msg.Write((byte)orderInfo.ManualPriority);
+                var hasTargetPosition = orderInfo.Order.TargetPosition != null;
                 msg.Write(hasTargetPosition);
                 if (hasTargetPosition)
                 {
-                    msg.Write(info.CurrentOrder.TargetPosition.Position.X);
-                    msg.Write(info.CurrentOrder.TargetPosition.Position.Y);
-                    msg.Write(info.CurrentOrder.TargetPosition.Hull == null ? (UInt16)0 : info.CurrentOrder.TargetPosition.Hull.ID);
+                    msg.Write(orderInfo.Order.TargetPosition.Position.X);
+                    msg.Write(orderInfo.Order.TargetPosition.Position.Y);
+                    msg.Write(orderInfo.Order.TargetPosition.Hull == null ? (UInt16)0 : orderInfo.Order.TargetPosition.Hull.ID);
                 }
-            }
-            else
-            {
-                msg.Write(false);
             }
 
             TryWriteStatus(msg);

@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            currPowerConsumption = powerConsumption;
+            currPowerConsumption = (currentMode == Mode.Active) ? powerConsumption : powerConsumption * 0.1f;
 
             UpdateOnActiveEffects(deltaTime);
 
@@ -252,9 +252,10 @@ namespace Barotrauma.Items.Components
             }
             foreach (Character c in Character.CharacterList)
             {
-                if (c.AnimController.CurrentHull != null || !c.Enabled) continue;
-                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) continue;
-                if (Vector2.DistanceSquared(c.WorldPosition, item.WorldPosition) > range * range) continue;
+                if (c.IsDead || c.Removed || !c.Enabled) { continue; }
+                if (c.AnimController.CurrentHull != null || c.Params.HideInSonar) { continue; }
+                if (DetectSubmarineWalls && c.AnimController.CurrentHull == null && item.CurrentHull != null) { continue; }
+                if (Vector2.DistanceSquared(c.WorldPosition, item.WorldPosition) > range * range) { continue; }
 
                 string directionName = GetDirectionName(c.WorldPosition - item.WorldPosition);
                 if (!targetGroups.ContainsKey(directionName))
@@ -277,9 +278,12 @@ namespace Barotrauma.Items.Components
                     dialogTag = "DialogSonarTargetLarge";
                 }
 
-                character.Speak(TextManager.GetWithVariables(dialogTag, new string[2] { "[direction]", "[count]" }, 
-                    new string[2] { targetGroup.Key.ToString(), targetGroup.Value.Count.ToString() },
-                    new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 60);
+                if (character.IsOnPlayerTeam)
+                {
+                    character.Speak(TextManager.GetWithVariables(dialogTag, new string[2] { "[direction]", "[count]" },
+                        new string[2] { targetGroup.Key.ToString(), targetGroup.Value.Count.ToString() },
+                        new bool[2] { true, false }), null, 0, "sonartarget" + targetGroup.Value[0].ID, 60);
+                }
 
                 //prevent the character from reporting other targets in the group
                 for (int i = 1; i < targetGroup.Value.Count; i++)
@@ -321,23 +325,23 @@ namespace Barotrauma.Items.Components
             return transducerPosSum / connectedTransducers.Count;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+            base.ReceiveSignal(signal, connection);
 
             if (connection.Name == "transducer_in")
             {
-                var transducer = source.GetComponent<SonarTransducer>();
+                var transducer = signal.source.GetComponent<SonarTransducer>();
                 if (transducer == null) return;
 
                 var connectedTransducer = connectedTransducers.Find(t => t.Transducer == transducer);
                 if (connectedTransducer == null)
                 {
-                    connectedTransducers.Add(new ConnectedTransducer(transducer, signalStrength, 1.0f));
+                    connectedTransducers.Add(new ConnectedTransducer(transducer, signal.strength, 1.0f));
                 }
                 else
                 {
-                    connectedTransducer.SignalStrength = signalStrength;
+                    connectedTransducer.SignalStrength = signal.strength;
                     connectedTransducer.DisconnectTimer = 1.0f;
                 }
             }

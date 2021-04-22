@@ -60,6 +60,7 @@ namespace Barotrauma
             public GUITextBlock submarineFee;
             public GUIButton selectSubmarineButton;
             public GUITextBlock middleTextBlock;
+            public GUIButton previewButton;
         }
 
         public SubmarineSelection(bool transfer, Action closeAction, RectTransform parent)
@@ -191,6 +192,12 @@ namespace Barotrauma
                 submarineDisplayElement.submarineClass = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUI.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Center);
                 submarineDisplayElement.submarineFee = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUI.SubHeadingFont);
                 submarineDisplayElement.selectSubmarineButton = new GUIButton(new RectTransform(Vector2.One, submarineDisplayElement.background.RectTransform), style: null);
+                submarineDisplayElement.previewButton = new GUIButton(new RectTransform(Vector2.One * 0.12f, submarineDisplayElement.background.RectTransform, anchor: Anchor.BottomRight, pivot: Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point((int)(0.03f * background.Rect.Height)) }, style: "ExpandButton")
+                {
+                    Color = Color.White,
+                    HoverColor = Color.White,
+                    PressedColor = Color.White
+                };
                 submarineDisplays[i] = submarineDisplayElement;
             }
 
@@ -299,6 +306,7 @@ namespace Barotrauma
                     submarineDisplays[i].selectSubmarineButton.OnClicked = null;
                     submarineDisplays[i].displayedSubmarine = null;
                     submarineDisplays[i].middleTextBlock.AutoDraw = false;
+                    submarineDisplays[i].previewButton.Visible = false;
                 }
                 else
                 {
@@ -369,6 +377,13 @@ namespace Barotrauma
                     {
                         SelectSubmarine(subToDisplay, submarineDisplays[i].background.Rect);
                     }
+
+                    submarineDisplays[i].previewButton.Visible = true;
+                    submarineDisplays[i].previewButton.OnClicked = (btn, obj) =>
+                    {
+                        SubmarinePreview.Create(subToDisplay);
+                        return false;
+                    };
                 }
 
                 submarineIndex++;

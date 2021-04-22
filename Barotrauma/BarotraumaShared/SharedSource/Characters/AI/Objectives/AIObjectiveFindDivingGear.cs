@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -37,11 +38,11 @@ namespace Barotrauma
                 return;
             }
             targetItem = character.Inventory.FindItemByTag(gearTag, true);
-            if (targetItem == null || !character.HasEquippedItem(targetItem))
+            if (targetItem == null || !character.HasEquippedItem(targetItem) && targetItem.ContainedItems.Any(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 0))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
-                    if (targetItem == null)
+                    if (targetItem == null && character.IsOnPlayerTeam)
                     {
                         character.Speak(TextManager.Get("DialogGetDivingGear"), null, 0.0f, "getdivinggear", 30.0f);
                     }
@@ -57,46 +58,78 @@ namespace Barotrauma
             }
             else
             {
-                if (!EjectEmptyTanks(character, targetItem, out var containedItems))
+                HumanAIController.UnequipContainedItems(targetItem, it => !it.HasTag("oxygensource"));
+                HumanAIController.UnequipEmptyItems(targetItem);
+                // Seek oxygen that has at least 10% condition left, if we are inside a friendly sub.
+                // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
+                // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
+                float min = character.Submarine != Submarine.MainSub ? 0.01f : MIN_OXYGEN;
+                if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
                 {
-#if DEBUG
-                    DebugConsole.ThrowError($"{character.Name}: AIObjectiveFindDivingGear failed - the item \"" + targetItem + "\" has no proper inventory");
-#endif
-                    Abandon = true;
-                    return;
-                }
-                if (containedItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > MIN_OXYGEN))
-                {
-                    // No valid oxygen source loaded.
-                    // Seek oxygen that has min 10% condition left.
                     TryAddSubObjective(ref getOxygen, () =>
                     {
-                        if (!HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: 10))
+                        if (character.IsOnPlayerTeam)
                         {
-                            character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
+                            if (HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: min))
+                            {
+                                character.Speak(TextManager.Get("dialogswappingoxygentank"), null, 0, "swappingoxygentank", 30.0f);
+                            }
+                            else
+                            {
+                                character.Speak(TextManager.Get("DialogGetOxygenTank"), null, 0, "getoxygentank", 30.0f);
+                            }
                         }
                         return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                         {
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
-                            ConditionLevel = MIN_OXYGEN
+                            ConditionLevel = MIN_OXYGEN,
+                            RemoveExisting = true
                         };
                     },
                     onAbandon: () =>
                     {
-                        // Try to seek any oxygen sources.
+                        getOxygen = null;
+                        int remainingTanks = ReportOxygenTankCount();
+                        // Try to seek any oxygen sources, even if they have minimal amount of oxygen.
                         TryAddSubObjective(ref getOxygen, () =>
                         {
                             return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                             {
                                 AllowToFindDivingGear = false,
-                                AllowDangerousPressure = true
+                                AllowDangerousPressure = true,
+                                RemoveExisting = true
                             };
                         },
-                        onAbandon: () => Abandon = true,
+                        onAbandon: () =>
+                        {
+                            Abandon = true;
+                            if (remainingTanks > 0 && !HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: 0.01f))
+                            {
+                                character.Speak(TextManager.Get("dialogcantfindtoxygen"), null, 0, "cantfindoxygen", 30.0f);
+                            }
+                        },
                         onCompleted: () => RemoveSubObjective(ref getOxygen));
                     },
-                    onCompleted: () => RemoveSubObjective(ref getOxygen));
+                    onCompleted: () =>
+                    {
+                        RemoveSubObjective(ref getOxygen);
+                        ReportOxygenTankCount();
+                    });
+
+                    int ReportOxygenTankCount()
+                    {
+                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("oxygensource") && i.Condition > 1);
+                        if (remainingOxygenTanks == 0)
+                        {
+                            character.Speak(TextManager.Get("DialogOutOfOxygenTanks"), null, 0.0f, "outofoxygentanks", 30.0f);
+                        }
+                        else if (remainingOxygenTanks < 10)
+                        {
+                            character.Speak(TextManager.Get("DialogLowOnOxygenTanks"), null, 0.0f, "lowonoxygentanks", 30.0f);
+                        }
+                        return remainingOxygenTanks;
+                    }
                 }
             }
         }
@@ -108,21 +141,7 @@ namespace Barotrauma
         {
             containedItems = target.OwnInventory?.AllItems;
             if (containedItems == null) { return false; }
-            foreach (Item containedItem in target.OwnInventory.AllItemsMod)
-            {
-                if (containedItem.Condition <= 0.0f)
-                {
-                    if (actor.Submarine == null)
-                    {
-                        // If we are outside of main sub, try to put the tank in the inventory instead dropping it in the sea.
-                        if (actor.Inventory.TryPutItem(containedItem, actor, CharacterInventory.anySlot))
-                        {
-                            continue;
-                        }          
-                    }
-                    containedItem.Drop(actor);
-                }
-            }
+            AIController.UnequipEmptyItems(actor, target);
             return true;
         }
 

@@ -74,11 +74,48 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private string output;
         [InGameEditable, Serialize("1", true, description: "The signal the item outputs when it has detected movement.", alwaysUseInstanceValues: true)]
-        public string Output { get; set; }
+        public string Output
+        {
+            get { return output; }
+            set
+            {
+                if (value == null) { return; }
+                output = value;
+                if (output.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    output = output.Substring(0, MaxOutputLength);
+                }
+            }
+        }
 
+        private string falseOutput;
         [InGameEditable, Serialize("", true, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
-        public string FalseOutput { get; set; }
+        public string FalseOutput
+        {
+            get { return falseOutput; }
+            set
+            {
+                if (value == null) { return; }
+                falseOutput = value;
+                if (falseOutput.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    falseOutput = falseOutput.Substring(0, MaxOutputLength);
+                }
+            }
+        }
+
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
 
         [Editable(DecimalCount = 3), Serialize(0.01f, true, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
         public float MinimumVelocity
@@ -113,7 +150,7 @@ namespace Barotrauma.Items.Components
         {
             string signalOut = MotionDetected ? Output : FalseOutput;
 
-            if (!string.IsNullOrEmpty(signalOut)) item.SendSignal(1, signalOut, "state_out", null);
+            if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(new Signal(signalOut, 1), "state_out"); }
 
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) return;
@@ -137,6 +174,10 @@ namespace Barotrauma.Items.Components
             foreach (Character c in Character.CharacterList)
             {
                 if (IgnoreDead && c.IsDead) { continue; }
+
+                //ignore characters that have spawned a second or less ago
+                //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
+                if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
 
                 switch (Target)
                 {

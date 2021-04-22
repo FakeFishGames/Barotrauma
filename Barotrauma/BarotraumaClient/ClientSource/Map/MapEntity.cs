@@ -20,9 +20,6 @@ namespace Barotrauma
         
         public static Vector2 StartMovingPos => startMovingPos;
 
-        // Quick undo/redo for size and movement only. TODO: Remove if we do a more general implementation.
-        private Memento<Rectangle> rectMemento;
-
         public event Action<Rectangle> Resized;
 
         private static bool resizing;
@@ -64,8 +61,6 @@ namespace Barotrauma
                 return editingHUD;
             }
         }
-
-        //protected bool isSelected;
 
         private static bool disableSelect;
         public static bool DisableSelect
@@ -805,7 +800,7 @@ namespace Barotrauma
             }
             if (selectionPos != null && selectionPos != Vector2.Zero)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(selectionPos.X, -selectionPos.Y), selectionSize, Color.DarkRed, false, 0, (int)Math.Max(1.5f / GameScreen.Selected.Cam.Zoom, 1.0f));
+                GUI.DrawRectangle(spriteBatch, new Vector2(selectionPos.X, -selectionPos.Y), selectionSize, Color.DarkRed, false, 0, 2f / GameScreen.Selected.Cam.Zoom);
             }
         }
 

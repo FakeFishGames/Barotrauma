@@ -256,14 +256,14 @@ namespace Barotrauma
             }
         }
 
-        public void CreateImageWizard(Vector2 positon)
+        public void CreateImageWizard()
         {
             string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             if (!Directory.Exists(home)) { return; }
 
             FileSelection.OnFileSelected = file =>
             {
-                Vector2 pos = Screen.Selected.Cam.ScreenToWorld(positon);
+                Vector2 pos = Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 pos.Y = -pos.Y;
                 Images.Add(new EditorImage(file, pos) { DrawTarget = EditorImage.DrawTargetType.World });
                 UpdateImageCategories();

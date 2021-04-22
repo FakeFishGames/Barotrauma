@@ -302,7 +302,7 @@ namespace Barotrauma
                     {
                         GUI.DrawLine(spriteBatch, new Vector2(edge.Point1.X + cell.Translation.X, -(edge.Point1.Y + cell.Translation.Y)),
                             new Vector2(edge.Point2.X + cell.Translation.X, -(edge.Point2.Y + cell.Translation.Y)), edge.NextToCave ? Color.Red : (cell.Body == null ? Color.Cyan * 0.5f : (edge.IsSolid ? Color.White : Color.Gray)),
-                            width: edge.NextToCave ? 8 :1);
+                            width: edge.NextToCave ? 8 : 1);
                     }
 
                     foreach (Vector2 point in cell.BodyVertices)
@@ -321,6 +321,11 @@ namespace Barotrauma
                             Color.Lerp(Color.Yellow, GUI.Style.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }*/
+
+                foreach (var abyssIsland in level.AbyssIslands)
+                {
+                    GUI.DrawRectangle(spriteBatch, new Vector2(abyssIsland.Area.X, -abyssIsland.Area.Y - abyssIsland.Area.Height), abyssIsland.Area.Size.ToVector2(), Color.Cyan, thickness: 5);
+                }
 
                 foreach (var ruin in level.Ruins)
                 {

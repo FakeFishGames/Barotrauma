@@ -11,7 +11,9 @@ using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 3, Corpse = 4 };
+    [Flags]
+    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 4, Corpse = 8 };
+
     partial class WayPoint : MapEntity
     {
         public static List<WayPoint> WayPointList = new List<WayPoint>();
@@ -142,7 +144,7 @@ namespace Barotrauma
 
             DebugConsole.Log("Created waypoint (" + ID + ")");
 
-            CurrentHull = Hull.FindHull(WorldPosition);
+            FindHull();
         }
 
         public override MapEntity Clone()
@@ -784,12 +786,19 @@ namespace Barotrauma
         public void FindHull()
         {
             CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
+#if CLIENT
+            //we may not be able to find the hull with the optimized method in the sub editor if new hulls have been added, use the unoptimized method
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                CurrentHull ??= Hull.FindHullUnoptimized(WorldPosition);
+            }
+#endif
         }
 
         public override void OnMapLoaded()
         {
             InitializeLinks();
-            CurrentHull = Hull.FindHull(WorldPosition, CurrentHull);
+            FindHull();
             FindStairs();
         }
 
