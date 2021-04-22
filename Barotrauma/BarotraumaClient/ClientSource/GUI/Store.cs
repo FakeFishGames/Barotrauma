@@ -24,7 +24,6 @@ namespace Barotrauma
         private int buyTotal, sellTotal;
 
         private GUITextBlock merchantBalanceBlock;
-        private GUILayoutGroup valueChangeGroup;
         private GUITextBlock currentSellValueBlock, newSellValueBlock;
         private GUIImage sellValueChangeArrow;
         private GUIDropDown sortingDropDown;
@@ -158,7 +157,7 @@ namespace Barotrauma
             };
 
             // Store header ------------------------------------------------
-            var headerGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f / 14.0f), storeContent.RectTransform), isHorizontal: true)
+            var headerGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.95f / 14.0f), storeContent.RectTransform), isHorizontal: true)
             {
                 RelativeSpacing = 0.005f
             };
@@ -209,7 +208,7 @@ namespace Barotrauma
             // Item sell value ------------------------------------------------
             var sellValueContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), balanceAndValueGroup.RectTransform))
             {
-                CanBeFocused = false,
+                CanBeFocused = true,
                 RelativeSpacing = 0.005f
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform),
@@ -220,9 +219,9 @@ namespace Barotrauma
                 ForceUpperCase = true
             };
 
-            valueChangeGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            var valueChangeGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
-                CanBeFocused = true,
+                CanBeFocused = false,
                 RelativeSpacing = 0.02f
             };
             float blockWidth = GUI.IsFourByThree() ? 0.32f : 0.28f;
@@ -247,7 +246,7 @@ namespace Barotrauma
                             {
                                 string tooltipTag = newStatus.SellPriceModifier > CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier ?
                                     "campaingstore.valueincreasetooltip" : "campaingstore.valuedecreasetooltip";
-                                valueChangeGroup.ToolTip = TextManager.Get(tooltipTag);
+                                sellValueContainer.ToolTip = TextManager.Get(tooltipTag);
                                 currentSellValueBlock.TextColor = newStatus.Color;
                                 sellValueChangeArrow.Color = newStatus.Color;
                                 sellValueChangeArrow.Visible = true;
@@ -256,7 +255,7 @@ namespace Barotrauma
                                 return $"{(CurrentLocation.ActiveStoreBalanceStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
                             }
                         }
-                        valueChangeGroup.ToolTip = null;
+                        sellValueContainer.ToolTip = TextManager.Get("campaignstore.sellvaluetooltip");
                         currentSellValueBlock.TextColor = CurrentLocation.BalanceColor;
                         sellValueChangeArrow.Visible = false;
                         newSellValueBlock.Text = null;
@@ -264,7 +263,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        valueChangeGroup.ToolTip = null;
+                        sellValueContainer.ToolTip = null;
                         sellValueChangeArrow.Visible = false;
                         newSellValueBlock.Text = null;
                         return null;
@@ -293,7 +292,7 @@ namespace Barotrauma
             newSellValueBlock.Padding = newPadding;
 
             // Store mode buttons ------------------------------------------------
-            var modeButtonFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f / 14.0f), storeContent.RectTransform), style: null);
+            var modeButtonFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f / 14.0f), storeContent.RectTransform), style: null);
             var modeButtonContainer = new GUILayoutGroup(new RectTransform(Vector2.One, modeButtonFrame.RectTransform), isHorizontal: true);
 
             var tabs = Enum.GetValues(typeof(StoreTab));
@@ -676,6 +675,7 @@ namespace Barotrauma
                         (itemFrame.UserData as PurchasedItem).Quantity = quantity;
                         SetQuantityLabelText(StoreTab.Buy, itemFrame);
                         SetOwnedLabelText(itemFrame);
+                        SetPriceGetters(itemFrame, true);
                     }
                     SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
                     existingItemFrames.Add(itemFrame);
@@ -750,6 +750,7 @@ namespace Barotrauma
                     (itemFrame.UserData as PurchasedItem).Quantity = itemQuantity;
                     SetQuantityLabelText(StoreTab.Sell, itemFrame);
                     SetOwnedLabelText(itemFrame);
+                    SetPriceGetters(itemFrame, false);
                 }
                 SetItemFrameStatus(itemFrame, hasPermissions && itemQuantity > 0);
                 if (itemQuantity < 1 && !isRequestedGood)
@@ -770,6 +771,37 @@ namespace Barotrauma
 
             storeSellList.BarScroll = prevSellListScroll;
             shoppingCrateSellList.BarScroll = prevShoppingCrateScroll;
+        }
+
+        private void SetPriceGetters(GUIComponent itemFrame, bool buying)
+        {
+            if (itemFrame == null || !(itemFrame.UserData is PurchasedItem pi)) { return; }
+
+            if (itemFrame.FindChild("undiscountedprice", recursive: true) is GUITextBlock undiscountedPriceBlock)
+            {
+                if (buying)
+                {
+                    undiscountedPriceBlock.TextGetter = () => GetCurrencyFormatted(
+                         CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, considerDailySpecials: false) ?? 0);
+                }
+                else
+                {
+                    undiscountedPriceBlock.TextGetter = () => GetCurrencyFormatted(
+                       CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, considerRequestedGoods: false) ?? 0);
+                }
+            }
+
+            if (itemFrame.FindChild("price", recursive: true) is GUITextBlock priceBlock)
+            {
+                if (buying)
+                {
+                    priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab) ?? 0);
+                }
+                else
+                {
+                    priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab) ?? 0);
+                }
+            }
         }
 
         public void RefreshItemsToSell()
@@ -1188,14 +1220,6 @@ namespace Barotrauma
             };
             priceBlock.Color *= (forceDisable ? 0.5f : 1.0f);
             priceBlock.CalculateHeightFromText();
-            if (isSellingRelatedList)
-            {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, priceInfo: priceInfo) ?? 0);
-            }
-            else
-            {
-                priceBlock.TextGetter = () => GetCurrencyFormatted(CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, priceInfo: priceInfo) ?? 0);
-            }
             if (locationHasDealOnItem)
             {
                 var undiscounterPriceBlock = new GUITextBlock(
@@ -1209,17 +1233,8 @@ namespace Barotrauma
                     TextColor = priceBlock.TextColor,
                     UserData = "undiscountedprice"
                 };
-                if (isSellingRelatedList)
-                {
-                    undiscounterPriceBlock.TextGetter = () => GetCurrencyFormatted(
-                        CurrentLocation?.GetAdjustedItemSellPrice(pi.ItemPrefab, priceInfo: priceInfo, considerRequestedGoods: false) ?? 0);
-                }
-                else
-                {
-                    undiscounterPriceBlock.TextGetter = () => GetCurrencyFormatted(
-                        CurrentLocation?.GetAdjustedItemBuyPrice(pi.ItemPrefab, priceInfo: priceInfo, considerDailySpecials: false) ?? 0);
-                }
             }
+            SetPriceGetters(frame, !isSellingRelatedList);
 
             if (isParentOnLeftSideOfInterface)
             {
@@ -1268,7 +1283,8 @@ namespace Barotrauma
             // Add items on the sub(s)
             Submarine.MainSub?.GetItems(true)
                 .Where(i => i.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached) &&
-                            i.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null)))
+                            i.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null)) &&
+                            ItemAndAllContainersInteractable(i))
                 .ForEach(i => AddToOwnedItems(i.Prefab));
 
             // Add items in character inventories
@@ -1285,6 +1301,16 @@ namespace Barotrauma
             CargoManager?.PurchasedItems?.ForEach(pi => AddToOwnedItems(pi.ItemPrefab, amount: pi.Quantity));
 
             ownedItemsUpdateTimer = 0.0f;
+
+            static bool ItemAndAllContainersInteractable(Item item)
+            {
+                do
+                {
+                    if (!item.IsPlayerTeamInteractable) { return false; }
+                    item = item.Container;
+                } while (item != null);
+                return true;
+            }
 
             void AddToOwnedItems(ItemPrefab itemPrefab, int amount = 1)
             {

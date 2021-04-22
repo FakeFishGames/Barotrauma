@@ -1208,7 +1208,7 @@ namespace Barotrauma
                             SafeAdd((ISerializableEntity) entity, property);
                             property.PropertyInfo.SetValue(entity, value);
                         } 
-                        else if (entity is ISerializableEntity sEntity && sEntity.SerializableProperties != null)
+                        else if (entity is ISerializableEntity { SerializableProperties: { } } sEntity)
                         {
                             var props = sEntity.SerializableProperties;
 

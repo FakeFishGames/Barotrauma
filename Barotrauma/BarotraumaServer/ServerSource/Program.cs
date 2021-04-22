@@ -42,6 +42,14 @@ namespace Barotrauma
 #endif
             Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
                 " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
+            if(Console.IsOutputRedirected)
+            {
+                Console.WriteLine("Output redirection detected; colored text and command input will be disabled.");
+            }
+            if(Console.IsInputRedirected)
+            {
+                Console.WriteLine("Redirected input is detected but is not supported by this application. Input will be ignored.");
+            }
 
             string executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
@@ -152,7 +160,11 @@ namespace Barotrauma
             }
 
             string crashReport = sb.ToString();
-            Console.ForegroundColor = ConsoleColor.Red;
+
+            if (!Console.IsOutputRedirected)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
             Console.Write(crashReport);
 
             File.WriteAllText(filePath,sb.ToString());

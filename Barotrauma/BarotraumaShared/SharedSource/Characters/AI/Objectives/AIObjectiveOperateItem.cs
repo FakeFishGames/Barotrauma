@@ -36,7 +36,7 @@ namespace Barotrauma
 
         public override float GetPriority()
         {
-            bool isOrder = objectiveManager.CurrentOrder == this;
+            bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed || character.LockHands)
             {
                 Priority = 0;
@@ -51,7 +51,7 @@ namespace Barotrauma
             {
                 if (isOrder)
                 {
-                    Priority = AIObjectiveManager.OrderPriority;
+                    Priority = objectiveManager.GetOrderPriority(this);
                 }
                 ItemComponent target = GetTarget();
                 Item targetItem = target?.Item;
@@ -69,10 +69,9 @@ namespace Barotrauma
                 {
                     if (!isOrder)
                     {
-                        if (reactor.LastUserWasPlayer && character.TeamID != CharacterTeamType.FriendlyNPC ||
-                            HumanAIController.IsTrueForAnyCrewMember(c =>
-                                c.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.GetTarget() == target))
+                        if (reactor.LastUserWasPlayer && character.TeamID != CharacterTeamType.FriendlyNPC)
                         {
+                            // The reactor was previously operated by a player -> ignore.
                             Priority = 0;
                             return Priority;
                         }
@@ -89,10 +88,14 @@ namespace Barotrauma
                         case "powerup":
                             // Check that we don't already have another order that is targeting the same item.
                             // Without this the autonomous objective will tell the bot to turn the reactor on again.
-                            if (objectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder != this && operateOrder.GetTarget() == target && operateOrder.Option != Option)
+                            if (IsAnotherOrderTargetingSameItem(objectiveManager.ForcedOrder) || objectiveManager.CurrentOrders.Any(o => IsAnotherOrderTargetingSameItem(o.Objective)))
                             {
                                 Priority = 0;
                                 return Priority;
+                            }
+                            bool IsAnotherOrderTargetingSameItem(AIObjective objective)
+                            {
+                                return objective is AIObjectiveOperateItem operateObjective && operateObjective != this && operateObjective.GetTarget() == target && operateObjective.Option != Option;
                             }
                             break;
                     }
@@ -108,14 +111,23 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float value = CumulatedDevotion + (AIObjectiveManager.OrderPriority * PriorityModifier);
-                    float max = isOrder ? MathHelper.Min(AIObjectiveManager.OrderPriority, 90) : AIObjectiveManager.RunPriority - 1;
-                    if (!isOrder && reactor != null && reactor.PowerOn && Option == "powerup")
+                    if (isOrder)
                     {
-                        // Decrease the priority when targeting a reactor that is already on.
-                        value /= 2;
+                        float max = objectiveManager.GetOrderPriority(this);
+                        float value = CumulatedDevotion + (max * PriorityModifier);
+                        Priority = MathHelper.Clamp(value, 0, max);
                     }
-                    Priority = MathHelper.Clamp(value, 0, max);
+                    else
+                    {
+                        float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
+                        float max = AIObjectiveManager.LowestOrderPriority - 1;
+                        if (reactor != null && reactor.PowerOn && reactor.FissionRate > 1 && Option == "powerup")
+                        {
+                            // Decrease the priority when targeting a reactor that is already on.
+                            value /= 2;
+                        }
+                        Priority = MathHelper.Clamp(value, 0, max);
+                    }
                 }
             }
             return Priority;
@@ -154,15 +166,18 @@ namespace Barotrauma
             ItemComponent target = GetTarget();
             if (useController && controller == null)
             {
-                character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
+                if (character.IsOnPlayerTeam)
+                {
+                    character.Speak(TextManager.GetWithVariable("DialogCantFindController", "[item]", component.Item.Name, true), null, 2.0f, "cantfindcontroller", 30.0f);
+                }
                 Abandon = true;
                 return;
             }
             if (operateTarget != null)
             {
-                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
+                if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective() is AIObjectiveOperateItem operateObjective && operateObjective.operateTarget == operateTarget))
                 {
-                    // Another crew member is already targeting this entity.
+                    // Another crew member is already targeting this entity (leak).
                     Abandon = true;
                     return;
                 }

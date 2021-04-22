@@ -73,6 +73,7 @@ namespace Barotrauma.Networking
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
+        public bool? WaitForNextRoundRespawn;
 
         public int KarmaKickCount;
 
@@ -163,7 +164,7 @@ namespace Barotrauma.Networking
 
         public void RemovePermission(ClientPermissions permission)
         {
-            if (this.Permissions.HasFlag(permission)) this.Permissions &= ~permission;
+            this.Permissions &= ~permission;
         }
 
         public bool HasPermission(ClientPermissions permission)

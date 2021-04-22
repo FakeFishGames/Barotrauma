@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
 
         public static void ClientRead(IReadMessage msg)
         {
-            UInt16 ID = msg.ReadUInt16();
+            UInt16 id = msg.ReadUInt16();
             ChatMessageType type = (ChatMessageType)msg.ReadByte();
             PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None;
             string txt = "";
@@ -29,6 +29,14 @@ namespace Barotrauma.Networking
 
             string senderName = msg.ReadString();
             Character senderCharacter = null;
+            Client senderClient = null;
+            bool hasSenderClient = msg.ReadBoolean();
+            if (hasSenderClient)
+            {
+                UInt64 clientId = msg.ReadUInt64();
+                senderClient = GameMain.Client.ConnectedClients.Find(c => c.SteamID == clientId || c.ID == clientId);
+                if (senderClient != null) { senderName = senderClient.Name; }
+            }
             bool hasSenderCharacter = msg.ReadBoolean();
             if (hasSenderCharacter)
             {
@@ -38,6 +46,7 @@ namespace Barotrauma.Networking
                     senderName = senderCharacter.Name;
                 }
             }
+            msg.ReadPadBits();
 
             switch (type)
             {
@@ -48,7 +57,54 @@ namespace Barotrauma.Networking
                     UInt16 targetCharacterID = msg.ReadUInt16();
                     Character targetCharacter = Entity.FindEntityByID(targetCharacterID) as Character;
                     Entity targetEntity = Entity.FindEntityByID(msg.ReadUInt16());
-                    int optionIndex = msg.ReadByte();
+
+                    Order orderPrefab = null;
+                    int? optionIndex = null;
+                    string orderOption = null;
+
+                    // The option of a Dismiss order is written differently so we know what order we target
+                    // now that the game supports multiple current orders simultaneously
+                    if (orderIndex >= 0 && orderIndex < Order.PrefabList.Count)
+                    {
+                        orderPrefab = Order.PrefabList[orderIndex];
+                        if (orderPrefab.Identifier != "dismissed")
+                        {
+                            optionIndex = msg.ReadByte();
+                        }
+                        // Does the dismiss order have a specified target?
+                        else if (msg.ReadBoolean())
+                        {
+                            int identifierCount = msg.ReadByte();
+                            if (identifierCount > 0)
+                            {
+                                int dismissedOrderIndex = msg.ReadByte();
+                                Order dismissedOrderPrefab = null;
+                                if (dismissedOrderIndex >= 0 && dismissedOrderIndex < Order.PrefabList.Count)
+                                {
+                                    dismissedOrderPrefab = Order.PrefabList[dismissedOrderIndex];
+                                    orderOption = dismissedOrderPrefab.Identifier;
+                                }
+                                if (identifierCount > 1)
+                                {
+                                    int dismissedOrderOptionIndex = msg.ReadByte();
+                                    if (dismissedOrderPrefab != null)
+                                    {
+                                        var options = dismissedOrderPrefab.Options;
+                                        if (options != null && dismissedOrderOptionIndex >= 0 && dismissedOrderOptionIndex < options.Length)
+                                        {
+                                            orderOption += $".{options[dismissedOrderOptionIndex]}";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        optionIndex = msg.ReadByte();
+                    }
+
+                    int orderPriority = msg.ReadByte();
                     OrderTarget orderTargetPosition = null;
                     Order.OrderTargetType orderTargetType = (Order.OrderTargetType)msg.ReadByte();
                     int wallSectionIndex = 0;
@@ -64,22 +120,18 @@ namespace Barotrauma.Networking
                         wallSectionIndex = msg.ReadByte();
                     }
 
-                    Order orderPrefab;
                     if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                     {
                         DebugConsole.ThrowError("Invalid order message - order index out of bounds.");
-                        if (NetIdUtils.IdMoreRecent(ID, LastID)) { LastID = ID; }
+                        if (NetIdUtils.IdMoreRecent(id, LastID)) { LastID = id; }
                         return;
                     }
                     else
                     {
-                        orderPrefab = Order.PrefabList[orderIndex];
+                        orderPrefab ??= Order.PrefabList[orderIndex];
                     }
-                    string orderOption = "";
-                    if (optionIndex >= 0 && optionIndex < orderPrefab.Options.Length)
-                    {
-                        orderOption = orderPrefab.Options[optionIndex];
-                    }
+
+                    orderOption ??= optionIndex.HasValue && optionIndex >= 0 && optionIndex < orderPrefab.Options.Length ? orderPrefab.Options[optionIndex.Value] : "";
                     txt = orderPrefab.GetChatMessage(targetCharacter?.Name, senderCharacter?.CurrentHull?.DisplayName, givingOrderToSelf: targetCharacter == senderCharacter, orderOption: orderOption);
 
                     if (GameMain.Client.GameStarted && Screen.Selected == GameMain.GameScreen)
@@ -107,16 +159,16 @@ namespace Barotrauma.Networking
                             }
                             else if (targetCharacter != null)
                             {
-                                targetCharacter.SetOrder(order, orderOption, senderCharacter);
+                                targetCharacter.SetOrder(order, orderOption, orderPriority, senderCharacter);
                             }
                         }
                     }
 
-                    if (NetIdUtils.IdMoreRecent(ID, LastID))
+                    if (NetIdUtils.IdMoreRecent(id, LastID))
                     {
                         GameMain.Client.AddChatMessage(
-                            new OrderChatMessage(orderPrefab, orderOption, txt, orderTargetPosition ?? targetEntity as ISpatialEntity, targetCharacter, senderCharacter));
-                        LastID = ID;
+                            new OrderChatMessage(orderPrefab, orderOption, orderPriority, txt, orderTargetPosition ?? targetEntity as ISpatialEntity, targetCharacter, senderCharacter));
+                        LastID = id;
                     }
                     return;
                 case ChatMessageType.ServerMessageBox:
@@ -128,7 +180,7 @@ namespace Barotrauma.Networking
                     break;
             }
 
-            if (NetIdUtils.IdMoreRecent(ID, LastID))
+            if (NetIdUtils.IdMoreRecent(id, LastID))
             {
                 switch (type)
                 {
@@ -154,10 +206,10 @@ namespace Barotrauma.Networking
                         GameMain.Client.ServerSettings.ServerLog?.WriteLine(txt, messageType);
                         break;
                     default:
-                        GameMain.Client.AddChatMessage(txt, type, senderName, senderCharacter, changeType);
+                        GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType);
                         break;
                 }
-                LastID = ID;
+                LastID = id;
             }
         }
     }

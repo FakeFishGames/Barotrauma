@@ -104,7 +104,8 @@ namespace Barotrauma
         /// </remarks>
         /// <param name="prefab"></param>
         /// <param name="category"></param>
-        public void PurchaseUpgrade(UpgradePrefab prefab, UpgradeCategory category)
+        /// <param name="force"></param>
+        public void PurchaseUpgrade(UpgradePrefab prefab, UpgradeCategory category, bool force = false)
         {
             if (!CanUpgradeSub())
             {
@@ -136,6 +137,11 @@ namespace Barotrauma
                     });
             }
 
+            if (force)
+            {
+                price = 0;
+            }
+
             if (Campaign.Money > price)
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -154,7 +160,7 @@ namespace Barotrauma
                 PurchasedUpgrade? upgrade = FindMatchingUpgrade(prefab, category);
 
 #if CLIENT
-                DebugLog($"CLIENT: Purchased level {GetUpgradeLevel(prefab, category) + 1} {category.Name}.{prefab.Name} for ${price}", GUI.Style.Orange);
+                DebugLog($"CLIENT: Purchased level {GetUpgradeLevel(prefab, category) + 1} {category.Name}.{prefab.Name} for {price}", GUI.Style.Orange);
 #endif
 
                 if (upgrade == null)
@@ -689,7 +695,7 @@ namespace Barotrauma
 
         public static void DebugLog(string msg, Color? color = null)
         {
-#if UNSTABLE || DEBUG
+#if DEBUG
             DebugConsole.NewMessage(msg, color ?? Color.GreenYellow);
 #else
             DebugConsole.Log(msg);

@@ -14,6 +14,8 @@ namespace Barotrauma
 
         public bool Passed;
 
+        public bool Locked;
+
         public LevelData LevelData { get; set; }
 
         public Vector2 CenterPos
@@ -30,6 +32,16 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        private readonly List<Mission> availableMissions = new List<Mission>();
+        public IEnumerable<Mission> AvailableMissions
+        {
+            get
+            {
+                availableMissions.RemoveAll(m => m.Completed || (m.Failed && !m.Prefab.AllowRetry));
+                return availableMissions;
+            }
         }
 
         public LocationConnection(Location location1, Location location2)

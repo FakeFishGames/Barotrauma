@@ -102,7 +102,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
 #if SERVER
             originalInventoryID = Entity.NullEntityID;
@@ -239,7 +239,7 @@ namespace Barotrauma
                     State = 1;
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) { return; }
+                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
                     State = 2;
                     break;
             }
@@ -248,9 +248,14 @@ namespace Barotrauma
         public override void End()
         {
             var root = item.GetRootContainer() ?? item;
-            if (root.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndPosition && !root.CurrentHull.Submarine.AtStartPosition) || item.Removed) 
+            if (root.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndExit && !root.CurrentHull.Submarine.AtStartExit) || item.Removed) 
             { 
                 return; 
+            }
+
+            if (Prefab.LocationTypeChangeOnCompleted != null)
+            {
+                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
             }
 
             item?.Remove();

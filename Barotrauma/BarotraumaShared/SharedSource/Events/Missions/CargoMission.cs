@@ -96,7 +96,8 @@ namespace Barotrauma
 
             var item = new Item(itemPrefab, position, cargoRoom.Submarine)
             {
-                SpawnedInOutpost = true
+                SpawnedInOutpost = true,
+                AllowStealing = false
             };
             item.FindHull();
             items.Add(item);
@@ -118,7 +119,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
             items.Clear();
             parentInventoryIDs.Clear();
@@ -131,13 +132,17 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (Submarine.MainSub != null && Submarine.MainSub.AtEndPosition)
+            if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
                 int deliveredItemCount = items.Count(i => i.CurrentHull != null && !i.Removed && i.Condition > 0.0f);
                 if (deliveredItemCount >= requiredDeliveryAmount)
                 {
                     GiveReward();
                     completed = true;
+                    if (Prefab.LocationTypeChangeOnCompleted != null)
+                    {
+                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                    }
                 }
             }
 

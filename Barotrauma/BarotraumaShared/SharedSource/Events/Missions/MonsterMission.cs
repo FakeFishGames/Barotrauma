@@ -8,7 +8,7 @@ namespace Barotrauma
     partial class MonsterMission : Mission
     {
         //string = filename, point = min,max
-        private readonly HashSet<Tuple<CharacterPrefab, Point>> monsterPrefabs = new HashSet<Tuple<CharacterPrefab, Point>>();
+        private readonly HashSet<(CharacterPrefab character, Point amountRange)> monsterPrefabs = new HashSet<(CharacterPrefab character, Point amountRange)>();
         private readonly List<Character> monsters = new List<Character>();
         private readonly List<Vector2> sonarPositions = new List<Vector2>();
 
@@ -16,6 +16,7 @@ namespace Barotrauma
 
         private readonly float maxSonarMarkerDistance = 10000.0f;
 
+        private readonly Level.PositionType spawnPosType;
 
         public override IEnumerable<Vector2> SonarPositions
         {
@@ -42,7 +43,7 @@ namespace Barotrauma
                 if (characterPrefab != null)
                 {
                     int monsterCount = Math.Min(prefab.ConfigElement.GetAttributeInt("monstercount", 1), 255);
-                    monsterPrefabs.Add(new Tuple<CharacterPrefab, Point>(characterPrefab, new Point(monsterCount)));
+                    monsterPrefabs.Add((characterPrefab, new Point(monsterCount)));
                 }
                 else
                 {
@@ -51,6 +52,13 @@ namespace Barotrauma
             }
 
             maxSonarMarkerDistance = prefab.ConfigElement.GetAttributeFloat("maxsonarmarkerdistance", 10000.0f);
+
+            var spawnPosTypeStr = prefab.ConfigElement.GetAttributeString("spawntype", "");
+            if (string.IsNullOrWhiteSpace(spawnPosTypeStr) ||
+                !Enum.TryParse(spawnPosTypeStr, true, out spawnPosType))
+            {
+                spawnPosType = Level.PositionType.MainPath | Level.PositionType.SidePath;
+            }
 
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
@@ -65,7 +73,7 @@ namespace Barotrauma
                 var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                 if (characterPrefab != null)
                 {
-                    monsterPrefabs.Add(new Tuple<CharacterPrefab, Point>(characterPrefab, new Point(min, max)));
+                    monsterPrefabs.Add((characterPrefab, new Point(min, max)));
                 }
                 else
                 {
@@ -75,14 +83,14 @@ namespace Barotrauma
 
             if (monsterPrefabs.Any())
             {
-                var characterParams = new CharacterParams(monsterPrefabs.First().Item1.FilePath);
+                var characterParams = new CharacterParams(monsterPrefabs.First().character.FilePath);
                 description = description.Replace("[monster]",
                     TextManager.Get("character." + characterParams.SpeciesTranslationOverride, returnNull: true) ??
                     TextManager.Get("character." + characterParams.SpeciesName));
             }
         }
-        
-        public override void Start(Level level)
+
+        protected override void StartMissionSpecific(Level level)
         {
             if (monsters.Count > 0)
             {
@@ -106,13 +114,13 @@ namespace Barotrauma
 
             if (!IsClient)
             {
-                Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
-                foreach (var monster in monsterPrefabs)
+                Level.Loaded.TryGetInterestingPosition(true, spawnPosType, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
+                foreach (var (character, amountRange) in monsterPrefabs)
                 {
-                    int amount = Rand.Range(monster.Item2.X, monster.Item2.Y + 1);
+                    int amount = Rand.Range(amountRange.X, amountRange.Y + 1);
                     for (int i = 0; i < amount; i++)
                     {
-                        monsters.Add(Character.Create(monster.Item1.Identifier, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
+                        monsters.Add(Character.Create(character.Identifier, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
                     }
                 }
 
@@ -213,9 +221,17 @@ namespace Barotrauma
             tempSonarPositions.Clear();
             monsters.Clear();
             if (State < 1) { return; }
-            
+
+            if (Prefab.LocationTypeChangeOnCompleted != null)
+            {
+                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+            }
             GiveReward();
             completed = true;
+            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase) || t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)))
+            {
+                level.LevelData.HasHuntingGrounds = false;
+            }
         }
 
         public bool IsEliminated(Character enemy) =>

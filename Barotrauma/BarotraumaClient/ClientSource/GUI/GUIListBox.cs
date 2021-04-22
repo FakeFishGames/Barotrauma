@@ -194,6 +194,8 @@ namespace Barotrauma
         public bool ScrollBarEnabled { get; set; } = true;
         public bool KeepSpaceForScrollBar { get; set; }
 
+        public bool CanTakeKeyBoardFocus { get; set; } = true;
+
         public bool ScrollBarVisible
         {
             get
@@ -214,7 +216,22 @@ namespace Barotrauma
         public bool AutoHideScrollBar { get; set; } = true;
         private bool IsScrollBarOnDefaultSide { get; set; }
 
-        public bool CanDragElements { get; set; } = false;
+        public bool CanDragElements
+        {
+            get
+            {
+                return canDragElements;
+            }
+            set
+            {
+                if (value == false && canDragElements && draggedElement != null)
+                {
+                    draggedElement = null;
+                }
+                canDragElements = value;
+            }
+        }
+        private bool canDragElements = false;
         private GUIComponent draggedElement;
         private Rectangle draggedReferenceRectangle;
         private Point draggedReferenceOffset;
@@ -223,9 +240,12 @@ namespace Barotrauma
         
         private bool scheduledScroll = false;
 
+        private readonly bool isHorizontal;
+
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
         {
+            this.isHorizontal = isHorizontal;
             HoverCursor = CursorState.Hand;
             CanBeFocused = true;
             selected = new List<GUIComponent>();
@@ -454,22 +474,42 @@ namespace Barotrauma
                 }
                 else
                 {
-                    draggedElement.RectTransform.AbsoluteOffset = draggedReferenceOffset + new Point(0, (int)PlayerInput.MousePosition.Y - draggedReferenceRectangle.Center.Y);
+                    draggedElement.RectTransform.AbsoluteOffset = isHorizontal ?
+                        draggedReferenceOffset + new Point((int)PlayerInput.MousePosition.X - draggedReferenceRectangle.Center.X, 0) :
+                        draggedReferenceOffset + new Point(0, (int)PlayerInput.MousePosition.Y - draggedReferenceRectangle.Center.Y);
 
                     int index = Content.RectTransform.GetChildIndex(draggedElement.RectTransform);
                     int currIndex = index;
 
-                    while (currIndex > 0 && PlayerInput.MousePosition.Y < draggedReferenceRectangle.Top)
+                    if (isHorizontal)
                     {
-                        currIndex--;
-                        draggedReferenceRectangle.Y -= draggedReferenceRectangle.Height;
-                        draggedReferenceOffset.Y -= draggedReferenceRectangle.Height;
+                        while (currIndex > 0 && PlayerInput.MousePosition.X < draggedReferenceRectangle.Left)
+                        {
+                            currIndex--;
+                            draggedReferenceRectangle.X -= draggedReferenceRectangle.Width;
+                            draggedReferenceOffset.X -= draggedReferenceRectangle.Width;
+                        }
+                        while (currIndex < Content.CountChildren - 1 && PlayerInput.MousePosition.X > draggedReferenceRectangle.Right)
+                        {
+                            currIndex++;
+                            draggedReferenceRectangle.X += draggedReferenceRectangle.Width;
+                            draggedReferenceOffset.X += draggedReferenceRectangle.Width;
+                        }
                     }
-                    while (currIndex < Content.CountChildren - 1 && PlayerInput.MousePosition.Y > draggedReferenceRectangle.Bottom)
+                    else
                     {
-                        currIndex++;
-                        draggedReferenceRectangle.Y += draggedReferenceRectangle.Height;
-                        draggedReferenceOffset.Y += draggedReferenceRectangle.Height;
+                        while (currIndex > 0 && PlayerInput.MousePosition.Y < draggedReferenceRectangle.Top)
+                        {
+                            currIndex--;
+                            draggedReferenceRectangle.Y -= draggedReferenceRectangle.Height;
+                            draggedReferenceOffset.Y -= draggedReferenceRectangle.Height;
+                        }
+                        while (currIndex < Content.CountChildren - 1 && PlayerInput.MousePosition.Y > draggedReferenceRectangle.Bottom)
+                        {
+                            currIndex++;
+                            draggedReferenceRectangle.Y += draggedReferenceRectangle.Height;
+                            draggedReferenceOffset.Y += draggedReferenceRectangle.Height;
+                        }
                     }
 
                     if (currIndex != index)
@@ -853,7 +893,7 @@ namespace Barotrauma
             }
 
             // If one of the children is the subscriber, we don't want to register, because it will unregister the child.
-            if (takeKeyBoardFocus && RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
+            if (takeKeyBoardFocus && CanTakeKeyBoardFocus && RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
             {
                 Selected = true;
                 GUI.KeyboardDispatcher.Subscriber = this;
@@ -943,9 +983,10 @@ namespace Barotrauma
 
         public override void RemoveChild(GUIComponent child)
         {
-            if (child == null) { return; } 
+            if (child == null) { return; }
             child.RectTransform.Parent = null;
-            if (selected.Contains(child)) selected.Remove(child);
+            if (selected.Contains(child)) { selected.Remove(child); }
+            if (draggedElement == child) { draggedElement = null; }
             UpdateScrollBarSize();
         }
 

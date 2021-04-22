@@ -12,11 +12,48 @@ namespace Barotrauma.Items.Components
         private bool isInWater;
         private float stateSwitchDelay;
 
+        private string output;
         [InGameEditable, Serialize("1", true, description: "The signal the item sends out when it's underwater.", alwaysUseInstanceValues: true)]
-        public string Output { get; set; }
+        public string Output
+        {
+            get { return output; }
+            set
+            {
+                if (value == null) { return; }
+                output = value;
+                if (output.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    output = output.Substring(0, MaxOutputLength);
+                }
+            }
+        }
 
+        private string falseOutput;
         [InGameEditable, Serialize("0", true, description: "The signal the item sends out when it's not underwater.", alwaysUseInstanceValues: true)]
-        public string FalseOutput { get; set; }
+        public string FalseOutput
+        {
+            get { return falseOutput; }
+            set
+            {
+                if (value == null) { return; }
+                falseOutput = value;
+                if (falseOutput.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    falseOutput = falseOutput.Substring(0, MaxOutputLength);
+                }
+            }
+        }
+
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
 
         public WaterDetector(Item item, XElement element)
             : base(item, element)
@@ -59,13 +96,13 @@ namespace Barotrauma.Items.Components
             string signalOut = isInWater ? Output : FalseOutput;
             if (!string.IsNullOrEmpty(signalOut))
             {
-                item.SendSignal(0, signalOut, "signal_out", null);
+                item.SendSignal(signalOut, "signal_out");
             }
 
             if (item.CurrentHull != null)
             {
                 int waterPercentage = MathHelper.Clamp((int)Math.Round(item.CurrentHull.WaterPercentage), 0, 100);
-                item.SendSignal(0, waterPercentage.ToString(), "water_%", null);
+                item.SendSignal(waterPercentage.ToString(), "water_%");
             }
         }
     }

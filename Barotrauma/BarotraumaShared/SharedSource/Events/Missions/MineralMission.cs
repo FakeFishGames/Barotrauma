@@ -44,7 +44,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Start(Level level)
+        protected override void StartMissionSpecific(Level level)
         {
             if (SpawnedResources.Any())
             {
@@ -125,7 +125,7 @@ namespace Barotrauma
                     State = 1;
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndPosition && !Submarine.MainSub.AtStartPosition) { return; }
+                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
                     State = 2;
                     break;
             }
@@ -135,6 +135,10 @@ namespace Barotrauma
         {
             if (EnoughHaveBeenCollected())
             {
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
                 GiveReward();
                 completed = true;
             }

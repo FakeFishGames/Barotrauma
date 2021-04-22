@@ -136,8 +136,7 @@ namespace Barotrauma.Networking
             EnsureBufferSize(ref buf, bitPos + 64);
 
             byte[] bytes = BitConverter.GetBytes(val);
-            WriteBytes(ref buf, ref bitPos, bytes, 0, bytes.Length);
-            bitPos += 64;
+            WriteBytes(ref buf, ref bitPos, bytes, 0, 8);
         }
         internal static void Write(ref byte[] buf, ref int bitPos, string val)
         {
@@ -155,14 +154,14 @@ namespace Barotrauma.Networking
         internal static int WriteVariableUInt32(ref byte[] buf, ref int bitPos, uint value)
         {
             int retval = 1;
-            uint num1 = (uint)value;
-            while (num1 >= 0x80)
+            uint remainingValue = (uint)value;
+            while (remainingValue >= 0x80)
             {
-                Write(ref buf, ref bitPos, (byte)(num1 | 0x80));
-                num1 = num1 >> 7;
+                Write(ref buf, ref bitPos, (byte)(remainingValue | 0x80));
+                remainingValue = remainingValue >> 7;
                 retval++;
             }
-            Write(ref buf, ref bitPos, (byte)num1);
+            Write(ref buf, ref bitPos, (byte)remainingValue);
             return retval;
         }
 
@@ -304,19 +303,19 @@ namespace Barotrauma.Networking
         {
             int bitLength = buf.Length * 8;
 
-            int num1 = 0;
-            int num2 = 0;
+            int result = 0;
+            int shift = 0;
             while (bitLength - bitPos >= 8)
             {
-                byte num3 = ReadByte(buf, ref bitPos);
-                num1 |= (num3 & 0x7f) << num2;
-                num2 += 7;
-                if ((num3 & 0x80) == 0)
-                    return (uint)num1;
+                byte chunk = ReadByte(buf, ref bitPos);
+                result |= (chunk & 0x7f) << shift;
+                shift += 7;
+                if ((chunk & 0x80) == 0)
+                    return (uint)result;
             }
 
             // ouch; failed to find enough bytes; malformed variable length number?
-            return (uint)num1;
+            return (uint)result;
         }
 
         internal static String ReadString(byte[] buf, ref int bitPos)
@@ -329,7 +328,7 @@ namespace Barotrauma.Networking
             if ((ulong)(bitLength - bitPos) < ((ulong)byteLen * 8))
             {
                 // not enough data
-				return null;
+                return null;
             }
 
             if ((bitPos & 7) == 0)

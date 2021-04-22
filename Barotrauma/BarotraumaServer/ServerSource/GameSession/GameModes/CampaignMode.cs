@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {
@@ -13,10 +12,11 @@ namespace Barotrauma
 
         public override void ShowStartMessage()
         {
-            if (Mission == null) return;
-
-            GameServer.Log(TextManager.Get("Mission") + ": " + Mission.Name, Networking.ServerLog.MessageType.ServerMessage);
-            GameServer.Log(Mission.Description, Networking.ServerLog.MessageType.ServerMessage);
+            foreach (Mission mission in Missions)
+            {
+                GameServer.Log(TextManager.Get("Mission") + ": " + mission.Name, ServerLog.MessageType.ServerMessage);
+                GameServer.Log(mission.Description, ServerLog.MessageType.ServerMessage);
+            }
         }
     }
 }

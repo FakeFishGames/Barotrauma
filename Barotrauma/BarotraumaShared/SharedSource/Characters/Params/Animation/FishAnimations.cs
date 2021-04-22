@@ -173,13 +173,13 @@ namespace Barotrauma
         [Editable, Serialize(true, true, description: "Should the character face towards the direction it's heading.")]
         public bool RotateTowardsMovement { get; set; }
 
-        [Serialize(25.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the torso to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 2000, ValueStep = 1)]
         public float TorsoTorque { get; set; }
 
-        [Serialize(25.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        [Serialize(25.0f, true, description: "How much torque is used to rotate the head to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 2000, ValueStep = 1)]
         public float HeadTorque { get; set; }
 
-        [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 1000, ValueStep = 1)]
+        [Serialize(50.0f, true, description: "How much torque is used to rotate the tail to the correct orientation."), Editable(MinValueFloat = 0, MaxValueFloat = 2000, ValueStep = 1)]
         public float TailTorque { get; set; }
 
         [Serialize(1f, true, description: "Multiplier applied based on the angle difference between the tail and the main limb. Increasing the value prevents snake-like characters from getting tangled on themselves. Default = 1 (no boost)"), Editable(MinValueFloat = 1, MaxValueFloat = 100)]

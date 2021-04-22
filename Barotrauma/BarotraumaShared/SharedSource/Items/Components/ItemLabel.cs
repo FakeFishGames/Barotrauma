@@ -13,13 +13,13 @@ namespace Barotrauma.Items.Components
 
         partial void OnStateChanged();
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "set_text":
-                    if (Text == signal) { return; }
-                    Text = signal;
+                    if (Text == signal.value) { return; }
+                    Text = signal.value;
                     OnStateChanged();
                     break;
             }

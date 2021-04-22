@@ -133,7 +133,7 @@ namespace Barotrauma
 
         public Rectangle Borders
         {
-            get 
+            get
             {
                 return subBody == null ? Rectangle.Empty : subBody.Borders;
             }
@@ -155,7 +155,7 @@ namespace Barotrauma
         private float? realWorldCrushDepth;
         public float RealWorldCrushDepth
         {
-            get 
+            get
             {
                 if (!realWorldCrushDepth.HasValue)
                 {
@@ -165,13 +165,11 @@ namespace Barotrauma
                         if (structure.Submarine != this || !structure.HasBody || structure.Indestructible) { continue; }
                         realWorldCrushDepth = Math.Min(structure.CrushDepth, realWorldCrushDepth.Value);
                     }
-                    if (Info.SubmarineClass == SubmarineClass.DeepDiver)
-                    {
-                        realWorldCrushDepth *= 1.2f;
-                    }
+                    realWorldCrushDepth *= Info.GetRealWorldCrushDepthMultiplier();
                 }
                 return realWorldCrushDepth.Value;
             }
+            set { realWorldCrushDepth = value; }
         }
 
         /// <summary>
@@ -179,34 +177,30 @@ namespace Barotrauma
         /// </summary>
         public float RealWorldDepth
         {
-            get 
+            get
             {
                 if (Level.Loaded?.GenerationParams == null)
                 {
                     return -WorldPosition.Y * Physics.DisplayToRealWorldRatio;
                 }
-                else if (GameMain.GameSession?.Campaign == null)
-                {
-                    return (-(WorldPosition.Y - Level.Loaded.GenerationParams.Height) + 80000.0f) * Physics.DisplayToRealWorldRatio;
-                }
                 return Level.Loaded.GetRealWorldDepth(WorldPosition.Y);
             }
         }
 
-        public bool AtEndPosition
+        public bool AtEndExit
         {
-            get 
+            get
             {
                 if (Level.Loaded == null) { return false; }
                 if (Level.Loaded.EndOutpost != null && DockedTo.Contains(Level.Loaded.EndOutpost))
                 {
                     return true;
                 }
-                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.EndPosition) < Level.ExitDistance * Level.ExitDistance);
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.EndExitPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 
-        public bool AtStartPosition
+        public bool AtStartExit
         {
             get
             {
@@ -215,7 +209,7 @@ namespace Barotrauma
                 {
                     return true;
                 }
-                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.StartPosition) < Level.ExitDistance * Level.ExitDistance);
+                return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.StartExitPosition) < Level.ExitDistance * Level.ExitDistance);
             }
         }
 
@@ -251,10 +245,10 @@ namespace Barotrauma
 
         public bool AtDamageDepth
         {
-            get 
+            get
             {
                 if (Level.Loaded == null || subBody == null) { return false; }
-                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth & RealWorldDepth > RealWorldCrushDepth;
+                return RealWorldDepth > Level.Loaded.RealWorldCrushDepth && RealWorldDepth > RealWorldCrushDepth;
             }
         }
 
@@ -324,6 +318,7 @@ namespace Barotrauma
         {
             Info.Type = SubmarineType.Wreck;
             ShowSonarMarker = false;
+            DockedTo.ForEach(s => s.ShowSonarMarker = false);
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = CharacterTeamType.None;
 
@@ -333,7 +328,7 @@ namespace Barotrauma
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != this) { continue; }
-                if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard") 
+                if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard")
                 {
                     foreach (string tag in item.GetTags().ToList())
                     {
@@ -341,7 +336,7 @@ namespace Barotrauma
                         string newTag = Level.Loaded.GetWreckIDTag(tag, this);
                         item.ReplaceTag(tag, newTag);
                         ReplaceIDCardTagRequirements(tag, newTag);
-                    } 
+                    }
                 }
             }
 
@@ -455,7 +450,7 @@ namespace Barotrauma
         public Vector2 FindSpawnPos(Vector2 spawnPos, Point? submarineSize = null, float subDockingPortOffset = 0.0f, int verticalMoveDir = 0)
         {
             Rectangle dockedBorders = GetDockedBorders();
-            Vector2 diffFromDockedBorders = 
+            Vector2 diffFromDockedBorders =
                 new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)
                 - new Vector2(Borders.Center.X, Borders.Y - Borders.Height / 2);
 
@@ -506,7 +501,7 @@ namespace Barotrauma
                             (e.Point1.Y > refPos.Y + minHeight * 0.5f && e.Point2.Y > refPos.Y + minHeight * 0.5f))
                         {
                             continue;
-                        }                        
+                        }
 
                         if (cell.Site.Coord.X < refPos.X)
                         {
@@ -553,7 +548,7 @@ namespace Barotrauma
                 //walls found at both sides, use their midpoint
                 spawnPos.X = (limits.X + limits.Y) / 2 + subDockingPortOffset;
             }
-            
+
             spawnPos.Y = MathHelper.Clamp(spawnPos.Y, dockedBorders.Height / 2 + 10, Level.Loaded.Size.Y - dockedBorders.Height / 2 - padding * 2);
             return spawnPos - diffFromDockedBorders;
         }
@@ -587,18 +582,31 @@ namespace Barotrauma
             {
                 if (e is Item item)
                 {
+                    if (item.GetComponent<Turret>() != null) { return false; }
                     if (item.body != null && !item.body.Enabled) { return true; }
                 }
+                if (e.HiddenInGame) { return true; }
                 return false;
             });
 
-            if (entities.Count == 0) return Rectangle.Empty;
+            if (entities.Count == 0) { return Rectangle.Empty; }
 
             float minX = entities[0].Rect.X, minY = entities[0].Rect.Y - entities[0].Rect.Height;
             float maxX = entities[0].Rect.Right, maxY = entities[0].Rect.Y;
 
             for (int i = 1; i < entities.Count; i++)
             {
+                if (entities[i] is Item item)
+                {
+                    var turret = item.GetComponent<Turret>();
+                    if (turret != null)
+                    {
+                        minX = Math.Min(minX, entities[i].Rect.X + turret.TransformedBarrelPos.X * 2f);
+                        minY = Math.Min(minY, entities[i].Rect.Y - entities[i].Rect.Height - turret.TransformedBarrelPos.Y * 2f);
+                        maxX = Math.Max(maxX, entities[i].Rect.Right + turret.TransformedBarrelPos.X * 2f);
+                        maxY = Math.Max(maxY, entities[i].Rect.Y - turret.TransformedBarrelPos.Y * 2f);
+                    }
+                }
                 minX = Math.Min(minX, entities[i].Rect.X);
                 minY = Math.Min(minY, entities[i].Rect.Y - entities[i].Rect.Height);
                 maxX = Math.Max(maxX, entities[i].Rect.Right);
@@ -607,7 +615,7 @@ namespace Barotrauma
 
             return new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
         }
-        
+
         public static Rectangle AbsRect(Vector2 pos, Vector2 size)
         {
             if (size.X < 0.0f)
@@ -620,7 +628,7 @@ namespace Barotrauma
                 pos.Y -= size.Y;
                 size.Y = -size.Y;
             }
-            
+
             return new Rectangle((int)pos.X, (int)pos.Y, (int)size.X, (int)size.Y);
         }
 
@@ -674,7 +682,7 @@ namespace Barotrauma
 
                     closestFraction = 0.0f;
                     closestNormal = Vector2.Normalize(rayEnd - rayStart);
-                    if (fixture.Body != null) closestBody = fixture.Body;                    
+                    if (fixture.Body != null) closestBody = fixture.Body;
                     return false;
                 }, ref aabb);
                 if (closestFraction <= 0.0f)
@@ -685,7 +693,7 @@ namespace Barotrauma
                     return closestBody;
                 }
             }
-            
+
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (!CheckFixtureCollision(fixture, ignoredBodies, collisionCategory, ignoreSensors, customPredicate)) { return -1; }
@@ -702,7 +710,7 @@ namespace Barotrauma
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
             lastPickedNormal = closestNormal;
-            
+
             return closestBody;
         }
 
@@ -827,13 +835,13 @@ namespace Barotrauma
                 lastPickedPosition = rayEnd;
                 return null;
             }
-            
+
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 if (fixture == null) { return -1; }
                 if (ignoreSensors && fixture.IsSensor) { return -1; }
                 if (ignoreLevel && fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionLevel) 
+                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)
                     && !fixture.CollisionCategories.HasFlag(Physics.CollisionWall)
                     && !fixture.CollisionCategories.HasFlag(Physics.CollisionRepair)) { return -1; }
                 if (ignoreSubs && fixture.Body.UserData is Submarine) { return -1; }
@@ -880,7 +888,7 @@ namespace Barotrauma
             parents.Add(this);
 
             flippedX = !flippedX;
-            
+
             Item.UpdateHulls();
 
             List<Item> bodyItems = Item.ItemList.FindAll(it => it.Submarine == this && it.body != null);
@@ -1049,6 +1057,7 @@ namespace Barotrauma
                 }
 
                 steering.MaintainPos = true;
+                steering.PosToMaintain = WorldPosition;
                 steering.AutoPilot = true;
 #if SERVER
                 steering.UnsentChanges = true;
@@ -1137,7 +1146,7 @@ namespace Barotrauma
                 {
                     if (ConnectedDockingPorts.TryGetValue(dockedSub, out DockingPort port))
                     {
-                        port.Undock();
+                        port.Undock(applyEffects: false);
                         continue;
                     }
                 }
@@ -1164,7 +1173,8 @@ namespace Barotrauma
             subBody.SetPosition(subBody.Position + amount);
         }
 
-        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true)
+        /// <param name="teamType">If has value, the sub must match the team type.</param>
+        public static Submarine FindClosest(Vector2 worldPosition, bool ignoreOutposts = false, bool ignoreOutsideLevel = true, bool ignoreRespawnShuttle = false, CharacterTeamType? teamType = null)
         {
             Submarine closest = null;
             float closestDist = 0.0f;
@@ -1172,6 +1182,11 @@ namespace Barotrauma
             {
                 if (ignoreOutposts && sub.Info.IsOutpost) { continue; }
                 if (ignoreOutsideLevel && Level.Loaded != null && sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
+                if (ignoreRespawnShuttle)
+                {
+                    if (sub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
+                }
+                if (teamType.HasValue && sub.TeamID != teamType) { continue; }
                 float dist = Vector2.DistanceSquared(worldPosition, sub.WorldPosition);
                 if (closest == null || dist < closestDist)
                 {
@@ -1334,14 +1349,19 @@ namespace Barotrauma
                     PhysicsBody.FarseerBody.BodyType = BodyType.Static;
                     TeamID = CharacterTeamType.FriendlyNPC;
 
+                    bool indestructible =
+                        GameMain.NetworkMember != null &&
+                        !GameMain.NetworkMember.ServerSettings.DestructibleOutposts &&
+                        !(info.OutpostGenerationParams?.AlwaysDestructible ?? false);
+
                     foreach (MapEntity me in MapEntity.mapEntityList)
                     {
                         if (me.Submarine != this) { continue; }
                         if (me is Item item)
                         {
-                            item.SpawnedInOutpost = true;
-                            if (item.GetComponent<Repairable>() != null && 
-                                (GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.DestructibleOutposts))
+                            item.SpawnedInOutpost = info.OutpostGenerationParams != null;
+                            item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
+                            if (item.GetComponent<Repairable>() != null && indestructible)
                             {
                                 item.Indestructible = true;
                             }
@@ -1350,7 +1370,10 @@ namespace Barotrauma
                                 if (ic is ConnectionPanel connectionPanel)
                                 {
                                     //prevent rewiring
-                                    connectionPanel.Locked = true;
+                                    if (info.OutpostGenerationParams != null && !info.OutpostGenerationParams.AlwaysRewireable)
+                                    {
+                                        connectionPanel.Locked = true;
+                                    }
                                 }
                                 else if (ic is Holdable holdable && holdable.Attached && item.GetComponent<LevelResource>() == null)
                                 {
@@ -1363,9 +1386,9 @@ namespace Barotrauma
                                 }
                             }
                         }
-                        else if (me is Structure structure && structure.Prefab.IndestructibleInOutposts)
+                        else if (me is Structure structure && structure.Prefab.IndestructibleInOutposts && indestructible)
                         {
-                            structure.Indestructible = GameMain.NetworkMember != null && !GameMain.NetworkMember.ServerSettings.DestructibleOutposts;
+                            structure.Indestructible = true;
                         }
                     }
                 }
@@ -1415,7 +1438,7 @@ namespace Barotrauma
             //halve the brightness of the lights to make them look (almost) right on the new lighting formula
             if (showWarningMessages &&
                 !string.IsNullOrEmpty(Info.FilePath) &&
-                Screen.Selected != GameMain.SubEditorScreen && 
+                Screen.Selected != GameMain.SubEditorScreen &&
                 (Info.GameVersion == null || Info.GameVersion < new Version("0.8.9.0")))
             {
                 DebugConsole.ThrowError("The submarine \"" + Info.Name + "\" was made using an older version of the Barotrauma that used a different formula to calculate the lighting. "
@@ -1428,6 +1451,7 @@ namespace Barotrauma
                     if (lightComponent != null) lightComponent.LightColor = new Color(lightComponent.LightColor, lightComponent.LightColor.A / 255.0f * 0.5f);
                 }
             }
+            GenerateOutdoorNodes();
         }
 
         protected override ushort DetermineID(ushort id, Submarine submarine)
@@ -1483,7 +1507,7 @@ namespace Barotrauma
             element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));
             element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", Info.RequiredContentPackages)));
-            
+
             if (Info.Type == SubmarineType.OutpostModule)
             {
                 Info.OutpostModuleInfo?.Save(element);
@@ -1589,7 +1613,7 @@ namespace Barotrauma
 
             PhysicsBody.RemoveAll();
 
-            GameMain.World.Clear();            
+            GameMain.World.Clear();
 
             Unloading = false;
         }
@@ -1634,10 +1658,16 @@ namespace Barotrauma
             {
                 if (outdoorNodes == null)
                 {
-                    outdoorNodes = PathNode.GenerateNodes(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path && wp.Submarine == this && wp.CurrentHull == null));
+                    GenerateOutdoorNodes();
                 }
                 return outdoorNodes;
             }
+        }
+
+        private void GenerateOutdoorNodes()
+        {
+            var waypoints = WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path && wp.Submarine == this && wp.CurrentHull == null);
+            outdoorNodes = PathNode.GenerateNodes(waypoints, removeOrphans: false);
         }
 
         private readonly Dictionary<Submarine, HashSet<PathNode>> obstructedNodes = new Dictionary<Submarine, HashSet<PathNode>>();
@@ -1707,7 +1737,6 @@ namespace Barotrauma
                         }
                     }
                 }
-                node.Waypoint.FindHull();
             }
         }
 
@@ -1722,7 +1751,8 @@ namespace Barotrauma
                 nodes.Clear();
                 obstructedNodes.Remove(otherSub);
             }
-            OutdoorNodes.ForEach(n => n.Waypoint.FindHull());
         }
+
+        public void RefreshOutdoorNodes() => OutdoorNodes.ForEach(n => n?.Waypoint?.FindHull());
     }
 }

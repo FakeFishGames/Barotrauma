@@ -1,13 +1,10 @@
-﻿using FarseerPhysics;
+﻿using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Xml.Linq;
 using System.Linq;
-using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
-using Voronoi2;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -195,7 +192,7 @@ namespace Barotrauma
         }
     }
 
-    partial class ItemPrefab : MapEntityPrefab
+    partial class ItemPrefab : MapEntityPrefab, IHasUintIdentifier
     {
         private readonly string name;
         public override string Name => name;
@@ -215,7 +212,7 @@ namespace Barotrauma
         protected Vector2 size;                
 
         private float impactTolerance;
-        private readonly PriceInfo defaultPrice;
+        public readonly PriceInfo DefaultPrice;
         private readonly Dictionary<string, PriceInfo> locationPrices;
 
         /// <summary>
@@ -485,12 +482,14 @@ namespace Barotrauma
             public int ClusterQuantity { get; }
             public int ClusterSize { get; }
             public bool IsIslandSpecifc { get; }
+            public bool AllowAtStart { get; }
 
-            public FixedQuantityResourceInfo(int clusterQuantity, int clusterSize, bool isIslandSpecific)
+            public FixedQuantityResourceInfo(int clusterQuantity, int clusterSize, bool isIslandSpecific, bool allowAtStart)
             {
                 ClusterQuantity = clusterQuantity;
                 ClusterSize = clusterSize;
                 IsIslandSpecifc = isIslandSpecific;
+                AllowAtStart = allowAtStart;
             }
         }
 
@@ -515,18 +514,34 @@ namespace Barotrauma
             set { maxStackSize = MathHelper.Clamp(value, 1, Inventory.MaxStackSize); }
         }
 
+        [Serialize(false, false)]
+        public bool AllowDroppingOnSwap { get; private set; }
+
+        private readonly HashSet<string> allowDroppingOnSwapWith = new HashSet<string>();
+        public IEnumerable<string> AllowDroppingOnSwapWith
+        {
+            get { return allowDroppingOnSwapWith; }
+        }
+
         public Vector2 Size => size;
 
-        public bool CanBeBought => (defaultPrice != null && defaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
+        public bool CanBeBought => (DefaultPrice != null && DefaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
+
+        /// <summary>
+        /// Can the item be chosen as extra cargo in multiplayer. If not set, the item is available if it can be bought from outposts in the campaign.
+        /// </summary>
+        public bool? AllowAsExtraCargo;
 
         /// <summary>
         /// Any item with a Price element in the definition can be sold everywhere.
         /// </summary>
-        public bool CanBeSold => defaultPrice != null;
+        public bool CanBeSold => DefaultPrice != null;
 
         public bool RandomDeconstructionOutput { get; }
 
         public int RandomDeconstructionOutputAmount { get; }
+
+        public uint UIntIdentifier { get; set; }
 
         public static void RemoveByFile(string filePath) => Prefabs.RemoveByFile(filePath);
 
@@ -642,7 +657,9 @@ namespace Barotrauma
             originalName = element.GetAttributeString("name", "");
             name = originalName;
             identifier = element.GetAttributeString("identifier", "");
-            if (!Enum.TryParse(element.GetAttributeString("category", "Misc"), true, out MapEntityCategory category))
+
+            string categoryStr = element.GetAttributeString("category", "Misc");
+            if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
             {
                 category = MapEntityCategory.Misc;
             }
@@ -684,7 +701,7 @@ namespace Barotrauma
                     identifier = GenerateLegacyIdentifier(originalName);
                 }
             }
-            
+
             if (string.Equals(parentType, "wrecked", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.IsNullOrEmpty(name))
@@ -692,7 +709,7 @@ namespace Barotrauma
                     name = TextManager.GetWithVariable("wreckeditemformat", "[name]", name);
                 }
             }
-            
+
             if (string.IsNullOrEmpty(name))
             {
                 DebugConsole.ThrowError($"Unnamed item ({identifier}) in {filePath}!");
@@ -704,11 +721,16 @@ namespace Barotrauma
                 (element.GetAttributeStringArray("aliases", null, convertToLowerInvariant: true) ??
                 element.GetAttributeStringArray("Aliases", new string[0], convertToLowerInvariant: true));
             Aliases.Add(originalName.ToLowerInvariant());
-            
-            Triggers            = new List<Rectangle>();
-            DeconstructItems    = new List<DeconstructItem>();
-            FabricationRecipes  = new List<FabricationRecipe>();
-            DeconstructTime     = 1.0f;
+
+            Triggers = new List<Rectangle>();
+            DeconstructItems = new List<DeconstructItem>();
+            FabricationRecipes = new List<FabricationRecipe>();
+            DeconstructTime = 1.0f;
+
+            if (element.Attribute("allowasextracargo") != null)
+            {
+                AllowAsExtraCargo = element.GetAttributeBool("allowasextracargo", false);
+            }
 
             Tags = new HashSet<string>(element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true));
             if (!Tags.Any())
@@ -736,6 +758,16 @@ namespace Barotrauma
                 else
                 {
                     Description = TextManager.Get("EntityDescription." + nameIdentifier, true) ?? string.Empty;
+                }
+            }
+
+            var allowDroppingOnSwapWith = element.GetAttributeStringArray("allowdroppingonswapwith", new string[0]);
+            if (allowDroppingOnSwapWith.Any())
+            {
+                AllowDroppingOnSwap = true;
+                foreach (string tag in allowDroppingOnSwapWith)
+                {
+                    this.allowDroppingOnSwapWith.Add(tag);
                 }
             }
 
@@ -770,7 +802,7 @@ namespace Barotrauma
                         if (locationPrices == null) { locationPrices = new Dictionary<string, PriceInfo>(); }
                         if (subElement.Attribute("baseprice") != null)
                         {
-                            foreach (Tuple<string, PriceInfo> priceInfo in PriceInfo.CreatePriceInfos(subElement, out defaultPrice))
+                            foreach (Tuple<string, PriceInfo> priceInfo in PriceInfo.CreatePriceInfos(subElement, out DefaultPrice))
                             {
                                 if (priceInfo == null) { continue; }
                                 locationPrices.Add(priceInfo.Item1, priceInfo.Item2);
@@ -961,7 +993,8 @@ namespace Barotrauma
                                     LevelQuantity.Add(levelName, new FixedQuantityResourceInfo(
                                         levelCommonnessElement.GetAttributeInt("clusterquantity", 0),
                                         levelCommonnessElement.GetAttributeInt("clustersize", 0),
-                                        levelCommonnessElement.GetAttributeBool("isislandspecific", false)));
+                                        levelCommonnessElement.GetAttributeBool("isislandspecific", false),
+                                        levelCommonnessElement.GetAttributeBool("allowatstart", true)));
                                 }
                             }
                         }
@@ -985,7 +1018,14 @@ namespace Barotrauma
             // with separate Price elements and there is no default price explicitly set
             if (locationPrices != null && locationPrices.Any())
             {
-                defaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
+                DefaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
+            }
+
+            //backwards compatibility
+            if (categoryStr.Equals("Thalamus", StringComparison.OrdinalIgnoreCase))
+            {
+                Category = MapEntityCategory.Wrecked;
+                Subcategory = "Thalamus";
             }
 
             if (sprite == null)
@@ -1023,6 +1063,7 @@ namespace Barotrauma
             AllowedLinks = element.GetAttributeStringArray("allowedlinks", new string[0], convertToLowerInvariant: true).ToList();
 
             Prefabs.Add(this, allowOverriding);
+            this.CalculatePrefabUIntIdentifier(Prefabs);
         }
 
         public float GetTreatmentSuitability(string treatmentIdentifier)
@@ -1040,7 +1081,7 @@ namespace Barotrauma
             }
             else
             {
-                return defaultPrice;
+                return DefaultPrice;
             }
         }
 
@@ -1049,7 +1090,10 @@ namespace Barotrauma
             priceInfo = null;
             if (location?.Type == null) { return false; }
             priceInfo = GetPriceInfo(location);
-            return priceInfo != null && priceInfo.CanBeBought;
+            return 
+                priceInfo != null && 
+                priceInfo.CanBeBought && 
+                (location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
         }
 
         public static ItemPrefab Find(string name, string identifier)
@@ -1085,9 +1129,9 @@ namespace Barotrauma
             int? minPrice = locationPrices != null && locationPrices.Values.Any() ? locationPrices?.Values.Min(p => p.Price) : null;
             if (minPrice.HasValue)
             {
-                if (defaultPrice != null)
+                if (DefaultPrice != null)
                 {
-                    return minPrice < defaultPrice.Price ? minPrice : defaultPrice.Price;
+                    return minPrice < DefaultPrice.Price ? minPrice : DefaultPrice.Price;
                 }
                 else
                 {
@@ -1096,7 +1140,7 @@ namespace Barotrauma
             }
             else
             {
-                return defaultPrice?.Price;
+                return DefaultPrice?.Price;
             }
         }
 

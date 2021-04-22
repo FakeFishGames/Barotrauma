@@ -24,15 +24,18 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
             if (!signalReceived)
             {
-                item.SendSignal(0, "1", "signal_out", null, 0.0f);
+                item.SendSignal("1", "signal_out");
             }
             signalReceived = false;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection.Name != "signal_in") { return; }
-            item.SendSignal(stepsTaken, signal == "0" || signal == string.Empty ? "1" : "0", "signal_out", sender, 0.0f, source, signalStrength);
+
+            signal.value = signal.value == "0" || string.IsNullOrEmpty(signal.value) ? "1" : "0";
+            signal.power = 0.0f;
+            item.SendSignal(signal, "signal_out");
             signalReceived = true;
         }
     }

@@ -123,6 +123,7 @@ namespace Barotrauma.Networking
             if (!started) { return; }
 
             UInt64 senderSteamId = inc.ReadUInt64();
+            UInt64 ownerSteamId = inc.ReadUInt64();
 
             byte incByte = inc.ReadByte();
             bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
@@ -145,7 +146,9 @@ namespace Barotrauma.Networking
                 pendingClient?.Heartbeat();
                 connectedClient?.Heartbeat();
 
-                if (serverSettings.BanList.IsBanned(senderSteamId, out string banReason))
+                string banReason;
+                if (serverSettings.BanList.IsBanned(senderSteamId, out banReason) ||
+                    serverSettings.BanList.IsBanned(ownerSteamId, out banReason))
                 {
                     if (pendingClient != null)
                     {
@@ -181,6 +184,10 @@ namespace Barotrauma.Networking
 
                     if (pendingClient != null)
                     {
+                        if (ownerSteamId != 0)
+                        {
+                            pendingClient.Connection.SetOwnerSteamIDIfUnknown(ownerSteamId);
+                        }
                         ReadConnectionInitializationStep(pendingClient, new ReadOnlyMessage(inc.Buffer, false, inc.BytePosition, inc.LengthBytes - inc.BytePosition, null));
                     }
                     else
@@ -223,6 +230,7 @@ namespace Barotrauma.Networking
                         {
                             Language = GameMain.Config.Language
                         };
+                        OwnerConnection.SetOwnerSteamIDIfUnknown(OwnerSteamID);
 
                         OnInitializationComplete?.Invoke(OwnerConnection);
                     }

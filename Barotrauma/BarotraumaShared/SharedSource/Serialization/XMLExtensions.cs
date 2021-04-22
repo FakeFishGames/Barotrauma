@@ -570,6 +570,25 @@ namespace Barotrauma
 
         public static Color ParseColor(string stringColor, bool errorMessages = true)
         {
+            if (stringColor.StartsWith("gui.", StringComparison.OrdinalIgnoreCase))
+            {
+#if CLIENT
+                if (GUI.Style != null)
+                {
+                    string colorName = stringColor.Substring(4);
+                    var property = GUI.Style.GetType().GetProperties().FirstOrDefault(
+                        p => p.PropertyType == typeof(Color) &&
+                             p.Name.Equals(colorName, StringComparison.OrdinalIgnoreCase));
+                    if (property != null)
+                    {
+                        return (Color)property?.GetValue(GUI.Style);
+                    }
+                }
+#endif
+                return Color.White;
+            }
+
+
             string[] strComponents = stringColor.Split(',');
 
             Color color = Color.White;

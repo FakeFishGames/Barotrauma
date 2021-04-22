@@ -307,7 +307,7 @@ namespace Barotrauma
         public static void OnRoundEnded(GameSession gameSession)
         {
             //made it to the destination
-            if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndPosition)
+            if (gameSession?.Submarine != null && Level.Loaded != null && gameSession.Submarine.AtEndExit)
             {
                 float levelLengthMeters = Physics.DisplayToRealWorldRatio * Level.Loaded.Size.X;
                 float levelLengthKilometers = levelLengthMeters / 1000.0f;
@@ -331,32 +331,35 @@ namespace Barotrauma
                 }
             }
 
+            //make sure changed stats (kill count, kms traveled) get stored
+            SteamManager.StoreStats();
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            if (gameSession.Mission != null)
+            foreach (Mission mission in gameSession.Missions)
             {
-                if (gameSession.Mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
+                if (mission is CombatMission combatMission && GameMain.GameSession.WinningTeam.HasValue)
                 {
                     //all characters that are alive and in the winning team get an achievement
-                    UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true, 
+                    UnlockAchievement(mission.Prefab.AchievementIdentifier + (int)GameMain.GameSession.WinningTeam, true,
                         c => c != null && !c.IsDead && !c.IsUnconscious && combatMission.IsInWinningTeam(c));
                 }
-                else if (gameSession.Mission.Completed)
+                else if (mission.Completed)
                 {
                     //all characters get an achievement
                     if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
-                        UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier, true, c => c != null);
+                        UnlockAchievement(mission.Prefab.AchievementIdentifier, true, c => c != null);
                     }
                     else
                     {
-                        UnlockAchievement(gameSession.Mission.Prefab.AchievementIdentifier);
+                        UnlockAchievement(mission.Prefab.AchievementIdentifier);
                     }
                 }
             }
             
             //made it to the destination
-            if (gameSession.Submarine.AtEndPosition)
+            if (gameSession.Submarine.AtEndExit)
             {
                 bool noDamageRun = !roundData.SubWasDamaged && !roundData.Casualties.Any(c => !(c.AIController is EnemyAIController));
 

@@ -68,7 +68,7 @@ namespace Barotrauma
                 if (_abandon)
                 {
 #if DEBUG
-                    if (HumanAIController.debugai && objectiveManager.CurrentOrder == this)
+                    if (HumanAIController.debugai && objectiveManager.IsOrder(this) && !objectiveManager.IsCurrentOrder<AIObjectiveGoTo>())
                     {
                         throw new Exception("Order abandoned!");
                     }
@@ -230,7 +230,7 @@ namespace Barotrauma
         /// </summary>
         public virtual float GetPriority()
         {
-            bool isOrder = objectiveManager.CurrentOrder == this;
+            bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed)
             {
                 Priority = 0;
@@ -239,7 +239,7 @@ namespace Barotrauma
             }
             if (isOrder)
             {
-                Priority = AIObjectiveManager.OrderPriority;
+                Priority = objectiveManager.GetOrderPriority(this);
             }
             else
             {
@@ -261,7 +261,7 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime)
         {
-            if (objectiveManager.CurrentOrder != this && objectiveManager.WaitTimer <= 0)
+            if (!objectiveManager.IsOrder(this) && objectiveManager.WaitTimer <= 0)
             {
                 UpdateDevotion(deltaTime);
             }
@@ -430,7 +430,7 @@ namespace Barotrauma
                     subObjectives.Remove(subObjective);
                     if (AbandonWhenCannotCompleteSubjectives)
                     {
-                        if (objectiveManager.CurrentOrder == this)
+                        if (objectiveManager.IsOrder(this))
                         {
                             Reset();
                         }

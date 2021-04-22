@@ -4,7 +4,7 @@ using System.Xml.Linq;
 namespace Barotrauma.Items.Components
 {
     class AndComponent : ItemComponent
-    {
+    {        
         protected string output, falseOutput;
 
         //an array to keep track of how long ago a non-zero signal was received on both inputs
@@ -27,14 +27,41 @@ namespace Barotrauma.Items.Components
         public string Output
         {
             get { return output; }
-            set { output = value; }
+            set
+            {
+                if (value == null) { return; }
+                output = value;
+                if (output.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    output = output.Substring(0, MaxOutputLength);
+                }
+            }
         }
 
         [InGameEditable, Serialize("", true, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
-            set { falseOutput = value; }
+            set
+            {
+                if (value == null) { return; }
+                falseOutput = value;
+                if (falseOutput.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
+                {
+                    falseOutput = falseOutput.Substring(0, MaxOutputLength);
+                }
+            }
+        }
+
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
         }
 
         public AndComponent(Item item, XElement element)
@@ -56,23 +83,23 @@ namespace Barotrauma.Items.Components
             string signalOut = sendOutput ? output : falseOutput;
             if (string.IsNullOrEmpty(signalOut)) return;
 
-            item.SendSignal(0, signalOut, "signal_out", null);
+            item.SendSignal(signalOut, "signal_out");
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "signal_in1":
-                    if (signal == "0") return;
+                    if (signal.value == "0") return;
                     timeSinceReceived[0] = 0.0f;
                     break;
                 case "signal_in2":
-                    if (signal == "0") return;
+                    if (signal.value == "0") return;
                     timeSinceReceived[1] = 0.0f;
                     break;
                 case "set_output":
-                    output = signal;
+                    output = signal.value;
                     break;
             }
         }

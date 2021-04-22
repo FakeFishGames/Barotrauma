@@ -27,7 +27,8 @@ namespace Barotrauma.Particles
         private float angularVelocity;
 
         private Vector2 dragVec = Vector2.Zero;
-        private int dragWait = 0;
+        private float dragWait = 0;
+        private float collisionIgnoreTimer = 0;
 
         private Vector2 size;
         private Vector2 sizeChange;
@@ -103,7 +104,7 @@ namespace Barotrauma.Particles
             return debugName;
         }
 
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f)
         {
             this.prefab = prefab;
             debugName = $"Particle ({prefab.Name})";
@@ -174,14 +175,22 @@ namespace Barotrauma.Particles
             }
 
             DrawOnTop = drawOnTop;
+
+            this.collisionIgnoreTimer = collisionIgnoreTimer;
         }
         
-        public bool Update(float deltaTime)
+        public enum UpdateResult
+        {
+            Normal,
+            Delete
+        }
+
+        public UpdateResult Update(float deltaTime)
         {
             if (startDelay > 0.0f)
             {
                 startDelay -= deltaTime;
-                return true;
+                return UpdateResult.Normal;
             }
 
             prevPosition = position;
@@ -251,7 +260,7 @@ namespace Barotrauma.Particles
             }
             
             lifeTime -= deltaTime;
-            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) { return false; }
+            if (lifeTime <= 0.0f || color.A <= 0 || size.X <= 0.0f || size.Y <= 0.0f) { return UpdateResult.Delete; }
 
             if (hasSubEmitters)
             {
@@ -261,7 +270,13 @@ namespace Barotrauma.Particles
                 }
             }
 
-            if (!prefab.UseCollision) { return true; }
+            if (collisionIgnoreTimer > 0f)
+            {
+                collisionIgnoreTimer -= deltaTime;
+                if (collisionIgnoreTimer <= 0f) { currentHull ??= Hull.FindHull(position); }
+                return UpdateResult.Normal;
+            }
+            if (!prefab.UseCollision) { return UpdateResult.Normal; }
 
             if (HighQualityCollisionDetection)
             {
@@ -278,17 +293,17 @@ namespace Barotrauma.Particles
                 }
             }
 
-            return true;
+            return UpdateResult.Normal;
         }
 
-        private bool CollisionUpdate()
+        private UpdateResult CollisionUpdate()
         {
             if (currentHull == null)
             {
                 Hull collidedHull = Hull.FindHull(position);
                 if (collidedHull != null)
                 {
-                    if (prefab.DeleteOnCollision) return false;
+                    if (prefab.DeleteOnCollision) return UpdateResult.Delete;
                     OnWallCollisionOutside(collidedHull);
                 }
             }
@@ -298,12 +313,12 @@ namespace Barotrauma.Particles
                 Vector2 collisionNormal = Vector2.Zero;
                 if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
                 else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
 
@@ -328,12 +343,12 @@ namespace Barotrauma.Particles
 
                 if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
                 else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
                 {
-                    if (prefab.DeleteOnCollision) { return false; }
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(-1.0f, 0.0f);
                 }
 
@@ -374,7 +389,7 @@ namespace Barotrauma.Particles
                 }
             }
 
-            return true;
+            return UpdateResult.Normal;
         }
 
         private void ApplyDrag(float dragCoefficient, float deltaTime)
@@ -389,10 +404,10 @@ namespace Barotrauma.Particles
             //TODO: some better way to handle particle drag
             //this doesn't work that well because the drag vector is only updated every 0.5 seconds, allowing the particle to accelerate way more than it should
             //(e.g. a falling particle can freely accelerate for 0.5 seconds before the drag takes effect)
-            dragWait--;
-            if (dragWait <= 0)
+            dragWait-=deltaTime;
+            if (dragWait <= 0f)
             {
-                dragWait = 30;
+                dragWait = 0.5f;
 
                 float speed = velocity.Length();
 

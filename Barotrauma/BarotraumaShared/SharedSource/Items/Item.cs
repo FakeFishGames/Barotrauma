@@ -348,7 +348,7 @@ namespace Barotrauma
             {
                 if (AiTarget != null)
                 {
-                    AiTarget.SonarLabel = value;
+                    AiTarget.SonarLabel = !string.IsNullOrEmpty(value) && value.Length > 200 ? value.Substring(200) : value;
                 }
             }
         }
@@ -527,6 +527,8 @@ namespace Barotrauma
             }
         }
 
+        public bool AllowStealing = true;
+
         private string originalOutpost;
         [Serialize("", true, alwaysUseInstanceValues: true)]
         public string OriginalOutpost
@@ -593,13 +595,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// A list of items the last signal sent by this item went through
+        /// A list of connections the last signal sent by this item went through
         /// </summary>
-        public List<Item> LastSentSignalRecipients
+        public List<Connection> LastSentSignalRecipients
         {
             get;
             private set;
-        } = new List<Item>(20);
+        } = new List<Connection>(20);
 
         public string ConfigFile
         {
@@ -874,7 +876,7 @@ namespace Barotrauma
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
 
-            if (Components.Any() && Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
+            if (Components.Any(ic => ic is Wire) && Components.All(ic => ic is Wire || ic is Holdable)) { isWire = true; }
             if (HasTag("logic")) { isLogic = true; }
         }
 
@@ -1098,6 +1100,27 @@ namespace Barotrauma
             rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
 
             if (findNewHull) { FindHull(); }
+        }
+
+        /// <summary>
+        /// Is dropping the item allowed when trying to swap it with the other item
+        /// </summary>
+        public bool AllowDroppingOnSwapWith(Item otherItem)
+        {
+            if (!Prefab.AllowDroppingOnSwap || otherItem == null) { return false; }
+            if (Prefab.AllowDroppingOnSwapWith.Any())
+            {
+                foreach (string tagOrIdentifier in Prefab.AllowDroppingOnSwapWith)
+                {
+                    if (otherItem.prefab.Identifier.Equals(tagOrIdentifier, StringComparison.OrdinalIgnoreCase)) { return true; }
+                    if (otherItem.HasTag(tagOrIdentifier)) { return true; }
+                }
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         public void SetActiveSprite()
@@ -1712,6 +1735,11 @@ namespace Barotrauma
                 flippedX = false;
                 return; 
             }
+
+            if (Prefab.AllowRotatingInEditor)
+            {
+                rotationRad = MathUtils.WrapAngleTwoPi(-rotationRad);
+            }
 #if CLIENT
             if (Prefab.CanSpriteFlipX)
             {
@@ -1890,42 +1918,63 @@ namespace Barotrauma
             return controller != null;
         }
 
-        public void SendSignal(int stepsTaken, string signal, string connectionName, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
+        public void SendSignal(string signal, string connectionName)
         {
-            if (connections == null) { return; }
-            if (!connections.TryGetValue(connectionName, out Connection c)) { return; }
-            SendSignal(stepsTaken, signal, c, sender, power, source, signalStrength);           
+            SendSignal(new Signal(signal), connectionName);
         }
 
-        public void SendSignal(int stepsTaken, string signal, Connection connection, Character sender, float power = 0.0f, Item source = null, float signalStrength = 1.0f)
+        public void SendSignal(Signal signal, string connectionName)
+        {
+            if (connections == null) { return; }
+            if (!connections.TryGetValue(connectionName, out Connection connection)) { return; }
+
+            signal.source ??= this;
+            SendSignal(signal, connection);
+        }
+
+        public void SendSignal(Signal signal, Connection connection)
         {
             LastSentSignalRecipients.Clear();
             if (connections == null || connection == null) { return; }
 
-            stepsTaken++;
+            signal.stepsTaken++;
             
-            if (stepsTaken > 10)
+            if (signal.stepsTaken > 10)
             {
+                //if the signal has been passed through this item multiple times already, interrupt it to prevent infinite loops
+                if (signal.source != null)
+                {
+                    if (signal.source.LastSentSignalRecipients.Count(recipient => recipient == connection) > 2)
+                    {
+                        return;
+                    }
+                }
                 //use a coroutine to prevent infinite loops by creating a one 
                 //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(SendSignal(signal, connection, sender, power, signalStrength));
+                CoroutineManager.StartCoroutine(DelaySignal(signal, connection));
             }
             else
             {
                 foreach (StatusEffect effect in connection.Effects)
                 {
                     if (condition <= 0.0f && effect.type != ActionType.OnBroken) { continue; }
-                    if (signal != "0" && !string.IsNullOrEmpty(signal)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
+                    if (signal.value != "0" && !string.IsNullOrEmpty(signal.value)) { ApplyStatusEffect(effect, ActionType.OnUse, (float)Timing.Step); }
                 }
-                connection.SendSignal(stepsTaken, signal, source ?? this, sender, power, signalStrength);
+
+                signal.source ??= this;
+                connection.SendSignal(signal);
             }
+
         }
-        private IEnumerable<object> SendSignal(string signal, Connection connection, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+
+        private IEnumerable<object> DelaySignal(Signal signal, Connection connection)
         {
             //wait one frame
             yield return CoroutineStatus.Running;
 
-            connection.SendSignal(0, signal, this, sender, power, signalStrength);
+            signal.stepsTaken = 0;
+            signal.source = this;
+            connection.SendSignal(signal);
 
             yield return CoroutineStatus.Success;
         }
@@ -2781,7 +2830,14 @@ namespace Barotrauma
 
             if (parentInventory != null)
             {
-                parentInventory.RemoveItem(this);
+                if (parentInventory is CharacterInventory characterInventory)
+                {
+                    characterInventory.RemoveItem(this, tryEquipFromSameStack: true);
+                }
+                else
+                {
+                    parentInventory.RemoveItem(this);
+                }
                 parentInventory = null;
             }
 

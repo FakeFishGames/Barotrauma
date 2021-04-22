@@ -25,17 +25,18 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0, float signalStrength = 1)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             switch (connection.Name)
             {
                 case "set_exponent":
                 case "exponent":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out exponent);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out exponent);
                     break;
                 case "signal_in":
-                    float.TryParse(signal, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
-                    item.SendSignal(0, MathUtils.Pow(value, Exponent).ToString("G", CultureInfo.InvariantCulture), "signal_out", null);
+                    float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
+                    signal.value = MathUtils.Pow(value, Exponent).ToString("G", CultureInfo.InvariantCulture);
+                    item.SendSignal(signal, "signal_out");
                     break;
             }
         }

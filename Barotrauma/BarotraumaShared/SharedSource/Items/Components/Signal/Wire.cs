@@ -37,11 +37,6 @@ namespace Barotrauma.Items.Components
 
                 angle = MathUtils.VectorToAngle(end - start);
                 length = Vector2.Distance(start, end);
-
-                if (length > 5000.0f)
-                {
-                    int akjsdnfkjsadf = 1;
-                }
             }
         }
 
@@ -100,6 +95,20 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(false, true, "If enabled, this wire will be ignored by the \"Lock all default wires\" setting.", alwaysUseInstanceValues: true)]
+        public bool NoAutoLock
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(false, true, "If enabled, this wire will use the sprite depth instead of a constant depth.")]
+        public bool UseSpriteDepth
+        {
+            get;
+            set;
+        }
+        
         public Wire(Item item, XElement element)
             : base(item, element)
         {
@@ -309,6 +318,8 @@ namespace Barotrauma.Items.Components
 
             if (Screen.Selected != GameMain.SubEditorScreen)
             {
+                if (user != null) { NoAutoLock = true; }
+
                 //cannot run wires from sub to another
                 if (item.Submarine != sub && sub != null && item.Submarine != null)
                 {

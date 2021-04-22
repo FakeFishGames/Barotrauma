@@ -35,7 +35,7 @@ namespace Barotrauma
 
         private static IEnumerable<MapEntity> GetThalamusEntities(Submarine wreck, string tag) => MapEntity.mapEntityList.Where(e => e.Submarine == wreck && e.prefab != null && IsThalamus(e.prefab, tag));
 
-        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.Category == MapEntityCategory.Thalamus || entityPrefab.Tags.Contains(tag);
+        private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
 
         public WreckAI(Submarine wreck)
         {
@@ -246,7 +246,7 @@ namespace Barotrauma
             initialCellsSpawned = true;
         }
 
-        private void Kill()
+        public void Kill()
         {
             thalamusItems.ForEach(i => i.Condition = 0);
             foreach (var turret in turrets)

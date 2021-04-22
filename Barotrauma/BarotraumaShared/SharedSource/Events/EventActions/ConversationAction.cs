@@ -61,7 +61,6 @@ namespace Barotrauma
 
         private Character speaker;
 
-        private OrderInfo? prevSpeakerOrder;
         private AIObjective prevIdleObjective, prevGotoObjective;
 
         public List<SubactionGroup> Options { get; private set; }
@@ -180,6 +179,7 @@ namespace Barotrauma
         {
             if (speaker == null) { return; }
             speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+            speaker.ActiveConversation = this;
             speaker.SetCustomInteract(null, null);
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
@@ -187,16 +187,10 @@ namespace Barotrauma
             var humanAI = speaker.AIController as HumanAIController;
             if (humanAI != null && !speaker.IsDead && !speaker.Removed)
             {
-                if (prevSpeakerOrder != null)
-                {
-                    humanAI.SetOrder(prevSpeakerOrder.Value.Order, prevSpeakerOrder.Value.OrderOption, orderGiver: null, speak: false);
-                }
-                else
-                {
-                    humanAI.SetOrder(null, string.Empty, orderGiver: null, speak: false);
-                }
+                humanAI.ClearForcedOrder();
                 if (prevIdleObjective != null) { humanAI.ObjectiveManager.AddObjective(prevIdleObjective); }
                 if (prevGotoObjective != null) { humanAI.ObjectiveManager.AddObjective(prevGotoObjective); }
+                humanAI.ObjectiveManager.SortObjectives();
             }
         }
 
@@ -221,24 +215,24 @@ namespace Barotrauma
 #if CLIENT
                     Character.DisableControls = true;
 #endif
-                    if (ShouldInterrupt()) 
+                    if (ShouldInterrupt())
                     {
                         ResetSpeaker();
-                        interrupt = true; 
+                        interrupt = true;
                     }
-                    return; 
+                    return;
                 }
 
                 if (!string.IsNullOrEmpty(SpeakerTag))
                 {
-                    if (speaker != null && !speaker.Removed && speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk) { return; }
+                    if (speaker != null && !speaker.Removed && speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && speaker.ActiveConversation?.ParentEvent != this.ParentEvent) { return; }
                     speaker = ParentEvent.GetTargets(SpeakerTag).FirstOrDefault(e => e is Character) as Character;
                     if (speaker == null || speaker.Removed)
-                    { 
-                        return; 
+                    {
+                        return;
                     }
                     //some conversation already assigned to the speaker, wait for it to be removed
-                    if (speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk)
+                    if (speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && speaker.ActiveConversation?.ParentEvent != this.ParentEvent)
                     {
                         return;
                     }
@@ -249,6 +243,7 @@ namespace Barotrauma
                     else
                     {
                         speaker.CampaignInteractionType = CampaignMode.InteractionType.Talk;
+                        speaker.ActiveConversation = this;
 #if CLIENT
                         speaker.SetCustomInteract(
                             TryStartConversation, 
@@ -324,16 +319,11 @@ namespace Barotrauma
 
             if (speaker?.AIController is HumanAIController humanAI)
             {
-                prevSpeakerOrder = null;
-                if (humanAI.CurrentOrder != null)
-                {
-                    prevSpeakerOrder = new OrderInfo(humanAI.CurrentOrder, humanAI.CurrentOrderOption);
-                }
                 prevIdleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
                 prevGotoObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveGoTo>();
-                humanAI.SetOrder(
-                    Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)), 
-                    option: string.Empty, orderGiver: null, speak: false);
+                humanAI.SetForcedOrder(
+                    Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)),
+                    option: string.Empty, orderGiver: null);
                 if (targets.Any()) 
                 {
                     Entity closestTarget = null;

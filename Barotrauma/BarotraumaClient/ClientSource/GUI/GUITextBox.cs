@@ -626,6 +626,9 @@ namespace Barotrauma
         {
             if (Text == null) Text = "";
 
+            // Prevent alt gr from triggering any of these as that combination is often needed for special characters
+            if (PlayerInput.IsAltDown()) return;
+
             switch (command)
             {
                 case '\b' when !Readonly: //backspace
@@ -667,7 +670,10 @@ namespace Barotrauma
                     }
                     break;
                 case (char)0x1: // ctrl-a
-                    SelectAll();
+                    if (PlayerInput.IsCtrlDown())
+                    {
+                        SelectAll();
+                    }
                     break;
                 case (char)0x1A when !Readonly && !SubEditorScreen.IsSubEditor(): // ctrl-z
                     text = memento.Undo();

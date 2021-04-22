@@ -160,13 +160,6 @@ namespace Barotrauma
             CreateSlots();
         }
 
-        public override void RemoveItem(Item item)
-        {
-            if (!Contains(item)) { return; }
-            base.RemoveItem(item);
-            CreateSlots();
-        }
-
         public override void CreateSlots()
         {
             if (visualSlots == null) { visualSlots = new VisualSlot[capacity]; }
@@ -639,7 +632,13 @@ namespace Barotrauma
                 foreach (Item doubleClickedItem in doubleClickedItems)
                 {
                     QuickUseItem(doubleClickedItem, true, true, true, quickUseAction, playSound: doubleClickedItem == doubleClickedItems.First());
+                    //only use one item if we're equipping or using it as a treatment
                     if (quickUseAction == QuickUseAction.Equip || quickUseAction == QuickUseAction.UseTreatment)
+                    {
+                        break;
+                    }
+                    //if the item was put in a limb slot, only put one item from the stack
+                    if (doubleClickedItem.ParentInventory == this && !IsInLimbSlot(doubleClickedItem, InvSlotType.Any))
                     {
                         break;
                     }
@@ -696,6 +695,7 @@ namespace Barotrauma
                 if (firstItem != null && !DraggingItems.Contains(firstItem) && Character.Controlled?.Inventory == this &&
                     GUI.KeyboardDispatcher.Subscriber == null && !CrewManager.IsCommandInterfaceOpen && PlayerInput.InventoryKeyHit(visualSlots[i].InventoryKeyIndex))
                 {
+                    if (SubEditorScreen.IsSubEditor() && SubEditorScreen.SkipInventorySlotUpdate) { continue; }
 #if LINUX
                     // some window managers on Linux use windows key + number to change workspaces or perform other actions
                     if (PlayerInput.KeyDown(Keys.RightWindows) || PlayerInput.KeyDown(Keys.LeftWindows)) { continue; }
@@ -810,6 +810,8 @@ namespace Barotrauma
                     highlightedSubInventorySlot.Inventory.HideTimer = 0.0f;
                 }
             }
+
+            HintManager.OnShowSubInventory(slotRef?.Item);
         }
         
         public void AssignQuickUseNumKeys()
@@ -835,6 +837,13 @@ namespace Barotrauma
             
             if (item.ParentInventory != this)
             {
+                if (Screen.Selected == GameMain.GameScreen)
+                {
+                    if (item.NonInteractable || item.NonPlayerTeamInteractable)
+                    {
+                        return QuickUseAction.None;
+                    }
+                }
                 if (item.ParentInventory == null || item.ParentInventory.Locked)
                 {
                     return QuickUseAction.None;

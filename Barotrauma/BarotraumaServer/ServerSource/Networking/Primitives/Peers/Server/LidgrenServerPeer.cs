@@ -184,7 +184,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (serverSettings.BanList.IsBanned(inc.SenderConnection.RemoteEndPoint.Address, 0, out string banReason))
+            if (serverSettings.BanList.IsBanned(inc.SenderConnection.RemoteEndPoint.Address, 0, 0, out string banReason))
             {
                 //IP banned: deny immediately
                 inc.SenderConnection.Deny(DisconnectReason.Banned.ToString() + "/ " + banReason);
@@ -233,7 +233,7 @@ namespace Barotrauma.Networking
                     return;
                 }
                 if (pendingClient != null) { pendingClients.Remove(pendingClient); }
-                if (serverSettings.BanList.IsBanned(conn.IPEndPoint.Address, conn.SteamID, out string banReason))
+                if (serverSettings.BanList.IsBanned(conn.IPEndPoint.Address, conn.SteamID, conn.OwnerSteamID, out string banReason))
                 {
                     Disconnect(conn, DisconnectReason.Banned.ToString() + "/ " + banReason);
                     return;
@@ -308,7 +308,8 @@ namespace Barotrauma.Networking
             }
 
             LidgrenConnection pendingConnection = pendingClient.Connection as LidgrenConnection;
-            if (serverSettings.BanList.IsBanned(pendingConnection.NetConnection.RemoteEndPoint.Address, steamID, out string banReason))
+            string banReason;
+            if (serverSettings.BanList.IsBanned(pendingConnection.NetConnection.RemoteEndPoint.Address, steamID, ownerID, out banReason))
             {
                 RemovePendingClient(pendingClient, DisconnectReason.Banned, banReason);
                 return;
@@ -316,6 +317,7 @@ namespace Barotrauma.Networking
 
             if (status == Steamworks.AuthResponse.OK)
             {
+                pendingClient.OwnerSteamID = ownerID;
                 pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
                 pendingClient.UpdateTime = Timing.TotalTime;
             }
@@ -442,8 +444,16 @@ namespace Barotrauma.Networking
                     Steamworks.BeginAuthResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, steamId);
                     if (authSessionStartState != Steamworks.BeginAuthResult.OK)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: " + authSessionStartState.ToString());
-                        return;
+                        if (requireSteamAuth)
+                        {
+                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: " + authSessionStartState.ToString());
+                            return;
+                        }
+                        else
+                        {
+                            steamId = 0;
+                            pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
+                        }
                     }
                     pendingClient.SteamID = steamId;
                     pendingClient.Connection.Name = name;
@@ -452,7 +462,7 @@ namespace Barotrauma.Networking
                     pendingClient.AuthSessionStarted = true;
                 }
             }
-            else //TODO: could remove since this seems impossible
+            else
             {
                 if (pendingClient.SteamID != steamId)
                 {

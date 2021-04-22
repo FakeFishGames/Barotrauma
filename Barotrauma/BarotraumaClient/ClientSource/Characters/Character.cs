@@ -55,6 +55,11 @@ namespace Barotrauma
             set
             {
                 if (controlled == value) return;
+                if ((!(controlled is null)) && (!(Screen.Selected?.Cam is null)) && value is null)
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
                 controlled = value;
                 if (controlled != null) controlled.Enabled = true;
                 CharacterHealth.OpenHealthWindow = null;                
@@ -96,6 +101,13 @@ namespace Barotrauma
             get { return chromaticAberrationStrength; }
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
+        
+        private float grainStrength;
+        public float GrainStrength
+        {
+            get => grainStrength;
+            set => grainStrength = MathHelper.Clamp(value, 0.0f, 1.0f);
+        }
 
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
@@ -114,6 +126,9 @@ namespace Barotrauma
         {
             get { return gibEmitters; }
         }
+
+        public static bool IsMouseOnUI => GUI.MouseOn != null ||
+                    (CharacterInventory.IsMouseOnInventory() && !CharacterInventory.DraggingItemToWorld);
 
         public class ObjectiveEntity
         {
@@ -217,8 +232,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (NeedsAir &&
-                        pressureProtection < 80.0f &&
+                    if (NeedsAir && !IsProtectedFromPressure() &&
                         (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
@@ -284,6 +298,10 @@ namespace Barotrauma
                         {
                             cam.OffsetAmount = targetOffsetAmount = 0.0f;
                         }
+                    }
+                    else if (IsMouseOnUI)
+                    {
+                        targetOffsetAmount = cam.OffsetAmount;
                     }
                     else if (Vector2.DistanceSquared(AnimController.Limbs[0].SimPosition, mouseSimPos) > 1.0f)
                     {
@@ -375,25 +393,63 @@ namespace Barotrauma
 
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
         {
+            HintManager.OnCharacterKilled(this);
+
             if (GameMain.NetworkMember != null && controlled == this)
             {
                 string chatMessage = CauseOfDeath.Type == CauseOfDeathType.Affliction ?
                     CauseOfDeath.Affliction.SelfCauseOfDeathDescription :
                     TextManager.Get("Self_CauseOfDeathDescription." + CauseOfDeath.Type.ToString(), fallBackTag: "Self_CauseOfDeathDescription.Damage");
 
-                if (GameMain.Client != null) chatMessage += " " + TextManager.Get("DeathChatNotification");
+                if (GameMain.Client != null) { chatMessage += " " + TextManager.Get("DeathChatNotification"); }
+
+                if (GameMain.NetworkMember.RespawnManager?.UseRespawnPrompt ?? false)
+                {
+                    CoroutineManager.InvokeAfter(() =>
+                    {
+                        if (controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
+                        var respawnPrompt = new GUIMessageBox(
+                            TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
+                            new string[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") });
+                        respawnPrompt.Buttons[0].OnClicked += (btn, userdata) =>
+                        {
+                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: false);
+                            respawnPrompt.Close();
+                            return true;
+                        };
+                        respawnPrompt.Buttons[1].OnClicked += (btn, userdata) =>
+                        {
+                            GameMain.Client?.SendRespawnPromptResponse(waitForNextRoundRespawn: true);
+                            respawnPrompt.Close();
+                            return true;
+                        };
+                    }, delay: 5.0f);
+                }
 
                 GameMain.NetworkMember.AddChatMessage(chatMessage, ChatMessageType.Dead);
                 GameMain.LightManager.LosEnabled = false;
                 controlled = null;
+                if (!(Screen.Selected?.Cam is null))
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
             }
-            
+
             PlaySound(CharacterSound.SoundType.Die);
         }
 
         partial void DisposeProjSpecific()
         {
-            if (controlled == this) controlled = null;
+            if (controlled == this)
+            {
+                controlled = null;
+                if (!(Screen.Selected?.Cam is null))
+                {
+                    Screen.Selected.Cam.TargetPos = Vector2.Zero;
+                    Lights.LightManager.ViewTarget = null;
+                }
+            }
 
             if (GameMain.GameSession?.CrewManager != null &&
                 GameMain.GameSession.CrewManager.GetCharacters().Contains(this))
@@ -634,9 +690,9 @@ namespace Barotrauma
             }
         }
 
-        partial void SetOrderProjSpecific(Order order, string orderOption)
+        partial void SetOrderProjSpecific(Order order, string orderOption, int priority)
         {
-            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption);
+            GameMain.GameSession?.CrewManager?.AddCurrentOrderIcon(this, order, orderOption, priority);
         }
 
         public static void AddAllToGUIUpdateList()
@@ -815,7 +871,7 @@ namespace Barotrauma
                             iconPos.Y = -iconPos.Y;
                             nameColor = iconStyle.Color;
                             var icon = iconStyle.Sprites[GUIComponent.ComponentState.None].First();
-                            float iconScale = 30.0f / icon.Sprite.size.X / cam.Zoom;                 
+                            float iconScale = (30.0f / icon.Sprite.size.X / cam.Zoom) * GUI.Scale;
                             icon.Sprite.Draw(spriteBatch, iconPos + new Vector2(-35.0f, -25.0f), iconStyle.Color * hudInfoAlpha, scale: iconScale);
                         }
                     }
