@@ -2258,7 +2258,7 @@ namespace Barotrauma
             {
                 SelectCharacter(FocusedCharacter);
             }
-            else if (FocusedCharacter != null && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged && CanInteractMonster)
+            else if (FocusedCharacter != null && FocusedCharacter.IsDead && IsKeyHit(InputType.Grab) && FocusedCharacter.CanBeDragged && CanInteractMonster)
             {
                 SelectCharacter(FocusedCharacter);
             }
