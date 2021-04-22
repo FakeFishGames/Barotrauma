@@ -87,6 +87,8 @@ namespace Barotrauma
 
         public List<string> GetAll(string textTag)
         {
+            if (textTag is null) { return null; }
+
             if (!texts.TryGetValue(textTag.ToLowerInvariant(), out List<string> textList) || !textList.Any())
             {
                 return null;

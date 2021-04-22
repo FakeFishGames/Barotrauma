@@ -303,10 +303,10 @@ namespace Barotrauma.Networking
             RespawnShuttle.Velocity = Vector2.Zero;
         }
 
-        partial void RespawnCharactersProjSpecific();
-        public void RespawnCharacters()
+        partial void RespawnCharactersProjSpecific(Vector2? shuttlePos);
+        public void RespawnCharacters(Vector2? shuttlePos)
         {
-            RespawnCharactersProjSpecific();
+            RespawnCharactersProjSpecific(shuttlePos);
         }
         
         public Vector2 FindSpawnPos()

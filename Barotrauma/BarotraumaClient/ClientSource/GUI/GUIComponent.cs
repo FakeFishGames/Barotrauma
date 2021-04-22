@@ -77,6 +77,12 @@ namespace Barotrauma
             return RectTransform.IsParentOf(component.RectTransform, recursive);
         }
 
+        public bool IsChildOf(GUIComponent component, bool recursive = true)
+        {
+            if (component == null) { return false; }
+            return RectTransform.IsChildOf(component.RectTransform, recursive);
+        }
+
         public virtual void RemoveChild(GUIComponent child)
         {
             if (child == null) { return; }

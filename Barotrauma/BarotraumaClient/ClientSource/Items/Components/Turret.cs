@@ -540,15 +540,16 @@ namespace Barotrauma.Items.Components
             if (ShowProjectileIndicator)
             {
                 Point slotSize = (Inventory.SlotSpriteSmall.size * Inventory.UIScale).ToPoint();
-                int spacing = 5;
+                Point spacing = new Point(GUI.IntScale(5), GUI.IntScale(20));
                 int slotsPerRow = Math.Min(availableAmmo.Count, 6);
-                int totalWidth = slotSize.X * slotsPerRow + spacing * (slotsPerRow - 1);
-                Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, powerIndicator.Rect.Y - (int)(75 * GUI.Scale));
+                int totalWidth = slotSize.X * slotsPerRow + spacing.X * (slotsPerRow - 1);
+                int rows = (int)Math.Ceiling(availableAmmo.Count / (float)slotsPerRow);
+                Point invSlotPos = new Point(GameMain.GraphicsWidth / 2 - totalWidth / 2, powerIndicator.Rect.Y - (slotSize.Y + spacing.Y) * rows);
                 for (int i = 0; i < availableAmmo.Count; i++)
                 {
                     // TODO: Optimize? Creates multiple new objects per frame?
                     Inventory.DrawSlot(spriteBatch, null,
-                        new VisualSlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing)), slotSize)),
+                        new VisualSlot(new Rectangle(invSlotPos + new Point((i % slotsPerRow) * (slotSize.X + spacing.X), (int)Math.Floor(i / (float)slotsPerRow) * (slotSize.Y + spacing.Y)), slotSize)),
                         availableAmmo[i], -1, true);
                 }
                 if (flashNoAmmo)

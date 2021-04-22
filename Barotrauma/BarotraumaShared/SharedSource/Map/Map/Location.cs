@@ -62,6 +62,8 @@ namespace Barotrauma
         private string baseName;
         private int nameFormatIndex;
 
+        private LocationType addInitialMissionsForType;
+
         public bool Discovered;
 
         public readonly Dictionary<LocationTypeChange.Requirement, int> ProximityTimer = new Dictionary<LocationTypeChange.Requirement, int>();
@@ -266,6 +268,7 @@ namespace Barotrauma
                 if (locationType.Equals("lair", StringComparison.OrdinalIgnoreCase))
                 {
                     Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("Abandoned", StringComparison.OrdinalIgnoreCase));
+                    addInitialMissionsForType = Type;                    
                 }
                 if (Type == null)
                 {
@@ -554,23 +557,37 @@ namespace Barotrauma
         public void InstantiateLoadedMissions(Map map)
         {
             availableMissions.Clear();
-            if (loadedMissions == null || loadedMissions.None()) { return; }
-            foreach (LoadedMission loadedMission in loadedMissions)
-            {
-                Location destination;
-                if (loadedMission.DestinationIndex >= 0 && loadedMission.DestinationIndex < map.Locations.Count)
+            if (loadedMissions != null && loadedMissions.Any()) 
+            { 
+                foreach (LoadedMission loadedMission in loadedMissions)
                 {
-                    destination = map.Locations[loadedMission.DestinationIndex];
+                    Location destination;
+                    if (loadedMission.DestinationIndex >= 0 && loadedMission.DestinationIndex < map.Locations.Count)
+                    {
+                        destination = map.Locations[loadedMission.DestinationIndex];
+                    }
+                    else
+                    {
+                        destination = Connections.First().OtherLocation(this);
+                    }
+                    var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination });
+                    availableMissions.Add(mission);
+                    if (loadedMission.SelectedMission) { SelectedMission = mission; }
                 }
-                else
-                {
-                    destination = Connections.First().OtherLocation(this);
-                }
-                var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination });
-                availableMissions.Add(mission);
-                if (loadedMission.SelectedMission) { SelectedMission = mission; }
+                loadedMissions = null;
             }
-            loadedMissions = null;
+            if (addInitialMissionsForType != null)
+            {
+                if (addInitialMissionsForType.MissionIdentifiers.Any())
+                {
+                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandom());
+                }
+                if (addInitialMissionsForType.MissionTags.Any())
+                {
+                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandom());
+                }
+                addInitialMissionsForType = null;
+            }
         }
 
         /// <summary>

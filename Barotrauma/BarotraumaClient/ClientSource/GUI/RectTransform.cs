@@ -640,6 +640,12 @@ namespace Barotrauma
             return children.Contains(rectT) || (recursive && children.Any(c => c.IsParentOf(rectT)));
         }
 
+        public bool IsChildOf(RectTransform rectT, bool recursive = true)
+        {
+            if (Parent == null) { return false; }
+            return Parent == rectT || (recursive && Parent.IsChildOf(rectT));
+        }
+
         public void ClearChildren()
         {
             children.ForEachMod(c => c.Parent = null);

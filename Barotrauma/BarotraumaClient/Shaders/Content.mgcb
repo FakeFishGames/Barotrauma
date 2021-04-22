@@ -61,9 +61,3 @@
 /processorParam:DebugMode=Auto
 /build:watershader.fx
 
-#begin grainshader.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:grainshader.fx
-

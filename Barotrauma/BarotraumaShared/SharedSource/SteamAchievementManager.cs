@@ -331,6 +331,9 @@ namespace Barotrauma
                 }
             }
 
+            //make sure changed stats (kill count, kms traveled) get stored
+            SteamManager.StoreStats();
+
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
             foreach (Mission mission in gameSession.Missions)

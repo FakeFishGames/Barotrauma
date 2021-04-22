@@ -522,7 +522,7 @@ namespace Barotrauma
             {
                 allowedBiomes.Clear();
                 allowedBiomes.AddRange(biomes.Where(b => b.AllowedZones.Contains(generationParams.DifficultyZones - i)));
-                float zoneX = Width - zoneWidth * i;
+                float zoneX = zoneWidth * (generationParams.DifficultyZones - i);
 
                 foreach (Location location in Locations)
                 {

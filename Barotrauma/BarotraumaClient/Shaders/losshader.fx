@@ -26,8 +26,6 @@ sampler TextureSampler : register (s0) = sampler_state { Texture = <xTexture>; }
 Texture2D xLosTexture;
 sampler LosSampler = sampler_state { Texture = <xLosTexture>; };
 
-float xLosAlpha;
-
 float4 xColor;
 
 float4 mainPS(VertexShaderOutput input) : COLOR0
@@ -41,7 +39,7 @@ float4 mainPS(VertexShaderOutput input) : COLOR0
 		sampleColor.r * xColor.r, 
 		sampleColor.g * xColor.g, 
 		sampleColor.b * xColor.b,
-		obscureAmount * xLosAlpha);
+		obscureAmount);
 		
 	return outColor;
 }

@@ -7,23 +7,10 @@ using System.Text;
 
 namespace Microsoft.Xna.Framework.Graphics
 {
-    public interface ISpriteBatch
-    {
-        public void Draw(Texture2D texture,
-                Vector2 position,
-                Rectangle? sourceRectangle,
-                Color color,
-                float rotation,
-                Vector2 origin,
-                Vector2 scale,
-                SpriteEffects effects,
-                float layerDepth);
-    }
-
     /// <summary>
     /// Helper class for drawing text strings and sprites in one or more optimized batches.
     /// </summary>
-	public class SpriteBatch : GraphicsResource, ISpriteBatch
+	public class SpriteBatch : GraphicsResource
 	{
         #region Private Fields
         readonly SpriteBatcher _batcher;

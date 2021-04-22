@@ -141,10 +141,10 @@ namespace Barotrauma.Networking
 
                 GameServer.Log("Dispatching the respawn shuttle.", ServerLog.MessageType.Spawning);
 
-                RespawnCharacters();
+                Vector2 spawnPos = FindSpawnPos();
+                RespawnCharacters(spawnPos);
 
                 CoroutineManager.StopCoroutines("forcepos");
-                Vector2 spawnPos = FindSpawnPos();
                 if (spawnPos.Y > Level.Loaded.Size.Y)
                 {
                     CoroutineManager.StartCoroutine(ForceShuttleToPos(Level.Loaded.StartPosition - Vector2.UnitY * Level.ShaftHeight, 100.0f), "forcepos");
@@ -163,7 +163,7 @@ namespace Barotrauma.Networking
                 GameServer.Log("Respawning everyone in main sub.", ServerLog.MessageType.Spawning);
                 GameMain.Server.CreateEntityEvent(this);
 
-                RespawnCharacters();
+                RespawnCharacters(null);
             }
         }
 
@@ -244,7 +244,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        partial void RespawnCharactersProjSpecific()
+        partial void RespawnCharactersProjSpecific(Vector2? shuttlePos)
         {
             var respawnSub = RespawnShuttle ?? Submarine.MainSub;
 
@@ -293,10 +293,21 @@ namespace Barotrauma.Networking
             //(in order to give them appropriate ID card tags)
             var mainSubSpawnPoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub);
 
-            ItemPrefab divingSuitPrefab = MapEntityPrefab.Find(null, "divingsuit") as ItemPrefab;
-            ItemPrefab oxyPrefab = MapEntityPrefab.Find(null, "oxygentank") as ItemPrefab;
-            ItemPrefab scooterPrefab = MapEntityPrefab.Find(null, "underwaterscooter") as ItemPrefab;
-            ItemPrefab batteryPrefab = MapEntityPrefab.Find(null, "batterycell") as ItemPrefab;
+            ItemPrefab divingSuitPrefab = null;
+            if ((shuttlePos != null && Level.Loaded.GetRealWorldDepth(shuttlePos.Value.Y) > Level.DefaultRealWorldCrushDepth) ||
+                Level.Loaded.GetRealWorldDepth(Submarine.MainSub.WorldPosition.Y) > Level.DefaultRealWorldCrushDepth)
+            {
+                divingSuitPrefab = ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t.Equals("respawnsuitdeep", StringComparison.OrdinalIgnoreCase)));
+            }
+            if (divingSuitPrefab == null)
+            {
+                divingSuitPrefab = 
+                    ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t.Equals("respawnsuit", StringComparison.OrdinalIgnoreCase))) ??
+                    ItemPrefab.Find(null, "divingsuit");
+            }
+            ItemPrefab oxyPrefab = ItemPrefab.Find(null, "oxygentank");
+            ItemPrefab scooterPrefab = ItemPrefab.Find(null, "underwaterscooter");
+            ItemPrefab batteryPrefab = ItemPrefab.Find(null, "batterycell");
 
             var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnSub && wp.SpawnType == SpawnType.Cargo);
 
