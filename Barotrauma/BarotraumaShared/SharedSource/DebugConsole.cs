@@ -720,6 +720,18 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
+            commands.Add(new Command("ignorehuskexceptions", "ignorehuskexceptions: Ignore any control exceptions for all husk infections).", (string[] args) =>
+            {
+                AfflictionHusk.IgnoreHuskExceptions = true;
+                NewMessage("All husk exceptions ignored", Color.Red);
+            }, isCheat: true));
+
+            commands.Add(new Command("restorehuskexceptions", "restorehuskexceptions: Restore all control exceptions for all husk infections).", (string[] args) =>
+            {
+                AfflictionHusk.IgnoreHuskExceptions = false;
+                NewMessage("All husk exceptions no longer ignored", Color.Red);
+            }, isCheat: true));
+
             commands.Add(new Command("freecamera|freecam", "freecam: Detach the camera from the controlled character.", (string[] args) =>
             {
 #if CLIENT

@@ -87,6 +87,26 @@ namespace Barotrauma
             }
         }
 
+        public Client GetCharacterClient
+        {
+            get
+            {
+                dynamic controller = null;
+#if SERVER
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    if (c.Character == this)
+                    {
+                        controller = c;
+                    }
+
+                }
+#endif
+                return controller;
+            }
+
+        }
+
         /// <summary>
         /// Is the character controlled by another human player (should always be false in single player)
         /// </summary>

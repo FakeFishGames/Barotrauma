@@ -3,6 +3,7 @@ using System.Linq;
 using System.Xml.Linq;
 using System;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -22,6 +23,8 @@ namespace Barotrauma
         private Character character;
 
         private readonly List<Affliction> huskInfection = new List<Affliction>();
+
+        public static bool IgnoreHuskExceptions = false;
 
         [Serialize(0f, true), Editable]
         public override float Strength
@@ -174,10 +177,10 @@ namespace Barotrauma
             }
 
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
-            CoroutineManager.StartCoroutine(CreateAIHusk());
+            CoroutineManager.StartCoroutine(CreateAIHusk(character.GetCharacterClient, character.SpeciesName, character));
         }
 
-        private IEnumerable<object> CreateAIHusk()
+        private IEnumerable<object> CreateAIHusk(Client huskController, string originalSpecies, Character originalCharacter)
         {
             //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
             // -> don't spawn the AI husk
@@ -208,6 +211,30 @@ namespace Barotrauma
                 husk.Info.Character = husk;
                 husk.Info.TeamID = CharacterTeamType.None;
             }
+#if CLIENT
+            if (Prefab is AfflictionPrefabHusk huskPrefab)
+            {
+                if (originalCharacter == Character.Controlled && huskPrefab.ControlHusk)
+                {
+                    if (huskPrefab.ControlException.None(s => s.Equals(originalSpecies, StringComparison.OrdinalIgnoreCase)) || IgnoreHuskExceptions == true)
+                    {
+                        Character.Controlled = husk;
+                    }
+                }
+            }
+#endif
+#if SERVER
+            if (Prefab is AfflictionPrefabHusk huskPrefab)
+            {
+                if (huskController != null && huskPrefab.ControlHusk)
+                {
+                    if (huskPrefab.ControlException.None(s => s.Equals(originalSpecies, StringComparison.OrdinalIgnoreCase)) || IgnoreHuskExceptions == true)
+                    {
+                        GameMain.Server.SetClientCharacter(huskController, husk);
+                    }
+                }
+            }
+#endif
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {
