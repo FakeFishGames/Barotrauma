@@ -36,6 +36,23 @@ namespace Barotrauma
             levelDifficultyScrollBar.OnMoved(levelDifficultyScrollBar, levelDifficultyScrollBar.BarScroll);
 #endif
         }
+
+        public void SetRadiationEnabled(bool enabled)
+        {
+#if CLIENT
+            if (radiationEnabledTickBox == null) { return; }
+            radiationEnabledTickBox.Selected = enabled;
+#endif
+        }
+
+        public bool IsRadiationEnabled()
+        {
+#if CLIENT
+            return radiationEnabledTickBox != null && radiationEnabledTickBox.Selected;
+#elif SERVER
+            return GameMain.Server.ServerSettings.RadiationEnabled;
+#endif
+        }
         
         public void ToggleTraitorsEnabled(int dir)
         {

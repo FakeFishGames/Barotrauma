@@ -12,15 +12,20 @@ namespace Barotrauma.Items.Components
 {
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
+        public const float AutopilotMinDistToPathNode = 30.0f;
+
         private const float AutopilotRayCastInterval = 0.5f;
         private const float RecalculatePathInterval = 5.0f;
-
-        private const float AutopilotMinDistToPathNode = 30.0f;
 
         private const float AutoPilotSteeringLerp = 0.1f;
 
         private const float AutoPilotMaxSpeed = 0.5f;
         private const float AIPilotMaxSpeed = 1.0f;
+
+        /// <summary>
+        /// How fast the steering vector adjusts when the nav terminal is operated by something else than a character (= signals)
+        /// </summary>
+        const float DefaultSteeringAdjustSpeed = 0.2f;
 
         private Vector2 targetVelocity;
 
@@ -333,22 +338,17 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            float targetLevel = targetVelocity.X;
-            if (controlledSub != null && controlledSub.FlippedX) { targetLevel *= -1; }
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_x_out", user);
+            float velX = targetVelocity.X;
+            if (controlledSub != null && controlledSub.FlippedX) { velX *= -1; }
+            item.SendSignal(new Signal(velX.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_x_out");
 
-            targetLevel = -targetVelocity.Y;
-            targetLevel += (neutralBallastLevel - 0.5f) * 100.0f;
-            item.SendSignal(0, targetLevel.ToString(CultureInfo.InvariantCulture), "velocity_y_out", user);
+            float velY = MathHelper.Lerp((neutralBallastLevel * 100 - 50) * 2, -100 * Math.Sign(targetVelocity.Y), Math.Abs(targetVelocity.Y) / 100.0f);
+            item.SendSignal(new Signal(velY.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_y_out");
             // converts the controlled sub's velocity to km/h and sends it. 
-            // TODO: add current_velocity_x and current_velocity_y pins on the navigation terminals and shuttle terminals
-            // TODO: increase the size of the connection panels of both navigation terminals
-            item.SendSignal(0, (ConvertUnits.ToDisplayUnits(controlledSub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_x", null);
-            item.SendSignal(0, (ConvertUnits.ToDisplayUnits(controlledSub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_y", null);
-            // TODO: add position_x and depth pins on the navigation terminals and shuttle terminals
-            item.SendSignal(0, (controlledSub.WorldPosition.X * Physics.DisplayToRealWorldRatio).ToString("0.0000", CultureInfo.InvariantCulture), "position_x", null);
-            item.SendSignal(0, controlledSub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), "depth", null);
-        }
+            item.SendSignal((ConvertUnits.ToDisplayUnits(controlledSub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_x");
+            item.SendSignal((ConvertUnits.ToDisplayUnits(controlledSub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6).ToString("0.0000", CultureInfo.InvariantCulture), "current_velocity_y");
+            item.SendSignal((controlledSub.WorldPosition.X * Physics.DisplayToRealWorldRatio).ToString("0.0000", CultureInfo.InvariantCulture), "position_x");
+            item.SendSignal(controlledSub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), "depth");
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
         {
@@ -551,6 +551,10 @@ namespace Barotrauma.Items.Components
             {
                 TargetVelocity *= 100.0f / velMagnitude;
             }
+
+#if CLIENT
+            HintManager.OnAutoPilotPathUpdated(this);
+#endif
         }
 
         private float? GetNodePenalty(PathNode node, PathNode nextNode)
@@ -634,7 +638,7 @@ namespace Barotrauma.Items.Components
         {
             if (objective.Override)
             {
-                if (user != character && user != null && user.SelectedConstruction == item)
+                if (user != character && user != null && user.SelectedConstruction == item && character.IsOnPlayerTeam)
                 {
                     character.Speak(TextManager.Get("DialogSteeringTaken"), null, 0.0f, "steeringtaken", 10.0f);
                 }
@@ -669,7 +673,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {
@@ -684,7 +688,7 @@ namespace Barotrauma.Items.Components
                     if (Level.IsLoadedOutpost) { break; }
                     if (DockingSources.Any(d => d.Docked))
                     {
-                        item.SendSignal(0, "1", "toggle_docking", sender: null);
+                        item.SendSignal("1", "toggle_docking");
                     }
                     if (objective.Override)
                     {
@@ -697,22 +701,25 @@ namespace Barotrauma.Items.Components
                     break;
             }
             sonar?.AIOperate(deltaTime, character, objective);
-            if (!MaintainPos && showIceSpireWarning)
+            if (!MaintainPos && showIceSpireWarning && character.IsOnPlayerTeam)
             {
                 character.Speak(TextManager.Get("dialogicespirespottedsonar"), null, 0.0f, "icespirespottedsonar", 60.0f);
             }
             return false;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power = 0.0f, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection.Name == "velocity_in")
             {
-                TargetVelocity = XMLExtensions.ParseVector2(signal, errorMessages: false);
+                steeringAdjustSpeed = DefaultSteeringAdjustSpeed;
+                steeringInput = XMLExtensions.ParseVector2(signal.value, errorMessages: false);
+                steeringInput.X = MathHelper.Clamp(steeringInput.X, -100.0f, 100.0f);
+                steeringInput.Y = MathHelper.Clamp(-steeringInput.Y, -100.0f, 100.0f);
             }
             else
             {
-                base.ReceiveSignal(stepsTaken, signal, connection, source, sender, power, signalStrength);
+                base.ReceiveSignal(signal, connection);
             }
         }
     }

@@ -987,5 +987,28 @@ namespace Voronoi2
             return generateVoronoi(xVal, yVal, 0, width, 0, height);
         }
 
+        public List<GraphEdge> MakeVoronoiGraph(double[] xVal, double[] yVal, Rectangle area)
+        {
+            for (int i = 0; i<xVal.Length;i++)
+            {
+                xVal[i] -= area.X;
+                yVal[i] -= area.Y;
+            }
+            var graphEdges = generateVoronoi(xVal, yVal, 0, area.Width, 0, area.Height);
+            HashSet<Site> sites = new HashSet<Site>();
+            foreach (var graphEdge in graphEdges)
+            {
+                graphEdge.Point1 += area.Location.ToVector2();
+                graphEdge.Point2 += area.Location.ToVector2();
+                sites.Add(graphEdge.Site1);
+                sites.Add(graphEdge.Site2);
+            }
+            foreach (Site site in sites)
+            {
+                site.Coord = new DoubleVector2(site.Coord.X + area.Location.X, site.Coord.Y + area.Location.Y);
+            }
+            return graphEdges;
+        }
+
     } // Voronoi Class End
 } // namespace Voronoi2 End

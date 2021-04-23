@@ -342,7 +342,7 @@ namespace Barotrauma.Items.Components
             powerOut?.SendPowerProbeSignal(source, power);
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (item.Condition <= 0.0f || connection.IsPower) { return; }
             if (!connectedRecipients.ContainsKey(connection)) { return; }
@@ -351,16 +351,16 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection recipient in connectedRecipients[connection])
                 {
-                    if (recipient.Item == item || recipient.Item == source) { continue; }
+                    if (recipient.Item == item || recipient.Item == signal.source) { continue; }
 
-                    source?.LastSentSignalRecipients.Add(recipient.Item);
+                    signal.source?.LastSentSignalRecipients.Add(recipient);
 
                     foreach (ItemComponent ic in recipient.Item.Components)
                     {
                         //other junction boxes don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
                         if (ic is PowerTransfer && !(ic is RelayComponent) && connection.Name.Contains("signal")) { continue; }
-                        ic.ReceiveSignal(stepsTaken, signal, recipient, source, sender, 0.0f, signalStrength);
+                        ic.ReceiveSignal(signal, recipient);
                     }
 
                     foreach (StatusEffect effect in recipient.Effects)

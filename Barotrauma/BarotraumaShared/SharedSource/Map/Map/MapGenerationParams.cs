@@ -125,6 +125,8 @@ namespace Barotrauma
             get; private set;
         }
 
+        public RadiationParams RadiationParams;
+
         public static void Init()
         {
 
@@ -238,6 +240,9 @@ namespace Barotrauma
                         TypeChangeIcon = new Sprite(subElement);
                         break;
 #endif
+                    case "radiationparams":
+                        RadiationParams = new RadiationParams(subElement);
+                        break;
                 }
             }
         }

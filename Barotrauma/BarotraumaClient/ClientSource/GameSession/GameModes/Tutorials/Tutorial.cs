@@ -535,15 +535,15 @@ namespace Barotrauma.Tutorials
                 titleBlock.RectTransform.IsFixedSize = true;
             }
 
-            List<RichTextData> richTextData = RichTextData.GetRichTextData(text, out text);
+            List<RichTextData> richTextData = RichTextData.GetRichTextData(" " + text, out text);
             GUITextBlock textBlock;
             if (richTextData == null)
             {
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), " " + text, wrap: true);
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
             }
             else
             {
-                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), richTextData, " " + text, wrap: true);
+                textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), richTextData, text, wrap: true);
             }
 
             textBlock.RectTransform.IsFixedSize = true;

@@ -24,20 +24,23 @@ namespace Barotrauma
         {
             get
             {
-                if (!GameMain.SubEditorScreen.ShowThalamus && prefab.Category.HasFlag(MapEntityCategory.Thalamus))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
                 {
                     return false;
                 }
                 return HasBody ? ShowWalls : ShowStructures;
             }
         }
-        
-        private string specialTag;
+
+#if DEBUG
         [Editable, Serialize("", true)]
+#else
+        [Serialize("", true)]
+#endif
         public string SpecialTag
         {
-            get { return specialTag; }
-            set { specialTag = value; }
+            get;
+            set;
         }        
 
         partial void InitProjSpecific()
@@ -92,7 +95,10 @@ namespace Barotrauma
         {
             int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
-            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null);
+            GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.95f, 0.8f), editingHUD.RectTransform, Anchor.Center), style: null)
+            {
+                CanTakeKeyBoardFocus = false
+            };
             var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont) { UserData = this };
 
             if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)

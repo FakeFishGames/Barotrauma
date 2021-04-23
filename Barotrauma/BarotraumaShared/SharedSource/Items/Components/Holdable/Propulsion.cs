@@ -41,25 +41,25 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) return false;
-            if (!character.IsKeyDown(InputType.Aim) || character.Stun > 0.0f) return false;
+            if (!character.IsKeyDown(InputType.Aim) || character.Stun > 0.0f) { return false; }
 
             IsActive = true;
             useState = 0.1f;
 
             if (character.AnimController.InWater)
             {
-                if (UsableIn == UseEnvironment.Air) return true;
+                if (UsableIn == UseEnvironment.Air) { return true; }
             }
             else
             {
-                if (UsableIn == UseEnvironment.Water) return true;
+                if (UsableIn == UseEnvironment.Water) { return true; }
             }
 
             Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
             //move upwards if the cursor is at the position of the character
             if (!MathUtils.IsValid(dir)) dir = Vector2.UnitY;
 
-            Vector2 propulsion = dir * Force;
+            Vector2 propulsion = dir * Force * character.PropulsionSpeedMultiplier;
 
             if (character.AnimController.InWater) character.AnimController.TargetMovement = dir;
 

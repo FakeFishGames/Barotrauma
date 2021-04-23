@@ -68,6 +68,15 @@ namespace Barotrauma
         private static Submarine Generate(OutpostGenerationParams generationParams, LocationType locationType, Location location, bool onlyEntrance = false)
         {
             var outpostModuleFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.OutpostModule);
+            if (location != null)
+            {
+                if (location.IsCriticallyRadiated() && OutpostGenerationParams.Params.FirstOrDefault(p => p.Identifier.Equals(generationParams.ReplaceInRadiation, StringComparison.OrdinalIgnoreCase)) is { } newParams)
+                {
+                    generationParams = newParams;
+                }
+
+                locationType = location.GetLocationType();
+            }
             
             //load the infos of the outpost module files
             List<SubmarineInfo> outpostModules = new List<SubmarineInfo>();
@@ -169,6 +178,7 @@ namespace Barotrauma
                     Type = SubmarineType.Outpost
                 };
                 generationFailed = false;
+                outpostInfo.OutpostGenerationParams = generationParams;
                 sub = new Submarine(outpostInfo, loadEntities: loadEntities);
                 sub.Info.OutpostGenerationParams = generationParams;
                 if (!generationFailed)
@@ -669,10 +679,15 @@ namespace Barotrauma
 
             if (availableModules.Count() == 0) { return null; }
 
-            var modulesSuitableForLocationType = 
-                availableModules.Where(m =>
-                    !m.OutpostModuleInfo.AllowedLocationTypes.Any() ||
-                    m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+            //try to search for modules made specifically for this location type first
+            var modulesSuitableForLocationType =
+                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+
+            //if not found, search for modules suitable for any location type
+            if (!modulesSuitableForLocationType.Any())
+            {
+                modulesSuitableForLocationType = availableModules.Where(m => !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+            }
 
             if (!modulesSuitableForLocationType.Any())
             {
@@ -705,10 +720,15 @@ namespace Barotrauma
 
             if (availableModules.Count() == 0) { return null; }
 
+            //try to search for modules made specifically for this location type first
             var modulesSuitableForLocationType =
-                availableModules.Where(m =>
-                    !m.OutpostModuleInfo.AllowedLocationTypes.Any() ||
-                    m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier.ToLowerInvariant()));
+
+            //if not found, search for modules suitable for any location type
+            if (!modulesSuitableForLocationType.Any())
+            {
+                modulesSuitableForLocationType = availableModules.Where(m => !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+            }
 
             if (!modulesSuitableForLocationType.Any())
             {
@@ -963,7 +983,7 @@ namespace Barotrauma
                 var moduleEntities = MapEntity.LoadAll(sub, hallwayInfo.SubmarineElement, hallwayInfo.FilePath, -1);
 
                 //remove items that don't fit in the hallway
-                moduleEntities.Where(e => e is Item item && item.GetComponent<Door>() == null && e.Rect.Width > hallwayLength).ForEach(e => e.Remove());
+                moduleEntities.Where(e => e is Item item && item.GetComponent<Door>() == null && (isHorizontal ? e.Rect.Width : e.Rect.Height) > hallwayLength).ForEach(e => e.Remove());
 
                 //find the largest hull to use it as the center point of the hallway
                 //and the bounds of all the hulls, used when resizing the hallway to fit between the modules
@@ -1036,11 +1056,11 @@ namespace Barotrauma
                             }
                         }
                     }
-                    else if (me is Structure structure)
+                    else if (me is Structure || (me is Item item && item.GetComponent<Door>() == null))
                     {
                         if (isHorizontal)
                         {
-                            if (!structure.ResizeHorizontal)
+                            if (!me.ResizeHorizontal)
                             {
                                 int xPos = (int)(leftHull.WorldRect.Right + (me.WorldPosition.X - hullBounds.X) * scaleFactor);
                                 me.Rect = new Rectangle(xPos - me.RectWidth / 2, me.Rect.Y, me.Rect.Width, me.Rect.Height);
@@ -1054,9 +1074,9 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (!structure.ResizeVertical)
+                            if (!me.ResizeVertical)
                             {
-                                int yPos = (int)(topHull.WorldRect.Y - topHull.RectHeight + (me.WorldPosition.X - hullBounds.Bottom) * scaleFactor);
+                                int yPos = (int)(topHull.WorldRect.Y - topHull.RectHeight + (me.WorldPosition.Y - hullBounds.Bottom) * scaleFactor);
                                 me.Rect = new Rectangle(me.Rect.X, yPos + me.RectHeight / 2, me.Rect.Width, me.Rect.Height);
                             }
                             else
@@ -1084,8 +1104,35 @@ namespace Barotrauma
                         DebugConsole.ThrowError($"Failed to connect waypoints between outpost modules. No waypoint in the {GetOpposingGapPosition(module.ThisGapPosition).ToString().ToLower()} gap of the module \"{module.PreviousModule.Info.Name}\".");
                         continue;
                     }
-                    startWaypoint.linkedTo.Add(endWaypoint);
-                    endWaypoint.linkedTo.Add(startWaypoint);
+
+                    if (startWaypoint.WorldPosition.X > endWaypoint.WorldPosition.X)
+                    {
+                        var temp = startWaypoint;
+                        startWaypoint = endWaypoint;
+                        endWaypoint = temp;
+                    }
+
+                    if (hallwayLength > 100 && isHorizontal)
+                    {
+                        WayPoint prevWayPoint = startWaypoint;
+                        for (float x = leftHull.Rect.Right + 50; x < rightHull.Rect.X - 50; x += 100.0f)
+                        {
+                            var newWayPoint = new WayPoint(new Vector2(x, hullBounds.Y + 110.0f), SpawnType.Path, sub);
+                            prevWayPoint.linkedTo.Add(newWayPoint);
+                            newWayPoint.linkedTo.Add(prevWayPoint);
+                            prevWayPoint = newWayPoint;
+                        }
+                        if (prevWayPoint != null)
+                        {
+                            prevWayPoint.linkedTo.Add(endWaypoint);
+                            endWaypoint.linkedTo.Add(prevWayPoint);
+                        }
+                    }
+                    else
+                    {
+                        startWaypoint.linkedTo.Add(endWaypoint);
+                        endWaypoint.linkedTo.Add(startWaypoint);
+                    }
 
                     WayPoint closestWaypoint = null;
                     float closestDistSqr = 30.0f * 30.0f;
@@ -1381,10 +1428,9 @@ namespace Barotrauma
                 Rand.SetSyncedSeed(ToolBox.StringToInt(characterInfo.Name));
 
                 ISpatialEntity gotoTarget = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Human, humanPrefab.GetModuleFlags(), humanPrefab.GetSpawnPointTags());
-
                 if (gotoTarget == null)
                 {
-                    gotoTarget = outpost.GetHulls(true).GetRandom();
+                    gotoTarget = outpost.GetHulls(true).GetRandom(Rand.RandSync.Server);
                 }
                 characterInfo.TeamID = CharacterTeamType.FriendlyNPC;
                 var npc = Character.Create(CharacterPrefab.HumanConfigFile, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
@@ -1406,27 +1452,11 @@ namespace Barotrauma
                 humanPrefab.GiveItems(npc, outpost, Rand.RandSync.Server);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
+                    item.AllowStealing = outpost.Info.OutpostGenerationParams.AllowStealing;
                     item.SpawnedInOutpost = true;
                 }
                 npc.GiveIdCardTags(gotoTarget as WayPoint);
-                if (npc.AIController is HumanAIController humanAI) 
-                {
-                    var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
-                    if (humanPrefab.CampaignInteractionType != CampaignMode.InteractionType.None)
-                    {
-                        idleObjective.Behavior = AIObjectiveIdle.BehaviorType.StayInHull;
-                        idleObjective.TargetHull = AIObjectiveGoTo.GetTargetHull(gotoTarget);
-                        (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, humanPrefab.CampaignInteractionType);
-                    }
-                    else
-                    {
-                        idleObjective.Behavior = humanPrefab.Behavior;
-                        foreach (string moduleType in humanPrefab.PreferredOutpostModuleTypes)
-                        {
-                            idleObjective.PreferredOutpostModuleTypes.Add(moduleType);
-                        }
-                    }
-                }
+                humanPrefab.InitializeCharacter(npc, gotoTarget);
             }
         }
     }

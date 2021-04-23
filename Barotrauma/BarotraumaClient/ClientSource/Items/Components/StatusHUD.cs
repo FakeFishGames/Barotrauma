@@ -225,7 +225,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (AfflictionPrefab affliction in combinedAfflictionStrengths.Keys)
                 {
-                    texts.Add(TextManager.AddPunctuation(':', affliction.Name, ((int)combinedAfflictionStrengths[affliction]).ToString() + " %"));
+                    texts.Add(TextManager.AddPunctuation(':', affliction.Name, Math.Max(((int)combinedAfflictionStrengths[affliction]), 1).ToString() + " %"));
                     textColors.Add(Color.Lerp(GUI.Style.Orange, GUI.Style.Red, combinedAfflictionStrengths[affliction] / affliction.MaxStrength));
                 }
             }

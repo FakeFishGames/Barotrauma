@@ -144,7 +144,7 @@ namespace Barotrauma
                     new XAttribute("value", valueStr),
                     new XAttribute("type", value?.GetType())));
             }
-#if DEBUG || UNSTABLE
+#if DEBUG
             DebugConsole.Log(element.ToString());
 #endif
             modeElement.Add(element);

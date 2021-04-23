@@ -30,6 +30,8 @@ namespace Barotrauma.Sounds
         private readonly SoundSourcePool[] sourcePools;
         
         private readonly List<Sound> loadedSounds;
+        public IReadOnlyList<Sound> LoadedSounds => loadedSounds;
+
         private readonly SoundChannel[][] playingChannels = new SoundChannel[2][];
         private readonly object threadDeathMutex = new object();
 
@@ -512,6 +514,18 @@ namespace Barotrauma.Sounds
             }
         }
 
+        public void MoveSoundToPosition(Sound sound, int pos)
+        {
+            lock (loadedSounds)
+            {
+                int index = loadedSounds.IndexOf(sound);
+                if (index >= 0)
+                {
+                    loadedSounds.SiftElement(index, pos);
+                }
+            }
+        }
+
         public void SetCategoryGainMultiplier(string category, float gain, int index=0)
         {
             if (Disabled) { return; }
@@ -706,9 +720,11 @@ namespace Barotrauma.Sounds
         }
 
         bool areStreamsPlaying = false;
+        ManualResetEvent streamMre = null;
 
         void UpdateStreaming()
         {
+            streamMre = new ManualResetEvent(false);
             bool killThread = false;
             while (!killThread)
             {
@@ -745,12 +761,18 @@ namespace Barotrauma.Sounds
                         }
                     }
                 }
+                streamMre.WaitOne(10);
+                streamMre.Reset();
                 lock (threadDeathMutex)
                 {
                     areStreamsPlaying = !killThread;
                 }
-                Thread.Sleep(10); //TODO: use a separate thread for network audio?
             }
+        }
+
+        public void ForceStreamUpdate()
+        {
+            streamMre?.Set();
         }
 
         private void ReloadSounds()
@@ -788,6 +810,8 @@ namespace Barotrauma.Sounds
             }
             sourcePools[(int)SourcePoolIndex.Default]?.Dispose();
             sourcePools[(int)SourcePoolIndex.Voice]?.Dispose();
+
+            SoundBuffers.ClearPool();
         }
 
         public void Dispose()

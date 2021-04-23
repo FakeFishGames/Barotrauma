@@ -19,27 +19,62 @@ namespace Barotrauma
 
     struct OrderInfo
     {
-        public string ComponentIdentifier { get; set; }
-        public Order Order { get; private set; }
-        public string OrderOption { get; private set; }
+        public Order Order { get; }
+        public string OrderOption { get; }
+        public int ManualPriority { get; }
+        public OrderType Type { get; }
+        public AIObjective Objective { get; }
+        public bool IsCurrentOrder => Type == OrderType.Current;
 
-        public OrderInfo(Order order, string orderOption)
+        public enum OrderType
         {
-            ComponentIdentifier = "currentorder";
+            Current,
+            Previous
+        }
+
+        private OrderInfo(Order order, string orderOption, int manualPriority, OrderType orderType, AIObjective objective)
+        {
             Order = order;
             OrderOption = orderOption;
+            ManualPriority = Math.Min(manualPriority, CharacterInfo.HighestManualOrderPriority);
+            Type = orderType;
+            Objective = objective;
         }
 
-        public OrderInfo(OrderInfo orderInfo)
-        {
-            ComponentIdentifier = "previousorder";
-            Order = orderInfo.Order;
-            OrderOption = orderInfo.OrderOption;
-        }
+        public OrderInfo(Order order, string orderOption, int manualPriority) : this(order, orderOption, manualPriority, OrderType.Current, null) { }
+
+        public OrderInfo(Order order, string orderOption, int manualPriority, AIObjective objective) : this(order, orderOption, manualPriority, OrderType.Current, objective) { }
+
+        public OrderInfo(OrderInfo orderInfo, int manualPriority) : this(orderInfo.Order, orderInfo.OrderOption, manualPriority, orderInfo.Type, orderInfo.Objective) { }
+
+        public OrderInfo(OrderInfo orderInfo, OrderType type) : this(orderInfo.Order, orderInfo.OrderOption, orderInfo.ManualPriority, type, orderInfo.Objective) { }
+
+        public bool MatchesOrder(string orderIdentifier, string orderOption) =>
+            (orderIdentifier == Order?.Identifier || (string.IsNullOrEmpty(orderIdentifier) && string.IsNullOrEmpty(Order?.Identifier))) &&
+            (orderOption == OrderOption || (string.IsNullOrEmpty(orderOption) && string.IsNullOrEmpty(OrderOption)));
 
         public bool MatchesOrder(Order order, string option) =>
-            order.Identifier == Order.Identifier &&
-            option == OrderOption;
+            MatchesOrder(order?.Identifier, option);
+
+        public bool MatchesOrder(OrderInfo orderInfo) =>
+            MatchesOrder(orderInfo.Order?.Identifier, orderInfo.OrderOption);
+
+        public bool MatchesDismissedOrder(string dismissOrderOption)
+        {
+            string[] dismissedOrder = dismissOrderOption?.Split('.');
+            if (dismissedOrder != null && dismissedOrder.Length > 0)
+            {
+                string dismissedOrderIdentifier = dismissedOrder.Length > 0 ? dismissedOrder[0] : null;
+                if (dismissedOrderIdentifier == null || dismissedOrderIdentifier != Order?.Identifier) { return false; }
+                string dismissedOrderOption = dismissedOrder.Length > 1 ? dismissedOrder[1] : null;
+                if (dismissedOrderOption == null && string.IsNullOrEmpty(OrderOption)) { return true; }
+                return dismissedOrderOption == OrderOption;
+            }
+            else
+            {
+                return false;
+            }
+        }
     }
 
     class Order
@@ -412,7 +447,7 @@ namespace Barotrauma
             orderOption ??= "";
 
             string messageTag = (givingOrderToSelf && !TargetAllCharacters ? "OrderDialogSelf." : "OrderDialog.") + Identifier;
-            if (!string.IsNullOrEmpty(orderOption)) { messageTag += "." + orderOption; }
+            if (Identifier != "dismissed" && !string.IsNullOrEmpty(orderOption)) { messageTag += "." + orderOption; }
 
             if (targetCharacterName == null) { targetCharacterName = ""; }
             if (targetRoomName == null) { targetRoomName = ""; }
@@ -497,6 +532,24 @@ namespace Barotrauma
         {
             if (index < 0 || index >= Options.Length) { return null; }
             return GetOptionName(Options[index]);
+        }
+
+        /// <summary>
+        /// Used to create the order option for the Dismiss order to know which order it targets
+        /// </summary>
+        /// <param name="orderInfo">The order to target with the dismiss order</param>
+        public static string GetDismissOrderOption(OrderInfo orderInfo)
+        {
+            if (orderInfo.Order != null)
+            {
+                string option = orderInfo.Order.Identifier;
+                if (!string.IsNullOrEmpty(orderInfo.OrderOption))
+                {
+                    option += $".{orderInfo.OrderOption}";
+                }
+                return option;
+            }
+            return "";
         }
     }
 }

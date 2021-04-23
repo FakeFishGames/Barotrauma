@@ -139,7 +139,21 @@ namespace Barotrauma.Steam
             }
             return success;
         }
-        
+
+        public static bool StoreStats()
+        {
+            if (!isInitialized || !Steamworks.SteamClient.IsValid) { return false; }
+            DebugConsole.Log("Storing Steam stats...");
+            bool success = Steamworks.SteamUserStats.StoreStats();
+            if (!success)
+            {
+#if DEBUG
+                DebugConsole.NewMessage("Failed to store Steam stats.");
+#endif
+            }
+            return success;
+        }
+
         public static void Update(float deltaTime)
         {
             if (!isInitialized) { return; }

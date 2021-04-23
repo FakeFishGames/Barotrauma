@@ -10,6 +10,7 @@ namespace Barotrauma.Networking
         public SteamP2PConnection(string name, UInt64 steamId)
         {
             SteamID = steamId;
+            OwnerSteamID = 0;
             EndPointString = SteamManager.SteamIDUInt64ToString(SteamID);
             Name = name;
             Heartbeat();

@@ -48,6 +48,7 @@ namespace Barotrauma
             msgBox.Buttons[0].OnClicked = delegate
             {
                 msgBox.Close();
+                if (GameMain.Client == null) { return true; }
                 SendState(ReadyStatus.Yes);
                 CreateResultsMessage();
                 return true;
@@ -57,6 +58,7 @@ namespace Barotrauma
             msgBox.Buttons[1].OnClicked = delegate
             {
                 msgBox.Close();
+                if (GameMain.Client == null) { return true; }
                 SendState(ReadyStatus.No);
                 CreateResultsMessage();
                 return true;
@@ -65,6 +67,8 @@ namespace Barotrauma
 
         private void CreateResultsMessage()
         {
+            if (GameMain.Client == null) { return; }
+
             Vector2 relativeSize = new Vector2(0.2f, 0.3f);
             Point minSize = new Point(300, 400);
             resultsBox = new GUIMessageBox(readyCheckHeader, string.Empty, new[] { closeButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = ResultData, Draggable = true };

@@ -476,6 +476,11 @@ namespace Barotrauma
 #endif
         }
 
+        public static bool IsAltDown()
+        {
+            return KeyDown(Keys.LeftAlt) || KeyDown(Keys.RightAlt);
+        }
+
         public static void Update(double deltaTime)
         {
             timeSinceClick += deltaTime;

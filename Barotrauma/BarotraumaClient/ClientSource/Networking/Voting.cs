@@ -112,14 +112,17 @@ namespace Barotrauma
 
             switch (voteType)
             {
-                case VoteType.Sub:                    
-                    SubmarineInfo sub = data as SubmarineInfo;
-                    if (sub == null) { return; }
+                case VoteType.Sub:
+                    if (!(data is SubmarineInfo sub)) { return; }
                     msg.Write(sub.EqualityCheckVal);
+                    if (sub.EqualityCheckVal == 0)
+                    {
+                        //sub doesn't exist client-side, use hash to let the server know which one we voted for
+                        msg.Write(sub.MD5Hash.Hash);
+                    }
                     break;
                 case VoteType.Mode:
-                    GameModePreset gameMode = data as GameModePreset;
-                    if (gameMode == null) { return; }
+                    if (!(data is GameModePreset gameMode)) { return; }
                     msg.Write(gameMode.Identifier);
                     break;
                 case VoteType.EndRound:
@@ -127,8 +130,7 @@ namespace Barotrauma
                     msg.Write((bool)data);
                     break;
                 case VoteType.Kick:
-                    Client votedClient = data as Client;
-                    if (votedClient == null) return;
+                    if (!(data is Client votedClient)) { return; }
 
                     msg.Write(votedClient.ID);
                     break;

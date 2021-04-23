@@ -33,8 +33,9 @@ namespace Barotrauma
                 {
                     OriginalContainerID = item.OriginalContainerID;
                 }
+
                 OriginalID = item.ID;
-                ModuleIndex = (ushort)item.OriginalModuleIndex;
+                ModuleIndex = (ushort) item.OriginalModuleIndex;
                 Identifier = item.prefab.Identifier;
             }
 
@@ -42,6 +43,7 @@ namespace Barotrauma
             {
                 return obj.OriginalID == OriginalID && obj.OriginalContainerID == OriginalContainerID && obj.ModuleIndex == ModuleIndex && obj.Identifier == Identifier;
             }
+
             public bool Matches(Item item)
             {
                 if (item.OriginalContainerID != Entity.NullEntityID)
@@ -56,15 +58,17 @@ namespace Barotrauma
         }
 
         public readonly List<LocationConnection> Connections = new List<LocationConnection>();
-        
+
         private string baseName;
         private int nameFormatIndex;
 
+        private LocationType addInitialMissionsForType;
+
         public bool Discovered;
 
-        public readonly Dictionary<LocationTypeChange, int> ProximityTimer = new Dictionary<LocationTypeChange, int>();
-
-        public Pair<LocationTypeChange, int> PendingLocationTypeChange;
+        public readonly Dictionary<LocationTypeChange.Requirement, int> ProximityTimer = new Dictionary<LocationTypeChange.Requirement, int>();
+        public (LocationTypeChange typeChange, int delay, MissionPrefab parentMission)? PendingLocationTypeChange;
+        public int LocationTypeChangeCooldown;
 
         public string BaseName { get => baseName; }
 
@@ -76,11 +80,15 @@ namespace Barotrauma
 
         public LocationType Type { get; private set; }
 
+        public LocationType OriginalType { get; private set; }
+
         public LevelData LevelData { get; set; }
 
         public int PortraitId { get; private set; }
 
         public Reputation Reputation { get; set; }
+
+        public int TurnsInRadiation { get; set; }
 
         #region Store
 
@@ -168,11 +176,10 @@ namespace Barotrauma
         {
             get 
             {
-                availableMissions.RemoveAll(m => m.Completed || m.Failed);
+                availableMissions.RemoveAll(m => m.Completed || (m.Failed && !m.Prefab.AllowRetry));
                 return availableMissions; 
             }
         }
-
 
         public Mission SelectedMission
         {
@@ -216,6 +223,8 @@ namespace Barotrauma
 
         public int TimeSinceLastTypeChange;
 
+        public bool IsGateBetweenBiomes;
+
         private struct LoadedMission
         {
             public MissionPrefab MissionPrefab { get; }
@@ -239,38 +248,64 @@ namespace Barotrauma
             return $"Location ({Name ?? "null"})";
         }
 
-        public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, IEnumerable<Location> existingLocations = null)
+        public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, LocationType? forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
-            Type = LocationType.Random(rand, zone, requireOutpost);
+            Type = OriginalType = forceLocationType ?? LocationType.Random(rand, zone, requireOutpost);
             Name = RandomName(Type, rand, existingLocations);
             MapPosition = mapPosition;
             PortraitId = ToolBox.StringToInt(Name);
-            Connections = new List<LocationConnection>();
+            Connections = new List<LocationConnection>(); 
         }
 
         public Location(XElement element)
         {
             string locationType = element.GetAttributeString("type", "");
             Type = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase));
+            bool typeNotFound = false;
+            if (Type == null)
+            {
+                //turn lairs into abandoned outposts
+                if (locationType.Equals("lair", StringComparison.OrdinalIgnoreCase))
+                {
+                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("Abandoned", StringComparison.OrdinalIgnoreCase));
+                    addInitialMissionsForType = Type;                    
+                }
+                if (Type == null)
+                {
+                    DebugConsole.AddWarning($"Could not find location type \"{locationType}\". Using location type \"None\" instead.");
+                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("None", StringComparison.OrdinalIgnoreCase));
+                    Type ??= LocationType.List.First();
+                }
+                if (Type != null)
+                {
+                    element.SetAttributeValue("type", Type.Identifier);
+                }
+                typeNotFound = true;
+            }
+
+            string originalLocationType = element.GetAttributeString("originaltype", locationType);
+            OriginalType = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase));
+
             baseName        = element.GetAttributeString("basename", "");
             Name            = element.GetAttributeString("name", "");
             MapPosition     = element.GetAttributeVector2("position", Vector2.Zero);
             Discovered      = element.GetAttributeBool("discovered", false);
             PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 1.0f);
+            IsGateBetweenBiomes         = element.GetAttributeBool("isgatebetweenbiomes", false);
             MechanicalPriceMultiplier   = element.GetAttributeFloat("mechanicalpricemultipler", 1.0f);
-            TimeSinceLastTypeChange     = element.GetAttributeInt("timesincelasttypechange", 0);
+            TurnsInRadiation            = element.GetAttributeInt(nameof(TurnsInRadiation).ToLower(), 0);
 
-            for (int i = 0; i < Type.CanChangeTo.Count; i++)
+            if (!typeNotFound)
             {
-                ProximityTimer.Add(Type.CanChangeTo[i], element.GetAttributeInt("proximitytimer" + i, 0));
-            }
+                for (int i = 0; i < Type.CanChangeTo.Count; i++)
+                {
+                    for (int j = 0; j < Type.CanChangeTo[i].Requirements.Count; j++)
+                    {
+                        ProximityTimer.Add(Type.CanChangeTo[i].Requirements[j], element.GetAttributeInt("proximitytimer" + i + "-" + j, 0));
+                    }
+                }
 
-            int locationTypeChangeIndex = element.GetAttributeInt("pendinglocationtypechange", -1);
-            if (locationTypeChangeIndex > 0 && locationTypeChangeIndex < Type.CanChangeTo.Count - 1)
-            {
-                PendingLocationTypeChange = new Pair<LocationTypeChange, int>(
-                    Type.CanChangeTo[locationTypeChangeIndex],
-                    element.GetAttributeInt("pendinglocationtypechangetimer", 0));
+                LoadLocationTypeChange(element);
             }
 
             string[] takenItemStr = element.GetAttributeStringArray("takenitems", new string[0]);
@@ -316,6 +351,42 @@ namespace Barotrauma
             LoadMissions(element);
         }
 
+        public void LoadLocationTypeChange(XElement locationElement)
+        {
+            TimeSinceLastTypeChange = locationElement.GetAttributeInt("timesincelasttypechange", 0);
+            LocationTypeChangeCooldown = locationElement.GetAttributeInt("locationtypechangecooldown", 0);
+            foreach (XElement subElement in locationElement.Elements())
+            {
+                switch (subElement.Name.ToString())
+                {
+                    case "pendinglocationtypechange":
+                        int timer = subElement.GetAttributeInt("timer", 0);
+                        if (subElement.Attribute("index") != null)
+                        {
+                            int locationTypeChangeIndex = subElement.GetAttributeInt("index", 0);
+                            if (locationTypeChangeIndex < 0 || locationTypeChangeIndex >= Type.CanChangeTo.Count)
+                            {
+                                DebugConsole.AddWarning($"Failed to activate a location type change in the location \"{Name}\". Location index out of bounds ({locationTypeChangeIndex}).");
+                                continue;
+                            }
+                            PendingLocationTypeChange = (Type.CanChangeTo[locationTypeChangeIndex], timer, null);
+                        }
+                        else
+                        {
+                            string missionIdentifier = subElement.GetAttributeString("missionidentifier", "");
+                            var mission = MissionPrefab.List.Find(mp => mp.Identifier.Equals(missionIdentifier, StringComparison.OrdinalIgnoreCase));
+                            if (mission == null)
+                            {
+                                DebugConsole.AddWarning($"Failed to activate a location type change from the mission \"{missionIdentifier}\" in location \"{Name}\". Matching mission not found.");
+                                continue;
+                            }
+                            PendingLocationTypeChange = (mission.LocationTypeChangeOnCompleted, timer, mission);
+                        }
+                        break;
+                }
+            }
+        }
+
         public void LoadMissions(XElement locationElement)
         {
             if (locationElement.GetChildElement("missions") is XElement missionsElement)
@@ -335,9 +406,9 @@ namespace Barotrauma
         }
 
 
-        public static Location CreateRandom(Vector2 position, int? zone, Random rand, bool requireOutpost, IEnumerable<Location> existingLocations = null)
+        public static Location CreateRandom(Vector2 position, int? zone, Random rand, bool requireOutpost, LocationType? forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
-            return new Location(position, zone, rand, requireOutpost, existingLocations);
+            return new Location(position, zone, rand, requireOutpost, forceLocationType, existingLocations);
         }
 
         public void ChangeType(LocationType newType)
@@ -348,6 +419,16 @@ namespace Barotrauma
 
             Type = newType;
             Name = Type.NameFormats == null ? baseName : Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
+
+            if (Type.MissionIdentifiers.Any())
+            {
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom());
+            }
+            if (Type.MissionTags.Any())
+            {
+                UnlockMissionByTag(Type.MissionTags.GetRandom());
+            }
+
             CreateStore(force: true);
         }
 
@@ -355,6 +436,16 @@ namespace Barotrauma
         {
             if (AvailableMissions.Any(m => m.Prefab == missionPrefab)) { return; }
             var mission = InstantiateMission(missionPrefab, connection);
+            availableMissions.Add(mission);
+#if CLIENT
+            GameMain.GameSession?.Campaign?.CampaignUI?.RefreshLocationInfo();
+#endif
+        }
+
+        public void UnlockMission(MissionPrefab missionPrefab)
+        {
+            if (AvailableMissions.Any(m => m.Prefab == missionPrefab)) { return; }
+            var mission = InstantiateMission(missionPrefab);
             availableMissions.Add(mission);
 #if CLIENT
             GameMain.GameSession?.Campaign?.CampaignUI?.RefreshLocationInfo();
@@ -399,12 +490,12 @@ namespace Barotrauma
                 var unusedMissions = matchingMissions.Where(m => !availableMissions.Any(mission => mission.Prefab == m));
                 if (unusedMissions.Any())
                 {
-                    var suitableMissions = unusedMissions.Where(m => Connections.Any(c => m.IsAllowed(this, c.OtherLocation(this))));
+                    var suitableMissions = unusedMissions.Where(m => Connections.Any(c => m.IsAllowed(this, c.OtherLocation(this)) || m.IsAllowed(this, this)));
                     if (!suitableMissions.Any())
                     {
                         suitableMissions = unusedMissions;
                     }
-                    MissionPrefab missionPrefab = suitableMissions.GetRandom();
+                    MissionPrefab missionPrefab = ToolBox.SelectWeightedRandom(suitableMissions.ToList(), suitableMissions.Select(m => (float)m.Commonness).ToList(), Rand.RandSync.Unsynced);
                     var mission = InstantiateMission(missionPrefab, out LocationConnection connection);
                     //don't allow duplicate missions in the same connection
                     if (AvailableMissions.Any(m => m.Prefab == missionPrefab && m.Locations.Contains(mission.Locations[0]) && m.Locations.Contains(mission.Locations[1])))
@@ -428,6 +519,12 @@ namespace Barotrauma
 
         private Mission InstantiateMission(MissionPrefab prefab, out LocationConnection connection)
         {
+            if (prefab.IsAllowed(this, this))
+            {
+                connection = null;
+                return InstantiateMission(prefab);
+            }
+
             var suitableConnections = Connections.Where(c => prefab.IsAllowed(this, c.OtherLocation(this)));
             if (!suitableConnections.Any())
             {
@@ -439,10 +536,7 @@ namespace Barotrauma
                 suitableConnections.Select(c => (c.Passed ? 1.0f : 5.0f) / Math.Max(availableMissions.Count(m => m.Locations.Contains(c.OtherLocation(this))), 1.0f)).ToList(),
                 Rand.RandSync.Unsynced);            
 
-            Location destination = connection.OtherLocation(this);
-            var mission = prefab.Instantiate(new Location[] { this, destination });
-            mission.AdjustLevelData(connection.LevelData);
-            return mission;
+            return InstantiateMission(prefab, connection);
         }
 
         private Mission InstantiateMission(MissionPrefab prefab, LocationConnection connection)
@@ -453,26 +547,47 @@ namespace Barotrauma
             return mission;
         }
 
+        private Mission InstantiateMission(MissionPrefab prefab)
+        {
+            var mission = prefab.Instantiate(new Location[] { this, this });
+            mission.AdjustLevelData(LevelData);
+            return mission;
+        }
+
         public void InstantiateLoadedMissions(Map map)
         {
             availableMissions.Clear();
-            if (loadedMissions == null || loadedMissions.None()) { return; }
-            foreach (LoadedMission loadedMission in loadedMissions)
-            {
-                Location destination = null;
-                if (loadedMission.DestinationIndex >= 0 && loadedMission.DestinationIndex < map.Locations.Count)
+            if (loadedMissions != null && loadedMissions.Any()) 
+            { 
+                foreach (LoadedMission loadedMission in loadedMissions)
                 {
-                    destination = map.Locations[loadedMission.DestinationIndex];
+                    Location destination;
+                    if (loadedMission.DestinationIndex >= 0 && loadedMission.DestinationIndex < map.Locations.Count)
+                    {
+                        destination = map.Locations[loadedMission.DestinationIndex];
+                    }
+                    else
+                    {
+                        destination = Connections.First().OtherLocation(this);
+                    }
+                    var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination });
+                    availableMissions.Add(mission);
+                    if (loadedMission.SelectedMission) { SelectedMission = mission; }
                 }
-                else
-                {
-                    destination = Connections.First().OtherLocation(this);
-                }
-                var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination });
-                availableMissions.Add(mission);
-                if (loadedMission.SelectedMission) { SelectedMission = mission; }
+                loadedMissions = null;
             }
-            loadedMissions = null;
+            if (addInitialMissionsForType != null)
+            {
+                if (addInitialMissionsForType.MissionIdentifiers.Any())
+                {
+                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandom());
+                }
+                if (addInitialMissionsForType.MissionTags.Any())
+                {
+                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandom());
+                }
+                addInitialMissionsForType = null;
+            }
         }
 
         /// <summary>
@@ -482,6 +597,33 @@ namespace Barotrauma
         {
             availableMissions.Clear();
             SelectedMissionIndex = -1;
+        }
+
+        public bool HasOutpost()
+        {
+            if (!Type.HasOutpost) { return false; }
+
+            return !IsCriticallyRadiated();
+        }
+
+        public bool IsCriticallyRadiated()
+        {
+            if (GameMain.GameSession?.Map?.Radiation != null)
+            {
+                return TurnsInRadiation > GameMain.GameSession.Map.Radiation.Params.CriticalRadiationThreshold;
+            }
+
+            return false;
+        }
+
+        public LocationType GetLocationType()
+        {
+            if (IsCriticallyRadiated() && LocationType.List.FirstOrDefault(lt => lt.Identifier.Equals(Type.ReplaceInRadiation, StringComparison.OrdinalIgnoreCase)) is { } newLocationType)
+            {
+                return newLocationType;
+            }
+
+            return Type;
         }
 
         public IEnumerable<Mission> GetMissionsInConnection(LocationConnection connection)
@@ -582,6 +724,8 @@ namespace Barotrauma
                 }
             }
         }
+
+        public bool IsRadiated() => GameMain.GameSession?.Map?.Radiation != null && GameMain.GameSession.Map.Radiation.Enabled && GameMain.GameSession.Map.Radiation.Contains(this);
 
         private List<PurchasedItem> CreateStoreStock()
         {
@@ -908,27 +1052,55 @@ namespace Barotrauma
         {
             var locationElement = new XElement("location",
                 new XAttribute("type", Type.Identifier),
+                new XAttribute("originaltype", (Type ?? OriginalType).Identifier),
                 new XAttribute("basename", BaseName),
                 new XAttribute("name", Name),
                 new XAttribute("discovered", Discovered),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
                 new XAttribute("pricemultiplier", PriceMultiplier),
+                new XAttribute("isgatebetweenbiomes", IsGateBetweenBiomes),
                 new XAttribute("mechanicalpricemultipler", MechanicalPriceMultiplier),
-                new XAttribute("timesincelasttypechange", TimeSinceLastTypeChange));
+                new XAttribute("timesincelasttypechange", TimeSinceLastTypeChange),
+                new XAttribute(nameof(TurnsInRadiation).ToLower(), TurnsInRadiation));
             LevelData.Save(locationElement);
 
             for (int i = 0; i < Type.CanChangeTo.Count; i++)
             {
-                if (ProximityTimer.ContainsKey(Type.CanChangeTo[i]))
+                for (int j = 0; j < Type.CanChangeTo[i].Requirements.Count; j++)
                 {
-                    locationElement.Add(new XAttribute("proximitytimer" + i, ProximityTimer[Type.CanChangeTo[i]]));
+                    if (ProximityTimer.ContainsKey(Type.CanChangeTo[i].Requirements[j]))
+                    {
+                        locationElement.Add(new XAttribute("proximitytimer" + i + "-" + j, ProximityTimer[Type.CanChangeTo[i].Requirements[j]]));
+                    }
                 }
             }
 
-            if (PendingLocationTypeChange != null)
+            if (PendingLocationTypeChange.HasValue)
             {
-                locationElement.Add(new XAttribute("pendinglocationtypechange", Type.CanChangeTo.IndexOf(PendingLocationTypeChange.First)));
-                locationElement.Add(new XAttribute("pendinglocationtypechangetimer", PendingLocationTypeChange.Second));
+                var changeElement = new XElement("pendinglocationtypechange", new XAttribute("timer", PendingLocationTypeChange.Value.delay));
+                if (PendingLocationTypeChange.Value.parentMission != null)
+                {
+                    changeElement.Add(new XAttribute("missionidentifier", PendingLocationTypeChange.Value.parentMission.Identifier));
+                    locationElement.Add(changeElement);
+                }
+                else
+                {
+                    int index = Type.CanChangeTo.IndexOf(PendingLocationTypeChange.Value.typeChange);
+                    changeElement.Add(new XAttribute("index", index));
+                    if (index == -1)
+                    {
+                        DebugConsole.AddWarning($"Invalid location type change in the location \"{Name}\". Unknown type change ({PendingLocationTypeChange.Value.typeChange.ChangeToType}).");
+                    }
+                    else
+                    {
+                        locationElement.Add(changeElement);
+                    }
+                }
+            }
+
+            if (LocationTypeChangeCooldown > 0)
+            {
+                locationElement.Add(new XAttribute("locationtypechangecooldown", LocationTypeChangeCooldown));
             }
 
             if (takenItems.Any())
@@ -987,7 +1159,7 @@ namespace Barotrauma
                 var missionsElement = new XElement("missions");
                 foreach (Mission mission in missions)
                 {
-                    var location = mission.Locations.FirstOrDefault(l => l != this);
+                    var location = mission.Locations.All(l => l == this) ? this : mission.Locations.FirstOrDefault(l => l != this);
                     var i = map.Locations.IndexOf(location);
                     missionsElement.Add(new XElement("mission",
                         new XAttribute("prefabid", mission.Prefab.Identifier),

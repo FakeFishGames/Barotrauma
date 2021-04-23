@@ -281,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        public const float MAX_SPEED = 15;
+        public const float MAX_SPEED = 20;
 
         public Vector2 TargetMovement
         {
@@ -472,7 +472,7 @@ namespace Barotrauma
                 if (joint == null) { continue; }
                 float angle = (joint.LowerLimit + joint.UpperLimit) / 2.0f;
                 joint.LimbB?.body?.SetTransform(
-                    (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, MathHelper.ToDegrees(joint.BodyA.Rotation + angle), true)),
+                    (joint.WorldAnchorA - MathUtils.RotatePointAroundTarget(joint.LocalAnchorB, Vector2.Zero, joint.BodyA.Rotation + angle, true)),
                     joint.BodyA.Rotation + angle);
             }
         }
@@ -636,9 +636,12 @@ namespace Barotrauma
             //always collides with bodies other than structures
             if (!(f2.Body.UserData is Structure structure))
             {
-                lock (impactQueue)
+                if (!f2.IsSensor)
                 {
-                    impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
+                    lock (impactQueue)
+                    {
+                        impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
+                    }
                 }
                 return true;
             }
@@ -1119,6 +1122,32 @@ namespace Barotrauma
             CheckBodyInRest(deltaTime);            
 
             splashSoundTimer -= deltaTime;
+
+            if (character.Submarine == null && Level.Loaded != null)
+            {
+                if (Collider.SimPosition.Y > Level.Loaded.TopBarrier.Position.Y)
+                {
+                    Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, Math.Min(Collider.LinearVelocity.Y, -1));
+                }
+                else if (Collider.SimPosition.Y < Level.Loaded.BottomBarrier.Position.Y)
+                {
+                    Collider.LinearVelocity = new Vector2(Collider.LinearVelocity.X, 
+                        MathHelper.Clamp(Collider.LinearVelocity.Y, Level.Loaded.BottomBarrier.Position.Y - Collider.SimPosition.Y, 10.0f));
+                }
+                foreach (Limb limb in Limbs)
+                {
+                    if (limb.SimPosition.Y > Level.Loaded.TopBarrier.Position.Y)
+                    {
+                        limb.body.LinearVelocity = new Vector2(limb.LinearVelocity.X, Math.Min(limb.LinearVelocity.Y, -1));
+                    }
+                    else if (limb.SimPosition.Y < Level.Loaded.BottomBarrier.Position.Y)
+                    {
+                        limb.body.LinearVelocity = new Vector2(
+                            limb.LinearVelocity.X,
+                            MathHelper.Clamp(limb.LinearVelocity.Y, Level.Loaded.BottomBarrier.Position.Y - limb.SimPosition.Y, 10.0f));
+                    }
+                }
+            }
 
             if (forceStanding)
             {

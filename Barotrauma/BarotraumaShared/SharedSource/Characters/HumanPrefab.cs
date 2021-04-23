@@ -20,6 +20,15 @@ namespace Barotrauma
         [Serialize(1f, false)]
         public float HealthMultiplier { get; protected set; }
 
+        [Serialize(1f, false)]
+        public float HealthMultiplierInMultiplayer { get; protected set; }
+
+        [Serialize(1f, false)]
+        public float AimSpeed { get; protected set; }
+
+        [Serialize(1f, false)]
+        public float AimAccuracy { get; protected set; }
+
         private readonly HashSet<string> moduleFlags = new HashSet<string>();
 
         [Serialize("", true, "What outpost module tags does the NPC prefer to spawn in.")]
@@ -67,6 +76,9 @@ namespace Barotrauma
         [Serialize(AIObjectiveIdle.BehaviorType.Passive, false)]
         public AIObjectiveIdle.BehaviorType Behavior { get; protected set; }
 
+        [Serialize(float.PositiveInfinity, false)]
+        public float ReportRange { get; protected set; }
+
         public List<string> PreferredOutpostModuleTypes { get; protected set; }
 
         public string OriginalName { get { return Identifier; } }
@@ -105,16 +117,54 @@ namespace Barotrauma
             return Job != null && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync);
         }
 
-        public void GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
+        {
+            npc.CharacterHealth.MaxVitality *= HealthMultiplier;
+            if (GameMain.NetworkMember != null)
+            {
+                npc.CharacterHealth.MaxVitality *= HealthMultiplierInMultiplayer;
+            }
+            var humanAI = npc.AIController as HumanAIController;
+            if (humanAI != null)
+            {
+                var idleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
+                if (positionToStayIn != null && Behavior == AIObjectiveIdle.BehaviorType.StayInHull)
+                {
+                    idleObjective.TargetHull = AIObjectiveGoTo.GetTargetHull(positionToStayIn);
+                    idleObjective.Behavior = AIObjectiveIdle.BehaviorType.StayInHull;
+                }
+                else
+                {
+                    idleObjective.Behavior = Behavior;
+                    foreach (string moduleType in PreferredOutpostModuleTypes)
+                    {
+                        idleObjective.PreferredOutpostModuleTypes.Add(moduleType);
+                    }
+                }
+                humanAI.ReportRange = ReportRange;
+                humanAI.AimSpeed = AimSpeed;
+                humanAI.AimAccuracy = AimAccuracy;
+            }
+            if (CampaignInteractionType != CampaignMode.InteractionType.None)
+            {
+                (GameMain.GameSession.GameMode as CampaignMode)?.AssignNPCMenuInteraction(npc, CampaignInteractionType);
+                if (positionToStayIn != null && humanAI != null)
+                {
+                    humanAI.ObjectiveManager.SetForcedOrder(new AIObjectiveGoTo(positionToStayIn, npc, humanAI.ObjectiveManager, repeat: true, getDivingGearIfNeeded: false, closeEnough: 200));
+                }
+            }
+        }
+
+        public void GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
         {
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets.Keys.ToList(), ItemSets.Values.ToList(), randSync);
             foreach (XElement itemElement in spawnItems.GetChildElements("item"))
             {
-                InitializeItems(character, itemElement, submarine);
+                InitializeItems(character, itemElement, submarine, createNetworkEvents: createNetworkEvents);
             }
         }
 
-        private void InitializeItems(Character character, XElement itemElement, Submarine submarine, Item parentItem = null)
+        private void InitializeItems(Character character, XElement itemElement, Submarine submarine, Item parentItem = null, bool createNetworkEvents = true)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
@@ -126,7 +176,7 @@ namespace Barotrauma
             }
             Item item = new Item(itemPrefab, character.Position, null);
 #if SERVER
-            if (GameMain.Server != null && Entity.Spawner != null)
+            if (GameMain.Server != null && Entity.Spawner != null && createNetworkEvents)
             {
                 if (GameMain.Server.EntityEventManager.UniqueEvents.Any(ev => ev.Entity == item))
                 {
@@ -187,7 +237,7 @@ namespace Barotrauma
             }
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeItems(character, childItemElement, submarine, item);
+                InitializeItems(character, childItemElement, submarine, item, createNetworkEvents);
             }
         }
     }

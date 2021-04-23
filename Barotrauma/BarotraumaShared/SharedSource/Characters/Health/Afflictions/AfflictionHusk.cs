@@ -102,7 +102,7 @@ namespace Barotrauma
 
         private void ApplyDamage(float deltaTime, bool applyForce)
         {
-            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered);
+            int limbCount = character.AnimController.Limbs.Count(l => !l.IgnoreCollisions && !l.IsSevered && !l.Hidden);
             foreach (Limb limb in character.AnimController.Limbs)
             {
                 if (limb.IsSevered) { continue; }
@@ -148,10 +148,9 @@ namespace Barotrauma
             }
         }
 
-        public void Remove()
+        public void UnsubscribeFromDeathEvent()
         {
-            if (character == null) { return; }
-            DeactivateHusk();
+            if (character == null || !subscribedToDeathEvent) { return; }
             character.OnDeath -= CharacterDead;
             subscribedToDeathEvent = false;
         }
@@ -159,7 +158,11 @@ namespace Barotrauma
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (Strength < ActiveThreshold || character.Removed) { return; }
+            if (Strength < ActiveThreshold || character.Removed) 
+            {
+                UnsubscribeFromDeathEvent();
+                return; 
+            }
 
             //don't turn the character into a husk if any of its limbs are severed
             if (character.AnimController?.LimbJoints != null)
@@ -170,18 +173,22 @@ namespace Barotrauma
                 }
             }
 
-            //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
-            // -> don't spawn the AI husk
-            if (Entity.Spawner.IsInRemoveQueue(character)) { return; }
-
             //create the AI husk in a coroutine to ensure that we don't modify the character list while enumerating it
             CoroutineManager.StartCoroutine(CreateAIHusk());
         }
 
         private IEnumerable<object> CreateAIHusk()
         {
+            //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
+            // -> don't spawn the AI husk
+            if (Entity.Spawner.IsInRemoveQueue(character))
+            {
+                yield return CoroutineStatus.Success;
+            }
+
             character.Enabled = false;
             Entity.Spawner.AddToRemoveQueue(character);
+            UnsubscribeFromDeathEvent();
 
             string huskedSpeciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);

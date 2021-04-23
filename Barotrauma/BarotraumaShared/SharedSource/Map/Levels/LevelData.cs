@@ -29,6 +29,8 @@ namespace Barotrauma
         public bool HasBeaconStation;
         public bool IsBeaconActive;
 
+        public bool HasHuntingGrounds, OriginallyHadHuntingGrounds;
+
         public OutpostGenerationParams ForceOutpostGenerationParams;
 
         public readonly Point Size;
@@ -86,6 +88,9 @@ namespace Barotrauma
             HasBeaconStation = element.GetAttributeBool("hasbeaconstation", false);
             IsBeaconActive = element.GetAttributeBool("isbeaconactive", false);
 
+            HasHuntingGrounds = element.GetAttributeBool("hashuntinggrounds", false);
+            OriginallyHadHuntingGrounds = element.GetAttributeBool("originallyhadhuntinggrounds", HasHuntingGrounds);
+
             string generationParamsId = element.GetAttributeString("generationparams", "");
             GenerationParams = LevelGenerationParams.LevelParams.Find(l => l.Identifier == generationParamsId || l.OldIdentifier == generationParamsId);
             if (GenerationParams == null)
@@ -112,8 +117,7 @@ namespace Barotrauma
             EventHistory.AddRange(EventSet.PrefabList.Where(p => prefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
 
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
-            NonRepeatableEvents.AddRange(EventSet.PrefabList.Where(p => prefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
-
+            NonRepeatableEvents.AddRange(EventSet.PrefabList.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
         }
 
 
@@ -140,7 +144,13 @@ namespace Barotrauma
             var rand = new MTRandom(ToolBox.StringToInt(Seed));
             InitialDepth = (int)MathHelper.Lerp(GenerationParams.InitialDepthMin, GenerationParams.InitialDepthMax, (float)rand.NextDouble());
 
-            HasBeaconStation = rand.NextDouble() < locationConnection.Locations.Select(l => l.Type.BeaconStationChance).Max();
+            //minimum difficulty of the level before hunting grounds can appear
+            float huntingGroundsDifficultyThreshold = 25;
+            //probability of hunting grounds appearing in 100% difficulty levels
+            float maxHuntingGroundsProbability = 0.3f;
+            HasHuntingGrounds = OriginallyHadHuntingGrounds = rand.NextDouble() < MathUtils.InverseLerp(huntingGroundsDifficultyThreshold, 100.0f, Difficulty) * maxHuntingGroundsProbability;
+
+            HasBeaconStation = !HasHuntingGrounds && rand.NextDouble() < locationConnection.Locations.Select(l => l.Type.BeaconStationChance).Max();              
             IsBeaconActive = false;
         }
 
@@ -163,7 +173,7 @@ namespace Barotrauma
                 (int)MathUtils.Round(GenerationParams.Height, Level.GridCellSize));
         }
 
-        public static LevelData CreateRandom(string seed = "", float? difficulty = null, LevelGenerationParams generationParams = null)
+        public static LevelData CreateRandom(string seed = "", float? difficulty = null, LevelGenerationParams generationParams = null, bool requireOutpost = false)
         {
             if (string.IsNullOrEmpty(seed))
             {
@@ -172,7 +182,9 @@ namespace Barotrauma
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
-            LevelType type = generationParams == null ? LevelData.LevelType.LocationConnection : generationParams.Type;
+            LevelType type = generationParams == null ?
+                (requireOutpost ? LevelType.Outpost : LevelType.LocationConnection) :
+                 generationParams.Type;
 
             if (generationParams == null) { generationParams = LevelGenerationParams.GetRandom(seed, type); }
             var biome =
@@ -191,7 +203,13 @@ namespace Barotrauma
                 levelData.HasBeaconStation = beaconRng < 0.5f;
                 levelData.IsBeaconActive = beaconRng > 0.25f;
             }
-            GameMain.GameSession?.GameMode?.Mission?.AdjustLevelData(levelData);
+            if (GameMain.GameSession?.GameMode != null)
+            {
+                foreach (Mission mission in GameMain.GameSession.GameMode.Missions)
+                {
+                    mission.AdjustLevelData(levelData);
+                }
+            }
             return levelData;
         }
 
@@ -211,6 +229,17 @@ namespace Barotrauma
                 newElement.Add(
                     new XAttribute("hasbeaconstation", HasBeaconStation.ToString()),
                     new XAttribute("isbeaconactive", IsBeaconActive.ToString()));
+            }
+
+            if (HasHuntingGrounds)
+            {
+                newElement.Add(
+                    new XAttribute("hashuntinggrounds", true));
+            }
+            if (HasHuntingGrounds || OriginallyHadHuntingGrounds)
+            {
+                newElement.Add(
+                    new XAttribute("originallyhadhuntinggrounds", true));
             }
 
             if (Type == LevelType.Outpost)

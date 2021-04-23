@@ -70,6 +70,14 @@ namespace Barotrauma
         }
 
         private string selectedTip;
+        private List<RichTextData> selectedTipRichTextData;
+        private bool selectedTipRichTextUnparsed;
+        private void SetSelectedTip(string tip)
+        {
+            selectedTip = tip;
+            selectedTipRichTextData = null;
+            selectedTipRichTextUnparsed = true;
+        }
 
         private readonly object loadMutex = new object();
         private float? loadState;
@@ -115,7 +123,7 @@ namespace Barotrauma
             overlay = TextureLoader.FromFile("Content/UI/LoadingScreenOverlay.png");
             noiseSprite = new Sprite("Content/UI/noise.png", Vector2.Zero);
             DrawLoadingText = true;
-            selectedTip = TextManager.Get("LoadingScreenTip", true);
+            SetSelectedTip(TextManager.Get("LoadingScreenTip", true));
         }
 
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
@@ -215,14 +223,34 @@ namespace Barotrauma
 
                 if (GUI.Font != null && selectedTip != null)
                 {
+                    if (selectedTipRichTextUnparsed)
+                    {
+                        selectedTipRichTextData = RichTextData.GetRichTextData(selectedTip, out selectedTip);
+                        selectedTipRichTextUnparsed = false;
+                    }
+
                     string wrappedTip = ToolBox.WrapText(selectedTip, GameMain.GraphicsWidth * 0.5f, GUI.Font);
                     string[] lines = wrappedTip.Split('\n');
                     float lineHeight = GUI.Font.MeasureString(selectedTip).Y;
 
-                    for (int i = 0; i < lines.Length; i++)
+                    if (selectedTipRichTextData != null)
                     {
-                        GUI.Font.DrawString(spriteBatch, lines[i],
-                            new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White);
+                        int rtdOffset = 0;
+                        for (int i = 0; i < lines.Length; i++)
+                        {
+                            GUI.Font.DrawStringWithColors(spriteBatch, lines[i],
+                                new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White,
+                                0f, Vector2.Zero, 1f, SpriteEffects.None, 0f, selectedTipRichTextData, rtdOffset);
+                            rtdOffset += lines[i].Length;
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < lines.Length; i++)
+                        {
+                            GUI.Font.DrawString(spriteBatch, lines[i],
+                                new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White);
+                        }
                     }
                 }
 
@@ -302,7 +330,7 @@ namespace Barotrauma
                 {
                     GameMain.Config.Language = language;
                     //reload tip in the selected language
-                    selectedTip = TextManager.Get("LoadingScreenTip", true);
+                    SetSelectedTip(TextManager.Get("LoadingScreenTip", true));
                     GameMain.Config.SetDefaultBindings(legacy: false);
                     GameMain.Config.CheckBindings(useDefaults: true);
                     WaitForLanguageSelection = false;
@@ -364,7 +392,7 @@ namespace Barotrauma
         {
             drawn = false;
             LoadState = null;
-            selectedTip = TextManager.Get("LoadingScreenTip", true);
+            SetSelectedTip(TextManager.Get("LoadingScreenTip", true));
             currentBackgroundTexture = LocationType.List.GetRandom()?.GetPortrait(Rand.Int(int.MaxValue))?.Texture;
             
             while (!drawn)

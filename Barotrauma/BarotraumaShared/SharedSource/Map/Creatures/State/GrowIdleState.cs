@@ -60,7 +60,7 @@ namespace Barotrauma.MapCreatures.Behavior
         protected virtual void Grow()
         {
             List<BallastFloraBranch> newTiles = GrowRandomly();
-#if DEBUG || UNSTABLE
+#if DEBUG
             Behavior.debugSearchLines.Clear();
 #endif
             if (newTiles.Any(TryScanTargets)) { return; }
@@ -135,7 +135,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 Vector2 itemSimPos = ConvertUnits.ToSimUnits(item.Position);
 
-#if DEBUG || UNSTABLE
+#if DEBUG
                 Tuple<Vector2, Vector2> debugLine1 = Tuple.Create(parent.Position - ConvertUnits.ToDisplayUnits(topLeft), parent.Position - ConvertUnits.ToDisplayUnits(itemSimPos - diameter));
                 Tuple<Vector2, Vector2> debugLine2 = Tuple.Create(parent.Position - ConvertUnits.ToDisplayUnits(bottomRight), parent.Position - ConvertUnits.ToDisplayUnits(itemSimPos + diameter));
                 Behavior.debugSearchLines.Add(debugLine2);

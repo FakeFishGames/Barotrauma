@@ -614,7 +614,7 @@ namespace Barotrauma.Tutorials
             GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
             GameMain.LightManager.LosEnabled = false;
 
-            var cinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, Alignment.CenterLeft, Alignment.CenterRight, duration: 5.0f);
+            var cinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, Alignment.CenterLeft, Alignment.CenterRight, panDuration: 5.0f);
 
             while (cinematic.Running)
             {

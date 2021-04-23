@@ -147,13 +147,36 @@ namespace Barotrauma.Networking
                     if (missingPackages.Count > 0)
                     {
                         var nonDownloadable = missingPackages.Where(p => p.WorkshopId == 0);
+                        var mismatchedButDownloaded = missingPackages.Where(p =>
+                        {
+                            var localMatching = ContentPackage.RegularPackages.Find(l => l.SteamWorkshopId != 0 && p.WorkshopId == l.SteamWorkshopId);
+                            localMatching ??= ContentPackage.CorePackages.Find(l => l.SteamWorkshopId != 0 && p.WorkshopId == l.SteamWorkshopId);
 
-                        if (nonDownloadable.Any())
+                            return localMatching != null;
+                        });
+
+                        if (mismatchedButDownloaded.Any())
+                        {
+                            string disconnectMsg;
+                            if (mismatchedButDownloaded.Count() == 1)
+                            {
+                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMod~[incompatiblecontentpackage]={GetPackageStr(mismatchedButDownloaded.First())}";
+                            }
+                            else
+                            {
+                                List<string> packageStrs = new List<string>();
+                                mismatchedButDownloaded.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
+                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMods~[incompatiblecontentpackages]={string.Join(", ", packageStrs)}";
+                            }
+                            Close(disconnectMsg, disableReconnect: true);
+                            OnDisconnectMessageReceived?.Invoke(DisconnectReason.MissingContentPackage + "/" + disconnectMsg);
+                        }
+                        else if (nonDownloadable.Any())
                         {
                             string disconnectMsg;
                             if (nonDownloadable.Count() == 1)
                             {
-                                disconnectMsg = $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(missingPackages[0])}";
+                                disconnectMsg = $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(nonDownloadable.First())}";
                             }
                             else
                             {

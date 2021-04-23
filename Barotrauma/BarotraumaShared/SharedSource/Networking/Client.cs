@@ -13,6 +13,7 @@ namespace Barotrauma.Networking
         public string Name; public UInt16 NameID;
         public byte ID;
         public UInt64 SteamID;
+        public UInt64 OwnerSteamID;
 
         public string Language;
 

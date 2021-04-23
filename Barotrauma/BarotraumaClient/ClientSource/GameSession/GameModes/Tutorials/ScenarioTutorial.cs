@@ -62,7 +62,7 @@ namespace Barotrauma.Tutorials
 
             yield return CoroutineStatus.Running;
 
-            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefab: null);
+            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefabs: null);
             (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
 
             if (generationParams != null)
@@ -110,7 +110,7 @@ namespace Barotrauma.Tutorials
             }
 
             CharacterInfo charInfo = configElement.Element("Character") == null ?
-                new CharacterInfo(CharacterPrefab.HumanSpeciesName, "", JobPrefab.Get("engineer")) :
+                new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer")) :
                 new CharacterInfo(configElement.Element("Character"));
 
             WayPoint wayPoint = GetSpawnPoint(charInfo);
@@ -182,7 +182,8 @@ namespace Barotrauma.Tutorials
 
         protected bool HasOrder(Character character, string identifier, string option = null)
         {
-            if (character.CurrentOrder?.Identifier == identifier)
+            var currentOrderInfo = character.GetCurrentOrderWithTopPriority();
+            if (currentOrderInfo?.Order?.Identifier == identifier)
             {
                 if (option == null)
                 {
@@ -190,8 +191,7 @@ namespace Barotrauma.Tutorials
                 }
                 else
                 {
-                    HumanAIController humanAI = character.AIController as HumanAIController;
-                    return humanAI.CurrentOrderOption == option;
+                    return currentOrderInfo?.OrderOption == option;
                 }
             }
 
@@ -288,7 +288,7 @@ namespace Barotrauma.Tutorials
 
             yield return new WaitForSeconds(waitBeforeFade);
 
-            var endCinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null, Alignment.Center, duration: fadeOutTime);
+            var endCinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: fadeOutTime);
             currentTutorialCompleted = Completed = true;
             while (endCinematic.Running) yield return null;
             Stop();

@@ -48,6 +48,7 @@ namespace Barotrauma.Lights
         private readonly List<LightSource> lights;
 
         public bool LosEnabled = true;
+        public float LosAlpha = 1f;
         public LosMode LosMode = LosMode.Transparent;
 
         public bool LightingEnabled = true;
@@ -497,7 +498,6 @@ namespace Barotrauma.Lights
 
             graphics.SetRenderTarget(LosTexture);
 
-            spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
             if (ObstructVision)
             {
                 graphics.Clear(Color.Black);
@@ -507,16 +507,17 @@ namespace Barotrauma.Lights
                 float rotation = MathUtils.VectorToAngle(losOffset);
 
                 Vector2 scale = new Vector2(
-                    MathHelper.Clamp(losOffset.Length() / 256.0f, 2.0f, 5.0f), 2.0f);
+                    MathHelper.Clamp(losOffset.Length() / 256.0f, 4.0f, 5.0f), 3.0f);
 
+                spriteBatch.Begin(SpriteSortMode.Deferred, transformMatrix: cam.Transform * Matrix.CreateScale(new Vector3(GameMain.Config.LightMapScale, GameMain.Config.LightMapScale, 1.0f)));
                 spriteBatch.Draw(visionCircle, new Vector2(ViewTarget.WorldPosition.X, -ViewTarget.WorldPosition.Y), null, Color.White, rotation,
                     new Vector2(visionCircle.Width * 0.2f, visionCircle.Height / 2), scale, SpriteEffects.None, 0.0f);
+                spriteBatch.End();
             }
             else
             {
                 graphics.Clear(Color.White);
             }
-            spriteBatch.End();
             
 
             //--------------------------------------

@@ -30,6 +30,7 @@ namespace Barotrauma.Sounds
         public override int FillStreamBuffer(int samplePos, short[] buffer)
         {
             if (!Stream) throw new Exception("Called FillStreamBuffer on a non-streamed sound!");
+            if (reader == null) throw new Exception("Called FillStreamBuffer when the reader is null!");
 
             if (samplePos >= reader.TotalSamples * reader.Channels * 2) return 0;
 
@@ -41,7 +42,7 @@ namespace Barotrauma.Sounds
             //MuffleBuffer(floatBuffer, reader.Channels);
             CastBuffer(floatBuffer, buffer, readSamples);
 
-            return readSamples * 2;
+            return readSamples;
         }
 
         static void MuffleBuffer(float[] buffer, int sampleRate, int channelCount)
@@ -63,8 +64,20 @@ namespace Barotrauma.Sounds
             ALFormat = reader.Channels == 1 ? Al.FormatMono16 : Al.FormatStereo16;
             SampleRate = reader.SampleRate;
 
+            if (Buffers != null && SoundBuffers.BuffersGenerated < SoundBuffers.MaxBuffers)
+            {
+                Buffers.RequestAlBuffers(); FillBuffers();
+            }
+        }
+
+        public override void FillBuffers()
+        {
             if (!Stream)
             {
+                reader ??= new VorbisReader(Filename);
+
+                reader.DecodedPosition = 0;
+
                 int bufferSize = (int)reader.TotalSamples * reader.Channels;
 
                 float[] floatBuffer = new float[bufferSize];
@@ -86,26 +99,26 @@ namespace Barotrauma.Sounds
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                Al.BufferData(ALBuffer, ALFormat, shortBuffer,
+                Al.BufferData(Buffers.AlBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set regular buffer data for non-streamed audio! " + Al.GetErrorString(alError));
                 }
 
                 MuffleBuffer(floatBuffer, SampleRate, reader.Channels);
 
                 CastBuffer(floatBuffer, shortBuffer, readSamples);
 
-                Al.BufferData(ALMuffledBuffer, ALFormat, shortBuffer,
+                Al.BufferData(Buffers.AlMuffledBuffer, ALFormat, shortBuffer,
                                 readSamples * sizeof(short), SampleRate);
 
                 alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    throw new Exception("Failed to set buffer data for non-streamed audio! " + Al.GetErrorString(alError));
+                    throw new Exception("Failed to set muffled buffer data for non-streamed audio! " + Al.GetErrorString(alError));
                 }
 
                 reader.Dispose(); reader = null;
@@ -116,7 +129,7 @@ namespace Barotrauma.Sounds
         {
             if (Stream)
             {
-                reader.Dispose();
+                reader?.Dispose();
             }
 
             base.Dispose();

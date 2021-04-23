@@ -25,7 +25,54 @@ namespace Barotrauma.Networking
                 int orderIndex = msg.ReadByte();
                 orderTargetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
                 orderTargetEntity = Entity.FindEntityByID(msg.ReadUInt16()) as Entity;
-                int orderOptionIndex = msg.ReadByte();
+                
+                Order orderPrefab = null;
+                int? orderOptionIndex = null;
+                string orderOption = null;
+
+                // The option of a Dismiss order is written differently so we know what order we target
+                // now that the game supports multiple current orders simultaneously
+                if (orderIndex >= 0 && orderIndex < Order.PrefabList.Count)
+                {
+                    orderPrefab = Order.PrefabList[orderIndex];
+                    if (orderPrefab.Identifier != "dismissed")
+                    {
+                        orderOptionIndex = msg.ReadByte();
+                    }
+                    // Does the dismiss order have a specified target?
+                    else if(msg.ReadBoolean())
+                    {
+                        int identifierCount = msg.ReadByte();
+                        if (identifierCount > 0)
+                        {
+                            int dismissedOrderIndex = msg.ReadByte();
+                            Order dismissedOrderPrefab = null;
+                            if (dismissedOrderIndex >= 0 && dismissedOrderIndex < Order.PrefabList.Count)
+                            {
+                                dismissedOrderPrefab = Order.PrefabList[dismissedOrderIndex];
+                                orderOption = dismissedOrderPrefab.Identifier;
+                            }
+                            if (identifierCount > 1)
+                            {
+                                int dismissedOrderOptionIndex = msg.ReadByte();
+                                if (dismissedOrderPrefab != null)
+                                {
+                                    var options = dismissedOrderPrefab.Options;
+                                    if (options != null && dismissedOrderOptionIndex >= 0 && dismissedOrderOptionIndex < options.Length)
+                                    {
+                                        orderOption += $".{options[dismissedOrderOptionIndex]}";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    orderOptionIndex = msg.ReadByte();
+                }
+
+                int orderPriority = msg.ReadByte();
                 orderTargetType = (Order.OrderTargetType)msg.ReadByte();
                 if (msg.ReadBoolean())
                 {
@@ -41,14 +88,14 @@ namespace Barotrauma.Networking
 
                 if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
                 {
-                    DebugConsole.ThrowError($"Invalid order message from client \"{c.Name}\" - order index out of bounds ({orderIndex}, {orderOptionIndex}).");
+                    DebugConsole.ThrowError($"Invalid order message from client \"{c.Name}\" - order index out of bounds ({orderIndex}).");
                     if (NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) { c.LastSentChatMsgID = ID; }
                     return;
                 }
 
-                Order orderPrefab = Order.PrefabList[orderIndex];
-                string orderOption = orderOptionIndex < 0 || orderOptionIndex >= orderPrefab.Options.Length ? "" : orderPrefab.Options[orderOptionIndex];
-                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character)
+                orderPrefab ??= Order.PrefabList[orderIndex];
+                orderOption ??= orderOptionIndex == null || orderOptionIndex < 0 || orderOptionIndex >= orderPrefab.Options.Length ? "" : orderPrefab.Options[orderOptionIndex.Value];
+                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderPriority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character)
                 {
                     WallSectionIndex = wallSectionIndex
                 };
@@ -147,7 +194,7 @@ namespace Barotrauma.Networking
                     }
                     if (order != null)
                     {
-                        orderTargetCharacter.SetOrder(order, orderMsg.OrderOption, orderMsg.Sender);
+                        orderTargetCharacter.SetOrder(order, orderMsg.OrderOption, orderMsg.OrderPriority, orderMsg.Sender);
                     }
                 }
                 else if (orderMsg.Order.IsIgnoreOrder)
@@ -183,12 +230,16 @@ namespace Barotrauma.Networking
                             2 + //(UInt16)NetStateID
                             1 + //(byte)Type
                             Encoding.UTF8.GetBytes(Text).Length + 2;
-
+            
+            if (SenderClient != null)
+            {
+                length += 8; //SteamID or local ID (ulong)
+            }
             if (Sender != null && c.InGame)
             {
                 length += 2; //sender ID (UInt16)
             }
-            else if (SenderName != null)
+            if (SenderName != null)
             {
                 length += Encoding.UTF8.GetBytes(SenderName).Length + 2;
             }
@@ -205,11 +256,17 @@ namespace Barotrauma.Networking
             msg.Write(Text);
 
             msg.Write(SenderName);
+            msg.Write(SenderClient != null);
+            if (SenderClient != null)
+            {
+                msg.Write((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID);
+            }
             msg.Write(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {
                 msg.Write(Sender.ID);
             }
+            msg.WritePadBits();
             if (Type == ChatMessageType.ServerMessageBoxInGame)
             {
                 msg.Write(IconStyle);

@@ -18,14 +18,13 @@ namespace Barotrauma
 
         public MissionAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
         {
-            //TODO: use event identifier in the error messages
             if (string.IsNullOrEmpty(MissionIdentifier) && string.IsNullOrEmpty(MissionTag))
             {
-                DebugConsole.ThrowError($"Error in event \"{"event identifier goes here"}\": neither MissionIdentifier or MissionTag has been configured.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": neither MissionIdentifier or MissionTag has been configured.");
             }
             if (!string.IsNullOrEmpty(MissionIdentifier) && !string.IsNullOrEmpty(MissionTag))
             {
-                DebugConsole.ThrowError($"Error in event \"{"event identifier goes here"}\": both MissionIdentifier or MissionTag have been configured. The tag will be ignored.");
+                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": both MissionIdentifier or MissionTag have been configured. The tag will be ignored.");
             }
         }
 

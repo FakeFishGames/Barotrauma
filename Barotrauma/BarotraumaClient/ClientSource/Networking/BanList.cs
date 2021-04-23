@@ -3,12 +3,13 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 namespace Barotrauma.Networking
 {
     partial class BannedPlayer
     {
-        public BannedPlayer(string name, UInt16 uniqueIdentifier, bool isRangeBan, string endPoint, ulong steamID)
+        public BannedPlayer(string name, UInt16 uniqueIdentifier, bool isRangeBan, string endPoint, ulong steamID, string reason, DateTime? expiration)
         {
             this.Name = name;
             this.EndPoint = endPoint;
@@ -16,6 +17,8 @@ namespace Barotrauma.Networking
             ParseEndPointAsSteamId();
             this.IsRangeBan = isRangeBan;
             this.UniqueIdentifier = uniqueIdentifier;
+            this.Reason = reason;
+            this.ExpirationTime = expiration;
         }
     }
 
@@ -152,12 +155,24 @@ namespace Barotrauma.Networking
 
             bannedPlayers.Clear();
             UInt32 bannedPlayerCount = incMsg.ReadVariableUInt32();
+
             for (int i = 0; i < (int)bannedPlayerCount; i++)
             {
                 string name = incMsg.ReadString();
                 UInt16 uniqueIdentifier = incMsg.ReadUInt16();
-                bool isRangeBan = incMsg.ReadBoolean(); incMsg.ReadPadBits();
-                
+                bool isRangeBan = incMsg.ReadBoolean();
+                bool includesExpiration = incMsg.ReadBoolean();
+                incMsg.ReadPadBits();
+
+                DateTime? expiration = null;
+                if (includesExpiration)
+                {
+                    double hoursFromNow = incMsg.ReadDouble();
+                    expiration = DateTime.Now + TimeSpan.FromHours(hoursFromNow);
+                }
+
+                string reason = incMsg.ReadString();
+
                 string endPoint = "";
                 UInt64 steamID = 0;
                 if (isOwner)
@@ -170,7 +185,7 @@ namespace Barotrauma.Networking
                     endPoint = "Endpoint concealed by host";
                     steamID = 0;
                 }
-                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, isRangeBan, endPoint, steamID));
+                bannedPlayers.Add(new BannedPlayer(name, uniqueIdentifier, isRangeBan, endPoint, steamID, reason, expiration));
             }
 
             if (banFrame != null)

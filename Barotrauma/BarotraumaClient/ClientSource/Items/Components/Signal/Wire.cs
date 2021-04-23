@@ -87,7 +87,7 @@ namespace Barotrauma.Items.Components
                     SpriteEffects.None,
                     depth);
             }
-        }        
+        }
         private static Sprite defaultWireSprite;
         private Sprite overrideSprite;
         private Sprite wireSprite;
@@ -156,7 +156,8 @@ namespace Barotrauma.Items.Components
                 drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
             }
 
-            float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : wireSprite.Depth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
+            float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;
+            float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : baseDepth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
 
             if (item.IsHighlighted)
             {

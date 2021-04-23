@@ -172,15 +172,15 @@ namespace Barotrauma
 
         public void CreatePurchasedItems()
         {
-            CreateItems(PurchasedItems);
+            CreateItems(PurchasedItems, Submarine.MainSub);
             OnPurchasedItemsChanged?.Invoke();
         }
 
-        public static void CreateItems(List<PurchasedItem> itemsToSpawn)
+        public static void CreateItems(List<PurchasedItem> itemsToSpawn, Submarine sub)
         {
             if (itemsToSpawn.Count == 0) { return; }
 
-            WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub);
+            WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
             if (wp == null)
             {
                 DebugConsole.ThrowError("The submarine must have a waypoint marked as Cargo for bought items to be placed correctly!");
@@ -188,25 +188,27 @@ namespace Barotrauma
             }
 
             Hull cargoRoom = Hull.FindHull(wp.WorldPosition);
-
             if (cargoRoom == null)
             {
                 DebugConsole.ThrowError("A waypoint marked as Cargo must be placed inside a room!");
                 return;
             }
 
-#if CLIENT
-            new GUIMessageBox("", TextManager.GetWithVariable("CargoSpawnNotification", "[roomname]", cargoRoom.DisplayName, true), new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "StoreShoppingCrateIcon");
-#else
-            foreach (Client client in GameMain.Server.ConnectedClients)
+            if (sub == Submarine.MainSub)
             {
-                ChatMessage msg = ChatMessage.Create("",
-                   TextManager.ContainsTag(cargoRoom.RoomName) ? $"CargoSpawnNotification~[roomname]=§{cargoRoom.RoomName}" : $"CargoSpawnNotification~[roomname]={cargoRoom.RoomName}", 
-                   ChatMessageType.ServerMessageBoxInGame, null);
-                msg.IconStyle = "StoreShoppingCrateIcon";
-                GameMain.Server.SendDirectChatMessage(msg, client);
-            }
+#if CLIENT
+                new GUIMessageBox("", TextManager.GetWithVariable("CargoSpawnNotification", "[roomname]", cargoRoom.DisplayName, true), new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "StoreShoppingCrateIcon");
+#else
+                foreach (Client client in GameMain.Server.ConnectedClients)
+                {
+                    ChatMessage msg = ChatMessage.Create("",
+                       TextManager.ContainsTag(cargoRoom.RoomName) ? $"CargoSpawnNotification~[roomname]=§{cargoRoom.RoomName}" : $"CargoSpawnNotification~[roomname]={cargoRoom.RoomName}", 
+                       ChatMessageType.ServerMessageBoxInGame, null);
+                    msg.IconStyle = "StoreShoppingCrateIcon";
+                    GameMain.Server.SendDirectChatMessage(msg, client);
+                }
 #endif
+            }
 
             List<ItemContainer> availableContainers = new List<ItemContainer>();
             ItemPrefab containerPrefab = null;

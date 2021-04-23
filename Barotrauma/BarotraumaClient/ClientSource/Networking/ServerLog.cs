@@ -242,16 +242,7 @@ namespace Barotrauma.Networking
                     textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
                     {
                         Data = data,
-                        OnClick = (component, area) =>
-                        {
-                            if (!UInt64.TryParse(area.Data.Metadata, out UInt64 id)) { return; }
-                            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
-                                ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
-                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
-                                ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
-                            if (client == null) { return; }
-                            GameMain.NetLobbyScreen.SelectPlayer(client);
-                        }
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
                     });
                 }
             }

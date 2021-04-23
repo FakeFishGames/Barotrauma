@@ -334,7 +334,11 @@ namespace Barotrauma.Sounds
                         return;
                     }
 
-                    Al.Sourcei(alSource, Al.Buffer, muffled ? (int)Sound.ALMuffledBuffer : (int)Sound.ALBuffer);
+                    if (Sound.Buffers.RequestAlBuffers())
+                    {
+                        Sound.FillBuffers();
+                    }
+                    Al.Sourcei(alSource, Al.Buffer, muffled ? (int)Sound.Buffers.AlMuffledBuffer : (int)Sound.Buffers.AlBuffer);
 
                     alError = Al.GetError();
                     if (alError != Al.NoError)
@@ -487,8 +491,10 @@ namespace Barotrauma.Sounds
                 mutex = new object();
             }
 
+#if !DEBUG
             try
             {
+#endif
                 if (mutex != null) { Monitor.Enter(mutex); }
                 if (sound.Owner.CountPlayingInstances(sound) < sound.MaxSimultaneousInstances)
                 {
@@ -506,17 +512,17 @@ namespace Barotrauma.Sounds
                             throw new Exception("Failed to reset source buffer: " + debugName + ", " + Al.GetErrorString(alError));
                         }
 
-                        if (!Al.IsBuffer(sound.ALBuffer))
+                        if (Sound.Buffers.RequestAlBuffers())
                         {
-                            throw new Exception(sound.Filename + " has an invalid buffer!");
+                            Sound.FillBuffers();
                         }
 
-                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
+                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffled ? Sound.Buffers.AlMuffledBuffer : Sound.Buffers.AlBuffer;
                         Al.Sourcei(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.Buffer, (int)alBuffer);
                         alError = Al.GetError();
                         if (alError != Al.NoError)
                         {
-                            throw new Exception("Failed to bind buffer to source (" + ALSourceIndex.ToString() + ":" + sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) + "," + sound.ALBuffer.ToString() + "): " + debugName + ", " + Al.GetErrorString(alError));
+                            throw new Exception("Failed to bind buffer to source (" + ALSourceIndex.ToString() + ":" + sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex) + "," + alBuffer.ToString() + "): " + debugName + ", " + Al.GetErrorString(alError));
                         }
 
                         Al.SourcePlay(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex));
@@ -528,7 +534,7 @@ namespace Barotrauma.Sounds
                     }
                     else
                     {
-                        uint alBuffer = sound.Owner.GetCategoryMuffle(category) || muffle ? sound.ALMuffledBuffer : sound.ALBuffer;
+                        uint alBuffer = 0;
                         Al.Sourcei(sound.Owner.GetSourceFromIndex(Sound.SourcePoolIndex, ALSourceIndex), Al.Buffer, (int)alBuffer);
                         int alError = Al.GetError();
                         if (alError != Al.NoError)
@@ -574,6 +580,7 @@ namespace Barotrauma.Sounds
                 this.Near = near;
                 this.Far = far;
                 this.Category = category;
+#if !DEBUG
             }
             catch
             {
@@ -581,8 +588,11 @@ namespace Barotrauma.Sounds
             }
             finally
             {
+#endif
                 if (mutex != null) { Monitor.Exit(mutex); }
+#if !DEBUG
             }
+#endif
 
             Sound.Owner.Update();
         }
@@ -736,11 +746,6 @@ namespace Barotrauma.Sounds
 
                         if (FilledByNetwork)
                         {
-                            if (Sound is VoipSound voipSound)
-                            {
-                                voipSound.ApplyFilters(buffer, readSamples);
-                            }
-
                             if (readSamples <= 0)
                             {
                                 streamAmplitude *= 0.5f;
@@ -752,13 +757,18 @@ namespace Barotrauma.Sounds
                             }
                             else
                             {
+                                if (Sound is VoipSound voipSound)
+                                {
+                                    voipSound.ApplyFilters(buffer, readSamples);
+                                }
+
                                 decayTimer = 0;
                             }
                         }
                         else if (Sound.StreamsReliably)
                         {
-                            streamSeekPos += readSamples;
-                            if (readSamples < STREAM_BUFFER_SIZE)
+                            streamSeekPos += readSamples * 2;
+                            if (readSamples * 2 < STREAM_BUFFER_SIZE)
                             {
                                 if (looping)
                                 {
@@ -775,7 +785,7 @@ namespace Barotrauma.Sounds
                         {
                             streamBufferAmplitudes[index] = readAmplitude;
 
-                            Al.BufferData<short>(streamBuffers[index], Sound.ALFormat, buffer, readSamples, Sound.SampleRate);
+                            Al.BufferData<short>(streamBuffers[index], Sound.ALFormat, buffer, readSamples * 2, Sound.SampleRate);
 
                             alError = Al.GetError();
                             if (alError != Al.NoError)

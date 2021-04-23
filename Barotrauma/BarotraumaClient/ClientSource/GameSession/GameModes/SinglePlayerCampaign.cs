@@ -22,7 +22,7 @@ namespace Barotrauma
         {
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
 
-            if (PlayerInput.RightButtonClicked() ||
+            if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
             {
                 ShowCampaignUI = false;
@@ -57,11 +57,12 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates a new single player campaign
         /// </summary>
-        private SinglePlayerCampaign(string mapSeed) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign)
         {
             CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
-            map = new Map(this, mapSeed);
+            map = new Map(this, mapSeed, settings);
+            Settings = settings;
             foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
@@ -85,11 +86,14 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "campaignsettings":
+                        Settings = new CampaignSettings(subElement);
+                        break;
                     case "crew":
                         GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
                         break;
                     case "map":
-                        map = Map.Load(this, subElement);
+                        map = Map.Load(this, subElement, Settings);
                         break;
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
@@ -141,9 +145,9 @@ namespace Barotrauma
         /// <summary>
         /// Start a completely new single player campaign
         /// </summary>
-        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub)
+        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
         {
-            var campaign = new SinglePlayerCampaign(mapSeed);
+            var campaign = new SinglePlayerCampaign(mapSeed, settings);
             return campaign;
         }
 
@@ -213,6 +217,7 @@ namespace Barotrauma
 
             if (!savedOnStart)
             {
+                GUI.SetSavingIndicatorState(true);
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
                 savedOnStart = true;
             }
@@ -224,6 +229,8 @@ namespace Barotrauma
             {
                 PetBehavior.LoadPets(petsElement);
             }
+
+            GUI.DisableSavingIndicatorDelayed();
         }
 
         protected override void LoadInitialLevel()
@@ -290,15 +297,29 @@ namespace Barotrauma
                             break;
                         }
                     }
+                    if (GameMain.GameSession == null)
+                    {
+                        GUI.DisableHUD = false;
+                        yield return CoroutineStatus.Success;
+                    }
                     overlayTextColor = Color.Lerp(Color.Transparent, Color.White, (timer - 1.0f) / fadeInDuration);
                     timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
                     yield return CoroutineStatus.Running;
                 }
+                var outpost = GameMain.GameSession.Level.StartOutpost;
+                var borders = outpost.GetDockedBorders();
+                borders.Location += outpost.WorldPosition.ToPoint();
+                GameMain.GameScreen.Cam.Position = new Vector2(borders.X + borders.Width / 2, borders.Y - borders.Height / 2);
+                float startZoom = 0.8f /
+                    ((float)Math.Max(borders.Width, borders.Height) / (float)GameMain.GameScreen.Cam.Resolution.X);
+                GameMain.GameScreen.Cam.MinZoom = Math.Min(startZoom, GameMain.GameScreen.Cam.MinZoom);
                 var transition = new CameraTransition(prevControlled, GameMain.GameScreen.Cam,
                     null, null,
                     fadeOut: false,
-                    duration: 5,
-                    startZoom: 1.5f, endZoom: 1.0f)
+                    losFadeIn: true,
+                    waitDuration: 1,
+                    panDuration: 5,
+                    startZoom: startZoom, endZoom: 1.0f)
                 {
                     AllowInterrupt = true,
                     RemoveControlFromCharacter = false
@@ -323,19 +344,13 @@ namespace Barotrauma
             else
             {
                 ISpatialEntity transitionTarget;
-                if (prevControlled != null)
-                {
-                    transitionTarget = prevControlled;
-                }
-                else
-                {
-                    transitionTarget = Submarine.MainSub;
-                }
+                transitionTarget = (ISpatialEntity)prevControlled ?? Submarine.MainSub;
 
                 var transition = new CameraTransition(transitionTarget, GameMain.GameScreen.Cam,
                     null, null,
                     fadeOut: false,
-                    duration: 5,
+                    losFadeIn: prevControlled != null,
+                    panDuration: 5,
                     startZoom: 0.5f, endZoom: 1.0f)
                 {
                     AllowInterrupt = true,
@@ -370,10 +385,8 @@ namespace Barotrauma
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
             SoundPlayer.OverrideMusicType = success ? "endround" : "crewdead";
             SoundPlayer.OverrideMusicDuration = 18.0f;
+            GUI.SetSavingIndicatorState(success);
             crewDead = false;
-
-            LevelData lvlData = GameMain.GameSession.LevelData;
-            bool beaconActive = GameMain.GameSession.Level.CheckBeaconActive();
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
@@ -408,13 +421,13 @@ namespace Barotrauma
             var endTransition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null,
                 transitionType == TransitionType.LeaveLocation ? Alignment.BottomCenter : Alignment.Center,
                 fadeOut: false,
-                duration: EndTransitionDuration);
+                panDuration: EndTransitionDuration);
 
             GUI.ClearMessages();
 
             Location portraitLocation = Map.SelectedLocation ?? Map.CurrentLocation;
             overlaySprite = portraitLocation.Type.GetPortrait(portraitLocation.PortraitId);
-            float fadeOutDuration = endTransition.Duration;
+            float fadeOutDuration = endTransition.PanDuration;
             float t = 0.0f;
             while (t < fadeOutDuration || endTransition.Running)
             {
@@ -459,8 +472,6 @@ namespace Barotrauma
                     }
                 }
 
-                lvlData.IsBeaconActive = beaconActive;
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
@@ -484,6 +495,7 @@ namespace Barotrauma
                 overlayColor = Color.Transparent;
             });
 
+            GUI.SetSavingIndicatorState(false);
             yield return CoroutineStatus.Success;
         }
 
@@ -510,7 +522,7 @@ namespace Barotrauma
             var transition = new CameraTransition(endObject ?? Submarine.MainSub, GameMain.GameScreen.Cam,
                 null, Alignment.Center,
                 fadeOut: true,
-                duration: 10,
+                panDuration: 10,
                 startZoom: null, endZoom: 0.2f);
 
             while (transition.Running)
@@ -530,6 +542,8 @@ namespace Barotrauma
             if (CoroutineManager.IsCoroutineRunning("LevelTransition") || CoroutineManager.IsCoroutineRunning("SubmarineTransition") || gameOver) { return; }
 
             base.Update(deltaTime);
+            
+            Map?.Radiation?.UpdateRadiation(deltaTime);
 
             if (PlayerInput.SecondaryMouseButtonClicked() ||
                 PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape))
@@ -583,7 +597,7 @@ namespace Barotrauma
                 {
                     //wasn't initially docked (sub doesn't have a docking port?)
                     // -> choose a destination when the sub is far enough from the start outpost
-                    if (!Submarine.MainSub.AtStartPosition)
+                    if (!Submarine.MainSub.AtStartExit)
                     {
                         ForceMapUI = true;
                         CampaignUI.SelectTab(InteractionType.Map);
@@ -611,6 +625,7 @@ namespace Barotrauma
                 {
                     ShowCampaignUI = false;
                 }
+                HintManager.OnAvailableTransition(transitionType);
             }
 
             if (!crewDead)
@@ -632,9 +647,9 @@ namespace Barotrauma
             if (nextLevel == null)
             {
                 //no level selected -> force the player to select one
+                ForceMapUI = true;
                 CampaignUI.SelectTab(InteractionType.Map);
                 map.SelectLocation(-1);
-                ForceMapUI = true;
                 return false;
             }
             else if (transitionType == TransitionType.ProgressToNextEmptyLocation)
@@ -707,6 +722,7 @@ namespace Barotrauma
                 new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
                 new XAttribute("cheatsenabled", CheatsEnabled));
+            modeElement.Add(Settings.Save());
 
             //save and remove all items that are in someone's inventory so they don't get included in the sub file as well
             foreach (Character c in Character.CharacterList)

@@ -199,9 +199,9 @@ namespace Barotrauma.Items.Components
                 Charge -= CurrPowerOutput / 3600.0f;            
             }
 
-            item.SendSignal(0, ((int)Math.Round(Charge)).ToString(), "charge", null);
-            item.SendSignal(0, ((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%", null);
-            item.SendSignal(0, ((int)Math.Round(RechargeSpeed / maxRechargeSpeed * 100)).ToString(), "charge_rate", null);
+            item.SendSignal(((int)Math.Round(Charge)).ToString(), "charge");
+            item.SendSignal(((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%");
+            item.SendSignal(((int)Math.Round(RechargeSpeed / maxRechargeSpeed * 100)).ToString(), "charge_rate");
         }
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
@@ -228,11 +228,13 @@ namespace Barotrauma.Items.Components
                     {
                         rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
                     }
-#endif
-                    
-                    character.Speak(TextManager.GetWithVariables("DialogChargeBatteries", new string[2] { "[itemname]", "[rate]" }, 
-                        new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
-                        new bool[2] { true, false }), null, 1.0f, "chargebattery", 10.0f);
+#endif                   
+                    if (character.IsOnPlayerTeam)
+                    {
+                        character.Speak(TextManager.GetWithVariables("DialogChargeBatteries", new string[2] { "[itemname]", "[rate]" },
+                            new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
+                            new bool[2] { true, false }), null, 1.0f, "chargebattery", 10.0f);
+                    }
                 }
             }
             else
@@ -249,22 +251,25 @@ namespace Barotrauma.Items.Components
                         rechargeSpeedSlider.BarScroll = RechargeSpeed / Math.Max(maxRechargeSpeed, 1.0f);
                     }
 #endif
-                    character.Speak(TextManager.GetWithVariables("DialogStopChargingBatteries", new string[2] { "[itemname]", "[rate]" },
-                        new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
-                        new bool[2] { true, false }), null, 1.0f, "chargebattery", 10.0f);
+                    if (character.IsOnPlayerTeam)
+                    {
+                        character.Speak(TextManager.GetWithVariables("DialogStopChargingBatteries", new string[2] { "[itemname]", "[rate]" },
+                            new string[2] { item.Name, ((int)(rechargeSpeed / maxRechargeSpeed * 100.0f)).ToString() },
+                            new bool[2] { true, false }), null, 1.0f, "chargebattery", 10.0f);
+                    }
                 }
             }
 
             return true;
         }
 
-        public override void ReceiveSignal(int stepsTaken, string signal, Connection connection, Item source, Character sender, float power, float signalStrength = 1.0f)
+        public override void ReceiveSignal(Signal signal, Connection connection)
         {
             if (connection.IsPower) { return; }
 
             if (connection.Name == "set_rate")
             {
-                if (float.TryParse(signal, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
+                if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float tempSpeed))
                 {
                     if (!MathUtils.IsValid(tempSpeed)) { return; }
 

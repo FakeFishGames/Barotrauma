@@ -152,7 +152,7 @@ namespace Barotrauma.Items.Components
 
             if (IsToggle)
             {
-                item.SendSignal(0, State ? "1" : "0", "signal_out", sender: null);
+                item.SendSignal(State ? "1" : "0", "signal_out");
             }
 
             if (user == null 
@@ -277,7 +277,7 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            item.SendSignal(0, "1", "trigger_out", user);
+            item.SendSignal(new Signal("1", sender: user), "trigger_out");
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             
@@ -343,14 +343,14 @@ namespace Barotrauma.Items.Components
 
         public Item GetFocusTarget()
         {
-            item.SendSignal(0, MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), "position_out", user);
+            item.SendSignal(new Signal(MathHelper.ToDegrees(targetRotation).ToString("G", CultureInfo.InvariantCulture), sender: user), "position_out");
 
             for (int i = item.LastSentSignalRecipients.Count - 1; i >= 0; i--)
             {
-                if (item.LastSentSignalRecipients[i].Condition <= 0.0f) continue;
-                if (item.LastSentSignalRecipients[i].Prefab.FocusOnSelected)
+                if (item.LastSentSignalRecipients[i].Item.Condition <= 0.0f) { continue; }
+                if (item.LastSentSignalRecipients[i].Item.Prefab.FocusOnSelected)
                 {
-                    return item.LastSentSignalRecipients[i];
+                    return item.LastSentSignalRecipients[i].Item;
                 }
             }
             
@@ -374,7 +374,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                item.SendSignal(0, "1", "signal_out", picker);
+                item.SendSignal(new Signal("1", sender: picker), "signal_out");
             }
 #if CLIENT
             PlaySound(ActionType.OnUse, picker);
@@ -442,7 +442,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             item.CreateServerEvent(this);
 #endif
-            item.SendSignal(0, "1", "signal_out", user);
+            item.SendSignal(new Signal("1", sender: user), "signal_out");
             return true;
         }
 
