@@ -87,14 +87,19 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Returns the client that is currently controlling the character
+        /// </summary>
         public Client GetCharacterClient
         {
             get
             {
-                dynamic controller = null;
+                Client controller = null;
 #if SERVER
+                // Loop through every client in the server
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
+                    // If the client's current controlled character is this one, then this character's controller is that client
                     if (c.Character == this)
                     {
                         controller = c;

@@ -211,30 +211,28 @@ namespace Barotrauma
                 husk.Info.Character = husk;
                 husk.Info.TeamID = CharacterTeamType.None;
             }
-#if CLIENT
+            var CanControlCharacter = false;
             if (Prefab is AfflictionPrefabHusk huskPrefab)
             {
-                if (originalCharacter == Character.Controlled && huskPrefab.ControlHusk)
-                {
-                    if (huskPrefab.ControlException.None(s => s.Equals(originalSpecies, StringComparison.OrdinalIgnoreCase)) || IgnoreHuskExceptions == true)
-                    {
-                        Character.Controlled = husk;
-                    }
-                }
+                // Check if this specific husk infection allows the player to control their husk, then check if their species DOESN'T appear in the exception list or if the server is currently ignoring exceptions altogether.
+                if (huskPrefab.ControlHusk && (huskPrefab.ControlException.None(s => s.Equals(originalSpecies, StringComparison.OrdinalIgnoreCase)) || IgnoreHuskExceptions)) { CanControlCharacter = true; }
             }
+            if (CanControlCharacter)
+            // If a player was controlling the character that just died to the husk infection, set their controlled character to the husk.
+            {
+#if CLIENT
+                if (originalCharacter == Character.Controlled)
+                {
+                    Character.Controlled = husk; 
+                }
 #endif
 #if SERVER
-            if (Prefab is AfflictionPrefabHusk huskPrefab)
-            {
-                if (huskController != null && huskPrefab.ControlHusk)
+                if (huskController != null)
                 {
-                    if (huskPrefab.ControlException.None(s => s.Equals(originalSpecies, StringComparison.OrdinalIgnoreCase)) || IgnoreHuskExceptions == true)
-                    {
-                        GameMain.Server.SetClientCharacter(huskController, husk);
-                    }
+                    GameMain.Server.SetClientCharacter(huskController, husk);
                 }
-            }
 #endif
+            }
 
             foreach (Limb limb in husk.AnimController.Limbs)
             {
