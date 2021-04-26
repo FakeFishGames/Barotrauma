@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -203,6 +204,18 @@ namespace Barotrauma
 
             [Serialize(1, false)]
             public int Count { get; private set; }
+
+            [Serialize(0, false)]
+            public int Stun { get; private set; }
+
+            [Serialize(false, false)]
+            public bool TransferController { get; private set; }
+
+            [Serialize(false, false)]
+            public bool TransferInventory { get; private set; }
+
+            [Serialize(false, false)]
+            public bool RemovePreviousCharacter { get; private set; }
 
             [Serialize(0f, false)]
             public float Spread { get; private set; }
@@ -1213,6 +1226,51 @@ namespace Barotrauma
                                 if (characters.Count == characterSpawnInfo.Count)
                                 {
                                     SwarmBehavior.CreateSwarm(characters.Cast<AICharacter>());
+                                }
+                                newCharacter.SetStun(characterSpawnInfo.Stun);
+                                foreach (var target in targets)
+                                {
+                                    if (target is Character character)
+                                    {
+                                        if (characterSpawnInfo.TransferInventory && character.Inventory != null && newCharacter.Inventory != null)
+                                        {
+                                            if (character.Inventory.Capacity != newCharacter.Inventory.Capacity)
+                                            {
+                                                return;
+                                            }
+                                            for (int i = 0; i < character.Inventory.Capacity && i < newCharacter.Inventory.Capacity; i++)
+                                            {
+                                                character.Inventory.GetItemsAt(i).ForEachMod(item => newCharacter.Inventory.TryPutItem(item, i, true, false, null));
+                                            }
+                                        }
+                                        bool LastCharacter = false;
+
+                                        if (i == characterSpawnInfo.Count) { LastCharacter = true; }
+
+                                        if (LastCharacter) // Only perform the below actions if this is the last character being spawned.
+                                        {
+                                            if (characterSpawnInfo.TransferController)
+                                            {
+#if CLIENT
+                                                if (Character.Controlled == target)
+                                                {
+                                                    Character.Controlled = newCharacter;
+                                                }
+#endif
+#if SERVER
+                                            foreach (Client c in GameMain.Server.ConnectedClients)
+                                            {
+                                                if (c.Character == target)
+                                                {
+                                                    GameMain.Server.SetClientCharacter(c, newCharacter);
+                                                }
+
+                                            }
+#endif
+                                            }
+                                            if (characterSpawnInfo.RemovePreviousCharacter) { Entity.Spawner?.AddToRemoveQueue(character); }
+                                        }
+                                    }
                                 }
                             });
                     }
