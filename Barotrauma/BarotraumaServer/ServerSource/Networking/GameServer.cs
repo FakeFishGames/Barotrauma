@@ -3482,8 +3482,6 @@ namespace Barotrauma.Networking
             sender.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, sender.Name);
             sender.CharacterInfo.RecreateHead(headSpriteId, race, gender, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
 
-            //if the client didn't provide job preferences, we'll use the preferences that are randomly assigned in the Client constructor
-            Debug.Assert(sender.JobPreferences.Count > 0);
             if (jobPreferences.Count > 0)
             {
                 sender.JobPreferences = jobPreferences;
@@ -3534,7 +3532,7 @@ namespace Barotrauma.Networking
             for (int i = unassigned.Count - 1; i >= 0; i--)
             {
                 if (unassigned[i].JobPreferences.Count == 0) { continue; }
-                if (!unassigned[i].JobPreferences[0].First.AllowAlways) { continue; }
+                if (!unassigned[i].JobPreferences.Any() || !unassigned[i].JobPreferences[0].First.AllowAlways) { continue; }
                 unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
                 unassigned.RemoveAt(i);
             }

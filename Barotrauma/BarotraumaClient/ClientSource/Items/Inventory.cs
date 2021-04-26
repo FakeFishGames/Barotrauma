@@ -220,6 +220,8 @@ namespace Barotrauma
 
             public int tooltipDisplayedCondition;
 
+            public bool ForceTooltipRefresh;
+
             public SlotReference(Inventory parentInventory, VisualSlot slot, int slotIndex, bool isSubSlot, Inventory subInventory = null)
             {
                 ParentInventory = parentInventory;
@@ -234,12 +236,14 @@ namespace Barotrauma
 
             public bool TooltipNeedsRefresh()
             {
+                if (ForceTooltipRefresh) { return true; }
                 if (Item == null) { return false; }
                 return (int)Item.ConditionPercentage != tooltipDisplayedCondition;
             }
 
             public void RefreshTooltip()
             {
+                ForceTooltipRefresh = false;
                 if (Item == null) { return; }
                 IEnumerable<Item> itemsInSlot = null;
                 if (ParentInventory != null && Item != null)

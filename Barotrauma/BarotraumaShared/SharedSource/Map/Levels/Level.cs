@@ -3663,7 +3663,7 @@ namespace Barotrauma
                     }
 
                     //break powered items
-                    foreach (Item item in beaconItems.Where(it => it.Components.Any(c => c is Powered)))
+                    foreach (Item item in beaconItems.Where(it => it.Components.Any(c => c is Powered) && it.Components.Any(c => c is Repairable)))
                     {
                         if (item.NonInteractable) { continue; }
                         if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.5f)

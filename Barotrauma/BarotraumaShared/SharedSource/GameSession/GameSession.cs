@@ -32,6 +32,8 @@ namespace Barotrauma
         public Level Level { get; private set; }
         public LevelData LevelData { get; private set; }
 
+        public bool MirrorLevel { get; private set; }
+
         public Map Map
         {
             get
@@ -318,6 +320,7 @@ namespace Barotrauma
 
         public void StartRound(LevelData levelData, bool mirrorLevel = false, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
         {
+            MirrorLevel = mirrorLevel;
             if (SubmarineInfo == null)
             {
                 DebugConsole.ThrowError("Couldn't start game session, submarine not selected.");
@@ -583,6 +586,7 @@ namespace Barotrauma
                 if (ls.Sub == null || ls.Submarine != Submarine) { continue; }
                 if (!ls.LoadSub || ls.Sub.DockedTo.Contains(Submarine)) { continue; }
                 if (Submarine.Info.LeftBehindDockingPortIDs.Contains(ls.OriginalLinkedToID)) { continue; }
+                if (ls.Sub.Info.SubmarineElement.Attribute("location") != null) { continue; }
                 ls.Sub.SetPosition(ls.Sub.WorldPosition + (Submarine.WorldPosition - originalSubPos));
             }
         }
@@ -743,7 +747,8 @@ namespace Barotrauma
 
             doc.Root.Add(new XAttribute("savetime", ToolBox.Epoch.NowLocal));
             doc.Root.Add(new XAttribute("version", GameMain.Version));
-            doc.Root.Add(new XAttribute("submarine", SubmarineInfo == null ? "" : SubmarineInfo.Name));
+            var submarineInfo = Campaign?.PendingSubmarineSwitch ?? SubmarineInfo;
+            doc.Root.Add(new XAttribute("submarine", submarineInfo == null ? "" : submarineInfo.Name));
             if (OwnedSubmarines != null)
             {
                 List<string> ownedSubmarineNames = new List<string>();

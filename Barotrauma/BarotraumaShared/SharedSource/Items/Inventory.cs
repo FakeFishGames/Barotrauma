@@ -507,7 +507,8 @@ namespace Barotrauma
 #if CLIENT
             if (visualSlots != null)
             {
-                visualSlots[i]?.ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                visualSlots[i].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
             }
 #endif
 
@@ -625,7 +626,10 @@ namespace Barotrauma
             else
             {
                 existingItems.Add(slots[index].FirstOrDefault());
-                slots[index].RemoveItem(existingItems.First());
+                for (int j = 0; j < capacity; j++)
+                {
+                    if (existingItems.Any(existingItem => slots[j].Contains(existingItem))) { slots[j].RemoveItem(existingItems.First()); }
+                }
             }
 
             List<Item> stackedItems = new List<Item>();
@@ -831,7 +835,14 @@ namespace Barotrauma
                 if (!slots[n].Contains(item)) { continue; }
 
                 slots[n].RemoveItem(item);
-                item.ParentInventory = null;                
+                item.ParentInventory = null;
+#if CLIENT
+                if (visualSlots != null)
+                {
+                    visualSlots[n].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
+                    if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
+                }
+#endif
             }
         }
 

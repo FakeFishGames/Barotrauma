@@ -105,7 +105,12 @@ namespace Barotrauma
 
         public static string GetFolder(XDocument doc, string filePath)
         {
-            var folder = doc.Root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
+            var root = doc.Root;
+            if (root?.IsOverride() ?? false)
+            {
+                root = root.FirstElement();
+            }
+            var folder = root?.Element("ragdolls")?.GetAttributeString("folder", string.Empty);
             if (string.IsNullOrEmpty(folder) || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
             {
                 folder = Path.Combine(Path.GetDirectoryName(filePath), "Ragdolls") + Path.DirectorySeparatorChar;

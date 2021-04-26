@@ -23,9 +23,9 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
-            if (!string.IsNullOrWhiteSpace(Tag) && ParentEvent.Targets.ContainsKey(Tag))
+            if (!string.IsNullOrWhiteSpace(Tag))
             {
-                ParentEvent.Targets.Remove(Tag);
+                ParentEvent.RemoveTag(Tag);
             }
             isFinished = true;
         }

@@ -308,7 +308,15 @@ namespace Barotrauma.Items.Components
             if (AutoPilot)
             {
                 UpdateAutoPilot(deltaTime);
-                TargetVelocity = TargetVelocity.ClampLength(MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f);
+                float throttle = 1.0f;
+                if (controlledSub != null)
+                {
+                    //if the sub is heading in the correct direction, throttle the speed according to the user's skill
+                    //if it's e.g. sinking due to extra water, don't throttle, but allow emptying up the ballast completely
+                    throttle = MathHelper.Clamp(Vector2.Dot(controlledSub.Velocity, TargetVelocity) / 100.0f, 0.0f, 1.0f);
+                }
+                float maxSpeed = MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f;
+                TargetVelocity = TargetVelocity.ClampLength(MathHelper.Lerp(100.0f, maxSpeed, throttle));
             }
             else
             {

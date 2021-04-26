@@ -1319,17 +1319,26 @@ namespace Barotrauma
 
                 // When using Deselect to close the interface, make sure it's not a seconday mouse button click on a node
                 // That should be reserved for opening manual assignment
-                var hitDeselect = PlayerInput.KeyHit(InputType.Deselect) && (!PlayerInput.SecondaryMouseButtonClicked() ||
-                     (optionNodes.None(n => GUI.IsMouseOn(n.Item1)) && shortcutNodes.None(n => GUI.IsMouseOn(n))));
+                bool isMouseOnOptionNode = optionNodes.Any(n => GUI.IsMouseOn(n.Item1));
+                bool isMouseOnShortcutNode = !isMouseOnOptionNode && shortcutNodes.Any(n => GUI.IsMouseOn(n));
+                bool hitDeselect = PlayerInput.KeyHit(InputType.Deselect) &&
+                    (!PlayerInput.SecondaryMouseButtonClicked() || (!isMouseOnOptionNode && !isMouseOnShortcutNode));
+
+                bool isBoundToPrimaryMouse = GameMain.Config.KeyBind(InputType.Command).MouseButton is MouseButton mouseButton &&
+                    (mouseButton == MouseButton.PrimaryMouse || mouseButton == (PlayerInput.MouseButtonsSwapped() ? MouseButton.RightMouse : MouseButton.LeftMouse));
+                bool canToggleInterface = !isBoundToPrimaryMouse ||
+                    (!isMouseOnOptionNode && !isMouseOnShortcutNode && extraOptionNodes.None(n => GUI.IsMouseOn(n)) && !GUI.IsMouseOn(returnNode));
+
                 // TODO: Consider using HUD.CloseHUD() instead of KeyHit(Escape), the former method is also used for health UI
                 if (hitDeselect || PlayerInput.KeyHit(Keys.Escape) || !CanIssueOrders ||
-                    (PlayerInput.KeyHit(InputType.Command) && selectedNode == null && !clicklessSelectionActive))
+                    (canToggleInterface && PlayerInput.KeyHit(InputType.Command) && selectedNode == null && !clicklessSelectionActive))
                 {
                     DisableCommandUI();
                 }
                 else if (PlayerInput.KeyUp(InputType.Command))
                 {
-                    if (!isOpeningClick && clicklessSelectionActive && timeSelected < 0.15f)
+                    // Clickless selection behavior
+                    if (canToggleInterface && !isOpeningClick && clicklessSelectionActive && timeSelected < 0.15f)
                     {
                         DisableCommandUI();
                     }
@@ -1344,6 +1353,7 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.KeyDown(InputType.Command) && (targetFrame == null || !targetFrame.Visible))
                 {
+                    // Clickless selection behavior
                     if (!GUI.IsMouseOn(centerNode))
                     {
                         clicklessSelectionActive = true;
@@ -1914,6 +1924,7 @@ namespace Barotrauma
 
         private bool NavigateForward(GUIButton node, object userData)
         {
+            if (commandFrame == null) { return false; }
             if (!(optionNodes.Find(n => n.Item1 == node) is Tuple<GUIComponent, Keys> optionNode) || !optionNodes.Remove(optionNode))
             {
                 shortcutNodes.Remove(node);
@@ -1953,6 +1964,7 @@ namespace Barotrauma
 
         private bool NavigateBackward(GUIButton node, object userData)
         {
+            if (commandFrame == null) { return false; }
             RemoveOptionNodes();
             if (targetFrame != null) { targetFrame.Visible = false; }
             // TODO: Center node could move to option node instead of being removed

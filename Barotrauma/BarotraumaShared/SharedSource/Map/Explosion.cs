@@ -424,13 +424,7 @@ namespace Barotrauma
                         }
                         foreach (var edge in cell.Edges)
                         {
-                            if (!MathUtils.GetLineIntersection(worldPosition, cell.Center, edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, out Vector2 intersection))
-                            {
-                                continue;
-                            }
-
-                            float wallDist = Vector2.DistanceSquared(worldPosition, intersection);
-                            if (wallDist < worldRange * worldRange)
+                            if (MathUtils.LineSegmentToPointDistanceSquared((edge.Point1 + cell.Translation).ToPoint(), (edge.Point2 + cell.Translation).ToPoint(), worldPosition.ToPoint()) < worldRange * worldRange)
                             {
                                 destructibleWall.AddDamage(damage, worldPosition);
                                 break;

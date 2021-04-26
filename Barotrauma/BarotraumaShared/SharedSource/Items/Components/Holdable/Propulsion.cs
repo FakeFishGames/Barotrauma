@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
             : base(item,element)
         {
         }
-        
+
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character.Removed) return false;
@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
 
             Vector2 propulsion = dir * Force * character.PropulsionSpeedMultiplier;
 
-            if (character.AnimController.InWater) character.AnimController.TargetMovement = dir;
+            if (character.AnimController.InWater && Force > 0.0f) { character.AnimController.TargetMovement = dir; }
 
             foreach (Limb limb in character.AnimController.Limbs)
             {

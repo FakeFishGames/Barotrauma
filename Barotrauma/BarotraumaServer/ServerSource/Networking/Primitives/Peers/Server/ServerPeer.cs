@@ -253,6 +253,8 @@ namespace Barotrauma.Networking
                         outMsg.Write(mpContentPackages[i].Name);
                         outMsg.Write(mpContentPackages[i].MD5hash.Hash);
                         outMsg.Write(mpContentPackages[i].SteamWorkshopId);
+                        UInt32 installTimeDiffSeconds = (UInt32)((mpContentPackages[i].InstallTime ?? DateTime.UtcNow) - DateTime.UtcNow).TotalSeconds;
+                        outMsg.Write(installTimeDiffSeconds);
                     }
                     break;
                 case ConnectionInitialization.Password:

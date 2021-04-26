@@ -189,7 +189,7 @@ namespace Barotrauma
             var particlePrefabs = GameMain.ParticleManager.GetPrefabList();
             foreach (ParticlePrefab particlePrefab in particlePrefabs)
             {
-                var prefabText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), prefabList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), prefabList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     particlePrefab.DisplayName)
                 {
                     Padding = Vector4.Zero,
@@ -231,6 +231,7 @@ namespace Barotrauma
         
         private void SerializeAll()
         {
+            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
             foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
@@ -259,6 +260,7 @@ namespace Barotrauma
                     writer.Flush();
                 }
             }
+            Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
         }
 
         private void SerializeToClipboard(ParticlePrefab prefab)

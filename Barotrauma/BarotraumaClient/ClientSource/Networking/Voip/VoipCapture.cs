@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Sounds;
+using Concentus.Structs;
 using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
@@ -22,6 +23,8 @@ namespace Barotrauma.Networking
         private Thread captureThread;
 
         private bool capturing;
+
+        private OpusEncoder encoder;
 
         public double LastdB
         {
@@ -79,7 +82,7 @@ namespace Barotrauma.Networking
         {
             Disconnected = false;
 
-            VoipConfig.SetupEncoding();
+            encoder = VoipConfig.CreateEncoder();
 
             //set up capture device
             captureDevice = Alc.CaptureOpenDevice(deviceName, VoipConfig.FREQUENCY, Al.FormatMono16, VoipConfig.BUFFER_SIZE * 5);
@@ -265,10 +268,10 @@ namespace Barotrauma.Networking
                         {
                             if (!prevCaptured) //enqueue the previous buffer if not sent to avoid cutoff
                             {
-                                int compressedCountPrev = VoipConfig.Encoder.Encode(prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
+                                int compressedCountPrev = encoder.Encode(prevUncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
                                 EnqueueBuffer(compressedCountPrev);
                             }
-                            int compressedCount = VoipConfig.Encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
+                            int compressedCount = encoder.Encode(uncompressedBuffer, 0, VoipConfig.BUFFER_SIZE, BufferToQueue, 0, VoipConfig.MAX_COMPRESSED_SIZE);
                             EnqueueBuffer(compressedCount);
                         }
                         captureTimer -= (VoipConfig.BUFFER_SIZE * 1000) / VoipConfig.FREQUENCY;

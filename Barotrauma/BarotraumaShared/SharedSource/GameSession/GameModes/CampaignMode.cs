@@ -265,7 +265,7 @@ namespace Barotrauma
                     if (beaconMissionPrefabs.Any())
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var beaconMissionPrefab = beaconMissionPrefabs.GetRandom(rand);
+                        var beaconMissionPrefab = ToolBox.SelectWeightedRandom(beaconMissionPrefabs, beaconMissionPrefabs.Select(p => (float)p.Commonness).ToList(), rand);
                         if (!Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
                         {
                             extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
@@ -282,7 +282,7 @@ namespace Barotrauma
                     else
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var huntingGroundsMissionPrefab = huntingGroundsMissionPrefabs.GetRandom(rand);
+                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, huntingGroundsMissionPrefabs.Select(p => (float)p.Commonness).ToList(), rand);
                         if (!Missions.Any(m => m.Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))))
                         {
                             extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
@@ -613,6 +613,13 @@ namespace Barotrauma
 
         public void EndCampaign()
         {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.IsOnPlayerTeam)
+                {
+                    c.CharacterHealth.RemoveAllAfflictions();
+                }
+            }
             foreach (LocationConnection connection in Map.Connections)
             {
                 connection.Difficulty = MathHelper.Lerp(connection.Difficulty, 100.0f, 0.25f);

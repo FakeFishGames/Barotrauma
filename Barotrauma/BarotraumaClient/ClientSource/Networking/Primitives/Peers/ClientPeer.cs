@@ -12,9 +12,10 @@ namespace Barotrauma.Networking
     {
         protected class ServerContentPackage
         {
-            public string Name;
-            public string Hash;
-            public UInt64 WorkshopId;
+            public readonly string Name;
+            public readonly string Hash;
+            public readonly UInt64 WorkshopId;
+            public readonly DateTime InstallTime;
 
             public ContentPackage RegularPackage
             {
@@ -32,11 +33,12 @@ namespace Barotrauma.Networking
                 }
             }
 
-            public ServerContentPackage(string name, string hash, UInt64 workshopId)
+            public ServerContentPackage(string name, string hash, UInt64 workshopId, DateTime installTime)
             {
                 Name = name;
                 Hash = hash;
                 WorkshopId = workshopId;
+                InstallTime = installTime;
             }
         }
 
@@ -129,7 +131,10 @@ namespace Barotrauma.Networking
                         string name = inc.ReadString();
                         string hash = inc.ReadString();
                         UInt64 workshopId = inc.ReadUInt64();
-                        var pkg = new ServerContentPackage(name, hash, workshopId);
+                        UInt32 installTimeDiffSeconds = inc.ReadUInt32();
+                        DateTime installTime = DateTime.UtcNow + TimeSpan.FromSeconds(installTimeDiffSeconds);
+
+                        var pkg = new ServerContentPackage(name, hash, workshopId, installTime);
                         if (pkg.CorePackage != null)
                         {
                             corePackage = pkg;
@@ -147,16 +152,24 @@ namespace Barotrauma.Networking
                     if (missingPackages.Count > 0)
                     {
                         var nonDownloadable = missingPackages.Where(p => p.WorkshopId == 0);
-                        var mismatchedButDownloaded = missingPackages.Where(p =>
+                        var mismatchedButDownloaded = missingPackages.Where(remote =>
                         {
-                            var localMatching = ContentPackage.RegularPackages.Find(l => l.SteamWorkshopId != 0 && p.WorkshopId == l.SteamWorkshopId);
-                            localMatching ??= ContentPackage.CorePackages.Find(l => l.SteamWorkshopId != 0 && p.WorkshopId == l.SteamWorkshopId);
-
-                            return localMatching != null;
+                            return ContentPackage.AllPackages.Any(local =>
+                                local.SteamWorkshopId != 0 && /* is a Workshop item */
+                                remote.WorkshopId == local.SteamWorkshopId /* ids match */);
                         });
+                        if (GameMain.ServerListScreen.LastAutoConnectEndpoint != ServerConnection.EndPointString)
+                        {
+                            mismatchedButDownloaded = mismatchedButDownloaded.Where(remote =>
+                            {
+                                return ContentPackage.AllPackages.Any(local =>
+                                    remote.InstallTime < local.InstallTime/* remote is older than local */);
+                            });
+                        }
 
                         if (mismatchedButDownloaded.Any())
                         {
+                            GameMain.ServerListScreen.LastAutoConnectEndpoint = null;
                             string disconnectMsg;
                             if (mismatchedButDownloaded.Count() == 1)
                             {

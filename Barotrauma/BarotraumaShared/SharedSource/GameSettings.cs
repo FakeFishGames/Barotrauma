@@ -311,8 +311,6 @@ namespace Barotrauma
         public bool ModBreakerMode { get; set; }
 #endif
 
-        private System.IO.FileSystemWatcher modsFolderWatcher;
-
         private static int ContentFileLoadOrder(ContentFile a)
         {
             switch (a.Type)
@@ -805,87 +803,6 @@ namespace Barotrauma
             }
 
             LoadPlayerConfig();
-
-            modsFolderWatcher = new System.IO.FileSystemWatcher("Mods");
-            modsFolderWatcher.Filter = "*";
-            modsFolderWatcher.NotifyFilter = System.IO.NotifyFilters.LastWrite | System.IO.NotifyFilters.FileName | System.IO.NotifyFilters.DirectoryName;
-            modsFolderWatcher.Created += OnModFolderUpdate;
-            modsFolderWatcher.Deleted += OnModFolderUpdate;
-            modsFolderWatcher.Renamed += OnModFolderUpdate;
-            modsFolderWatcher.EnableRaisingEvents = true;
-        }
-
-        private void OnModFolderUpdate(object sender, System.IO.FileSystemEventArgs e)
-        {
-            if (SuppressModFolderWatcher || (GameMain.NetworkMember?.IsClient ?? false)) { return; }
-            switch (e.ChangeType)
-            {
-                case System.IO.WatcherChangeTypes.Created:
-                    {
-                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        if (File.Exists(cpPath) &&
-                            !ContentPackage.AllPackages.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
-                        {
-                            var newPackage = new ContentPackage(cpPath);
-                            if (!newPackage.IsCorrupt) { ContentPackage.AddPackage(newPackage); }
-                        }
-                    }
-                    break;
-                case System.IO.WatcherChangeTypes.Deleted:
-                    {
-                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        var toRemove = ContentPackage.RegularPackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
-                        foreach (var cp in toRemove)
-                        {
-                            if (enabledRegularPackages.Contains(cp)) { DisableRegularPackage(cp); }
-                        }
-
-                        toRemove.AddRange(ContentPackage.CorePackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath));
-                        bool reselectCore = false;
-                        foreach (var cp in toRemove)
-                        {
-                            ContentPackage.RemovePackage(cp);
-                            if (cp.IsCorePackage)
-                            {
-                                reselectCore = true;
-                            }
-                        }
-                        if (reselectCore) { AutoSelectCorePackage(null); }
-                    }
-                    break;
-                case System.IO.WatcherChangeTypes.Renamed:
-                    {
-                        System.IO.RenamedEventArgs renameArgs = e as System.IO.RenamedEventArgs;
-
-                        string cpPath = Path.GetFullPath(Path.Combine(e.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        var toRemove = ContentPackage.RegularPackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath).ToList();
-                        foreach (var cp in toRemove)
-                        {
-                            if (enabledRegularPackages.Contains(cp)) { DisableRegularPackage(cp); }
-                        }
-
-                        toRemove.AddRange(ContentPackage.CorePackages.Where(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath));
-                        bool reselectCore = false;
-                        foreach (var cp in toRemove)
-                        {
-                            ContentPackage.RemovePackage(cp);
-                            if (cp.IsCorePackage)
-                            {
-                                reselectCore = true;
-                            }
-                        }
-
-                        cpPath = Path.GetFullPath(Path.Combine(renameArgs.FullPath, Steam.SteamManager.MetadataFileName)).CleanUpPath();
-                        if (File.Exists(cpPath) &&
-                            !ContentPackage.AllPackages.Any(cp => Path.GetFullPath(cp.Path).CleanUpPath() == cpPath))
-                        {
-                            var newPackage = new ContentPackage(cpPath);
-                            if (!newPackage.IsCorrupt) { ContentPackage.AddPackage(newPackage); }
-                        }
-                        if (reselectCore) { AutoSelectCorePackage(null); }
-                    }
-                    break;
-            }
         }
 
         private void LoadDefaultConfig(bool setLanguage = true, bool loadContentPackages = true)

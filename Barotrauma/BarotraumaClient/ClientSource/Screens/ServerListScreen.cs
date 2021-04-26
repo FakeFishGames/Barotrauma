@@ -41,7 +41,9 @@ namespace Barotrauma
         private GUIFrame workshopDownloadsFrame = null;
         private Steamworks.Ugc.Item? currentlyDownloadingWorkshopItem = null;
         private Dictionary<ulong, Steamworks.Ugc.Item?> pendingWorkshopDownloads = null;
-        private string autoConnectName; private string autoConnectEndpoint;
+        private string autoConnectName;
+        public string AutoConnectEndpoint { get; private set; }
+        public string LastAutoConnectEndpoint;
 
         private enum TernaryOption
         {
@@ -1037,7 +1039,7 @@ namespace Barotrauma
                 }
             }
 
-            if (currentlyDownloadingWorkshopItem?.IsInstalled ?? true)
+            if (currentlyDownloadingWorkshopItem == null)
             {
                 if (pendingWorkshopDownloads?.Any() ?? false)
                 {
@@ -1046,15 +1048,19 @@ namespace Barotrauma
                     {
                         ulong itemId = item.Value.Id;
                         currentlyDownloadingWorkshopItem = item;
-                        SteamManager.SubscribeToWorkshopItem(itemId, () =>
+                        SteamManager.ForceRedownload(item.Value.Id, () =>
                         {
+                            if (!(item?.IsSubscribed ?? false))
+                            {
+                                TaskPool.Add("SubscribeToServerMod", item?.Subscribe(), (t) => { });
+                            }
                             pendingWorkshopDownloads.Remove(itemId);
+                            currentlyDownloadingWorkshopItem = null;
 
                             if (SteamManager.CheckWorkshopItemInstalled(item))
                             {
                                 SteamManager.UninstallWorkshopItem(item, false, out _);
                             }
-
                             if (SteamManager.InstallWorkshopItem(item, out string errorMsg, enableContentPackage: false, suppressInstallNotif: true))
                             {
                                 workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Green);
@@ -1067,10 +1073,11 @@ namespace Barotrauma
                         });
                     }
                 }
-                else if (!string.IsNullOrEmpty(autoConnectEndpoint))
+                else if (!string.IsNullOrEmpty(AutoConnectEndpoint))
                 {
-                    JoinServer(autoConnectEndpoint, autoConnectName);
-                    autoConnectEndpoint = null;
+                    LastAutoConnectEndpoint = AutoConnectEndpoint;
+                    JoinServer(AutoConnectEndpoint, autoConnectName);
+                    AutoConnectEndpoint = null;
                 }
             }
         }
@@ -2132,9 +2139,10 @@ namespace Barotrauma
             if (workshopDownloadsFrame != null) { return; }
             int rowCount = ids.Count() + 2;
 
-            autoConnectName = serverName; autoConnectEndpoint = endPointString;
+            autoConnectName = serverName; AutoConnectEndpoint = endPointString;
 
             workshopDownloadsFrame = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas), null, Color.Black * 0.5f);
+            currentlyDownloadingWorkshopItem = null;
             pendingWorkshopDownloads = new Dictionary<ulong, Steamworks.Ugc.Item?>();
 
             var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.1f + 0.03f * rowCount), workshopDownloadsFrame.RectTransform, Anchor.Center, Pivot.Center));
@@ -2191,9 +2199,11 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
-                    autoConnectEndpoint = null;
+                    AutoConnectEndpoint = null;
+                    LastAutoConnectEndpoint = null;
                     autoConnectName = null;
                     pendingWorkshopDownloads.Clear();
+                    currentlyDownloadingWorkshopItem = null;
                     workshopDownloadsFrame = null;
                     return true;
                 }

@@ -101,9 +101,7 @@ namespace Barotrauma.Networking
 
         partial void InitProjSpecific()
         {
-            var jobs = JobPrefab.Prefabs.ToList();
-            // TODO: modding support?
-            JobPreferences = new List<Pair<JobPrefab, int>>(jobs.GetRange(0, Math.Min(jobs.Count, 3)).Select(j => new Pair<JobPrefab, int>(j, 0)));
+            JobPreferences = new List<Pair<JobPrefab, int>>();
 
             VoipQueue = new VoipQueue(ID, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);

@@ -682,12 +682,21 @@ namespace Barotrauma
                     try
                     {
                         bool reselect = GameMain.Config.AllEnabledPackages.Any(cp => cp.SteamWorkshopId != 0 && cp.SteamWorkshopId == item?.Id);
-                        if (!SteamManager.UninstallWorkshopItem(item, false, out string errorMsg) ||
-                            !SteamManager.InstallWorkshopItem(item, out errorMsg, reselect, true))
+                        if (!SteamManager.UninstallWorkshopItem(item, false, out string errorMsg))
                         {
                             DebugConsole.ThrowError($"Failed to reinstall \"{item?.Title}\": {errorMsg}", null, true);
                             elem.Flash(GUI.Style.Red);
+                            return true;
                         }
+
+                        SteamManager.ForceRedownload(item?.Id ?? 0, () =>
+                        {
+                            if (!SteamManager.InstallWorkshopItem(item, out string errorMsg, reselect, true))
+                            {
+                                DebugConsole.ThrowError($"Failed to reinstall \"{item?.Title}\": {errorMsg}", null, true);
+                                elem.Flash(GUI.Style.Red);
+                            }
+                        });
                     }
                     catch (Exception e)
                     {

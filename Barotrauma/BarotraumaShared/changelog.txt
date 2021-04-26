@@ -1,4 +1,38 @@
 ---------------------------------------------------------------------------------------------------------
+v0.13.1.11
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Adjusted autopilot logic to make it better at keeping the sub afloat when there's extra water on board. The maximum velocity of the autopilot is limited, which previously prevented it from emptying the ballast fully. Now it's only limited if the submarine is heading in the correct direction with enough speed, so if the sub starts sinking due to extra water, the autopilot can compensate and fully empty the ballast.
+
+Fixes:
+- Fixes to issues that prevented mods installed from the Workshop from getting automatically updated.
+- Fixed inability to drag players who've ragdolled themselves with space bar.
+- Fixed status monitor being messed up on mirrored subs that contain shuttles.
+- Fixed an issue in the voice chat that caused audio crackling when multiple people were speaking at the same time.
+- Fixed inability to place oxygenite tanks in oxygen tank shelves.
+- Fixed railgun payloads not exploding.
+- Fixed server sometimes assigning players who haven't set any job preferences as the captain, even if someone else wants to be the captain.
+- Fixed ancient weapon propelling the character in an incorrect direction when using it underwater.
+- Fixed sonar beacons not appearing on the sonar in the sub editor's test mode.
+- Fixed "easterbunny" traitor mission failing after the mudraptor hatches.
+- Fixed "changes to your character will be applied after the round ends" texts getting drawn behind the tab menu elements.
+- Fixed "IsToggle" setting not working on periscopes.
+- Fixed "Praise the Honkmother" mission being impossible to complete because it required more items to be delivered than the crate contains.
+- Fixed humanhusk's inventory not being visible while controlling one.
+- Fixed sub editor's entity list getting cleared when changing the entity category while a container/cabinet is selected.
+- Fixed items that have been edited in the sub editor (e.g. recolored clothing) reverting back to default when starting a new campaign round while the item is in a character's inventory.
+- Fixed clicking on command interface nodes crashing the game if the key is rebound to primary mouse button.
+- Fixed tiling issues in some of the legacy background wall sprites.
+- Fixed Spinelings attacking Leucocytes. Spinelings should avoid Leucocytes if they get close.
+- Fixed "beacon station" text and "generating preview..." in the submarine preview window not being translated when playing in a language other than English.
+
+Modding:
+- Fixed crashing if the current style doesn't define a saving indicator.
+- Fixed inability to load ragdoll/animation definitions from mods that override a character.
+- Fixed ClearTagAction not properly clearing all the tags assigned by a scripted event.
+
+---------------------------------------------------------------------------------------------------------
 v0.13.0.11
 ---------------------------------------------------------------------------------------------------------
 
