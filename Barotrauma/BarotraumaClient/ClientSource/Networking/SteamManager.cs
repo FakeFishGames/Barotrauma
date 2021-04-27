@@ -1001,7 +1001,7 @@ namespace Barotrauma.Steam
                 }
                 catch (Exception e) { DebugConsole.ThrowError("Failed to delete Workshop item cache", e); }
             }
-            itemToNuke.Download(onDownloadFinished, highPriority: true);
+            DebugConsole.NewMessage($"{itemToNuke.Download(onDownloadFinished, highPriority: true)}");
         }
 
         /// <summary>

@@ -1,5 +1,22 @@
 ---------------------------------------------------------------------------------------------------------
-v0.13.1.11
+v0.1300.2.11 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Made large monsters immune to sufforin.
+
+Fixes:
+- More fixes to installing/updating mods.
+- Fixed certain submarines spawning with a non-neutral ballast level (Kastrull seems to have been the only affected vanilla submarine). Happened because the game would determine the neutral ballast level from the first nav terminal it finds in the sub, without checking whether that terminal controls a shuttle or the sub itself.
+- Fixed explosions using wall damage value instead of level wall damage when the explosion happens outside a level wall.
+- Fixed oxygen shelves refilling oxygenite tanks (again).
+- Readded traitor missions that were accidentally removed in the previous unstable build.
+
+Modding:
+- Fixed console errors when a character with no gender tries to wear clothing that only has separate male and female sprites.
+
+---------------------------------------------------------------------------------------------------------
+v0.1300.1.11 (unstable)
 ---------------------------------------------------------------------------------------------------------
 
 Changes:

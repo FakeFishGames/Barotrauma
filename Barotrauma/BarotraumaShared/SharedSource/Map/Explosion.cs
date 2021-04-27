@@ -426,7 +426,7 @@ namespace Barotrauma
                         {
                             if (MathUtils.LineSegmentToPointDistanceSquared((edge.Point1 + cell.Translation).ToPoint(), (edge.Point2 + cell.Translation).ToPoint(), worldPosition.ToPoint()) < worldRange * worldRange)
                             {
-                                destructibleWall.AddDamage(damage, worldPosition);
+                                destructibleWall.AddDamage(levelWallDamage, worldPosition);
                                 break;
                             }
                         }

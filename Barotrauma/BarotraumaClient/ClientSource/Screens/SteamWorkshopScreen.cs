@@ -696,7 +696,9 @@ namespace Barotrauma
                                 DebugConsole.ThrowError($"Failed to reinstall \"{item?.Title}\": {errorMsg}", null, true);
                                 elem.Flash(GUI.Style.Red);
                             }
+                            RefreshSubscribedItems();
                         });
+                        RefreshSubscribedItems();
                     }
                     catch (Exception e)
                     {
@@ -705,6 +707,7 @@ namespace Barotrauma
                     }
                     return true;
                 };
+                reinstallBtn.Enabled = !item.Value.IsDownloading && !item.Value.IsDownloadPending;
                 var unsubBtn = new GUIButton(new RectTransform(new Point((int)(32 * GUI.Scale)), rightColumn.RectTransform), "", style: "GUIMinusButton")
                 {
                     ToolTip = TextManager.Get("WorkshopItemUnsubscribe"),

@@ -1068,12 +1068,36 @@ namespace Barotrauma
         public void NeutralizeBallast()
         {
             float neutralBallastLevel = 0.5f;
+            int selectedSteeringValue = 0;
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != this) { continue; }
                 var steering = item.GetComponent<Steering>();
                 if (steering == null) { continue; }
-                neutralBallastLevel = Math.Min(neutralBallastLevel, steering.NeutralBallastLevel);
+
+                //find how many pumps/engines in this sub the steering item is connected to
+                int steeringValue = 1;
+                Connection connectionX = item.GetComponent<ConnectionPanel>()?.Connections.Find(c => c.Name == "velocity_x_out");
+                Connection connectionY = item.GetComponent<ConnectionPanel>()?.Connections.Find(c => c.Name == "velocity_y_out");
+                if (connectionX != null)
+                {
+                    foreach (Engine engine in steering.Item.GetConnectedComponentsRecursive<Engine>(connectionX))
+                    {
+                        if (engine.Item.Submarine == this) { steeringValue++; }
+                    }
+                }
+                if (connectionY != null)
+                {
+                    foreach (Pump pump in steering.Item.GetConnectedComponentsRecursive<Pump>(connectionY))
+                    {
+                        if (pump.Item.Submarine == this) { steeringValue++; }
+                    }
+                }
+                //the nav terminal that's connected to the most engines/pumps in the sub most likely controls the sub (instead of a shuttle or some other system)
+                if (steeringValue > selectedSteeringValue)
+                {
+                    neutralBallastLevel = steering.NeutralBallastLevel;
+                }
             }
 
             HashSet<Hull> ballastHulls = new HashSet<Hull>();

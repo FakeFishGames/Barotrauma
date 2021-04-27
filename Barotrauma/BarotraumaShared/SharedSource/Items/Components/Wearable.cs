@@ -144,6 +144,11 @@ namespace Barotrauma
                 // If the variant does not exist, parse the path so that it uses first variant.
                 SpritePath = tempPath.Replace("[VARIANT]", "1");
             }
+            if (!File.Exists(SpritePath) && _gender == Gender.None)
+            {
+                // If there's no sprite for Gender.None does not exist, try to use male sprite
+                SpritePath = tempPath.Replace("[GENDER]", "male");
+            }
             if (parseSpritePath)
             {
                 Sprite.ParseTexturePath(file: SpritePath);

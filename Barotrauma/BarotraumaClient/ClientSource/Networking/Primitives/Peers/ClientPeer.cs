@@ -44,11 +44,11 @@ namespace Barotrauma.Networking
 
         protected string GetPackageStr(ContentPackage contentPackage)
         {
-            return "\"" + contentPackage.Name + "\" (hash " + contentPackage.MD5hash.ShortHash + ")";
+            return $"\"{contentPackage.Name}\" (hash {contentPackage.MD5hash.ShortHash})";
         }
         protected string GetPackageStr(ServerContentPackage contentPackage)
         {
-            return "\"" + contentPackage.Name + "\" (hash " + Md5Hash.GetShortHash(contentPackage.Hash) + ")";
+            return $"\"{contentPackage.Name}\" (hash {Md5Hash.GetShortHash(contentPackage.Hash)})";
         }
 
         public delegate void MessageCallback(IReadMessage message);
@@ -156,20 +156,12 @@ namespace Barotrauma.Networking
                         {
                             return ContentPackage.AllPackages.Any(local =>
                                 local.SteamWorkshopId != 0 && /* is a Workshop item */
-                                remote.WorkshopId == local.SteamWorkshopId /* ids match */);
+                                remote.WorkshopId == local.SteamWorkshopId && /* ids match */
+                                remote.InstallTime < local.InstallTime/* remote is older than local */);
                         });
-                        if (GameMain.ServerListScreen.LastAutoConnectEndpoint != ServerConnection.EndPointString)
-                        {
-                            mismatchedButDownloaded = mismatchedButDownloaded.Where(remote =>
-                            {
-                                return ContentPackage.AllPackages.Any(local =>
-                                    remote.InstallTime < local.InstallTime/* remote is older than local */);
-                            });
-                        }
 
                         if (mismatchedButDownloaded.Any())
                         {
-                            GameMain.ServerListScreen.LastAutoConnectEndpoint = null;
                             string disconnectMsg;
                             if (mismatchedButDownloaded.Count() == 1)
                             {
@@ -225,7 +217,9 @@ namespace Barotrauma.Networking
                             msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
                             {
                                 GameMain.ServerListScreen.Select();
-                                GameMain.ServerListScreen.DownloadWorkshopItems(missingPackages.Select(p => p.WorkshopId), serverName, ServerConnection.EndPointString);
+                                IEnumerable<ServerListScreen.PendingWorkshopDownload> downloads =
+                                    missingPackages.Select(p => new ServerListScreen.PendingWorkshopDownload(p.Hash, p.WorkshopId));
+                                GameMain.ServerListScreen.DownloadWorkshopItems(downloads, serverName, ServerConnection.EndPointString);
                                 return true;
                             };
                             msgBox.Buttons[0].OnClicked += msgBox.Close;
