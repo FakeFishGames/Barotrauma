@@ -319,7 +319,7 @@ namespace Barotrauma.Networking
                 }
                 if (!successSend)
                 {
-                    DebugConsole.ThrowError("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
+                    DebugConsole.AddWarning("Failed to send message to remote peer! (" + length.ToString() + " bytes)");
                 }
             }
         }

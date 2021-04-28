@@ -276,7 +276,16 @@ namespace Barotrauma
             {
                 SteamWorkshopId = SteamManager.GetWorkshopItemIDFromUrl(workshopUrl);
             }
-            GameVersion = new Version(doc.Root.GetAttributeString("gameversion", "0.0.0.0"));
+            string versionStr = doc.Root.GetAttributeString("gameversion", "0.0.0.0");
+            try
+            {
+                GameVersion = new Version(versionStr);
+            }
+            catch
+            {
+                DebugConsole.ThrowError($"Invalid version number in content package \"{Name}\" ({versionStr}).");
+                GameVersion = GameMain.Version;
+            }
             if (doc.Root.Attribute("installtime") != null)
             {
                 InstallTime = ToolBox.Epoch.ToDateTime(doc.Root.GetAttributeUInt("installtime", 0));

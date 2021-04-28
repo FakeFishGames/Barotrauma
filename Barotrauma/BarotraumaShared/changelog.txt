@@ -1,33 +1,23 @@
----------------------------------------------------------------------------------------------------------
-v0.1300.2.11 (unstable)
----------------------------------------------------------------------------------------------------------
-
-Changes:
-- Made large monsters immune to sufforin.
-
-Fixes:
-- More fixes to installing/updating mods.
-- Fixed certain submarines spawning with a non-neutral ballast level (Kastrull seems to have been the only affected vanilla submarine). Happened because the game would determine the neutral ballast level from the first nav terminal it finds in the sub, without checking whether that terminal controls a shuttle or the sub itself.
-- Fixed explosions using wall damage value instead of level wall damage when the explosion happens outside a level wall.
-- Fixed oxygen shelves refilling oxygenite tanks (again).
-- Readded traitor missions that were accidentally removed in the previous unstable build.
-
-Modding:
-- Fixed console errors when a character with no gender tries to wear clothing that only has separate male and female sprites.
-
----------------------------------------------------------------------------------------------------------
-v0.1300.1.11 (unstable)
+------------------------------------------------------------------------------------------------------
+v0.13.3.11
 ---------------------------------------------------------------------------------------------------------
 
 Changes:
 - Adjusted autopilot logic to make it better at keeping the sub afloat when there's extra water on board. The maximum velocity of the autopilot is limited, which previously prevented it from emptying the ballast fully. Now it's only limited if the submarine is heading in the correct direction with enough speed, so if the sub starts sinking due to extra water, the autopilot can compensate and fully empty the ballast.
+- Made large monsters immune to sufforin.
 
 Fixes:
-- Fixes to issues that prevented mods installed from the Workshop from getting automatically updated.
-- Fixed inability to drag players who've ragdolled themselves with space bar.
-- Fixed status monitor being messed up on mirrored subs that contain shuttles.
+- Fixes to issues that prevented mods installed from the Workshop from getting automatically updated and caused errors when trying to join modded servers.
 - Fixed an issue in the voice chat that caused audio crackling when multiple people were speaking at the same time.
+- Fixed inability to drag players who've ragdolled themselves with space bar.
+- Fixed "failed to send message to remote peer" error spam when a client's internet connection goes down.
+- Fixed certain submarines spawning with a non-neutral ballast level (Kastrull seems to have been the only affected vanilla submarine). Happened because the game would determine the neutral ballast level from the first nav terminal it finds in the sub, without checking whether that terminal controls a shuttle or the sub itself.
+- Fixed explosions using wall damage value instead of level wall damage when the explosion happens outside a level wall.
 - Fixed inability to place oxygenite tanks in oxygen tank shelves.
+- Fixed crashing when a bot tries to find a diving suit inside ruins.
+- Fixed minor wall draw order issue in Orca's top deck.
+- Fixed bots trying to treat nausea even though the only cure for it is to wait it out.
+- Fixed status monitor being messed up on mirrored subs that contain shuttles.
 - Fixed railgun payloads not exploding.
 - Fixed server sometimes assigning players who haven't set any job preferences as the captain, even if someone else wants to be the captain.
 - Fixed ancient weapon propelling the character in an incorrect direction when using it underwater.
@@ -42,12 +32,15 @@ Fixes:
 - Fixed clicking on command interface nodes crashing the game if the key is rebound to primary mouse button.
 - Fixed tiling issues in some of the legacy background wall sprites.
 - Fixed Spinelings attacking Leucocytes. Spinelings should avoid Leucocytes if they get close.
+- Fixed bots being unable to stand on the platform below Humpback's docking hatch, preventing them from repairing the hatch.
 - Fixed "beacon station" text and "generating preview..." in the submarine preview window not being translated when playing in a language other than English.
 
 Modding:
+- Fixed console errors when a character with no gender tries to wear clothing that only has separate male and female sprites.
 - Fixed crashing if the current style doesn't define a saving indicator.
 - Fixed inability to load ragdoll/animation definitions from mods that override a character.
 - Fixed ClearTagAction not properly clearing all the tags assigned by a scripted event.
+- Fixed crashing if a mod's version number is incorrectly formatted in filelist.xml.
 
 ---------------------------------------------------------------------------------------------------------
 v0.13.0.11

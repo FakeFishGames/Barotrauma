@@ -442,7 +442,7 @@ namespace Barotrauma
                         Character.AnimController.InWater ||
                         Character.AnimController.HeadInWater ||
                         Character.CurrentHull == null ||
-                        Character.Submarine.TeamID != Character.TeamID ||
+                        Character.Submarine?.TeamID != Character.TeamID ||
                         ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() ||
                         ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character ||   // wait order
                         ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);

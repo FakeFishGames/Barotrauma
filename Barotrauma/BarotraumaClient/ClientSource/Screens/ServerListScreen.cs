@@ -1078,11 +1078,25 @@ namespace Barotrauma
                             pendingWorkshopDownloads.Remove(itemId);
                             currentlyDownloadingWorkshopItem = null;
 
+                            void onInstall(ContentPackage resultingPackage)
+                            {
+                                if (!resultingPackage.MD5hash.Hash.Equals(clearedDownload.ExpectedHash))
+                                {
+                                    workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Red);
+                                    CancelWorkshopDownloads();
+                                    GameMain.Client?.Disconnect();
+                                    GameMain.Client = null;
+                                    new GUIMessageBox(
+                                        TextManager.Get("ConnectionLost"),
+                                        TextManager.GetWithVariable("DisconnectMessage.MismatchedWorkshopMod", "[incompatiblecontentpackage]", $"\"{resultingPackage.Name}\" (hash {resultingPackage.MD5hash.ShortHash})"));
+                                }
+                            }
+
                             if (SteamManager.CheckWorkshopItemInstalled(item))
                             {
                                 SteamManager.UninstallWorkshopItem(item, false, out _);
                             }
-                            if (SteamManager.InstallWorkshopItem(item, out string errorMsg, enableContentPackage: false, suppressInstallNotif: true))
+                            if (SteamManager.InstallWorkshopItem(item, out string errorMsg, enableContentPackage: false, suppressInstallNotif: true, onInstall: onInstall))
                             {
                                 workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Green);
                             }
@@ -1090,16 +1104,6 @@ namespace Barotrauma
                             {
                                 workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Red);
                                 DebugConsole.ThrowError(errorMsg);
-                            }
-
-                            ContentPackage resultingPackage = ContentPackage.AllPackages.FirstOrDefault(p => p.MD5hash.Hash == clearedDownload.ExpectedHash);
-                            if (resultingPackage == null)
-                            {
-                                workshopDownloadsFrame?.FindChild((c) => c.UserData is ulong l && l == itemId, true)?.Flash(GUI.Style.Red);
-                                CancelWorkshopDownloads();
-                                new GUIMessageBox(
-                                    TextManager.Get("ConnectionLost"),
-                                    TextManager.GetWithVariable("DisconnectMessage.MismatchedWorkshopMod", "incompatiblecontentpackage", $"\"{resultingPackage.Name}\" (hash {resultingPackage.MD5hash.ShortHash})"));
                             }
                         });
                     }

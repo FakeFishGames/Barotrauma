@@ -1007,7 +1007,7 @@ namespace Barotrauma.Steam
         /// <summary>
         /// Installs a workshop item by moving it to the game folder.
         /// </summary>
-        public static bool InstallWorkshopItem(Steamworks.Ugc.Item? itemOrNull, out string errorMsg, bool enableContentPackage = false, bool suppressInstallNotif = false)
+        public static bool InstallWorkshopItem(Steamworks.Ugc.Item? itemOrNull, out string errorMsg, bool enableContentPackage = false, bool suppressInstallNotif = false, Action<ContentPackage> onInstall = null)
         {
             errorMsg = "Item is null";
             if (!itemOrNull.TryGetValue(out Steamworks.Ugc.Item item)) { return false; }
@@ -1142,6 +1142,8 @@ namespace Barotrauma.Steam
                         }
 
                         GameMain.Config.SuppressModFolderWatcher = false;
+
+                        onInstall?.Invoke(newPackage);
 
                         GameMain.SteamWorkshopScreen?.SetReinstallButtonStatus(item, true, GUI.Style.Green);
                     }
