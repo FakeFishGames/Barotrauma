@@ -474,8 +474,7 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam, bool isSubInventory = false)
         {
-            // Need to update the infiltrator's inventory because they use id cards to access the sub. TODO: We don't probably need to update everything.
-            if (!AccessibleWhenAlive && !character.IsDead && (character.Params.AI == null || !character.Params.AI.Infiltrate))
+            if (!AccessibleWhenAlive && !character.IsDead)
             {
                 syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
                 return;

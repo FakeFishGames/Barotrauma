@@ -5,6 +5,7 @@ using Barotrauma.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -217,7 +218,7 @@ namespace Barotrauma
                     $"<PersonalityTrait " +
                     $"{GetVariable("name", split[1])}" +
                     $"{GetVariable("alloweddialogtags", string.Join(",", NPCPersonalityTrait.List[i].AllowedDialogTags))}" +
-                    $"{GetVariable("commonness", NPCPersonalityTrait.List[i].Commonness.ToString())}/>");
+                    $"{GetVariable("commonness", NPCPersonalityTrait.List[i].Commonness.ToString(CultureInfo.InvariantCulture))}/>");
             }
 
             xmlContent.Add(string.Empty);

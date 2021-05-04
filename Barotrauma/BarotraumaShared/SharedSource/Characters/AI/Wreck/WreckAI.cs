@@ -334,9 +334,15 @@ namespace Barotrauma
             return (int)Math.Round(MathHelper.Lerp(minValue, maxValue, Level.Loaded.Difficulty * 0.01f * Config.AgentSpawnCountDifficultyMultiplier));
         }
 
-        private float GetSpawnTime() => 
-            Math.Max(Config.AgentSpawnDelay * Rand.Range(Config.AgentSpawnDelayRandomFactor, 1 + Config.AgentSpawnDelayRandomFactor) 
-            / (Math.Max(Level.Loaded.Difficulty, 1) * 0.01f * Config.AgentSpawnDelayDifficultyMultiplier), Config.AgentSpawnDelay);
+        private float GetSpawnTime()
+        {
+            float randomFactor = Config.AgentSpawnDelayRandomFactor;
+            float delay = Config.AgentSpawnDelay;
+            float min = delay;
+            float max = delay * 6;
+            float t = Level.Loaded.Difficulty * Config.AgentSpawnDelayDifficultyMultiplier * Rand.Range(1 - randomFactor, 1 + randomFactor);
+            return MathHelper.Lerp(max, min, MathUtils.InverseLerp(0, 100, t));
+        }
 
         void UpdateReinforcements(float deltaTime)
         {

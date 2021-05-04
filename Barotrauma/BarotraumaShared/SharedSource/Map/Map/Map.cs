@@ -975,7 +975,14 @@ namespace Barotrauma
         private void ChangeLocationType(Location location, LocationTypeChange change)
         {
             string prevName = location.Name;
-            location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase)));
+
+            var newType = LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase));
+            if (newType.OutpostTeam != location.Type.OutpostTeam ||
+                newType.HasOutpost != location.Type.HasOutpost)
+            {
+                location.ClearMissions();
+            }
+            location.ChangeType(newType);
             ChangeLocationTypeProjSpecific(location, prevName, change);
             foreach (var requirement in change.Requirements)
             {

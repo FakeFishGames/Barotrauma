@@ -153,6 +153,7 @@ namespace Barotrauma.Items.Components
             if (IsToggle)
             {
                 item.SendSignal(State ? "1" : "0", "signal_out");
+                item.SendSignal(State ? "1" : "0", "trigger_out");
             }
 
             if (user == null 
@@ -263,6 +264,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private double lastUsed;
+
         public override bool Use(float deltaTime, Character activator = null)
         {
             if (activator != user)
@@ -277,7 +280,22 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            item.SendSignal(new Signal("1", sender: user), "trigger_out");
+            if (IsToggle && (activator == null || lastUsed < Timing.TotalTime - 0.1))
+            {
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                {
+                    State = !State;
+#if SERVER
+                    item.CreateServerEvent(this);
+#endif
+                }
+            }
+            else
+            {
+                item.SendSignal(new Signal("1", sender: user), "trigger_out");
+            }
+
+            lastUsed = Timing.TotalTime;
 
             ApplyStatusEffects(ActionType.OnUse, 1.0f, activator);
             

@@ -245,6 +245,12 @@ namespace Barotrauma
                         {
                             IsCompleted = true;
                         }
+                        else if (Enemy.IsKnockedDown && 
+                            !objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>() && 
+                            !HumanAIController.HasItem(character, "handlocker", out _, requireEquipped: false))
+                        {
+                            IsCompleted = true;
+                        }
                         break;
                 }
             }
@@ -738,7 +744,7 @@ namespace Barotrauma
                 },
                 onAbandon: () => Abandon = true);
             if (followTargetObjective == null) { return; }
-            if (Mode == CombatMode.Arrest && (Enemy.Stun > 1 || Enemy.IsKnockedDown))
+            if (Mode == CombatMode.Arrest && Enemy.IsKnockedDown)
             {
                 if (HumanAIController.HasItem(character, "handlocker", out _))
                 {
@@ -786,6 +792,23 @@ namespace Barotrauma
 
         private void OnArrestTargetReached()
         {
+            if (!Enemy.IsKnockedDown)
+            {
+                RemoveFollowTarget();
+                return;
+            }
+            if (character.TeamID == CharacterTeamType.FriendlyNPC)
+            {
+                // Confiscate stolen goods.
+                foreach (var item in Enemy.Inventory.AllItemsMod)
+                {
+                    if (item.StolenDuringRound)
+                    {
+                        item.Drop(character);
+                        character.Inventory.TryPutItem(item, character, CharacterInventory.anySlot);
+                    }
+                }
+            }
             if (HumanAIController.HasItem(character, "handlocker", out IEnumerable<Item> matchingItems) && !Enemy.IsUnconscious && Enemy.IsKnockedDown && character.CanInteractWith(Enemy))
             {
                 var handCuffs = matchingItems.First();
@@ -794,20 +817,18 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.NewMessage($"{character.Name}: Failed to handcuff the target.", Color.Red);
 #endif
-                }
-                // Confiscate stolen goods.
-                foreach (var item in Enemy.Inventory.AllItemsMod)
-                {
-                    if (item == handCuffs) { continue; }
-                    if (item.StolenDuringRound)
+                    if (objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
                     {
-                        item.Drop(character);
-                        character.Inventory.TryPutItem(item, character, CharacterInventory.anySlot);
+                        Abandon = true;
+                        return;
                     }
                 }
                 character.Speak(TextManager.Get("DialogTargetArrested"), null, 3.0f, "targetarrested", 30.0f);
             }
-            IsCompleted = true;
+            if (!objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
+            {
+                IsCompleted = true;
+            }
         }
 
         /// <summary>
@@ -941,14 +962,6 @@ namespace Barotrauma
                 return;
             }
             if (reloadTimer > 0) { return; }
-            if (Mode == CombatMode.Arrest)
-            {
-                // If the target is arrested or if it's stunned and we can't lock the target up, consider the objective done.
-                if (Enemy.IsKnockedDown && !HumanAIController.HasItem(character, "handlocker", out _, requireEquipped: false) || HumanAIController.HasItem(Enemy, "handlocker", out _, requireEquipped: true))
-                {
-                    IsCompleted = true;
-                }
-            }
             if (holdFireCondition != null && holdFireCondition()) { return; }
             float sqrDist = Vector2.DistanceSquared(character.Position, Enemy.Position);
             if (WeaponComponent is MeleeWeapon meleeWeapon)

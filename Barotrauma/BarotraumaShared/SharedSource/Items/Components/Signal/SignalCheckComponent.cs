@@ -5,6 +5,17 @@ namespace Barotrauma.Items.Components
 {
     class SignalCheckComponent : ItemComponent
     {
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
+
         private string output;
         [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the target signal.", alwaysUseInstanceValues: true)]
         public string Output
@@ -39,17 +50,6 @@ namespace Barotrauma.Items.Components
 
         [InGameEditable, Serialize("", true, description: "The value to compare the received signals against.", alwaysUseInstanceValues: true)]
         public string TargetSignal { get; set; }
-
-        private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
-        public int MaxOutputLength
-        {
-            get { return maxOutputLength; }
-            set
-            {
-                maxOutputLength = Math.Max(value, 0);
-            }
-        }
 
         public SignalCheckComponent(Item item, XElement element)
             : base(item, element)

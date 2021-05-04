@@ -156,10 +156,10 @@ namespace Barotrauma
                 sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
                 sb.AppendLine("VSync " + (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
                 sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
-            }
-            if (GameMain.Config.AllEnabledPackages != null)
-            {
-                sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
+                if (GameMain.Config.AllEnabledPackages != null)
+                {
+                    sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
+                }
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));

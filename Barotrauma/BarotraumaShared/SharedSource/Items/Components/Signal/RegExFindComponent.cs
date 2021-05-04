@@ -18,6 +18,17 @@ namespace Barotrauma.Items.Components
 
         private bool nonContinuousOutputSent;
 
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
+
         private string output;
 
         [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the regular expression.", alwaysUseInstanceValues: true)]
@@ -61,20 +72,8 @@ namespace Barotrauma.Items.Components
 
                 catch
                 {
-                    item.SendSignal("ERROR", "signal_out");
                     return;
                 }
-            }
-        }
-
-        private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking issues.")]
-        public int MaxOutputLength
-        {
-            get { return maxOutputLength; }
-            set
-            {
-                maxOutputLength = Math.Max(value, 0);
             }
         }
 

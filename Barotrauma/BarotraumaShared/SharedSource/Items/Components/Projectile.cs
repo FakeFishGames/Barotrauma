@@ -372,7 +372,7 @@ namespace Barotrauma.Items.Components
             hits = hits.OrderBy(h => h.Fraction).ToList();
             foreach (HitscanResult h in hits)
             {
-                item.body.SetTransform(h.Point, rotation);
+                item.SetTransform(h.Point, rotation);
                 if (HandleProjectileCollision(h.Fixture, h.Normal, Vector2.Zero))
                 {
                     hitSomething = true;

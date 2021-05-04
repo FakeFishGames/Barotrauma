@@ -757,7 +757,7 @@ namespace Barotrauma.Items.Components
             bool reducesCondition = false;
             foreach (StatusEffect effect in statusEffects)
             {
-                if (broken && effect.type != ActionType.OnBroken) { continue; }
+                if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
                 item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, false, false, worldPosition);
                 reducesCondition |= effect.ReducesItemCondition();

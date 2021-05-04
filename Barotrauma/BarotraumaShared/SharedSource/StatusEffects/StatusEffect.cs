@@ -284,6 +284,11 @@ namespace Barotrauma
         // Currently only used for OnDamaged. TODO: is there a better, more generic way to do this?
         public readonly bool OnlyPlayerTriggered;
 
+        /// <summary>
+        /// Can the StatusEffect be applied when the item applying it is broken
+        /// </summary>
+        public readonly bool AllowWhenBroken = false;
+
         public HashSet<string> TargetIdentifiers
         {
             get { return targetIdentifiers; }
@@ -356,6 +361,7 @@ namespace Barotrauma
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
             OnlyPlayerTriggered = element.GetAttributeBool("onlyplayertriggered", false);
+            AllowWhenBroken = element.GetAttributeBool("allowwhenbroken", false);
 
             Range = element.GetAttributeFloat("range", 0.0f);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);

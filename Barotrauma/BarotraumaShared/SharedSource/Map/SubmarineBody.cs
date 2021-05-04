@@ -146,7 +146,7 @@ namespace Barotrauma
 
                 foreach (Hull hull in Hull.hullList)
                 {
-                    if (hull.Submarine != submarine) { continue; }
+                    if (hull.Submarine != submarine || hull.IdFreed) { continue; }
 
                     Rectangle rect = hull.Rect;
                     farseerBody.CreateRectangle(

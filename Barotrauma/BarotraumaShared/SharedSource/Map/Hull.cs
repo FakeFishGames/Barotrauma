@@ -501,7 +501,7 @@ namespace Barotrauma
             EntityGrids.Add(newGrid);            
             foreach (Hull hull in hullList)
             {
-                if (hull.Submarine == submarine) newGrid.InsertEntity(hull);
+                if (hull.Submarine == submarine && !hull.IdFreed) { newGrid.InsertEntity(hull); }
             }
             return newGrid;
         }

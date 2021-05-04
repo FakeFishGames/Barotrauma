@@ -10,35 +10,22 @@ namespace Barotrauma.Networking
 {
     static partial class VoipConfig
     {
-        public static bool Ready = false;
+        public const int FREQUENCY = 48000; //48Khz
+        public const int BITRATE = 16000; //16Kbps
+        public const int BUFFER_SIZE = (8 * MAX_COMPRESSED_SIZE * FREQUENCY) / BITRATE; //20ms window
 
-        public const int FREQUENCY = 48000;
-        public const int BUFFER_SIZE = 960; //20ms window
+        public static OpusEncoder CreateEncoder()
+        {
+            var encoder = new OpusEncoder(FREQUENCY, 1, OpusApplication.OPUS_APPLICATION_VOIP);
+            encoder.Bandwidth = OpusBandwidth.OPUS_BANDWIDTH_AUTO;
+            encoder.Bitrate = BITRATE;
+            encoder.SignalType = OpusSignal.OPUS_SIGNAL_VOICE;
+            return encoder;
+        }
         
-        public static OpusEncoder Encoder
+        public static OpusDecoder CreateDecoder()
         {
-            get;
-            private set;
-        }
-        public static OpusDecoder Decoder
-        {
-            get;
-            private set;
-        }
-
-        public static void SetupEncoding()
-        {
-            if (!Ready)
-            {
-                Encoder = new OpusEncoder(FREQUENCY, 1, OpusApplication.OPUS_APPLICATION_VOIP);
-                Encoder.Bandwidth = OpusBandwidth.OPUS_BANDWIDTH_AUTO;
-                Encoder.Bitrate = 8 * MAX_COMPRESSED_SIZE * FREQUENCY / BUFFER_SIZE;
-                Encoder.SignalType = OpusSignal.OPUS_SIGNAL_VOICE;
-
-                Decoder = new OpusDecoder(FREQUENCY, 1);
-
-                Ready = true;
-            }
+            return new OpusDecoder(FREQUENCY, 1);
         }
     }
 }

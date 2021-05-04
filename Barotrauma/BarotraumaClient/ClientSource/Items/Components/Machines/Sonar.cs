@@ -898,6 +898,22 @@ namespace Barotrauma.Items.Components
                 signalWarningText.Visible = false;
             }
 
+            foreach (AITarget aiTarget in AITarget.List)
+            {
+                if (!aiTarget.Enabled) { continue; }
+                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) { continue; }
+
+                if (Vector2.DistanceSquared(aiTarget.WorldPosition, transducerCenter) < aiTarget.SoundRange * aiTarget.SoundRange)
+                {
+                    DrawMarker(spriteBatch,
+                        aiTarget.SonarLabel,
+                        aiTarget.SonarIconIdentifier,
+                        aiTarget,
+                        aiTarget.WorldPosition, transducerCenter,
+                        displayScale, center, DisplayRadius * 0.975f);
+                }
+            }
+
             if (GameMain.GameSession == null || Level.Loaded == null) { return; }
 
             if (Level.Loaded.StartLocation != null)
@@ -931,23 +947,7 @@ namespace Barotrauma.Items.Components
                     cave.StartPos.ToVector2(), transducerCenter,
                     displayScale, center, DisplayRadius);
             }
-
-            foreach (AITarget aiTarget in AITarget.List)
-            {
-                if (!aiTarget.Enabled) { continue; }
-                if (string.IsNullOrEmpty(aiTarget.SonarLabel) || aiTarget.SoundRange <= 0.0f) { continue; }
-
-                if (Vector2.DistanceSquared(aiTarget.WorldPosition, transducerCenter) < aiTarget.SoundRange * aiTarget.SoundRange)
-                {
-                    DrawMarker(spriteBatch,
-                        aiTarget.SonarLabel,
-                        aiTarget.SonarIconIdentifier,
-                        aiTarget,
-                        aiTarget.WorldPosition, transducerCenter, 
-                        displayScale, center, DisplayRadius * 0.975f);
-                }
-            }
-            
+                        
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
                 if (!string.IsNullOrWhiteSpace(mission.SonarLabel))

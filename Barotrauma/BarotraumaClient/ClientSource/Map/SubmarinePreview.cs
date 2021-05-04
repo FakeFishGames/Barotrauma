@@ -573,7 +573,7 @@ namespace Barotrauma
             if (!spriteRecorder.ReadyToRender)
             {
                 string waitText = !loadTask.IsCompleted ?
-                    "Generating preview..." :
+                    TextManager.Get("generatingsubmarinepreview", fallBackTag: "loading") :
                     (loadTask.Exception?.ToString() ?? "Task completed without marking as ready to render");
                 Vector2 origin = (GUI.Font.MeasureString(waitText) * 0.5f);
                 origin.X = MathF.Round(origin.X);

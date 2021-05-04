@@ -12,6 +12,17 @@ namespace Barotrauma.Items.Components
         private bool isInWater;
         private float stateSwitchDelay;
 
+        private int maxOutputLength;
+        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        public int MaxOutputLength
+        {
+            get { return maxOutputLength; }
+            set
+            {
+                maxOutputLength = Math.Max(value, 0);
+            }
+        }
+
         private string output;
         [InGameEditable, Serialize("1", true, description: "The signal the item sends out when it's underwater.", alwaysUseInstanceValues: true)]
         public string Output
@@ -41,17 +52,6 @@ namespace Barotrauma.Items.Components
                 {
                     falseOutput = falseOutput.Substring(0, MaxOutputLength);
                 }
-            }
-        }
-
-        private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
-        public int MaxOutputLength
-        {
-            get { return maxOutputLength; }
-            set
-            {
-                maxOutputLength = Math.Max(value, 0);
             }
         }
 

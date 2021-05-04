@@ -1356,11 +1356,11 @@ namespace Barotrauma
         {
             if (!isNetworkEvent && checkCondition)
             {
-                if (condition == 0.0f && effect.type != ActionType.OnBroken) return;
+                if (condition == 0.0f && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { return; }
             }
-            if (effect.type != type) return;
+            if (effect.type != type) { return; }
             
-            bool hasTargets = (effect.TargetIdentifiers == null);
+            bool hasTargets = effect.TargetIdentifiers == null;
 
             targets.Clear();
             
@@ -2611,7 +2611,7 @@ namespace Barotrauma
 
             foreach (XAttribute attribute in element.Attributes())
             {
-                if (!item.SerializableProperties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) continue;
+                if (!item.SerializableProperties.TryGetValue(attribute.Name.ToString(), out SerializableProperty property)) { continue; }
                 bool shouldBeLoaded = false;
                 foreach (var propertyAttribute in property.Attributes.OfType<Serialize>())
                 {
@@ -2622,7 +2622,31 @@ namespace Barotrauma
                     }
                 }
 
-                if (shouldBeLoaded) { property.TrySetValue(item, attribute.Value); }
+                if (shouldBeLoaded) 
+                {
+                    object prevValue = property.GetValue(item);
+                    property.TrySetValue(item, attribute.Value);
+                    //create network events for properties that differ from the prefab values
+                    //(e.g. if a character has an item with modified colors in their inventory)
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && property.Attributes.OfType<Editable>().Any() && 
+                        (submarine == null || !submarine.Loading ))
+                    {
+                        switch (property.Name)
+                        {
+                            case "Tags":
+                            case "Condition":
+                            case "Description":
+                                //these can be ignored, they're always written in the spawn data
+                                break;
+                            default:
+                                if (!(property.GetValue(item)?.Equals(prevValue) ?? true))
+                                {
+                                    GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ChangeProperty, property });
+                                }
+                                break;
+                        }
+                    }
+                }
             }
 
             item.ParseLinks(element, idRemap);

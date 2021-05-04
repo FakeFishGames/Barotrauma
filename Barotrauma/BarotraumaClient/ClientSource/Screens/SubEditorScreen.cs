@@ -2815,13 +2815,17 @@ namespace Barotrauma
             foreach (GUIComponent child in categorizedEntityList.Content.Children)
             {
                 child.Visible = !entityCategory.HasValue || (MapEntityCategory)child.UserData == entityCategory;
-                if (child.Visible && dummyCharacter?.SelectedConstruction?.OwnInventory != null)
+                var innerList = child.GetChild<GUIListBox>();
+                foreach (GUIComponent grandChild in innerList.Content.Children)
                 {
-                    child.Visible = child.UserData is MapEntityPrefab item && IsItemPrefab(item);
+                    grandChild.Visible = true;                    
                 }
             }
             
-            if (!string.IsNullOrEmpty(entityFilterBox.Text)) { FilterEntities(entityFilterBox.Text); }
+            if (!string.IsNullOrEmpty(entityFilterBox.Text) || dummyCharacter?.SelectedConstruction?.OwnInventory != null) 
+            { 
+                FilterEntities(entityFilterBox.Text); 
+            }
             
             categorizedEntityList.UpdateScrollBarSize();
             categorizedEntityList.BarScroll = 0.0f;
@@ -2831,7 +2835,7 @@ namespace Barotrauma
 
         private void FilterEntities(string filter)
         {
-            if (string.IsNullOrWhiteSpace(filter))
+            if (string.IsNullOrWhiteSpace(filter) && dummyCharacter?.SelectedConstruction?.OwnInventory == null)
             {
                 allEntityList.Visible = false;
                 categorizedEntityList.Visible = true;
@@ -2844,10 +2848,6 @@ namespace Barotrauma
                     foreach (GUIComponent grandChild in innerList.Content.Children)
                     {
                         grandChild.Visible = ((MapEntityPrefab)grandChild.UserData).Name.ToLower().Contains(filter);
-                        if (grandChild.Visible && dummyCharacter?.SelectedConstruction?.OwnInventory != null)
-                        {
-                            grandChild.Visible = grandChild.UserData is MapEntityPrefab item && IsItemPrefab(item);
-                        }
                     }
                 };
                 categorizedEntityList.UpdateScrollBarSize();

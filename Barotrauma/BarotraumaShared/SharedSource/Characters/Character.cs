@@ -3423,7 +3423,7 @@ namespace Barotrauma
         /// Is the character knocked down regardless whether the technical state is dead, unconcious, paralyzed, or stunned. 
         /// With stunning, the parameter uses a half a second delay before the character is treated as knocked down. The purpose of this is to ignore minor stunning. If you don't want to to ignore any stun, use the Stun property.
         /// </summary>
-        public bool IsKnockedDown => IsDead || IsIncapacitated || CharacterHealth.StunTimer > 0.5f;
+        public bool IsKnockedDown => IsDead || IsIncapacitated || CharacterHealth.StunTimer > 0.5f || IsRagdolled;
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {

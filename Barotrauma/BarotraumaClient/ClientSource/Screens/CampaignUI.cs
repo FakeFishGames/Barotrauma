@@ -407,7 +407,7 @@ namespace Barotrauma
                         ToolTip = TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip")
                     };
                     new GUITextBlock(new RectTransform(Vector2.One, beaconStationContent.RectTransform),
-                        TextManager.Get("submarinetype.beaconstation"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                        TextManager.Get("submarinetype.beaconstation", fallBackTag: "beaconstationsonarlabel"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
                     {
                         Padding = Vector4.Zero,
                         ToolTip = icon.ToolTip

@@ -78,7 +78,7 @@ namespace Barotrauma
         private readonly GUIFrame playerInfoContainer;
 
         private GUILayoutGroup infoContainer;
-        private GUITextBlock changesPendingText;
+        private GUIComponent changesPendingText;
         public GUIButton PlayerFrame;
 
         private readonly GUIComponent subPreviewContainer;
@@ -417,7 +417,7 @@ namespace Barotrauma
                 {
                     if (!(FileTransferFrame.UserData is FileReceiver.FileTransferIn transfer)) { return false; }
                     GameMain.Client?.CancelFileTransfer(transfer);
-                    GameMain.Client.FileReceiver.StopTransfer(transfer);
+                    GameMain.Client?.FileReceiver.StopTransfer(transfer);
                     return true;
                 }
             };
@@ -1632,9 +1632,17 @@ namespace Barotrauma
         
         private void CreateChangesPendingText()
         {
-            if (changesPendingText != null || infoContainer == null) return;
-            changesPendingText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.065f), infoContainer.Parent.RectTransform, Anchor.BottomCenter, Pivot.TopCenter) { RelativeOffset = new Vector2(0f, -0.065f) }, 
-                TextManager.Get("tabmenu.characterchangespending"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, style: null) { IgnoreLayoutGroups = true };
+            if (changesPendingText != null || infoContainer == null) { return; }
+
+            changesPendingText = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.065f), infoContainer.Parent.Parent.RectTransform, Anchor.BottomCenter, Pivot.TopCenter) { RelativeOffset = new Vector2(0f, -0.03f) },
+                style: "OuterGlow")
+            {
+                Color = Color.Black,
+                IgnoreLayoutGroups = true
+            };
+            var text = new GUITextBlock(new RectTransform(Vector2.One, changesPendingText.RectTransform, Anchor.Center), 
+                TextManager.Get("tabmenu.characterchangespending"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, style: null);
+            changesPendingText.RectTransform.MinSize = new Point((int)(text.TextSize.X * 1.2f), (int)(text.TextSize.Y * 2.0f));
         }
 
         private void CreateJobVariantTooltip(JobPrefab jobPrefab, int variant, GUIComponent parentSlot)

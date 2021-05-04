@@ -1274,6 +1274,7 @@ namespace Barotrauma
 
         private static void UpdateSavingIndicator(float deltaTime)
         {
+            if (Style.SavingIndicator == null) { return; }
             lock (mutex)
             {
                 if (timeUntilSavingIndicatorDisabled.HasValue)
@@ -1651,7 +1652,7 @@ namespace Barotrauma
 
         private static void DrawSavingIndicator(SpriteBatch spriteBatch)
         {
-            if (!IsSavingIndicatorVisible) { return; }
+            if (!IsSavingIndicatorVisible || Style.SavingIndicator == null) { return; }
             var sheet = Style.SavingIndicator;
             Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
             sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
