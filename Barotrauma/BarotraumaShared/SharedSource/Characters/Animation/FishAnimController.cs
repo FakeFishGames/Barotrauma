@@ -130,6 +130,7 @@ namespace Barotrauma
         }
 
         private float flipTimer, flipCooldown;
+        private bool Eating = false;
 
         public FishAnimController(Character character, string seed, FishRagdollParams ragdollParams = null) : base(character, seed, ragdollParams) { }
 
@@ -219,10 +220,18 @@ namespace Barotrauma
             if (character.SelectedCharacter != null)
             {
                 DragCharacter(character.SelectedCharacter, deltaTime);
+                Eating = true; // Set eating to true immediately here to avoid issues in multiplayer
+            }
+            else
+            {
+                Eating = false;
             }
 
             //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
+
+            //don't flip if eating
+            if (Eating) { return;  }
             
             if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip))
             {
@@ -328,6 +337,7 @@ namespace Barotrauma
             float dmg = character.Params.EatingSpeed;
             float eatSpeed = dmg / ((float)Math.Sqrt(Math.Max(target.Mass, 1)) * 10);
             eatTimer += deltaTime * eatSpeed;
+            Eating = true;
 
             Vector2 mouthPos = SimplePhysicsEnabled ? character.SimPosition : GetMouthPosition().Value;
             Vector2 attackSimPosition = character.Submarine == null ? ConvertUnits.ToSimUnits(target.WorldPosition) : target.SimPosition;
