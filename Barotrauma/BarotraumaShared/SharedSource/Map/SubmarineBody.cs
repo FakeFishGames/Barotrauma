@@ -174,6 +174,11 @@ namespace Barotrauma
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
 
+                    if (sub.FlippedX)
+                    {
+                        simPos.X = -simPos.X;
+                    }
+
                     if (width > 0.0f && height > 0.0f)
                     {
                         item.StaticFixtures.Add(farseerBody.CreateRectangle(simWidth, simHeight, 5.0f, simPos));
@@ -513,7 +518,7 @@ namespace Barotrauma
             {
                 return CheckCharacterCollision(contact, character);
             }
-            else if (f2.UserData is Items.Components.DockingPort)
+            else if (f1.UserData is Items.Components.DockingPort || f2.UserData is Items.Components.DockingPort)
             {
                 return false;
             }

@@ -8,9 +8,16 @@ namespace Barotrauma
 {
     partial class Item : MapEntity, IDamageable, ISerializableEntity, IServerSerializable, IClientSerializable
     {
+        private CoroutineHandle logPropertyChangeCoroutine;
+
         public override Sprite Sprite
         {
             get { return prefab?.sprite; }
+        }
+
+        partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
+        {
+            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
         }
 
         public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
@@ -85,6 +92,9 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.Status:
                     msg.Write(condition);
+                    break;
+                case NetEntityEvent.Type.AssignCampaignInteraction:
+                    msg.Write((byte)CampaignInteractionType);
                     break;
                 case NetEntityEvent.Type.Treatment:
                     {

@@ -52,6 +52,7 @@ namespace Barotrauma
             GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "FloodingAmount: " + (int)Math.Round(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "FireAmount: " + (int)Math.Round(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
             GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "EnemyDanger: " + (int)Math.Round(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(15, y + 140), "MonsterTotalStrength: " + (int)Math.Round(monsterTotalStrength), Color.Lerp(GUI.Style.Green, GUI.Style.Red, monsterTotalStrength / 5000f), Color.Black * 0.6f, 0, GUI.SmallFont);
 
 #if DEBUG
             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) &&
@@ -75,7 +76,7 @@ namespace Barotrauma
                 lastIntensityUpdate = (float) Timing.TotalTime;
             }
 
-            Rectangle graphRect = new Rectangle(15, y + 150, 150, 50);
+            Rectangle graphRect = new Rectangle(15, y + 165, 150, 50);
 
             GUI.DrawRectangle(spriteBatch, graphRect, Color.Black * 0.5f, true);
             intensityGraph.Draw(spriteBatch, graphRect, 1.0f, 0.0f, Color.Lerp(Color.White, GUI.Style.Red, currentIntensity));

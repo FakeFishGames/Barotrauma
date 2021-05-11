@@ -21,9 +21,9 @@ namespace Barotrauma
             return ToolBox.GradientLerp(t, GUI.Style.Green, GUI.Style.Orange, GUI.Style.Red);
         }
 
-        public string GetMissionRewardText()
+        public virtual string GetMissionRewardText(Submarine sub)
         {
-            string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", Reward));
+            string rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub)));
             return TextManager.GetWithVariable("missionreward", "[reward]", $"‖color:gui.orange‖{rewardText}‖end‖");
         }
 

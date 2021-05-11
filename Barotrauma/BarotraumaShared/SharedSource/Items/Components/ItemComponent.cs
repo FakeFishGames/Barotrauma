@@ -660,6 +660,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public virtual bool HasAccess(Character character)
         {
+            if (item.IgnoreByAI) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (requiredItems.None()) { return true; }
             if (character.Inventory != null)
@@ -678,7 +679,6 @@ namespace Barotrauma.Items.Components
         public virtual bool HasRequiredItems(Character character, bool addMessage, string msg = null)
         {
             if (requiredItems.None()) { return true; }
-            if (!character.IsPlayer && character.Params.AI != null && character.Params.AI.Infiltrate) { return true; }
             if (character.Inventory == null) { return false; }
             bool hasRequiredItems = false;
             bool canContinue = true;

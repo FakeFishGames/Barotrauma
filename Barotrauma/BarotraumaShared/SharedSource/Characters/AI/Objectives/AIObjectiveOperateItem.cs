@@ -8,15 +8,18 @@ namespace Barotrauma
 {
     class AIObjectiveOperateItem : AIObjective
     {
-        public override string DebugTag => $"operate item {component.Name}";
+        public override string Identifier { get; set; } = "operate item";
+        public override string DebugTag =>  $"{Identifier} {component.Name}";
+
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowMultipleInstances => true;
         public override bool AllowInAnySub => true;
+        public override bool PrioritizeIfSubObjectivesActive => component != null && (component is Reactor || component is Turret);
 
-        private ItemComponent component, controller;
-        private Entity operateTarget;
-        private bool requireEquip;
-        private bool useController;
+        private readonly ItemComponent component, controller;
+        private readonly Entity operateTarget;
+        private readonly bool requireEquip;
+        private readonly bool useController;
         private AIObjectiveGoTo goToObjective;
         private AIObjectiveGetItem getItemObjective;
 
@@ -34,7 +37,7 @@ namespace Barotrauma
         public Func<bool> completionCondition;
         private bool isDoneOperating;
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed || character.LockHands)
@@ -100,6 +103,16 @@ namespace Barotrauma
                             break;
                     }
                 }
+                else if (!isOrder)
+                {
+                    var steering = component?.Item.GetComponent<Steering>();
+                    if (steering != null && (steering.AutoPilot || HumanAIController.IsTrueForAnyCrewMember(c => c != HumanAIController && c.Character.IsCaptain)))
+                    {
+                        // Ignore if already set to autopilot or if there's a captain onboard
+                        Priority = 0;
+                        return Priority;
+                    }
+                }
                 if (targetItem.CurrentHull == null ||
                     targetItem.Submarine != character.Submarine && !isOrder ||
                     targetItem.CurrentHull.FireSources.Any() ||
@@ -121,10 +134,10 @@ namespace Barotrauma
                     {
                         float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
                         float max = AIObjectiveManager.LowestOrderPriority - 1;
-                        if (reactor != null && reactor.PowerOn && reactor.FissionRate > 1 && Option == "powerup")
+                        if (reactor != null && reactor.PowerOn && reactor.FissionRate > 1 && reactor.AutoTemp && Option == "powerup")
                         {
-                            // Decrease the priority when targeting a reactor that is already on.
-                            value /= 2;
+                            // Already on, no need to operate.
+                            value = 0;
                         }
                         Priority = MathHelper.Clamp(value, 0, max);
                     }
@@ -268,7 +281,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check() => isDoneOperating && !IsLoop;
+        protected override bool CheckObjectiveSpecific() => isDoneOperating && !IsLoop;
 
         public override void Reset()
         {

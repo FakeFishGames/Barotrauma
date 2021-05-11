@@ -240,7 +240,7 @@ namespace Barotrauma
                     {
                         TryStartConversation(speaker);
                     }
-                    else
+                    else if (speaker.ActiveConversation != this)
                     {
                         speaker.CampaignInteractionType = CampaignMode.InteractionType.Talk;
                         speaker.ActiveConversation = this;
@@ -352,6 +352,14 @@ namespace Barotrauma
             ShowDialog(speaker, targetCharacter);
 
             dialogOpened = true;
+            if (speaker != null)
+            {
+                speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+                speaker.SetCustomInteract(null, null);
+#if SERVER
+                GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+#endif
+            }
         }
 
         partial void ShowDialog(Character speaker, Character targetCharacter);

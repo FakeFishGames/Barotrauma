@@ -36,6 +36,7 @@
     <EmbeddedResource Remove=".\**" />
     <None Remove=".\**" />
     <Compile Include="Clipboard.cs" />
+    <Compile Include="FileDropEventArgs.cs" />
     <Compile Include="MessageBox.cs" />
     <Compile Include="CurveContinuity.cs" />
     <Compile Include="Curve.cs" />

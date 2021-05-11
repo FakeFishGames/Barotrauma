@@ -320,6 +320,11 @@ namespace Barotrauma
                         toolTip += $"‖color:{conditionColorStr}‖ ({(int)item.ConditionPercentage} %)‖color:end‖";
                     }
                     if (!string.IsNullOrEmpty(description)) { toolTip += '\n' + description; }
+                    if (item.prefab.ContentPackage != GameMain.VanillaContent && item.prefab.ContentPackage != null)
+                    {
+                        colorStr = XMLExtensions.ColorToString(Color.MediumPurple);
+                        toolTip += $"\n‖color:{colorStr}‖{item.prefab.ContentPackage.Name}‖color:end‖";
+                    }
                 }
                 if (itemsInSlot.Count() > 1)
                 {
@@ -1575,7 +1580,7 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if (!item.AllowStealing && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if ((!item.AllowStealing || (inventory != null && inventory.slots[slotIndex].Items.Any(it => !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
                     Vector2 iconSize = new Vector2(25 * GUI.Scale);

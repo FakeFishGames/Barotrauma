@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 
 namespace Barotrauma.Networking
 {
@@ -40,24 +41,24 @@ namespace Barotrauma.Networking
             TargetEntity = targetEntity;
         }
 
-        private void WriteOrder(IWriteMessage msg)
+        public static void WriteOrder(IWriteMessage msg, Order order, Character targetCharacter, ISpatialEntity targetEntity, string orderOption, int orderPriority, int? wallSectionIndex)
         {
-            msg.Write((byte)Order.PrefabList.IndexOf(Order.Prefab));
-            msg.Write(TargetCharacter == null ? (UInt16)0 : TargetCharacter.ID);
-            msg.Write(TargetEntity is Entity ? (TargetEntity as Entity).ID : (UInt16)0);
+            msg.Write((byte)Order.PrefabList.IndexOf(order.Prefab));
+            msg.Write(targetCharacter == null ? (UInt16)0 : targetCharacter.ID);
+            msg.Write(targetEntity is Entity ? (targetEntity as Entity).ID : (UInt16)0);
 
             // The option of a Dismiss order is written differently so we know what order we target
             // now that the game supports multiple current orders simultaneously
-            if (Order.Prefab.Identifier != "dismissed")
+            if (order.Prefab.Identifier != "dismissed")
             {
-                msg.Write((byte)Array.IndexOf(Order.Prefab.Options, OrderOption));
+                msg.Write((byte)Array.IndexOf(order.Prefab.Options, orderOption));
             }
             else
             {
-                if (!string.IsNullOrEmpty(OrderOption))
+                if (!string.IsNullOrEmpty(orderOption))
                 {
                     msg.Write(true);
-                    string[] dismissedOrder = OrderOption.Split('.');
+                    string[] dismissedOrder = orderOption.Split('.');
                     msg.Write((byte)dismissedOrder.Length);
                     if (dismissedOrder.Length > 0)
                     {
@@ -79,9 +80,9 @@ namespace Barotrauma.Networking
                 }
             }
 
-            msg.Write((byte)OrderPriority);
-            msg.Write((byte)Order.TargetType);
-            if (Order.TargetType == Order.OrderTargetType.Position && TargetEntity is OrderTarget orderTarget)
+            msg.Write((byte)orderPriority);
+            msg.Write((byte)order.TargetType);
+            if (order.TargetType == Order.OrderTargetType.Position && targetEntity is OrderTarget orderTarget)
             {
                 msg.Write(true);
                 msg.Write(orderTarget.Position.X);
@@ -91,11 +92,117 @@ namespace Barotrauma.Networking
             else
             {
                 msg.Write(false);
-                if (Order.TargetType == Order.OrderTargetType.WallSection)
+                if (order.TargetType == Order.OrderTargetType.WallSection)
                 {
-                    msg.Write((byte)(WallSectionIndex ?? Order.WallSectionIndex ?? 0));
+                    msg.Write((byte)(wallSectionIndex ?? order.WallSectionIndex ?? 0));
                 }
             }
+        }
+
+        private void WriteOrder(IWriteMessage msg)
+        {
+            WriteOrder(msg, Order, TargetCharacter, TargetEntity, OrderOption, OrderPriority, WallSectionIndex);
+        }
+
+        public struct OrderMessageInfo
+        {
+            public int OrderIndex { get; }
+            public Order OrderPrefab { get; }
+            public string OrderOption { get; }
+            public int? OrderOptionIndex { get; }
+            public Character TargetCharacter { get; }
+            public Order.OrderTargetType TargetType { get; }
+            public Entity TargetEntity { get; }
+            public OrderTarget TargetPosition { get; }
+            public int? WallSectionIndex { get; }
+            public int Priority { get; }
+
+            public OrderMessageInfo(int orderIndex, Order orderPrefab, string orderOption, int? orderOptionIndex, Character targetCharacter, Order.OrderTargetType targetType, Entity targetEntity, OrderTarget targetPosition, int? wallSectionIndex, int orderPriority)
+            {
+                OrderIndex = orderIndex;
+                OrderPrefab = orderPrefab;
+                OrderOption = orderOption;
+                OrderOptionIndex = orderOptionIndex;
+                TargetCharacter = targetCharacter;
+                TargetType = targetType;
+                TargetEntity = targetEntity;
+                TargetPosition = targetPosition;
+                WallSectionIndex = wallSectionIndex;
+                Priority = orderPriority;
+            }
+        }
+
+        public static OrderMessageInfo ReadOrder(IReadMessage msg)
+        {
+            int orderIndex = msg.ReadByte();
+            ushort targetCharacterId = msg.ReadUInt16();
+            Character targetCharacter = targetCharacterId != Entity.NullEntityID ? Entity.FindEntityByID(targetCharacterId) as Character : null;
+            ushort targetEntityId = msg.ReadUInt16();
+            Entity targetEntity = targetEntityId != Entity.NullEntityID ? Entity.FindEntityByID(targetEntityId) : null;
+
+            Order orderPrefab = null;
+            int? optionIndex = null;
+            string orderOption = null;
+            // The option of a Dismiss order is written differently so we know what order we target
+            // now that the game supports multiple current orders simultaneously
+            if (orderIndex >= 0 && orderIndex < Order.PrefabList.Count)
+            {
+                orderPrefab = Order.PrefabList[orderIndex];
+                if (orderPrefab.Identifier != "dismissed")
+                {
+                    optionIndex = msg.ReadByte();
+                }
+                // Does the dismiss order have a specified target?
+                else if (msg.ReadBoolean())
+                {
+                    int identifierCount = msg.ReadByte();
+                    if (identifierCount > 0)
+                    {
+                        int dismissedOrderIndex = msg.ReadByte();
+                        Order dismissedOrderPrefab = null;
+                        if (dismissedOrderIndex >= 0 && dismissedOrderIndex < Order.PrefabList.Count)
+                        {
+                            dismissedOrderPrefab = Order.PrefabList[dismissedOrderIndex];
+                            orderOption = dismissedOrderPrefab.Identifier;
+                        }
+                        if (identifierCount > 1)
+                        {
+                            int dismissedOrderOptionIndex = msg.ReadByte();
+                            if (dismissedOrderPrefab != null)
+                            {
+                                var options = dismissedOrderPrefab.Options;
+                                if (options != null && dismissedOrderOptionIndex >= 0 && dismissedOrderOptionIndex < options.Length)
+                                {
+                                    orderOption += $".{options[dismissedOrderOptionIndex]}";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                optionIndex = msg.ReadByte();
+            }
+
+            int orderPriority = msg.ReadByte();
+            OrderTarget orderTargetPosition = null;
+            Order.OrderTargetType orderTargetType = (Order.OrderTargetType)msg.ReadByte();
+            int wallSectionIndex = 0;
+            if (msg.ReadBoolean())
+            {
+                float x = msg.ReadSingle();
+                float y = msg.ReadSingle();
+                ushort hullId = msg.ReadUInt16();
+                var hull = hullId != Entity.NullEntityID ? Entity.FindEntityByID(hullId) as Hull : null;
+                orderTargetPosition = new OrderTarget(new Vector2(x, y), hull, creatingFromExistingData: true);
+            }
+            else if (orderTargetType == Order.OrderTargetType.WallSection)
+            {
+                wallSectionIndex = msg.ReadByte();
+            }
+
+            return new OrderMessageInfo(orderIndex, orderPrefab, orderOption, optionIndex, targetCharacter, orderTargetType, targetEntity, orderTargetPosition, wallSectionIndex, orderPriority);
         }
     }
 }

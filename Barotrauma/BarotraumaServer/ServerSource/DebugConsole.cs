@@ -1688,13 +1688,18 @@ namespace Barotrauma
                 "heal",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    Character healedCharacter = (args.Length == 0) ? client.Character : FindMatchingCharacter(args);
+                    bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
+                    Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
                     if (healedCharacter != null)
                     {
                         healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                         healedCharacter.Oxygen = 100.0f;
                         healedCharacter.Bloodloss = 0.0f;
                         healedCharacter.SetStun(0.0f, true);
+                        if (healAll)
+                        {
+                            healedCharacter.CharacterHealth.RemoveAllAfflictions();
+                        }
                     }
                 }
             );

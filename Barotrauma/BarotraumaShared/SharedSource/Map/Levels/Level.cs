@@ -325,9 +325,11 @@ namespace Barotrauma
             get { return LevelData.Seed; }
         }
 
+
+        public static float? ForcedDifficulty;
         public float Difficulty
         {
-            get { return LevelData.Difficulty; }
+            get { return ForcedDifficulty ?? LevelData.Difficulty; }
         }
 
         public LevelData.LevelType Type
@@ -2710,14 +2712,21 @@ namespace Barotrauma
             return position;
         }
 
-        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Vector2 position, Func<InterestingPosition, bool> filter = null)
+        public bool TryGetInterestingPositionAwayFromPoint(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Vector2 position, Vector2 awayPoint, float minDistFromPoint, Func<InterestingPosition, bool> filter = null)
         {
-            bool success = TryGetInterestingPosition(useSyncedRand, positionType, minDistFromSubs, out Point pos, filter);
+            bool success = TryGetInterestingPosition(useSyncedRand, positionType, minDistFromSubs, out Point pos, awayPoint, minDistFromPoint, filter);
             position = pos.ToVector2();
             return success;
         }
 
-        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Point position, Func<InterestingPosition, bool> filter = null)
+        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Vector2 position, Func<InterestingPosition, bool> filter = null)
+        {
+            bool success = TryGetInterestingPosition(useSyncedRand, positionType, minDistFromSubs, out Point pos, Vector2.Zero, minDistFromPoint: 0, filter);
+            position = pos.ToVector2();
+            return success;
+        }
+
+        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Point position, Vector2 awayPoint, float minDistFromPoint = 0f, Func<InterestingPosition, bool> filter = null)
         {
             if (!PositionsOfInterest.Any())
             {
@@ -2755,6 +2764,11 @@ namespace Barotrauma
                     farEnoughPositions.RemoveAll(p => Vector2.DistanceSquared(p.Position.ToVector2(), sub.WorldPosition) < minDistFromSubs * minDistFromSubs);
                 }
             }
+            if (minDistFromPoint > 0.0f)
+            {
+                farEnoughPositions.RemoveAll(p => Vector2.DistanceSquared(p.Position.ToVector2(), awayPoint) < minDistFromPoint * minDistFromPoint);
+            }
+
             if (!farEnoughPositions.Any())
             {
                 string errorMsg = "Could not find a position of interest far enough from the submarines. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
@@ -2826,7 +2840,7 @@ namespace Barotrauma
             if (index < 0 || index >= bottomPositions.Count - 1) { return new Vector2(xPosition, BottomPos); }
 
             float t = (xPosition - bottomPositions[index].X) / (bottomPositions[index + 1].X - bottomPositions[index].X);
-            Debug.Assert(t < 1.0f);
+            Debug.Assert(t <= 1.0f);
             t = MathHelper.Clamp(t, 0.0f, 1.0f);
 
             float yPos = MathHelper.Lerp(bottomPositions[index].Y, bottomPositions[index + 1].Y, t);
@@ -3094,12 +3108,11 @@ namespace Barotrauma
                 sub.SetPosition(spawnPoint);
                 wreckPositions.Add(sub, positions);
                 blockedRects.Add(sub, rects);
-
                 return sub;
             }
             else
             {
-                DebugConsole.NewMessage($"Failed to position wreck {subName}. Used {tempSW.ElapsedMilliseconds.ToString()} (ms).", Color.Red);
+                DebugConsole.NewMessage($"Failed to position wreck {subName}. Used {tempSW.ElapsedMilliseconds} (ms).", Color.Red);
                 return null;
             }
 
@@ -3306,18 +3319,19 @@ namespace Barotrauma
             }
             wreckFiles.Shuffle(Rand.RandSync.Server);
 
-            int wreckCount = Math.Min(Loaded.GenerationParams.WreckCount, wreckFiles.Count);
+            int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, wreckFiles.Count);
+            int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, wreckFiles.Count);
+            int wreckCount = Rand.Range(minWreckCount, maxWreckCount, Rand.RandSync.Server);
             Wrecks = new List<Submarine>(wreckCount);
             for (int i = 0; i < wreckCount; i++)
             {
                 ContentFile contentFile = wreckFiles[i];
                 if (contentFile == null) { continue; }
                 string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
-                // For storing the translations. Used only for debugging.
                 SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck);
             }
             totalSW.Stop();
-            Debug.WriteLine($"{Wrecks.Count} wrecks created in { totalSW.ElapsedMilliseconds.ToString()} (ms)");
+            Debug.WriteLine($"{Wrecks.Count} wrecks created in { totalSW.ElapsedMilliseconds} (ms)");
         }
 
         private bool HasStartOutpost()
@@ -3365,11 +3379,8 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                if (Submarine.MainSubs.Length > 1 && Submarine.MainSubs[0] != null && Submarine.MainSubs[1] != null)
-                {
-                    continue;
-                }
-
+                if (GameMain.GameSession.GameMode is PvPMode) { continue; }
+                
                 bool isStart = (i == 0) == !Mirrored;
                 if (isStart)
                 {

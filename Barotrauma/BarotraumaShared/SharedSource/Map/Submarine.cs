@@ -1238,6 +1238,26 @@ namespace Barotrauma
             return list.FindAll(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
         }
 
+        public List<(ItemContainer container, int freeSlots)> GetCargoContainers()
+        {
+            List<(ItemContainer container, int freeSlots)> containers = new List<(ItemContainer container, int freeSlots)>();
+            var connectedSubs = GetConnectedSubs();
+            foreach (Item item in Item.ItemList)
+            {
+                if (!connectedSubs.Contains(item.Submarine)) { continue; }
+                if (!item.HasTag("cargocontainer")) { continue; }
+                var itemContainer = item.GetComponent<ItemContainer>();
+                if (itemContainer == null) { continue; }
+                int emptySlots = 0;
+                for (int i = 0; i < itemContainer.Inventory.Capacity; i++)
+                {
+                    if (itemContainer.Inventory.GetItemAt(i) == null) { emptySlots++; }
+                }
+                containers.Add((itemContainer, emptySlots));
+            }
+            return containers;
+        }
+
         public IEnumerable<T> GetEntities<T>(bool includingConnectedSubs, IEnumerable<T> list) where T : MapEntity
         {
             return list.Where(e => IsEntityFoundOnThisSub(e, includingConnectedSubs));
@@ -1527,6 +1547,8 @@ namespace Barotrauma
 
             Rectangle dimensions = CalculateDimensions();
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
+            var cargoContainers = GetCargoContainers();
+            element.Add(new XAttribute("cargocapacity", cargoContainers.Sum(c => c.freeSlots)));
             element.Add(new XAttribute("recommendedcrewsizemin", Info.RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));
@@ -1535,6 +1557,40 @@ namespace Barotrauma
             if (Info.Type == SubmarineType.OutpostModule)
             {
                 Info.OutpostModuleInfo?.Save(element);
+            }
+
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.PendingItemSwap?.SwappableItem?.ConnectedItemsToSwap == null) { continue; }
+                foreach (var (requiredTag, swapTo) in item.PendingItemSwap.SwappableItem.ConnectedItemsToSwap)
+                {
+                    List<Item> itemsToSwap = new List<Item>();
+                    itemsToSwap.AddRange(item.linkedTo.Where(lt => (lt as Item)?.HasTag(requiredTag) ?? false).Cast<Item>());
+                    var connectionPanel = item.GetComponent<ConnectionPanel>();
+                    if (connectionPanel != null)
+                    {
+                        foreach (Connection c in connectionPanel.Connections)
+                        {
+                            foreach (var connectedComponent in item.GetConnectedComponentsRecursive<ItemComponent>(c))
+                            {
+                                if (!itemsToSwap.Contains(connectedComponent.Item) && connectedComponent.Item.HasTag(requiredTag))
+                                {
+                                    itemsToSwap.Add(connectedComponent.Item);
+                                }
+                            }
+                        }
+                    }
+                    ItemPrefab itemPrefab = ItemPrefab.Find("", swapTo);
+                    if (itemPrefab == null) 
+                    {
+                        DebugConsole.ThrowError($"Failed to swap an item connected to \"{item.Name}\" into \"{swapTo}\".");
+                        continue;
+                    }
+                    foreach (Item itemToSwap in itemsToSwap)
+                    {
+                        if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }                       
+                    }
+                }
             }
 
             foreach (MapEntity e in MapEntity.mapEntityList.OrderBy(e => e.ID))

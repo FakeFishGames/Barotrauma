@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFire : AIObjective
     {
-        public override string DebugTag => "extinguish fire";
+        public override string Identifier { get; set; } = "extinguish fire";
         public override bool ForceRun => true;
         public override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
@@ -27,7 +27,7 @@ namespace Barotrauma
             this.targetHull = targetHull;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
@@ -68,7 +68,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        protected override bool Check() => targetHull.FireSources.None();
+        protected override bool CheckObjectiveSpecific() => targetHull.FireSources.None();
 
         private float sinTime;
         protected override void Act(float deltaTime)

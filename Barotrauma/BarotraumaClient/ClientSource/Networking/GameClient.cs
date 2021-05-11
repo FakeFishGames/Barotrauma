@@ -1046,6 +1046,11 @@ namespace Barotrauma.Networking
                 mission.ClientReadInitial(inc);
             }
 
+            if (inc.ReadBoolean())
+            {
+                CrewManager.ClientReadActiveOrders(inc);
+            }
+
             roundInitStatus = RoundInitStatus.Started;
         }
 
@@ -1609,6 +1614,9 @@ namespace Barotrauma.Networking
             DateTime? timeOut = null;
             DateTime requestFinalizeTime = DateTime.Now;
             TimeSpan requestFinalizeInterval = new TimeSpan(0, 0, 2);
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.Write((byte)ClientPacketHeader.REQUEST_STARTGAMEFINALIZE);
+            clientPeer.Send(msg, DeliveryMethod.Unreliable);
 
             while (true)
             {
@@ -1618,7 +1626,7 @@ namespace Barotrauma.Networking
                     {
                         if (DateTime.Now > requestFinalizeTime)
                         {
-                            IWriteMessage msg = new WriteOnlyMessage();
+                            msg = new WriteOnlyMessage();
                             msg.Write((byte)ClientPacketHeader.REQUEST_STARTGAMEFINALIZE);
                             clientPeer.Send(msg, DeliveryMethod.Unreliable);
                             requestFinalizeTime = DateTime.Now + requestFinalizeInterval;
@@ -1648,12 +1656,11 @@ namespace Barotrauma.Networking
                         break;
                     }
 
-                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize)
-                    {
-                        break;
-                    }
+                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
 
                     clientPeer.Update((float)Timing.Step);
+
+                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
                 }
                 catch (Exception e)
                 {
@@ -3289,16 +3296,24 @@ namespace Barotrauma.Networking
             {
                 string respawnText = string.Empty;
                 Color textColor = Color.White;
-                bool canChooseRespawn = 
-                    GameMain.GameSession.GameMode is CampaignMode && 
-                    Character.Controlled == null && 
+                bool canChooseRespawn =
+                    GameMain.GameSession.GameMode is CampaignMode &&
+                    Character.Controlled == null &&
                     Level.Loaded?.Type != LevelData.LevelType.Outpost &&
                     (characterInfo == null || HasSpawned);
-                if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.RespawnCountdownStarted)
+                if (respawnManager.CurrentState == RespawnManager.State.Waiting)
                 {
-                    float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
-                    respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                    if (respawnManager.RespawnCountdownStarted)
+                    {
+                        float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
+                        respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                    }
+                    else if (respawnManager.PendingRespawnCount > 0)
+                    {
+                        respawnText = TextManager.GetWithVariables("RespawnWaitingForMoreDeadPlayers", 
+                            new string[] { "[deadplayers]", "[requireddeadplayers]" },
+                            new string[] { respawnManager.PendingRespawnCount.ToString(), respawnManager.RequiredRespawnCount.ToString() });
+                    }
                 }
                 else if (respawnManager.CurrentState == RespawnManager.State.Transporting && 
                     respawnManager.ReturnCountdownStarted)

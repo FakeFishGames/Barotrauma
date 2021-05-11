@@ -19,7 +19,8 @@ namespace Barotrauma.Items.Components
         {
             Any,
             Human,
-            Monster
+            Monster,
+            Wall
         }
 
         [Serialize(false, false, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
@@ -153,7 +154,7 @@ namespace Barotrauma.Items.Components
             if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(new Signal(signalOut, 1), "state_out"); }
 
             updateTimer -= deltaTime;
-            if (updateTimer > 0.0f) return;
+            if (updateTimer > 0.0f) { return; }
 
             MotionDetected = false;
             updateTimer = UpdateInterval;
@@ -171,6 +172,30 @@ namespace Barotrauma.Items.Components
             float broadRangeX = Math.Max(rangeX * 2, 500);
             float broadRangeY = Math.Max(rangeY * 2, 500);
 
+            if (item.CurrentHull == null && item.Submarine != null && Level.Loaded != null &&
+                (Target == TargetType.Wall || Target == TargetType.Any) &&
+                (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity))
+            {
+                var cells = Level.Loaded.GetCells(item.WorldPosition, 1);
+                foreach (var cell in cells)
+                {
+                    if (cell.IsPointInside(item.WorldPosition))
+                    {
+                        MotionDetected = true;
+                        return;
+                    }
+                    foreach (var edge in cell.Edges)
+                    {
+                        var closestPoint = MathUtils.GetClosestPointOnLineSegment(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, item.WorldPosition);
+                        if (Math.Abs(closestPoint.X - item.WorldPosition.X) < rangeX && Math.Abs(closestPoint.Y - item.WorldPosition.Y) < rangeY)
+                        {
+                            MotionDetected = true;
+                            return;
+                        }
+                    }                    
+                }
+            }
+
             foreach (Character c in Character.CharacterList)
             {
                 if (IgnoreDead && c.IsDead) { continue; }
@@ -186,6 +211,8 @@ namespace Barotrauma.Items.Components
                         break;
                     case TargetType.Monster:
                         if (c.IsHuman || c.IsPet) { continue; }
+                        break;
+                    case TargetType.Wall:
                         break;
                 }
 
@@ -203,7 +230,7 @@ namespace Barotrauma.Items.Components
                     if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                     {
                         MotionDetected = true;
-                        break;
+                        return;
                     }
                 }
             }

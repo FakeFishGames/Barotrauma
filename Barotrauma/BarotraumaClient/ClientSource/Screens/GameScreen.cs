@@ -364,13 +364,15 @@ namespace Barotrauma
                 Quad.Render();
             }
 
-            float grainStrength = Character.Controlled?.GrainStrength ?? 0;
-            if (grainStrength > 0)
+            if (Character.Controlled is { } character)
             {
+                float grainStrength = character.GrainStrength;
                 Rectangle screenRect = new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, effect: GrainEffect);
-                GUI.DrawRectangle(spriteBatch, screenRect, Color.White * grainStrength, isFilled: true);
+                GUI.DrawRectangle(spriteBatch, screenRect, Color.White, isFilled: true);
                 GrainEffect.Parameters["seed"].SetValue(Rand.Range(0f, 1f, Rand.RandSync.Unsynced));
+                GrainEffect.Parameters["intensity"].SetValue(grainStrength);
+                GrainEffect.Parameters["grainColor"].SetValue(character.GrainColor.ToVector4());
                 spriteBatch.End();
             }
 

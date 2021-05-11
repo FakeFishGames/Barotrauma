@@ -22,7 +22,7 @@ namespace Barotrauma
                 msg.Write((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {
-                    item.WriteSpawnData(msg, item.ID, item.ParentInventory.Owner?.ID ?? Entity.NullEntityID, 0);
+                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0);
                 }
             }
         }

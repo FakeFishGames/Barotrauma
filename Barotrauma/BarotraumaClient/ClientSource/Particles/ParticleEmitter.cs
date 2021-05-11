@@ -1,10 +1,21 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Barotrauma.Particles
 {
+    class ParticleEmitterProperties : ISerializableEntity
+    {
+        public string Name => nameof(ParticleEmitterProperties);
+        public Dictionary<string, SerializableProperty> SerializableProperties { get; }
+
+        public ParticleEmitterProperties(XElement element)
+        {
+            SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+        }
+    }
+
     class ParticleEmitter
     {
         private float emitTimer;
@@ -23,7 +34,7 @@ namespace Barotrauma.Particles
             Prefab = prefab;
         }
 
-        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null)
+        public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             emitTimer += deltaTime * amountMultiplier;
             burstEmitTimer -= deltaTime;
@@ -33,7 +44,7 @@ namespace Barotrauma.Particles
                 float emitInterval = 1.0f / Prefab.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
-                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle);
+                    Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: tracerPoints);
                     emitTimer -= emitInterval;
                 }
             }
@@ -43,11 +54,11 @@ namespace Barotrauma.Particles
             burstEmitTimer = Prefab.EmitInterval;
             for (int i = 0; i < Prefab.ParticleAmount * amountMultiplier; i++)
             {
-                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle);
+                Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: tracerPoints);
             }
         }
 
-        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null)
+        private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             angle += Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
 
@@ -55,11 +66,12 @@ namespace Barotrauma.Particles
             Vector2 velocity = dir * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax) * velocityMultiplier;
             position += dir * Rand.Range(Prefab.DistanceMin, Prefab.DistanceMax);
 
-            var particle = GameMain.ParticleManager.CreateParticle(overrideParticle ?? Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop);
+            var particle = GameMain.ParticleManager.CreateParticle(overrideParticle ?? Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, tracerPoints: tracerPoints);
 
             if (particle != null)
             {
                 particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax) * sizeMultiplier;
+                particle.Size *= Prefab.ScaleMultiplier;
                 particle.HighQualityCollisionDetection = Prefab.HighQualityCollisionDetection;
                 if (colorMultiplier.HasValue) 
                 { 
@@ -135,6 +147,7 @@ namespace Barotrauma.Particles
         public readonly float VelocityMin, VelocityMax;
 
         public readonly float ScaleMin, ScaleMax;
+        public readonly Vector2 ScaleMultiplier;
 
         public readonly float EmitInterval;
         public readonly int ParticleAmount;
@@ -179,6 +192,7 @@ namespace Barotrauma.Particles
                 ScaleMin = element.GetAttributeFloat("scalemin", 1.0f);
                 ScaleMax = Math.Max(ScaleMin, element.GetAttributeFloat("scalemax", 1.0f));
             }
+            ScaleMultiplier = element.GetAttributeVector2("scalemultiplier", Vector2.One);
 
             if (element.Attribute("distance") == null)
             {

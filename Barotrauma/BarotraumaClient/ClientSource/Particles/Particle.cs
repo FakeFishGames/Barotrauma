@@ -66,7 +66,7 @@ namespace Barotrauma.Particles
         public Vector4 ColorMultiplier;
 
         public bool DrawOnTop { get; private set; }
-                
+
         public ParticlePrefab.DrawTargetType DrawTarget
         {
             get { return prefab.DrawTarget; }        
@@ -103,8 +103,7 @@ namespace Barotrauma.Particles
         {
             return debugName;
         }
-
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
             debugName = $"Particle ({prefab.Name})";
@@ -117,6 +116,16 @@ namespace Barotrauma.Particles
             dragVec = Vector2.Zero;
 
             currentHull = Hull.FindHull(position, hullGuess);
+
+            size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
+
+            if (tracerPoints != null)
+            {
+                size = new Vector2(Vector2.Distance(tracerPoints.Item1, tracerPoints.Item2), size.Y);
+                position = (tracerPoints.Item1 + tracerPoints.Item2) / 2;
+            }
+
+            sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
             this.position = position;
             prevPosition = position;
@@ -138,10 +147,6 @@ namespace Barotrauma.Particles
             totalLifeTime = prefab.LifeTime;
             lifeTime = prefab.LifeTime;
             startDelay = Rand.Range(prefab.StartDelayMin, prefab.StartDelayMax);
-            
-            size = prefab.StartSizeMin + (prefab.StartSizeMax - prefab.StartSizeMin) * Rand.Range(0.0f, 1.0f);
-
-            sizeChange = prefab.SizeChangeMin + (prefab.SizeChangeMax - prefab.SizeChangeMin) * Rand.Range(0.0f, 1.0f);
 
             color = prefab.StartColor;
             changeColor = prefab.StartColor != prefab.EndColor;

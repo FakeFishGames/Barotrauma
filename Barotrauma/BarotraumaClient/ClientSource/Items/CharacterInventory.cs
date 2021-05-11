@@ -910,7 +910,7 @@ namespace Barotrauma
                 else if (allowEquip) //doubleclicked and no other inventory is selected
                 {
                     //not equipped -> attempt to equip
-                    if (!character.HasEquippedItem(item))
+                    if (!character.HasEquippedItem(item) || item.GetComponents<Pickable>().Count() > 1)
                     {
                         return QuickUseAction.Equip;
                     }

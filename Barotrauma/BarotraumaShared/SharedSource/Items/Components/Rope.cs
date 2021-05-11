@@ -10,7 +10,8 @@ namespace Barotrauma.Items.Components
 {
     partial class Rope : ItemComponent, IServerSerializable
     {
-        private Item source, target;
+        private ISpatialEntity source;
+        private Item target;
 
         private float snapTimer;
         private const float SnapAnimDuration = 1.0f;
@@ -85,7 +86,7 @@ namespace Barotrauma.Items.Components
         partial void InitProjSpecific(XElement element);
 
         
-        public void Attach(Item source, Item target)
+        public void Attach(ISpatialEntity source, Item target)
         {
             System.Diagnostics.Debug.Assert(source != null);
             System.Diagnostics.Debug.Assert(target != null);
@@ -97,7 +98,8 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (source == null || source.Removed || target == null || target.Removed)
+            if (source == null || target == null || target.Removed ||
+                (source is Entity sourceEntity && sourceEntity.Removed))
             {
                 IsActive = false;
                 return;
@@ -224,32 +226,40 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private PhysicsBody GetBodyToPull(Item target)
+        private PhysicsBody GetBodyToPull(ISpatialEntity target)
         {
-            if (target.ParentInventory is CharacterInventory characterInventory &&
-                characterInventory.Owner is Character ownerCharacter)
+            if (target is Item targetItem)
             {
-                if (ownerCharacter.Removed) { return null; }
-                return ownerCharacter.AnimController.Collider;
+                if (targetItem.ParentInventory is CharacterInventory characterInventory &&
+                    characterInventory.Owner is Character ownerCharacter)
+                {
+                    if (ownerCharacter.Removed) { return null; }
+                    return ownerCharacter.AnimController.Collider;
+                }
+                var projectile = targetItem.GetComponent<Projectile>();
+                if (projectile != null)
+                {
+                    if (projectile.StickTarget?.UserData is Structure structure)
+                    {
+                        return structure.Submarine?.PhysicsBody;
+                    }
+                    else if (projectile.StickTarget?.UserData is Submarine sub)
+                    {
+                        return sub?.PhysicsBody;
+                    }
+                    else if (projectile.StickTarget?.UserData is Character character)
+                    {
+                        return character.AnimController.Collider;
+                    }
+                    return null;
+                }
+                if (targetItem.body != null) { return targetItem.body; }
             }
-            var projectile = target.GetComponent<Projectile>();
-            if (projectile != null)
+            else if (target is Limb targetLimb)
             {
-                if (projectile.StickTarget?.UserData is Structure structure)
-                {
-                    return structure.Submarine?.PhysicsBody;
-                }
-                else if (projectile.StickTarget?.UserData is Submarine sub)
-                {
-                    return sub?.PhysicsBody;
-                }
-                else if (projectile.StickTarget?.UserData is Character character)
-                {
-                    return character.AnimController.Collider;
-                }
-                return null;
+                return targetLimb.body;
             }
-            if (target.body != null) { return target.body; }
+
             return null;
         }
     }

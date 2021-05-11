@@ -547,8 +547,8 @@ namespace Barotrauma
             [Serialize(false, true, description: "If enabled, the character chooses randomly from the available attacks. The priority is used as a weight for weighted random."), Editable]
             public bool RandomAttack { get; private set; }
 
-            [Serialize(false, true, description:"Can the character open doors and hatches without a proper id card? Only applies on humanoids."), Editable]
-            public bool Infiltrate { get; private set; }
+            [Serialize(false, true, description:"Does the creature know how to open doors (still requires a proper ID card). Only applies on humanoids. Humans can always open doors (They don't use this AI definition)."), Editable]
+            public bool CanOpenDoors { get; private set; }
 
             [Serialize(true, true, "Is the creature allowed to navigate from and into the depths of the abyss? When enabled, the creatures will try to avoid the depths."), Editable]
             public bool AvoidAbyss { get; set; }

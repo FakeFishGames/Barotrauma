@@ -13,7 +13,7 @@ namespace Barotrauma
         private Point monsterCountRange;
         private readonly string sonarLabel;
 
-        public BeaconMission(MissionPrefab prefab, Location[] locations) : base(prefab, locations)
+        public BeaconMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
             swarmSpawned = false;
 

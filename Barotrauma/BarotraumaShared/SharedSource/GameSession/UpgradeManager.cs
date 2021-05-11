@@ -28,6 +28,18 @@ namespace Barotrauma
         }
     }
 
+    internal class PurchasedItemSwap
+    {
+        public readonly Item ItemToRemove;
+        public readonly ItemPrefab ItemToInstall;
+
+        public PurchasedItemSwap(Item itemToRemove, ItemPrefab itemToInstall)
+        {
+            ItemToRemove = itemToRemove;
+            ItemToInstall = itemToInstall;
+        }
+    }
+
     /// <summary>
     /// This class handles all upgrade logic.
     /// Storing, applying, checking and validation of upgrades.
@@ -75,6 +87,8 @@ namespace Barotrauma
 
         public readonly List<PurchasedUpgrade> PendingUpgrades = new List<PurchasedUpgrade>();
 
+        public readonly List<PurchasedItemSwap> PurchasedItemSwaps = new List<PurchasedItemSwap>();
+
         private CampaignMetadata Metadata => Campaign.CampaignMetadata;
         private readonly CampaignMode Campaign;
         private int spentMoney;
@@ -90,7 +104,67 @@ namespace Barotrauma
         public UpgradeManager(CampaignMode campaign, XElement element, bool isSingleplayer) : this(campaign)
         {
             DebugConsole.Log($"Restored upgrade manager from save file, ({element.Elements().Count()} pending upgrades).");
-            LoadPendingUpgrades(element, isSingleplayer);
+
+            //backwards compatibility: 
+            //upgrades used to be saved to a <pendingupgrades> element, now upgrades and item swaps are saved separately under a <upgrademanager> element
+            if (element.Name.LocalName.Equals("pendingupgrades", StringComparison.OrdinalIgnoreCase))
+            {
+                LoadPendingUpgrades(element, isSingleplayer);
+            }
+            else
+            {
+                foreach (XElement subElement in element.Elements())
+                {
+                    switch (subElement.Name.ToString().ToLowerInvariant())
+                    {
+                        case "pendingupgrades":
+                            LoadPendingUpgrades(subElement, isSingleplayer);
+                            break;
+                    }
+                }
+            }
+        }
+
+        public int DetermineItemSwapCost(Item item, ItemPrefab replacement)
+        {
+            if (replacement == null)
+            {
+                replacement = ItemPrefab.Find("", item.Prefab.SwappableItem.ReplacementOnUninstall);
+                if (replacement == null)
+                {
+                    DebugConsole.ThrowError("Failed to determine swap cost for item \"{}\". Trying to uninstall the item but no replacement item found.");
+                    return 0;
+                }
+            }
+
+            int price = 0;
+            if (replacement == item.Prefab)
+            {
+                if (item.PendingItemSwap != null)
+                {
+                    //refund the pending swap
+                    price -= item.PendingItemSwap.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                    //buy back the current item
+                    price += item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                }
+            }
+            else
+            {
+                price = replacement.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                if (item.PendingItemSwap != null)
+                {
+                    //refund the pending swap
+                    price -= item.PendingItemSwap.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                    //buy back the current item
+                    price += item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                }
+                //refund the current item
+                if (replacement != item.prefab)
+                {
+                    price -= item.Prefab.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation);
+                }
+            }
+            return price;
         }
 
         private DateTime lastUpgradeSpeak, lastErrorSpeak;
@@ -102,9 +176,6 @@ namespace Barotrauma
         /// Purchased upgrades are temporarily stored in <see cref="PendingUpgrades"/> and they are applied
         /// after the next round starts similarly how items are spawned in the stowage room after the round starts.
         /// </remarks>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        /// <param name="force"></param>
         public void PurchaseUpgrade(UpgradePrefab prefab, UpgradeCategory category, bool force = false)
         {
             if (!CanUpgradeSub())
@@ -142,7 +213,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.Money > price)
+            if (Campaign.Money >= price)
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
@@ -185,6 +256,151 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Purchases an item swap and handles logic for deducting the credit.
+        /// </summary>
+        public void PurchaseItemSwap(Item itemToRemove, ItemPrefab itemToInstall, bool force = false)
+        {
+            if (!CanUpgradeSub())
+            {
+                DebugConsole.ThrowError("Cannot swap items when switching to another submarine.");
+                return;
+            }
+            if (itemToRemove == null)
+            {
+                DebugConsole.ThrowError($"Cannot swap null item!");
+                return;
+            }
+            if (!UpgradeCategory.Categories.Any(c => c.ItemTags.Any(t => itemToRemove.HasTag(t)) && c.ItemTags.Any(t => itemToInstall.Tags.Contains(t))))
+            {
+                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" with \"{itemToInstall.Name}\" (not in the same upgrade category).");
+                return;
+            }
+
+            /*if (itemToRemove.PendingItemSwap != null)
+            {
+                CancelItemSwap(itemToRemove);
+            }
+            else */
+            if (itemToRemove.prefab == itemToInstall)
+            {
+                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" (trying to swap with the same item!).");
+                return;
+            }
+            SwappableItem? swappableItem = itemToRemove.Prefab.SwappableItem;
+            if (swappableItem == null)
+            {
+                DebugConsole.ThrowError($"Failed to swap item \"{itemToRemove.Name}\" (not configured as a swappable item).");
+                return;
+            }
+
+            int price = 0;
+            if (!itemToRemove.AvailableSwaps.Contains(itemToInstall))
+            {
+                price = itemToInstall.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation);
+            }
+
+            if (force)
+            {
+                price = 0;
+            }
+
+            if (Campaign.Money >= price)
+            {
+                PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToRemove);
+                if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                {
+                    // only make the NPC speak if more than 5 minutes have passed since the last purchased service
+                    if (lastUpgradeSpeak == DateTime.MinValue || lastUpgradeSpeak.AddMinutes(5) < DateTime.Now)
+                    {
+                        UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased"), Campaign.IsSinglePlayer);
+                        lastUpgradeSpeak = DateTime.Now;
+                    }
+                }
+
+                Campaign.Money -= price;
+                spentMoney += price;
+
+                itemToRemove.AvailableSwaps.Add(itemToRemove.Prefab);
+                if (itemToInstall != null) { itemToRemove.AvailableSwaps.Add(itemToInstall); }
+
+                if (itemToRemove.Prefab != itemToInstall && itemToInstall != null)
+                {
+                    itemToRemove.PendingItemSwap = itemToInstall;
+                    PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
+                    DebugLog($"CLIENT: Swapped item \"{itemToRemove.Name}\" with \"{itemToInstall.Name}\".", Color.Orange);
+                }
+                else
+                {
+                    DebugLog($"CLIENT: Cancelled swapping the item \"{itemToRemove.Name}\" with \"{(itemToRemove.PendingItemSwap?.Name ?? null)}\".", Color.Orange);
+                }
+                OnUpgradesChanged?.Invoke();
+            }
+            else
+            {
+                DebugConsole.ThrowError("Tried to swap an item with insufficient funds, the transaction has not been completed.\n" +
+                                        $"Item to remove: {itemToRemove.Name}, Item to install: {itemToInstall.Name}, Cost: {price}, Have: {Campaign.Money}");
+            }
+        }
+
+        /// <summary>
+        /// Cancels the currently pending item swap, or uninstalls the item if there's no swap pending
+        /// </summary>
+        public void CancelItemSwap(Item itemToRemove, bool force = false)
+        {
+            if (!CanUpgradeSub())
+            {
+                DebugConsole.ThrowError("Cannot swap items when switching to another submarine.");
+                return;
+            }
+
+            if (itemToRemove?.PendingItemSwap == null && string.IsNullOrEmpty(itemToRemove?.Prefab.SwappableItem?.ReplacementOnUninstall))
+            {
+                DebugConsole.ThrowError($"Cannot uninstall item \"{itemToRemove?.Name}\" (no replacement item configured).");
+                return;
+            }
+
+            SwappableItem? swappableItem = itemToRemove.Prefab.SwappableItem;
+            if (swappableItem == null)
+            {
+                DebugConsole.ThrowError($"Failed to uninstall item \"{itemToRemove.Name}\" (not configured as a swappable item).");
+                return;
+            }
+
+            if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+            {
+                // only make the NPC speak if more than 5 minutes have passed since the last purchased service
+                if (lastUpgradeSpeak == DateTime.MinValue || lastUpgradeSpeak.AddMinutes(5) < DateTime.Now)
+                {
+                    UpgradeNPCSpeak(TextManager.Get("Dialog.UpgradePurchased"), Campaign.IsSinglePlayer);
+                    lastUpgradeSpeak = DateTime.Now;
+                }
+            }
+
+            if (itemToRemove.PendingItemSwap == null)
+            {
+                var replacement = MapEntityPrefab.Find("", swappableItem.ReplacementOnUninstall) as ItemPrefab;
+                if (replacement == null)
+                {
+                    DebugConsole.ThrowError($"Failed to uninstall item \"{itemToRemove.Name}\". Could not find the replacement item \"{swappableItem.ReplacementOnUninstall}\".");
+                    return;
+                }
+                PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToRemove);
+                PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, replacement));
+                DebugLog($"Uninstalled item item \"{itemToRemove.Name}\".", Color.Orange);
+                itemToRemove.PendingItemSwap = replacement;
+            }
+            else
+            {
+                PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToRemove);
+                DebugLog($"Cancelled swapping the item \"{itemToRemove.Name}\" with \"{itemToRemove.PendingItemSwap.Name}\".", Color.Orange);
+                itemToRemove.PendingItemSwap = null;
+            }
+#if CLIENT
+            OnUpgradesChanged?.Invoke();
+#endif       
+        }
+
+        /// <summary>
         /// Applies all our pending upgrades to the submarine.
         /// </summary>
         /// <remarks>
@@ -201,24 +417,17 @@ namespace Barotrauma
         public void ApplyUpgrades()
         {
             PurchasedUpgrades.Clear();
+            PurchasedItemSwaps.Clear();
             if (Submarine.MainSub == null) { return; }
 
             List<PurchasedUpgrade> pendingUpgrades = PendingUpgrades;
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
-                if (Level.Loaded?.Type != LevelData.LevelType.Outpost)
+                if (loadedUpgrades != null)
                 {
-                    if (loadedUpgrades != null)
-                    {
-                        // client receives pending upgrades from the save file
-                        pendingUpgrades = loadedUpgrades;
-                    }
-                }
-                else
-                {
-                    // prevent the client from applying pending upgrades at an outpost when joining mid round
-                    return;
+                    // client receives pending upgrades from the save file
+                    pendingUpgrades = loadedUpgrades;
                 }
             }
 
@@ -592,7 +801,17 @@ namespace Barotrauma
             OnUpgradesChanged?.Invoke();
         }
 
-        public void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
+        public void Save(XElement? parent)
+        {
+            if (parent == null) { return; }
+
+            var upgradeManagerElement = new XElement("upgrademanager");
+            parent.Add(upgradeManagerElement);
+
+            SavePendingUpgrades(upgradeManagerElement, PendingUpgrades);
+        }
+
+        private void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
         {
             if (parent == null) { return; }
 
@@ -647,7 +866,7 @@ namespace Barotrauma
 #endif
         }
 
-        public static void LogError(string text, Dictionary<string, object?> data, Exception e = null)
+        public static void LogError(string text, Dictionary<string, object?> data, Exception? e = null)
         {
             string error = $"{text}\n";
             foreach (var (label, value) in data)

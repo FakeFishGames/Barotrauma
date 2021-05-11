@@ -87,21 +87,6 @@ namespace Barotrauma.Items.Components
         //float = strength of the disruption, between 0-1
         private readonly List<Pair<Vector2, float>> disruptedDirections = new List<Pair<Vector2, float>>();
 
-        class CachedDistance
-        {
-            public readonly Vector2 TransducerWorldPos;
-            public readonly Vector2 WorldPos;
-            public readonly float Distance;
-            public double RecalculationTime;
-
-            public CachedDistance(Vector2 transducerWorldPos, Vector2 worldPos, float dist)
-            {
-                TransducerWorldPos = transducerWorldPos;
-                WorldPos = worldPos;
-                Distance = dist;
-            }
-        }
-
         private readonly Dictionary<object, CachedDistance> markerDistances = new Dictionary<object, CachedDistance>();
 
         private readonly Color positiveColor = Color.Green;
@@ -459,8 +444,13 @@ namespace Barotrauma.Items.Components
                     zoomSlider.BarScroll += PlayerInput.ScrollWheelSpeed / 1000.0f;
                     zoomSlider.OnMoved(zoomSlider, zoomSlider.BarScroll);
                 }
+
+                if (PlayerInput.KeyHit(InputType.Run))
+                {
+                    SonarModeSwitch.OnClicked(SonarModeSwitch, null);
+                }
             }
-            
+
             float distort = 1.0f - item.Condition / item.MaxCondition;
             for (int i = sonarBlips.Count - 1; i >= 0; i--)
             {
@@ -1101,19 +1091,14 @@ namespace Barotrauma.Items.Components
                 if (Level.Loaded != null && dockingPort.Item.Submarine.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
                 if (dockingPort.Item.Submarine == null) { continue; }
                 if (dockingPort.Item.Submarine.Info.IsWreck) { continue; }
-                if (!dockingPort.Item.Submarine.ShowSonarMarker && !dockingPort.Item.Submarine.Info.IsOutpost) { continue; }
+                // docking ports should be shown even if defined as not, if the submarine is the same as the sonar's
+                if (!dockingPort.Item.Submarine.ShowSonarMarker && dockingPort.Item.Submarine != item.Submarine && !dockingPort.Item.Submarine.Info.IsOutpost) { continue; }
 
                 //don't show the docking ports of the opposing team on the sonar
                 if (item.Submarine != null)
                 {
-                    if (dockingPort.Item.Submarine.TeamID == CharacterTeamType.Team1 && (item.Submarine.TeamID == CharacterTeamType.Team2 || Character.Controlled?.TeamID == CharacterTeamType.Team2))
-                    {
-                        continue;
-                    }
-                    else if (dockingPort.Item.Submarine.TeamID == CharacterTeamType.Team2 && (item.Submarine.TeamID == CharacterTeamType.Team1 || Character.Controlled?.TeamID == CharacterTeamType.Team1))
-                    {
-                        continue;
-                    }
+                    // specifically checking for friendlyNPC seems more logical here
+                    if (dockingPort.Item.Submarine.TeamID != item.Submarine.TeamID && dockingPort.Item.Submarine.TeamID != CharacterTeamType.FriendlyNPC) { continue; } 
                 }
 
                 Vector2 offset = (dockingPort.Item.WorldPosition - transducerCenter) * scale;
@@ -1629,9 +1614,7 @@ namespace Barotrauma.Items.Components
             {
                 if (markerDistances.TryGetValue(targetIdentifier, out CachedDistance cachedDistance))
                 {
-                    if (Timing.TotalTime > cachedDistance.RecalculationTime &&
-                        (Vector2.DistanceSquared(cachedDistance.TransducerWorldPos, transducerPosition) > 500 * 500 ||
-                        Vector2.DistanceSquared(cachedDistance.WorldPos, worldPosition) > 500 * 500))
+                    if (cachedDistance.ShouldUpdateDistance(transducerPosition, worldPosition))
                     {
                         markerDistances.Remove(targetIdentifier);
                         CalculateDistance();
@@ -1653,10 +1636,7 @@ namespace Barotrauma.Items.Components
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(transducerPosition), ConvertUnits.ToSimUnits(worldPosition));
                 if (!path.Unreachable)
                 {
-                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, path.TotalLength)
-                    {
-                        RecalculationTime = Timing.TotalTime + Rand.Range(1.0f, 5.0f)
-                    };
+                    var cachedDistance = new CachedDistance(transducerPosition, worldPosition, path.TotalLength, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
                     markerDistances.Add(targetIdentifier, cachedDistance);
                     dist = path.TotalLength;
                 }

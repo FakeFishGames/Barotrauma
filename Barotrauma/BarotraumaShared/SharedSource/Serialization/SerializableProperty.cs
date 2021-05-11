@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -32,7 +33,7 @@ namespace Barotrauma
         public string FallBackTextTag;
 
         /// <summary>
-        /// Currently implemented only for int fields. TODO: implement the remaining types (SerializableEntityEditor)
+        /// Currently implemented only for int and bool fields. TODO: implement the remaining types (SerializableEntityEditor)
         /// </summary>
         public bool ReadOnly;
 
@@ -58,6 +59,34 @@ namespace Barotrauma
     [AttributeUsage(AttributeTargets.Property)]
     class InGameEditable : Editable
     {
+    }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    class ConditionallyEditable : Editable
+    {
+        public ConditionallyEditable(ConditionType conditionType)
+        {
+            this.conditionType = conditionType;
+        }
+
+        private ConditionType conditionType;
+
+        public enum ConditionType
+        {
+            //These need to exist at compile time, so it is a little awkward
+            //I would love to see a better way to do this
+            AllowLinkingWifiToChat
+        }
+
+        public bool IsEditable()
+        {
+            switch (conditionType)
+            {
+                case ConditionType.AllowLinkingWifiToChat:
+                    return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
+            }
+            return false;
+        }
     }
 
 

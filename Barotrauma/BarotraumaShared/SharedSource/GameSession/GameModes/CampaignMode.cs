@@ -51,7 +51,7 @@ namespace Barotrauma
         //there can be no events before this time has passed during the 1st campaign round
         const float FirstRoundEventDelay = 30.0f;
 
-        public enum InteractionType { None, Talk, Map, Crew, Store, Repair, Upgrade, PurchaseSub }
+        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub }
 
         public readonly CargoManager CargoManager;
         public UpgradeManager UpgradeManager;
@@ -169,7 +169,7 @@ namespace Barotrauma
             return Submarine.Loaded.FindAll(sub =>
                 sub != leavingSub &&
                 !leavingSub.DockedTo.Contains(sub) &&
-                sub.Info.Type == SubmarineType.Player &&
+                sub.Info.Type == SubmarineType.Player && sub.TeamID == CharacterTeamType.Team1 && // pirate subs are currently tagged as player subs as well
                 sub != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
                 (sub.AtEndExit != leavingSub.AtEndExit || sub.AtStartExit != leavingSub.AtStartExit));
         }
@@ -268,7 +268,7 @@ namespace Barotrauma
                         var beaconMissionPrefab = ToolBox.SelectWeightedRandom(beaconMissionPrefabs, beaconMissionPrefabs.Select(p => (float)p.Commonness).ToList(), rand);
                         if (!Missions.Any(m => m.Prefab.Type == beaconMissionPrefab.Type))
                         {
-                            extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                            extraMissions.Add(beaconMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
                         }
                     }
                 }
@@ -285,7 +285,7 @@ namespace Barotrauma
                         var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, huntingGroundsMissionPrefabs.Select(p => (float)p.Commonness).ToList(), rand);
                         if (!Missions.Any(m => m.Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))))
                         {
-                            extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations));
+                            extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
                         }
                     }
                 }
@@ -595,7 +595,6 @@ namespace Barotrauma
                 {
                     CrewManager.RemoveCharacterInfo(ci);
                 }
-                ci?.ClearCurrentOrders();
             }
 
             foreach (DockingPort port in DockingPort.List)
@@ -637,6 +636,7 @@ namespace Barotrauma
                 location.CreateStore(force: true);
                 location.ClearMissions();
                 location.Discovered = false;
+                location.LevelData?.EventHistory?.Clear();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);

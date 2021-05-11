@@ -50,7 +50,8 @@ namespace Barotrauma
         Corpses,
         WreckAIConfig,
         UpgradeModules,
-        MapCreature
+        MapCreature,
+        EnemySubmarine
     }
 
     public class ContentPackage
@@ -101,7 +102,8 @@ namespace Barotrauma
             ContentType.Orders,
             ContentType.Corpses,
             ContentType.UpgradeModules,
-            ContentType.MapCreature
+            ContentType.MapCreature,
+            ContentType.EnemySubmarine
         };
 
         //at least one file of each these types is required in core content packages
@@ -132,7 +134,8 @@ namespace Barotrauma
             ContentType.EventManagerSettings,
             ContentType.Orders,
             ContentType.Corpses,
-            ContentType.UpgradeModules
+            ContentType.UpgradeModules,
+            ContentType.EnemySubmarine
         };
 
         public static IEnumerable<ContentType> CorePackageRequiredFiles
@@ -211,7 +214,6 @@ namespace Barotrauma
         private readonly List<ContentFile> files;
         private readonly List<ContentFile> filesToAdd;
         private readonly List<ContentFile> filesToRemove;
-
 
         public IReadOnlyList<ContentFile> Files
         {
@@ -609,7 +611,8 @@ namespace Barotrauma
 
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error while calculating content package hash: ", e);
+                    DebugConsole.ThrowError($"Error while calculating the MD5 hash of the content package \"{Name}\" (file path: {Path}). The content package may be corrupted. You may want to delete or reinstall the package.", e);
+                    break;
                 }             
             }
             

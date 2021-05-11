@@ -326,7 +326,6 @@ namespace Barotrauma
             Level prevLevel = Level.Loaded;
 
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-            GUI.SetSavingIndicatorState(success);
             crewDead = false;
 
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
@@ -484,6 +483,8 @@ namespace Barotrauma
             {
                 IsFirstRound = false;
                 CoroutineManager.StartCoroutine(DoLevelTransition(), "LevelTransition");
+                bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
+                GUI.SetSavingIndicatorState(success && (Level.IsLoadedOutpost || transitionType != TransitionType.None));
             }
         }
 
@@ -568,6 +569,13 @@ namespace Barotrauma
                 msg.Write(prefab.Identifier);
                 msg.Write(category.Identifier);
                 msg.Write((byte)level);
+            }
+
+            msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+            foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
+            {
+                msg.Write(itemSwap.ItemToRemove.ID);
+                msg.Write(itemSwap.ItemToInstall?.Identifier ?? string.Empty);
             }
         }
 
@@ -657,6 +665,21 @@ namespace Barotrauma
                 pendingUpgrades.Add(new PurchasedUpgrade(prefab, category, upgradeLevel));
             }
 
+            ushort purchasedItemSwapCount = msg.ReadUInt16();
+            List<PurchasedItemSwap> purchasedItemSwaps = new List<PurchasedItemSwap>();
+            for (int i = 0; i < purchasedItemSwapCount; i++)
+            {
+                UInt16 itemToRemoveID = msg.ReadUInt16();
+                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
+
+                string itemToInstallIdentifier = msg.ReadString();
+                ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
+
+                if (itemToRemove == null) { continue; }
+
+                purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
+            }
+
             bool hasCharacterData = msg.ReadBoolean();
             CharacterInfo myCharacterInfo = null;
             if (hasCharacterData)
@@ -702,6 +725,26 @@ namespace Barotrauma
                     if (storeBalance.HasValue) { campaign.Map.CurrentLocation.StoreCurrentBalance = storeBalance.Value; }
                     campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
                     campaign.UpgradeManager.PurchasedUpgrades.Clear();
+
+                    campaign.UpgradeManager.PurchasedUpgrades.Clear();
+                    foreach (var purchasedItemSwap in purchasedItemSwaps)
+                    {
+                        if (purchasedItemSwap.ItemToInstall == null)
+                        {
+                            campaign.UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, force: true);
+                        }
+                        else
+                        {
+                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
+                        }
+                    }
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                        {
+                            item.PendingItemSwap = null;
+                        }
+                    }
 
                     foreach (var (identifier, rep) in factionReps)
                     {

@@ -191,11 +191,11 @@ namespace Barotrauma.Networking
                 {
                     shuttleSteering.SetDestinationLevelStart();
                 }
-                UpdateReturningProjSpecific();
+                UpdateReturningProjSpecific(deltaTime);
             }
         }
 
-        partial void UpdateReturningProjSpecific();
+        partial void UpdateReturningProjSpecific(float deltaTime);
         
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {

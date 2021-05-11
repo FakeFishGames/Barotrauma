@@ -81,6 +81,7 @@ namespace Barotrauma
 
                 if (location.Type.HasOutpost && !wasCritical && location.IsCriticallyRadiated())
                 {
+                    location.ClearMissions();
                     amountOfOutposts--;
                 }
             }

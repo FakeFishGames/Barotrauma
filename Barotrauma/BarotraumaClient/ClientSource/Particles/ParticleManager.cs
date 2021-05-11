@@ -114,13 +114,12 @@ namespace Barotrauma.Particles
         {
             Prefabs.RemoveByFile(configFile);
         }
-
-        public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null, float collisionIgnoreTimer = 0f)
+        public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
-            return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle, hullGuess, collisionIgnoreTimer);
+            return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle, hullGuess, collisionIgnoreTimer, tracerPoints: tracerPoints);
         }
 
-        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, float collisionIgnoreTimer = 0f)
+        public Particle CreateParticle(string prefabName, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             ParticlePrefab prefab = FindPrefab(prefabName);
 
@@ -129,27 +128,30 @@ namespace Barotrauma.Particles
                 DebugConsole.ThrowError("Particle prefab \"" + prefabName + "\" not found!");
                 return null;
             }
-
-            return CreateParticle(prefab, position, velocity, rotation, hullGuess, collisionIgnoreTimer: collisionIgnoreTimer);
+            return CreateParticle(prefab, position, velocity, rotation, hullGuess, collisionIgnoreTimer: collisionIgnoreTimer, tracerPoints:tracerPoints);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             if (particleCount >= MaxParticles || prefab == null || prefab.Sprites.Count == 0) { return null; }
+            
+            // this should be optimized for tracers after prototyping
+            if (tracerPoints == null)
+            {
+                Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
 
-            Vector2 particleEndPos = prefab.CalculateEndPosition(position, velocity);
+                Vector2 minPos = new Vector2(Math.Min(position.X, particleEndPos.X), Math.Min(position.Y, particleEndPos.Y));
+                Vector2 maxPos = new Vector2(Math.Max(position.X, particleEndPos.X), Math.Max(position.Y, particleEndPos.Y));
 
-            Vector2 minPos = new Vector2(Math.Min(position.X, particleEndPos.X), Math.Min(position.Y, particleEndPos.Y));
-            Vector2 maxPos = new Vector2(Math.Max(position.X, particleEndPos.X), Math.Max(position.Y, particleEndPos.Y));
+                Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
 
-            Rectangle expandedViewRect = MathUtils.ExpandRect(cam.WorldView, MaxOutOfViewDist);
-
-            if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
-            if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
+                if (minPos.X > expandedViewRect.Right || maxPos.X < expandedViewRect.X) { return null; }
+                if (minPos.Y > expandedViewRect.Y || maxPos.Y < expandedViewRect.Y - expandedViewRect.Height) { return null; }
+            }
 
             if (particles[particleCount] == null) particles[particleCount] = new Particle();
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer);
+            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, tracerPoints: tracerPoints);
 
             particleCount++;
 

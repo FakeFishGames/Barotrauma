@@ -49,7 +49,15 @@ namespace Barotrauma
         {
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             SaveUtil.LoadGame(selectedSave);
-            ((MultiPlayerCampaign)GameMain.GameSession.GameMode).LastSaveID++;
+            if (GameMain.GameSession.GameMode is MultiPlayerCampaign mpCampaign)
+            {
+                mpCampaign.LastSaveID++;
+            }
+            else
+            {
+                DebugConsole.ThrowError("Unexpected game mode: " + GameMain.GameSession.GameMode);
+                return;
+            }
             DebugConsole.NewMessage("Campaign loaded!", Color.Cyan);
             DebugConsole.NewMessage(
                 GameMain.GameSession.Map.SelectedLocation == null ?
@@ -155,6 +163,63 @@ namespace Barotrauma
             }
         }
 
+        public void SaveInventories()
+        {
+            List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
+            //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has a character)
+            characterData.RemoveAll(cd => cd.HasSpawned);
+
+            //refresh the character data of clients who are still in the server
+            foreach (Client c in GameMain.Server.ConnectedClients)
+            {
+                if (c.Character?.Info == null) { continue; }
+                if (c.Character.IsDead && c.Character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { continue; }
+                c.CharacterInfo = c.Character.Info;
+                characterData.RemoveAll(cd => cd.MatchesClient(c));
+                characterData.Add(new CharacterCampaignData(c));
+            }
+
+            //refresh the character data of clients who aren't in the server anymore
+            foreach (CharacterCampaignData data in prevCharacterData)
+            {
+                if (data.HasSpawned && !characterData.Any(cd => cd.IsDuplicate(data)))
+                {
+                    var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
+                    if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
+                    {
+                        data.Refresh(character);
+                        characterData.Add(data);
+                    }
+                }
+            }
+
+            characterData.ForEach(cd => cd.HasSpawned = false);
+
+            petsElement = new XElement("pets");
+            PetBehavior.SavePets(petsElement);
+
+            //remove all items that are in someone's inventory
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.Inventory == null) { continue; }
+                if (Level.Loaded.Type == LevelData.LevelType.Outpost && c.Submarine != Level.Loaded.StartOutpost)
+                {
+                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInOutpost && it.OriginalModuleIndex > 0));
+                }
+
+                if (c.Info != null && c.IsBot)
+                {
+                    if (c.IsDead && c.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { CrewManager.RemoveCharacterInfo(c.Info); }
+                    c.Info.HealthData = new XElement("health");
+                    c.CharacterHealth.Save(c.Info.HealthData);
+                    c.Info.InventoryData = new XElement("inventory");
+                    c.SaveInventory();
+                }
+
+                c.Inventory.DeleteAllItems();
+            }
+        }
+
         protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
         {
             lastUpdateID++;
@@ -186,59 +251,7 @@ namespace Barotrauma
 
             if (success)
             {
-                List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
-                //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has a character)
-                characterData.RemoveAll(cd => cd.HasSpawned);
-
-                //refresh the character data of clients who are still in the server
-                foreach (Client c in GameMain.Server.ConnectedClients)
-                {
-                    if (c.Character?.Info == null) { continue; }
-                    if (c.Character.IsDead && c.Character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { continue; }
-                    c.CharacterInfo = c.Character.Info;
-                    characterData.RemoveAll(cd => cd.MatchesClient(c));
-                    characterData.Add(new CharacterCampaignData(c));                    
-                }
-
-                //refresh the character data of clients who aren't in the server anymore
-                foreach (CharacterCampaignData data in prevCharacterData)
-                {
-                    if (data.HasSpawned && !characterData.Any(cd => cd.IsDuplicate(data)))
-                    {
-                        var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
-                        if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
-                        {
-                            data.Refresh(character);
-                            characterData.Add(data);
-                        }
-                    }
-                }
-
-                characterData.ForEach(cd => cd.HasSpawned = false);
-
-                petsElement = new XElement("pets");
-                PetBehavior.SavePets(petsElement);
-
-                //remove all items that are in someone's inventory
-                foreach (Character c in Character.CharacterList)
-                {
-                    if (c.Inventory == null) { continue; }
-                    if (Level.Loaded.Type == LevelData.LevelType.Outpost && c.Submarine != Level.Loaded.StartOutpost)
-                    {
-                        Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInOutpost && it.OriginalModuleIndex > 0));
-                    }
-
-                    if (c.Info != null && c.IsBot)
-                    {
-                        if (c.IsDead && c.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { CrewManager.RemoveCharacterInfo(c.Info); }
-                        c.Info.HealthData = new XElement("health");
-                        c.CharacterHealth.Save(c.Info.HealthData);
-                        c.Info.InventoryData = new XElement("inventory");
-                        c.SaveInventory(c.Inventory, c.Info.InventoryData);
-                    }
-                    
-                    c.Inventory.DeleteAllItems();
-                }
+                SaveInventories();
 
                 yield return CoroutineStatus.Running;
 
@@ -283,6 +296,8 @@ namespace Barotrauma
                 LastUpdateID++;
                 yield return CoroutineStatus.Success;
             }
+
+            CrewManager?.ClearCurrentOrders();
 
             //--------------------------------------
 
@@ -497,6 +512,13 @@ namespace Barotrauma
                 msg.Write((byte)level);
             }
 
+            msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+            foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
+            {
+                msg.Write(itemSwap.ItemToRemove.ID);
+                msg.Write(itemSwap.ItemToInstall?.Identifier ?? string.Empty);
+            }
+
             var characterData = GetClientCharacterData(c);
             if (characterData?.CharacterInfo == null)
             {
@@ -561,6 +583,21 @@ namespace Barotrauma
 
                 if (category == null || prefab == null) { continue; }
                 purchasedUpgrades.Add(new PurchasedUpgrade(prefab, category, upgradeLevel));
+            }
+
+            ushort purchasedItemSwapCount = msg.ReadUInt16();
+            List<PurchasedItemSwap> purchasedItemSwaps = new List<PurchasedItemSwap>();
+            for (int i = 0; i < purchasedItemSwapCount; i++)
+            {
+                UInt16 itemToRemoveID = msg.ReadUInt16();
+                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
+
+                string itemToInstallIdentifier = msg.ReadString();
+                ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
+
+                if (itemToRemove == null) { continue; }
+
+                purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
             if (!AllowedToManageCampaign(sender))
@@ -648,6 +685,26 @@ namespace Barotrauma
                 int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
+            }
+
+            foreach (var purchasedItemSwap in purchasedItemSwaps)
+            {
+                if (purchasedItemSwap.ItemToInstall == null)
+                {
+                    UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove);
+                }
+                else
+                {
+                    UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall);
+                }
+            }
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                {
+                    UpgradeManager.CancelItemSwap(item);
+                    item.PendingItemSwap = null;
+                }
             }
         }
 
@@ -863,7 +920,7 @@ namespace Barotrauma
             CampaignMetadata?.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
-            UpgradeManager?.SavePendingUpgrades(modeElement, UpgradeManager?.PendingUpgrades);
+            UpgradeManager?.Save(modeElement);
 
             if (petsElement != null)
             {

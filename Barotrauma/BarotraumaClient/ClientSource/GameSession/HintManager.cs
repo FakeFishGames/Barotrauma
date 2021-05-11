@@ -524,7 +524,7 @@ namespace Barotrauma
         private static void CheckIfDivingGearOutOfOxygen()
         {
             if (!CanDisplayHints()) { return; }
-            var divingGear = Character.Controlled.GetEquippedItem("diving");
+            var divingGear = Character.Controlled.GetEquippedItem("diving", InvSlotType.OuterClothes);
             if (divingGear?.OwnInventory == null) { return; }
             if (divingGear.GetContainedItemConditionPercentage() > 0.0f) { return; }
             DisplayHint("ondivinggearoutofoxygen", onUpdate: () =>

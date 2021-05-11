@@ -106,6 +106,7 @@ namespace Barotrauma
         class CharacterSpawnInfo : IEntitySpawnInfo
         {
             public readonly string identifier;
+            public readonly CharacterInfo CharacterInfo;
 
             public readonly Vector2 Position;
             public readonly Submarine Submarine;
@@ -127,13 +128,17 @@ namespace Barotrauma
                 this.onSpawned = onSpawn;
             }
 
+            public CharacterSpawnInfo(string identifier, Vector2 position, CharacterInfo characterInfo, Action<Character> onSpawn = null) : this (identifier, position, onSpawn)
+            {
+                CharacterInfo = characterInfo;
+            }
 
             public Entity Spawn()
             {
                 var character = string.IsNullOrEmpty(identifier) ? null :
                     Character.Create(identifier,
                     Submarine == null ? Position : Submarine.Position + Position,
-                    ToolBox.RandomSeed(8), createNetworkEvent: false);
+                    ToolBox.RandomSeed(8), CharacterInfo, createNetworkEvent: false);
                 return character;
             }
 
@@ -300,6 +305,19 @@ namespace Barotrauma
                 return;
             }
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub, onSpawn));
+        }
+
+        public void AddToSpawnQueue(string speciesName, Vector2 worldPosition, CharacterInfo characterInfo, Action<Character> onSpawn = null)
+        {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (string.IsNullOrEmpty(speciesName))
+            {
+                string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("EntitySpawner.AddToSpawnQueue4:SpeciesNameNullOrEmpty", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                return;
+            }
+            spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, characterInfo, onSpawn));
         }
 
         public void AddToRemoveQueue(Entity entity)

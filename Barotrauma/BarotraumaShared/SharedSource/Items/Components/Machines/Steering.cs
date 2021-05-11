@@ -57,6 +57,11 @@ namespace Barotrauma.Items.Components
 
         private Submarine controlledSub;
 
+        // AI interfacing
+        public Vector2 AITacticalTarget { get; set; }
+        public float AIRamTimer { get; set; }
+        bool navigateTactically; // this will be removed after rewriting steering to use an enum
+
         private bool showIceSpireWarning;
 
         private List<Submarine> connectedSubs = new List<Submarine>();
@@ -305,7 +310,13 @@ namespace Barotrauma.Items.Components
                 userSkill = user.GetSkillLevel("helm") / 100.0f;
             }
 
-            if (AutoPilot)
+            // override autopilot pathing while the AI rams, and go full speed ahead
+            if (AIRamTimer > 0f)
+            {
+                AIRamTimer -= deltaTime;
+                TargetVelocity = GetSteeringVelocity(AITacticalTarget, 0f);
+            }
+            else if (AutoPilot)
             {
                 UpdateAutoPilot(deltaTime);
                 float throttle = 1.0f;
@@ -352,6 +363,14 @@ namespace Barotrauma.Items.Components
 
             float velY = MathHelper.Lerp((neutralBallastLevel * 100 - 50) * 2, -100 * Math.Sign(targetVelocity.Y), Math.Abs(targetVelocity.Y) / 100.0f);
             item.SendSignal(new Signal(velY.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_y_out");
+
+            // if our tactical AI pilot has left, revert back to maintaining position
+            if (navigateTactically && (user == null || user.SelectedConstruction != item))
+            {
+                navigateTactically = false;
+                AIRamTimer = 0f;
+                SetMaintainPosition();
+            }
         }
 
         private void IncreaseSkillLevel(Character user, float deltaTime)
@@ -580,13 +599,18 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 target;
-            if (LevelEndSelected)
+
+            if (navigateTactically)
             {
-                target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
+                target = ConvertUnits.ToSimUnits(AITacticalTarget);
+            }
+            else if (LevelEndSelected)
+            {
+                target = ConvertUnits.ToSimUnits(Level.Loaded.EndExitPosition);
             }
             else
             {
-                target = ConvertUnits.ToSimUnits(Level.Loaded.StartPosition);
+                target = ConvertUnits.ToSimUnits(Level.Loaded.StartExitPosition);
             }
             steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(controlledSub == null ? item.WorldPosition : controlledSub.WorldPosition), target, errorMsgStr: "(Autopilot, target: " + target + ")");
         }
@@ -597,6 +621,7 @@ namespace Barotrauma.Items.Components
             MaintainPos = false;
             posToMaintain = null;
             LevelEndSelected = false;
+            navigateTactically = false;
             if (!LevelStartSelected)
             {
                 LevelStartSelected = true;
@@ -610,10 +635,41 @@ namespace Barotrauma.Items.Components
             MaintainPos = false;
             posToMaintain = null;
             LevelStartSelected = false;
+            navigateTactically = false;
             if (!LevelEndSelected)
             {
                 LevelEndSelected = true;
                 UpdatePath();
+            }
+        }
+
+        private void SetDestinationTactical()
+        {
+            AutoPilot = true;
+            MaintainPos = false;
+            posToMaintain = null;
+            LevelStartSelected = false;
+            LevelEndSelected = false;
+            if (!navigateTactically)
+            {
+                navigateTactically = true;
+                UpdatePath();
+            }
+        }
+
+        private void SetMaintainPosition()
+        {
+            if (!MaintainPos)
+            {
+                unsentChanges = true;
+                MaintainPos = true;
+            }
+            if (!posToMaintain.HasValue)
+            {
+                unsentChanges = true;
+                posToMaintain = controlledSub != null ?
+                    controlledSub.WorldPosition :
+                    item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
             }
         }
 
@@ -640,6 +696,7 @@ namespace Barotrauma.Items.Components
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
+            character.AIController.SteeringManager.Reset();
             if (objective.Override)
             {
                 if (user != character && user != null && user.SelectedConstruction == item && character.IsOnPlayerTeam)
@@ -659,18 +716,7 @@ namespace Barotrauma.Items.Components
                 case "maintainposition":
                     if (objective.Override)
                     {
-                        if (!MaintainPos)
-                        {
-                            unsentChanges = true;
-                            MaintainPos = true;
-                        }
-                        if (!posToMaintain.HasValue)
-                        {
-                            unsentChanges = true;
-                            posToMaintain = controlledSub != null ?
-                                controlledSub.WorldPosition :
-                                item.Submarine == null ? item.WorldPosition : item.Submarine.WorldPosition;
-                        }
+                        SetMaintainPosition();
                     }
                     break;
                 case "navigateback":
@@ -681,7 +727,7 @@ namespace Barotrauma.Items.Components
                     }
                     if (objective.Override)
                     {
-                        if (MaintainPos || LevelEndSelected || !LevelStartSelected)
+                        if (MaintainPos || LevelEndSelected || !LevelStartSelected || navigateTactically)
                         {
                             unsentChanges = true;
                         }
@@ -696,11 +742,26 @@ namespace Barotrauma.Items.Components
                     }
                     if (objective.Override)
                     {
-                        if (MaintainPos || !LevelEndSelected || LevelStartSelected)
+                        if (MaintainPos || !LevelEndSelected || LevelStartSelected || navigateTactically)
                         {
                             unsentChanges = true;
                         }
                         SetDestinationLevelEnd();
+                    }
+                    break;
+                case "navigatetactical":
+                    if (Level.IsLoadedOutpost) { break; }
+                    if (DockingSources.Any(d => d.Docked))
+                    {
+                        item.SendSignal("1", "toggle_docking");
+                    }
+                    if (objective.Override)
+                    {
+                        if (MaintainPos || LevelEndSelected || LevelStartSelected || !navigateTactically)
+                        {
+                            unsentChanges = true;
+                        }
+                        SetDestinationTactical();
                     }
                     break;
             }

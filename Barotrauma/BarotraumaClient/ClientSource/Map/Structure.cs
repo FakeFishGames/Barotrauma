@@ -127,7 +127,11 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                 OnClicked = (button, data) =>
                 {
-                    FlipX(relativeToSub: false);
+                    foreach (MapEntity me in SelectedList)
+                    {
+                        me.FlipX(relativeToSub: false);
+                    }
+                    if (!SelectedList.Contains(this)) { FlipX(relativeToSub: false); }
                     return true;
                 }
             };
@@ -136,7 +140,11 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                 OnClicked = (button, data) =>
                 {
-                    FlipY(relativeToSub: false);
+                    foreach (MapEntity me in SelectedList)
+                    {
+                        me.FlipY(relativeToSub: false);
+                    }
+                    if (!SelectedList.Contains(this)) { FlipY(relativeToSub: false); }
                     return true;
                 }
             };
@@ -153,7 +161,12 @@ namespace Barotrauma
             {
                 OnClicked = (button, data) =>
                 {
-                    Reset();
+                    foreach (MapEntity me in SelectedList)
+                    {
+                        (me as Item)?.Reset();
+                        (me as Structure)?.Reset();
+                    }
+                    if (!SelectedList.Contains(this)) { Reset(); }
                     CreateEditingHUD();
                     return true;
                 }
@@ -247,7 +260,7 @@ namespace Barotrauma
             }
             else if (HiddenInGame) { return; }
 
-            Color color = IsHighlighted ? GUI.Style.Orange : spriteColor;
+            Color color = IsIncludedInSelection && editing ? GUI.Style.Blue : IsHighlighted ? GUI.Style.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
             
             if (IsSelected && editing)
             {

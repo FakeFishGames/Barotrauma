@@ -929,7 +929,7 @@ namespace Barotrauma
                 }
             };
             QuitCampaignButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.3f), campaignContent.RectTransform),
-                TextManager.Get("pausemenusavequit"), textAlignment: Alignment.Center)
+                TextManager.Get("quitbutton"), textAlignment: Alignment.Center)
             {
                 OnClicked = (_, __) => 
                 {
@@ -1322,7 +1322,7 @@ namespace Barotrauma
             roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
             roundControlsHolder.Recalculate();
 
-            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted && SelectedMode != GameModePreset.MultiPlayerCampaign;
+            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
 
             RefreshGameModeContent();
         }
@@ -3269,7 +3269,7 @@ namespace Barotrauma
                 CampaignFrame.Visible = CampaignSetupFrame.Visible = false;
             }
 
-            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted && SelectedMode != GameModePreset.MultiPlayerCampaign;
+            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
 
             StartButton.Visible = 
                 GameMain.Client.HasPermission(ClientPermissions.ManageRound) && 

@@ -370,7 +370,7 @@ namespace Barotrauma
                 if (c.Inventory != null)
                 {
                     var inventoryElement = new XElement("inventory");
-                    c.SaveInventory(c.Inventory, inventoryElement);
+                    Character.SaveInventory(c.Inventory, inventoryElement);
                     petElement.Add(inventoryElement);
                 }
 

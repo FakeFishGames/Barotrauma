@@ -353,9 +353,14 @@ namespace Barotrauma
                     }
                 }
             }
-            if (GameMode is PvPMode && Submarine.MainSubs[1] == null)
+
+            if (Submarine.MainSubs[1] == null)
             {
-                Submarine.MainSubs[1] = new Submarine(SubmarineInfo, true);
+                var enemySubmarineInfo = GameMode is PvPMode ? SubmarineInfo : GameMode.Missions.FirstOrDefault(m => m.EnemySubmarineInfo != null)?.EnemySubmarineInfo;
+                if (enemySubmarineInfo != null)
+                {
+                    Submarine.MainSubs[1] = new Submarine(enemySubmarineInfo, true);
+                }
             }
 
             if (GameMain.NetworkMember?.ServerSettings?.LockAllDefaultWires ?? false)

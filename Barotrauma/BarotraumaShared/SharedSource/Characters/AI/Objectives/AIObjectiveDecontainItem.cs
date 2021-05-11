@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AIObjectiveDecontainItem : AIObjective
     {
-        public override string DebugTag => "decontain item";
+        public override string Identifier { get; set; } = "decontain item";
 
         public Func<Item, float> GetItemPriority;
 
@@ -59,7 +59,7 @@ namespace Barotrauma
             this.targetContainer = targetContainer;
         }
 
-        protected override bool Check() => IsCompleted;
+        protected override bool CheckObjectiveSpecific() => IsCompleted;
 
         protected override void Act(float deltaTime)
         {

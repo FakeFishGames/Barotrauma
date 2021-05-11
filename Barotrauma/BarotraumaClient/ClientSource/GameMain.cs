@@ -26,6 +26,7 @@ namespace Barotrauma
         public static bool ShowFPS = false;
         public static bool ShowPerf = false;
         public static bool DebugDraw;
+        public static bool IsSingleplayer => NetworkMember == null;
         public static bool IsMultiplayer => NetworkMember != null;
 
         public static PerformanceCounter PerformanceCounter;
@@ -245,6 +246,23 @@ namespace Barotrauma
             FarseerPhysics.Settings.PositionIterations = 1;
 
             MainThread = Thread.CurrentThread;
+
+            Window.FileDropped += OnFileDropped;
+        }
+
+        public static void OnFileDropped(object sender, FileDropEventArgs args)
+        {
+            if (!(Screen.Selected is { } screen)) { return; }
+
+            string filePath = args.FilePath;
+            if (string.IsNullOrWhiteSpace(filePath)) { return; }
+
+            string extension = Path.GetExtension(filePath).ToLower();
+
+            System.IO.FileInfo info = new System.IO.FileInfo(args.FilePath);
+            if (!info.Exists) { return; }
+
+            screen.OnFileDropped(filePath, extension);
         }
 
         public void ApplyGraphicsSettings()

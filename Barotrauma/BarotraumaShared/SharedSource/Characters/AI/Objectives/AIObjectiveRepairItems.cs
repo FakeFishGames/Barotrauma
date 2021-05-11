@@ -9,12 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItems : AIObjectiveLoop<Item>
     {
-        public override string DebugTag => "repair items";
-
-        /// <summary>
-        /// Should the character only attempt to fix items they have the skills to fix, or any damaged item
-        /// </summary>
-        public bool RequireAdequateSkills;
+        public override string Identifier { get; set; } = "repair items";
 
         /// <summary>
         /// If set, only fix items where required skill matches this.
@@ -28,7 +23,7 @@ namespace Barotrauma
 
         public readonly static float RequiredSuccessFactor = 0.4f;
 
-        public override bool IsDuplicate<T>(T otherObjective) => otherObjective is AIObjectiveRepairItems repairObjective && repairObjective.RequireAdequateSkills == RequireAdequateSkills;
+        public override bool IsDuplicate<T>(T otherObjective) => otherObjective is AIObjectiveRepairItems repairObjective && objectiveManager.IsOrder(repairObjective) == objectiveManager.IsOrder(this);
 
         public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Item prioritizedItem = null)
             : base(character, objectiveManager, priorityModifier)
@@ -69,16 +64,12 @@ namespace Barotrauma
 
         protected override bool Filter(Item item)
         {
-            if (!IsValidTarget(item, character)) { return false; }
-            if (item.CurrentHull.FireSources.Count > 0) { return false; }
-            // Don't repair items in rooms that have enemies inside.
-            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
+            if (!ViableForRepair(item, character, HumanAIController)) { return false; };
             if (!Objectives.ContainsKey(item))
             {
                 if (item != character.SelectedConstruction)
                 {
-                    float condition = item.ConditionPercentage;
-                    if (item.Repairables.All(r => condition >= r.RepairThreshold)) { return false; }
+                    if (NearlyFullCondition(item)) { return false; }
                 }
             }
             if (!string.IsNullOrWhiteSpace(RelevantSkill))
@@ -86,6 +77,21 @@ namespace Barotrauma
                 if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier.Equals(RelevantSkill, StringComparison.OrdinalIgnoreCase)))) { return false; }
             }
             return true;
+        }
+
+        public static bool ViableForRepair(Item item, Character character, HumanAIController humanAIController)
+        {
+            if (!IsValidTarget(item, character)) { return false; }
+            if (item.CurrentHull.FireSources.Count > 0) { return false; }
+            // Don't repair items in rooms that have enemies inside.
+            if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !humanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
+            return true;
+        }
+
+        public static bool NearlyFullCondition(Item item)
+        {
+            float condition = item.ConditionPercentage;
+            return item.Repairables.All(r => condition >= r.RepairThreshold);
         }
 
         protected override float TargetEvaluation()
@@ -115,14 +121,7 @@ namespace Barotrauma
                     // Enough fixers
                     return 0;
                 }
-                if (RequireAdequateSkills)
-                {
-                    return Targets.Sum(t => GetTargetPriority(t, character, RequiredSuccessFactor)) * ratio;
-                }
-                else
-                {
-                    return Targets.Sum(t => 100 - t.ConditionPercentage) * ratio;
-                }
+                return Targets.Sum(t => GetTargetPriority(t, character, RequiredSuccessFactor)) * ratio;
             }
         }
 

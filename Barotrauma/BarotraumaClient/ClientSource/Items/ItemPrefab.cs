@@ -63,8 +63,11 @@ namespace Barotrauma
         public Dictionary<int, List<DecorativeSprite>> DecorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
         public Sprite InventoryIcon;
         public Sprite MinimapIcon;
+        public Sprite UpgradePreviewSprite;
         public Sprite InfectedSprite;
         public Sprite DamagedInfectedSprite;
+
+        public float UpgradePreviewScale = 1.0f;
 
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
         [Serialize("1.0,1.0,1.0,1.0", false)]

@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItem : AIObjective
     {
-        public override string DebugTag => "repair item";
+        public override string Identifier { get; set; } = "repair item";
 
         public override bool AllowInAnySub => true;
 
@@ -31,7 +31,7 @@ namespace Barotrauma
             this.isPriority = isPriority;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed || Item.IgnoreByAI)
             {
@@ -71,7 +71,7 @@ namespace Barotrauma
             return Priority;
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             IsCompleted = Item.IsFullCondition;
             if (character.IsOnPlayerTeam && IsCompleted && IsRepairing())
@@ -122,8 +122,6 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                HumanAIController.UnequipContainedItems(repairTool.Item, it => !it.HasTag("weldingfuel"));
-                HumanAIController.UnequipEmptyItems(repairTool.Item);
                 RelatedItem item = null;
                 Item fuel = null;
                 foreach (RelatedItem requiredItem in repairTool.requiredItems[RelatedItem.RelationType.Contained])
@@ -135,9 +133,12 @@ namespace Barotrauma
                 if (fuel == null)
                 {
                     RemoveSubObjective(ref goToObjective);
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC), 
-                        onCompleted: () => RemoveSubObjective(ref refuelObjective),
-                        onAbandon: () => Abandon = true);
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, item.Identifiers, repairTool.Item.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    {
+                        RemoveExisting = true
+                    },
+                    onCompleted: () => RemoveSubObjective(ref refuelObjective),
+                    onAbandon: () => Abandon = true);
                     return;
                 }
             }

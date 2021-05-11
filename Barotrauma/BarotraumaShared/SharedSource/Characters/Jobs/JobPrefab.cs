@@ -178,6 +178,14 @@ namespace Barotrauma
             private set;
         }
 
+        //whether the job should be available to NPCs
+        [Serialize(false, false)]
+        public bool HiddenJob
+        {
+            get;
+            private set;
+        }
+
         public Sprite Icon;
         public Sprite IconSmall;
 
@@ -195,7 +203,7 @@ namespace Barotrauma
             SerializableProperty.DeserializeProperties(this, element);
 
             Name = TextManager.Get("JobName." + Identifier);
-            Description = TextManager.Get("JobDescription." + Identifier);
+            Description = TextManager.Get("JobDescription." + Identifier, returnNull: true) ?? string.Empty;
             Identifier = Identifier.ToLowerInvariant();
             Element = element;
 
@@ -265,7 +273,7 @@ namespace Barotrauma
         }
         
 
-        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => p.Identifier != "watchman", sync);
+        public static JobPrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(p => !p.HiddenJob, sync);
 
         public static void LoadAll(IEnumerable<ContentFile> files)
         {

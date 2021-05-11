@@ -683,7 +683,7 @@ namespace Barotrauma
         private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
         private readonly List<DamageModifier> tempModifiers = new List<DamageModifier>();
         private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
-        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f)
         {
             appliedDamageModifiers.Clear();
             afflictionsCopy.Clear();
@@ -726,7 +726,12 @@ namespace Barotrauma
                 float finalDamageModifier = damageMultiplier;
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
-                    finalDamageModifier *= damageModifier.DamageMultiplier;
+                    float damageModifierValue = damageModifier.DamageMultiplier;
+                    if (damageModifier.DeflectProjectiles && damageModifierValue < 1f)
+                    {
+                        damageModifierValue = MathHelper.Lerp(damageModifierValue, 1f, penetration);
+                    }
+                    finalDamageModifier *= damageModifierValue;
                 }
                 if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
                 {
@@ -981,13 +986,16 @@ namespace Barotrauma
                     NetEntityEvent.Type.ExecuteAttack, 
                     this, 
                     (damageTarget as Entity)?.ID ?? Entity.NullEntityID, 
-                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0
+                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0,
+                    attackSimPos.X,
+                    attackSimPos.Y
                 });   
 #endif
             }
 
             Vector2 diff = attackSimPos - SimPosition;
             bool applyForces = !attack.ApplyForcesOnlyOnce || !wasRunning;
+
             if (applyForces)
             {
                 if (attack.ForceOnLimbIndices != null && attack.ForceOnLimbIndices.Count > 0)
@@ -1143,7 +1151,7 @@ namespace Barotrauma
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    statusEffect.GetNearbyTargets(WorldPosition, targets);
+                    targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
                     statusEffect.Apply(actionType, deltaTime, character, targets);
                 }
                 else

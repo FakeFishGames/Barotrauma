@@ -86,10 +86,11 @@ namespace Barotrauma.Extensions
 
         /// <summary>
         /// Executes an action that modifies the collection on each element (such as removing items from the list).
-        /// Creates a temporary list.
+        /// Creates a temporary list, unless the collection is empty.
         /// </summary>
         public static void ForEachMod<T>(this IEnumerable<T> source, Action<T> action)
         {
+            if (source.None()) { return; }
             var temp = new List<T>(source);
             temp.ForEach(action);
         }

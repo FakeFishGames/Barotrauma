@@ -90,6 +90,7 @@ namespace Barotrauma
         
 
         public readonly Dictionary<XElement, float> ItemSets = new Dictionary<XElement, float>();
+        public readonly Dictionary<XElement, float> CustomNPCSets = new Dictionary<XElement, float>();
 
         public HumanPrefab(XElement element, string filePath)
         {
@@ -99,6 +100,7 @@ namespace Barotrauma
             Job = Job.ToLowerInvariant();
             Element = element;
             element.GetChildElements("itemset").ForEach(e => ItemSets.Add(e, e.GetAttributeFloat("commonness", 1)));
+            element.GetChildElements("character").ForEach(e => CustomNPCSets.Add(e, e.GetAttributeFloat("commonness", 1)));
             PreferredOutpostModuleTypes = element.GetAttributeStringArray("preferredoutpostmoduletypes", new string[0], convertToLowerInvariant: true).ToList();
         }
 
@@ -160,18 +162,24 @@ namespace Barotrauma
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets.Keys.ToList(), ItemSets.Values.ToList(), randSync);
             foreach (XElement itemElement in spawnItems.GetChildElements("item"))
             {
-                InitializeItems(character, itemElement, submarine, createNetworkEvents: createNetworkEvents);
+                InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
             }
         }
 
-        private void InitializeItems(Character character, XElement itemElement, Submarine submarine, Item parentItem = null, bool createNetworkEvents = true)
+        public CharacterInfo GetCharacterInfo()
+        {
+            var characterElement = ToolBox.SelectWeightedRandom(CustomNPCSets.Keys.ToList(), CustomNPCSets.Values.ToList(), Rand.RandSync.Unsynced);
+            return characterElement != null ? new CharacterInfo(characterElement) : null;
+        }
+
+        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, Item parentItem = null, bool createNetworkEvents = true)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
             itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
             if (itemPrefab == null)
             {
-                DebugConsole.ThrowError("Tried to spawn \"" + Identifier + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
+                DebugConsole.ThrowError("Tried to spawn \"" + humanPrefab?.Identifier + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
                 return;
             }
             Item item = new Item(itemPrefab, character.Position, null);
@@ -192,7 +200,11 @@ namespace Barotrauma
 #endif
             if (itemElement.GetAttributeBool("equip", false))
             {
-                List<InvSlotType> allowedSlots = new List<InvSlotType>(item.AllowedSlots);
+                //if the item is both pickable and wearable, try to wear it instead of picking it up
+                List<InvSlotType> allowedSlots =
+                    item.GetComponents<Pickable>().Count() > 1 ?
+                    new List<InvSlotType>(item.GetComponent<Wearable>()?.AllowedSlots ?? item.GetComponent<Pickable>().AllowedSlots) :
+                    new List<InvSlotType>(item.AllowedSlots);
                 allowedSlots.Remove(InvSlotType.Any);
 
                 character.Inventory.TryPutItem(item, null, allowedSlots);
@@ -237,7 +249,7 @@ namespace Barotrauma
             }
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeItems(character, childItemElement, submarine, item, createNetworkEvents);
+                InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);
             }
         }
     }

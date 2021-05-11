@@ -189,6 +189,10 @@ namespace Barotrauma
                 if (roomName == value) { return; }
                 roomName = value;
                 DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+                if (!IsWetRoom && ForceAsWetRoom)
+                {
+                    IsWetRoom = true;
+                }
             }
         }
 
@@ -326,6 +330,42 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) return;
                 oxygen = MathHelper.Clamp(value, 0.0f, Volume); 
+            }
+        }
+
+        private bool ForceAsWetRoom => 
+            roomName != null && (
+            roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || 
+            roomName.Contains("bilge", StringComparison.OrdinalIgnoreCase) || 
+            roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase));
+
+        private bool isWetRoom;
+        [Editable, Serialize(false, true, description: "It's normal for this hull to be filled with water. If the room name contains 'ballast', 'bilge', or 'airlock', you can't disable this setting.")]
+        public bool IsWetRoom
+        {
+            get { return isWetRoom; }
+            set
+            {
+                isWetRoom = value;
+                if (ForceAsWetRoom)
+                {
+                    isWetRoom = true;
+                }
+            }
+        }
+
+        private bool avoidStaying;
+        [Editable, Serialize(false, true, description: "Bots avoid staying here, but they are still allowed to access the room when needed and go through it. Forced true for wet rooms.")]
+        public bool AvoidStaying
+        {
+            get { return avoidStaying || IsWetRoom; }
+            set
+            {
+                avoidStaying = value;
+                if (IsWetRoom)
+                {
+                    avoidStaying = true;
+                }
             }
         }
 

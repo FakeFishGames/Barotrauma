@@ -533,8 +533,24 @@ namespace Barotrauma
             //prefer connections that haven't been passed through, and connections with fewer available missions
             connection = ToolBox.SelectWeightedRandom(
                 suitableConnections.ToList(),
-                suitableConnections.Select(c => (c.Passed ? 1.0f : 5.0f) / Math.Max(availableMissions.Count(m => m.Locations.Contains(c.OtherLocation(this))), 1.0f)).ToList(),
-                Rand.RandSync.Unsynced);            
+                suitableConnections.Select(c => GetConnectionWeight(this, c)).ToList(),
+                Rand.RandSync.Unsynced);    
+            
+            static float GetConnectionWeight(Location location, LocationConnection c)
+            {
+                float weight = c.Passed ? 1.0f : 5.0f;
+                Location destination = c.OtherLocation(location);
+                if (destination != null)
+                {
+                    if (destination.MapPosition.X > location.MapPosition.X) { weight *= 2.0f; }
+                    int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
+                    if (missionCount > 0) 
+                    { 
+                        weight /= missionCount * 2;
+                    }
+                }
+                return weight;
+            }
 
             return InstantiateMission(prefab, connection);
         }
@@ -542,14 +558,14 @@ namespace Barotrauma
         private Mission InstantiateMission(MissionPrefab prefab, LocationConnection connection)
         {
             Location destination = connection.OtherLocation(this);
-            var mission = prefab.Instantiate(new Location[] { this, destination });
+            var mission = prefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
             mission.AdjustLevelData(connection.LevelData);
             return mission;
         }
 
         private Mission InstantiateMission(MissionPrefab prefab)
         {
-            var mission = prefab.Instantiate(new Location[] { this, this });
+            var mission = prefab.Instantiate(new Location[] { this, this }, Submarine.MainSub);
             mission.AdjustLevelData(LevelData);
             return mission;
         }
@@ -570,7 +586,7 @@ namespace Barotrauma
                     {
                         destination = Connections.First().OtherLocation(this);
                     }
-                    var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination });
+                    var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
                     availableMissions.Add(mission);
                     if (loadedMission.SelectedMission) { SelectedMission = mission; }
                 }

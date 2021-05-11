@@ -20,7 +20,6 @@ namespace Barotrauma.Items.Components
             public Vector2 Point;
             public Vector2 Normal;
             public float Fraction;
-
             public HitscanResult(Fixture fixture, Vector2 point, Vector2 normal, float fraction)
             {
                 Fixture = fixture;
@@ -81,7 +80,11 @@ namespace Barotrauma.Items.Components
         [Serialize(10.0f, false, description: "The impulse applied to the physics body of the item when it's launched. Higher values make the projectile faster.")]
         public float LaunchImpulse { get; set; }
 
+        [Serialize(0.0f, false, description: "The random percentage modifier used to add variance to the launch impulse.")]
+        public float ImpulseSpread { get; set; }
+
         [Serialize(0.0f, false, description: "The rotation of the item relative to the rotation of the weapon when launched (in degrees).")]
+
         public float LaunchRotation
         {
             get { return MathHelper.ToDegrees(LaunchRotationRadians); }
@@ -189,7 +192,9 @@ namespace Barotrauma.Items.Components
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
                 Attack = new Attack(subElement, item.Name + ", Projectile");
             }
+            InitProjSpecific(element);
         }
+        partial void InitProjSpecific(XElement element);
 
         public override void OnItemLoaded()
         {
@@ -269,6 +274,7 @@ namespace Barotrauma.Items.Components
                 if (Hitscan)
                 {
                     Vector2 prevSimpos = item.SimPosition;
+                    item.body.SetTransformIgnoreContacts(item.body.SimPosition, launchAngle);
                     DoHitscan(launchDir);
                     if (i < HitScanCount - 1)
                     {
@@ -277,7 +283,8 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    DoLaunch(launchDir * LaunchImpulse * item.body.Mass);
+                    float modifiedLaunchImpulse = LaunchImpulse * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
+                    DoLaunch(launchDir * modifiedLaunchImpulse * item.body.Mass);
                 }
             }
             User = character;
@@ -331,7 +338,14 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             Vector2 rayStart = simPositon;
-            Vector2 rayEnd = simPositon + dir * 500.0f;
+            Vector2 rayEnd = rayStart + dir * 500.0f;
+
+            Vector2 rayStartWorld = item.WorldPosition;
+            float worldDist = 1000.0f;
+#if CLIENT
+            worldDist = Screen.Selected?.Cam?.WorldView.Width ?? GameMain.GraphicsWidth;
+#endif
+            Vector2 rayEndWorld = rayStartWorld + dir * worldDist;
 
             List<HitscanResult> hits = new List<HitscanResult>();
 
@@ -375,6 +389,7 @@ namespace Barotrauma.Items.Components
                 item.SetTransform(h.Point, rotation);
                 if (HandleProjectileCollision(h.Fixture, h.Normal, Vector2.Zero))
                 {
+                    LaunchProjSpecific(rayStartWorld, item.WorldPosition);
                     hitSomething = true;
                     break;
                 }
@@ -383,6 +398,8 @@ namespace Barotrauma.Items.Components
             //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
             if (!hitSomething)
             {
+                item.body.SetTransformIgnoreContacts(item.body.SimPosition, rotation);
+                LaunchProjSpecific(rayStartWorld, rayEndWorld);
                 if (Entity.Spawner == null)
                 {
                     item.Remove();
@@ -605,6 +622,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
         private bool HandleProjectileCollision(Fixture target, Vector2 collisionNormal, Vector2 velocity)
         {
             if (User != null && User.Removed) { User = null; }
@@ -614,6 +633,9 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
+
+            float projectileNewSpeed = 0.5f;
+            float projectileDeflectedNewSpeed = 0.1f;
 
             AttackResult attackResult = new AttackResult();
             Character character = null;
@@ -626,6 +648,12 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Limb limb)
             {
+                // when hitting limbs with piercing ammo, don't lose as much speed
+                if (MaxTargetsToHit > 1)
+                {
+                    projectileNewSpeed = 1f;
+                    projectileDeflectedNewSpeed = 0.8f;
+                }
                 //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
                 if (limb.IsSevered) { return true; }
                 if (limb.character == null || limb.character.Removed) { return false; }
@@ -690,8 +718,8 @@ namespace Barotrauma.Items.Components
                                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                                 {
-                                    var targets = new List<ISerializableEntity>();
-                                    effect.GetNearbyTargets(targetLimb.WorldPosition, targets);
+                                    targets.Clear();
+                                    targets.AddRange(effect.GetNearbyTargets(targetLimb.WorldPosition, targets));
                                     effect.Apply(ActionType.OnActive, 1.0f, targetLimb.character, targets);
                                 }
 
@@ -731,7 +759,7 @@ namespace Barotrauma.Items.Components
             if (attackResult.AppliedDamageModifiers != null &&
                 attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles))
             {
-                item.body.LinearVelocity *= 0.1f;
+                item.body.LinearVelocity *= projectileDeflectedNewSpeed;
             }
             else if (Vector2.Dot(velocity, collisionNormal) < 0.0f && hits.Count() >= MaxTargetsToHit &&
                         target.Body.Mass > item.body.Mass * 0.5f &&
@@ -761,13 +789,13 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #endif
-                item.body.LinearVelocity *= 0.5f;
+                item.body.LinearVelocity *= projectileNewSpeed;
 
                 return Hitscan;                
             }
             else
             {
-                item.body.LinearVelocity *= 0.5f;
+                item.body.LinearVelocity *= projectileNewSpeed;
             }
 
             var containedItems = item.OwnInventory?.AllItems;
@@ -876,5 +904,6 @@ namespace Barotrauma.Items.Components
             }
 
         }
+        partial void LaunchProjSpecific(Vector2 startLocation, Vector2 endLocation);
     }
 }

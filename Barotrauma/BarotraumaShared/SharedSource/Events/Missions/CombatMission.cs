@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 using System.Collections.Generic;
 
 namespace Barotrauma
@@ -7,6 +6,7 @@ namespace Barotrauma
     partial class CombatMission : Mission
     {
         private Submarine[] subs;
+        // TODO: not used
         private List<Character>[] crews;
 
         private readonly string[] descriptions;
@@ -45,8 +45,8 @@ namespace Barotrauma
             }
         }
 
-        public CombatMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        public CombatMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
         {
             descriptions = new string[]
             {

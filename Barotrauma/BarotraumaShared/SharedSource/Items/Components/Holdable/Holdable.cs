@@ -319,12 +319,38 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
+            //if the item has multiple Pickable components (e.g. Holdable and Wearable, check that we don't equip it in hands when the item is worn or vice versa)
+            if (item.GetComponents<Pickable>().Count() > 0)
+            {
+                bool inSuitableSlot = false;
+                for (int i = 0; i < character.Inventory.Capacity; i++)
+                {
+                    if (character.Inventory.GetItemsAt(i).Contains(item))
+                    {
+                        if (character.Inventory.SlotTypes[i] != InvSlotType.Any && 
+                            allowedSlots.Any(a => a.HasFlag(character.Inventory.SlotTypes[i])))
+                        {
+                            inSuitableSlot = true;
+                            break;
+                        }
+                    }
+                }
+                if (!inSuitableSlot) { return; }
+            }
+
             picker = character;
 
             if (item.Removed)
             {
                 DebugConsole.ThrowError($"Attempted to equip a removed item ({item.Name})\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
+            }
+
+            var wearable = item.GetComponent<Wearable>();
+            if (wearable != null)
+            {
+                //cannot hold and wear an item at the same time
+                wearable.Unequip(character);
             }
 
             if (character != null) { item.Submarine = character.Submarine; }

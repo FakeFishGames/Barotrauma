@@ -670,7 +670,11 @@ namespace Barotrauma
 
                 if (!swapSuccessful && existingItems.Count == 1 && existingItems[0].AllowDroppingOnSwapWith(item))
                 {
-                    existingItems[0].Drop(user, createNetworkEvent);
+                    if (!(existingItems[0].Container?.ParentInventory is CharacterInventory characterInv) ||
+                        !characterInv.TryPutItem(existingItems[0], user, new List<InvSlotType>() { InvSlotType.Any }))
+                    {
+                        existingItems[0].Drop(user, createNetworkEvent);
+                    }
                     swapSuccessful = stackedItems.Distinct().Any(stackedItem => TryPutItem(stackedItem, index, false, false, user, createNetworkEvent));
 #if CLIENT
                     if (swapSuccessful)
@@ -882,7 +886,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         /// <summary>
         /// Deletes all items inside the inventory (and also recursively all items inside the items)
         /// </summary>

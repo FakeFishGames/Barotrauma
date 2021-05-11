@@ -144,21 +144,6 @@ namespace Barotrauma
             }
         }
 
-        public void Reset()
-        {
-            if (Static)
-            {
-                SightRange = MaxSightRange;
-                SoundRange = MaxSoundRange;
-            }
-            else
-            {
-                // Non-static ai targets must be kept alive by a custom logic (e.g. item components)
-                SightRange = StaticSight ? MaxSightRange : MinSightRange;
-                SoundRange = StaticSound ? MaxSoundRange : MinSoundRange;
-            }
-        }
-
         public AITarget(Entity e, XElement element) : this(e)
         {
             SightRange = element.GetAttributeFloat("sightrange", 0.0f);
@@ -241,6 +226,21 @@ namespace Barotrauma
         {
             List.Remove(this);
             entity = null;
+        }
+
+        public void Reset()
+        {
+            if (Static)
+            {
+                SightRange = MaxSightRange;
+                SoundRange = MaxSoundRange;
+            }
+            else
+            {
+                // Non-static ai targets must be kept alive by a custom logic (e.g. item components)
+                SightRange = StaticSight ? MaxSightRange : MinSightRange;
+                SoundRange = StaticSound ? MaxSoundRange : MinSoundRange;
+            }
         }
     }
 }

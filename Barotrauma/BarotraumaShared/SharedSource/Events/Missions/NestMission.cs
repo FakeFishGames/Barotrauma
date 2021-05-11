@@ -46,8 +46,8 @@ namespace Barotrauma
             }
         }
 
-        public NestMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        public NestMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
         {
             itemConfig = prefab.ConfigElement.Element("Items");
 

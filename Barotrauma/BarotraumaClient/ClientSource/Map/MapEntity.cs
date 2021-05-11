@@ -97,6 +97,8 @@ namespace Barotrauma
         {
             get { return selectedList.Contains(this); }
         }
+        
+        public bool IsIncludedInSelection { get; set; }
 
         public virtual bool IsVisible(Rectangle worldView)
         {
@@ -360,6 +362,11 @@ namespace Barotrauma
                 selectionSize.X = position.X - selectionPos.X;
                 selectionSize.Y = selectionPos.Y - position.Y;
 
+                foreach (MapEntity entity in mapEntityList)
+                {
+                    entity.IsIncludedInSelection = false;
+                }
+
                 List<MapEntity> newSelection = new List<MapEntity>();// FindSelectedEntities(selectionPos, selectionSize);
                 if (Math.Abs(selectionSize.X) > Submarine.GridSize.X || Math.Abs(selectionSize.Y) > Submarine.GridSize.Y)
                 {
@@ -372,10 +379,15 @@ namespace Barotrauma
                         if (SelectionGroups.TryGetValue(highLightedEntity, out List<MapEntity> group))
                         {
                             newSelection.AddRange(group);
+                            foreach (MapEntity entity in group)
+                            {
+                                entity.IsIncludedInSelection = true;
+                            }
                         }
                         else
                         {
                             newSelection.Add(highLightedEntity);
+                            highLightedEntity.IsIncludedInSelection = true;
                         }
                     }
                 }
@@ -443,6 +455,10 @@ namespace Barotrauma
 
                     selectionPos = Vector2.Zero;
                     selectionSize = Vector2.Zero;
+                    foreach (MapEntity entity in mapEntityList)
+                    {
+                        entity.IsIncludedInSelection = false;
+                    }
                 }
             }
             //default, not doing anything specific yet
@@ -800,7 +816,32 @@ namespace Barotrauma
             }
             if (selectionPos != null && selectionPos != Vector2.Zero)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(selectionPos.X, -selectionPos.Y), selectionSize, Color.DarkRed, false, 0, 2f / GameScreen.Selected.Cam.Zoom);
+                var (sizeX, sizeY) = selectionSize;
+                var (posX, posY) = selectionPos;
+
+                posY = -posY;
+
+                Vector2[] corners = 
+                {
+                    new Vector2(posX, posY),
+                    new Vector2(posX + sizeX, posY),
+                    new Vector2(posX + sizeX, posY + sizeY),
+                    new Vector2(posX, posY + sizeY)
+                };
+
+                Color selectionColor = GUI.Style.Blue;
+                float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
+
+                GUI.DrawFilledRectangle(spriteBatch, corners[0], selectionSize, selectionColor * 0.1f);
+
+                Vector2 offset = new Vector2(0f, thickness / 2f);
+
+                if (sizeY < 0) { offset.Y = -offset.Y; }
+
+                spriteBatch.DrawLine(corners[0], corners[1], selectionColor, thickness);
+                spriteBatch.DrawLine(corners[1] - offset, corners[2] + offset, selectionColor, thickness);
+                spriteBatch.DrawLine(corners[2], corners[3], selectionColor, thickness);
+                spriteBatch.DrawLine(corners[3] + offset, corners[0] - offset, selectionColor, thickness);
             }
         }
 
@@ -1141,7 +1182,11 @@ namespace Barotrauma
             {
                 if (!e.SelectableInEditor) continue;
 
-                if (Submarine.RectsOverlap(selectionRect, e.rect)) foundEntities.Add(e);
+                if (Submarine.RectsOverlap(selectionRect, e.rect))
+                {
+                    foundEntities.Add(e);
+                    e.IsIncludedInSelection = true;
+                }
             }
 
             return foundEntities;

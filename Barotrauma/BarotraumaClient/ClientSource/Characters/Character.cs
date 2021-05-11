@@ -102,11 +102,13 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
         
+        public Color GrainColor { get; set; }
+        
         private float grainStrength;
         public float GrainStrength
         {
             get => grainStrength;
-            set => grainStrength = MathHelper.Clamp(value, 0.0f, 1.0f);
+            set => grainStrength = Math.Max(0, value);
         }
 
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
@@ -859,7 +861,14 @@ namespace Barotrauma
                     Color nameColor = Color.White;
                     if (Controlled != null && TeamID != Controlled.TeamID)
                     {
-                        nameColor = TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+                        if (TeamID == CharacterTeamType.FriendlyNPC)
+                        {
+                            nameColor = UniqueNameColor ?? Color.SkyBlue;
+                        }
+                        else
+                        {
+                            nameColor = GUI.Style.Red;
+                        }
                     }
                     if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
                     {

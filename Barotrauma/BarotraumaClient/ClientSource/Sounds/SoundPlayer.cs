@@ -72,6 +72,8 @@ namespace Barotrauma
         private readonly static BackgroundMusic[] targetMusic = new BackgroundMusic[MaxMusicChannels];
         private static List<BackgroundMusic> musicClips;
 
+        private static BackgroundMusic previousDefaultMusic;
+
         private static float updateMusicTimer;
 
         //ambience
@@ -829,9 +831,23 @@ namespace Barotrauma
                     targetMusic[0] = null;
                 }
                 //switch the music if nothing playing atm or the currently playing clip is not suitable anymore
-                else if (targetMusic[0] == null || currentMusic[0] == null || !suitableMusic.Any(m => m.File == currentMusic[0].Filename))
+                else if (targetMusic[0] == null || currentMusic[0] == null || !currentMusic[0].IsPlaying() || !suitableMusic.Any(m => m.File == currentMusic[0].Filename))
                 {
-                    targetMusic[0] = suitableMusic.GetRandom();
+                    if (currentMusicType == "default")
+                    {
+                        if (previousDefaultMusic == null)
+                        {
+                            targetMusic[0] = previousDefaultMusic = suitableMusic.GetRandom();
+                        }
+                        else
+                        {
+                            targetMusic[0] = previousDefaultMusic;
+                        }
+                    }
+                    else
+                    {
+                        targetMusic[0] = suitableMusic.GetRandom();
+                    }
                 }
                                 
                 //get the appropriate intensity layers for current situation
@@ -851,7 +867,7 @@ namespace Barotrauma
                 foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
                 {
                     //already playing, do nothing
-                    if (targetMusic.Any(m => m != null && m.File == intensityMusic.File)) continue;
+                    if (targetMusic.Any(m => m != null && m.File == intensityMusic.File)) { continue; }
 
                     for (int i = 1; i < MaxMusicChannels; i++)
                     {
@@ -973,7 +989,11 @@ namespace Barotrauma
                 return "editor";
             }
 
-            if (Screen.Selected != GameMain.GameScreen) { return firstTimeInMainMenu ? "menu" : "default"; }
+            if (Screen.Selected != GameMain.GameScreen) 
+            {
+                previousDefaultMusic = null;
+                return firstTimeInMainMenu ? "menu" : "default"; 
+            }
 
             firstTimeInMainMenu = false;
 

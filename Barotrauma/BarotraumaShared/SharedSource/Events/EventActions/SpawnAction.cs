@@ -102,12 +102,12 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (spawned) { return; }
-            
+
             if (!string.IsNullOrEmpty(NPCSetIdentifier) && !string.IsNullOrEmpty(NPCIdentifier))
             {
                 HumanPrefab humanPrefab = NPCSet.Get(NPCSetIdentifier, NPCIdentifier);
                 ISpatialEntity spawnPos = GetSpawnPos();
-                Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), onSpawn: newCharacter =>
+                Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), humanPrefab.GetCharacterInfo(), onSpawn: newCharacter =>
                 {
                     newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
                     newCharacter.EnableDespawn = false;
@@ -255,10 +255,9 @@ namespace Barotrauma
 
             potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && !wp.isObstructed);
 
-            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false).ToList();
             if (moduleFlags != null && moduleFlags.Any())
             {
-                List<WayPoint> spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags?.Any(moduleFlags.Contains) ?? false).ToList();
+                List<WayPoint> spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Any(moduleFlags.Contains) ?? false).ToList();
                 if (spawnPoints.Any())
                 {
                     potentialSpawnPoints = spawnPoints;
@@ -267,8 +266,10 @@ namespace Barotrauma
 
             if (spawnpointTags != null && spawnpointTags.Any())
             {
-                var spawnPoints = potentialSpawnPoints.Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag)))
-                                                                 .Where(wp => wp.ConnectedDoor == null && !wp.isObstructed);
+                var spawnPoints = potentialSpawnPoints
+                    .Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag)))
+                    .Where(wp => wp.ConnectedDoor == null && !wp.isObstructed);
+
                 if (spawnPoints.Any())
                 {
                     potentialSpawnPoints = spawnPoints.ToList();
@@ -293,6 +294,7 @@ namespace Barotrauma
             }
 
             //don't spawn in an airlock module if there are other options
+            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false);
             if (airlockSpawnPoints.Count() < validSpawnPoints.Count())
             {
                 validSpawnPoints = validSpawnPoints.Except(airlockSpawnPoints);

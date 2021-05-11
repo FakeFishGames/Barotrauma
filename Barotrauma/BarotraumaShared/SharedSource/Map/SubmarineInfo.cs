@@ -133,6 +133,12 @@ namespace Barotrauma
             private set;
         }
 
+        public int CargoCapacity
+        {
+            get;
+            private set;
+        }
+
         public string FilePath
         {
             get;
@@ -261,6 +267,7 @@ namespace Barotrauma
             SubmarineClass = original.SubmarineClass;
             hash = !string.IsNullOrEmpty(original.FilePath) ? original.MD5Hash : null;
             Dimensions = original.Dimensions;
+            CargoCapacity = original.CargoCapacity;
             FilePath = original.FilePath;
             RequiredContentPackages = new HashSet<string>(original.RequiredContentPackages);
             IsFileCorrupted = original.IsFileCorrupted;
@@ -323,6 +330,7 @@ namespace Barotrauma
                 Tags = tags;
             }
             Dimensions = SubmarineElement.GetAttributeVector2("dimensions", Vector2.Zero);
+            CargoCapacity = SubmarineElement.GetAttributeInt("cargocapacity", -1);
             RecommendedCrewSizeMin = SubmarineElement.GetAttributeInt("recommendedcrewsizemin", 0);
             RecommendedCrewSizeMax = SubmarineElement.GetAttributeInt("recommendedcrewsizemax", 0);
             RecommendedCrewExperience = SubmarineElement.GetAttributeString("recommendedcrewexperience", "Unknown");
@@ -511,10 +519,14 @@ namespace Barotrauma
         //saving/loading ----------------------------------------------------
         public bool SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
         {
-            var newElement = new XElement(SubmarineElement.Name,
-                SubmarineElement.Attributes().Where(a => !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
-                                                         !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)),
+            var newElement = new XElement(
+                SubmarineElement.Name, 
+                SubmarineElement.Attributes()
+                    .Where(a => 
+                        !string.Equals(a.Name.LocalName, "previewimage", StringComparison.InvariantCultureIgnoreCase) &&
+                        !string.Equals(a.Name.LocalName, "name", StringComparison.InvariantCultureIgnoreCase)), 
                 SubmarineElement.Elements());
+
             if (Type == SubmarineType.OutpostModule)
             {
                 OutpostModuleInfo.Save(newElement);
@@ -574,7 +586,7 @@ namespace Barotrauma
             var contentPackageSubs = ContentPackage.GetFilesOfType(
                 GameMain.Config.AllEnabledPackages, 
                 ContentType.Submarine, ContentType.Outpost, ContentType.OutpostModule,
-                ContentType.Wreck, ContentType.BeaconStation);
+                ContentType.Wreck, ContentType.BeaconStation, ContentType.EnemySubmarine);
 
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
             {

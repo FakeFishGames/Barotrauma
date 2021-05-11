@@ -1,4 +1,56 @@
 ------------------------------------------------------------------------------------------------------
+v0.1400.0.0 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Submarine weapons can be swapped in the outposts.
+- Added Pulse Laser and Chaingun (still WIP).
+- Added Canister Shells (a reloadable burst-type munition for the railgun).
+- Added escort missions.
+- Added pirate missions.
+- Cargo now spawns in crate shelves and "Unit Load Devices" (large containers mostly used in cargo subs). The amount of cargo you can transport depends on the number of the shelves/ULDs, and the cargo mission rewards scale according to the cargo capacity. If there's no shelves or ULDs, you can still transport a small number of crates on the cargo room's floor like before.
+- The previous music track continues playing when the game switches back from the "intensity tracks" to normal music.
+- Made it possible to carry diving suits and toolbelts in hands. We could use some feedback on the way this works: is it intuitive, should there be a separate key for picking them up...?
+- Added tracer particles to raycast projectiles (hitscan).
+- Increased sonar beacon range.
+- Color character names according to the team when using the Health Scanner HUD.
+- Allow combining elastin.
+- Character orders and ignore orders now persist between rounds and saved sessions.
+- Added indicators for the tasks the bots are currently doing when they are not following the orders.
+- Revisited the random (monster) events: more Watchers and Tigerthreshers, less Crawlers. Fixed a number of issues. Feedback appreciated. (WIP)
+- Numerous fixes and improvements on particle effects.
+- Changed how autonomous steering objective works. Captains now idle near the helm instead of standing next to the nav terminal.
+- Only show the "Save and Quit" button when the game can be saved. Renamed the button in the lobby to "Quit". Saving in multiplayer is done like in single player: on level transitions and on exit from an outpost.
+- Updated sounds for Endworm and the electrical discharger.
+- Increased the stun of smg rounds from 0.125 to 0.15 to give it a bit more stopping power.
+- Lowered Husks' health regeneration and bleeding reduction. Crawler Husks now regenerate too. Lowered their health a bit to compensate it.
+- Most outpost events no longer trigger automatically, but require interacting with a specific item/character.
+
+Fixes:
+- Fixed clients timing out at the start of a multiplayer round if loading the campaign save takes more than 30 seconds.
+- Fixed previous missions still being available in outposts that have become abandoned due to radiation.
+- Fixed eggs sometimes spawning partially inside walls in abandoned outpost missions.
+- Fixed thalamus walls' colliders still being present even if the wreck doesn't contain a thalamus, preventing entering the sub from places where thalamus walls used to be.
+- Fixed minerals sometimes not being mineable in outposts.
+- Fixed small characters being unable to avoid the edges of the hulls when idling.
+- Save submarine and characters' inventories when saving and quitting an mp campaign round in an outpost.
+- Marked "control" console command as a cheat.
+- Fixed items sometimes disappearing client-side when the server corrects their position from outside to inside.
+- The traitor mission to sabotage the engine doesn't require sabotaging shuttle engines.
+- Stacks of seeds can't be put into planters.
+- Fixed non-repeatable events (e.g. mission events) no longer appearing after completing the campaign.
+- Fixed security officers using head set batteries when their stun batons are out of batteries, causing them to be unable to hear or receive orders (#5681).
+- Fixed security officers often handcuffing you after one hit with stun baton (#5649).
+- Fixed ignore orders not being properly synced when joining a multiplayer game mid-round.
+- Fixed abyss monsters not spawning if there's any player sub (including the respawn shuttle) above the abyss.
+
+Modding:
+- Turret's barrel and rail sprites are shown in the sprite editor.
+- Made SecondaryUse status effects work with melee and ranged weapons.
+- Renamed "Inflitrate" to "CanOpenDoors" and rewrote the tooltip.
+- Added "scalemultiplier" (Vector2) for particle emitters so that the effects can be scaled just in one axis instead of both.
+
+------------------------------------------------------------------------------------------------------
 v0.13.3.11
 ---------------------------------------------------------------------------------------------------------
 

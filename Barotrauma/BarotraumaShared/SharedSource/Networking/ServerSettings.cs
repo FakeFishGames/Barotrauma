@@ -635,6 +635,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool AllowLinkingWifiToChat
+        {
+            get;
+            set;
+        }
+
         [Serialize(true, true)]
         public bool AllowFriendlyFire
         {

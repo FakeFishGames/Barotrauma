@@ -280,7 +280,7 @@ namespace Barotrauma
         public void ResolveLinks(IdRemap childRemap)
         {
             if (unresolvedLinkedToID == null) { return; }
-            for (int i=0;i<unresolvedLinkedToID.Count;i++)
+            for (int i = 0; i < unresolvedLinkedToID.Count; i++)
             {
                 int srcId = unresolvedLinkedToID[i];
                 int targetId = childRemap.GetOffsetId(srcId);
@@ -649,7 +649,10 @@ namespace Barotrauma
                     else
                     {
                         object newEntity = loadMethod.Invoke(t, new object[] { element, submarine, idRemap });
-                        if (newEntity != null) entities.Add((MapEntity)newEntity);
+                        if (newEntity != null)
+                        {
+                            entities.Add((MapEntity)newEntity);
+                        }
                     }
                 }
                 catch (TargetInvocationException e)

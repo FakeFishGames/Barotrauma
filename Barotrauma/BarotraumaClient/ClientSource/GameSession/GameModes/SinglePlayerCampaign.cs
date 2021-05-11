@@ -101,7 +101,8 @@ namespace Barotrauma
                     case "cargo":
                         CargoManager.LoadPurchasedItems(subElement);
                         break;
-                    case "pendingupgrades":
+                    case "pendingupgrades": //backwards compatibility
+                    case "upgrademanager":
                         UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: true);
                         break;
                     case "pets":
@@ -229,6 +230,7 @@ namespace Barotrauma
             {
                 PetBehavior.LoadPets(petsElement);
             }
+            CrewManager.LoadActiveOrders();
 
             GUI.DisableSavingIndicatorDelayed();
         }
@@ -479,6 +481,8 @@ namespace Barotrauma
                 PendingSubmarineSwitch = null;
                 EnableRoundSummaryGameOverState();
             }
+
+            CrewManager?.ClearCurrentOrders();
 
             //--------------------------------------
 
@@ -735,9 +739,10 @@ namespace Barotrauma
                 if (c.Inventory != null)
                 {
                     c.Info.InventoryData = new XElement("inventory");
-                    c.SaveInventory(c.Inventory, c.Info.InventoryData);
+                    c.SaveInventory();
                     c.Inventory?.DeleteAllItems();
                 }
+                c.Info.SaveOrderData();
             }
 
             petsElement = new XElement("pets");
@@ -748,7 +753,7 @@ namespace Barotrauma
             CampaignMetadata.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
-            UpgradeManager?.SavePendingUpgrades(modeElement, UpgradeManager?.PendingUpgrades);
+            UpgradeManager?.Save(modeElement);
             element.Add(modeElement);
         }
     }

@@ -505,7 +505,7 @@ namespace Barotrauma
                             missionName.CalculateHeightFromText();
                         }
 
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(), wrap: true, parseRichText: true);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(Submarine.MainSub), wrap: true, parseRichText: true);
 
                         string reputationText = mission.GetReputationRewardText(mission.Locations[0]);
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText, wrap: true, parseRichText: true);
@@ -517,8 +517,9 @@ namespace Barotrauma
                     {
                         var textBlock = child as GUITextBlock;
                         textBlock.Color = textBlock.SelectedColor = textBlock.HoverColor = Color.Transparent;
-                        textBlock.HoverTextColor = textBlock.TextColor;
+                        textBlock.SelectedTextColor = textBlock.TextColor;
                         textBlock.TextColor *= 0.5f;
+                        textBlock.HoverTextColor = textBlock.TextColor;
                     }
                     missionPanel.OnAddedToGUIUpdateList = (c) =>
                     {

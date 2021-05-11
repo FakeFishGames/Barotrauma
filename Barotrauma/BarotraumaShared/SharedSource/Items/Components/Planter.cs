@@ -137,16 +137,9 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
-            if (HasAnyFinishedGrowing())
-            {
-                Msg = MsgHarvest;
-                ParseMsg();
-                return true;
-            }
-
-            Msg = string.Empty;
+            Msg = MsgHarvest;
             ParseMsg();
-            return false;
+            return true;
         }
 
         public override bool Pick(Character character)
@@ -199,12 +192,13 @@ namespace Barotrauma.Items.Components
         {
             Debug.Assert(container != null, "Tried to harvest a planter without an item container.");
 
+            bool anyDecayed = GrowableSeeds.Any(s => s is { } seed && (seed.Decayed || seed.FullyGrown));
             for (var i = 0; i < GrowableSeeds.Length; i++)
             {
                 Growable? seed = GrowableSeeds[i];
                 if (seed == null) { continue; }
 
-                if (seed.Decayed || seed.FullyGrown)
+                if (!anyDecayed || seed.Decayed || seed.FullyGrown)
                 {
                     container?.Inventory.RemoveItem(seed.Item);
                     Entity.Spawner?.AddToRemoveQueue(seed.Item);

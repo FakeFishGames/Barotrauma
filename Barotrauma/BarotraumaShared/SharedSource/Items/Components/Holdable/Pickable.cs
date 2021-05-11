@@ -90,6 +90,24 @@ namespace Barotrauma.Items.Components
 
         public virtual bool OnPicked(Character picker)
         {
+            //if the item has multiple Pickable components (e.g. Holdable and Wearable, check that we don't equip it in hands when the item is worn or vice versa)
+            if (item.GetComponents<Pickable>().Count() > 0)
+            {
+                bool alreadyEquipped = false;
+                for (int i = 0; i < picker.Inventory.Capacity; i++)
+                {
+                    if (picker.Inventory.GetItemsAt(i).Contains(item))
+                    {
+                        if (picker.Inventory.SlotTypes[i] != InvSlotType.Any &&
+                            !allowedSlots.Any(a => a.HasFlag(picker.Inventory.SlotTypes[i])))
+                        {
+                            alreadyEquipped = true;
+                            break;
+                        }
+                    }
+                }
+                if (alreadyEquipped) { return false; }
+            }
             if (picker.Inventory.TryPutItemWithAutoEquipCheck(item, picker, allowedSlots))
             {
                 if (!picker.HeldItems.Contains(item) && item.body != null) { item.body.Enabled = false; }

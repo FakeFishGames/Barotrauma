@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
-        public override string DebugTag => "contain item";
+        public override string Identifier { get; set; } = "contain item";
 
         public Func<Item, float> GetItemPriority;
 
@@ -61,7 +61,7 @@ namespace Barotrauma
             this.container = container;
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
             if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
@@ -146,7 +146,7 @@ namespace Barotrauma
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
-                        abortCondition = obj => !ItemToContain.IsOwnedBy(character),
+                        AbortCondition = obj => !ItemToContain.IsOwnedBy(character),
                         SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
                     },
                     onAbandon: () => Abandon = true,
@@ -170,7 +170,8 @@ namespace Barotrauma
                             ignoredItems = containedItems,
                             AllowToFindDivingGear = AllowToFindDivingGear,
                             AllowDangerousPressure = AllowDangerousPressure,
-                            TargetCondition = ConditionLevel
+                            TargetCondition = ConditionLevel,
+                            ItemFilter = (Item potentialItem) => RemoveEmpty ? container.CanBeContained(potentialItem) : container.Inventory.CanBePut(potentialItem)
                         }, onAbandon: () =>
                         {
                             Abandon = true;

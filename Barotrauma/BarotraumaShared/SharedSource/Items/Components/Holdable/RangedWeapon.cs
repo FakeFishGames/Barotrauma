@@ -151,6 +151,11 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return characterUsable || character == null;
+        }
+
         public Projectile FindProjectile(bool triggerOnUseOnContainers = false)
         {
             var containedItems = item.OwnInventory?.AllItemsMod;

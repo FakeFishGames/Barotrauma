@@ -296,7 +296,7 @@ namespace Barotrauma
                 float alpha = GetDistanceBasedIconAlpha(brokenItem);
                 if (alpha <= 0.0f) continue;
                 GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUI.BrokenIcon, 
-                    Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);                
+                    Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);
             }
 
             float GetDistanceBasedIconAlpha(ISpatialEntity target, float maxDistance = 1000.0f)
@@ -341,7 +341,7 @@ namespace Barotrauma
 
                     if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
-                        bool shiftDown = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
+                        bool shiftDown = PlayerInput.IsShiftDown();
                         if (shouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
                         {
                             shouldRecreateHudTexts = true;
@@ -391,7 +391,16 @@ namespace Barotrauma
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
 
                     var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
-                    GUI.DrawIndicator(spriteBatch, npc.WorldPosition, cam, 500.0f, iconStyle.GetDefaultSprite(), iconStyle.Color);
+                    GUI.DrawIndicator(spriteBatch, npc.WorldPosition, cam, npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, iconStyle.GetDefaultSprite(), iconStyle.Color);
+                }
+
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.IconStyle is null || item.Submarine != character.Submarine) { continue; }
+                    if (Vector2.DistanceSquared(character.Position, item.Position) > 500f*500f) { continue; }
+                    var body = Submarine.CheckVisibility(character.SimPosition, item.SimPosition, ignoreLevel: true);
+                    if (body != null && body.UserData as Item != item) { continue; }
+                    GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Vector2(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color);
                 }
             }
 

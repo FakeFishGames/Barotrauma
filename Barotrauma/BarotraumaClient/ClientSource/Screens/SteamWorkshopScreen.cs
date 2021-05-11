@@ -26,6 +26,8 @@ namespace Barotrauma
         //listbox that shows the files included in the item being created
         private GUIListBox createItemFileList;
 
+        private GUIImage previewIcon;
+
         private System.IO.FileSystemWatcher createItemWatcher;
 
         private readonly List<GUIButton> tabButtons = new List<GUIButton>();
@@ -275,6 +277,24 @@ namespace Barotrauma
             itemEditor = null;
 
             SelectTab(Tab.Mods);
+        }
+
+        public override void OnFileDropped(string filePath, string extension)
+        {
+            switch (extension)
+            {
+                case ".png": // workshop preview
+                case ".jpg":
+                case ".jpeg":
+                    if (previewIcon == null || itemContentPackage == null) { break; }
+
+                    OnPreviewImageSelected(previewIcon, filePath);
+                    break;
+
+                default:
+                    DebugConsole.ThrowError($"Could not drag and drop the file. \"{extension}\" is not a valid file extension! (expected .png, .jpg or .jpeg)");
+                    break;
+            }
         }
 
         private void OnItemInstalled(ulong itemId)
@@ -1263,7 +1283,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemPreviewImage"), font: GUI.SubHeadingFont);
 
-            var previewIcon = new GUIImage(new RectTransform(new Vector2(1.0f, 0.7f), topLeftColumn.RectTransform), SteamManager.DefaultPreviewImage, scaleToFit: true);
+            previewIcon = new GUIImage(new RectTransform(new Vector2(1.0f, 0.7f), topLeftColumn.RectTransform), SteamManager.DefaultPreviewImage, scaleToFit: true);
             new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), topLeftColumn.RectTransform), TextManager.Get("WorkshopItemBrowse"), style: "GUIButtonSmall")
             {
                 OnClicked = (btn, userdata) =>

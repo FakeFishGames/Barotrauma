@@ -114,7 +114,6 @@ namespace Barotrauma
             if (realWorldDimensions != Vector2.Zero)
             {
                 string dimensionsStr = TextManager.GetWithVariables("DimensionsFormat", new string[2] { "[width]", "[height]" }, new string[2] { ((int)realWorldDimensions.X).ToString(), ((int)realWorldDimensions.Y).ToString() });
-
                 var dimensionsText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), parent.Content.RectTransform),
                     TextManager.Get("Dimensions"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
@@ -123,6 +122,15 @@ namespace Barotrauma
                 { CanBeFocused = false };
                 dimensionsText.RectTransform.MinSize = new Point(0, dimensionsText.Children.First().Rect.Height);
             }
+
+            string cargoCapacityStr = CargoCapacity < 0 ? TextManager.Get("unknown") : TextManager.GetWithVariables("cargocapacityformat", new string[1] { "[cratecount]" }, new string[1] {CargoCapacity.ToString() });
+            var cargoCapacityText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), parent.Content.RectTransform),
+                TextManager.Get("cargocapacity"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
+            { CanBeFocused = false };
+            new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), cargoCapacityText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
+                cargoCapacityStr, textAlignment: Alignment.TopLeft, font: font, wrap: true)
+            { CanBeFocused = false };
+            cargoCapacityText.RectTransform.MinSize = new Point(0, cargoCapacityText.Children.First().Rect.Height);
 
             if (RecommendedCrewSizeMax > 0)
             {

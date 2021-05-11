@@ -149,12 +149,14 @@ namespace Barotrauma
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
                         break;
+                    case "upgrademanager":
                     case "pendingupgrades":
                         UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: false);
                         break;
                     case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
                         CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
                         CrewManager.AddCharacterElements(subElement);
+                        CrewManager.ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "cargo":
                         CargoManager?.LoadPurchasedItems(subElement);

@@ -149,7 +149,7 @@ namespace Barotrauma
             OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
 
-            Commonness[""] = 1.0f;
+            Commonness[""] = element.GetAttributeFloat("commonness", 1.0f);
             foreach (XElement subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())

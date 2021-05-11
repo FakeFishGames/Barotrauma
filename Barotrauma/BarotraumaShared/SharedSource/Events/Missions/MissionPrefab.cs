@@ -20,8 +20,9 @@ namespace Barotrauma
         Combat = 0x40,
         OutpostDestroy = 0x80,
         OutpostRescue = 0x100,
-
-        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | OutpostDestroy | OutpostRescue
+        Escort = 0x200,
+        Pirate = 0x400,
+        All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | OutpostDestroy | OutpostRescue | Escort | Pirate
     }
 
     partial class MissionPrefab
@@ -38,6 +39,8 @@ namespace Barotrauma
             { MissionType.Mineral, typeof(MineralMission) },
             { MissionType.OutpostDestroy, typeof(OutpostDestroyMission) },
             { MissionType.OutpostRescue, typeof(AbandonedOutpostMission) },
+            { MissionType.Escort, typeof(EscortMission) },
+            { MissionType.Pirate, typeof(PirateMission) }
         };
         public static readonly Dictionary<MissionType, Type> PvPMissionClasses = new Dictionary<MissionType, Type>()
         {
@@ -286,15 +289,19 @@ namespace Barotrauma
 
             if (CoOpMissionClasses.ContainsKey(Type))
             {
-                constructor = CoOpMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+                constructor = CoOpMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]), typeof(Submarine) });
             }
             else if (PvPMissionClasses.ContainsKey(Type))
             {
-                constructor = PvPMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]) });
+                constructor = PvPMissionClasses[Type].GetConstructor(new[] { typeof(MissionPrefab), typeof(Location[]), typeof(Submarine) });
             }
             else
             {
                 DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - unsupported mission type \"" + Type.ToString() + "\"");
+            }
+            if (constructor == null)
+            {
+                DebugConsole.ThrowError($"Failed to find a constructor for the mission type \"{Type}\"!");
             }
 
             InitProjSpecific(element);
@@ -333,9 +340,9 @@ namespace Barotrauma
             return false;
         }
 
-        public Mission Instantiate(Location[] locations)
+        public Mission Instantiate(Location[] locations, Submarine sub)
         {
-            return constructor?.Invoke(new object[] { this, locations }) as Mission;
+            return constructor?.Invoke(new object[] { this, locations, sub }) as Mission;
         }
     }
 }

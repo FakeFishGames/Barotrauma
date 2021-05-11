@@ -37,6 +37,10 @@ namespace Barotrauma
 
         private static RoundData roundData;
 
+        // Used for the Extravehicular Activity ("crewaway") achievement
+        private static PathFinder pathFinder;
+        private static readonly Dictionary<Character, CachedDistance> cachedDistances = new Dictionary<Character, CachedDistance>();
+
         public static void OnStartRound()
         {
             roundData = new RoundData();
@@ -45,6 +49,8 @@ namespace Barotrauma
                 Reactor reactor = item.GetComponent<Reactor>();
                 if (reactor != null) { roundData.Reactors.Add(reactor); }
             }
+            pathFinder = new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+            cachedDistances.Clear();
         }
 
         public static void Update(float deltaTime)
@@ -153,11 +159,43 @@ namespace Barotrauma
 
             if (Submarine.MainSub != null && c.Submarine == null && c.SpeciesName.Equals(CharacterPrefab.HumanSpeciesName, StringComparison.OrdinalIgnoreCase))
             {
-                float dist = 500 / Physics.DisplayToRealWorldRatio;
-                if (Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition) >
-                    dist * dist)
+                float requiredDist = 500 / Physics.DisplayToRealWorldRatio;
+                float distSquared = Vector2.DistanceSquared(c.WorldPosition, Submarine.MainSub.WorldPosition);
+                if (cachedDistances.TryGetValue(c, out var cachedDistance))
+                {
+                    if (cachedDistance.ShouldUpdateDistance(c.WorldPosition, Submarine.MainSub.WorldPosition))
+                    {
+                        cachedDistances.Remove(c);
+                        cachedDistance = CalculateNewCachedDistance(c);
+                        if (cachedDistance != null)
+                        {
+                            cachedDistances.Add(c, cachedDistance);
+                        }
+                    }
+                }
+                else
+                {
+                    cachedDistance = CalculateNewCachedDistance(c);
+                    if (cachedDistance != null)
+                    {
+                        cachedDistances.Add(c, cachedDistance);
+                    }
+                }
+                if (cachedDistance != null)
+                {
+                    distSquared = Math.Max(distSquared, cachedDistance.Distance * cachedDistance.Distance);
+                }
+                if (distSquared > requiredDist * requiredDist)
                 {
                     UnlockAchievement(c, "crewaway");
+                }
+
+                static CachedDistance CalculateNewCachedDistance(Character c)
+                {
+                    pathFinder ??= new PathFinder(WayPoint.WayPointList, indoorsSteering: false);
+                    var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(c.WorldPosition), ConvertUnits.ToSimUnits(Submarine.MainSub.WorldPosition));
+                    if (path.Unreachable) { return null; }
+                    return new CachedDistance(c.WorldPosition, Submarine.MainSub.WorldPosition, path.TotalLength, Timing.TotalTime + Rand.Range(1.0f, 5.0f));
                 }
             }
         }

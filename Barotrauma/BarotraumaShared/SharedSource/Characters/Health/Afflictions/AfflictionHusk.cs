@@ -69,7 +69,10 @@ namespace Barotrauma
             if (Strength < DormantThreshold)
             {
                 DeactivateHusk();
-                State = InfectionState.Dormant;
+                if (Strength > Math.Min(1.0f, DormantThreshold))
+                {
+                    State = InfectionState.Dormant;
+                }
             }
             else if (Strength < ActiveThreshold)
             {

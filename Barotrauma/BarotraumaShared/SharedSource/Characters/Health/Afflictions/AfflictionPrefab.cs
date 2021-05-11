@@ -678,7 +678,10 @@ namespace Barotrauma
         {
             foreach (Effect effect in effects)
             {
-                if (currentStrength > effect.MinStrength && currentStrength <= effect.MaxStrength) return effect;
+                if (currentStrength > effect.MinStrength && currentStrength <= effect.MaxStrength)
+                {
+                    return effect;
+                }
             }
 
             //if above the strength range of all effects, use the highest strength effect

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -61,14 +62,19 @@ namespace Barotrauma
             //private set { description = value; }
         }
 
+        protected string descriptionWithoutReward;
+
         public virtual bool AllowUndocking
         {
             get { return true; }
         }
 
-        public int Reward
+        public virtual int Reward
         {
-            get { return Prefab.Reward; }
+            get 
+            {
+                return Prefab.Reward;
+            }
         }
 
         public Dictionary<string, float> ReputationRewards
@@ -92,6 +98,16 @@ namespace Barotrauma
             get { return true; }
         }
 
+        public virtual int TeamCount
+        {
+            get { return 1; }
+        }
+
+        public virtual SubmarineInfo EnemySubmarineInfo
+        {
+            get { return null; }
+        }
+
         public virtual IEnumerable<Vector2> SonarPositions
         {
             get { return Enumerable.Empty<Vector2>(); }
@@ -113,7 +129,7 @@ namespace Barotrauma
             get { return Prefab.Difficulty; }
         }
            
-        public Mission(MissionPrefab prefab, Location[] locations)
+        public Mission(MissionPrefab prefab, Location[] locations, Submarine sub)
         {
             System.Diagnostics.Debug.Assert(locations.Length == 2);
 
@@ -138,8 +154,12 @@ namespace Barotrauma
                     Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locationName);
                 }
             }
-            string rewardText = $"‖color:gui.orange‖{string.Format(CultureInfo.InvariantCulture, "{0:N0}", Reward)}‖end‖";
-            if (description != null) { description = description.Replace("[reward]", rewardText); }
+            string rewardText = $"‖color:gui.orange‖{string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub))}‖end‖";
+            if (description != null) 
+            {
+                descriptionWithoutReward = description;
+                description = description.Replace("[reward]", rewardText); 
+            }
             if (successMessage != null) { successMessage = successMessage.Replace("[reward]", rewardText); }
             if (failureMessage != null) { failureMessage = failureMessage.Replace("[reward]", rewardText); }
             for (int m = 0; m < Messages.Count; m++)
@@ -181,12 +201,17 @@ namespace Barotrauma
             {
                 if (randomNumber <= missionPrefab.Commonness)
                 {
-                    return missionPrefab.Instantiate(locations);
+                    return missionPrefab.Instantiate(locations, Submarine.MainSub);
                 }
                 randomNumber -= missionPrefab.Commonness;
             }
 
             return null;
+        }
+
+        public virtual int GetReward(Submarine sub)
+        {
+            return Prefab.Reward;
         }
 
         public void Start(Level level)
@@ -232,7 +257,7 @@ namespace Barotrauma
         public void GiveReward()
         {
             if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
-            campaign.Money += Reward;
+            campaign.Money += GetReward(Submarine.MainSub);
 
             foreach (KeyValuePair<string, float> reputationReward in ReputationRewards)
             {
@@ -287,5 +312,48 @@ namespace Barotrauma
         }
 
         public virtual void AdjustLevelData(LevelData levelData) { }
+
+        // putting these here since both escort and pirate missions need them. could be tucked away into another class that they can inherit from (or use composition)
+        protected HumanPrefab CreateHumanPrefabFromElement(XElement element)
+        {
+            HumanPrefab humanPrefab = null;
+
+            if (element.Attribute("name") != null)
+            {
+                DebugConsole.ThrowError("Error in mission \"" + Name + "\" - use character identifiers instead of names to configure the characters.");
+
+                return null;
+            }
+
+            string characterIdentifier = element.GetAttributeString("identifier", "");
+            string characterFrom = element.GetAttributeString("from", "");
+            humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
+
+            if (humanPrefab == null)
+            {
+                DebugConsole.ThrowError("Couldn't spawn character for mission: character prefab \"" + characterIdentifier + "\" not found");
+                return null;
+            }
+
+            return humanPrefab;
+        }
+
+        protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.Server, bool giveTags = true)
+        {
+            if (positionToStayIn == null) 
+            {
+                positionToStayIn = WayPoint.GetRandom(SpawnType.Human, null, submarine);
+            }
+            var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
+            characterInfo.TeamID = teamType;
+            Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
+            humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);
+            humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.Server, createNetworkEvents: false);
+
+            characters.Add(spawnedCharacter);
+            characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
+
+            return spawnedCharacter;
+        }
     }
 }

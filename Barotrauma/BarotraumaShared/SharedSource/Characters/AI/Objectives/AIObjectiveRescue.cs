@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveRescue : AIObjective
     {
-        public override string DebugTag => "rescue";
+        public override string Identifier { get; set; } = "rescue";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
 
@@ -374,7 +374,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             if (character.LockHands || targetCharacter == null || targetCharacter.CurrentHull == null || targetCharacter.Removed || targetCharacter.IsDead)
             {
@@ -390,6 +390,7 @@ namespace Barotrauma
             bool isCompleted = 
                 AIObjectiveRescueAll.GetVitalityFactor(targetCharacter) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, targetCharacter) ||
                 targetCharacter.CharacterHealth.GetAllAfflictions().All(a => a.Strength < a.Prefab.TreatmentThreshold);
+
             if (isCompleted && targetCharacter != character && character.IsOnPlayerTeam)
             {                
                 character.Speak(TextManager.GetWithVariable("DialogTargetHealed", "[targetname]", targetCharacter.Name),
@@ -398,7 +399,7 @@ namespace Barotrauma
             return isCompleted;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {

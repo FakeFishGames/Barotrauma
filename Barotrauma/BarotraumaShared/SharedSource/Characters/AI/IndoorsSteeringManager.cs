@@ -301,34 +301,33 @@ namespace Barotrauma
             }
             Ladder nextLadder = GetNextLadder();
             var ladders = currentLadder ?? nextLadder;
-            if (canClimb && !isDiving && ladders != null && character.SelectedConstruction != ladders.Item)
+            bool useLadders = canClimb && ladders != null && (!isDiving || Math.Abs(steering.X) < 0.1f && Math.Abs(steering.Y) > 1);
+            if (useLadders && character.SelectedConstruction != ladders.Item)
             {
-                if (IsNextNodeLadder || currentPath.Finished)
-                {
-                    if (character.CanInteractWith(ladders.Item))
-                    {
-                        ladders.Item.TryInteract(character, false, true);
-                    }
-                    else
-                    {
-                        // Cannot interact with the current (or next) ladder,
-                        // Try to select the previous ladder, unless it's already selected, unless the previous ladder is not adjacent to the current ladder.
-                        // The intention of this code is to prevent the bots from dropping from the "double ladders".
-                        var previousLadders = currentPath.PrevNode?.Ladders;
-                        if (previousLadders != null && previousLadders != ladders && character.SelectedConstruction != previousLadders.Item && 
-                            character.CanInteractWith(previousLadders.Item) && Math.Abs(previousLadders.Item.WorldPosition.X - ladders.Item.WorldPosition.X) < 5)
-                        {
-                            previousLadders.Item.TryInteract(character, false, true);
-                        }
-                    }
-                }
-                else if (!IsNextLadderSameAsCurrent && character.SelectedConstruction?.GetComponent<Ladder>() != null && character.CanInteractWith(ladders.Item))
+                if (character.CanInteractWith(ladders.Item))
                 {
                     ladders.Item.TryInteract(character, false, true);
                 }
+                else
+                {
+                    // Cannot interact with the current (or next) ladder,
+                    // Try to select the previous ladder, unless it's already selected, unless the previous ladder is not adjacent to the current ladder.
+                    // The intention of this code is to prevent the bots from dropping from the "double ladders".
+                    var previousLadders = currentPath.PrevNode?.Ladders;
+                    if (previousLadders != null && previousLadders != ladders && character.SelectedConstruction != previousLadders.Item &&
+                        character.CanInteractWith(previousLadders.Item) && Math.Abs(previousLadders.Item.WorldPosition.X - ladders.Item.WorldPosition.X) < 5)
+                    {
+                        previousLadders.Item.TryInteract(character, false, true);
+                    }
+                }
             }
             var collider = character.AnimController.Collider;
-            if (character.IsClimbing && !isDiving)
+            if (character.IsClimbing && !useLadders)
+            {
+                character.AnimController.Anim = AnimController.Animation.None;
+                character.SelectedConstruction = null;
+            }
+            if (character.IsClimbing && useLadders)
             {
                 Vector2 diff = currentPath.CurrentNode.SimPosition - pos;
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
@@ -380,17 +379,12 @@ namespace Barotrauma
             }
             else if (character.AnimController.InWater)
             {
-                // If the character is underwater, we don't need the ladders anymore
-                if (character.IsClimbing && isDiving)
-                {
-                    character.AnimController.Anim = AnimController.Animation.None;
-                    character.SelectedConstruction = null;
-                }
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 if (door == null || door.CanBeTraversed)
                 {
-                    float multiplier = MathHelper.Lerp(1, 10, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
-                    float targetDistance = collider.GetSize().X * multiplier;
+                    float margin = MathHelper.Lerp(1, 5, MathHelper.Clamp(collider.LinearVelocity.Length() / 10, 0, 1));
+                    Vector2 colliderSize = collider.GetSize();
+                    float targetDistance = Math.Max(Math.Max(colliderSize.X, colliderSize.Y) / 2 * margin, 0.5f);
                     float horizontalDistance = Math.Abs(character.WorldPosition.X - currentPath.CurrentNode.WorldPosition.X);
                     float verticalDistance = Math.Abs(character.WorldPosition.Y - currentPath.CurrentNode.WorldPosition.Y);
                     if (character.CurrentHull != currentPath.CurrentNode.CurrentHull)
@@ -404,24 +398,25 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (!canClimb || !IsNextLadderSameAsCurrent)
+            else
             {
                 // Walking horizontally
                 Vector2 colliderBottom = character.AnimController.GetColliderBottom();
                 Vector2 colliderSize = collider.GetSize();
                 Vector2 velocity = collider.LinearVelocity;
-                // If the character is smaller than this, it would fail to use the waypoint nodes because they are always too high.
-                float minHeight = 1;
-                // If the character is very thin, without a min value, it would often fail to reach the waypoints, because the horizontal distance is too small.
-                float minWidth = 0.17f;
+                // If the character is very short, it would fail to use the waypoint nodes because they are always too high.
+                // If the character is very thin, it would often fail to reach the waypoints, because the horizontal distance is too small.
+                // Both values are based on the human size. So basically anything smaller than humans are considered as equal in size.
+                float minHeight = 1.6125001f;
+                float minWidth = 0.3225f;
                 // Cannot use the head position, because not all characters have head or it can be below the total height of the character
                 float characterHeight = Math.Max(colliderSize.Y + character.AnimController.ColliderHeightFromFloor, minHeight);
                 float horizontalDistance = Math.Abs(collider.SimPosition.X - currentPath.CurrentNode.SimPosition.X);
                 bool isAboveFeet = currentPath.CurrentNode.SimPosition.Y > colliderBottom.Y;
                 bool isNotTooHigh = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + characterHeight;
                 var door = currentPath.CurrentNode.ConnectedDoor;
-                float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 10, 0, 1));
-                float targetDistance = Math.Max(collider.radius * margin, minWidth);
+                float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 5, 0, 1));
+                float targetDistance = Math.Max(colliderSize.X / 2 * margin, minWidth / 2);
                 if (horizontalDistance < targetDistance && isAboveFeet && isNotTooHigh && (door == null || door.CanBeTraversed))
                 {
                     currentPath.SkipToNextNode();

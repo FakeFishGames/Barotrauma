@@ -176,6 +176,20 @@ namespace Barotrauma
             private set;
         }
 
+        [Editable, Serialize(true, true, description: "Can the object be placed near the start of the level.")]
+        public bool AllowAtStart
+        {
+            get;
+            private set;
+        }
+
+        [Editable, Serialize(true, true, description: "Can the object be placed near the end of the level.")]
+        public bool AllowAtEnd
+        {
+            get;
+            private set;
+        }
+
         [Serialize(0.0f, true, description: "Minimum length of a graph edge the object can spawn on."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         /// <summary>
         /// Minimum length of a graph edge the object can spawn on.

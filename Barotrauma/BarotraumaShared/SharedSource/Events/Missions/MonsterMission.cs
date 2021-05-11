@@ -33,8 +33,8 @@ namespace Barotrauma
             }
         }
 
-        public MonsterMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        public MonsterMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
         {
             string speciesName = prefab.ConfigElement.GetAttributeString("monsterfile", null);
             if (!string.IsNullOrEmpty(speciesName))

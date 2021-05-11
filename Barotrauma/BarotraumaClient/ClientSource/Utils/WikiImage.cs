@@ -112,7 +112,7 @@ namespace Barotrauma
                     GameMain.Instance.GraphicsDevice.Viewport = prevViewport;
                     using (FileStream fs = File.Open("wikiimage.png", System.IO.FileMode.Create))
                     {
-                        rt.SaveAsPng(fs, boundingBox.Width, boundingBox.Height);
+                        rt.SaveAsPng(fs, texWidth, texHeight);
                     }
                 }
             }

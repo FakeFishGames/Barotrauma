@@ -35,9 +35,14 @@ namespace Barotrauma
             character.SpawnInventoryItems(inventory, itemData);
         }
 
-        public void ApplyHealthData(CharacterInfo characterInfo, Character character)
+        public void ApplyHealthData(Character character)
         {            
-            characterInfo.ApplyHealthData(character, healthData);
+            CharacterInfo.ApplyHealthData(character, healthData);
         }
+
+        public void ApplyOrderData(Character character)
+        {
+            CharacterInfo.ApplyOrderData(character, OrderData);
+        } 
     }
 }

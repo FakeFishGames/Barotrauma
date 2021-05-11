@@ -17,15 +17,6 @@ namespace Barotrauma.Items.Components
             TextManager.Get("CatastrophicBleeding")
         };
 
-        private static readonly string[] HealthTexts = 
-        {
-            TextManager.Get("NoInjuries"),
-            TextManager.Get("MinorInjuries"),
-            TextManager.Get("Injuries"),
-            TextManager.Get("MajorInjuries"),
-            TextManager.Get("CriticalInjuries")
-        };
-
         private static readonly string[] OxygenTexts = 
         {
             TextManager.Get("OxygenNormal"),
@@ -147,9 +138,13 @@ namespace Barotrauma.Items.Components
 
             List<string> texts = new List<string>();
             List<Color> textColors = new List<Color>();
-
             texts.Add(target.Info == null ? target.DisplayName : target.Info.DisplayName);
-            textColors.Add(GUI.Style.TextColor);            
+            Color nameColor = GUI.Style.TextColor;
+            if (Character.Controlled != null && target.TeamID != Character.Controlled.TeamID)
+            {
+                nameColor = target.TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+            }
+            textColors.Add(nameColor);
             
             if (target.IsDead)
             {

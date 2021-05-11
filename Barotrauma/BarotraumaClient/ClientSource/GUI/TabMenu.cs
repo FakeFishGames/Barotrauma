@@ -947,7 +947,7 @@ namespace Barotrauma
                     {
                         descriptionText += "\n\n" + missionMessage;
                     }
-                    string rewardText = mission.GetMissionRewardText();
+                    string rewardText = mission.GetMissionRewardText(Submarine.MainSub);
                     string reputationText = mission.GetReputationRewardText(mission.Locations[0]);
 
                     var missionNameRichTextData = RichTextData.GetRichTextData(mission.Name, out string missionNameString);

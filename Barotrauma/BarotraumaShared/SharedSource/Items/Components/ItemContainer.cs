@@ -204,6 +204,8 @@ namespace Barotrauma.Items.Components
             return ContainableItems.Find(c => c.MatchesItem(itemPrefab)) != null;
         }
 
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.ParentInventory is CharacterInventory)
@@ -235,8 +237,8 @@ namespace Barotrauma.Items.Components
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
-                    var targets = new List<ISerializableEntity>();
-                    effect.GetNearbyTargets(item.WorldPosition, targets);
+                    targets.Clear();
+                    targets.AddRange(effect.GetNearbyTargets(item.WorldPosition, targets));
                     effect.Apply(ActionType.OnActive, deltaTime, item, targets);
                 }
             }
@@ -403,10 +405,26 @@ namespace Barotrauma.Items.Components
         {
             if (SpawnWithId.Length > 0)
             {
-                ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == SpawnWithId);
-                if (prefab != null && Inventory != null && Inventory.CanBePut(prefab))
+                string[] splitIds = SpawnWithId.Split(',');
+                foreach (string id in splitIds)
                 {
-                    Entity.Spawner?.AddToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false);                    
+                    ItemPrefab prefab = ItemPrefab.Prefabs.Find(m => m.Identifier == id);
+                    if (prefab != null && Inventory != null && Inventory.CanBePut(prefab))
+                    {
+                        bool isEditor = false;
+#if CLIENT
+                        isEditor = Screen.Selected == GameMain.SubEditorScreen;
+#endif
+                        if (!isEditor && (Entity.Spawner == null || Entity.Spawner.Removed) && GameMain.NetworkMember == null)
+                        {
+                            var spawnedItem = new Item(prefab, Vector2.Zero, null);
+                            Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots, createNetworkEvent: false);
+                        }
+                        else
+                        {
+                            Entity.Spawner?.AddToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false);
+                        }
+                    }
                 }
             }
         }

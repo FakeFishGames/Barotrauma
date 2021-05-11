@@ -73,6 +73,8 @@ namespace Barotrauma
             get { return true; }
         }
 
+        public virtual bool IsMentallyUnstable => false;
+
         private IEnumerable<Hull> visibleHulls;
         private float hullVisibilityTimer;
         const float hullVisibilityInterval = 0.5f;
@@ -215,10 +217,26 @@ namespace Barotrauma
         }
 
         private readonly HashSet<Item> unequippedItems = new HashSet<Item>();
-        public bool TakeItem(Item item, Inventory targetInventory, bool equip, bool dropOtherIfCannotMove = true, bool allowSwapping = false, bool storeUnequipped = false)
+        public bool TakeItem(Item item, CharacterInventory targetInventory, bool equip, bool wear = false, bool dropOtherIfCannotMove = true, bool allowSwapping = false, bool storeUnequipped = false)
         {
             var pickable = item.GetComponent<Pickable>();
             if (pickable == null) { return false; }
+            if (wear)
+            {
+                var wearable = item.GetComponent<Wearable>();
+                if (wearable != null)
+                {
+                    pickable = wearable;
+                }
+            }
+            else
+            {
+                var holdable = item.GetComponent<Holdable>();
+                if (holdable != null)
+                {
+                    pickable = holdable;
+                }
+            }
             if (item.ParentInventory is ItemInventory itemInventory)
             {
                 if (!itemInventory.Container.HasRequiredItems(Character, addMessage: false)) { return false; }
@@ -302,7 +320,7 @@ namespace Barotrauma
             {
                 if (item != null && !item.Removed && Character.HasItem(item))
                 {
-                    TakeItem(item, Character.Inventory, equip: true, dropOtherIfCannotMove: true, allowSwapping: true, storeUnequipped: false);
+                    TakeItem(item, Character.Inventory, equip: true, wear: true, dropOtherIfCannotMove: true, allowSwapping: true, storeUnequipped: false);
                 }
             }
             unequippedItems.Clear();

@@ -51,6 +51,9 @@ namespace Barotrauma
         public bool InheritTextureScale { get; private set; }
         public bool InheritOrigin { get; private set; }
         public bool InheritSourceRect { get; private set; }
+
+        public float Scale { get; private set; }
+
         public LimbType DepthLimb { get; private set; }
         private Wearable _wearableComponent;
         public Wearable WearableComponent
@@ -175,6 +178,7 @@ namespace Barotrauma
             InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", false);
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
             Sound = SourceElement.GetAttributeString("sound", "");
+            Scale = SourceElement.GetAttributeFloat("scale", 1.0f);
             var index = SourceElement.GetAttributePoint("sheetindex", new Point(-1, -1));
             if (index.X > -1 && index.Y > -1)
             {
@@ -313,6 +317,11 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
+            foreach (var allowedSlot in allowedSlots)
+            {
+                if (allowedSlot != InvSlotType.Any && !character.Inventory.IsInLimbSlot(item, allowedSlot)) { return; }
+            }
+
             picker = character;
             for (int i = 0; i < wearableSprites.Length; i++ )
             {

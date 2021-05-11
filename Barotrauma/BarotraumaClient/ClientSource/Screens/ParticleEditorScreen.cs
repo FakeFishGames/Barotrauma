@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Text;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 #if DEBUG
 using System.IO;
 using System.Xml;
@@ -15,7 +16,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma
 {
-    class ParticleEditorScreen : Screen
+    class ParticleEditorScreen : EditorScreen
     {
         class Emitter : ISerializableEntity
         {
@@ -23,22 +24,22 @@ namespace Barotrauma
 
             public float BurstTimer;
 
-            [Editable(), Serialize("0.0,360.0", false)]
+            [Editable, Serialize("0.0,360.0", false)]
             public Vector2 AngleRange { get; private set; }
 
-            [Editable(), Serialize("0.0,0.0", false)]
+            [Editable, Serialize("0.0,0.0", false)]
             public Vector2 VelocityRange { get; private set; }
 
-            [Editable(), Serialize("1.0,1.0", false)]
+            [Editable, Serialize("1.0,1.0", false)]
             public Vector2 ScaleRange { get; private set; }
 
-            [Editable(), Serialize(0, false)]
+            [Editable, Serialize(0, false)]
             public int ParticleBurstAmount { get; private set; }
 
-            [Editable(), Serialize(1.0f, false)]
+            [Editable, Serialize(1.0f, false)]
             public float ParticleBurstInterval { get; private set; }
 
-            [Editable(), Serialize(1.0f, false)]
+            [Editable, Serialize(1.0f, false)]
             public float ParticlesPerSecond { get; private set; }
 
             public string Name
@@ -77,19 +78,24 @@ namespace Barotrauma
 
         private readonly Camera cam;
 
-        public override Camera Cam
-        {
-            get
-            {
-                return cam;
-            }
-        }
+        public override Camera Cam => cam;
+
+        private const string sizeRefFilePath = "Content/size_reference.png";
+        private readonly Texture2D sizeReference;
+        private Vector2 sizeRefPosition = Vector2.Zero;
+        private readonly Vector2 sizeRefOrigin;
+        private bool sizeRefEnabled;
 
         public ParticleEditorScreen()
         {
             cam = new Camera();
             GameMain.Instance.ResolutionChanged += CreateUI;
             CreateUI();
+            if (File.Exists(sizeRefFilePath))
+            {
+                sizeReference = TextureLoader.FromFile(sizeRefFilePath, compress: false);
+                sizeRefOrigin = new Vector2(sizeReference.Width / 2f, sizeReference.Height / 2f);
+            }
         }
 
         private void CreateUI()
@@ -314,7 +320,17 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             cam.MoveCamera((float)deltaTime, allowMove: true, allowZoom: GUI.MouseOn == null);
-            
+
+            if (GUI.MouseOn is null && PlayerInput.PrimaryMouseButtonHeld())
+            {
+                sizeRefPosition = cam.ScreenToWorld(PlayerInput.MousePosition);
+            }
+
+            if (PlayerInput.SecondaryMouseButtonClicked())
+            {
+                CreateContextMenu();
+            }
+
             if (selectedPrefab != null)
             {
                 emitter.EmitTimer += (float)deltaTime;
@@ -345,6 +361,15 @@ namespace Barotrauma
             GameMain.ParticleManager.Update((float)deltaTime);
         }
 
+        private void CreateContextMenu()
+        {
+            GUIContextMenu.CreateContextMenu
+            (
+                new ContextMenuOption("subeditor.editbackgroundcolor", true, CreateBackgroundColorPicker),
+                new ContextMenuOption("editor.togglereferencecharacter", true, delegate { sizeRefEnabled = !sizeRefEnabled; })
+            );
+        }
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             cam.UpdateTransform();
@@ -357,7 +382,7 @@ namespace Barotrauma
                 null, null, null, null,
                 cam.Transform);
 
-            graphics.Clear(new Color(0.051f, 0.149f, 0.271f, 1.0f));
+            graphics.Clear(BackgroundColor);
 
             GameMain.ParticleManager.Draw(spriteBatch, false, false, ParticleBlendState.AlphaBlend);
             GameMain.ParticleManager.Draw(spriteBatch, true, false, ParticleBlendState.AlphaBlend);
@@ -373,6 +398,20 @@ namespace Barotrauma
             GameMain.ParticleManager.Draw(spriteBatch, true, false, ParticleBlendState.Additive);
 
             spriteBatch.End();
+
+            if (sizeRefEnabled && !(sizeReference is null))
+            {
+                spriteBatch.Begin(SpriteSortMode.Deferred,
+                    BlendState.NonPremultiplied,
+                    null, null, null, null,
+                    cam.Transform);
+
+                Vector2 pos = sizeRefPosition;
+                pos.Y = -pos.Y;
+                spriteBatch.Draw(sizeReference, pos, null, Color.White, 0f, sizeRefOrigin, new Vector2(0.4f), SpriteEffects.None, 0f);
+
+                spriteBatch.End();
+            }
 
             //-------------------------------------------------------
 

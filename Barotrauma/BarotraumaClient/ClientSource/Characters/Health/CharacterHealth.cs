@@ -63,6 +63,8 @@ namespace Barotrauma
 
         private GUIListBox afflictionTooltip;
 
+        private static readonly Color oxygenLowGrainColor = new Color(0.1f, 0.1f, 0.1f, 1f);
+
         private struct HeartratePosition
         {
             public float Time;
@@ -671,17 +673,19 @@ namespace Barotrauma
             bloodParticleTimer -= deltaTime * (affliction.Strength / 10.0f);
             if (bloodParticleTimer <= 0.0f)
             {
-                var emitter = Character.BloodEmitters.FirstOrDefault();
+                bool inWater = Character.AnimController.InWater;
+                var drawTarget = inWater ? Particles.ParticlePrefab.DrawTargetType.Water : Particles.ParticlePrefab.DrawTargetType.Air;
+                var emitter = Character.BloodEmitters.FirstOrDefault(e => e.Prefab.ParticlePrefab.DrawTarget == drawTarget || e.Prefab.ParticlePrefab.DrawTarget == Particles.ParticlePrefab.DrawTargetType.Both);
                 float particleMinScale = emitter != null ? emitter.Prefab.ScaleMin : 0.5f;
                 float particleMaxScale = emitter != null ? emitter.Prefab.ScaleMax : 1;
                 float severity = Math.Min(affliction.Strength / affliction.Prefab.MaxStrength * Character.Params.BleedParticleMultiplier, 1);
                 float bloodParticleSize = MathHelper.Lerp(particleMinScale, particleMaxScale, severity);
-                bool inWater = Character.AnimController.InWater;
                 if (!inWater)
                 {
                     bloodParticleSize *= 2.0f;
                 }
 
+                // TODO: use the blood emitter?
                 var blood = GameMain.ParticleManager.CreateParticle(
                     inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
                     targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, Character.AnimController.CurrentHull);
@@ -742,6 +746,7 @@ namespace Barotrauma
             float radialDistortStrength = 0.0f;
             float chromaticAberrationStrength = 0.0f;
             float grainStrength = 0.0f;
+            Color grainColor = Color.White;
 
             if (Character.IsUnconscious)
             {
@@ -750,10 +755,15 @@ namespace Barotrauma
             }
             else if (OxygenAmount < 100.0f)
             {
+                // TODO disable some of these?
                 blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - Vitality / MaxVitality);
                 distortStrength = blurStrength;
                 distortSpeed = (blurStrength + 1.0f);
                 distortSpeed *= distortSpeed * distortSpeed * distortSpeed;
+                
+                
+                grainStrength = MathHelper.Lerp(0.5f, 10.0f, 1.0f - (OxygenAmount - LowOxygenThreshold) / LowOxygenThreshold);
+                grainColor = oxygenLowGrainColor;
             }
 
             foreach (Affliction affliction in afflictions)
@@ -778,6 +788,7 @@ namespace Barotrauma
             Character.RadialDistortStrength = radialDistortStrength;
             Character.ChromaticAberrationStrength = chromaticAberrationStrength;
             Character.GrainStrength = grainStrength;
+            Character.GrainColor = grainColor;
             if (blurStrength > 0.0f)
             {
                 distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;
@@ -2004,7 +2015,7 @@ namespace Barotrauma
                         existingAffliction.PeriodicEffectTimers[periodicEffect.First] = periodicEffect.Second;
                         foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
                         {
-                            existingAffliction.ApplyStatusEffect(effect, deltaTime: 1.0f, this, targetLimb: null);
+                            existingAffliction.ApplyStatusEffect(ActionType.OnActive, effect, deltaTime: 1.0f, this, targetLimb: null);
                         }
                     }
                 }
@@ -2071,7 +2082,7 @@ namespace Barotrauma
                             foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
                             {
                                 Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == limbHealths.IndexOf(newAffliction.First));
-                                existingAffliction.ApplyStatusEffect(effect, deltaTime: 1.0f, this, targetLimb: targetLimb);
+                                existingAffliction.ApplyStatusEffect(ActionType.OnActive, effect, deltaTime: 1.0f, this, targetLimb: targetLimb);
                             }
                         }
                     }

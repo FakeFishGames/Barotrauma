@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
         private Sprite barrelSprite, railSprite;
+        private List<Tuple<Sprite, Vector2>> chargeSprites = new List<Tuple<Sprite, Vector2>>();
+        private List<Sprite> spinningBarrelSprites = new List<Sprite>();
 
         private Vector2 barrelPos;
         private Vector2 transformedBarrelPos;
@@ -35,12 +37,32 @@ namespace Barotrauma.Items.Components
 
         private int failedLaunchAttempts;
 
+        private float currentChargeTime;
+        private bool tryingToCharge;
+
+        private enum ChargingState
+        {
+            Inactive,
+            WindingUp,
+            WindingDown,
+        }
+
+        private ChargingState currentChargingState;
+
+        private float currentBarrelSpin = 0f;
+
         private readonly List<Item> activeProjectiles = new List<Item>();
         public IEnumerable<Item> ActiveProjectiles => activeProjectiles;
 
         private Character user;
 
         private float resetUserTimer;
+
+        private float aiTargetingGraceTimer;
+
+        private float aiFindTargetTimer;
+        private Character currentTarget; 
+        const float aiFindTargetInterval = 5.0f;
 
         public float Rotation
         {
@@ -61,6 +83,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Serialize("0,0", false, description: "The projectile launching location relative to transformed barrel position (in pixels).")]
+        public Vector2 FiringOffset
+        {
+            get;
+            set;
+        }
         public Vector2 TransformedBarrelPos
         {
             get
@@ -198,6 +226,20 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(1.0f, false, description: "How fast the turret can rotate while firing (for charged weapons).")]
+        public float FiringRotationSpeedModifier
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, true, description: "Whether the turret should always charge-up fully to shoot.")]
+        public bool SingleChargedShot
+        {
+            get;
+            private set;
+        }
+
         private float prevScale;
         float prevBaseRotation;
         [Serialize(0.0f, true, description: "The angle of the turret's base in degrees.", alwaysUseInstanceValues: true)]
@@ -225,6 +267,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(0f, true, description: "The time required for a charge-type turret to charge up before able to fire.")]
+        public float MaxChargeTime
+        {
+            get;
+            private set;
+        }
+
         public Turret(Item item, XElement element)
             : base(item, element)
         {
@@ -239,6 +288,16 @@ namespace Barotrauma.Items.Components
                         break;
                     case "railsprite":
                         railSprite = new Sprite(subElement);
+                        break;
+                    case "chargesprite":
+                        chargeSprites.Add(new Tuple<Sprite, Vector2>(new Sprite(subElement), subElement.GetAttributeVector2("chargetarget", Vector2.Zero)));
+                        break;
+                    case "spinningbarrelsprite":
+                        int spriteCount = subElement.GetAttributeInt("spriteamount", 1);
+                        for (int i = 0; i < spriteCount; i++)
+                        {
+                            spinningBarrelSprites.Add(new Sprite(subElement));
+                        }
                         break;
                 }
             }
@@ -311,6 +370,35 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
+            float previousChargeTime = currentChargeTime;
+
+            if (SingleChargedShot && reload > 0f)
+            {
+                // single charged shot guns will decharge after firing
+                // for cosmetic reasons, this is done by lerping in half the reload time
+                currentChargeTime = Math.Max(0f, MaxChargeTime * (reload / reloadTime - 0.5f));
+            }
+            else
+            {
+                float chargeDeltaTime = tryingToCharge ? deltaTime : -deltaTime;
+                currentChargeTime = Math.Clamp(currentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
+            }
+            tryingToCharge = false;
+
+            if (currentChargeTime == 0f)
+            {
+                currentChargingState = ChargingState.Inactive;
+            } 
+            else if (currentChargeTime < previousChargeTime)
+            {
+                currentChargingState = ChargingState.WindingDown;
+            } 
+            else
+            {
+                // if we are charging up or at maxed charge, remain winding up
+                currentChargingState = ChargingState.WindingUp;
+            }
+
             UpdateProjSpecific(deltaTime);
 
             if (MathUtils.NearlyEqual(minRotation, maxRotation))
@@ -333,6 +421,10 @@ namespace Barotrauma.Items.Components
             float springStiffness = MathHelper.Lerp(SpringStiffnessLowSkill, SpringStiffnessHighSkill, degreeOfSuccess);
             float springDamping = MathHelper.Lerp(SpringDampingLowSkill, SpringDampingHighSkill, degreeOfSuccess);
             float rotationSpeed = MathHelper.Lerp(RotationSpeedLowSkill, RotationSpeedHighSkill, degreeOfSuccess);
+            if (MaxChargeTime > 0)
+            {
+                rotationSpeed *= MathHelper.Lerp(1f, FiringRotationSpeedModifier, MathUtils.EaseIn(currentChargeTime / MaxChargeTime));
+            }
 
             // Do not increase the weapons skill when operating a turret in an outpost level
             if (user?.Info != null && (GameMain.GameSession?.Campaign == null || !Level.IsLoadedOutpost))
@@ -384,6 +476,15 @@ namespace Barotrauma.Items.Components
                 angularVelocity *= -0.5f;
             }
 
+            if (aiTargetingGraceTimer > 0f)
+            {
+                aiTargetingGraceTimer -= deltaTime;
+            }
+            if (aiFindTargetTimer > 0.0f)
+            {
+                aiFindTargetTimer -= deltaTime;
+            }
+
             UpdateLightComponent();
         }
 
@@ -403,9 +504,17 @@ namespace Barotrauma.Items.Components
             return TryLaunch(deltaTime, character);
         }
 
+        public bool HasPowerToShoot()
+        {
+            return GetAvailableBatteryPower() >= powerConsumption;
+        }
+
         private bool TryLaunch(float deltaTime, Character character = null, bool ignorePower = false)
         {
+            tryingToCharge = true;
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+
+            if (currentChargeTime < MaxChargeTime) { return false; }
 
             if (reload > 0.0f) { return false; }
 
@@ -420,7 +529,7 @@ namespace Barotrauma.Items.Components
             
             if (!ignorePower)
             {
-                if (GetAvailableBatteryPower() < powerConsumption)
+                if (!HasPowerToShoot())
                 {
 #if CLIENT
                     if (!flashLowPower && character != null && character == Character.Controlled)
@@ -434,13 +543,17 @@ namespace Barotrauma.Items.Components
             }
 
             Projectile launchedProjectile = null;
+            bool loaderBroken = false;
             for (int i = 0; i < ProjectileCount; i++)
             {
-                var projectiles = GetLoadedProjectiles(true);
+                var projectiles = GetLoadedProjectiles();
                 if (projectiles.Any())
                 {
                     ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();
-                    if (projectileContainer?.Item != item) { projectileContainer?.Item.Use(deltaTime, null); }
+                    if (projectileContainer != null && projectileContainer.Item != item) 
+                    { 
+                        projectileContainer?.Item.Use(deltaTime, null); 
+                    }
                 }
                 else
                 {
@@ -449,11 +562,16 @@ namespace Barotrauma.Items.Components
                         //use linked projectile containers in case they have to react to the turret being launched somehow
                         //(play a sound, spawn more projectiles)
                         if (!(e is Item linkedItem)) { continue; }
+                        if (linkedItem.Condition <= 0.0f) 
+                        {
+                            loaderBroken = true;
+                            continue; 
+                        }
                         ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
                         if (projectileContainer != null)
                         {
                             linkedItem.Use(deltaTime, null);
-                            projectiles = GetLoadedProjectiles(true);
+                            projectiles = GetLoadedProjectiles();
                             if (projectiles.Any()) { break; }
                         }
                     }
@@ -465,9 +583,16 @@ namespace Barotrauma.Items.Components
                     //  -> attempt to launch the gun multiple times before showing the "no ammo" flash
                     failedLaunchAttempts++;
 #if CLIENT
-                    if (!flashNoAmmo && character != null && character == Character.Controlled && failedLaunchAttempts > 20)
+                    if (!flashNoAmmo && !flashLoaderBroken && character != null && character == Character.Controlled && failedLaunchAttempts > 20)
                     {
-                        flashNoAmmo = true;
+                        if (loaderBroken)
+                        {
+                            flashLoaderBroken = true;
+                        }
+                        else
+                        {
+                            flashNoAmmo = true;
+                        }
                         failedLaunchAttempts = 0;
                         SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
                     }
@@ -475,7 +600,6 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
                 failedLaunchAttempts = 0;
-                launchedProjectile = projectiles.FirstOrDefault();
                 if (!ignorePower)
                 {
                     var batteries = item.GetConnectedComponents<PowerContainer>();
@@ -496,6 +620,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                launchedProjectile = projectiles.FirstOrDefault();
                 if (launchedProjectile?.Item.Container != null)
                 {
                     var repairable = launchedProjectile?.Item.Container.GetComponent<Repairable>();
@@ -507,7 +632,17 @@ namespace Barotrauma.Items.Components
 
                 if (launchedProjectile != null || LaunchWithoutProjectile)
                 {
-                    Launch(launchedProjectile?.Item, character);
+                    if (projectiles.Any())
+                    {
+                        foreach (Projectile projectile in projectiles)
+                        {
+                            Launch(projectile.Item, character);
+                        }
+                    }
+                    else
+                    {
+                        Launch(null, character);
+                    }
                     if (item.AiTarget != null)
                     {
                         item.AiTarget.SoundRange = item.AiTarget.MaxSoundRange;
@@ -550,10 +685,10 @@ namespace Barotrauma.Items.Components
                     projectile.body.ResetDynamics();
                     projectile.body.Enabled = true;
                 }
-
+                
                 float spread = MathHelper.ToRadians(Spread) * Rand.Range(-0.5f, 0.5f);
                 projectile.SetTransform(
-                    ConvertUnits.ToSimUnits(new Vector2(item.WorldRect.X + transformedBarrelPos.X, item.WorldRect.Y - transformedBarrelPos.Y)), 
+                    ConvertUnits.ToSimUnits(GetRelativeFiringPosition()), 
                     -(launchRotation ?? rotation) + spread);
                 projectile.UpdateTransform();
                 projectile.Submarine = projectile.body?.Submarine;
@@ -561,7 +696,7 @@ namespace Barotrauma.Items.Components
                 Projectile projectileComponent = projectile.GetComponent<Projectile>();
                 if (projectileComponent != null)
                 {
-                    projectileComponent.Use((float)Timing.Step);
+                    projectileComponent.Use();
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);
                     projectileComponent.User = user;
 
@@ -780,7 +915,6 @@ namespace Barotrauma.Items.Components
             TryLaunch(deltaTime, ignorePower: true);
         }
 
-        private bool outOfAmmo;
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget &&
@@ -790,7 +924,7 @@ namespace Barotrauma.Items.Components
                 character.AIController.SelectTarget(null);
             }
 
-            if (GetAvailableBatteryPower() < powerConsumption)
+            if (!HasPowerToShoot())
             {
                 var batteries = item.GetConnectedComponents<PowerContainer>();
 
@@ -868,11 +1002,12 @@ namespace Barotrauma.Items.Components
                     void CheckRemainingAmmo()
                     {
                         if (!character.IsOnPlayerTeam) { return; }
-                        string ammoType = container.Item.HasTag("railgunammosource") ? "railgunammo" : container.Item.HasTag("coilgunammosource") ? "coilgunammo" : "turretammo";
+                        if (character.Submarine != Submarine.MainSub) { return; }
+                        string ammoType = container.ContainableItems.First().Identifiers.FirstOrDefault() ?? "ammobox";
                         int remainingAmmo = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(ammoType) && i.Condition > 1);
                         if (remainingAmmo == 0)
                         {
-                            character.Speak(TextManager.Get($"DialogOutOf{ammoType}"), null, 0.0f, "outofammo", 30.0f);
+                            character.Speak(TextManager.Get($"DialogOutOf{ammoType}", fallBackTag: "DialogOutOfTurretAmmo"), null, 0.0f, "outofammo", 30.0f);
                         }
                         else if (remainingAmmo < 3)
                         {
@@ -891,24 +1026,48 @@ namespace Barotrauma.Items.Components
             Vector2? targetPos = null;
             float maxDistance = 10000;
             float shootDistance = AIRange * item.OffsetOnSelectedMultiplier;
-            float closestDistance = maxDistance * maxDistance;
-            foreach (Character enemy in Character.CharacterList)
+            // use full range only if we're actively firing
+            if (aiTargetingGraceTimer <= 0f)
             {
-                // Ignore dead, friendly, and those that are inside the same sub
-                if (enemy.IsDead || !enemy.Enabled || enemy.Submarine == character.Submarine) { continue; }
-                // Don't aim monsters that are inside a submarine.
-                if (!enemy.IsHuman && enemy.CurrentHull != null) { continue; }
-                if (HumanAIController.IsFriendly(character, enemy)) { continue; }       
-                float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
-                if (dist > closestDistance) { continue; }
-                if (dist < shootDistance * shootDistance)
+                shootDistance *= 0.75f;
+            }
+
+            float closestDistance = maxDistance * maxDistance;
+
+            if (currentTarget != null)
+            {
+                if (currentTarget.Removed || currentTarget.IsDead)
                 {
-                    // Only check the angle to targets that are close enough to be shot at
-                    // We shouldn't check the angle when a long creature is traveling outside of the shooting range, because doing so would not allow us to shoot the limbs that might be close enough to shoot at.
-                    if (!CheckTurretAngle(enemy.WorldPosition)) { continue; }
+                    currentTarget = null;
                 }
-                closestEnemy = enemy;
-                closestDistance = dist;                
+            }
+
+            if (aiFindTargetTimer <= 0.0f || currentTarget == null)
+            {
+                foreach (Character enemy in Character.CharacterList)
+                {
+                    // Ignore dead, friendly, and those that are inside the same sub
+                    if (enemy.IsDead || !enemy.Enabled || enemy.Submarine == character.Submarine) { continue; }
+                    // Don't aim monsters that are inside a submarine.
+                    if (!enemy.IsHuman && enemy.CurrentHull != null) { continue; }
+                    if (HumanAIController.IsFriendly(character, enemy)) { continue; }       
+                    float dist = Vector2.DistanceSquared(enemy.WorldPosition, item.WorldPosition);
+                    if (dist > closestDistance) { continue; }
+                    if (dist < shootDistance * shootDistance)
+                    {
+                        // Only check the angle to targets that are close enough to be shot at
+                        // We shouldn't check the angle when a long creature is traveling outside of the shooting range, because doing so would not allow us to shoot the limbs that might be close enough to shoot at.
+                        if (!CheckTurretAngle(enemy.WorldPosition)) { continue; }
+                    }
+                    closestEnemy = enemy;
+                    closestDistance = dist;                
+                }
+                currentTarget = closestEnemy;
+                aiFindTargetTimer = aiFindTargetInterval;
+            }
+            else
+            {
+                closestEnemy = currentTarget;
             }
 
             if (closestEnemy != null)
@@ -938,6 +1097,7 @@ namespace Barotrauma.Items.Components
             else if (item.Submarine != null && Level.Loaded != null)
             {
                 // Check ice spires
+                shootDistance = AIRange * item.OffsetOnSelectedMultiplier;
                 closestDistance = shootDistance;
                 foreach (var wall in Level.Loaded.ExtraWalls)
                 {
@@ -990,6 +1150,8 @@ namespace Barotrauma.Items.Components
             }
 
             if (targetPos == null) { return false; }
+            // Force the highest priority so that we don't change the objective while targeting enemies.
+            objective.ForceHighestPriority = true;
 
             if (closestEnemy != null && character.AIController.SelectedAiTarget != closestEnemy.AiTarget)
             {
@@ -1032,7 +1194,14 @@ namespace Barotrauma.Items.Components
             float enemyAngle = MathUtils.VectorToAngle(targetPos.Value - item.WorldPosition);
             float turretAngle = -rotation;
 
-            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > 0.15f) { return false; }
+            float maxAngleError = 0.15f;
+            if (MaxChargeTime > 0.0f && currentChargingState == ChargingState.WindingUp && FiringRotationSpeedModifier > 0.0f)
+            {
+                //larger margin of error if the weapon needs to be charged (-> the bot can start charging when the turret is still rotating towards the target)
+                maxAngleError *= 2.0f;
+            }
+
+            if (Math.Abs(MathUtils.GetShortestAngle(enemyAngle, turretAngle)) > maxAngleError) { return false; }
 
             Vector2 start = ConvertUnits.ToSimUnits(item.WorldPosition);
             Vector2 end = ConvertUnits.ToSimUnits(targetPos.Value);
@@ -1088,8 +1257,20 @@ namespace Barotrauma.Items.Components
             {
                 character.Speak(TextManager.Get("DialogFireTurret"), null, 0.0f, "fireturret", 10.0f);
             }
+            aiTargetingGraceTimer = 5f;
             character.SetInput(InputType.Shoot, true, true);
             return false;
+        }
+
+        private Vector2 GetRelativeFiringPosition(bool useOffset = true)
+        {
+            // i don't feel great about this method, should be evaluated again
+            Vector2 transformedFiringOffset = Vector2.Zero;
+            if (useOffset)
+            {
+                transformedFiringOffset = MathUtils.RotatePoint(new Vector2(-FiringOffset.Y, -FiringOffset.X) * item.Scale, -rotation);
+            }
+            return new Vector2(item.WorldRect.X + transformedBarrelPos.X + transformedFiringOffset.X, item.WorldRect.Y - transformedBarrelPos.Y + transformedFiringOffset.Y);
         }
 
         private bool CheckTurretAngle(float angle)
@@ -1116,22 +1297,28 @@ namespace Barotrauma.Items.Components
 #endif
         }
 
-        private List<Projectile> GetLoadedProjectiles(bool returnFirst = false)
+        private List<Projectile> GetLoadedProjectiles()
         {
             List<Projectile> projectiles = new List<Projectile>();
-            //check the item itself first
-            CheckProjectileContainer(item, projectiles, returnFirst);
+            // check the item itself first
+            CheckProjectileContainer(item, projectiles, out bool _);
             foreach (MapEntity e in item.linkedTo)
             {
-                if (e is Item projectileContainer) { CheckProjectileContainer(projectileContainer, projectiles, returnFirst); }
-                if (returnFirst && projectiles.Any()) { return projectiles; }
+                if (e is Item projectileContainer)
+                {
+                    CheckProjectileContainer(projectileContainer, projectiles, out bool stopSearching);
+                    if (projectiles.Any() || stopSearching) { return projectiles; }
+                }
             }
 
             return projectiles;
         }
 
-        private void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, bool returnFirst)
+        private void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, out bool stopSearching)
         {
+            stopSearching = false;
+            if (projectileContainer.Condition <= 0.0f) { return; }
+
             var containedItems = projectileContainer.ContainedItems;
             if (containedItems == null) { return; }
 
@@ -1141,7 +1328,7 @@ namespace Barotrauma.Items.Components
                 if (projectileComponent != null && projectileComponent.Item.body != null)
                 {
                     projectiles.Add(projectileComponent);
-                    if (returnFirst) { return; }
+                    return;
                 }
                 else
                 {
@@ -1152,8 +1339,14 @@ namespace Barotrauma.Items.Components
                         if (projectileComponent != null && projectileComponent.Item.body != null)
                         {
                             projectiles.Add(projectileComponent);
-                            if (returnFirst) { return; }
                         }
+                    }
+                    // in the case that we found a container that still has condition/ammo left,
+                    // return and inform GetLoadedProjectiles to stop searching past this point (even if no projectiles were not found)
+                    if (containedItem.Condition > 0.0f || projectiles.Any())
+                    {
+                        stopSearching = true;
+                        return;
                     }
                 }
             }
@@ -1267,7 +1460,7 @@ namespace Barotrauma.Items.Components
         {
             if (extraData.Length > 2)
             {
-                msg.Write(!(extraData[2] is Item item) || item.Removed ? ushort.MaxValue : item.ID);
+                msg.Write(!(extraData[2] is Item item) ? ushort.MaxValue : item.ID);
                 msg.WriteRangedSingle(MathHelper.Clamp(rotation, minRotation, maxRotation), minRotation, maxRotation, 16);
             }
             else

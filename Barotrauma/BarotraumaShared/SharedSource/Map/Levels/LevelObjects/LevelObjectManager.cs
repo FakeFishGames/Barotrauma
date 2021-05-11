@@ -21,6 +21,12 @@ namespace Barotrauma
         private List<LevelObject> updateableObjects;
         private List<LevelObject>[,] objectGrid;
 
+        public float GlobalForceDecreaseTimer
+        {
+            get;
+            private set;
+        }
+
         public LevelObjectManager() : base(null, Entity.NullEntityID)
         {
         }
@@ -133,10 +139,24 @@ namespace Barotrauma
                     suitableSpawnPositions.Add(prefab, 
                         availableSpawnPositions.Where(sp =>
                             sp.SpawnPosTypes.Any(type => prefab.SpawnPos.HasFlag(type)) && 
-                            sp.Length >= prefab.MinSurfaceWidth && 
+                            sp.Length >= prefab.MinSurfaceWidth &&
+                            (prefab.AllowAtStart || !closeToStart(sp.GraphEdge.Center)) &&
+                            (prefab.AllowAtEnd || !closeToEnd(sp.GraphEdge.Center)) &&
                             (sp.Alignment == Alignment.Any || prefab.Alignment.HasFlag(sp.Alignment))).ToList());
+
                     spawnPositionWeights.Add(prefab,
                         suitableSpawnPositions[prefab].Select(sp => sp.GetSpawnProbability(prefab)).ToList());
+
+                    bool closeToStart(Vector2 position)
+                    {
+                        float minDist = level.Size.X * 0.2f;
+                        return MathUtils.LineSegmentToPointDistanceSquared(level.StartPosition.ToPoint(), level.StartExitPosition.ToPoint(), position.ToPoint()) < minDist * minDist;
+                    }
+                    bool closeToEnd(Vector2 position)
+                    {
+                        float minDist = level.Size.X * 0.2f;
+                        return MathUtils.LineSegmentToPointDistanceSquared(level.EndPosition.ToPoint(), level.EndExitPosition.ToPoint(), position.ToPoint()) < minDist * minDist;
+                    }
                 }
 
                 SpawnPosition spawnPosition = ToolBox.SelectWeightedRandom(suitableSpawnPositions[prefab], spawnPositionWeights[prefab], Rand.RandSync.Server);
@@ -484,6 +504,12 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            GlobalForceDecreaseTimer += deltaTime;
+            if (GlobalForceDecreaseTimer > 1000000.0f)
+            {
+                GlobalForceDecreaseTimer = 0.0f;
+            }
+
             foreach (LevelObject obj in updateableObjects)
             {
                 if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)

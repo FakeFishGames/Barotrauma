@@ -7,7 +7,8 @@ namespace Barotrauma
 {
     class AIObjectiveFindDivingGear : AIObjective
     {
-        public override string DebugTag => $"find diving gear ({gearTag})";
+        public override string Identifier { get; set; } = "find diving gear";
+        public override string DebugTag => $"{Identifier} ({gearTag})";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
@@ -23,7 +24,7 @@ namespace Barotrauma
         public static string LIGHT_DIVING_GEAR = "lightdiving";
         public static string OXYGEN_SOURCE = "oxygensource";
 
-        protected override bool Check() => targetItem != null && character.HasEquippedItem(targetItem);
+        protected override bool CheckObjectiveSpecific() => targetItem != null && character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head);
 
         public AIObjectiveFindDivingGear(Character character, bool needsDivingSuit, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
@@ -38,7 +39,7 @@ namespace Barotrauma
                 return;
             }
             targetItem = character.Inventory.FindItemByTag(gearTag, true);
-            if (targetItem == null || !character.HasEquippedItem(targetItem) && targetItem.ContainedItems.Any(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 0))
+            if (targetItem == null || !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes) && targetItem.ContainedItems.Any(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 0))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
@@ -48,9 +49,11 @@ namespace Barotrauma
                     }
                     return new AIObjectiveGetItem(character, gearTag, objectiveManager, equip: true)
                     {
-                        AllowStealing = true,
+                        AllowStealing = HumanAIController.NeedsDivingGear(character.CurrentHull, out _),
                         AllowToFindDivingGear = false,
-                        AllowDangerousPressure = true
+                        AllowDangerousPressure = true,
+                        EquipSlotType = InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes,
+                        Wear = true
                     };
                 }, 
                 onAbandon: () => Abandon = true,
@@ -58,8 +61,6 @@ namespace Barotrauma
             }
             else
             {
-                HumanAIController.UnequipContainedItems(targetItem, it => !it.HasTag("oxygensource"));
-                HumanAIController.UnequipEmptyItems(targetItem);
                 // Seek oxygen that has at least 10% condition left, if we are inside a friendly sub.
                 // The margin helps us to survive, because we might need some oxygen before we can find more oxygen.
                 // When we are venturing outside of our sub, let's just suppose that we have enough oxygen with us and optimize it so that we don't keep switching off half used tanks.
@@ -119,6 +120,7 @@ namespace Barotrauma
 
                     int ReportOxygenTankCount()
                     {
+                        if (character.Submarine != Submarine.MainSub) { return 1; }
                         int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("oxygensource") && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {

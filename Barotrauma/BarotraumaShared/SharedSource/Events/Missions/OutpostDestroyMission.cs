@@ -49,8 +49,8 @@ namespace Barotrauma
             }
         }
 
-        public OutpostDestroyMission(MissionPrefab prefab, Location[] locations) : 
-            base(prefab, locations)
+        public OutpostDestroyMission(MissionPrefab prefab, Location[] locations, Submarine sub) : 
+            base(prefab, locations, sub)
         {
             itemConfig = prefab.ConfigElement.Element("Items");
             itemTag = prefab.ConfigElement.GetAttributeString("targetitem", "");
@@ -96,10 +96,10 @@ namespace Barotrauma
                         spawnPoint = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandom();
                     }
                     Vector2 spawnPos = spawnPoint.WorldPosition;
-                    if (spawnPoint is WayPoint wp && wp.CurrentHull != null)
+                    if (spawnPoint is WayPoint wp && wp.CurrentHull != null && wp.CurrentHull.Rect.Width > 100)
                     {
                         spawnPos = new Vector2(
-                            MathHelper.Clamp(wp.WorldPosition.X + Rand.Range(-200, 200), wp.CurrentHull.WorldRect.X, wp.CurrentHull.WorldRect.Right),
+                            MathHelper.Clamp(wp.WorldPosition.X + Rand.Range(-200, 200), wp.CurrentHull.WorldRect.X + 50, wp.CurrentHull.WorldRect.Right - 50),
                             wp.CurrentHull.WorldRect.Y - wp.CurrentHull.Rect.Height + 16.0f);
                     }
                     var item = new Item(itemPrefab, spawnPos, null);

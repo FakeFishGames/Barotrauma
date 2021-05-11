@@ -35,8 +35,8 @@ namespace Barotrauma
 
         protected bool wasDocked;
 
-        public AbandonedOutpostMission(MissionPrefab prefab, Location[] locations) : 
-            base(prefab, locations)
+        public AbandonedOutpostMission(MissionPrefab prefab, Location[] locations, Submarine sub) : 
+            base(prefab, locations, sub)
         {
             characterConfig = prefab.ConfigElement.Element("Characters");
 
@@ -84,14 +84,7 @@ namespace Barotrauma
 
                 if (element.Attribute("identifier") != null && element.Attribute("from") != null)
                 {
-                    string characterIdentifier = element.GetAttributeString("identifier", "");
-                    string characterFrom = element.GetAttributeString("from", "");
-                    HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
-                    if (humanPrefab == null)
-                    {
-                        DebugConsole.ThrowError("Couldn't spawn a character for abandoned outpost mission: character prefab \"" + characterIdentifier + "\" not found");
-                        continue;
-                    }
+                    HumanPrefab humanPrefab = CreateHumanPrefabFromElement(element);
                     for (int i = 0; i < count; i++)
                     {
                         LoadHuman(humanPrefab, element, submarine);
@@ -128,32 +121,27 @@ namespace Barotrauma
                 spawnPos = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandom();
             }
 
-            var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.Server), randSync: Rand.RandSync.Server);
-            Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, spawnPos.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
-            if (element.GetAttributeBool("requirerescue", false))
-            {
-                requireRescue.Add(spawnedCharacter);
-                spawnedCharacter.TeamID = CharacterTeamType.FriendlyNPC;
-#if CLIENT
-                GameMain.GameSession.CrewManager.AddCharacterToCrewList(spawnedCharacter);
-#endif
-            }
-            else
-            {
-                spawnedCharacter.TeamID = CharacterTeamType.None;
-            }
-            humanPrefab.InitializeCharacter(spawnedCharacter, spawnPos);
-            humanPrefab.GiveItems(spawnedCharacter, Submarine.MainSub, Rand.RandSync.Server, createNetworkEvents: false);
+            bool requiresRescue = element.GetAttributeBool("requirerescue", false);
+
+            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None, spawnPos, giveTags: true);
+
             if (spawnPos is WayPoint wp)
             {
                 spawnedCharacter.GiveIdCardTags(wp);
             }
+
+            if (requiresRescue)
+            {
+                requireRescue.Add(spawnedCharacter);
+#if CLIENT
+                GameMain.GameSession.CrewManager.AddCharacterToCrewList(spawnedCharacter);
+#endif
+            }
+
             if (element.GetAttributeBool("requirekill", false))
             {
                 requireKill.Add(spawnedCharacter);
             }
-            characters.Add(spawnedCharacter);
-            characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
         }
 
         private void LoadMonster(CharacterPrefab monsterPrefab, XElement element, Submarine submarine)

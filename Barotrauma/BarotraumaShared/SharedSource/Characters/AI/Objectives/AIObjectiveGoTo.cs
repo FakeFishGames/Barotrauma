@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveGoTo : AIObjective
     {
-        public override string DebugTag => "go to";
+        public override string Identifier { get; set; } = "go to";
 
         private AIObjectiveFindDivingGear findDivingGear;
         private readonly bool repeat;
@@ -20,10 +20,6 @@ namespace Barotrauma
         /// Doesn't allow the objective to complete if this condition is false
         /// </summary>
         public Func<bool> requiredCondition;
-        /// <summary>
-        /// Aborts the objective when this condition is true
-        /// </summary>
-        public Func<AIObjectiveGoTo, bool> abortCondition;
         public Func<PathNode, bool> endNodeFilter;
 
         public Func<float> priorityGetter;
@@ -38,6 +34,7 @@ namespace Barotrauma
         private readonly float minDistance = 50;
         private readonly float seekGapsInterval = 1;
         private float seekGapsTimer;
+        private bool cannotFollow;
 
         /// <summary>
         /// Display units
@@ -81,7 +78,7 @@ namespace Barotrauma
 
         public float? OverridePriority = null;
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             bool isOrder = objectiveManager.IsOrder(this);
             if (!IsAllowed)
@@ -177,6 +174,11 @@ namespace Barotrauma
                 character.AIController.SteeringManager.Reset();
                 return;
             }
+            if (cannotFollow)
+            {
+                // Wait
+                character.AIController.SteeringManager.Reset();
+            }
             waitUntilPathUnreachable -= deltaTime;
             if (!character.IsClimbing)
             {
@@ -263,15 +265,28 @@ namespace Barotrauma
                         if (findDivingGear != null && !findDivingGear.CanBeCompleted)
                         {
                             TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit: false, objectiveManager),
-                                onAbandon: () => Abandon = true,
-                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
+                                onAbandon: () => Abort(),
+                                onCompleted: () =>
+                                {
+                                    cannotFollow = false;
+                                    RemoveSubObjective(ref findDivingGear);
+                                });
                         }
                         else
                         {
                             TryAddSubObjective(ref findDivingGear, () => new AIObjectiveFindDivingGear(character, needsDivingSuit, objectiveManager),
-                                onCompleted: () => RemoveSubObjective(ref findDivingGear));
+                                onAbandon: () => Abort(),
+                                onCompleted: () =>
+                                {
+                                    cannotFollow = false;
+                                    RemoveSubObjective(ref findDivingGear);
+                                });
                         }
                         return;
+                    }
+                    else
+                    {
+                        cannotFollow = false;
                     }
                 }
                 if (repeat)
@@ -578,18 +593,11 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
-            // First check the distance
-            // Then the custom condition
-            // And finally check if can interact (heaviest)
+            // First check the distance and then if can interact (heaviest)
             if (Target == null)
-            {
-                Abandon = true;
-                return false;
-            }
-            if (abortCondition != null && abortCondition(this))
             {
                 Abandon = true;
                 return false;
@@ -622,6 +630,18 @@ namespace Barotrauma
                 }
             }
             return IsCompleted;
+        }
+
+        private void Abort()
+        {
+            if (!objectiveManager.IsOrder(this))
+            {
+                Abandon = true;
+            }
+            else
+            {
+                cannotFollow = true;
+            }
         }
 
         protected override void OnAbandon()
@@ -657,6 +677,7 @@ namespace Barotrauma
             findDivingGear = null;
             seekGapsTimer = 0;
             TargetGap = null;
+            cannotFollow = false;
         }
     }
 }

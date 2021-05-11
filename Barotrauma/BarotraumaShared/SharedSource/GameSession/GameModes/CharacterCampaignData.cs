@@ -26,6 +26,7 @@ namespace Barotrauma
 
         private XElement itemData;
         private XElement healthData;
+        public XElement OrderData { get; private set; }
 
         partial void InitProjSpecific(Client client);
         public CharacterCampaignData(Client client)
@@ -38,8 +39,10 @@ namespace Barotrauma
             if (client.Character.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                client.Character.SaveInventory(client.Character.Inventory, itemData);
+                Character.SaveInventory(client.Character.Inventory, itemData);
             }
+            OrderData = new XElement("orders");
+            CharacterInfo.SaveOrderData(client.Character.Info, OrderData);
         }
         
         public CharacterCampaignData(XElement element)
@@ -67,6 +70,9 @@ namespace Barotrauma
                     case "health":
                         healthData = subElement;
                         break;
+                    case "orders":
+                        OrderData = subElement;
+                        break;
                 }
             }
         }
@@ -78,8 +84,10 @@ namespace Barotrauma
             if (character.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                character.SaveInventory(character.Inventory, itemData);
+                Character.SaveInventory(character.Inventory, itemData);
             }
+            OrderData = new XElement("orders");
+            CharacterInfo.SaveOrderData(character.Info, OrderData);
         }
 
         public XElement Save()
@@ -92,6 +100,7 @@ namespace Barotrauma
             CharacterInfo?.Save(element);
             if (itemData != null) { element.Add(itemData); }
             if (healthData != null) { element.Add(healthData); }
+            if (OrderData != null) { element.Add(OrderData); }
 
             return element;
         }        

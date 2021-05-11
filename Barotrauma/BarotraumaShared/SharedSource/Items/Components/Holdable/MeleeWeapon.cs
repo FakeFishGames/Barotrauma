@@ -132,7 +132,12 @@ namespace Barotrauma.Items.Components
             }
             return false;
         }
-        
+
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return characterUsable || character == null;
+        }
+
         public override void Drop(Character dropper)
         {
             base.Drop(dropper);

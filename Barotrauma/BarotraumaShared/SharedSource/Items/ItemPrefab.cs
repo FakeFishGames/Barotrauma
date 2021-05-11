@@ -192,6 +192,45 @@ namespace Barotrauma
         }
     }
 
+    class SwappableItem
+    {
+        public int BasePrice { get; }
+
+        public readonly bool CanBeBought;
+
+        public readonly string ReplacementOnUninstall;
+
+        public readonly Vector2 SwapOrigin;
+
+        public List<(string requiredTag, string swapTo)> ConnectedItemsToSwap = new List<(string requiredTag, string swapTo)>();
+
+        public int GetPrice(Location location = null)
+        {
+            int price = BasePrice;
+            return location?.GetAdjustedMechanicalCost(price) ?? price;
+        }
+
+        public SwappableItem(XElement element)
+        {
+            BasePrice = Math.Max(element.GetAttributeInt("price", 0), 0);
+            CanBeBought = element.GetAttributeBool("canbebought", BasePrice != 0);
+            ReplacementOnUninstall = element.GetAttributeString("replacementonuninstall", "");
+            SwapOrigin = element.GetAttributeVector2("origin", Vector2.One);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "swapconnecteditem":
+                        ConnectedItemsToSwap.Add(
+                            (subElement.GetAttributeString("tag", ""), 
+                            subElement.GetAttributeString("swapto", "")));
+                        break;
+                }
+            }
+        }
+    }
+
     partial class ItemPrefab : MapEntityPrefab, IHasUintIdentifier
     {
         private readonly string name;
@@ -460,6 +499,12 @@ namespace Barotrauma
             get;
             private set;
         } = new List<PreferredContainer>();
+
+        public SwappableItem SwappableItem
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// How likely it is for the item to spawn in a level of a given type.
@@ -830,6 +875,17 @@ namespace Barotrauma
                         break;
                     }
 #if CLIENT
+                    case "upgradepreviewsprite":
+                        {
+                            string iconFolder = "";
+                            if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                            {
+                                iconFolder = Path.GetDirectoryName(filePath);
+                            }
+                            UpgradePreviewSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
+                            UpgradePreviewScale = subElement.GetAttributeFloat("scale", 1.0f);
+                        }
+                        break;
                     case "inventoryicon":
                         {
                             string iconFolder = "";
@@ -862,15 +918,15 @@ namespace Barotrauma
                         }
                         break;
                     case "damagedinfectedsprite":
-                    {
-                        string iconFolder = "";
-                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            iconFolder = Path.GetDirectoryName(filePath);
-                        }
+                            string iconFolder = "";
+                            if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                            {
+                                iconFolder = Path.GetDirectoryName(filePath);
+                            }
 
-                        DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
-                    }
+                            DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
+                        }
                         break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
@@ -962,6 +1018,9 @@ namespace Barotrauma
                         {
                             PreferredContainers.Add(preferredContainer);
                         }
+                        break;
+                    case "swappableitem":
+                        SwappableItem = new SwappableItem(subElement);
                         break;
                     case "trigger":
                         Rectangle trigger = new Rectangle(0, 0, 10, 10)
@@ -1142,6 +1201,54 @@ namespace Barotrauma
             {
                 return DefaultPrice?.Price;
             }
+        }
+
+        public List<Tuple<string, PriceInfo>> GetBuyPricesUnder(int maxCost = 0)
+        {
+            List<Tuple<string, PriceInfo>> priceLocations = new List<Tuple<string, PriceInfo>>();
+            foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+            {
+                PriceInfo priceInfo = locationPrice.Value;
+
+                if (priceInfo == null)
+                {
+                    continue;
+                }
+                if (!priceInfo.CanBeBought)
+                {
+                    continue;
+                }
+                if (priceInfo.Price < maxCost || maxCost == 0)
+                {
+                    priceLocations.Add(new Tuple<string, PriceInfo>(locationPrice.Key, priceInfo));
+                }
+            }
+            return priceLocations;
+        }
+
+        public List<Tuple<string, PriceInfo>> GetSellPricesOver(int minCost = 0, bool sellingImportant = true)
+        {
+            List<Tuple<string, PriceInfo>> priceLocations = new List<Tuple<string, PriceInfo>>();
+
+            if (!CanBeSold && sellingImportant)
+            {
+                return priceLocations;
+            }
+
+            foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+            {
+                PriceInfo priceInfo = locationPrice.Value;
+
+                if (priceInfo == null)
+                {
+                    continue;
+                }
+                if (priceInfo.Price > minCost)
+                {
+                    priceLocations.Add(new Tuple<string, PriceInfo>(locationPrice.Key, priceInfo));
+                }
+            }
+            return priceLocations;
         }
 
         public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary)

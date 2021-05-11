@@ -745,6 +745,10 @@ namespace Barotrauma.Networking
                 TextManager.Get("ServerSettingsAllowRewiring"));
             GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
 
+            var allowWifiChatter = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform), 
+                TextManager.Get("ServerSettingsAllowWifiChat"));
+            GetPropertyData("AllowLinkingWifiToChat").AssignGUIComponent(allowWifiChatter);
+
             var allowDisguises = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowDisguises"));
             GetPropertyData("AllowDisguises").AssignGUIComponent(allowDisguises);

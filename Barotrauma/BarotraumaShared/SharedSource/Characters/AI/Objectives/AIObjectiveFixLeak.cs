@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeak : AIObjective
     {
-        public override string DebugTag => "fix leak";
+        public override string Identifier { get; set; } = "fix leak";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AllowInAnySub => true;
@@ -29,9 +29,9 @@ namespace Barotrauma
             this.isPriority = isPriority;
         }
 
-        protected override bool Check() => Leak.Open <= 0 || Leak.Removed;
+        protected override bool CheckObjectiveSpecific() => Leak.Open <= 0 || Leak.Removed;
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {
@@ -86,21 +86,22 @@ namespace Barotrauma
                     Abandon = true;
                     return;
                 }
-                HumanAIController.UnequipContainedItems(weldingTool, it => !it.HasTag("weldingfuel"));
-                HumanAIController.UnequipEmptyItems(weldingTool);
                 if (weldingTool.OwnInventory != null && weldingTool.OwnInventory.AllItems.None(i => i.HasTag("weldingfuel") && i.Condition > 0.0f))
                 {
-                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC),
-                        onAbandon: () =>
-                        {
-                            Abandon = true;
-                            ReportWeldingFuelTankCount();
-                        },
-                        onCompleted: () => 
-                        {
-                            RemoveSubObjective(ref refuelObjective);
-                            ReportWeldingFuelTankCount();
-                        });
+                    TryAddSubObjective(ref refuelObjective, () => new AIObjectiveContainItem(character, "weldingfuel", weldingTool.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                    {
+                        RemoveExisting = true
+                    },
+                    onAbandon: () =>
+                    {
+                        Abandon = true;
+                        ReportWeldingFuelTankCount();
+                    },
+                    onCompleted: () => 
+                    {
+                        RemoveSubObjective(ref refuelObjective);
+                        ReportWeldingFuelTankCount();
+                    });
 
                     void ReportWeldingFuelTankCount()
                     {
@@ -141,7 +142,7 @@ namespace Barotrauma
                     onAbandon: () => Abandon = true,
                     onCompleted: () =>
                     {
-                        if (Check()) { IsCompleted = true; }
+                        if (CheckObjectiveSpecific()) { IsCompleted = true; }
                         else
                         {
                             // Failed to operate. Probably too far.
@@ -160,7 +161,7 @@ namespace Barotrauma
                 },
                 onAbandon: () =>
                 {
-                    if (Check()) { IsCompleted = true; }
+                    if (CheckObjectiveSpecific()) { IsCompleted = true; }
                     else if ((Leak.WorldPosition - character.WorldPosition).LengthSquared() > MathUtils.Pow(reach * 2, 2))
                     {
                         // Too far
@@ -191,7 +192,7 @@ namespace Barotrauma
             // This is an approximation, because we don't know the exact reach until the pose is taken.
             // And even then the actual range depends on the direction we are aiming to.
             // Found out that without any multiplier the value (209) is often too short.
-            return repairTool.Range + armLength * 1.2f;
+            return repairTool.Range + armLength * 1.3f;
         }
     }
 }
