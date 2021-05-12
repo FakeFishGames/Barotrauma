@@ -324,10 +324,12 @@ namespace Barotrauma.Items.Components
             {
                 return;
             }
-            RepairBoost(QTESuccess);
-            QTECooldown = QTECooldownTime;
-            //on failure reset cursor to beginning
+
+            if (!GameMain.IsMultiplayer)RepairBoost(QTESuccess);
+
+            //on failure during cooldown reset cursor to beginning
             if (!QTESuccess && QTECooldown > 0.0f) QTETimer = QTETime;
+            QTECooldown = QTECooldownTime;
             //this will be set on button down so we can reset it here
             requestStartFixAction = FixActions.None;
             item.CreateClientEvent(this);
