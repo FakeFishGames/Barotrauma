@@ -215,10 +215,7 @@ namespace Barotrauma
                 }
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
-                if (idCardComponent != null)
-                {
-                    idCardComponent.Initialize(character.Info);
-                }
+                idCardComponent?.Initialize(character.Info);
 
                 var idCardTags = itemElement.GetAttributeStringArray("tags", new string[0]);
                 foreach (string tag in idCardTags)
@@ -231,10 +228,7 @@ namespace Barotrauma
             {
                 wifiComponent.TeamID = character.TeamID;
             }
-            if (parentItem != null)
-            {
-                parentItem.Combine(item, user: null);
-            }
+            parentItem?.Combine(item, user: null);
             foreach (XElement childItemElement in itemElement.Elements())
             {
                 InitializeItems(character, childItemElement, submarine, item, createNetworkEvents);

@@ -201,10 +201,7 @@ namespace Barotrauma
                 item.AddTag("job:" + Name);
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
-                if (idCardComponent != null)
-                {
-                    idCardComponent.Initialize(character.Info);
-                }
+                idCardComponent?.Initialize(character.Info);
             }
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())

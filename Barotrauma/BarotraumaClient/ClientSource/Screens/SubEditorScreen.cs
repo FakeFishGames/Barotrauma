@@ -3983,10 +3983,7 @@ namespace Barotrauma
             {
                 loadFrame.AddToGUIUpdateList();
             }
-            else if (saveFrame != null)
-            {
-                saveFrame.AddToGUIUpdateList();
-            }
+            else saveFrame?.AddToGUIUpdateList();
         }
         
         /// <summary>

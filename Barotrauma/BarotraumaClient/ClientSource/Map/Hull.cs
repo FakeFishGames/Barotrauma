@@ -629,10 +629,7 @@ namespace Barotrauma
                         PowerConsumptionTimer = message.ReadSingle()
                     };
                 }
-                else if (BallastFlora != null)
-                {
-                    BallastFlora.ClientRead(message, header);
-                }
+                else BallastFlora?.ClientRead(message, header);
                 return;
             }
             remoteWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;

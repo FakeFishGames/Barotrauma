@@ -264,10 +264,7 @@ namespace Barotrauma
                 prevControlled.AIController.Enabled = false;
             }
             Character.Controlled = null;
-            if (prevControlled != null)
-            {
-                prevControlled.ClearInputs();
-            }
+            prevControlled?.ClearInputs();
 
             GUI.DisableHUD = true;
             while (GameMain.Instance.LoadingScreenOpen)

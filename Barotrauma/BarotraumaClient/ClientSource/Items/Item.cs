@@ -442,10 +442,7 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                if (body != null)
-                {
-                    body.DebugDraw(spriteBatch, Color.White);
-                }
+                body?.DebugDraw(spriteBatch, Color.White);
             }
 
             if (editing && IsSelected && PlayerInput.KeyDown(Keys.Space))

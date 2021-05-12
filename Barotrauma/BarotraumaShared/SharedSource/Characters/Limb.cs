@@ -832,10 +832,7 @@ namespace Barotrauma
                 }
             }
 
-            if (attack != null)
-            {
-                attack.UpdateCoolDown(deltaTime);
-            }
+            attack?.UpdateCoolDown(deltaTime);
         }
 
         private float reEnableTimer = -1;

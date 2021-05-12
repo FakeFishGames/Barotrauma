@@ -1315,7 +1315,7 @@ namespace Barotrauma
                 child.Recalculate();
             }
 
-            if (buttonToSelect != null) { buttonToSelect.OnClicked(buttonToSelect, "selectaffliction"); }
+            buttonToSelect?.OnClicked(buttonToSelect, "selectaffliction");
 
             afflictionIconContainer.RecalculateChildren();
 

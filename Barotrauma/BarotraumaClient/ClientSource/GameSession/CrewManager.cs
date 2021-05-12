@@ -1244,10 +1244,7 @@ namespace Barotrauma
             //make the previously selected character wait in place for some time
             //(so they don't immediately start idling and walking away from their station)
             var aiController = Character.Controlled?.AIController;
-            if (aiController != null)
-            {
-                aiController.Reset();
-            }
+            aiController?.Reset();
             DisableCommandUI();
             Character.Controlled = character;
             HintManager.OnChangeCharacter();

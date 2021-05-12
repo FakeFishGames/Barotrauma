@@ -933,10 +933,7 @@ namespace Barotrauma
 
                     Screen.Selected.AddToGUIUpdateList();
 
-                    if (Client != null)
-                    {
-                        Client.AddToGUIUpdateList();
-                    }
+                    Client?.AddToGUIUpdateList();
 
                     SubmarinePreview.AddToGUIUpdateList();
 
@@ -966,10 +963,7 @@ namespace Barotrauma
                         }
                     }
 
-                    if (NetworkMember != null)
-                    {
-                        NetworkMember.Update((float)Timing.Step);
-                    }
+                    NetworkMember?.Update((float)Timing.Step);
 
                     GUI.Update((float)Timing.Step);
                 }

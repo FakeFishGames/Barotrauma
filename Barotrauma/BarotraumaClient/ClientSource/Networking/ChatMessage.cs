@@ -157,10 +157,7 @@ namespace Barotrauma.Networking
                                 var fadeOutTime = !orderPrefab.IsIgnoreOrder ? (float?)orderPrefab.FadeOutTime : null;
                                 GameMain.GameSession?.CrewManager?.AddOrder(order, fadeOutTime);
                             }
-                            else if (targetCharacter != null)
-                            {
-                                targetCharacter.SetOrder(order, orderOption, orderPriority, senderCharacter);
-                            }
+                            else targetCharacter?.SetOrder(order, orderOption, orderPriority, senderCharacter);
                         }
                     }
 

@@ -211,10 +211,7 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
 
-                if (prevControlled != null)
-                {
-                    prevControlled.ClearInputs();
-                }
+                prevControlled?.ClearInputs();
 
                 overlayColor = Color.LightGray;
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);

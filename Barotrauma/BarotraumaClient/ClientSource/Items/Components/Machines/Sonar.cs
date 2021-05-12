@@ -790,10 +790,7 @@ namespace Barotrauma.Items.Components
             DisplayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
             displayScale = DisplayRadius / range * zoom;
 
-            if (screenBackground != null)
-            {
-                screenBackground.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
-            }
+            screenBackground?.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
 
             if (useDirectionalPing)
             {
@@ -881,10 +878,7 @@ namespace Barotrauma.Items.Components
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2(), sonarBlips.Count.ToString(), Color.White);
             }
 
-            if (screenOverlay != null)
-            {
-                screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
-            }
+            screenOverlay?.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
 
             if (signalStrength <= 0.5f)
             {

@@ -187,10 +187,7 @@ namespace Barotrauma.Networking
             {
                 updateReturnTimer = 0.0f;
 
-                if (shuttleSteering != null)
-                {
-                    shuttleSteering.SetDestinationLevelStart();
-                }
+                shuttleSteering?.SetDestinationLevelStart();
                 UpdateReturningProjSpecific();
             }
         }

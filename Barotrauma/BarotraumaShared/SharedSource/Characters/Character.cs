@@ -3643,10 +3643,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (aiTarget != null)
-            {
-                aiTarget.Remove();
-            }
+            aiTarget?.Remove();
 
             aiTarget = new AITarget(this);
             CharacterHealth.RemoveAllAfflictions();

@@ -195,19 +195,13 @@ namespace Barotrauma.Items.Components
             if (Math.Abs(SourcePullForce) > 0.001f)
             {
                 var sourceBody = GetBodyToPull(source);
-                if (sourceBody != null)
-                {
-                    sourceBody.ApplyForce(forceDir * SourcePullForce);
-                }
+                sourceBody?.ApplyForce(forceDir * SourcePullForce);
             }
 
             if (Math.Abs(TargetPullForce) > 0.001f)
             {
                 var targetBody = GetBodyToPull(target);
-                if (targetBody != null)
-                {
-                    targetBody.ApplyForce(-forceDir * TargetPullForce);
-                }
+                targetBody?.ApplyForce(-forceDir * TargetPullForce);
             }
         }
 

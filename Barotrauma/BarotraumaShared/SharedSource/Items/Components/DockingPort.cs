@@ -887,10 +887,7 @@ namespace Barotrauma.Items.Components
             }
 
             var wire = item.GetComponent<Wire>();
-            if (wire != null)
-            {
-                wire.Drop(null);
-            }
+            wire?.Drop(null);
 
             if (joint != null)
             {

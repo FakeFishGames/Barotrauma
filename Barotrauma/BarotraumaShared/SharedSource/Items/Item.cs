@@ -1047,10 +1047,7 @@ namespace Barotrauma
         
         public void RemoveContained(Item contained)
         {
-            if (ownInventory != null)
-            {
-                ownInventory.RemoveItem(contained);
-            }
+            ownInventory?.RemoveItem(contained);
 
             contained.Container = null;            
         }

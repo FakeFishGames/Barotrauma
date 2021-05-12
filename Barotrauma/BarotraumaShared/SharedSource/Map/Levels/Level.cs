@@ -387,7 +387,7 @@ namespace Barotrauma
 
         private void Generate(bool mirror)
         {
-            if (Loaded != null) { Loaded.Remove(); }
+            Loaded?.Remove();
             Loaded = this;
             Generating = true;
 

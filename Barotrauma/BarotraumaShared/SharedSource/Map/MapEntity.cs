@@ -420,7 +420,7 @@ namespace Barotrauma
                 if (cloneItem == null) { continue; }
 
                 var door = cloneItem.GetComponent<Door>();
-                if (door != null) { door.RefreshLinkedGap(); }
+                door?.RefreshLinkedGap();
 
                 var cloneWire = cloneItem.GetComponent<Wire>();
                 if (cloneWire == null) continue;
