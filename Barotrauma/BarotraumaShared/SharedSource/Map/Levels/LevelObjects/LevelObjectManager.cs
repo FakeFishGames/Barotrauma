@@ -136,27 +136,18 @@ namespace Barotrauma
                 if (prefab == null) { continue; }
                 if (!suitableSpawnPositions.ContainsKey(prefab))
                 {
+                    float minDistance = level.Size.X * 0.2f;
+
                     suitableSpawnPositions.Add(prefab, 
                         availableSpawnPositions.Where(sp =>
                             sp.SpawnPosTypes.Any(type => prefab.SpawnPos.HasFlag(type)) && 
                             sp.Length >= prefab.MinSurfaceWidth &&
-                            (prefab.AllowAtStart || !closeToStart(sp.GraphEdge.Center)) &&
-                            (prefab.AllowAtEnd || !closeToEnd(sp.GraphEdge.Center)) &&
+                            (prefab.AllowAtStart || !level.IsCloseToStart(sp.GraphEdge.Center, minDistance)) &&
+                            (prefab.AllowAtEnd || !level.IsCloseToEnd(sp.GraphEdge.Center, minDistance)) &&
                             (sp.Alignment == Alignment.Any || prefab.Alignment.HasFlag(sp.Alignment))).ToList());
 
                     spawnPositionWeights.Add(prefab,
                         suitableSpawnPositions[prefab].Select(sp => sp.GetSpawnProbability(prefab)).ToList());
-
-                    bool closeToStart(Vector2 position)
-                    {
-                        float minDist = level.Size.X * 0.2f;
-                        return MathUtils.LineSegmentToPointDistanceSquared(level.StartPosition.ToPoint(), level.StartExitPosition.ToPoint(), position.ToPoint()) < minDist * minDist;
-                    }
-                    bool closeToEnd(Vector2 position)
-                    {
-                        float minDist = level.Size.X * 0.2f;
-                        return MathUtils.LineSegmentToPointDistanceSquared(level.EndPosition.ToPoint(), level.EndExitPosition.ToPoint(), position.ToPoint()) < minDist * minDist;
-                    }
                 }
 
                 SpawnPosition spawnPosition = ToolBox.SelectWeightedRandom(suitableSpawnPositions[prefab], spawnPositionWeights[prefab], Rand.RandSync.Server);
@@ -442,10 +433,10 @@ namespace Barotrauma
         public IEnumerable<LevelObject> GetAllObjects(Vector2 worldPosition, float radius)
         {
             var minIndices = GetGridIndices(worldPosition - Vector2.One * radius);
-            if (minIndices.X >= objectGrid.GetLength(0) || minIndices.Y >= objectGrid.GetLength(1)) return Enumerable.Empty<LevelObject>();
+            if (minIndices.X >= objectGrid.GetLength(0) || minIndices.Y >= objectGrid.GetLength(1)) { return Enumerable.Empty<LevelObject>(); }
 
             var maxIndices = GetGridIndices(worldPosition + Vector2.One * radius);
-            if (maxIndices.X < 0 || maxIndices.Y < 0) return Enumerable.Empty<LevelObject>();
+            if (maxIndices.X < 0 || maxIndices.Y < 0) { return Enumerable.Empty<LevelObject>(); }
 
             minIndices.X = Math.Max(0, minIndices.X);
             minIndices.Y = Math.Max(0, minIndices.Y);
@@ -460,6 +451,7 @@ namespace Barotrauma
                     if (objectGrid[x, y] == null) { continue; }
                     foreach (LevelObject obj in objectGrid[x, y])
                     {
+                        if (obj.Prefab.HideWhenBroken && obj.Health <= 0.0f) { continue; }
                         objectsInRange.Add(obj);
                     }
                 }
@@ -522,6 +514,7 @@ namespace Barotrauma
                         obj.NetworkUpdateTimer = NetConfig.LevelObjectUpdateInterval;
                     }
                 }
+                if (obj.Prefab.HideWhenBroken && obj.Health <= 0.0f) { continue; }
 
                 if (obj.Triggers != null)
                 {

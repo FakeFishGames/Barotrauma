@@ -254,7 +254,7 @@ namespace Barotrauma.Items.Components
                     foreach (ParticleEmitter emitter in particleEmitterCharges)
                     {
                         // color is currently not connected to ammo type, should be updated when ammo is changed
-                        emitter.Emit(deltaTime, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.ColorMultiplier);
+                        emitter.Emit(deltaTime, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
                     }
 
                     if (chargeSoundChannel == null || !chargeSoundChannel.IsPlaying)

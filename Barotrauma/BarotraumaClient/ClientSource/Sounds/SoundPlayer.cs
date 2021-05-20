@@ -826,36 +826,58 @@ namespace Barotrauma
 
                 IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
 
+                int mainTrackIndex = 0;
                 if (suitableMusic.Count() == 0)
                 {
-                    targetMusic[0] = null;
+                    targetMusic[mainTrackIndex] = null;
                 }
                 //switch the music if nothing playing atm or the currently playing clip is not suitable anymore
-                else if (targetMusic[0] == null || currentMusic[0] == null || !currentMusic[0].IsPlaying() || !suitableMusic.Any(m => m.File == currentMusic[0].Filename))
+                else if (targetMusic[mainTrackIndex] == null || currentMusic[mainTrackIndex] == null || !currentMusic[mainTrackIndex].IsPlaying() || !suitableMusic.Any(m => m.File == currentMusic[mainTrackIndex].Filename))
                 {
                     if (currentMusicType == "default")
                     {
                         if (previousDefaultMusic == null)
                         {
-                            targetMusic[0] = previousDefaultMusic = suitableMusic.GetRandom();
+                            targetMusic[mainTrackIndex] = previousDefaultMusic = suitableMusic.GetRandom();
                         }
                         else
                         {
-                            targetMusic[0] = previousDefaultMusic;
+                            targetMusic[mainTrackIndex] = previousDefaultMusic;
                         }
                     }
                     else
                     {
-                        targetMusic[0] = suitableMusic.GetRandom();
+                        targetMusic[mainTrackIndex] = suitableMusic.GetRandom();
                     }
                 }
-                                
+
+
+                if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
+                {
+                    // Find background noise loop for the current biome
+                    IEnumerable<BackgroundMusic> suitableNoiseLoops = Screen.Selected == GameMain.GameScreen ?
+                        GetSuitableMusicClips(Level.Loaded.LevelData?.Biome?.Identifier, currentIntensity) :
+                        Enumerable.Empty<BackgroundMusic>();
+
+                    int noiseLoopIndex = 1;
+                    if (suitableNoiseLoops.Count() == 0)
+                    {
+                        targetMusic[noiseLoopIndex] = null;
+                    }
+                    // Switch the noise loop if nothing playing atm or the currently playing clip is not suitable anymore
+                    else if (targetMusic[noiseLoopIndex] == null || currentMusic[noiseLoopIndex] == null || !suitableNoiseLoops.Any(m => m.File == currentMusic[noiseLoopIndex].Filename))
+                    {
+                        targetMusic[noiseLoopIndex] = suitableNoiseLoops.GetRandom();
+                    }
+                }
+
                 //get the appropriate intensity layers for current situation
                 IEnumerable<BackgroundMusic> suitableIntensityMusic = Screen.Selected == GameMain.GameScreen ?
                     GetSuitableMusicClips("intensity", currentIntensity) :
                     Enumerable.Empty<BackgroundMusic>();
 
-                for (int i = 1; i < MaxMusicChannels; i++)
+                int intensityTrackStartIndex = 2;
+                for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
                 {
                     //disable targetmusics that aren't suitable anymore
                     if (targetMusic[i] != null && !suitableIntensityMusic.Any(m => m.File == targetMusic[i].File))
@@ -869,7 +891,7 @@ namespace Barotrauma
                     //already playing, do nothing
                     if (targetMusic.Any(m => m != null && m.File == intensityMusic.File)) { continue; }
 
-                    for (int i = 1; i < MaxMusicChannels; i++)
+                    for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
                     {
                         if (targetMusic[i] == null)
                         {
@@ -877,7 +899,7 @@ namespace Barotrauma
                             break;
                         }
                     }
-                }                
+                }
 
                 updateMusicTimer = UpdateMusicInterval;
             }

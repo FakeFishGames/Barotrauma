@@ -3,6 +3,7 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -39,21 +40,24 @@ namespace Barotrauma
             public readonly List<ItemPrefab> ItemPrefabs;
             public int Amount;
             public readonly float MinCondition;
+            public readonly float MaxCondition;
             public readonly bool UseCondition;
 
-            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, bool useCondition)
+            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition)
             {
                 ItemPrefabs = new List<ItemPrefab>() { itemPrefab };
                 Amount = amount;
                 MinCondition = minCondition;
+                MaxCondition = maxCondition;
                 UseCondition = useCondition;
             }
 
-            public RequiredItem(IEnumerable<ItemPrefab> itemPrefabs, int amount, float minCondition, bool useCondition)
+            public RequiredItem(IEnumerable<ItemPrefab> itemPrefabs, int amount, float minCondition, float maxCondition, bool useCondition)
             {
                 ItemPrefabs = new List<ItemPrefab>(itemPrefabs);
                 Amount = amount;
                 MinCondition = minCondition;
+                MaxCondition = maxCondition;
                 UseCondition = useCondition;
             }
         }
@@ -71,7 +75,7 @@ namespace Barotrauma
         {
             TargetItem = itemPrefab;
             string displayName = element.GetAttributeString("displayname", "");
-            DisplayName = string.IsNullOrEmpty(displayName) ? itemPrefab.Name : TextManager.Get($"DisplayName.{displayName}");
+            DisplayName = string.IsNullOrEmpty(displayName) ? itemPrefab.Name : TextManager.GetWithVariable($"DisplayName.{displayName}", "[itemname]", itemPrefab.Name);
 
             SuitableFabricatorIdentifiers = element.GetAttributeStringArray("suitablefabricators", new string[0]);
 
@@ -107,6 +111,7 @@ namespace Barotrauma
                         }
 
                         float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
+                        float maxCondition = subElement.GetAttributeFloat("maxcondition", 1.0f);
                         //Substract mincondition from required item's condition or delete it regardless?
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int count = subElement.GetAttributeInt("count", 1);
@@ -119,10 +124,12 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            var existing = RequiredItems.Find(r => r.ItemPrefabs.Count == 1 && r.ItemPrefabs[0] == requiredItem && MathUtils.NearlyEqual(r.MinCondition, minCondition));
+                            var existing = RequiredItems.Find(r => 
+                                r.ItemPrefabs.Count == 1 && r.ItemPrefabs[0] == requiredItem && 
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) && MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
@@ -138,10 +145,13 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            var existing = RequiredItems.Find(r => r.ItemPrefabs.SequenceEqual(matchingItems) && MathUtils.NearlyEqual(r.MinCondition, minCondition));
+                            var existing = RequiredItems.Find(r => 
+                                r.ItemPrefabs.SequenceEqual(matchingItems) && 
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
@@ -204,6 +214,8 @@ namespace Barotrauma
 
         public List<(string requiredTag, string swapTo)> ConnectedItemsToSwap = new List<(string requiredTag, string swapTo)>();
 
+        public readonly Sprite SchematicSprite;
+
         public int GetPrice(Location location = null)
         {
             int price = BasePrice;
@@ -221,6 +233,9 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
+                    case "schematicsprite":
+                        SchematicSprite = new Sprite(subElement);
+                        break;
                     case "swapconnecteditem":
                         ConnectedItemsToSwap.Add(
                             (subElement.GetAttributeString("tag", ""), 
@@ -1203,9 +1218,9 @@ namespace Barotrauma
             }
         }
 
-        public List<Tuple<string, PriceInfo>> GetBuyPricesUnder(int maxCost = 0)
+        public ImmutableDictionary<string, PriceInfo> GetBuyPricesUnder(int maxCost = 0)
         {
-            List<Tuple<string, PriceInfo>> priceLocations = new List<Tuple<string, PriceInfo>>();
+            Dictionary<string, PriceInfo> priceLocations = new Dictionary<string, PriceInfo>();
             foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
             {
                 PriceInfo priceInfo = locationPrice.Value;
@@ -1220,19 +1235,19 @@ namespace Barotrauma
                 }
                 if (priceInfo.Price < maxCost || maxCost == 0)
                 {
-                    priceLocations.Add(new Tuple<string, PriceInfo>(locationPrice.Key, priceInfo));
+                    priceLocations.Add(locationPrice.Key, priceInfo);
                 }
             }
-            return priceLocations;
+            return priceLocations.ToImmutableDictionary();
         }
 
-        public List<Tuple<string, PriceInfo>> GetSellPricesOver(int minCost = 0, bool sellingImportant = true)
+        public ImmutableDictionary<string, PriceInfo> GetSellPricesOver(int minCost = 0, bool sellingImportant = true)
         {
-            List<Tuple<string, PriceInfo>> priceLocations = new List<Tuple<string, PriceInfo>>();
+            Dictionary<string, PriceInfo> priceLocations = new Dictionary<string, PriceInfo>();
 
             if (!CanBeSold && sellingImportant)
             {
-                return priceLocations;
+                return priceLocations.ToImmutableDictionary();
             }
 
             foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
@@ -1245,10 +1260,10 @@ namespace Barotrauma
                 }
                 if (priceInfo.Price > minCost)
                 {
-                    priceLocations.Add(new Tuple<string, PriceInfo>(locationPrice.Key, priceInfo));
+                    priceLocations.Add(locationPrice.Key, priceInfo);
                 }
             }
-            return priceLocations;
+            return priceLocations.ToImmutableDictionary();
         }
 
         public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary)

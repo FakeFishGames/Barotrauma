@@ -164,10 +164,7 @@ namespace Barotrauma
             if (IsInitialized) { return; }
             _gender = UnassignedSpritePath.Contains("[GENDER]") ? gender : Gender.None;
             ParsePath(false);
-            if (Sprite != null)
-            {
-                Sprite.Remove();
-            }
+            Sprite?.Remove();
             Sprite = new Sprite(SourceElement, file: SpritePath);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);

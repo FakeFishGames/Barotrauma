@@ -69,21 +69,24 @@ namespace Barotrauma
             this.conditionType = conditionType;
         }
 
-        private ConditionType conditionType;
+        private readonly ConditionType conditionType;
 
         public enum ConditionType
         {
             //These need to exist at compile time, so it is a little awkward
             //I would love to see a better way to do this
-            AllowLinkingWifiToChat
+            AllowLinkingWifiToChat,
+            IsSwappableItem
         }
 
-        public bool IsEditable()
+        public bool IsEditable(ISerializableEntity entity)
         {
             switch (conditionType)
             {
                 case ConditionType.AllowLinkingWifiToChat:
                     return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
+                case ConditionType.IsSwappableItem:
+                    return entity is Item item && item.Prefab.SwappableItem != null;
             }
             return false;
         }
@@ -766,6 +769,10 @@ namespace Barotrauma
                     if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                     {
                         FixValue(property, entity, attribute);
+                        if (property.Name == nameof(ItemComponent.Msg) && entity is ItemComponent component)
+                        {
+                            component.ParseMsg();
+                        }
                     }
                     else if (entity is Item item1)
                     {
@@ -774,6 +781,10 @@ namespace Barotrauma
                             if (component.SerializableProperties.TryGetValue(attributeName, out SerializableProperty componentProperty))
                             {
                                 FixValue(componentProperty, component, attribute);
+                                if (componentProperty.Name == nameof(ItemComponent.Msg))
+                                {
+                                    ((ItemComponent)component).ParseMsg();
+                                }
                             }
                         }
                     }

@@ -920,14 +920,14 @@ namespace Barotrauma.Items.Components
             if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget &&
                 previousTarget.IsDead)
             {
-                character.Speak(TextManager.Get("DialogTurretTargetDead"), null, 0.0f, "killedtarget" + previousTarget.ID, 10.0f);
+                character.Speak(TextManager.Get("DialogTurretTargetDead"), identifier: "killedtarget" + previousTarget.ID, minDurationBetweenSimilar: 10.0f);
                 character.AIController.SelectTarget(null);
             }
 
+            bool canShoot = true;
             if (!HasPowerToShoot())
             {
                 var batteries = item.GetConnectedComponents<PowerContainer>();
-
                 float lowestCharge = 0.0f;
                 PowerContainer batteryToLoad = null;
                 foreach (PowerContainer battery in batteries)
@@ -938,14 +938,30 @@ namespace Barotrauma.Items.Components
                         batteryToLoad = battery;
                         lowestCharge = battery.Charge;
                     }
+                    if (battery.Item.ConditionPercentage <= 0 && AIObjectiveRepairItems.IsValidTarget(battery.Item, character))
+                    {
+                        if (battery.Item.Repairables.Average(r => r.DegreeOfSuccess(character)) > 0.4f)
+                        {
+                            objective.AddSubObjective(new AIObjectiveRepairItem(character, battery.Item, objective.objectiveManager, isPriority: true));
+                            return false;
+                        }
+                        else
+                        {
+                            character.Speak(TextManager.Get("DialogSupercapacitorIsBroken"), identifier: "supercapacitorisbroken", minDurationBetweenSimilar: 30.0f);
+                            canShoot = false;
+                        }
+                    }
                 }
-
-                if (batteryToLoad == null) return true;
-
+                if (batteryToLoad == null) { return true; }
                 if (batteryToLoad.RechargeSpeed < batteryToLoad.MaxRechargeSpeed * 0.4f)
                 {
                     objective.AddSubObjective(new AIObjectiveOperateItem(batteryToLoad, character, objective.objectiveManager, option: "", requireEquip: false));                    
                     return false;
+                }
+                if (lowestCharge <= 0 && batteryToLoad.Item.ConditionPercentage > 0)
+                {
+                    character.Speak(TextManager.Get("DialogTurretHasNoPower"), identifier: "turrethasnopower", minDurationBetweenSimilar: 30.0f);
+                    canShoot = false;
                 }
             }
 
@@ -983,7 +999,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (character.IsOnPlayerTeam)
                     {
-                        character.Speak(TextManager.GetWithVariable("DialogCannotLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "cannotloadturret", 30.0f);
+                        character.Speak(TextManager.GetWithVariable("DialogCannotLoadTurret", "[itemname]", item.Name, formatCapitals: true), identifier: "cannotloadturret", minDurationBetweenSimilar: 30.0f);
                     }
                     return true;
                 }
@@ -993,7 +1009,7 @@ namespace Barotrauma.Items.Components
                     loadItemsObjective.ignoredContainerIdentifiers = new string[] { containerItem.prefab.Identifier };
                     if (character.IsOnPlayerTeam)
                     {
-                        character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, true), null, 0.0f, "loadturret", 30.0f);
+                        character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, formatCapitals: true), identifier: "loadturret", minDurationBetweenSimilar: 30.0f);
                     }
                     loadItemsObjective.Abandoned += CheckRemainingAmmo;
                     loadItemsObjective.Completed += CheckRemainingAmmo;
@@ -1007,11 +1023,11 @@ namespace Barotrauma.Items.Components
                         int remainingAmmo = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(ammoType) && i.Condition > 1);
                         if (remainingAmmo == 0)
                         {
-                            character.Speak(TextManager.Get($"DialogOutOf{ammoType}", fallBackTag: "DialogOutOfTurretAmmo"), null, 0.0f, "outofammo", 30.0f);
+                            character.Speak(TextManager.Get($"DialogOutOf{ammoType}", fallBackTag: "DialogOutOfTurretAmmo"), identifier: "outofammo", minDurationBetweenSimilar: 30.0f);
                         }
                         else if (remainingAmmo < 3)
                         {
-                            character.Speak(TextManager.Get($"DialogLowOn{ammoType}"), null, 0.0f, "outofammo", 30.0f);
+                            character.Speak(TextManager.Get($"DialogLowOn{ammoType}"), identifier: "outofammo", minDurationBetweenSimilar: 30.0f);
                         }
                     }
                 }
@@ -1253,12 +1269,15 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            if (character.IsOnPlayerTeam)
+            if (canShoot)
             {
-                character.Speak(TextManager.Get("DialogFireTurret"), null, 0.0f, "fireturret", 10.0f);
+                if (character.IsOnPlayerTeam)
+                {
+                    character.Speak(TextManager.Get("DialogFireTurret"), null, 0.0f, "fireturret", 10.0f);
+                }
+                character.SetInput(InputType.Shoot, true, true);
             }
             aiTargetingGraceTimer = 5f;
-            character.SetInput(InputType.Shoot, true, true);
             return false;
         }
 

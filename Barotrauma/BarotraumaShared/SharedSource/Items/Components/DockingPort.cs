@@ -887,10 +887,7 @@ namespace Barotrauma.Items.Components
             }
 
             var wire = item.GetComponent<Wire>();
-            if (wire != null)
-            {
-                wire.Drop(null);
-            }
+            wire?.Drop(null);
 
             if (joint != null)
             {
@@ -991,7 +988,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (DockingTarget.Door != null && doorBody != null)
                     {
-                        doorBody.Enabled = DockingTarget.Door.Body.Enabled;
+                        doorBody.Enabled = DockingTarget.Door.Body.Enabled && !(DockingTarget.Door.Body.FarseerBody.FixtureList.FirstOrDefault()?.IsSensor ?? false);                        
                     }
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }

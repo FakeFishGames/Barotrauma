@@ -456,7 +456,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string speciesName, string name = "", string originalName = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public CharacterInfo(string speciesName, string name = "", string originalName = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced, string npcIdentifier = "")
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -485,8 +485,12 @@ namespace Barotrauma
             {
                 Name = name;
             }
-            else
+            else if (!string.IsNullOrEmpty(npcIdentifier) && TextManager.Get("npctitle." + npcIdentifier, true) is string npcTitle)
             {
+                Name = npcTitle;
+            }
+            else
+            { 
                 name = "";
                 if (CharacterConfigElement.Element("name") != null)
                 {

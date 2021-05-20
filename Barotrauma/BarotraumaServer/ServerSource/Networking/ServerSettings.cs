@@ -306,7 +306,8 @@ namespace Barotrauma.Networking
             {
                 if (Enum.TryParse(missionTypeName, out MissionType missionType))
                 {
-                    if (missionType == Barotrauma.MissionType.None) continue;
+                    if (missionType == Barotrauma.MissionType.None) { continue; }
+                    if (MissionPrefab.HiddenMissionClasses.Contains(missionType)) { continue; }
                     AllowedRandomMissionTypes.Add(missionType);
                 }
             }

@@ -210,7 +210,7 @@ namespace Barotrauma
                     if (ParticleEmitterTriggers[i] != null && !ParticleEmitterTriggers[i].IsTriggered) { continue; }
                     Vector2 emitterPos = LocalToWorld(Prefab.EmitterPositions[i]);
                     ParticleEmitters[i].Emit(deltaTime, emitterPos, hullGuess: null,
-                        angle: ParticleEmitters[i].Prefab.CopyEntityAngle ? -CurrentRotation + MathHelper.PiOver2 : 0.0f);
+                        angle: ParticleEmitters[i].Prefab.Properties.CopyEntityAngle ? -CurrentRotation + MathHelper.PiOver2 : 0.0f);
                 }
             }
 
@@ -293,6 +293,12 @@ namespace Barotrauma
         public void ClientRead(IReadMessage msg)
         {
             if (Triggers == null) { return; }
+
+            if (Prefab.TakeLevelWallDamage)
+            {
+                float newHealth = msg.ReadRangedSingle(0.0f, Prefab.Health, 8);
+                AddDamage(Health - newHealth, 1.0f, null, isNetworkEvent: true);
+            }
             for (int i = 0; i < Triggers.Count; i++)
             {
                 if (!Triggers[i].UseNetworkSyncing) { continue; }

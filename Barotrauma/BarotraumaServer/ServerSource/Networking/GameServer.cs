@@ -378,7 +378,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (respawnManager != null) { respawnManager.Update(deltaTime); }
+                respawnManager?.Update(deltaTime);
 
                 entityEventManager.Update(connectedClients);
 
@@ -406,10 +406,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (TraitorManager != null)
-                {
-                    TraitorManager.Update(deltaTime);
-                }
+                TraitorManager?.Update(deltaTime);
 
                 if (serverSettings.Voting.VoteRunning)
                 {
@@ -433,7 +430,7 @@ namespace Barotrauma.Networking
                     connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsIncapacitated);
 
                 bool subAtLevelEnd = false;
-                if (Submarine.MainSub != null && Submarine.MainSubs[1] == null)
+                if (Submarine.MainSub != null && !(GameMain.GameSession.GameMode is PvPMode))
                 {
                     if (Level.Loaded?.EndOutpost != null)
                     {
@@ -488,8 +485,10 @@ namespace Barotrauma.Networking
                 }
                 else if (isCrewDead && (GameMain.GameSession?.GameMode is CampaignMode))
                 {
+#if !DEBUG
                     endRoundDelay = 1.0f;
                     endRoundTimer += deltaTime;
+#endif
                 }
                 else
                 {
@@ -3281,7 +3280,6 @@ namespace Barotrauma.Networking
             if (voteType != VoteType.PurchaseSub)
             {
                 SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee);
-                GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(newSub, true);
             }
 
             serverSettings.Voting.StopSubmarineVote(true);

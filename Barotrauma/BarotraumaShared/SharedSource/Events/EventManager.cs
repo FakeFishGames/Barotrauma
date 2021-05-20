@@ -107,7 +107,7 @@ namespace Barotrauma
             totalPathLength = 0.0f;
             if (level != null)
             {
-                var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(Level.Loaded.StartPosition), ConvertUnits.ToSimUnits(Level.Loaded.EndPosition));
+                var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(level.StartPosition), ConvertUnits.ToSimUnits(level.EndPosition));
                 totalPathLength = steeringPath.TotalLength;
             }
 
@@ -124,7 +124,7 @@ namespace Barotrauma
             }
             MTRandom rand = new MTRandom(seed);
 
-            var initialEventSet = SelectRandomEvents(EventSet.List);
+            var initialEventSet = SelectRandomEvents(EventSet.List, rand);
             if (initialEventSet != null)
             {
                 pendingEventSets.Add(initialEventSet);
@@ -386,21 +386,25 @@ namespace Barotrauma
         {
             if (level == null) { return; }
             if (level.LevelData.HasHuntingGrounds && eventSet.DisableInHuntingGrounds) { return; }
-
+#if DEBUG
+            DebugConsole.NewMessage($"Loading event set {eventSet.DebugIdentifier}", Color.LightBlue);
+#else
+            DebugConsole.Log($"Loading event set {eventSet.DebugIdentifier}");
+#endif
             int applyCount = 1;
             List<Func<Level.InterestingPosition, bool>> spawnPosFilter = new List<Func<Level.InterestingPosition, bool>>();
             if (eventSet.PerRuin)
             {
-                applyCount = Level.Loaded.Ruins.Count();
-                foreach (var ruin in Level.Loaded.Ruins)
+                applyCount = level.Ruins.Count();
+                foreach (var ruin in level.Ruins)
                 {
                     spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Ruin == ruin; });
                 }
             }
             else if (eventSet.PerCave)
             {
-                applyCount = Level.Loaded.Caves.Count();
-                foreach (var cave in Level.Loaded.Caves)
+                applyCount = level.Caves.Count();
+                foreach (var cave in level.Caves)
                 {
                     spawnPosFilter.Add((Level.InterestingPosition pos) => { return pos.Cave == cave; });
                 }
@@ -417,7 +421,8 @@ namespace Barotrauma
 
             var suitablePrefabs = eventSet.EventPrefabs.FindAll(e =>
                 string.IsNullOrEmpty(e.First.BiomeIdentifier) ||
-                e.First.BiomeIdentifier.Equals(Level.Loaded.LevelData?.Biome?.Identifier, StringComparison.OrdinalIgnoreCase));
+                e.First.BiomeIdentifier.Equals(level.LevelData?.Biome?.Identifier, StringComparison.OrdinalIgnoreCase));
+
             for (int i = 0; i < applyCount; i++)
             {
                 if (eventSet.ChooseRandom)
@@ -435,7 +440,11 @@ namespace Barotrauma
                                 if (newEvent == null) { continue; }
                                 newEvent.Init(true);
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
-                                DebugConsole.Log("Initialized event " + newEvent.ToString());
+#if DEBUG
+                                DebugConsole.NewMessage($"Initialized event {newEvent}");
+#else
+                                DebugConsole.Log($"Initialized event {newEvent}");
+#endif
                                 if (!selectedEvents.ContainsKey(eventSet))
                                 {
                                     selectedEvents.Add(eventSet, new List<Event>());
@@ -447,8 +456,11 @@ namespace Barotrauma
                     }
                     if (eventSet.ChildSets.Count > 0)
                     {
-                        var newEventSet = SelectRandomEvents(eventSet.ChildSets);
-                        if (newEventSet != null) { CreateEvents(newEventSet, rand); }
+                        var newEventSet = SelectRandomEvents(eventSet.ChildSets, rand);
+                        if (newEventSet != null)
+                        {
+                            CreateEvents(newEventSet, rand);
+                        }
                     }
                 }
                 else
@@ -458,7 +470,11 @@ namespace Barotrauma
                         var newEvent = eventPrefab.First.CreateInstance();
                         if (newEvent == null) { continue; }
                         newEvent.Init(true);
-                        DebugConsole.Log("Initialized event " + newEvent.ToString());
+#if DEBUG
+                        DebugConsole.NewMessage($"Initialized event {newEvent}");
+#else
+                        DebugConsole.Log($"Initialized event {newEvent}");
+#endif
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
                             selectedEvents.Add(eventSet, new List<Event>());
@@ -474,10 +490,10 @@ namespace Barotrauma
             }
         }
 
-        private EventSet SelectRandomEvents(List<EventSet> eventSets)
+        private EventSet SelectRandomEvents(List<EventSet> eventSets, Random random = null)
         {
             if (level == null) { return null; }
-            MTRandom rand = new MTRandom(ToolBox.StringToInt(level.Seed));
+            Random rand = random ?? new MTRandom(ToolBox.StringToInt(level.Seed));
 
             var allowedEventSets = 
                 eventSets.Where(es => 
@@ -496,7 +512,8 @@ namespace Barotrauma
             }
 
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
-            float randomNumber = (float)rand.NextDouble() * totalCommonness;
+            float randomNumber = (float)rand.NextDouble();
+            randomNumber *= totalCommonness;
             foreach (EventSet eventSet in allowedEventSets)
             {
                 float commonness = eventSet.GetCommonness(level);
@@ -835,7 +852,7 @@ namespace Barotrauma
         {
             if (level == null) { return 0.0f; }
             var refEntity = GetRefEntity();
-            Vector2 target = ConvertUnits.ToSimUnits(Level.Loaded.EndPosition);
+            Vector2 target = ConvertUnits.ToSimUnits(level.EndPosition);
             var steeringPath = pathFinder.FindPath(ConvertUnits.ToSimUnits(refEntity.WorldPosition), target);
             if (steeringPath.Unreachable || float.IsPositiveInfinity(totalPathLength))
             {
@@ -953,15 +970,15 @@ namespace Barotrauma
 
             const int maxDist = 1000;
 
-            if (Level.Loaded != null)
+            if (level != null)
             {
-                foreach (var ruin in Level.Loaded.Ruins)
+                foreach (var ruin in level.Ruins)
                 {
                     Rectangle area = ruin.Area;
                     area.Inflate(maxDist, maxDist);
                     if (area.Contains(character.WorldPosition)) { return true; }
                 }
-                foreach (var cave in Level.Loaded.Caves)
+                foreach (var cave in level.Caves)
                 {
                     Rectangle area = cave.Area;
                     area.Inflate(maxDist, maxDist);

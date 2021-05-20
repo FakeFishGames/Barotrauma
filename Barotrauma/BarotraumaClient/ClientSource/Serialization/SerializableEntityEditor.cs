@@ -273,8 +273,8 @@ namespace Barotrauma
 
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
             : this(parent, entity, inGame ? 
-                SerializableProperty.GetProperties<InGameEditable>(entity).Union(SerializableProperty.GetProperties<ConditionallyEditable>(entity).Where(p => p.GetAttribute<ConditionallyEditable>()?.IsEditable() ?? false)) 
-                : SerializableProperty.GetProperties<Editable>(entity), showName, style, elementHeight, titleFont)
+                SerializableProperty.GetProperties<InGameEditable>(entity).Union(SerializableProperty.GetProperties<ConditionallyEditable>(entity).Where(p => p.GetAttribute<ConditionallyEditable>()?.IsEditable(entity) ?? false)) 
+                : SerializableProperty.GetProperties<Editable>(entity).Where(p => p.GetAttribute<ConditionallyEditable>()?.IsEditable(entity) ?? true), showName, style, elementHeight, titleFont)
         {
         }
 

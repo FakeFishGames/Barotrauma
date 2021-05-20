@@ -11,11 +11,15 @@ namespace Barotrauma
 {
     partial class PirateMission : Mission
     {
+        private readonly XElement submarineTypeConfig;
         private readonly XElement characterConfig;
-        private readonly XElement submarineConfig;
+        private readonly XElement characterTypeConfig;
+        private readonly float addedMissionDifficultyPerPlayer;
+
+        private float missionDifficulty;
+        private int alternateReward;
 
         private Submarine enemySub;
-        private Item reactorItem;
         private readonly List<Character> characters = new List<Character>();
         private readonly Dictionary<Character, List<Item>> characterDictionary = new Dictionary<Character, List<Item>>();
 
@@ -51,17 +55,55 @@ namespace Barotrauma
             }
         }
 
+        public override int GetReward(Submarine sub)
+        {
+            return alternateReward;
+        }
+
         private SubmarineInfo submarineInfo;
 
-        public override SubmarineInfo EnemySubmarineInfo => submarineInfo;
+        public override SubmarineInfo EnemySubmarineInfo
+        {
+            get
+            {
+                return submarineInfo;
+            }
+        }
+
+        // these values could also be defined within the mission XML
+        private const float RandomnessModifier = 25;
+        private const float ShipRandomnessModifier = 15;
+
+        private const float MaxDifficulty = 100;
 
         public PirateMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
-            submarineConfig = prefab.ConfigElement.Element("Submarine");
+            submarineTypeConfig = prefab.ConfigElement.Element("SubmarineTypes");
             characterConfig = prefab.ConfigElement.Element("Characters");
+            characterTypeConfig = prefab.ConfigElement.Element("CharacterTypes");
+            addedMissionDifficultyPerPlayer = prefab.ConfigElement.GetAttributeFloat("addedmissiondifficultyperplayer", 0);
+
+            // for campaign missions, set difficulty at construction
+            LevelData levelData = locations[0].Connections.Where(c => c.Locations.Contains(locations[1])).FirstOrDefault()?.LevelData ?? locations[0]?.LevelData;
+            
+            SetDifficulty(levelData?.Difficulty ?? Level.Loaded?.Difficulty ?? 0f);
+        }
+
+        public override void SetDifficulty(float difficulty)
+        {
+            if (missionDifficulty > 0f)
+            {
+                // difficulty already set
+                return;
+            }
+
+            missionDifficulty = difficulty;
+
+            XElement submarineConfig = GetRandomDifficultyModifiedElement(submarineTypeConfig, missionDifficulty, ShipRandomnessModifier);
+
+            alternateReward = submarineConfig.GetAttributeInt("alternatereward", Reward);
 
             string submarineIdentifier = submarineConfig.GetAttributeString("identifier", string.Empty);
-
             if (submarineIdentifier == string.Empty)
             {
                 DebugConsole.ThrowError("No identifier used for submarine for pirate mission!");
@@ -74,7 +116,34 @@ namespace Barotrauma
                 DebugConsole.ThrowError("No submarine file found with the identifier!");
                 return;
             }
+
             submarineInfo = new SubmarineInfo(contentFile.Path);
+        }
+
+        private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier)
+        {
+            return Math.Abs(levelDifficulty - preferredDifficulty + (Rand.Range(-randomnessModifier, randomnessModifier, Rand.RandSync.Server)));
+        }
+        private int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty)
+        {
+            return Math.Max((int)Math.Round(minAmount + (maxAmount - minAmount) * ((levelDifficulty + Rand.Range(-RandomnessModifier, RandomnessModifier, Rand.RandSync.Server)) / MaxDifficulty)), minAmount);
+        }
+
+        private XElement GetRandomDifficultyModifiedElement(XElement parentElement, float levelDifficulty, float randomnessModifier)
+        {
+            // look for the element that is closest to our difficulty, with some randomness
+            XElement bestElement = null;
+            float bestValue = float.MaxValue;
+            foreach (XElement element in parentElement.Elements())
+            {
+                float applicabilityValue = GetDifficultyModifiedValue(element.GetAttributeFloat(0f, "preferreddifficulty"), levelDifficulty, randomnessModifier);
+                if (applicabilityValue < bestValue)
+                {
+                    bestElement = element;
+                    bestValue = applicabilityValue;
+                }
+            }
+            return bestElement;
         }
 
         private void CreateMissionPositions(out Vector2 preferredSpawnPos)
@@ -116,7 +185,6 @@ namespace Barotrauma
             if (enemySub.GetItems(alsoFromConnectedSubs: false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
             {
                 reactor.PowerUpImmediately();
-                reactorItem = reactor.Item;
             }
             enemySub.EnableMaintainPosition();
             enemySub.SetPosition(spawnPos);
@@ -134,21 +202,45 @@ namespace Barotrauma
                 return;
             }
 
+            int playerCount = 1;
+
+#if SERVER
+            playerCount = GameMain.Server.ConnectedClients.Where(c => !c.SpectateOnly || !GameMain.Server.ServerSettings.AllowSpectating).Count();
+#endif
+
+            float enemyCreationDifficulty = missionDifficulty + playerCount * addedMissionDifficultyPerPlayer;
+
             bool commanderAssigned = false;
             foreach (XElement element in characterConfig.Elements())
             {
-                Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(element), characters, characterDictionary, enemySub, CharacterTeamType.None, null);
-                if (!commanderAssigned)
+                // it is possible to get more than the "max" amount of characters if the modified difficulty is high enough; this is intentional
+                // if necessary, another "hard max" value could be used to clamp the value for performance/gameplay concerns
+                int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty);
+                for (int i = 0; i < amountCreated; i++)
                 {
-                    bool isCommander = element.GetAttributeBool("iscommander", false);
-                    if (isCommander && spawnedCharacter.AIController is HumanAIController humanAIController)
+                    XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeString("typeidentifier", string.Empty) == element.GetAttributeString("typeidentifier", string.Empty)).FirstOrDefault();
+
+                    if (characterType == null)
                     {
-                        humanAIController.InitShipCommandManager();
-                        foreach (var patrolPos in patrolPositions)
+                        DebugConsole.ThrowError("No character types defined in CharacterTypes for a declared type identifier in mission file " + this);
+                        return;
+                    }
+
+                    XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, RandomnessModifier);
+
+                    Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(variantElement), characters, characterDictionary, enemySub, CharacterTeamType.None, null);
+                    if (!commanderAssigned)
+                    {
+                        bool isCommander = variantElement.GetAttributeBool("iscommander", false);
+                        if (isCommander && spawnedCharacter.AIController is HumanAIController humanAIController)
                         {
-                            humanAIController.ShipCommandManager.patrolPositions.Add(patrolPos);
+                            humanAIController.InitShipCommandManager();
+                            foreach (var patrolPos in patrolPositions)
+                            {
+                                humanAIController.ShipCommandManager.patrolPositions.Add(patrolPos);
+                            }
+                            commanderAssigned = true;
                         }
-                        commanderAssigned = true;
                     }
                 }
             }
@@ -217,7 +309,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             int newState = State;
             float sqrSonarRange = MathUtils.Pow2(Sonar.DefaultSonarRange);
@@ -268,7 +360,7 @@ namespace Barotrauma
             State = newState;
         }
 
-        private bool CheckWinState() => !IsClient && (characters.All(m => !Survived(m)) || reactorItem.Condition <= 0f);
+        private bool CheckWinState() => !IsClient && (characters.All(m => !Survived(m)));
 
         private bool Survived(Character character)
         {

@@ -264,6 +264,27 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(false, true, description: "Can the object take damage from weapons/attacks that damage level walls."), Editable]
+        public bool TakeLevelWallDamage
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, true), Editable]
+        public bool HideWhenBroken
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(100.0f, true), Editable]
+        public float Health
+        {
+            get;
+            private set;
+        }
+
         public string Identifier
         {
             get;

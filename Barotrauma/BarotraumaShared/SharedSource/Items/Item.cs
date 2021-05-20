@@ -125,8 +125,7 @@ namespace Barotrauma
                         {
                             if (!component.AllowInGameEditing) { continue; }
                             if (component.SerializableProperties.Values.Any(p => p.Attributes.OfType<InGameEditable>().Any())
-                                || component.SerializableProperties.Values.Any(p => p.Attributes.OfType<ConditionallyEditable>().Any(a => a.IsEditable()))
-                            )
+                                || component.SerializableProperties.Values.Any(p => p.Attributes.OfType<ConditionallyEditable>().Any(a => a.IsEditable(this))))
                             {
                                 hasInGameEditableProperties = true;
                                 break;
@@ -193,6 +192,13 @@ namespace Barotrauma
         /// </summary>
         [Editable, Serialize(false, true, description: "When enabled, item is interactable only for characters on non-player teams.", alwaysUseInstanceValues: true)]
         public bool NonPlayerTeamInteractable
+        {
+            get;
+            set;
+        }
+
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.IsSwappableItem), Serialize(true, true, alwaysUseInstanceValues: true)]
+        public bool AllowSwapping
         {
             get;
             set;
@@ -1084,10 +1090,7 @@ namespace Barotrauma
         
         public void RemoveContained(Item contained)
         {
-            if (ownInventory != null)
-            {
-                ownInventory.RemoveItem(contained);
-            }
+            ownInventory?.RemoveItem(contained);
 
             contained.Container = null;            
         }
@@ -2043,6 +2046,8 @@ namespace Barotrauma
 
         public bool TryInteract(Character picker, bool ignoreRequiredItems = false, bool forceSelectKey = false, bool forceActionKey = false)
         {
+            if (CampaignInteractionType != CampaignMode.InteractionType.None) { return false; }
+
             bool picked = false, selected = false;
 #if CLIENT
             bool hasRequiredSkills = true;
@@ -2467,7 +2472,7 @@ namespace Barotrauma
         private List<Pair<object, SerializableProperty>> GetInGameEditableProperties()
         {
             return GetProperties<ConditionallyEditable>()
-                .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().IsEditable())
+                .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().IsEditable(this))
                 .Union(GetProperties<InGameEditable>()).ToList();
         }
 
@@ -2746,7 +2751,7 @@ namespace Barotrauma
                         }
                 }
             }
-            if (usePrefabValues)
+            if (usePrefabValues && appliedSwap == null)
             {
                 //use prefab scale when overriding a non-overridden item or vice versa
                 item.Scale = prefab.ConfigElement.GetAttributeFloat(item.scale, "scale", "Scale");
@@ -2764,22 +2769,34 @@ namespace Barotrauma
                 }
             }
 
+            float prevRotation = item.Rotation;
             if (element.GetAttributeBool("flippedx", false)) { item.FlipX(false); }
             if (element.GetAttributeBool("flippedy", false)) { item.FlipY(false); }
+            item.Rotation = prevRotation;
 
-            if (appliedSwap != null && oldPrefab.SwappableItem != null && prefab.SwappableItem != null)
+            if (appliedSwap != null)
             {
-                Vector2 oldRelativeOrigin = (oldPrefab.SwappableItem.SwapOrigin - oldPrefab.Size / 2) * element.GetAttributeFloat(item.scale, "scale", "Scale");
-                oldRelativeOrigin.Y = -oldRelativeOrigin.Y;
-                oldRelativeOrigin = MathUtils.RotatePoint(oldRelativeOrigin, item.rotationRad);
-                Vector2 oldOrigin = centerPos + oldRelativeOrigin;
+                item.SpriteDepth = element.GetAttributeFloat("spritedepth", item.SpriteDepth);
+                item.SpriteColor = element.GetAttributeColor("spritecolor", item.SpriteColor);
+                item.Rotation = element.GetAttributeFloat("rotation", item.Rotation);
 
-                Vector2 relativeOrigin = (prefab.SwappableItem.SwapOrigin - prefab.Size / 2) * item.Scale;
-                relativeOrigin.Y = -relativeOrigin.Y;
-                relativeOrigin = MathUtils.RotatePoint(relativeOrigin, item.rotationRad);
-                Vector2 origin = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + relativeOrigin;
+                float scaleRelativeToPrefab = element.GetAttributeFloat(item.scale, "scale", "Scale") / oldPrefab.Scale;
+                item.Scale *= scaleRelativeToPrefab;
 
-                item.rect.Location -= (origin - oldOrigin).ToPoint();
+                if (oldPrefab.SwappableItem != null && prefab.SwappableItem != null)
+                {
+                    Vector2 oldRelativeOrigin = (oldPrefab.SwappableItem.SwapOrigin - oldPrefab.Size / 2) * element.GetAttributeFloat(item.scale, "scale", "Scale");
+                    oldRelativeOrigin.Y = -oldRelativeOrigin.Y;
+                    oldRelativeOrigin = MathUtils.RotatePoint(oldRelativeOrigin, item.rotationRad);
+                    Vector2 oldOrigin = centerPos + oldRelativeOrigin;
+
+                    Vector2 relativeOrigin = (prefab.SwappableItem.SwapOrigin - prefab.Size / 2) * item.Scale;
+                    relativeOrigin.Y = -relativeOrigin.Y;
+                    relativeOrigin = MathUtils.RotatePoint(relativeOrigin, item.rotationRad);
+                    Vector2 origin = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + relativeOrigin;
+
+                    item.rect.Location -= (origin - oldOrigin).ToPoint();
+                }
             }
 
             float condition = element.GetAttributeFloat("condition", item.MaxCondition);

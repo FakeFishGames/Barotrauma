@@ -150,11 +150,8 @@ namespace Barotrauma
                 {
                     max += Character.Info.Job.Prefab.VitalityModifier;
                 }
+                max *= Character.StaticHealthMultiplier;
                 return max * Character.HealthMultiplier;
-            }
-            set
-            {
-                maxVitality = Math.Max(0, value);
             }
         }
 

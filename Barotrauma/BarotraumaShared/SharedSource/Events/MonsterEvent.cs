@@ -442,7 +442,7 @@ namespace Barotrauma
                 }
                 else if (!spawnPosType.HasFlag(Level.PositionType.MainPath))
                 {
-                    scatterAmount = 100;
+                    scatterAmount = 0;
                 }
                 for (int i = 0; i < amount; i++)
                 {
@@ -455,7 +455,7 @@ namespace Barotrauma
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 
                         Vector2 pos = spawnPos.Value + Rand.Vector(scatterAmount);
-                        if (scatterAmount > 100)
+                        if (scatterAmount > 0)
                         {
                             if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)))
                             {

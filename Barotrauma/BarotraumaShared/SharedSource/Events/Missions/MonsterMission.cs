@@ -160,7 +160,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             switch (State)
             {

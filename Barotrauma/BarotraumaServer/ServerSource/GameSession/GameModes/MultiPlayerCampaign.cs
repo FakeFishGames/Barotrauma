@@ -214,6 +214,7 @@ namespace Barotrauma
                     c.CharacterHealth.Save(c.Info.HealthData);
                     c.Info.InventoryData = new XElement("inventory");
                     c.SaveInventory();
+                    c.Info.SaveOrderData();
                 }
 
                 c.Inventory.DeleteAllItems();
@@ -332,7 +333,7 @@ namespace Barotrauma
                 CargoManager.OnSoldItemsChanged += () => { LastUpdateID++; };
                 UpgradeManager.OnUpgradesChanged += () => { LastUpdateID++; };
                 Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
-                Map.OnMissionSelected += (loc, mission) => { LastUpdateID++; };
+                Map.OnMissionsSelected += (loc, mission) => { LastUpdateID++; };
                 Reputation.OnAnyReputationValueChanged += () => { LastUpdateID++; };
             }
             //increment save ID so clients know they're lacking the most up-to-date save file
@@ -431,8 +432,15 @@ namespace Barotrauma
             msg.Write(lastSaveID);
             msg.Write(map.Seed);
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
-            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
+            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex); 
+            
+            var selectedMissionIndices = map.GetSelectedMissionIndices();
+            msg.Write((byte)selectedMissionIndices.Count());
+            foreach (int selectedMissionIndex in selectedMissionIndices)
+            {
+                msg.Write((byte)selectedMissionIndex);
+            }
+
             msg.Write(map.AllowDebugTeleport);
             msg.Write(reputation != null);
             if (reputation != null) { msg.Write(reputation.Value); }
@@ -535,7 +543,14 @@ namespace Barotrauma
         {
             UInt16 currentLocIndex  = msg.ReadUInt16();
             UInt16 selectedLocIndex = msg.ReadUInt16();
-            byte selectedMissionIndex = msg.ReadByte();
+
+            byte selectedMissionCount = msg.ReadByte();
+            List<int> selectedMissionIndices = new List<int>();
+            for (int i = 0; i < selectedMissionCount; i++)
+            {
+                selectedMissionIndices.Add(msg.ReadByte());
+            }
+
             bool purchasedHullRepairs = msg.ReadBoolean();
             bool purchasedItemRepairs = msg.ReadBoolean();
             bool purchasedLostShuttles = msg.ReadBoolean();
@@ -663,7 +678,7 @@ namespace Barotrauma
 
             Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
             if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
-            if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndex); }
+            if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
 
             List<PurchasedItem> currentBuyCrateItems = new List<PurchasedItem>(CargoManager.ItemsInBuyCrate);
             currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity));

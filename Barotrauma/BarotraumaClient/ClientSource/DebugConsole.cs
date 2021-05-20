@@ -1395,9 +1395,9 @@ namespace Barotrauma
                 // omega nesting incoming
                 if (fabricationRecipe != null)
                 {
-                    foreach (Tuple<string, PriceInfo> itemLocationPrice in itemPrefab.GetSellPricesOver(0))
+                    foreach (KeyValuePair<string, PriceInfo> itemLocationPrice in itemPrefab.GetSellPricesOver(0))
                     {
-                        NewMessage("    If bought at " + itemLocationPrice.Item1 + " it costs " + itemLocationPrice.Item2.Price);
+                        NewMessage("    If bought at " + itemLocationPrice.Key + " it costs " + itemLocationPrice.Value.Price);
                         int totalPrice = 0;
                         int? totalBestPrice = 0;
                         foreach (var ingredient in fabricationRecipe.RequiredItems)
@@ -1408,15 +1408,15 @@ namespace Barotrauma
                                 totalPrice += ingredientItemPrefab.DefaultPrice.Price;
                                 totalBestPrice += ingredientItemPrefab.GetMinPrice();
                                 int basePrice = ingredientItemPrefab.DefaultPrice.Price;
-                                foreach (Tuple<string, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
+                                foreach (KeyValuePair<string, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
                                 {
-                                    if (basePrice > ingredientItemLocationPrice.Item2.Price)
+                                    if (basePrice > ingredientItemLocationPrice.Value.Price)
                                     {
-                                        NewMessage("            Location " + ingredientItemLocationPrice.Item1 + " sells ingredient " + ingredientItemPrefab.Name + " for cheaper, " + ingredientItemLocationPrice.Item2.Price, Color.Yellow);
+                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for cheaper, " + ingredientItemLocationPrice.Value.Price, Color.Yellow);
                                     }
                                     else
                                     {
-                                        NewMessage("            Location " + ingredientItemLocationPrice.Item1 + " sells ingredient " + ingredientItemPrefab.Name + " for more, " + ingredientItemLocationPrice.Item2.Price, Color.Teal);
+                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for more, " + ingredientItemLocationPrice.Value.Price, Color.Teal);
                                     }
                                 }
                             }
@@ -1426,11 +1426,15 @@ namespace Barotrauma
 
                         if (totalBestPrice.HasValue)
                         {
-                            int? bestDifference = itemLocationPrice.Item2.Price - totalBestPrice;
+                            int? bestDifference = itemLocationPrice.Value.Price - totalBestPrice;
                             NewMessage("    Constructing the item from store-bought items provides " + bestDifference + " profit with best-case scenario values.");
                         }
                     }
                 }
+            },
+            () =>
+            {
+                return new string[][] { ItemPrefab.Prefabs.SelectMany(p => p.Aliases).Concat(ItemPrefab.Prefabs.Select(p => p.Identifier)).ToArray() };
             }, isCheat: false));
 
             commands.Add(new Command("checkcraftingexploits", "checkcraftingexploits: Finds outright item exploits created by buying store-bought ingredients and constructing them into sellable items.", (string[] args) =>

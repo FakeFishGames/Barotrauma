@@ -395,14 +395,12 @@ namespace Barotrauma
                 Affliction affliction;
                 string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
                 afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
-                if (afflictionPrefab != null)
+                if (afflictionPrefab == null)
                 {
-                    affliction = afflictionPrefab.Instantiate(0.0f);
+                    DebugConsole.ThrowError($"Couldn't find the affliction with the identifier {afflictionIdentifier} referenced in {element.Document.ParseContentPathFromUri()}");
+                    continue;
                 }
-                else
-                {
-                    affliction = new Affliction(null, 0);
-                }
+                affliction = afflictionPrefab.Instantiate(0.0f);
                 affliction.Deserialize(subElement);
                 //backwards compatibility
                 if (subElement.Attribute("amount") != null && subElement.Attribute("strength") == null)

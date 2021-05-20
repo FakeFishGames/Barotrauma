@@ -171,6 +171,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "Override random spread with static spread; hitscan are launched with an equal amount of angle between them. Only applies when firing multiple hitscan.")]
+        public bool StaticSpread
+        {
+            get;
+            set;
+        }
+
         public Body StickTarget 
         { 
             get; 
@@ -267,9 +274,24 @@ namespace Barotrauma.Items.Components
         {
             if (character != null && !characterUsable) { return false; }
 
+
             for (int i = 0; i < HitScanCount; i++)
             {
-                float launchAngle = item.body.Rotation + MathHelper.ToRadians(Spread * Rand.Range(-0.5f, 0.5f));
+                float launchAngle = 0f;
+                
+                if (StaticSpread)
+                {
+                    float staticSpread = Spread / (HitScanCount - 1);
+                    // because the position of the item changes as hitscan are fired, we will set an
+                    // initial offset on the first hitscan and then increase the item's angle by a set amount as hitscan are fired
+                    float offset = i == 0 ? -staticSpread * (HitScanCount -1) : 0f; 
+                    launchAngle = item.body.Rotation + MathHelper.ToRadians(staticSpread + offset);
+                }
+                else
+                {
+                    launchAngle = item.body.Rotation + MathHelper.ToRadians(Spread * Rand.Range(-0.5f, 0.5f));
+                }
+
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
                 if (Hitscan)
                 {
@@ -430,8 +452,15 @@ namespace Barotrauma.Items.Components
             var aabb = new FarseerPhysics.Collision.AABB(rayStart - Vector2.One * 0.001f, rayStart + Vector2.One * 0.001f);
             GameMain.World.QueryAABB((fixture) =>
             {
-                //ignore sensors and items
-                if (fixture?.Body == null || fixture.IsSensor) { return true; }
+                if (fixture?.Body.UserData is LevelObject levelObj)
+                {
+                    if (!levelObj.Prefab.TakeLevelWallDamage) { return true; }
+                }
+                else if (fixture?.Body == null || fixture.IsSensor) 
+                { 
+                    //ignore sensors and items
+                    return true; 
+                }
                 if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return true; }
                 if (fixture.Body.UserData as string == "ruinroom") { return true; }
@@ -439,6 +468,7 @@ namespace Barotrauma.Items.Components
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
                 if (submarine != null)
                 {
+                    if (fixture.Body.UserData is VoronoiCell) { return true; }
                     if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return true; }
                 }
 
@@ -459,7 +489,15 @@ namespace Barotrauma.Items.Components
             GameMain.World.RayCast((fixture, point, normal, fraction) =>
             {
                 //ignore sensors and items
-                if (fixture?.Body == null || fixture.IsSensor) { return -1; }
+                if (fixture?.Body.UserData is LevelObject levelObj)
+                {
+                    if (!levelObj.Prefab.TakeLevelWallDamage) { return -1; }
+                }
+                else if (fixture?.Body == null || fixture.IsSensor)
+                {
+                    //ignore sensors and items
+                    return -1;
+                }
                 if (fixture.Body.UserData is VineTile) { return -1; }
 
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
@@ -473,21 +511,40 @@ namespace Barotrauma.Items.Components
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
                 if (submarine != null)
                 {
+                    if (fixture.Body.UserData is VoronoiCell) { return -1; }
                     if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return -1; }
                 }
 
                 //ignore level cells if the item and the point of impact are inside a sub
-                if (fixture.Body.UserData is VoronoiCell && this.item.Submarine != null) 
+                if (fixture.Body.UserData is VoronoiCell) 
                 { 
-                    if (Hull.FindHull(ConvertUnits.ToDisplayUnits(point), this.item.CurrentHull) != null)
+                    if (Hull.FindHull(ConvertUnits.ToDisplayUnits(point), this.item.CurrentHull) != null && this.item.Submarine != null)
                     {
                         return -1;
                     }
                 }
 
+                if (hits.Count > 50)
+                {
+                    float furthestHit = 0.0f;
+                    int furthestHitIndex = -1;
+                    for (int i = 0; i < hits.Count; i++)
+                    {
+                        if (hits[i].Fraction > furthestHit)
+                        {
+                            furthestHitIndex = i;
+                            furthestHit = hits[i].Fraction;
+                        }
+                    }
+                    if (furthestHitIndex > -1)
+                    {
+                        hits.RemoveAt(furthestHitIndex);
+                    }
+                }
+
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
-                return hits.Count < 25 ? 1 : 0;
+                return 1;
             }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel);
 
             return hits;
@@ -590,11 +647,11 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Limb limb)
             {
-                //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
                 if (limb.IsSevered)
                 {
-                    target.Body.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass);
-                    return true;
+                    //push the severed limb around a bit, but let the projectile pass through it
+                    limb.body?.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass * 0.1f, item.SimPosition);
+                    return false;
                 }
             }
             else if (target.Body.UserData is Item item)
@@ -654,9 +711,7 @@ namespace Barotrauma.Items.Components
                     projectileNewSpeed = 1f;
                     projectileDeflectedNewSpeed = 0.8f;
                 }
-                //severed limbs don't deactivate the projectile (but may still slow it down enough to make it inactive)
-                if (limb.IsSevered) { return true; }
-                if (limb.character == null || limb.character.Removed) { return false; }
+                if (limb.IsSevered || limb.character == null || limb.character.Removed) { return false; }
 
                 limb.character.LastDamageSource = item;
                 if (Attack != null) { attackResult = Attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f); }
@@ -674,7 +729,7 @@ namespace Barotrauma.Items.Components
             {
                 if (Attack != null) { attackResult = Attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }
             }
-            else if (target.Body.UserData is VoronoiCell voronoiCell && voronoiCell.IsDestructible && Attack != null && Math.Abs(Attack.StructureDamage) > 0.0f)
+            else if (target.Body.UserData is VoronoiCell voronoiCell && voronoiCell.IsDestructible && Attack != null && Math.Abs(Attack.LevelWallDamage) > 0.0f)
             {
                 if (Level.Loaded?.ExtraWalls.Find(w => w.Body == target.Body) is DestructibleLevelWall destructibleWall)
                 {

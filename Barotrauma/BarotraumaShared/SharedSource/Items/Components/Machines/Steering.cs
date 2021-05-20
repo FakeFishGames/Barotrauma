@@ -705,6 +705,20 @@ namespace Barotrauma.Items.Components
                 }
             }
             user = character;
+
+            if (Item.ConditionPercentage <= 0 && AIObjectiveRepairItems.IsValidTarget(Item, character))
+            {
+                if (Item.Repairables.Average(r => r.DegreeOfSuccess(character)) > 0.4f)
+                {
+                    objective.AddSubObjective(new AIObjectiveRepairItem(character, Item, objective.objectiveManager, isPriority: true));
+                    return false;
+                }
+                else
+                {
+                    character.Speak(TextManager.Get("DialogNavTerminalIsBroken"), identifier: "navterminalisbroken", minDurationBetweenSimilar: 30.0f);
+                }
+            }
+
             if (!AutoPilot)
             {
                 unsentChanges = true;

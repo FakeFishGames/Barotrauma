@@ -290,10 +290,12 @@ namespace Barotrauma.Items.Components
                 {
                     for (int i = 0; i < ingredient.Amount; i++)
                     {
-                        var availableItem = availableIngredients.FirstOrDefault(it => it != null && ingredient.ItemPrefabs.Contains(it.Prefab) && it.ConditionPercentage >= ingredient.MinCondition * 100.0f);
+                        var availableItem = availableIngredients.FirstOrDefault(it => 
+                            it != null && ingredient.ItemPrefabs.Contains(it.Prefab) && 
+                            it.ConditionPercentage >= ingredient.MinCondition * 100.0f &&
+                            it.ConditionPercentage <= ingredient.MaxCondition * 100.0f);
                         if (availableItem == null) { continue; }
-                                            
-                        //Item4 = use condition bool
+
                         if (ingredient.UseCondition && availableItem.ConditionPercentage - ingredient.MinCondition * 100 > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
                         {
                             availableItem.Condition -= availableItem.Prefab.Health * ingredient.MinCondition;
@@ -493,7 +495,8 @@ namespace Barotrauma.Items.Components
             return 
                 item != null && 
                 requiredItem.ItemPrefabs.Contains(item.prefab) && 
-                item.Condition / item.Prefab.Health >= requiredItem.MinCondition;
+                item.Condition / item.Prefab.Health >= requiredItem.MinCondition &&
+                item.Condition / item.Prefab.Health <= requiredItem.MaxCondition;
         }
 
         public override XElement Save(XElement parentElement)

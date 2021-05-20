@@ -303,9 +303,15 @@ namespace Barotrauma
 
         private bool IsValidTarget(Entity e)
         {
-            return 
-                e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
+            bool isValid = e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
                 (e == Character.Controlled || character.IsRemotePlayer);
+#if SERVER
+            UpdateIgnoredClients();
+            isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
+#elif CLIENT
+            isValid &= (e != Character.Controlled || !GUI.InputBlockingMenuOpen);
+#endif
+            return isValid;
         }
 
         private void TryStartConversation(Character speaker, Character targetCharacter = null)
@@ -348,7 +354,7 @@ namespace Barotrauma
             {
                 ParentEvent.AddTarget(InvokerTag, targetCharacter);
             }
-            
+
             ShowDialog(speaker, targetCharacter);
 
             dialogOpened = true;

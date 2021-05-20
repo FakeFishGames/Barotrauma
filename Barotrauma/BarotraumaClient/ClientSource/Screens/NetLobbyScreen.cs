@@ -969,6 +969,16 @@ namespace Barotrauma
                     UserData = missionType,
                 };
 
+                if (MissionPrefab.HiddenMissionClasses.Contains(missionType))
+                {
+                    missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform), string.Empty)
+                    {
+                        UserData = (int)missionType,
+                        Visible = false,
+                        CanBeFocused = false
+                    };
+                    continue;
+                }
                 missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform),
                     TextManager.Get("MissionType." + missionType.ToString()))
                 {
@@ -3214,7 +3224,12 @@ namespace Barotrauma
         {
             for (int i = 0; i < missionTypeTickBoxes.Length; i++)
             {
-                MissionType missionType = (MissionType)((int)missionTypeTickBoxes[i].UserData);
+                MissionType missionType = (MissionType)(int)missionTypeTickBoxes[i].UserData;
+                if (MissionPrefab.HiddenMissionClasses.Contains(missionType))
+                {
+                    missionTypeTickBoxes[i].Parent.Visible = false;
+                    continue;
+                }
                 if (SelectedMode == GameModePreset.Mission)
                 {
                     missionTypeTickBoxes[i].Parent.Visible = MissionPrefab.CoOpMissionClasses.ContainsKey(missionType);

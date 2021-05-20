@@ -3200,6 +3200,8 @@ namespace Barotrauma
 
                 Color newColor = SetColor(null);
 
+                if (!IsSubEditor()) { return true; }
+
                 Dictionary<object, List<ISerializableEntity>> oldProperties = new Dictionary<object, List<ISerializableEntity>>();
 
                 foreach (var (sEntity, color, _) in entities)
@@ -3969,9 +3971,9 @@ namespace Barotrauma
             {
                 loadFrame.AddToGUIUpdateList();
             }
-            else if (saveFrame != null)
+            else
             {
-                saveFrame.AddToGUIUpdateList();
+                saveFrame?.AddToGUIUpdateList();
             }
         }
         

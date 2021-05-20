@@ -46,7 +46,7 @@ namespace Barotrauma
                 Abandon = !isOrder;
                 return Priority;
             }
-            if (component.Item.ConditionPercentage <= 0)
+            if (!isOrder && component.Item.ConditionPercentage <= 0)
             {
                 Priority = 0;
             }

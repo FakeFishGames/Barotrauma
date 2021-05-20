@@ -51,7 +51,14 @@ namespace Barotrauma
             {
                 foreach (var target in targets)
                 {
-                    effect.Apply(effect.type, deltaTime, target, target as ISerializableEntity);
+                    if (target is Item targetItem)
+                    {
+                        effect.Apply(effect.type, deltaTime, target, targetItem.AllPropertyObjects);
+                    }
+                    else
+                    {
+                        effect.Apply(effect.type, deltaTime, target, target as ISerializableEntity);
+                    }
                 }
             }
 #if SERVER

@@ -39,13 +39,10 @@ namespace Barotrauma
             itemConfig = prefab.ConfigElement.Element("TerroristItems");
         }
 
-        public override int Reward
+        public override int GetReward(Submarine sub)
         {
-            get
-            { 
-                int multiplier = CalculateScalingEscortedCharacterCount();
-                return Prefab.Reward * multiplier;
-            }
+            int multiplier = CalculateScalingEscortedCharacterCount();
+            return Prefab.Reward * multiplier;
         }
 
         int CalculateScalingEscortedCharacterCount(bool inMission = false)
@@ -58,7 +55,7 @@ namespace Barotrauma
                 }
                 return 1;
             }
-            return (int)Math.Round(baseEscortedCharacters + scalingEscortedCharacters * Submarine.MainSub.Info.RecommendedCrewSizeMin);
+            return (int)Math.Round(baseEscortedCharacters + scalingEscortedCharacters * (Submarine.MainSub.Info.RecommendedCrewSizeMin + Submarine.MainSub.Info.RecommendedCrewSizeMax) / 2);
         }
 
         private void InitEscort()
@@ -87,6 +84,25 @@ namespace Barotrauma
                         humanAI.InitMentalStateManager();
                     }
                 }
+            }
+
+            if (terroristChance > 0f)
+            {
+                int terroristCount = (int)Math.Ceiling(terroristChance * Rand.Range(0.8f, 1.2f) * characters.Count);
+                terroristCount = Math.Clamp(terroristCount, 1, characters.Count);
+
+                terroristCharacters.Clear();
+                characters.GetRange(0, terroristCount).ForEach(c => terroristCharacters.Add(c));
+
+                terroristDistanceSquared = Vector2.DistanceSquared(Level.Loaded.StartPosition, Level.Loaded.EndPosition) * Rand.Range(0.35f, 0.65f);
+
+#if DEBUG
+                DebugConsole.AddWarning("Terrorists will trigger at range  " + Math.Sqrt(terroristDistanceSquared));
+                foreach (Character character in terroristCharacters)
+                {
+                    DebugConsole.AddWarning(character.Name + " is a terrorist.");
+                }
+#endif
             }
         }
 
@@ -119,26 +135,6 @@ namespace Barotrauma
                     characters[k + i].UniqueNameColor = element.GetAttributeColor("color", Color.LightGreen);
                 }
                 i++;
-            }
-
-            if (!IsClient && terroristChance > 0f)
-            {
-                int terroristCount = (int)Math.Ceiling(terroristChance * Rand.Range(0.8f, 1.2f) * characters.Count);
-                terroristCount = Math.Clamp(terroristCount, 1, characters.Count);
-
-                terroristCharacters.Clear();
-                characters.Shuffle();
-                characters.GetRange(0, terroristCount).ForEach(c => terroristCharacters.Add(c));
-
-                terroristDistanceSquared = Vector2.DistanceSquared(Level.Loaded.StartPosition, Level.Loaded.EndPosition) * Rand.Range(0.35f, 0.65f);
-
-#if DEBUG
-                DebugConsole.AddWarning("Terrorists will trigger at range  " + Math.Sqrt(terroristDistanceSquared));
-                foreach (Character character in terroristCharacters)
-                {
-                    DebugConsole.AddWarning(character.Name + " is a terrorist.");
-                }
-#endif
             }
         }
 
@@ -207,10 +203,10 @@ namespace Barotrauma
 
         bool NonTerroristsStillAlive(IEnumerable<Character> characterList)
         {
-            return characterList.Any(c => !terroristCharacters.Contains(c) && IsAlive(c));
+            return characterList.All(c => terroristCharacters.Contains(c) || IsAlive(c));
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (!IsClient)
             {
@@ -261,9 +257,10 @@ namespace Barotrauma
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
                 bool terroristsSurvived = terroristCharacters.Any(c => Survived(c) && !IsCaptured(c));
-                bool friendliesSurvived = characters.Except(terroristCharacters).Any(c => Survived(c));
+                bool friendliesSurvived = characters.Except(terroristCharacters).All(c => Survived(c));
                 bool vipDied = false;
 
+                // this logic is currently irrelevant, as the mission is failed regardless of who dies 
                 if (vipCharacter != null)
                 {
                     vipDied = !Survived(vipCharacter);

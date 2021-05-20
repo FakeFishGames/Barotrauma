@@ -208,6 +208,19 @@ namespace Barotrauma
             get { return pauseMenuOpen; }
         }
 
+        public static bool InputBlockingMenuOpen
+        {
+            get
+            {
+                return PauseMenuOpen ||
+                    SettingsMenuOpen ||
+                    DebugConsole.IsOpen ||
+                    GameSession.IsTabMenuOpen ||
+                    (GameMain.GameSession?.GameMode?.Paused ?? false) ||
+                    CharacterHUD.IsCampaignInterfaceOpen;
+            }
+        }
+
         public static bool PreventPauseMenuToggle = false;
 
         public static Color ScreenOverlayColor
@@ -2144,7 +2157,7 @@ namespace Barotrauma
                     for (int j = i + 1; j < elements.Count; j++)
                     {
                         Rectangle rect2 = elements[j].Rect;
-                        if (!rect1.Intersects(rect2)) continue;
+                        if (!rect1.Intersects(rect2)) { continue; }
 
                         intersections = true;
                         Point centerDiff = rect1.Center - rect2.Center;
@@ -2173,10 +2186,10 @@ namespace Barotrauma
                         elements[j].RectTransform.ScreenSpaceOffset += moveAmount2.ToPoint();
                     }
 
-                    if (disallowedAreas == null) continue;
+                    if (disallowedAreas == null) { continue; }
                     foreach (Rectangle rect2 in disallowedAreas)
                     {
-                        if (!rect1.Intersects(rect2)) continue;
+                        if (!rect1.Intersects(rect2)) { continue; } 
                         intersections = true;
 
                         Point centerDiff = rect1.Center - rect2.Center;
@@ -2194,7 +2207,7 @@ namespace Barotrauma
                 iterations++;
             }
 
-            Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
+            static Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
             {
                 if (Rect.Y < clampTo.Y)
                 {

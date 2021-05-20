@@ -46,6 +46,8 @@ namespace Barotrauma.Items.Components
 
         private Character equipper;
 
+        private bool isEquippable;
+
         public IEnumerable<Character> VisibleCharacters
         {
             get 
@@ -55,14 +57,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            isEquippable = item.GetComponent<Pickable>() != null;
+            if (!isEquippable) { IsActive = true; }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
 
-            if (equipper == null || equipper.Removed)
+            Entity refEntity = equipper;
+            if (isEquippable)
             {
-                IsActive = false;
-                return;
+                if (equipper == null || equipper.Removed)
+                {
+                    IsActive = false;
+                    return;
+                }
+            }
+            else
+            {
+                refEntity = item;
             }
             
             if (updateTimer > 0.0f)
@@ -76,11 +92,11 @@ namespace Barotrauma.Items.Components
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
 
-                float dist = Vector2.DistanceSquared(equipper.WorldPosition, c.WorldPosition);
+                float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
                 {
-                    Vector2 diff = c.WorldPosition - equipper.WorldPosition;
-                    if (Submarine.CheckVisibility(equipper.SimPosition, equipper.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
+                    Vector2 diff = c.WorldPosition - refEntity.WorldPosition;
+                    if (Submarine.CheckVisibility(refEntity.SimPosition, refEntity.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
                     {
                         visibleCharacters.Add(c);
                     }

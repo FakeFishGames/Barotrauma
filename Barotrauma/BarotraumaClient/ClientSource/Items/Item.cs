@@ -462,10 +462,7 @@ namespace Barotrauma
 
             if (GameMain.DebugDraw)
             {
-                if (body != null)
-                {
-                    body.DebugDraw(spriteBatch, Color.White);
-                }
+                body?.DebugDraw(spriteBatch, Color.White);
             }
 
             if (editing && IsSelected && PlayerInput.KeyDown(Keys.Space))
@@ -722,7 +719,7 @@ namespace Barotrauma
                     reloadTextureButton.OnClicked += (button, data) =>
                     {
                         Sprite.ReloadXML();
-                        Sprite.ReloadTexture();
+                        Sprite.ReloadTexture(updateAllSprites: true);
                         return true;
                     };
                 }
@@ -768,7 +765,7 @@ namespace Barotrauma
                 {
                     if (!ic.AllowInGameEditing) { continue; }
                     if (SerializableProperty.GetProperties<InGameEditable>(ic).Count == 0 &&
-                        !SerializableProperty.GetProperties<ConditionallyEditable>(ic).Any(p => p.GetAttribute<ConditionallyEditable>().IsEditable())) 
+                        !SerializableProperty.GetProperties<ConditionallyEditable>(ic).Any(p => p.GetAttribute<ConditionallyEditable>().IsEditable(ic))) 
                     {
                         continue; 
                     }
@@ -1133,30 +1130,34 @@ namespace Barotrauma
             texts.Add(new ColoredText(nameText, GUI.Style.TextColor, false, false));
 
             bool noComponentText = true;
-            foreach (ItemComponent ic in components)
-            {
-                if (string.IsNullOrEmpty(ic.DisplayMsg)) { continue; }
-                if (!ic.CanBePicked && !ic.CanBeSelected) { continue; }
-                if (ic is Holdable holdable && !holdable.CanBeDeattached()) { continue; }
 
-                Color color = Color.Gray;
-                if (ic.HasRequiredItems(character, false))
-                {
-                    if (ic is Repairable)
-                    {
-                        if (!IsFullCondition) { color = Color.Cyan; }
-                    }
-                    else
-                    {
-                        color = Color.Cyan;
-                    }
-                }
-                texts.Add(new ColoredText(ic.DisplayMsg, color, false, false));
-                noComponentText = false;
-            }
-            if (noComponentText && CampaignInteractionType != CampaignMode.InteractionType.None)
+            if (CampaignInteractionType != CampaignMode.InteractionType.None)
             {
                 texts.Add(new ColoredText(TextManager.GetWithVariable($"CampaignInteraction.{CampaignInteractionType}", "[key]", GameMain.Config.KeyBindText(InputType.Use)), Color.Cyan, false, false));
+            }
+            else
+            {
+                foreach (ItemComponent ic in components)
+                {
+                    if (string.IsNullOrEmpty(ic.DisplayMsg)) { continue; }
+                    if (!ic.CanBePicked && !ic.CanBeSelected) { continue; }
+                    if (ic is Holdable holdable && !holdable.CanBeDeattached()) { continue; }
+
+                    Color color = Color.Gray;
+                    if (ic.HasRequiredItems(character, false))
+                    {
+                        if (ic is Repairable)
+                        {
+                            if (!IsFullCondition) { color = Color.Cyan; }
+                        }
+                        else
+                        {
+                            color = Color.Cyan;
+                        }
+                    }
+                    texts.Add(new ColoredText(ic.DisplayMsg, color, false, false));
+                    noComponentText = false;
+                }
             }
             if (PlayerInput.IsShiftDown() && CrewManager.DoesItemHaveContextualOrders(this))
             {

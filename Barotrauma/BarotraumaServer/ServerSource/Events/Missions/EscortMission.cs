@@ -18,6 +18,7 @@ namespace Barotrauma
             foreach (Character character in characters)
             {
                 character.WriteSpawnData(msg, character.ID, restrictMessageSize: false);
+                msg.Write(terroristCharacters.Contains(character));
                 List<Item> characterItems = characterDictionary[character];
                 // items must be written in a specific sequence so that child items aren't written before their parents
                 msg.Write((ushort)characterItems.Count());

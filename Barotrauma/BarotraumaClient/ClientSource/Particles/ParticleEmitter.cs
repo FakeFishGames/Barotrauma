@@ -7,7 +7,102 @@ namespace Barotrauma.Particles
 {
     class ParticleEmitterProperties : ISerializableEntity
     {
-        public string Name => nameof(ParticleEmitterProperties);
+        private const float MinValue = int.MinValue,
+                            MaxValue = int.MaxValue;
+
+        public string Name => nameof(ParticleEmitter);
+
+        private float angleMin, angleMax;
+
+        public float AngleMinRad { get; private set; }
+        public float AngleMaxRad { get; private set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, true)]
+        public float AngleMin
+        {
+            get => angleMin;
+            set
+            {
+                angleMin = value;
+                AngleMinRad = MathHelper.ToRadians(MathHelper.Clamp(value, -360.0f, 360.0f));
+            }
+        }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 360, MinValueFloat = -360f), Serialize(0f, true)]
+        public float AngleMax
+        {
+            get => angleMax;
+            set
+            {
+                angleMax = value;
+                AngleMaxRad = MathHelper.ToRadians(MathHelper.Clamp(value, -360.0f, 360.0f));
+            }
+        }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        public float DistanceMin { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        public float DistanceMax { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        public float VelocityMin { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        public float VelocityMax { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(1f, true)]
+        public float ScaleMin { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(1f, true)]
+        public float ScaleMax { get; set; }
+
+
+        [Editable(), Serialize("1,1", true)]
+        public Vector2 ScaleMultiplier { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        public float EmitInterval { get; set; }
+
+        [Editable, Serialize(0, true)]
+        public int ParticleAmount { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = 0), Serialize(0f, true)]
+        public float ParticlesPerSecond { get; set; }
+
+        [Editable, Serialize(false, true)]
+        public bool HighQualityCollisionDetection { get; set; }
+
+        [Editable, Serialize(false, true)]
+        public bool CopyEntityAngle { get; set; }
+
+        [Editable, Serialize("1,1,1,1", true)]
+        public Color ColorMultiplier { get; set; }
+
+        [Editable, Serialize(false, true)]
+        public bool DrawOnTop { get; set; }
+
+        [Serialize(0f, true)]
+        public float Angle
+        {
+            get => AngleMin;
+            set => AngleMin = AngleMax = value;
+        }
+
+        [Serialize(0f, true)]
+        public float Distance
+        {
+            get => DistanceMin;
+            set => DistanceMin = DistanceMax = value;
+        }
+
+        [Serialize(0f, true)]
+        public float Velocity
+        {
+            get => VelocityMin;
+            set => VelocityMin = VelocityMax = value;
+        }
+
         public Dictionary<string, SerializableProperty> SerializableProperties { get; }
 
         public ParticleEmitterProperties(XElement element)
@@ -39,9 +134,9 @@ namespace Barotrauma.Particles
             emitTimer += deltaTime * amountMultiplier;
             burstEmitTimer -= deltaTime;
 
-            if (Prefab.ParticlesPerSecond > 0)
+            if (Prefab.Properties.ParticlesPerSecond > 0)
             {
-                float emitInterval = 1.0f / Prefab.ParticlesPerSecond;
+                float emitInterval = 1.0f / Prefab.Properties.ParticlesPerSecond;
                 while (emitTimer > emitInterval)
                 {
                     Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: tracerPoints);
@@ -50,9 +145,9 @@ namespace Barotrauma.Particles
             }
 
             if (burstEmitTimer > 0.0f) { return; }
-            
-            burstEmitTimer = Prefab.EmitInterval;
-            for (int i = 0; i < Prefab.ParticleAmount * amountMultiplier; i++)
+
+            burstEmitTimer = Prefab.Properties.EmitInterval;
+            for (int i = 0; i < Prefab.Properties.ParticleAmount * amountMultiplier; i++)
             {
                 Emit(position, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: tracerPoints);
             }
@@ -60,26 +155,29 @@ namespace Barotrauma.Particles
 
         private void Emit(Vector2 position, Hull hullGuess, float angle, float particleRotation, float velocityMultiplier, float sizeMultiplier, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
         {
-            angle += Rand.Range(Prefab.AngleMin, Prefab.AngleMax);
+            var particlePrefab = overrideParticle ?? Prefab.ParticlePrefab;
+            if (particlePrefab == null) { return; }
+
+            angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad);
 
             Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-            Vector2 velocity = dir * Rand.Range(Prefab.VelocityMin, Prefab.VelocityMax) * velocityMultiplier;
-            position += dir * Rand.Range(Prefab.DistanceMin, Prefab.DistanceMax);
+            Vector2 velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
+            position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
 
-            var particle = GameMain.ParticleManager.CreateParticle(overrideParticle ?? Prefab.ParticlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, tracerPoints: tracerPoints);
+            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, tracerPoints: tracerPoints);
 
             if (particle != null)
             {
-                particle.Size *= Rand.Range(Prefab.ScaleMin, Prefab.ScaleMax) * sizeMultiplier;
-                particle.Size *= Prefab.ScaleMultiplier;
-                particle.HighQualityCollisionDetection = Prefab.HighQualityCollisionDetection;
-                if (colorMultiplier.HasValue) 
-                { 
-                    particle.ColorMultiplier = colorMultiplier.Value.ToVector4(); 
-                }
-                else if (Prefab.ColorMultiplier != Color.White)
+                particle.Size *= Rand.Range(Prefab.Properties.ScaleMin, Prefab.Properties.ScaleMax) * sizeMultiplier;
+                particle.Size *= Prefab.Properties.ScaleMultiplier;
+                particle.HighQualityCollisionDetection = Prefab.Properties.HighQualityCollisionDetection;
+                if (colorMultiplier.HasValue)
                 {
-                    particle.ColorMultiplier = Prefab.ColorMultiplier.ToVector4();
+                    particle.ColorMultiplier = colorMultiplier.Value.ToVector4();
+                }
+                else if (Prefab.Properties.ColorMultiplier != Color.White)
+                {
+                    particle.ColorMultiplier = Prefab.Properties.ColorMultiplier.ToVector4();
                 }
             }
         }
@@ -88,9 +186,9 @@ namespace Barotrauma.Particles
         {
             Rectangle bounds = new Rectangle((int)startPosition.X, (int)startPosition.Y, (int)startPosition.X, (int)startPosition.Y);
 
-            for (float angle = Prefab.AngleMin; angle <= Prefab.AngleMax; angle += 0.1f)
+            for (float angle = Prefab.Properties.AngleMinRad; angle <= Prefab.Properties.AngleMaxRad; angle += 0.1f)
             {
-                Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Prefab.VelocityMax;
+                Vector2 velocity = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * Prefab.Properties.VelocityMax;
                 Vector2 endPosition = Prefab.ParticlePrefab.CalculateEndPosition(startPosition, velocity);
 
                 Vector2 endSize = Prefab.ParticlePrefab.CalculateEndSize();
@@ -103,15 +201,15 @@ namespace Barotrauma.Particles
                     }
                     else
                     {
-                        spriteExtent = Math.Max(spriteExtent, Math.Max(sprite.size.X * endSize.X, sprite.size.Y * endSize.Y)); 
+                        spriteExtent = Math.Max(spriteExtent, Math.Max(sprite.size.X * endSize.X, sprite.size.Y * endSize.Y));
                     }
                 }
 
                 bounds = new Rectangle(
-                    (int)Math.Min(bounds.X, endPosition.X - Prefab.DistanceMax - spriteExtent / 2),
-                    (int)Math.Min(bounds.Y, endPosition.Y - Prefab.DistanceMax - spriteExtent / 2),
-                    (int)Math.Max(bounds.X, endPosition.X + Prefab.DistanceMax + spriteExtent / 2),
-                    (int)Math.Max(bounds.Y, endPosition.Y + Prefab.DistanceMax + spriteExtent / 2));
+                    (int)Math.Min(bounds.X, endPosition.X - Prefab.Properties.DistanceMax - spriteExtent / 2),
+                    (int)Math.Min(bounds.Y, endPosition.Y - Prefab.Properties.DistanceMax - spriteExtent / 2),
+                    (int)Math.Max(bounds.X, endPosition.X + Prefab.Properties.DistanceMax + spriteExtent / 2),
+                    (int)Math.Max(bounds.Y, endPosition.Y + Prefab.Properties.DistanceMax + spriteExtent / 2));
             }
 
             bounds = new Rectangle(bounds.X, bounds.Y, bounds.Width - bounds.X, bounds.Height - bounds.Y);
@@ -121,9 +219,7 @@ namespace Barotrauma.Particles
     }
 
     class ParticleEmitterPrefab
-    {        
-        public readonly string Name;
-
+    {
         private string particlePrefabName;
 
         private ParticlePrefab particlePrefab;
@@ -134,105 +230,30 @@ namespace Barotrauma.Particles
                 if (particlePrefab == null && particlePrefabName != null)
                 {
                     particlePrefab = GameMain.ParticleManager?.FindPrefab(particlePrefabName);
-                    if (particlePrefab == null) { particlePrefabName = null; }
+                    if (particlePrefab == null) 
+                    {
+                        DebugConsole.ThrowError($"Failed to find particle prefab \"{particlePrefabName}\".");
+                        particlePrefabName = null; 
+                    }
                 }
                 return particlePrefab;
             }
         }
 
-        public readonly float AngleMin, AngleMax;
+        public readonly ParticleEmitterProperties Properties;
 
-        public readonly float DistanceMin, DistanceMax;
-
-        public readonly float VelocityMin, VelocityMax;
-
-        public readonly float ScaleMin, ScaleMax;
-        public readonly Vector2 ScaleMultiplier;
-
-        public readonly float EmitInterval;
-        public readonly int ParticleAmount;
-
-        public readonly float ParticlesPerSecond;
-
-        public readonly bool HighQualityCollisionDetection;
-
-        public readonly bool CopyEntityAngle;
-
-        public readonly Color ColorMultiplier;
-
-        public bool DrawOnTop => forceDrawOnTop || ParticlePrefab.DrawOnTop;
-        private readonly bool forceDrawOnTop;
+        public bool DrawOnTop => Properties.DrawOnTop || ParticlePrefab.DrawOnTop;
 
         public ParticleEmitterPrefab(XElement element)
         {
-            Name = element.Name.ToString();
+            Properties = new ParticleEmitterProperties(element);
             particlePrefabName = element.GetAttributeString("particle", "");
+        }
 
-            if (element.Attribute("startrotation") == null)
-            {
-                AngleMin = element.GetAttributeFloat("anglemin", 0.0f);
-                AngleMax = element.GetAttributeFloat("anglemax", 0.0f);
-            }
-            else
-            {
-                AngleMin = element.GetAttributeFloat("angle", 0.0f);
-                AngleMax = AngleMin;
-            }
-
-            AngleMin = MathHelper.ToRadians(MathHelper.Clamp(AngleMin, -360.0f, 360.0f));
-            AngleMax = MathHelper.ToRadians(MathHelper.Clamp(AngleMax, -360.0f, 360.0f));
-
-            if (element.Attribute("scalemin") == null)
-            {
-                ScaleMin = 1.0f;
-                ScaleMax = 1.0f;
-            }
-            else
-            {
-                ScaleMin = element.GetAttributeFloat("scalemin", 1.0f);
-                ScaleMax = Math.Max(ScaleMin, element.GetAttributeFloat("scalemax", 1.0f));
-            }
-            ScaleMultiplier = element.GetAttributeVector2("scalemultiplier", Vector2.One);
-
-            if (element.Attribute("distance") == null)
-            {
-                DistanceMin = element.GetAttributeFloat("distancemin", 0.0f);
-                DistanceMax = element.GetAttributeFloat("distancemax", 0.0f);
-            }
-            else
-            {
-                DistanceMin = DistanceMax = element.GetAttributeFloat("distance", 0.0f);
-            }
-            if (DistanceMax < DistanceMin)
-            {
-                var temp = DistanceMin;
-                DistanceMin = DistanceMax;
-                DistanceMax = temp;
-            }
-
-            if (element.Attribute("velocity") == null)
-            {
-                VelocityMin = element.GetAttributeFloat("velocitymin", 0.0f);
-                VelocityMax = element.GetAttributeFloat("velocitymax", 0.0f);
-            }
-            else
-            {
-                VelocityMin = VelocityMax = element.GetAttributeFloat("velocity", 0.0f);
-            }
-            if (VelocityMax < VelocityMin)
-            {
-                var temp = VelocityMin;
-                VelocityMin = VelocityMax;
-                VelocityMax = temp;
-            }
-
-            EmitInterval = element.GetAttributeFloat("emitinterval", 0.0f);
-            ParticlesPerSecond = element.GetAttributeFloat("particlespersecond", 0);
-            ParticleAmount = element.GetAttributeInt("particleamount", 0);
-            HighQualityCollisionDetection = element.GetAttributeBool("highqualitycollisiondetection", false);
-            CopyEntityAngle = element.GetAttributeBool("copyentityangle", false);
-            forceDrawOnTop = element.GetAttributeBool("drawontop", false); 
-            ColorMultiplier = element.GetAttributeColor("colormultiplier", Color.White);
+        public ParticleEmitterPrefab(ParticlePrefab prefab, ParticleEmitterProperties properties)
+        {
+            Properties = properties;
+            particlePrefab = prefab;
         }
     }
 }

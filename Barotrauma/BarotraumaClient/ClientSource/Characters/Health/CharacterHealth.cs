@@ -676,8 +676,8 @@ namespace Barotrauma
                 bool inWater = Character.AnimController.InWater;
                 var drawTarget = inWater ? Particles.ParticlePrefab.DrawTargetType.Water : Particles.ParticlePrefab.DrawTargetType.Air;
                 var emitter = Character.BloodEmitters.FirstOrDefault(e => e.Prefab.ParticlePrefab.DrawTarget == drawTarget || e.Prefab.ParticlePrefab.DrawTarget == Particles.ParticlePrefab.DrawTargetType.Both);
-                float particleMinScale = emitter != null ? emitter.Prefab.ScaleMin : 0.5f;
-                float particleMaxScale = emitter != null ? emitter.Prefab.ScaleMax : 1;
+                float particleMinScale = emitter?.Prefab.Properties.ScaleMin ?? 0.5f;
+                float particleMaxScale = emitter?.Prefab.Properties.ScaleMax ?? 1;
                 float severity = Math.Min(affliction.Strength / affliction.Prefab.MaxStrength * Character.Params.BleedParticleMultiplier, 1);
                 float bloodParticleSize = MathHelper.Lerp(particleMinScale, particleMaxScale, severity);
                 if (!inWater)
@@ -1326,7 +1326,7 @@ namespace Barotrauma
                 child.Recalculate();
             }
 
-            if (buttonToSelect != null) { buttonToSelect.OnClicked(buttonToSelect, "selectaffliction"); }
+            buttonToSelect?.OnClicked(buttonToSelect, "selectaffliction");
 
             afflictionIconContainer.RecalculateChildren();
 

@@ -77,9 +77,9 @@ namespace Barotrauma
 
             if (flash)
             {
-                float displayRange = flashRange.HasValue ? flashRange.Value : Attack.Range;
+                float displayRange = flashRange ?? Attack.Range;
                 if (displayRange < 0.1f) { return; }
-                var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
+                var light = new LightSource(worldPosition, displayRange, flashColor, null);
                 CoroutineManager.StartCoroutine(DimLight(light));
             }
         }

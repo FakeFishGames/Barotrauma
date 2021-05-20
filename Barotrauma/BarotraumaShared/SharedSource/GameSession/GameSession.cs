@@ -162,6 +162,18 @@ namespace Barotrauma
 
         private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, SubmarineInfo selectedSub, CampaignSettings settings, IEnumerable<MissionPrefab> missionPrefabs = null, MissionType missionType = MissionType.None)
         {
+            if (gameModePreset.GameModeType == typeof(CoOpMode) || gameModePreset.GameModeType == typeof(PvPMode))
+            {
+                //don't allow hidden mission types (e.g. GoTo) in single mission modes
+                var missionTypes = (MissionType[])Enum.GetValues(typeof(MissionType));
+                for (int i = 0; i < missionTypes.Length; i++)
+                {
+                    if (MissionPrefab.HiddenMissionClasses.Contains(missionTypes[i]))
+                    {
+                        missionType &= ~missionTypes[i];
+                    }
+                }
+            }
             if (gameModePreset.GameModeType == typeof(CoOpMode))
             {
                 return missionPrefabs != null ?
@@ -352,6 +364,12 @@ namespace Barotrauma
                         wifiComponent.TeamID = sub.TeamID;
                     }
                 }
+            }
+
+            foreach (Mission mission in GameMode.Missions)
+            {
+                // setting difficulty for missions that may involve difficulty-related submarine creation
+                mission.SetDifficulty(levelData?.Difficulty ?? 0f);
             }
 
             if (Submarine.MainSubs[1] == null)

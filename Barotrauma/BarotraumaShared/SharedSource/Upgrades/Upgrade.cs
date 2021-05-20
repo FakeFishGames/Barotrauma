@@ -46,6 +46,8 @@ namespace Barotrauma
             {
                 var value = (float) OriginalValue;
 
+                if (level == 0) { return value; }
+
                 if (Multiplier[^1] != '%')
                 {
                     float multiplier = ParseValue();

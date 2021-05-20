@@ -35,7 +35,7 @@ namespace Barotrauma
             Cave = 0x4,
             Ruin = 0x8,
             Wreck = 0x10,
-            BeaconStation = 0x20,
+            BeaconStation = 0x20, // Not used anywhere
             Abyss = 0x40,
             AbyssCave = 0x80
         }
@@ -389,7 +389,7 @@ namespace Barotrauma
 
         private void Generate(bool mirror)
         {
-            if (Loaded != null) { Loaded.Remove(); }
+            Loaded?.Remove();
             Loaded = this;
             Generating = true;
 
@@ -1154,7 +1154,7 @@ namespace Barotrauma
             }
 
             CreateWrecks();
-            CreateBeaconStation(cells);
+            CreateBeaconStation();
 
             EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.Server));
 
@@ -3007,20 +3007,30 @@ namespace Barotrauma
             return originalTag + "_" + shortSeed;
         }
 
+        public bool IsCloseToStart(Vector2 position, float minDist) => IsCloseToStart(position.ToPoint(), minDist);
+        public bool IsCloseToEnd(Vector2 position, float minDist) => IsCloseToEnd(position.ToPoint(), minDist);
+
+        public bool IsCloseToStart(Point position, float minDist)
+        {
+            return MathUtils.LineSegmentToPointDistanceSquared(StartPosition.ToPoint(), StartExitPosition.ToPoint(), position) < minDist * minDist;
+        }
+
+        public bool IsCloseToEnd(Point position, float minDist)
+        {
+            return MathUtils.LineSegmentToPointDistanceSquared(EndPosition.ToPoint(), EndExitPosition.ToPoint(), position) < minDist * minDist;
+        }
+
         private Submarine SpawnSubOnPath(string subName, ContentFile contentFile, SubmarineType type)
         {
             var tempSW = new Stopwatch();
 
             // Min distance between a sub and the start/end/other sub.
             float minDistance = Sonar.DefaultSonarRange;
-            float squaredMinDistance = minDistance * minDistance;
-            Vector2 start = startPosition.ToVector2();
-            Vector2 end = endPosition.ToVector2();
             var waypoints = WayPoint.WayPointList.Where(wp =>
                 wp.Submarine == null &&
                 wp.SpawnType == SpawnType.Path &&
-                Vector2.DistanceSquared(wp.WorldPosition, start) > squaredMinDistance &&
-                Vector2.DistanceSquared(wp.WorldPosition, end) > squaredMinDistance).ToList();
+                !IsCloseToStart(wp.WorldPosition, minDistance) && 
+                !IsCloseToEnd(wp.WorldPosition, minDistance)).ToList();
 
             var subDoc = SubmarineInfo.OpenFile(contentFile.Path);
             Rectangle subBorders = Submarine.GetBorders(subDoc.Root);
@@ -3163,7 +3173,7 @@ namespace Barotrauma
                 else
                 {
                     var sp = spawnPoint;
-                    if (Wrecks.Any(w => Vector2.DistanceSquared(w.WorldPosition, sp) < squaredMinDistance))
+                    if (Wrecks.Any(w => Vector2.DistanceSquared(w.WorldPosition, sp) < minDistance * minDistance))
                     {
                         Debug.WriteLine($"Invalid position {spawnPoint}. Too close to other wreck(s).");
                         return false;
@@ -3321,7 +3331,13 @@ namespace Barotrauma
 
             int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, wreckFiles.Count);
             int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, wreckFiles.Count);
-            int wreckCount = Rand.Range(minWreckCount, maxWreckCount, Rand.RandSync.Server);
+            int wreckCount = Rand.Range(minWreckCount, maxWreckCount + 1, Rand.RandSync.Server);
+
+            if (GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireWreck) ?? false)
+            {
+                wreckCount = Math.Max(wreckCount, 1);
+            }
+
             Wrecks = new List<Submarine>(wreckCount);
             for (int i = 0; i < wreckCount; i++)
             {
@@ -3379,7 +3395,7 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                if (GameMain.GameSession.GameMode is PvPMode) { continue; }
+                if (GameMain.GameSession?.GameMode is PvPMode) { continue; }
                 
                 bool isStart = (i == 0) == !Mirrored;
                 if (isStart)
@@ -3561,7 +3577,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateBeaconStation(List<VoronoiCell> mainPath)
+        private void CreateBeaconStation()
         {
             if (!LevelData.HasBeaconStation) { return; }
             var beaconStationFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.BeaconStation).ToList();

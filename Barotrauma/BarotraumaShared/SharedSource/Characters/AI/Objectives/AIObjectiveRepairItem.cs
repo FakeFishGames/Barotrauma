@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
 
@@ -43,7 +44,6 @@ namespace Barotrauma
                 }
                 return Priority;
             }
-            // TODO: priority list?
             // Ignore items that are being repaired by someone else.
             if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character))
             {
@@ -66,7 +66,20 @@ namespace Barotrauma
                 float devotion = (CumulatedDevotion + selectedBonus) / 100;
                 float reduction = isPriority ? 1 : isSelected ? 2 : 3;
                 float max = AIObjectiveManager.LowestOrderPriority - reduction;
-                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                float highestWeight = -1;
+                foreach (string tag in Item.Prefab.Tags)
+                {
+                    if (JobPrefab.ItemRepairPriorities.TryGetValue(tag, out float weight) && weight > highestWeight)
+                    {
+                        highestWeight = weight;
+                    }
+                }
+                if (highestWeight == -1)
+                {
+                    // Predefined weight not found.
+                    highestWeight = 1;
+                }
+                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * highestWeight * PriorityModifier), 0, 1));
             }
             return Priority;
         }

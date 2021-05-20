@@ -1279,10 +1279,7 @@ namespace Barotrauma
             //make the previously selected character wait in place for some time
             //(so they don't immediately start idling and walking away from their station)
             var aiController = Character.Controlled?.AIController;
-            if (aiController != null)
-            {
-                aiController.Reset();
-            }
+            aiController?.Reset();
             DisableCommandUI();
             Character.Controlled = character;
             HintManager.OnChangeCharacter();
@@ -2009,7 +2006,10 @@ namespace Barotrauma
         {
             nodeConnectors = new GUICustomComponent(
                 new RectTransform(Vector2.One, commandFrame.RectTransform),
-                onDraw: DrawNodeConnectors);
+                onDraw: DrawNodeConnectors)
+            {
+                CanBeFocused = false
+            };
             nodeConnectors.SetAsFirstChild();
             background.SetAsFirstChild();
         }
@@ -2018,10 +2018,27 @@ namespace Barotrauma
         {
             if (centerNode == null || optionNodes == null) { return; }
             var startNodePos = centerNode.Rect.Center.ToVector2();
-            // Don't draw connectors for mini map options or assignment nodes
-            if ((targetFrame == null || !targetFrame.Visible) && !(optionNodes.FirstOrDefault()?.Item1.UserData is Character))
+            // Don't draw connectors for assignment nodes
+            if (!(optionNodes.FirstOrDefault()?.Item1.UserData is Character))
             {
-                optionNodes.ForEach(n => DrawNodeConnector(startNodePos, centerNodeMargin, n.Item1, optionNodeMargin, spriteBatch));
+                // Regular option nodes
+                if (targetFrame == null || !targetFrame.Visible)
+                {
+                    optionNodes.ForEach(n => DrawNodeConnector(startNodePos, centerNodeMargin, n.Item1, optionNodeMargin, spriteBatch));
+                }
+                // Minimap item nodes for single-option orders
+                else if(optionNodes.FirstOrDefault()?.Item1?.UserData is Tuple<Order, string> userData && string.IsNullOrEmpty(userData.Item2))
+                {
+                    foreach (var node in optionNodes)
+                    {
+                        float iconRadius = 0.5f * optionNodeMargin;
+                        Vector2 itemPosition = node.Item1.Parent.Rect.Center.ToVector2();
+                        if (Vector2.Distance(node.Item1.Center, itemPosition) <= iconRadius) { continue; }
+                        DrawNodeConnector(itemPosition, 0.0f, node.Item1, iconRadius, spriteBatch, widthMultiplier: 0.5f);
+                        GUI.DrawFilledRectangle(spriteBatch, itemPosition - Vector2.One, new Vector2(3),
+                            node.Item1.GetChildByUserData("colorsource")?.Color ?? Color.White);
+                    }
+                }
             }
             DrawNodeConnector(startNodePos, centerNodeMargin, returnNode, returnNodeMargin, spriteBatch);
             if (shortcutCenterNode == null || !shortcutCenterNode.Visible) { return; }
@@ -2030,7 +2047,7 @@ namespace Barotrauma
             shortcutNodes.ForEach(n => DrawNodeConnector(startNodePos, shortcutCenterNodeMargin, n, shortcutNodeMargin, spriteBatch));
         }
 
-        private void DrawNodeConnector(Vector2 startNodePos, float startNodeMargin, GUIComponent endNode, float endNodeMargin, SpriteBatch spriteBatch)
+        private void DrawNodeConnector(Vector2 startNodePos, float startNodeMargin, GUIComponent endNode, float endNodeMargin, SpriteBatch spriteBatch, float widthMultiplier = 1.0f)
         {
             if (endNode == null || !endNode.Visible) { return; }
             var endNodePos = endNode.Rect.Center.ToVector2();
@@ -2041,11 +2058,11 @@ namespace Barotrauma
             if ((selectedNode == null && endNode != shortcutCenterNode && GUI.IsMouseOn(endNode)) ||
                 (isSelectionHighlighted && (endNode == selectedNode || (endNode == shortcutCenterNode && shortcutNodes.Any(n => GUI.IsMouseOn(n))))))
             {
-                GUI.DrawLine(spriteBatch, start, end, colorSource != null ? colorSource.HoverColor : Color.White, width: 4);
+                GUI.DrawLine(spriteBatch, start, end, colorSource?.HoverColor ?? Color.White, width: Math.Max(widthMultiplier * 4.0f, 1.0f));
             }
             else
             {
-                GUI.DrawLine(spriteBatch, start, end, colorSource != null ? colorSource.Color : Color.White * nodeColorMultiplier, width: 2);
+                GUI.DrawLine(spriteBatch, start, end, colorSource?.Color ?? Color.White * nodeColorMultiplier, width: Math.Max(widthMultiplier * 2.0f, 1.0f));
             }
         }
 
@@ -2122,7 +2139,12 @@ namespace Barotrauma
         {
             if (commandFrame == null) { return false; }
             RemoveOptionNodes();
-            if (targetFrame != null) { targetFrame.Visible = false; }
+            if (targetFrame != null)
+            {
+                targetFrame.Visible = false;
+                nodeConnectors.RectTransform.Parent = commandFrame.RectTransform;
+                nodeConnectors.RectTransform.RepositionChildInHierarchy(1);
+            }
             // TODO: Center node could move to option node instead of being removed
             commandFrame.RemoveChild(centerNode);
             SetCenterNode(node);
@@ -2731,18 +2753,20 @@ namespace Barotrauma
                     if (itemTargetFrame == null) { continue; }
 
                     var anchor = Anchor.TopLeft;
-                    if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
+                    if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f)
                     {
-                        anchor = Anchor.BottomRight;
+                        if (itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
+                        {
+                            anchor = Anchor.BottomRight;
+                        }
+                        else
+                        {
+                            anchor = Anchor.TopRight;
+                        }
                     }
-                    else if (itemTargetFrame.RectTransform.RelativeOffset.X > 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
+                    else if (itemTargetFrame.RectTransform.RelativeOffset.Y < 0.5f)
                     {
                         anchor = Anchor.BottomLeft;
-                    }
-
-                    else if (itemTargetFrame.RectTransform.RelativeOffset.X < 0.5f && itemTargetFrame.RectTransform.RelativeOffset.Y > 0.5f)
-                    {
-                        anchor = Anchor.TopRight;
                     }
 
                     GUIComponent optionElement;
@@ -2807,7 +2831,6 @@ namespace Barotrauma
                         {
                             UserData = userData,
                             Font = GUI.SmallFont,
-                            ToolTip = item?.Name ?? GetOrderNameBasedOnContextuality(order),
                             OnClicked = (_, userData) =>
                             {
                                 if (!CanIssueOrders) { return false; }
@@ -2824,12 +2847,28 @@ namespace Barotrauma
                         var colorMultiplier = characters.Any(c => c.CurrentOrders.Any(o => o.Order != null &&
                             o.Order.Identifier == userData.Item1.Identifier &&
                             o.Order.TargetEntity == userData.Item1.TargetEntity)) ? 0.5f : 1f;
-                        CreateNodeIcon(Vector2.One, optionElement.RectTransform, item.Prefab.MinimapIcon ?? order.SymbolSprite, order.Color * colorMultiplier);
+                        CreateNodeIcon(Vector2.One, optionElement.RectTransform, item.Prefab.MinimapIcon ?? order.SymbolSprite, order.Color * colorMultiplier, tooltip: item.Name);
                         optionNodes.Add(new Tuple<GUIComponent, Keys>(optionElement, Keys.None));
                     }
                     optionElements.Add(optionElement);
                 }
-                GUI.PreventElementOverlap(optionElements, clampArea: new Rectangle(10, 10, GameMain.GraphicsWidth - 20, GameMain.GraphicsHeight - 20));
+
+                Rectangle clampArea = new Rectangle(10, 10, GameMain.GraphicsWidth - 20, GameMain.GraphicsHeight - 20);
+                if (order.Identifier == "operateweapons")
+                {
+                    Rectangle disallowedArea = targetFrame.GetChild<GUIFrame>().Rect;
+                    Point originalSize = disallowedArea.Size;
+                    disallowedArea.Size = disallowedArea.MultiplySize(0.9f);
+                    disallowedArea.X += (originalSize.X - disallowedArea.Size.X) / 2;
+                    disallowedArea.Y += (originalSize.Y - disallowedArea.Size.Y) / 2;
+                    GUI.PreventElementOverlap(optionElements, new List<Rectangle>() { disallowedArea }, clampArea);
+                    nodeConnectors.RectTransform.Parent = targetFrame.RectTransform;
+                    nodeConnectors.RectTransform.SetAsFirstChild();
+                }
+                else
+                {
+                    GUI.PreventElementOverlap(optionElements, clampArea: clampArea);
+                }
 
                 var shadow = new GUIFrame(
                     new RectTransform(targetFrame.Rect.Size + new Point((int)(200 * GUI.Scale)), targetFrame.RectTransform, anchor: Anchor.Center),
@@ -2901,6 +2940,12 @@ namespace Barotrauma
 
         private bool CreateAssignmentNodes(GUIComponent node)
         {
+            if (centerNode == null)
+            {
+                DisableCommandUI();
+                return false;
+            }
+
             var order = (node.UserData is Order) ?
                 new Tuple<Order, string>(node.UserData as Order, null) :
                 node.UserData as Tuple<Order, string>;
@@ -2947,6 +2992,8 @@ namespace Barotrauma
                     node = null;
                 }
                 targetFrame.Visible = false;
+                nodeConnectors.RectTransform.Parent = commandFrame.RectTransform;
+                nodeConnectors.RectTransform.RepositionChildInHierarchy(1);
             }
             if (shortcutCenterNode != null)
             {

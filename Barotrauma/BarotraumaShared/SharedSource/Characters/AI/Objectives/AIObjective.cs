@@ -56,8 +56,23 @@ namespace Barotrauma
         public float BasePriority { get; set; }
         public float PriorityModifier { get; private set; } = 1;
 
-        // For forcing the highest priority temporarily. Will reset after each priority calculation, so it will need to be kept alive by something.
-        public bool ForceHighestPriority { get; set; }
+        private float resetPriorityTimer;
+        private readonly float resetPriorityTime = 1;
+        private bool _forceHighestPriority;
+        // For forcing the highest priority temporarily. Will reset automatically after one second, unless kept alive by something.
+        public bool ForceHighestPriority
+        {
+            get { return _forceHighestPriority; }
+            set
+            {
+                if (_forceHighestPriority == value) { return; }
+                _forceHighestPriority = value;
+                if (_forceHighestPriority)
+                {
+                    resetPriorityTimer = resetPriorityTime;
+                }
+            }
+        }
 
         // For temporarily forcing walking. Will reset after each priority calculation, so it will need to be kept alive by something.
         // The intention of this boolean to allow walking even when the priority is higher than AIObjectiveManager.RunPriority.
@@ -171,7 +186,6 @@ namespace Barotrauma
             Act(deltaTime);
         }
 
-        // TODO: check turret aioperate
         public void AddSubObjective(AIObjective objective, bool addFirst = false)
         {
             var type = objective.GetType();
@@ -294,6 +308,14 @@ namespace Barotrauma
 
         public virtual void Update(float deltaTime)
         {
+            if (resetPriorityTimer > 0)
+            {
+                resetPriorityTimer -= deltaTime;
+            }
+            else
+            {
+                ForceHighestPriority = false;
+            }
             if (!objectiveManager.IsOrder(this) && objectiveManager.WaitTimer <= 0)
             {
                 UpdateDevotion(deltaTime);

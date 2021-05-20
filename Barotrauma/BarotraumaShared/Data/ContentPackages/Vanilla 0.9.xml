@@ -257,5 +257,7 @@
   <OutpostModule file="Content/Map/Outposts/MineModule_04.sub" />
   <OutpostModule file="Content/Map/Outposts/HallModuleHorizontal_Abandoned.sub" />
   <OutpostModule file="Content/Map/Outposts/HallModuleVertical_Abandoned.sub" />
+  <EnemySubmarine file="Content/Map/EnemySubmarines/DugongPirate.sub"/>
   <EnemySubmarine file="Content/Map/EnemySubmarines/HumpbackPirate.sub"/>
+  <EnemySubmarine file="Content/Map/EnemySubmarines/Typhon2Pirate.sub"/>
 </contentpackage>

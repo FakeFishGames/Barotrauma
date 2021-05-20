@@ -93,7 +93,7 @@ namespace Barotrauma
             }
         }
 
-        static void ShipCommandLog(string text)
+        public static void ShipCommandLog(string text)
         {
             if (GameSettings.VerboseLogging)
             {

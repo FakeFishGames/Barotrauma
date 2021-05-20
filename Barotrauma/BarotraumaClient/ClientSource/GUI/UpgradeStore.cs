@@ -43,7 +43,7 @@ namespace Barotrauma
         private readonly CampaignUI campaignUI;
         private CampaignMode? Campaign => campaignUI.Campaign;
         private int AvailableMoney => Campaign?.Money ?? 0;
-        private UpgradeTab selectedUpgradTab = UpgradeTab.Upgrade;
+        private UpgradeTab selectedUpgradeTab = UpgradeTab.Upgrade;
 
         private GUIMessageBox? currectConfirmation;
 
@@ -59,7 +59,7 @@ namespace Barotrauma
         private GUIFrame? subPreviewFrame;
         private Submarine? drawnSubmarine;
         private readonly List<UpgradeCategory> applicableCategories = new List<UpgradeCategory>();
-        private Vector2[][] subHullVerticies = new Vector2[0][];
+        private Vector2[][] subHullVertices = new Vector2[0][];
         private List<Structure> submarineWalls = new List<Structure>();
 
         public MapEntity? HoveredItem;
@@ -110,7 +110,7 @@ namespace Barotrauma
 
         public void RefreshAll()
         {
-            switch (selectedUpgradTab)
+            switch (selectedUpgradeTab)
             {
                 case UpgradeTab.Repairs:                    
                     SelectTab(UpgradeTab.Repairs);
@@ -215,7 +215,7 @@ namespace Barotrauma
          */
         private void CreateUI(GUIComponent parent)
         {
-            selectedUpgradTab = UpgradeTab.Upgrade;
+            selectedUpgradeTab = UpgradeTab.Upgrade;
             parent.ClearChildren();
 
             ItemInfoFrame.ClearChildren();
@@ -259,8 +259,8 @@ namespace Barotrauma
                     GUIImage submarineIcon = new GUIImage(rectT(new Point(locationLayout.Rect.Height, locationLayout.Rect.Height), locationLayout), style: "SubmarineIcon", scaleToFit: true);
                     new GUITextBlock(rectT(1.0f - submarineIcon.RectTransform.RelativeSize.X, 1, locationLayout), TextManager.Get("UpgradeUI.Title"), font: GUI.LargeFont);
                 categoryButtonLayout = new GUILayoutGroup(rectT(0.4f, 0.3f, leftLayout), isHorizontal: true) { Stretch = true };
-                    GUIButton upgradeButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradTab == UpgradeTab.Upgrade };
-                    GUIButton repairButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradTab == UpgradeTab.Repairs };
+                    GUIButton upgradeButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradeTab == UpgradeTab.Upgrade };
+                    GUIButton repairButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradeTab == UpgradeTab.Repairs };
 
             /*                                         RIGHT HEADER LAYOUT
              * |---------------------------------------------------------------------------------------------------|
@@ -282,15 +282,15 @@ namespace Barotrauma
             {
                 if (o is UpgradeTab upgradeTab)
                 {
-                    if (upgradeTab != selectedUpgradTab || currentStoreLayout == null || currentStoreLayout.Parent != storeLayout)
+                    if (upgradeTab != selectedUpgradeTab || currentStoreLayout == null || currentStoreLayout.Parent != storeLayout)
                     {
-                        selectedUpgradTab = upgradeTab;
-                        SelectTab(selectedUpgradTab);
+                        selectedUpgradeTab = upgradeTab;
+                        SelectTab(selectedUpgradeTab);
                         storeLayout?.Recalculate();
                     }
 
-                    repairButton.Selected = (UpgradeTab) repairButton.UserData == selectedUpgradTab;
-                    upgradeButton.Selected = (UpgradeTab) upgradeButton.UserData == selectedUpgradTab;
+                    repairButton.Selected = (UpgradeTab) repairButton.UserData == selectedUpgradeTab;
+                    upgradeButton.Selected = (UpgradeTab) upgradeButton.UserData == selectedUpgradeTab;
 
                     return true;
                 }
@@ -305,6 +305,12 @@ namespace Barotrauma
             };
 
             SelectTab(UpgradeTab.Upgrade);
+
+            var itemSwapPreview = new GUICustomComponent(new RectTransform(new Vector2(0.27f, 0.4f), mainStoreLayout.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(GUI.IsFourByThree() ? 0.5f : 0.47f, 0.0f) }, DrawItemSwapPreview)
+            {
+                IgnoreLayoutGroups = true,
+                CanBeFocused = true
+            };
 
 #if DEBUG
             // creates a button that re-creates the UI
@@ -321,6 +327,35 @@ namespace Barotrauma
                 };
             }
 #endif
+        }
+
+        private void DrawItemSwapPreview(SpriteBatch spriteBatch, GUICustomComponent component)
+        {
+            var selectedItem = customizeTabOpen ? 
+                activeItemSwapSlideDown?.UserData as Item ?? HoveredItem as Item : 
+                HoveredItem as Item;
+            if (selectedItem?.Prefab.SwappableItem == null) { return; }
+
+            Sprite schematicsSprite = selectedItem.Prefab.SwappableItem.SchematicSprite;
+            if (schematicsSprite == null) { return; }
+            float schematicsScale = Math.Min(component.Rect.Width / 2 / schematicsSprite.size.X, component.Rect.Height / schematicsSprite.size.Y);
+            Vector2 center = new Vector2(component.Rect.Center.X, component.Rect.Center.Y);
+            schematicsSprite.Draw(spriteBatch, new Vector2(component.Rect.X, center.Y), GUI.Style.Green, new Vector2(0, schematicsSprite.size.Y / 2), 
+                scale: schematicsScale);
+
+            var swappableItemList = selectedUpgradeCategoryLayout?.FindChild("prefablist", true) as GUIListBox;
+            var highlightedElement = swappableItemList?.Content.FindChild(c => c.UserData is ItemPrefab && c.IsParentOf(GUI.MouseOn)) ?? GUI.MouseOn;
+            ItemPrefab swapTo = highlightedElement?.UserData as ItemPrefab ?? selectedItem.PendingItemSwap;
+            if (swapTo?.SwappableItem == null) { return; }
+            Sprite? schematicsSprite2 = swapTo.SwappableItem?.SchematicSprite;
+            schematicsSprite2?.Draw(spriteBatch, new Vector2(component.Rect.Right, center.Y), GUI.Style.Orange, new Vector2(schematicsSprite2.size.X, schematicsSprite2.size.Y / 2),
+                scale: Math.Min(component.Rect.Width / 2 / schematicsSprite2.size.X, component.Rect.Height / schematicsSprite2.size.Y));
+
+            var arrowSprite = GUI.Style?.GetComponentStyle("GUIButtonToggleRight")?.GetDefaultSprite();
+            if (arrowSprite != null)
+            {
+                arrowSprite.Draw(spriteBatch, center, scale: GUI.Scale);
+            }
         }
 
         private void SelectTab(UpgradeTab tab)
@@ -672,7 +707,9 @@ namespace Barotrauma
             GUIFrame paddedFrame = new GUIFrame(rectT(0.93f, 0.9f, frame, Anchor.Center), style: null);
 
             bool hasSwappableItems = Submarine.MainSub.GetItems(true).Any(i => 
-                i.Prefab.SwappableItem != null && (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) && 
+                i.Prefab.SwappableItem != null && 
+                !i.HiddenInGame && i.AllowSwapping &&
+                (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) && 
                 Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
 
             float listHeight = hasSwappableItems ? 0.9f : 1.0f;
@@ -746,7 +783,7 @@ namespace Barotrauma
                 p is ItemPrefab itemPrefab && 
                 category.ItemTags.Any(t => itemPrefab.Tags.Contains(t)) &&
                 (itemPrefab.SwappableItem?.CanBeBought ?? false)).Cast<ItemPrefab>();
-            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t))).ToList();
+            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.HiddenInGame && i.AllowSwapping && category.ItemTags.Any(t => i.HasTag(t))).ToList();
 
             int slotIndex = 0;
             foreach (Item item in entitiesOnSub)
@@ -836,7 +873,7 @@ namespace Barotrauma
                 int price = isPurchased || replacement == item.Prefab ? 0 : replacement.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation);
 
                 frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), replacement.UpgradePreviewSprite, replacement.Name, replacement.Description, 
-                    price, null, 
+                    price, replacement, 
                     addBuyButton: true, 
                     addProgressBar: false,
                     buttonStyle: isPurchased ? "UpgradeBuyButton" : "StoreAddToCrateButton"));
@@ -1191,7 +1228,7 @@ namespace Barotrauma
                 {
                     if (HoveredItem != item) { CreateItemTooltip(item); }
                     HoveredItem = item;
-                    if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradTab == UpgradeTab.Upgrade && currentStoreLayout != null)
+                    if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradeTab == UpgradeTab.Upgrade && currentStoreLayout != null)
                     {
                         if (customizeTabOpen)
                         {
@@ -1221,14 +1258,14 @@ namespace Barotrauma
                     // Every wall should have the same upgrades so we can just display the first one in the tooltip
                     Structure? firstStructure = submarineWalls.FirstOrDefault();
                     // use pnpoly algorithm to detect if our mouse is within any of the hull polygons
-                    if (subHullVerticies.Any(hullVertex => ToolBox.PointIntersectsWithPolygon(PlayerInput.MousePosition, hullVertex)))
+                    if (subHullVertices.Any(hullVertex => ToolBox.PointIntersectsWithPolygon(PlayerInput.MousePosition, hullVertex)))
                     {
                         if (HoveredItem != firstStructure && !(firstStructure is null)) { CreateItemTooltip(firstStructure); }
                         HoveredItem = firstStructure;
                         isMouseOnStructure = true;
                         GUI.MouseCursor = CursorState.Hand;
 
-                        if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradTab == UpgradeTab.Upgrade && currentStoreLayout != null)
+                        if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradeTab == UpgradeTab.Upgrade && currentStoreLayout != null)
                         {
                             ScrollToCategory(data => data.Category.IsWallUpgrade);
                         }
@@ -1353,7 +1390,7 @@ namespace Barotrauma
             Vector2 offset = (sub.WorldPosition - new Vector2(dockedBorders.Center.X, dockedBorders.Y - dockedBorders.Height / 2)) * scale;
             Vector2 center = parent.Rect.Center.ToVector2();
 
-            subHullVerticies = new Vector2[sub.HullVertices.Count][];
+            subHullVertices = new Vector2[sub.HullVertices.Count][];
 
             for (int i = 0; i < sub.HullVertices.Count; i++)
             {
@@ -1367,7 +1404,7 @@ namespace Barotrauma
                 float angle = (float)Math.Atan2(edge.Y, edge.X);
                 Matrix rotate = Matrix.CreateRotationZ(angle);
 
-                subHullVerticies[i] = new[]
+                subHullVertices[i] = new[]
                 {
                     center + start + Vector2.Transform(new Vector2(length, -lineWidth), rotate),
                     center + end + Vector2.Transform(new Vector2(-length, -lineWidth), rotate),
@@ -1379,7 +1416,7 @@ namespace Barotrauma
 
         private void DrawSubmarine(SpriteBatch spriteBatch, GUICustomComponent component)
         {
-            foreach (Vector2[] hullVertex in subHullVerticies)
+            foreach (Vector2[] hullVertex in subHullVertices)
             {
                 // calculate the center point so we can draw a line from X to Y instead of drawing a rotated rectangle that is filled
                 Vector2 point1 = hullVertex[1] + (hullVertex[2] - hullVertex[1]) / 2;

@@ -1326,21 +1326,38 @@ namespace Barotrauma
                 }
             };
 
-            GUITickBox disableInGameHintsBox = new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform),
-                TextManager.Get("DisableInGameHints"))
+            new GUITickBox(new RectTransform(tickBoxScale, gameplaySettingsGroup.RectTransform), TextManager.Get("DisableInGameHints"))
             {
                 Selected = DisableInGameHints,
                 ToolTip = TextManager.Get("DisableInGameHintsToolTip"),
                 OnSelected = (tickBox) =>
                 {
                     DisableInGameHints = tickBox.Selected;
-                    if (!DisableInGameHints && GameMain.Config?.IgnoredHints != null)
-                    {
-                        // Reset the ignored hints when the hints are re-enabled (to-be-replaced by a separate button)
-                        GameMain.Config.IgnoredHints.Clear();
-                    }
                     UnsavedSettings = true;
                     return true;
+                }
+            };
+
+            new GUIButton(new RectTransform(new Vector2(1.0f, 0.05f), gameplaySettingsGroup.RectTransform),
+                text: TextManager.Get("ResetInGameHints"),
+                style: "GUIButtonSmall")
+            {
+                OnClicked = (button, userData) =>
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get("ResetInGameHints"),
+                        TextManager.Get("ResetInGameHintsTooltip"),
+                        new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
+                    {
+                        UserData = "verificationprompt"
+                    };
+                    msgBox.Buttons[0].OnClicked = (button, userData) =>
+                    {
+                        GameMain.Config.IgnoredHints.Clear();
+                        return true;
+                    };
+                    msgBox.Buttons[0].OnClicked += msgBox.Close;
+                    msgBox.Buttons[1].OnClicked = msgBox.Close;
+                    return false;
                 }
             };
 

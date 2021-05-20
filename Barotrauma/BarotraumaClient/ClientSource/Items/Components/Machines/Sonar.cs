@@ -436,7 +436,9 @@ namespace Barotrauma.Items.Components
                 connectedSubUpdateTimer = ConnectedSubUpdateInterval;
             }
 
-            if (sonarView.Rect.Contains(PlayerInput.MousePosition))
+            Steering steering = item.GetComponent<Steering>();
+            if (sonarView.Rect.Contains(PlayerInput.MousePosition) && 
+                (GUI.MouseOn == null || GUI.MouseOn == sonarView || sonarView.IsParentOf(GUI.MouseOn) || GUI.MouseOn == steering?.GuiFrame || (steering?.GuiFrame?.IsParentOf(GUI.MouseOn) ?? false)))
             {
                 float scrollSpeed = PlayerInput.ScrollWheelSpeed / 1000.0f;
                 if (Math.Abs(scrollSpeed) > 0.0001f)
@@ -613,7 +615,6 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Steering steering = item.GetComponent<Steering>();
             if (steering != null && steering.DockingModeEnabled && steering.ActiveDockingSource != null)
             {
                 float dockingDist = Vector2.Distance(steering.ActiveDockingSource.Item.WorldPosition, steering.DockingTarget.Item.WorldPosition);
@@ -780,10 +781,7 @@ namespace Barotrauma.Items.Components
             DisplayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
             displayScale = DisplayRadius / range * zoom;
 
-            if (screenBackground != null)
-            {
-                screenBackground.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
-            }
+            screenBackground?.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
 
             if (useDirectionalPing)
             {
@@ -871,10 +869,7 @@ namespace Barotrauma.Items.Components
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2(), sonarBlips.Count.ToString(), Color.White);
             }
 
-            if (screenOverlay != null)
-            {
-                screenOverlay.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
-            }
+            screenOverlay?.Draw(spriteBatch, center, 0.0f, rect.Width / screenOverlay.size.X);
 
             if (signalStrength <= 0.5f)
             {
@@ -937,21 +932,25 @@ namespace Barotrauma.Items.Components
                     cave.StartPos.ToVector2(), transducerCenter,
                     displayScale, center, DisplayRadius);
             }
-                        
+
+            int missionIndex = 0;
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
                 if (!string.IsNullOrWhiteSpace(mission.SonarLabel))
                 {
+                    int i = 0;
                     foreach (Vector2 sonarPosition in mission.SonarPositions)
                     {
                         DrawMarker(spriteBatch,
                             mission.SonarLabel,
                             mission.SonarIconIdentifier,
-                            mission,
-                            sonarPosition, transducerCenter, 
+                            "mission" + missionIndex + ":" + i,
+                            sonarPosition, transducerCenter,
                             displayScale, center, DisplayRadius * 0.95f);
+                        i++;
                     }
                 }
+                missionIndex++;
             }
 
             if (AllowUsingMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null)
@@ -964,7 +963,7 @@ namespace Barotrauma.Items.Components
                     var i = unobtainedMinerals.FirstOrDefault();
                     if (i == null) { continue; }
                     DrawMarker(spriteBatch,
-                        i.Name, "mineral", i,
+                        i.Name, "mineral", "mineralcluster" + i,
                         c.center, transducerCenter,
                         displayScale, center, DisplayRadius * 0.95f,
                         onlyShowTextOnMouseOver: true);
@@ -977,14 +976,14 @@ namespace Barotrauma.Items.Components
                 if (connectedSubs.Contains(sub)) { continue; }
                 if (sub.WorldPosition.Y > Level.Loaded.Size.Y) { continue; }
 
-                if (item.Submarine != null)
+                if (item.Submarine != null || Character.Controlled != null)
                 {
                     //hide enemy team
-                    if (sub.TeamID == CharacterTeamType.Team1 && (item.Submarine.TeamID == CharacterTeamType.Team2 || Character.Controlled?.TeamID == CharacterTeamType.Team2))
+                    if (sub.TeamID == CharacterTeamType.Team1 && (item.Submarine?.TeamID == CharacterTeamType.Team2 || Character.Controlled?.TeamID == CharacterTeamType.Team2))
                     {
                         continue;
                     }
-                    else if (sub.TeamID == CharacterTeamType.Team2 && (item.Submarine.TeamID == CharacterTeamType.Team1 || Character.Controlled?.TeamID == CharacterTeamType.Team1))
+                    else if (sub.TeamID == CharacterTeamType.Team2 && (item.Submarine?.TeamID == CharacterTeamType.Team1 || Character.Controlled?.TeamID == CharacterTeamType.Team1))
                     {
                         continue;
                     }
@@ -1095,7 +1094,7 @@ namespace Barotrauma.Items.Components
                 if (!dockingPort.Item.Submarine.ShowSonarMarker && dockingPort.Item.Submarine != item.Submarine && !dockingPort.Item.Submarine.Info.IsOutpost) { continue; }
 
                 //don't show the docking ports of the opposing team on the sonar
-                if (item.Submarine != null)
+                if (item.Submarine != null && item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle && dockingPort.Item.Submarine.Info.Type != SubmarineType.Outpost)
                 {
                     // specifically checking for friendlyNPC seems more logical here
                     if (dockingPort.Item.Submarine.TeamID != item.Submarine.TeamID && dockingPort.Item.Submarine.TeamID != CharacterTeamType.FriendlyNPC) { continue; } 

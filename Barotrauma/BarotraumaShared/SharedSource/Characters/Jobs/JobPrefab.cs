@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -42,6 +42,12 @@ namespace Barotrauma
             disposed = true;
             Prefabs.Remove(this);
         }
+
+        private static readonly Dictionary<string, float> _itemRepairPriorities = new Dictionary<string, float>();
+        /// <summary>
+        /// Tag -> priority.
+        /// </summary>
+        public static IReadOnlyDictionary<string, float> ItemRepairPriorities => _itemRepairPriorities;
 
         public static XElement NoJobElement;
         public static JobPrefab Get(string identifier)
@@ -294,7 +300,7 @@ namespace Barotrauma
             }
             foreach (XElement element in mainElement.Elements())
             {
-                if (element.Name.ToString().Equals("nojob", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (!element.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (element.IsOverride())
                 {
                     var job = new JobPrefab(element.FirstElement(), file.Path)
@@ -312,8 +318,31 @@ namespace Barotrauma
                     Prefabs.Add(job, false);
                 }
             }
-            NoJobElement = NoJobElement ?? mainElement.Element("NoJob");
-            NoJobElement = NoJobElement ?? mainElement.Element("nojob");
+            NoJobElement ??= mainElement.GetChildElement("nojob");
+            var itemRepairPrioritiesElement = mainElement.GetChildElement("ItemRepairPriorities");
+            if (itemRepairPrioritiesElement != null)
+            {
+                foreach (var subElement in itemRepairPrioritiesElement.Elements())
+                {
+                    string tag = subElement.GetAttributeString("tag", null);
+                    if (tag != null)
+                    {
+                        float priority = subElement.GetAttributeFloat("priority", -1f);
+                        if (priority >= 0)
+                        {
+                            _itemRepairPriorities.TryAdd(tag, priority);
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"The 'priority' attribute is missing from the the item repair priorities definition in {subElement} of {file.Path}.");
+                        }
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"The 'tag' attribute is missing from the the item repair priorities definition in {subElement} of {file.Path}.");
+                    }
+                }
+            }
         }
 
         public static void RemoveByFile(string filePath)

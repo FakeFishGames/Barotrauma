@@ -629,9 +629,9 @@ namespace Barotrauma
                         PowerConsumptionTimer = message.ReadSingle()
                     };
                 }
-                else if (BallastFlora != null)
+                else
                 {
-                    BallastFlora.ClientRead(message, header);
+                    BallastFlora?.ClientRead(message, header);
                 }
                 return;
             }

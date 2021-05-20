@@ -111,7 +111,7 @@ namespace Barotrauma.Items.Components
             Tuple<Vector2, Vector2> tracerPoints = new Tuple<Vector2, Vector2>(startLocation, endLocation);
             foreach (ParticleEmitter emitter in particleEmitters)
             {
-                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation, colorMultiplier: emitter.Prefab.ColorMultiplier, tracerPoints: tracerPoints);
+                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier, tracerPoints: tracerPoints);
             }
         }
 

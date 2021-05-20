@@ -400,7 +400,7 @@ namespace Barotrauma
                     spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
                 }
                 var pet = Character.Create(speciesName, spawnPos, seed);
-                var petBehavior = (pet.AIController as EnemyAIController)?.PetBehavior;
+                var petBehavior = (pet?.AIController as EnemyAIController)?.PetBehavior;
                 if (petBehavior != null)
                 {
                     petBehavior.Owner = owner;

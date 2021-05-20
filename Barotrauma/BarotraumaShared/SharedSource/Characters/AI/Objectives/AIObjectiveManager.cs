@@ -614,7 +614,11 @@ namespace Barotrauma
         /// <summary>
         /// Returns all active objectives of the specific type. Creates a new collection -> don't use too frequently.
         /// </summary>
-        public IEnumerable<T> GetActiveObjectives<T>() where T : AIObjective => CurrentObjective?.GetSubObjectivesRecursive(includingSelf: true).Where(so => so is T).Select(so => so as T);
+        public IEnumerable<T> GetActiveObjectives<T>() where T : AIObjective
+        {
+            if (CurrentObjective == null) { return Enumerable.Empty<T>(); }
+            return CurrentObjective.GetSubObjectivesRecursive(includingSelf: true).Where(so => so is T).Select(so => so as T);
+        }
 
         public bool HasActiveObjective<T>() where T : AIObjective => CurrentObjective is T || CurrentObjective != null && CurrentObjective.GetSubObjectivesRecursive().Any(so => so is T);
 

@@ -643,7 +643,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
                 Disconnect();
-                GameMain.MainMenuScreen.Select();
+                GameMain.ServerListScreen.Select();
                 return;
             }
 
@@ -659,10 +659,7 @@ namespace Barotrauma.Networking
             {
                 EndVoteTickBox.Visible = serverSettings.Voting.AllowEndVoting && HasSpawned && !(GameMain.GameSession?.GameMode is CampaignMode);
 
-                if (respawnManager != null)
-                {
-                    respawnManager.Update(deltaTime);
-                }
+                respawnManager?.Update(deltaTime);
 
                 if (updateTimer <= DateTime.Now)
                 {
@@ -935,9 +932,6 @@ namespace Barotrauma.Networking
                             };
                         }
                     }
-                    break;
-                case ServerPacketHeader.RESET_UPGRADES:
-                    campaign?.UpgradeManager.ClientRead(inc);
                     break;
                 case ServerPacketHeader.CREW:
                     campaign?.ClientReadCrew(inc);
@@ -1313,10 +1307,7 @@ namespace Barotrauma.Networking
             Client.ReadPermissions(inc, out permissions, out permittedCommands);
 
             Client targetClient = ConnectedClients.Find(c => c.ID == clientID);
-            if (targetClient != null)
-            {
-                targetClient.SetPermissions(permissions, permittedCommands);
-            }
+            targetClient?.SetPermissions(permissions, permittedCommands);
             if (clientID == myID)
             {
                 SetMyPermissions(permissions, permittedCommands.Select(command => command.names[0]));
@@ -1427,7 +1418,7 @@ namespace Barotrauma.Networking
 
             while (CoroutineManager.IsCoroutineRunning("EndGame"))
             {
-                if (EndCinematic != null) { EndCinematic.Stop(); }
+                EndCinematic?.Stop();
                 yield return CoroutineStatus.Running;
             }
 
@@ -2759,6 +2750,8 @@ namespace Barotrauma.Networking
 
         public void Vote(VoteType voteType, object data)
         {
+            if (clientPeer == null) return;
+
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
             msg.Write((byte)ClientNetObject.VOTE);

@@ -361,6 +361,7 @@ namespace Barotrauma.Lights
 
             void DrawHalo(Character character)
             {
+                if (character == null || character.Removed) { return; }
                 Vector2 haloDrawPos = character.DrawPosition;
                 haloDrawPos.Y = -haloDrawPos.Y;
 
@@ -404,7 +405,7 @@ namespace Barotrauma.Lights
                 }
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.IsHighlighted && !highlightedEntities.Contains(item))
+                    if ((item.IsHighlighted || item.IconStyle != null) && !highlightedEntities.Contains(item))
                     {
                         highlightedEntities.Add(item);
                     }
@@ -425,11 +426,34 @@ namespace Barotrauma.Lights
             {
                 if (highlighted is Item item)
                 {
-                    item.Draw(spriteBatch, false, true);
+                    if (item.IconStyle != null && (item != Character.Controlled.FocusedItem || Character.Controlled.FocusedItem == null))
+                    {
+                        //wait until next pass
+                    }
+                    else
+                    {
+                        item.Draw(spriteBatch, false, true);
+                    }
                 }
                 else if (highlighted is Character character)
                 {
                     character.Draw(spriteBatch, cam);
+                }
+            }
+            spriteBatch.End();
+
+            //draw items with iconstyles in the style's color
+            spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Additive, samplerState: SamplerState.LinearWrap, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
+            foreach (Entity highlighted in highlightedEntities)
+            {
+                if (highlighted is Item item)
+                {
+                    if (item.IconStyle != null && (item != Character.Controlled.FocusedItem || Character.Controlled.FocusedItem == null))
+                    {
+                        SolidColorEffect.Parameters["color"].SetValue(item.IconStyle.Color.ToVector4());
+                        SolidColorEffect.CurrentTechnique.Passes[0].Apply();
+                        item.Draw(spriteBatch, false, true);
+                    }
                 }
             }
             spriteBatch.End();

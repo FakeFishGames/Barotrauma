@@ -1447,7 +1447,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    npc.CharacterHealth.MaxVitality *= humanPrefab.HealthMultiplier;
+                    npc.AddStaticHealthMultiplier(humanPrefab.HealthMultiplier);
                 }
                 humanPrefab.GiveItems(npc, outpost, Rand.RandSync.Server);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))

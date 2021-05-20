@@ -73,7 +73,7 @@ namespace Barotrauma.Items.Components
                 }
                 particleEmitter.Emit(
                     deltaTime, ConvertUnits.ToDisplayUnits(raystart),
-                    item.CurrentHull, particleAngle, particleEmitter.Prefab.CopyEntityAngle ? -particleAngle : 0);
+                    item.CurrentHull, particleAngle, particleEmitter.Prefab.Properties.CopyEntityAngle ? -particleAngle : 0);
             }
         }
 

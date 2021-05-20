@@ -41,9 +41,14 @@ namespace Barotrauma
                     foreach (Item item in npc.Inventory.AllItems)
                     {
                         item.AllowStealing = true;
+                        var wifiComponent = item.GetComponent<Items.Components.WifiComponent>();
+                        if (wifiComponent != null)
+                        {
+                            wifiComponent.TeamID = newTeam;
+                        }
                     }
 #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew });
+                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew, newTeam, npc.Inventory.AllItems.Select(it => it.ID).ToArray() });
 #endif
                 }
             }

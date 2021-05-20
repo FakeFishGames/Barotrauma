@@ -1125,9 +1125,10 @@ namespace Barotrauma
                 if (selectedSlot == null)
                 {
                     if (DraggingItemToWorld &&
-                        Character.Controlled.FocusedItem?.OwnInventory != null &&
-                        (Character.Controlled.FocusedItem.GetComponent<ItemContainer>()?.HasRequiredItems(Character.Controlled, addMessage: false) ?? false) &&
-                        Character.Controlled.FocusedItem.OwnInventory.CanBePut(DraggingItems.FirstOrDefault()))
+                        Character.Controlled.FocusedItem is { OwnInventory: { } inventory } item && item.GetComponent<ItemContainer>() is { } container && 
+                        container.HasRequiredItems(Character.Controlled, addMessage: false) && 
+                        container.AllowDragAndDrop && 
+                        inventory.CanBePut(DraggingItems.FirstOrDefault()))
                     {
                         bool anySuccess = false;
                         foreach (Item it in DraggingItems)

@@ -150,6 +150,8 @@ namespace Barotrauma
         //legacy support
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
+        public readonly string[] HiddenOptions;
+        public readonly string[] AllOptions;
         private readonly Dictionary<string, string> OptionNames;
 
         public readonly Dictionary<string, Sprite> OptionSprites;
@@ -310,6 +312,8 @@ namespace Barotrauma
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
+            HiddenOptions = orderElement.GetAttributeStringArray("hiddenoptions", new string[0]);
+            AllOptions = Options.Concat(HiddenOptions).ToArray();
             var category = orderElement.GetAttributeString("category", null);
             if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);

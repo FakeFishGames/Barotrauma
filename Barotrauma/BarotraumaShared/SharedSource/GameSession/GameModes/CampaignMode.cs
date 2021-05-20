@@ -49,7 +49,7 @@ namespace Barotrauma
         //duration of the camera transition at the end of a round
         protected const float EndTransitionDuration = 5.0f;
         //there can be no events before this time has passed during the 1st campaign round
-        const float FirstRoundEventDelay = 30.0f;
+        const float FirstRoundEventDelay = 0.0f;
 
         public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub }
 
@@ -113,12 +113,15 @@ namespace Barotrauma
         {
             get
             {
-                if (Map.CurrentLocation?.SelectedMission != null)
+                if (Map.CurrentLocation != null)
                 {
-                    if (Map.CurrentLocation.SelectedMission.Locations[0] == Map.CurrentLocation.SelectedMission.Locations[1] ||
-                        Map.CurrentLocation.SelectedMission.Locations.Contains(Map.SelectedLocation))
+                    foreach (Mission mission in map.CurrentLocation.SelectedMissions)
                     {
-                        yield return Map.CurrentLocation.SelectedMission;
+                        if (mission.Locations[0] == mission.Locations[1] ||
+                            mission.Locations.Contains(Map.SelectedLocation))
+                        {
+                            yield return mission;
+                        }
                     }
                 }
                 foreach (Mission mission in extraMissions)
@@ -240,23 +243,24 @@ namespace Barotrauma
             if (levelData.Type == LevelData.LevelType.Outpost)
             {
                 //if there's an available mission that takes place in the outpost, select it
-                var availableMissionsInLocation = currentLocation.AvailableMissions.Where(m => m.Locations[0] == currentLocation && m.Locations[1] == currentLocation);
-                if (availableMissionsInLocation.Any())
+                foreach (var availableMission in currentLocation.AvailableMissions)
                 {
-                    currentLocation.SelectedMission = availableMissionsInLocation.FirstOrDefault();
-                }
-                else
-                {
-                    currentLocation.SelectedMission = null;
+                    if (availableMission.Locations[0] == currentLocation && availableMission.Locations[1] == currentLocation)
+                    {
+                        currentLocation.SelectMission(availableMission);
+                    }
                 }
             }
             else
             {
-                //if we had selected a mission that takes place in the outpost, deselect it when leaving the outpost
-                if (currentLocation.SelectedMission?.Locations[0] == currentLocation &&
-                    currentLocation.SelectedMission?.Locations[1] == currentLocation)
+                foreach (Mission mission in currentLocation.SelectedMissions.ToList())
                 {
-                    currentLocation.SelectedMission = null;
+                    //if we had selected a mission that takes place in the outpost, deselect it when leaving the outpost
+                    if (mission.Locations[0] == currentLocation &&
+                        mission.Locations[1] == currentLocation)
+                    {
+                        currentLocation.DeselectMission(mission);
+                    }
                 }
 
                 if (levelData.HasBeaconStation && !levelData.IsBeaconActive)
@@ -851,11 +855,14 @@ namespace Barotrauma
                     DebugConsole.NewMessage("     " + i + ". " + destination.Name, Color.White);
                 }
             }
-            
-            if (map.CurrentLocation?.SelectedMission != null)
+
+            if (map.CurrentLocation != null)
             {
-                DebugConsole.NewMessage("   Selected mission: " + map.CurrentLocation.SelectedMission.Name, Color.White);
-                DebugConsole.NewMessage("\n" + map.CurrentLocation.SelectedMission.Description, Color.White);
+                foreach (Mission mission in map.CurrentLocation.SelectedMissions)
+                {
+                    DebugConsole.NewMessage("   Selected mission: " + mission.Name, Color.White);
+                    DebugConsole.NewMessage("\n" + mission.Description, Color.White);
+                }
             }
         }
 

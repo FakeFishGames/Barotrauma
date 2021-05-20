@@ -218,12 +218,15 @@ namespace Barotrauma
             };
 
             List<Mission> missionsToDisplay = new List<Mission>(selectedMissions);
-            if (!selectedMissions.Any() && startLocation?.SelectedMission != null) 
-            { 
-                if (startLocation.SelectedMission.Locations[0] == startLocation.SelectedMission.Locations[1] ||
-                    startLocation.SelectedMission.Locations.Contains(campaignMode?.Map.SelectedLocation))
+            if (!selectedMissions.Any() && startLocation != null)
+            {
+                foreach (Mission mission in startLocation.SelectedMissions)
                 {
-                    missionsToDisplay.Add(startLocation.SelectedMission);
+                    if (mission.Locations[0] == mission.Locations[1] ||
+                        mission.Locations.Contains(campaignMode?.Map.SelectedLocation))
+                    {
+                        missionsToDisplay.Add(mission);
+                    }
                 }
             }
 
@@ -284,10 +287,11 @@ namespace Barotrauma
                     new GUIImage(new RectTransform(Vector2.One, missionIcon.RectTransform), displayedMission.Completed ? "MissionCompletedIcon" : "MissionFailedIcon", scaleToFit: true);
                 }
 
-                var missionTextContent = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.8f), missionContentHorizontal.RectTransform))
+                var missionTextContent = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), missionContentHorizontal.RectTransform))
                 {
-                    RelativeSpacing = 0.05f
+                    AbsoluteSpacing = GUI.IntScale(5)
                 };
+                missionContentHorizontal.Recalculate();
                 var missionNameTextBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
                     displayedMission.Name, font: GUI.SubHeadingFont);
                 if (displayedMission.Difficulty.HasValue)
@@ -309,7 +313,7 @@ namespace Barotrauma
                         };
                     }
                 }
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
+                var missionDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
                     missionMessage, wrap: true, parseRichText: true);
                 int reward = displayedMission.GetReward(Submarine.MainSub);
                 if (selectedMissions.Contains(displayedMission) && displayedMission.Completed && reward > 0)
@@ -323,6 +327,13 @@ namespace Barotrauma
                     var spacing = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), missionList.Content.RectTransform) { MaxSize = new Point(int.MaxValue, GUI.IntScale(15)) }, style: null);
                     new GUIFrame(new RectTransform(new Vector2(0.8f, 1.0f), spacing.RectTransform, Anchor.Center) { RelativeOffset = new Vector2(0.1f, 0.0f) }, "HorizontalLine");
                 }
+
+                foreach (GUIComponent child in missionTextContent.Children)
+                {
+                    child.RectTransform.IsFixedSize = true;
+                }
+                missionTextContent.RectTransform.MinSize = new Point(0, missionTextContent.Children.Sum(c => c.Rect.Height + missionTextContent.AbsoluteSpacing));
+                missionContentHorizontal.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Rect.Height / missionTextContent.RectTransform.RelativeSize.Y));
             }
 
             if (!missionsToDisplay.Any())

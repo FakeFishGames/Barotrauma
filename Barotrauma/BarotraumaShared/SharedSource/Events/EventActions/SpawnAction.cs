@@ -15,7 +15,8 @@ namespace Barotrauma
             Outpost,
             MainPath,
             Ruin,
-            Wreck
+            Wreck,
+            BeaconStation
         }
 
         [Serialize("", true, description: "Species name of the character to spawn.")]
@@ -225,6 +226,7 @@ namespace Barotrauma
                     SpawnLocationType.Outpost => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsOutpost),
                     SpawnLocationType.Wreck => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsWreck),
                     SpawnLocationType.Ruin => Item.ItemList.FindAll(it => it.ParentRuin != null),
+                    SpawnLocationType.BeaconStation => Item.ItemList.FindAll(it => it.Submarine != null && it.Submarine.Info.IsBeacon),
                     _ => throw new NotImplementedException()
                 };
 
@@ -250,6 +252,7 @@ namespace Barotrauma
                 SpawnLocationType.Outpost => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.CurrentHull != null && wp.Submarine.Info.IsOutpost),
                 SpawnLocationType.Wreck => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.Submarine.Info.IsWreck),
                 SpawnLocationType.Ruin => WayPoint.WayPointList.FindAll(wp => wp.ParentRuin != null),
+                SpawnLocationType.BeaconStation => WayPoint.WayPointList.FindAll(wp => wp.Submarine != null && wp.Submarine.Info.IsBeacon),
                 _ => throw new NotImplementedException()
             };
 

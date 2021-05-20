@@ -181,27 +181,50 @@ namespace Barotrauma
             }
         }
 
-        public Mission SelectedMission
+        private readonly List<Mission> selectedMissions = new List<Mission>();
+        public IEnumerable<Mission> SelectedMissions
         {
-            get;
-            set;
+            get { return selectedMissions; }
         }
 
-        public int SelectedMissionIndex
+        public void SelectMission(Mission mission)
         {
-            get
+            if (!SelectedMissions.Contains(mission) && mission != null)
             {
-                if (SelectedMission == null) { return -1; }
-                return availableMissions.IndexOf(SelectedMission);
+                selectedMissions.Add(mission);
             }
-            set
+        }
+
+        public void DeselectMission(Mission mission)
+        {
+            selectedMissions.Remove(mission);
+        }
+
+
+        public List<int> GetSelectedMissionIndices()
+        {
+            List<int> selectedMissionIndices = new List<int>();
+            foreach (Mission mission in SelectedMissions)
             {
-                if (value < 0 || value >= AvailableMissions.Count())
+                if (availableMissions.Contains(mission))
                 {
-                    SelectedMission = null;
-                    return;
+                    selectedMissionIndices.Add(availableMissions.IndexOf(mission));
                 }
-                SelectedMission = availableMissions[value];
+            }
+            return selectedMissionIndices;
+        }
+
+        public void SetSelectedMissionIndices(IEnumerable<int> missionIndices)
+        {
+            selectedMissions.Clear();
+            foreach (int missionIndex in missionIndices)
+            {
+                if (missionIndex < 0 || missionIndex >= availableMissions.Count)
+                {
+                    DebugConsole.ThrowError($"Failed to select a mission in location \"{Name}\". Mission index out of bounds ({missionIndex}, available missions: {availableMissions.Count})");
+                    break;
+                }
+                selectedMissions.Add(availableMissions[missionIndex]);
             }
         }
 
@@ -415,6 +438,12 @@ namespace Barotrauma
         {
             if (newType == Type) { return; }
 
+            if (newType == null)
+            {
+                DebugConsole.ThrowError($"Failed to change the type of the location \"{Name}\" to null.\n" + Environment.StackTrace.CleanupStackTrace());
+                return;
+            }
+
             DebugConsole.Log("Location " + baseName + " changed it's type from " + Type + " to " + newType);
 
             Type = newType;
@@ -573,6 +602,7 @@ namespace Barotrauma
         public void InstantiateLoadedMissions(Map map)
         {
             availableMissions.Clear();
+            selectedMissions.Clear();
             if (loadedMissions != null && loadedMissions.Any()) 
             { 
                 foreach (LoadedMission loadedMission in loadedMissions)
@@ -588,7 +618,7 @@ namespace Barotrauma
                     }
                     var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
                     availableMissions.Add(mission);
-                    if (loadedMission.SelectedMission) { SelectedMission = mission; }
+                    if (loadedMission.SelectedMission) { selectedMissions.Add(mission); }
                 }
                 loadedMissions = null;
             }
@@ -612,7 +642,7 @@ namespace Barotrauma
         public void ClearMissions()
         {
             availableMissions.Clear();
-            SelectedMissionIndex = -1;
+            selectedMissions.Clear();
         }
 
         public bool HasOutpost()
@@ -1180,7 +1210,7 @@ namespace Barotrauma
                     missionsElement.Add(new XElement("mission",
                         new XAttribute("prefabid", mission.Prefab.Identifier),
                         new XAttribute("destinationindex", i),
-                        new XAttribute("selected", mission == SelectedMission)));
+                        new XAttribute("selected", selectedMissions.Contains(mission))));
                 }
                 locationElement.Add(missionsElement);
             }

@@ -124,7 +124,7 @@ namespace Barotrauma
                                     npc.CampaignInteractionType = CampaignMode.InteractionType.Examine;
 #if CLIENT
                                     npc.SetCustomInteract(
-                                        Trigger,
+                                        (speaker, player) => { if (e1 == speaker) { Trigger(speaker, player); } else { Trigger(player, speaker); } },
                                         TextManager.GetWithVariable("CampaignInteraction.Examine", "[key]", GameMain.Config.KeyBindText(InputType.Use)));
 #else
                                     npc.SetCustomInteract( 

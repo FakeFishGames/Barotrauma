@@ -77,6 +77,7 @@ namespace Barotrauma
 
         private static Vector2 lastPickedPosition;
         private static float lastPickedFraction;
+        private static Fixture lastPickedFixture;
         private static Vector2 lastPickedNormal;
 
         private Vector2 prevPosition;
@@ -97,6 +98,11 @@ namespace Barotrauma
         public static float LastPickedFraction
         {
             get { return lastPickedFraction; }
+        }
+
+        public static Fixture LastPickedFixture
+        {
+            get { return lastPickedFixture; }
         }
 
         public static Vector2 LastPickedNormal
@@ -669,6 +675,7 @@ namespace Barotrauma
 
             float closestFraction = 1.0f;
             Vector2 closestNormal = Vector2.Zero;
+            Fixture closestFixture = null;
             Body closestBody = null;
             if (allowInsideFixture)
             {
@@ -682,13 +689,15 @@ namespace Barotrauma
 
                     closestFraction = 0.0f;
                     closestNormal = Vector2.Normalize(rayEnd - rayStart);
-                    if (fixture.Body != null) closestBody = fixture.Body;
+                    closestFixture = fixture;
+                    if (fixture.Body != null) { closestBody = fixture.Body; }
                     return false;
                 }, ref aabb);
                 if (closestFraction <= 0.0f)
                 {
                     lastPickedPosition = rayStart;
                     lastPickedFraction = closestFraction;
+                    lastPickedFixture = closestFixture;
                     lastPickedNormal = closestNormal;
                     return closestBody;
                 }
@@ -702,6 +711,7 @@ namespace Barotrauma
                 {
                     closestFraction = fraction;
                     closestNormal = normal;
+                    closestFixture = fixture;
                     if (fixture.Body != null) closestBody = fixture.Body;
                 }
                 return fraction;
@@ -709,6 +719,7 @@ namespace Barotrauma
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
+            lastPickedFixture = closestFixture;
             lastPickedNormal = closestNormal;
 
             return closestBody;
@@ -752,6 +763,7 @@ namespace Barotrauma
                     lastPickedPosition = rayStart + (rayEnd - rayStart) * fraction;
                     lastPickedFraction = fraction;
                     lastPickedNormal = normal;
+                    lastPickedFixture = fixture;
                 }
                 //continue
                 return -1;
@@ -772,6 +784,7 @@ namespace Barotrauma
                     lastPickedPosition = rayStart;
                     lastPickedFraction = 0.0f;
                     lastPickedNormal = Vector2.Normalize(rayEnd - rayStart);
+                    lastPickedFixture = fixture;
                     bodies.Add(fixture.Body);
                     bodyDist[fixture.Body] = 0.0f;
                     return false;
@@ -828,6 +841,7 @@ namespace Barotrauma
         {
             Body closestBody = null;
             float closestFraction = 1.0f;
+            Fixture closestFixture = null;
             Vector2 closestNormal = Vector2.Zero;
 
             if (Vector2.DistanceSquared(rayStart, rayEnd) < 0.01f)
@@ -847,6 +861,8 @@ namespace Barotrauma
                 if (ignoreSubs && fixture.Body.UserData is Submarine) { return -1; }
                 if (ignoreBranches && fixture.Body.UserData is VineTile) { return -1; }
                 if (fixture.Body.UserData as string == "ruinroom") { return -1; }
+                //the hulls have solid fixtures in the submarine's world space collider, ignore them
+                if (fixture.UserData is Hull) { return -1; }
                 if (fixture.Body.UserData is Structure structure)
                 {
                     if (structure.IsPlatform || structure.StairDirection != Direction.None) { return -1; }
@@ -861,6 +877,7 @@ namespace Barotrauma
                 {
                     closestBody = fixture.Body;
                     closestFraction = fraction;
+                    closestFixture = fixture;
                     closestNormal = normal;
                 }
                 return closestFraction;
@@ -870,6 +887,7 @@ namespace Barotrauma
 
             lastPickedPosition = rayStart + (rayEnd - rayStart) * closestFraction;
             lastPickedFraction = closestFraction;
+            lastPickedFixture = closestFixture;
             lastPickedNormal = closestNormal;
             return closestBody;
         }
@@ -944,19 +962,23 @@ namespace Barotrauma
                 mapEntity.Move(HiddenSubPosition);
             }
 
-            foreach (Item item in Item.ItemList)
+            for (int i = 0; i < 2; i++)
             {
-                if (bodyItems.Contains(item))
+                foreach (Item item in Item.ItemList)
                 {
-                    item.Submarine = this;
-                    if (Position == Vector2.Zero) item.Move(-HiddenSubPosition);
+                    //two passes: flip docking ports on the 2nd pass because the doors need to be correctly flipped for the port's orientation to be determined correctly
+                    if ((item.GetComponent<DockingPort>() != null) == (i == 0)) { continue; }
+                    if (bodyItems.Contains(item))
+                    {
+                        item.Submarine = this;
+                        if (Position == Vector2.Zero) { item.Move(-HiddenSubPosition); }
+                    }
+                    else if (item.Submarine != this)
+                    {
+                        continue;
+                    }
+                    item.FlipX(true);
                 }
-                else if (item.Submarine != this)
-                {
-                    continue;
-                }
-
-                item.FlipX(true);
             }
 
             Item.UpdateHulls();

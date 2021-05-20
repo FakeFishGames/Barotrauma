@@ -15,7 +15,7 @@ namespace Barotrauma
         private readonly Dictionary<Item, UInt16> parentInventoryIDs = new Dictionary<Item, UInt16>();
         private readonly Dictionary<Item, byte> parentItemContainerIndices = new Dictionary<Item, byte>();
 
-        private int requiredDeliveryAmount;
+        private float requiredDeliveryAmount;
 
         private readonly List<(XElement element, ItemContainer container)> itemsToSpawn = new List<(XElement element, ItemContainer container)>();
         private int? rewardPerCrate;
@@ -29,7 +29,7 @@ namespace Barotrauma
         {
             this.sub = sub;
             itemConfig = prefab.ConfigElement.Element("Items");
-            requiredDeliveryAmount = prefab.ConfigElement.GetAttributeInt("requireddeliveryamount", 0);
+            requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.9f), 1.0f);            
             DetermineCargo();
         }
 
@@ -123,12 +123,7 @@ namespace Barotrauma
                 LoadItemAsChild(element, container?.Item);
             }
 
-            if (requiredDeliveryAmount == 0) { requiredDeliveryAmount = items.Count; }
-            if (requiredDeliveryAmount > items.Count)
-            {
-                DebugConsole.AddWarning($"Error in mission \"{Prefab.Identifier}\". Required delivery amount is {requiredDeliveryAmount} but there's only {items.Count} items to deliver.");
-                requiredDeliveryAmount = items.Count;
-            }
+            if (requiredDeliveryAmount <= 0.0f) { requiredDeliveryAmount = 1.0f; }
         }
 
         private ItemPrefab FindItemPrefab(XElement element)
@@ -220,7 +215,7 @@ namespace Barotrauma
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
                 int deliveredItemCount = items.Count(i => i.CurrentHull != null && !i.Removed && i.Condition > 0.0f);
-                if (deliveredItemCount >= requiredDeliveryAmount)
+                if (deliveredItemCount / (float)items.Count >= requiredDeliveryAmount)
                 {
                     GiveReward();
                     completed = true;

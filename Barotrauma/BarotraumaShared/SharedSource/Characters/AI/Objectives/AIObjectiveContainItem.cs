@@ -91,7 +91,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
+            if (container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI())
             {
                 Abandon = true;
                 return;
@@ -146,7 +146,10 @@ namespace Barotrauma
                     {
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
-                        AbortCondition = obj => !ItemToContain.IsOwnedBy(character),
+                        AbortCondition = obj =>
+                            container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI() ||
+                            ItemToContain == null || ItemToContain.Removed ||
+                            !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
                         SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()
                     },
                     onAbandon: () => Abandon = true,

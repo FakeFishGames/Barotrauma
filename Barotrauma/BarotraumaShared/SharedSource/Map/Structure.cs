@@ -353,10 +353,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            if (convexHulls!=null)
-            {
-                convexHulls.ForEach(x => x.Move(amount));
-            }
+            convexHulls?.ForEach(x => x.Move(amount));
 #endif
         }
 

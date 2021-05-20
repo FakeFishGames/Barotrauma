@@ -38,6 +38,10 @@ namespace Barotrauma
         /// Effects applied to entities that are inside the trigger
         /// </summary>
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
+        public IEnumerable<StatusEffect> StatusEffects
+        {
+            get { return statusEffects; }
+        }
 
         /// <summary>
         /// Attacks applied to entities that are inside the trigger
@@ -205,7 +209,7 @@ namespace Barotrauma
                 PhysicsBody = new PhysicsBody(element, scale)
                 {
                     CollisionCategories = Physics.CollisionLevel,
-                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall
+                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall,
                 };
                 PhysicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
                 PhysicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
@@ -523,6 +527,7 @@ namespace Barotrauma
             {
                 foreach (StatusEffect effect in statusEffects)
                 {
+                    if (effect.type == ActionType.OnBroken) { continue; }
                     Vector2? position = null;
                     if (effect.HasTargetType(StatusEffect.TargetType.This)) { position = WorldPosition; }
                     if (triggerer is Character character)

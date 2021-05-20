@@ -242,7 +242,7 @@ namespace Barotrauma.Items.Components
             optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
             tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
             allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
-            
+
             optimalTemperature = Vector2.Lerp(new Vector2(40.0f, 60.0f), new Vector2(30.0f, 70.0f), degreeOfSuccess);
             allowedTemperature = Vector2.Lerp(new Vector2(30.0f, 70.0f), new Vector2(10.0f, 90.0f), degreeOfSuccess);
             
@@ -312,6 +312,33 @@ namespace Barotrauma.Items.Components
                         currentLoad = Math.Max(currentLoad, pt.PowerLoad - externalPower);
                     }
                 }
+            }
+
+            if (!loadQueue.Any() && PowerOn)
+            {
+                //loadQueue is empty, round must've just started
+                //reset the fission rate, turbine output and
+                //temperature to optimal levels to prevent fires
+                //at the start of the round
+                correctTurbineOutput = currentLoad / MaxPowerOutput * 100.0f;
+                tolerance = MathHelper.Lerp(2.5f, 10.0f, degreeOfSuccess);
+                optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+                tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
+                allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
+
+                float desiredTurbineOutput = MathHelper.Clamp(correctTurbineOutput, 0.0f, 100.0f);
+                DebugConsole.Log($"Turbine output reset: {targetTurbineOutput}, {turbineOutput} -> {desiredTurbineOutput}");
+                targetTurbineOutput = desiredTurbineOutput;
+                turbineOutput = desiredTurbineOutput;
+
+                float desiredFissionRate = (optimalFissionRate.X + optimalFissionRate.Y) / 2.0f;
+                DebugConsole.Log($"Fission rate reset: {targetFissionRate}, {fissionRate} -> {desiredFissionRate}");
+                targetFissionRate = desiredFissionRate;
+                fissionRate = desiredFissionRate;
+
+                float desiredTemperature = (optimalTemperature.X + optimalTemperature.Y) / 2.0f;
+                DebugConsole.Log($"Temperature reset: {temperature} -> {desiredTemperature}");
+                temperature = desiredTemperature;
             }
 
             loadQueue.Enqueue(currentLoad);
@@ -619,6 +646,18 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
+                        if (Item.ConditionPercentage <= 0 && AIObjectiveRepairItems.IsValidTarget(Item, character))
+                        {
+                            if (Item.Repairables.Average(r => r.DegreeOfSuccess(character)) > 0.4f)
+                            {
+                                objective.AddSubObjective(new AIObjectiveRepairItem(character, Item, objective.objectiveManager, isPriority: true));
+                                return false;
+                            }
+                            else
+                            {
+                                character.Speak(TextManager.Get("DialogReactorIsBroken"), identifier: "reactorisbroken", minDurationBetweenSimilar: 30.0f);
+                            }
+                        }
                         if (TooMuchFuel())
                         {
                             DropFuel(minCondition: 0.1f, maxCondition: 100);

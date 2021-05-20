@@ -121,11 +121,12 @@ namespace Barotrauma
 
         public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
         {
-            npc.CharacterHealth.MaxVitality *= HealthMultiplier;
+            npc.AddStaticHealthMultiplier(HealthMultiplier);
             if (GameMain.NetworkMember != null)
             {
-                npc.CharacterHealth.MaxVitality *= HealthMultiplierInMultiplayer;
+                npc.AddStaticHealthMultiplier(HealthMultiplierInMultiplayer);
             }
+
             var humanAI = npc.AIController as HumanAIController;
             if (humanAI != null)
             {
@@ -227,10 +228,7 @@ namespace Barotrauma
                 }
 
                 IdCard idCardComponent = item.GetComponent<IdCard>();
-                if (idCardComponent != null)
-                {
-                    idCardComponent.Initialize(character.Info);
-                }
+                idCardComponent?.Initialize(character.Info);
 
                 var idCardTags = itemElement.GetAttributeStringArray("tags", new string[0]);
                 foreach (string tag in idCardTags)
@@ -243,10 +241,7 @@ namespace Barotrauma
             {
                 wifiComponent.TeamID = character.TeamID;
             }
-            if (parentItem != null)
-            {
-                parentItem.Combine(item, user: null);
-            }
+            parentItem?.Combine(item, user: null);
             foreach (XElement childItemElement in itemElement.Elements())
             {
                 InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);

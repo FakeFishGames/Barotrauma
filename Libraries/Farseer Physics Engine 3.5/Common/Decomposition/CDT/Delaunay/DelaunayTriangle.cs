@@ -211,10 +211,7 @@ namespace FarseerPhysics.Common.Decomposition.CDT.Delaunay
             for (int i = 0; i < 3; i++)
             {
                 t = Neighbors[i];
-                if (t != null)
-                {
-                    t.ClearNeighbor(this);
-                }
+                t?.ClearNeighbor(this);
             }
             ClearNeighbors();
             Points[0] = Points[1] = Points[2] = null;

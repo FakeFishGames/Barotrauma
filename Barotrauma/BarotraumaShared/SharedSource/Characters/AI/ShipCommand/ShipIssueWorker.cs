@@ -113,7 +113,7 @@ namespace Barotrauma
             if (CurrentOrder != null && OrderedCharacter.GetCurrentOrderWithTopPriority()?.Order != CurrentOrder)
             {
 #if DEBUG
-                DebugConsole.NewMessage($"Order {CurrentOrder.Name} did not match current order for character {OrderedCharacter} in {this}");
+                ShipCommandManager.ShipCommandLog($"Order {CurrentOrder.Name} did not match current order for character {OrderedCharacter} in {this}");
 #endif
                 return false;
             }
@@ -121,7 +121,7 @@ namespace Barotrauma
             if (!shipCommandManager.AbleToTakeOrder(OrderedCharacter))
             {
 #if DEBUG
-                DebugConsole.NewMessage(OrderedCharacter + " was unable to perform assigned order in " + this);
+                ShipCommandManager.ShipCommandLog(OrderedCharacter + " was unable to perform assigned order in " + this);
 #endif
                 return false;
             }

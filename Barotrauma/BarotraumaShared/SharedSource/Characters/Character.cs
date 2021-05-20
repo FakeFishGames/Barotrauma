@@ -1524,6 +1524,16 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Can be used to modify a character's health for runtime session. Change with AddHealthMultiplier
+        /// </summary>
+        public float StaticHealthMultiplier { get; private set; } = 1;
+
+        public void AddStaticHealthMultiplier(float newMultiplier)
+        {
+            StaticHealthMultiplier *= newMultiplier;
+        }
+
+        /// <summary>
         /// Speed reduction from the current limb specific damage. Min 0, max 1.
         /// </summary>
         public float GetTemporarySpeedReduction()
@@ -1916,19 +1926,19 @@ namespace Barotrauma
             return AnimController.GetLimb(LimbType.Head) ?? AnimController.GetLimb(LimbType.Torso) ?? AnimController.MainLimb;
         }
 
-        public bool CanSeeTarget(ISpatialEntity target, Limb seeingLimb = null)
+        public bool CanSeeTarget(ISpatialEntity target, ISpatialEntity seeingEntity = null)
         {
-            seeingLimb ??= GetSeeingLimb();
-            if (seeingLimb == null) { return false; }
-            ISpatialEntity seeingEntity = AnimController.SimplePhysicsEnabled ? this : seeingLimb as ISpatialEntity;
+            seeingEntity ??= AnimController.SimplePhysicsEnabled ? this as ISpatialEntity : GetSeeingLimb() as ISpatialEntity;
+            if (seeingEntity == null) { return false; }
+            ISpatialEntity sourceEntity = seeingEntity ;
             // TODO: Could we just use the method below? If not, let's refactor it so that we can.
-            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - seeingEntity.WorldPosition);
+            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceEntity.WorldPosition);
             Body closestBody;
             //both inside the same sub (or both outside)
             //OR the we're inside, the other character outside
             if (target.Submarine == Submarine || target.Submarine == null)
             {
-                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
+                closestBody = Submarine.CheckVisibility(sourceEntity.SimPosition, sourceEntity.SimPosition + diff);
             }
             //we're outside, the other character inside
             else if (Submarine == null)
@@ -1938,7 +1948,7 @@ namespace Barotrauma
             //both inside different subs
             else
             {
-                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
+                closestBody = Submarine.CheckVisibility(sourceEntity.SimPosition, sourceEntity.SimPosition + diff);
                 if (!IsBlocking(closestBody))
                 {
                     closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
@@ -1964,29 +1974,6 @@ namespace Barotrauma
                 }
                 return false;
             }
-        }
-
-        /// <summary>
-        /// TODO: ensure that works. CheckVisibility takes positions in sim space, but this method uses world positions
-        /// </summary>
-        public bool CanSeeCharacter(Character target, Vector2 sourceWorldPos)
-        {
-            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceWorldPos);
-            Body closestBody;
-            if (target.Submarine == null)
-            {
-                closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
-                if (closestBody == null) { return true; }
-            }
-            else
-            {
-                closestBody = Submarine.CheckVisibility(target.WorldPosition, target.WorldPosition - diff);
-                if (closestBody == null) { return true; }
-            }
-            Structure wall = closestBody.UserData as Structure;
-            Item item = closestBody.UserData as Item;
-            Door door = item?.GetComponent<Door>();
-            return (wall == null || !wall.CastShadow) && (door == null || door.CanBeTraversed);
         }
 
         /// <summary>
@@ -2233,7 +2220,10 @@ namespace Barotrauma
             Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
 
             // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
-            Vector2 playerDistanceCheckPosition = Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
+            Vector2 playerDistanceCheckPosition =
+                lowerBodyPosition.Y < upperBodyPosition.Y ?
+                Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition) :
+                Vector2.Clamp(itemDisplayRect.Center.ToVector2(), upperBodyPosition, lowerBodyPosition);
 
             // If playerDistanceCheckPosition is inside the itemDisplayRect then we consider the character to within 0 distance of the item
             if (itemDisplayRect.Contains(playerDistanceCheckPosition))
@@ -2271,7 +2261,7 @@ namespace Barotrauma
                     itemPosition -= Submarine.SimPosition;
                 }
                 var body = Submarine.CheckVisibility(SimPosition, itemPosition, ignoreLevel: true);
-                if (body != null && body.UserData as Item != item) { return false; }
+                if (body != null && body.UserData as Item != item && Submarine.LastPickedFixture?.UserData as Item != item) { return false; }
             }
 
             return true;
@@ -3657,7 +3647,11 @@ namespace Barotrauma
                 // OnDamaged is called only for the limb that is hit.
                 AnimController.Limbs.ForEach(l => l.ApplyStatusEffects(actionType, deltaTime));
             }
-            CharacterHealth.ApplyAfflictionStatusEffects(actionType);
+            //OnActive effects are handled by the afflictions themselves
+            if (actionType != ActionType.OnActive)
+            {
+                CharacterHealth.ApplyAfflictionStatusEffects(actionType);
+            }
         }
 
         private void Implode(bool isNetworkMessage = false)
@@ -3801,10 +3795,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (aiTarget != null)
-            {
-                aiTarget.Remove();
-            }
+            aiTarget?.Remove();
 
             aiTarget = new AITarget(this);
             CharacterHealth.RemoveAllAfflictions();

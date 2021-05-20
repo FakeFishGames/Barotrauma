@@ -51,9 +51,18 @@ namespace Barotrauma
             CreateUI(container);
 
             campaign.Map.OnLocationSelected += SelectLocation;
-            campaign.Map.OnMissionSelected += (connection, mission) => 
+            campaign.Map.OnMissionsSelected += (connection, missions) => 
             {
-                missionList?.Select(mission);
+                if (missionList?.Content != null)
+                {
+                    foreach (GUIComponent missionElement in missionList.Content.Children)
+                    {
+                        if (missionElement.FindChild(c => c is GUITickBox, recursive: true) is GUITickBox tickBox) 
+                        { 
+                            tickBox.Selected = missions.Contains(tickBox.UserData as Mission); 
+                        }
+                    }
+                }
             };
         }
 
@@ -436,6 +445,16 @@ namespace Barotrauma
             {
                 Spacing = (int)(5 * GUI.yScale)
             };
+            missionList.OnSelected = (GUIComponent selected, object userdata) =>
+            {
+                var tickBox = selected.FindChild(c => c is GUITickBox, recursive: true) as GUITickBox;
+                if (GUI.MouseOn == tickBox) { return false; }
+                if (tickBox != null)
+                {
+                    tickBox.Selected = !tickBox.Selected;
+                }
+                return true;
+            };
 
             SelectedLevel = connection?.LevelData;
             Location currentDisplayLocation = Campaign.GetCurrentDisplayLocation();
@@ -443,9 +462,6 @@ namespace Barotrauma
             {
                 List<Mission> availableMissions = currentDisplayLocation.GetMissionsInConnection(connection).ToList();
                 if (!availableMissions.Contains(null)) { availableMissions.Insert(0, null); }
-
-                Mission selectedMission = currentDisplayLocation.SelectedMission != null && availableMissions.Contains(currentDisplayLocation.SelectedMission) ?
-                    currentDisplayLocation.SelectedMission : null;
 
                 missionList.Content.ClearChildren();
 
@@ -458,52 +474,73 @@ namespace Barotrauma
                     var missionTextContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), missionPanel.RectTransform, Anchor.Center))
                     {
                         Stretch = true,
-                        CanBeFocused = true
+                        CanBeFocused = true,
+                        AbsoluteSpacing = GUI.IntScale(5)
                     };
 
                     var missionName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission?.Name ?? TextManager.Get("NoMission"), font: GUI.SubHeadingFont, wrap: true);
+                   // missionName.RectTransform.MinSize = new Point(0, (int)(missionName.Rect.Height * 1.5f));
                     if (mission != null)
-                    {
-                        if (MapGenerationParams.Instance?.MissionIcon != null)
+                    {                    
+                        var tickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.X, 0) }, label: string.Empty)
                         {
-                            var icon = new GUIImage(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.X, 0) },
-                                MapGenerationParams.Instance.MissionIcon, scaleToFit: true)
+                            UserData = mission,
+                            Selected = Campaign.Map.CurrentLocation?.SelectedMissions.Contains(mission) ?? false
+                        };
+                        tickBox.RectTransform.MinSize = new Point(tickBox.Rect.Height, 0);
+                        tickBox.RectTransform.IsFixedSize = true;
+                        if (Campaign.AllowedToManageCampaign())
+                        {
+                            tickBox.OnSelected += (GUITickBox tb) =>
                             {
-                                Color = MapGenerationParams.Instance.IndicatorColor * 0.5f,
-                                SelectedColor = MapGenerationParams.Instance.IndicatorColor,
-                                HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f)
-                            };
-                            icon.RectTransform.IsFixedSize = true;
-
-                            GUILayoutGroup difficultyIndicatorGroup = null;
-                            if (mission.Difficulty.HasValue)
-                            {
-                                difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.Z, 0) },
-                                    isHorizontal: true, childAnchor: Anchor.CenterRight)
+                                if (tb.Selected)
                                 {
-                                    AbsoluteSpacing = 1,
-                                    UserData = "difficulty"
-                                };
-                                var difficultyColor = mission.GetDifficultyColor();
-                                for (int i = 0; i < mission.Difficulty; i++)
-                                {
-                                    new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest) { IsFixedSize = true }, "DifficultyIndicator", scaleToFit: true)
-                                    {
-                                        Color = difficultyColor * 0.5f,
-                                        SelectedColor = difficultyColor,
-                                        HoverColor = Color.Lerp(difficultyColor, Color.White, 0.5f)
-                                    };
+                                    Campaign.Map.CurrentLocation.SelectMission(mission);
                                 }
-                            }
-                            
-                            float extraPadding = 0.5f * icon.Rect.Width;
-                            float extraZPadding = difficultyIndicatorGroup != null ? mission.Difficulty.Value * (difficultyIndicatorGroup.Children.First().Rect.Width + difficultyIndicatorGroup.AbsoluteSpacing) : 0;
-                            missionName.Padding = new Vector4(missionName.Padding.X + icon.Rect.Width + extraPadding,
-                                missionName.Padding.Y,
-                                missionName.Padding.Z + extraZPadding + extraPadding,
-                                missionName.Padding.W);
-                            missionName.CalculateHeightFromText();
+                                else
+                                {
+                                    Campaign.Map.CurrentLocation.DeselectMission(mission);
+                                }
+                                if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
+                                    Campaign.AllowedToManageCampaign())
+                                {
+                                    GameMain.Client?.SendCampaignState();
+                                }
+                                return true;
+                            };
                         }
+
+                        GUILayoutGroup difficultyIndicatorGroup = null;
+                        if (mission.Difficulty.HasValue)
+                        {
+                            difficultyIndicatorGroup = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterRight, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.Z, 0) },
+                                isHorizontal: true, childAnchor: Anchor.CenterRight)
+                            {
+                                AbsoluteSpacing = 1,
+                                UserData = "difficulty"
+                            };
+                            var difficultyColor = mission.GetDifficultyColor();
+                            for (int i = 0; i < mission.Difficulty; i++)
+                            {
+                                new GUIImage(new RectTransform(Vector2.One, difficultyIndicatorGroup.RectTransform, scaleBasis: ScaleBasis.Smallest) { IsFixedSize = true }, "DifficultyIndicator", scaleToFit: true)
+                                {
+                                    Color = difficultyColor,
+                                    SelectedColor = difficultyColor,
+                                    HoverColor = difficultyColor
+                                };
+                            }
+                        }
+
+                        float extraPadding = 0;// 0.8f * tickBox.Rect.Width;
+                        float extraZPadding = difficultyIndicatorGroup != null ? mission.Difficulty.Value * (difficultyIndicatorGroup.Children.First().Rect.Width + difficultyIndicatorGroup.AbsoluteSpacing) : 0;
+                        missionName.Padding = new Vector4(missionName.Padding.X + tickBox.Rect.Width * 1.2f + extraPadding,
+                            missionName.Padding.Y,
+                            missionName.Padding.Z + extraZPadding + extraPadding,
+                            missionName.Padding.W);
+                        missionName.CalculateHeightFromText();
+
+                        //spacing
+                        new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform) { MinSize = new Point(0, GUI.IntScale(10)) }, style: null);
 
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(Submarine.MainSub), wrap: true, parseRichText: true);
 
@@ -512,14 +549,14 @@ namespace Barotrauma
 
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.Description, wrap: true, parseRichText: true);
                     }
-                    missionPanel.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Children.Sum(c => c.Rect.Height) / missionTextContent.RectTransform.RelativeSize.Y) + GUI.IntScale(20));
+                    missionPanel.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Children.Sum(c => c.Rect.Height + missionTextContent.AbsoluteSpacing) / missionTextContent.RectTransform.RelativeSize.Y) + GUI.IntScale(0));
                     foreach (GUIComponent child in missionTextContent.Children)
                     {
-                        var textBlock = child as GUITextBlock;
-                        textBlock.Color = textBlock.SelectedColor = textBlock.HoverColor = Color.Transparent;
-                        textBlock.SelectedTextColor = textBlock.TextColor;
-                        textBlock.TextColor *= 0.5f;
-                        textBlock.HoverTextColor = textBlock.TextColor;
+                        if (child is GUITextBlock textBlock)
+                        {
+                            textBlock.Color = textBlock.SelectedColor = textBlock.HoverColor = Color.Transparent;
+                            textBlock.SelectedTextColor = textBlock.HoverTextColor = textBlock.TextColor;
+                        }
                     }
                     missionPanel.OnAddedToGUIUpdateList = (c) =>
                     {
@@ -538,27 +575,9 @@ namespace Barotrauma
                         };
                     }
                 }
-                missionList.Select(selectedMission);
                 if (prevSelectedLocation == selectedLocation)
                 {
                     missionList.BarScroll = prevMissionListScroll;
-                }
-
-                if (Campaign.AllowedToManageCampaign())
-                {
-                    missionList.OnSelected = (component, userdata) =>
-                    {
-                        Mission mission = userdata as Mission;
-                        if (Campaign.Map.CurrentLocation.SelectedMission == mission) { return false; }
-                        Campaign.Map.CurrentLocation.SelectedMission = mission;
-                        //RefreshMissionInfo(mission);
-                        if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
-                            Campaign.AllowedToManageCampaign())
-                        {
-                            GameMain.Client?.SendCampaignState();
-                        }
-                        return true;
-                    };
                 }
             }
 
@@ -567,7 +586,8 @@ namespace Barotrauma
             {
                 OnClicked = (GUIButton btn, object obj) =>
                 {
-                    if (missionList.Content.Children.Any(c => c.UserData is Mission) && !(missionList.SelectedData is Mission))
+                    if (missionList.Content.FindChild(c => c is GUITickBox tickBox && tickBox.Selected, recursive: true) == null &&
+                        missionList.Content.Children.Any(c => c.UserData is Mission))
                     {
                         var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
                         noMissionVerification.Buttons[0].OnClicked = (btn, userdata) =>

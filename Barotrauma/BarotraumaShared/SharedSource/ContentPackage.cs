@@ -194,13 +194,13 @@ namespace Barotrauma
                 isCorePackage = value;
                 if (isCorePackage && regularPackages.Contains(this))
                 {
-                    corePackages.Add(this);
-                    regularPackages.Remove(this);
+                    corePackages.AddOnMainThread(this);
+                    regularPackages.RemoveOnMainThread(this);
                 }
                 else if (!isCorePackage && corePackages.Contains(this))
                 {
-                    regularPackages.Add(this);
-                    corePackages.Remove(this);
+                    regularPackages.AddOnMainThread(this);
+                    corePackages.RemoveOnMainThread(this);
                 }
             }
         }
@@ -411,6 +411,7 @@ namespace Barotrauma
                     case ContentType.Submarine:
                     case ContentType.Wreck:
                     case ContentType.BeaconStation:
+                    case ContentType.EnemySubmarine:
                         break;
                     default:
                         try
@@ -528,7 +529,7 @@ namespace Barotrauma
                         {
                             refreshFiles = true;
                         }
-                        corePackages.Remove(p);
+                        corePackages.RemoveOnMainThread(p);
                     }
                     else
                     {
@@ -536,16 +537,16 @@ namespace Barotrauma
                         {
                             refreshFiles = true;
                         }
-                        regularPackages.Remove(p);
+                        regularPackages.RemoveOnMainThread(p);
                     }
                 }
                 if (IsCorePackage)
                 {
-                    corePackages.Add(this);
+                    corePackages.AddOnMainThread(this);
                 }
                 else
                 {
-                    regularPackages.Add(this);
+                    regularPackages.AddOnMainThread(this);
                 }
 
                 if (refreshFiles)
@@ -743,18 +744,18 @@ namespace Barotrauma
             }
             if (newPackage.IsCorePackage) 
             { 
-                corePackages.Add(newPackage); 
+                corePackages.AddOnMainThread(newPackage); 
             }
             else 
             { 
-                regularPackages.Add(newPackage); 
+                regularPackages.AddOnMainThread(newPackage); 
             }
         }
 
         public static void RemovePackage(ContentPackage package)
         {
-            if (package.IsCorePackage) { corePackages.Remove(package); }
-            else { regularPackages.Remove(package); }
+            if (package.IsCorePackage) { corePackages.RemoveOnMainThread(package); }
+            else { regularPackages.RemoveOnMainThread(package); }
         }
 
         public static void LoadAll()
@@ -775,9 +776,9 @@ namespace Barotrauma
 
             IEnumerable<string> files = Directory.GetFiles(folder, "*.xml");
 
-            corePackages.Clear();
+            corePackages.ClearOnMainThread();
             var prevRegularPackages = regularPackages.Select(p => p.Name.ToLowerInvariant()).ToList();
-            regularPackages.Clear();
+            regularPackages.ClearOnMainThread();
 
             foreach (string filePath in files)
             {
@@ -815,7 +816,7 @@ namespace Barotrauma
                 .OrderBy(p => order(p))
                 .ThenBy(p => regularPackages.IndexOf(p))
                 .ToList();
-            regularPackages.Clear(); regularPackages.AddRange(ordered);
+            regularPackages.ClearOnMainThread(); regularPackages.AddRangeOnMainThread(ordered);
             (config ?? GameMain.Config)?.SortContentPackages(refreshAll);
         }
 
@@ -825,12 +826,12 @@ namespace Barotrauma
             {
                 if (IsCorePackage)
                 {
-                    corePackages.Remove(this);
+                    corePackages.RemoveOnMainThread(this);
                     if (GameMain.Config.CurrentCorePackage == this) { GameMain.Config.AutoSelectCorePackage(null); }
                 }
                 else
                 {
-                    regularPackages.Remove(this);
+                    regularPackages.RemoveOnMainThread(this);
                     if (GameMain.Config.EnabledRegularPackages.Contains(this)) { GameMain.Config.DisableRegularPackage(this); }
                 }
                 GameMain.Config.SaveNewPlayerConfig();

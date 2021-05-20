@@ -211,10 +211,7 @@ namespace Barotrauma
             {
                 Character.Controlled = null;
 
-                if (prevControlled != null)
-                {
-                    prevControlled.ClearInputs();
-                }
+                prevControlled?.ClearInputs();
 
                 overlayColor = Color.LightGray;
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);
@@ -535,7 +532,13 @@ namespace Barotrauma
 
             msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
             msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
-            msg.Write(map.SelectedMissionIndex == -1 ? byte.MaxValue : (byte)map.SelectedMissionIndex);
+
+            var selectedMissionIndices = map.GetSelectedMissionIndices();
+            msg.Write((byte)selectedMissionIndices.Count());
+            foreach (int selectedMissionIndex in selectedMissionIndices)
+            {
+                msg.Write((byte)selectedMissionIndex);
+            }
             msg.Write(PurchasedHullRepairs);
             msg.Write(PurchasedItemRepairs);
             msg.Write(PurchasedLostShuttles);
@@ -589,8 +592,15 @@ namespace Barotrauma
             string mapSeed      = msg.ReadString();
             UInt16 currentLocIndex      = msg.ReadUInt16();
             UInt16 selectedLocIndex     = msg.ReadUInt16();
-            byte selectedMissionIndex   = msg.ReadByte();
-            bool allowDebugTeleport     = msg.ReadBoolean();
+
+            byte selectedMissionCount = msg.ReadByte();
+            List<int> selectedMissionIndices = new List<int>();
+            for (int i = 0; i < selectedMissionCount; i++)
+            {
+                selectedMissionIndices.Add(msg.ReadByte());
+            }
+
+            bool allowDebugTeleport = msg.ReadBoolean();
             float? reputation = null;
             if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
             
@@ -717,7 +727,7 @@ namespace Barotrauma
 
                     campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                     campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-                    campaign.Map.SelectMission(selectedMissionIndex);
+                    campaign.Map.SelectMission(selectedMissionIndices);
                     campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
                     campaign.CargoManager.SetPurchasedItems(purchasedItems);

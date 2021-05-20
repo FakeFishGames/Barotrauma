@@ -356,8 +356,12 @@ namespace Barotrauma
                             int orderIndex = Order.PrefabList.IndexOf(orderPrefab);
                             msg.WriteRangedInteger(orderIndex, 0, Order.PrefabList.Count);
                             if (!orderPrefab.HasOptions) { break; }
-                            int optionIndex = orderPrefab.Options.IndexOf(currentOrderInfo.Value.OrderOption);
-                            msg.WriteRangedInteger(optionIndex, 0, orderPrefab.Options.Length);
+                            int optionIndex = orderPrefab.AllOptions.IndexOf(currentOrderInfo.Value.OrderOption);
+                            if (optionIndex == -1)
+                            {
+                                DebugConsole.AddWarning($"Error while writing order data. Order option \"{(currentOrderInfo.Value.OrderOption ?? null)}\" not found in the order prefab \"{orderPrefab.Name}\".");
+                            }
+                            msg.WriteRangedInteger(optionIndex, -1, orderPrefab.AllOptions.Length);
                         }
                         else if (type == 2)
                         {
@@ -381,6 +385,13 @@ namespace Barotrauma
                         break;
                     case NetEntityEvent.Type.AddToCrew:
                         msg.WriteRangedInteger(9, min, max);
+                        msg.Write((byte)(CharacterTeamType)extraData[1]); // team id
+                        ushort[] inventoryItemIDs = (ushort[])extraData[2];
+                        msg.Write((ushort)inventoryItemIDs.Length);
+                        for (int i = 0; i < inventoryItemIDs.Length; i++)
+                        {
+                            msg.Write(inventoryItemIDs[i]);
+                        }
                         break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");

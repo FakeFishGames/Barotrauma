@@ -440,7 +440,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null)
             {
-                return attachTargetCell != null && Structure.GetAttachTarget(item.WorldPosition) != null;
+                return attachTargetCell != null || Structure.GetAttachTarget(item.WorldPosition) != null;
             }
             else
             {

@@ -1,4 +1,79 @@
 ------------------------------------------------------------------------------------------------------
+v0.1400.1.0 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Improvements/balancing to the pulse laser and chaingun.
+- Option to choose multiple missions per level.
+- Added some hardpoints to the vanilla subs.
+- Replaced the old railgun loaders with the new smaller versions.
+- Improvements to the weapon customization menu.
+- Docking ports can't be rewired in outpost levels because it can be abused to force to submarine to depart from the outpost.
+- The ice shards and exploding mushrooms in caves can be destroyed with weapons and explosives.
+- The pirate missions can no longer be completed by exploding the reactor: all the pirates need to be killed for the mission to be successful.
+- Changed the way diving suits are picked up: now LMB equips the suit like it did before, and the suits can be picked up with E.
+- Taking items that contain stolen items counts as stealing, so you can't for example put a toolbox inside an outpost cabinet, load it full of items and then take it.
+- Added a button for resetting in-game hints to the settings.
+- Mention diving suits' depth limits in their descriptions.
+- Modified the locked path tooltips to mention the officer in the outpost.
+- Reset reactor fission rate, turbine output and temperature to optimal levels at the start of a round. Prevents the reactor from catching fire at the start of a round if it was being operated at a high fission rate at the end of the previous round.
+- Increased canister shell pellet count from 7 to 10, increased pellet damage from 22 to 25, reduced spread from 25 to 20.
+- Option to disable swapping specific weapons in the sub editor.
+- Items that are set to be hidden in-game can't be swapped.
+- Removed ability to drag and drop seeds into planters.
+- Added ability to load .sub, .xml, .png and .jpeg files in sub editor by dragging and dropping them onto the game window.
+- Added new biome-specific background noise tracks.
+- Made upgrades affect all submarines. Old purchased submarines will have their upgrades overridden by the currently loaded submarine's upgrades.
+- Improved the command interface minimap view by adding connector lines between icons and item positions to better visualize which item each icon is linked to.
+- Projectiles go through severed limbs.
+
+Fixes:
+- Fixed rotation of mirrored items getting messed up when saving and reloading a sub.
+- Fixed inability to detach items attached outside the sub.
+- Removed colliders from decorative pirate submarine pieces.
+- Fixed pirate bandana sprite.
+- Fixed depth decoy sprite.
+- Fixed items that are inside a hull being difficult to target from outside the sub (docking ports/hatches in particular).
+- Fixed crashing when trying to load a campaign save that contains pets that can't be found (e.g. if you've saved while using a mod that adds custom pets and try to load the save in the vanilla game).
+- Fixed crashing when trying to change a location's type to a type that can't be found (e.g. if a mod includes custom location types which are configured incorrectly).
+- Fixed "are you sure you want to depart without a mission" prompt popping up even if there's no missions available.
+- Fixed pirate missions not ending automatically when docking with the destination outpost in mission mode.
+- Fixed client-side "index out of range" errors when a pirate gets assigned the "navigatetactical" order.
+- Fixed health bars showing up through walls.
+- Fixed main sub's docking ports not showing up on the respawn shuttle's sonar.
+- Fixed abandoned outposts' docking ports not showing up on sonar.
+- Fixed handheld sonar showing the enemy sub in PvP mode when used outside the main sub.
+- Fixed how weapons are displayed on the outpost display shelves.
+- Fixed location portrait overlapping with the texts in the tab menu's mission tab.
+- Fixed horizontal docking ports sometimes docking from the wrong side in mirrored subs.
+- Fixed mouse wheel zooming the nav terminal view when the server log (or any other UI element) is blocking it.
+- Fixed chainguns not damaging items (e.g. eggs, piezo crystals).
+- Fixed Watcher always spawning at the start when the difficulty is between 10 and 20.
+- Fixed wrecks never spawning in certain biomes, even if there's a wreck mission selected.
+- Fixed legacy railgun loaders exploding the shells.
+- Fixed campaign's initial text popup getting stuck if the sub automatically undocks at the start of a round.
+- Swapped weapons inherit the scale, rotation, sprite depth and sprite color from the previously installed item.
+- Non-empty items (ammo boxes, fuel rods, etc) can't be recycled.
+- Fixed afflictions applying their status effects multiple times, causing afflictions that apply other afflictions way faster than they should (e.g. opiate withdrawal caused by opiate addiction, burns caused by radiation sickness).
+- Fixed all sonar markers of a given mission displaying the same distance reading.
+- Fixed command interface minimap tooltips not being displayed.
+- Fixed bot orders not being saved in multiplayer.
+- Disabled the tab menu missions tab in the test game modes (e.g. sub editor) to fix a related crash.
+- Made airlock door assembly behave a bit more reliably. The circuit in the assembly simply toggles the state of both doors, meaning that one of the doors needs to always be closed and the other open for the logic to work correctly. If using the assembly in a respawn shuttle, it'd break when the shuttle leaves and it's doors are forced to close.
+- Fixed inability to go through docking ports when the door/hatch at the other side is broken.
+- Fixed other entities' sprites disappearing when reloading a sprite in the sub editor.
+- Fixed Remora drone's docking hatch being repairable with a welding tool instead of a wrench.
+- Fixed some of Remora drone's walls being transparent.
+
+Modding:
+- Made it possible to use StatusHUD components in non-equippable items like turrets.
+- Fixed scripted event's StatusEffectAction not being able to target ItemComponents.
+- Added support for making triggering scripted events.
+- Option to configure the color of an explosion's flash.
+- Option to configure the number of gates between biomes (see MapGenerationParameters.xml).
+- Fixed "publishing [mod] in the steam workshop failed" error when trying to publish a mod that contains enemy subs.
+
+------------------------------------------------------------------------------------------------------
 v0.1400.0.0 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

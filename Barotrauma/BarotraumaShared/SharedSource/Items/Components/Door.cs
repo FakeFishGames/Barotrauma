@@ -259,6 +259,10 @@ namespace Barotrauma.Items.Components
             Body.SetTransformIgnoreContacts(
                 ConvertUnits.ToSimUnits(new Vector2(doorRect.Center.X, doorRect.Y - doorRect.Height / 2)),
                 0.0f);
+            if (isBroken)
+            {
+                DisableBody();
+            }
         }
 
         public override void Move(Vector2 amount)

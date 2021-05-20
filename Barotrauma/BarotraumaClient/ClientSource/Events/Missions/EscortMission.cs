@@ -10,7 +10,12 @@ namespace Barotrauma
 
             for (int i = 0; i < characterCount; i++)
             {
-                characters.Add(Character.ReadSpawnData(msg));
+                Character character = Character.ReadSpawnData(msg);
+                characters.Add(character);
+                if (msg.ReadBoolean())
+                {
+                    terroristCharacters.Add(character);
+                }
                 ushort itemCount = msg.ReadUInt16();
                 for (int j = 0; j < itemCount; j++)
                 {

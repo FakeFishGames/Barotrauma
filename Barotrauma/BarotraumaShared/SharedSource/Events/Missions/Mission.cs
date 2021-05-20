@@ -23,6 +23,7 @@ namespace Barotrauma
                 if (state != value)
                 {
                     state = value;
+                    TryTriggerEvents(state);
 #if SERVER
                     GameMain.Server?.UpdateMissionState(this, state);
 #endif
@@ -128,6 +129,20 @@ namespace Barotrauma
         {
             get { return Prefab.Difficulty; }
         }
+
+        private class DelayedTriggerEvent
+        {
+            public readonly MissionPrefab.TriggerEvent TriggerEvent;
+            public float Delay;
+
+            public DelayedTriggerEvent(MissionPrefab.TriggerEvent triggerEvent, float delay)
+            {
+                TriggerEvent = triggerEvent;
+                Delay = delay;
+            }
+        }
+
+        private List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
            
         public Mission(MissionPrefab prefab, Location[] locations, Submarine sub)
         {
@@ -167,6 +182,9 @@ namespace Barotrauma
                 Messages[m] = Messages[m].Replace("[reward]", rewardText);
             }
         }
+
+        public virtual void SetDifficulty(float difficulty) { }
+
         public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
             return LoadRandom(locations, new MTRandom(ToolBox.StringToInt(seed)), requireCorrectLocationType, missionType, isSinglePlayer);
@@ -216,9 +234,11 @@ namespace Barotrauma
 
         public void Start(Level level)
         {
+            state = 0;
 #if CLIENT
             shownMessages.Clear();
 #endif
+            delayedTriggerEvents.Clear();
             foreach (string categoryToShow in Prefab.UnhideEntitySubCategories)
             {
                 foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.prefab?.HasSubCategory(categoryToShow) ?? false))
@@ -227,12 +247,27 @@ namespace Barotrauma
                 }
             }
             this.level = level;
+            TryTriggerEvents(0);
             StartMissionSpecific(level);
         }
 
         protected virtual void StartMissionSpecific(Level level) { }
 
-        public virtual void Update(float deltaTime) { }
+        public void Update(float deltaTime)
+        {
+            for (int i = delayedTriggerEvents.Count - 1; i>=0;i--)
+            {
+                delayedTriggerEvents[i].Delay -= deltaTime;
+                if (delayedTriggerEvents[i].Delay <= 0.0f)
+                {
+                    TriggerEvent(delayedTriggerEvents[i].TriggerEvent);
+                    delayedTriggerEvents.RemoveAt(i);
+                }
+            }
+            UpdateMissionSpecific(deltaTime);
+        }
+
+        protected virtual void UpdateMissionSpecific(float deltaTime) { }
 
         protected void ShowMessage(int missionState)
         {
@@ -240,6 +275,55 @@ namespace Barotrauma
         }
 
         partial void ShowMessageProjSpecific(int missionState);
+
+
+        private void TryTriggerEvents(int state)
+        {
+            foreach (var triggerEvent in Prefab.TriggerEvents)
+            {
+                if (triggerEvent.State == state)
+                {
+                    TryTriggerEvent(triggerEvent);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Triggers the event or adds it to the delayedTriggerEvents it if it has a delay
+        /// </summary>
+        private void TryTriggerEvent(MissionPrefab.TriggerEvent trigger)
+        {
+            if (trigger.Delay > 0)
+            {
+                if (!delayedTriggerEvents.Any(t => t.TriggerEvent == trigger))
+                {
+                    delayedTriggerEvents.Add(new DelayedTriggerEvent(trigger, trigger.Delay));
+                }
+            }
+            else
+            {
+                TriggerEvent(trigger);
+            }
+        }
+
+        /// <summary>
+        /// Triggers the event immediately, ignoring any delays
+        /// </summary>
+        private void TriggerEvent(MissionPrefab.TriggerEvent trigger)
+        {
+            var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier.Equals(trigger.EventIdentifier, StringComparison.OrdinalIgnoreCase));
+            if (eventPrefab == null)
+            {
+                DebugConsole.ThrowError($"Mission \"{Name}\" failed to trigger an event (couldn't find an event with the identifier \"{trigger.EventIdentifier}\").");
+                return;
+            }
+            if (GameMain.GameSession?.EventManager != null)
+            {
+                var newEvent = eventPrefab.CreateInstance();
+                GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
+                newEvent.Init(true);
+            }
+        }
 
         /// <summary>
         /// End the mission and give a reward if it was completed successfully
@@ -344,7 +428,7 @@ namespace Barotrauma
             {
                 positionToStayIn = WayPoint.GetRandom(SpawnType.Human, null, submarine);
             }
-            var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
+            var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
             characterInfo.TeamID = teamType;
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);

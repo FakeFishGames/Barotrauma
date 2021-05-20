@@ -302,9 +302,9 @@ namespace Barotrauma
                                 GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 
                                 //read anyway to prevent messing up reading the rest of the message
-                                UInt16 lastEventID = msg.ReadUInt16();
-                                byte itemCount = msg.ReadByte();
-                                for (int i = 0; i < itemCount; i++)
+                                _ = msg.ReadUInt16();
+                                byte inventoryItemCount = msg.ReadByte();
+                                for (int i = 0; i < inventoryItemCount; i++)
                                 {
                                     msg.ReadUInt16();
                                 }
@@ -411,8 +411,11 @@ namespace Barotrauma
                                 string option = null;
                                 if (orderPrefab.HasOptions)
                                 {
-                                    int optionIndex = msg.ReadRangedInteger(0, orderPrefab.Options.Length);
-                                    option = orderPrefab.Options[optionIndex];
+                                    int optionIndex = msg.ReadRangedInteger(-1, orderPrefab.AllOptions.Length);
+                                    if (optionIndex > -1)
+                                    {
+                                        option = orderPrefab.Options[optionIndex];
+                                    }
                                 }
                                 GameMain.GameSession?.CrewManager?.SetOrderHighlight(this, orderPrefab.Identifier, option);
                             }
@@ -431,9 +434,18 @@ namespace Barotrauma
                             break;
                         case 9: //NetEntityEvent.Type.AddToCrew
                             GameMain.GameSession.CrewManager.AddCharacter(this);
-                            foreach (Item item in Inventory.AllItems)
+                            CharacterTeamType teamID = (CharacterTeamType)msg.ReadByte();
+                            ushort itemCount = msg.ReadUInt16();
+                            for (int i = 0; i < itemCount; i++)
                             {
+                                ushort itemID = msg.ReadUInt16();
+                                if (!(Entity.FindEntityByID(itemID) is Item item)) { continue; }
                                 item.AllowStealing = true;
+                                var wifiComponent = item.GetComponent<Items.Components.WifiComponent>();
+                                if (wifiComponent != null)
+                                {
+                                    wifiComponent.TeamID = teamID;
+                                }
                             }
                             break;
                     }
