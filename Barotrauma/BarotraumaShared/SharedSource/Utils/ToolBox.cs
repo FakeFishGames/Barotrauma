@@ -696,5 +696,10 @@ namespace Barotrauma
             Point topLeft = new Point(center.X - halfSize.X, center.Y + halfSize.Y);
             return new Rectangle(topLeft, size);
         }
+
+        public static float FlooredModulus(float a, float b)
+        {
+            return ((a % b) + b) % b;
+        }
     }
 }

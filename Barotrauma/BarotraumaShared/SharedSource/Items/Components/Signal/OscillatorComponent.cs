@@ -15,17 +15,20 @@ namespace Barotrauma.Items.Components
             Sawtooth,
             Sine,
             Square,
+            Triangle,
         }
 
         private float frequency;
-
+        private float period => 1f / frequency;
         private float phase;
 
         [InGameEditable, Serialize(WaveType.Pulse, true, description: "What kind of a signal the item outputs." +
             " Pulse: periodically sends out a signal of 1." +
             " Sawtooth: sends out a periodic wave that increases linearly from 0 to 1." +
             " Sine: sends out a sine wave oscillating between -1 and 1." +
-            " Square: sends out a signal that alternates between 0 and 1.", alwaysUseInstanceValues: true)]
+            " Square: sends out a signal that alternates between 0 and 1." +
+            " Triangle: sends out a wave that alternates between increasing linearly from -1 to 1 and decreasing from 1 to -1.",
+                                   alwaysUseInstanceValues: true)]
         public WaveType OutputType
         {
             get;
@@ -76,6 +79,11 @@ namespace Barotrauma.Items.Components
                 case WaveType.Sine:
                     phase = (phase + deltaTime * frequency) % 1.0f;
                     item.SendSignal(Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out");
+                    break;
+                case WaveType.Triangle:
+                    phase = (phase + deltaTime * frequency) % 1.0f;
+                    float output = 4.0f * MathF.Abs(ToolBox.FlooredModulus(phase - 0.25f, 1.0f) - 0.5f) - 1.0f;
+                    item.SendSignal(output.ToString(CultureInfo.InvariantCulture), "signal_out");
                     break;
             }
         }
