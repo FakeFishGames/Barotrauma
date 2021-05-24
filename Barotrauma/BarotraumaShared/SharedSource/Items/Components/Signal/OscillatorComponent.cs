@@ -12,6 +12,7 @@ namespace Barotrauma.Items.Components
         public enum WaveType
         {
             Pulse,
+            Sawtooth,
             Sine,
             Square,
         }
@@ -22,6 +23,7 @@ namespace Barotrauma.Items.Components
 
         [InGameEditable, Serialize(WaveType.Pulse, true, description: "What kind of a signal the item outputs." +
             " Pulse: periodically sends out a signal of 1." +
+            " Sawtooth: sends out a periodic wave that increases linearly from 0 to 1." +
             " Sine: sends out a sine wave oscillating between -1 and 1." +
             " Square: sends out a signal that alternates between 0 and 1.", alwaysUseInstanceValues: true)]
         public WaveType OutputType
@@ -62,6 +64,10 @@ namespace Barotrauma.Items.Components
                         item.SendSignal("1", "signal_out");
                         phase -= pulseInterval;
                     }
+                    break;
+                case WaveType.Sawtooth:
+                    phase = (phase + deltaTime * frequency) % 1.0f;
+                    item.SendSignal(phase.ToString(CultureInfo.InvariantCulture), "signal_out");
                     break;
                 case WaveType.Square:
                     phase = (phase + deltaTime * frequency) % 1.0f;
