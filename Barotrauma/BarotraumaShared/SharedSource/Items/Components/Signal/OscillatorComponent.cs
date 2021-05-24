@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
         }
 
         private float frequency;
-        private float period => 1f / frequency;
+
         private float phase;
 
         [InGameEditable, Serialize(WaveType.Pulse, true, description: "What kind of a signal the item outputs." +
