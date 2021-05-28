@@ -663,7 +663,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                return Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character));
+                return base.HasAccess(character) && Item.GetConnectedComponents<Controller>(true).Any(b => b.HasAccess(character));
             }
         }
 

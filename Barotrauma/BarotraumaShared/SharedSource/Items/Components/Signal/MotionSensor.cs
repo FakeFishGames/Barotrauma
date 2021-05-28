@@ -164,6 +164,7 @@ namespace Barotrauma.Items.Components
                 if (Math.Abs(item.body.LinearVelocity.X) > MinimumVelocity || Math.Abs(item.body.LinearVelocity.Y) > MinimumVelocity)
                 {
                     MotionDetected = true;
+                    return;
                 }
             }
 
@@ -173,67 +174,93 @@ namespace Barotrauma.Items.Components
             float broadRangeY = Math.Max(rangeY * 2, 500);
 
             if (item.CurrentHull == null && item.Submarine != null && Level.Loaded != null &&
-                (Target == TargetType.Wall || Target == TargetType.Any) &&
-                (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity))
+                (Target == TargetType.Wall || Target == TargetType.Any))
             {
-                var cells = Level.Loaded.GetCells(item.WorldPosition, 1);
-                foreach (var cell in cells)
+                if (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity)
                 {
-                    if (cell.IsPointInside(item.WorldPosition))
+                    var cells = Level.Loaded.GetCells(item.WorldPosition, 1);
+                    foreach (var cell in cells)
                     {
-                        MotionDetected = true;
-                        return;
-                    }
-                    foreach (var edge in cell.Edges)
-                    {
-                        var closestPoint = MathUtils.GetClosestPointOnLineSegment(edge.Point1 + cell.Translation, edge.Point2 + cell.Translation, item.WorldPosition);
-                        if (Math.Abs(closestPoint.X - item.WorldPosition.X) < rangeX && Math.Abs(closestPoint.Y - item.WorldPosition.Y) < rangeY)
+                        if (cell.IsPointInside(item.WorldPosition))
                         {
                             MotionDetected = true;
                             return;
                         }
-                    }                    
+                        foreach (var edge in cell.Edges)
+                        {
+                            Vector2 e1 = edge.Point1 + cell.Translation;
+                            Vector2 e2 = edge.Point2 + cell.Translation;
+                            if (MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.Right, detectRect.Y)) ||
+                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Bottom), new Vector2(detectRect.Right, detectRect.Bottom)) ||
+                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.X, detectRect.Bottom)) ||
+                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.Right, detectRect.Y), new Vector2(detectRect.Right, detectRect.Bottom)))
+                            {
+                                MotionDetected = true;
+                                return;
+                            }
+                        }
+                    }
                 }
-            }
-
-            foreach (Character c in Character.CharacterList)
-            {
-                if (IgnoreDead && c.IsDead) { continue; }
-
-                //ignore characters that have spawned a second or less ago
-                //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
-                if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
-
-                switch (Target)
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    case TargetType.Human:
-                        if (!c.IsHuman) { continue; }
-                        break;
-                    case TargetType.Monster:
-                        if (c.IsHuman || c.IsPet) { continue; }
-                        break;
-                    case TargetType.Wall:
-                        break;
-                }
+                    if (sub == item.Submarine) { continue; }
 
-                //do a rough check based on the position of the character's collider first
-                //before the more accurate limb-based check
-                if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
-                {
-                    continue;
-                }
+                    Vector2 relativeVelocity = item.Submarine.Velocity - sub.Velocity;
+                    if (Math.Abs(relativeVelocity.X) < MinimumVelocity && Math.Abs(relativeVelocity.Y) < MinimumVelocity) { continue; }
 
-                foreach (Limb limb in c.AnimController.Limbs)
-                {
-                    if (limb.IsSevered) { continue; }
-                    if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) { continue; }
-                    if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                    Rectangle worldBorders = new Rectangle(
+                        sub.Borders.X + (int)sub.WorldPosition.X,
+                        sub.Borders.Y + (int)sub.WorldPosition.Y - sub.Borders.Height,
+                        sub.Borders.Width,
+                        sub.Borders.Height);
+
+                    if (worldBorders.Intersects(detectRect))
                     {
                         MotionDetected = true;
                         return;
                     }
                 }
             }
+
+            if (Target != TargetType.Wall)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (IgnoreDead && c.IsDead) { continue; }
+
+                    //ignore characters that have spawned a second or less ago
+                    //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
+                    if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
+
+                    switch (Target)
+                    {
+                        case TargetType.Human:
+                            if (!c.IsHuman) { continue; }
+                            break;
+                        case TargetType.Monster:
+                            if (c.IsHuman || c.IsPet) { continue; }
+                            break;
+                    }
+
+                    //do a rough check based on the position of the character's collider first
+                    //before the more accurate limb-based check
+                    if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
+                    {
+                        continue;
+                    }
+
+                    foreach (Limb limb in c.AnimController.Limbs)
+                    {
+                        if (limb.IsSevered) { continue; }
+                        if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) { continue; }
+                        if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                        {
+                            MotionDetected = true;
+                            return;
+                        }
+                    }
+                }
+            }           
         }
 
         public override void FlipX(bool relativeToSub)

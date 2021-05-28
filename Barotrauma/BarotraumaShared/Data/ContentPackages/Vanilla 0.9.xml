@@ -109,6 +109,7 @@
   <Character file="Content/Characters/Variants/Hammerheadgold_m.xml" />
   <Character file="Content/Characters/Variants/Crawler_hatchling/Crawler_hatchling.xml" />
   <Character file="Content/Characters/Variants/Mudraptor_hatchling/Mudraptor_hatchling.xml" />
+  <Character file="Content/Characters/Variants/Mudraptor_passive/Mudraptor_passive.xml" />
   <Character file="Content/Characters/Variants/Tigerthresher_hatchling/Tigerthresher_hatchling.xml" />
   <MapCreature file="Content/Items/Gardening/ballastflora.xml" />
   <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
@@ -148,7 +149,7 @@
   <Afflictions file="Content/Afflictions.xml" />
   <Structure file="Content/Map/StructurePrefabs.xml" />
   <Structure file="Content/Map/Outposts/OutpostStructurePrefabs.xml" />
-  <Structure file="Content/Map/Pirates/PirateAssets.xml" />
+  <Structure file="Content/Map/Pirates/PirateStructures.xml" />
   <Item file="Content/Map/Outposts/OutpostItems.xml" />
   <Structure file="Content/Items/Shipwrecks/StructurePrefabsWrecked.xml" />
   <Structure file="Content/Map/Thalamus/thalamusstructures.xml" />

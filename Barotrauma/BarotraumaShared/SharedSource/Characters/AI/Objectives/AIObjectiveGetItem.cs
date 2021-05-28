@@ -305,6 +305,7 @@ namespace Barotrauma
                 if (rootInventoryOwner is Item ownerItem)
                 {
                     if (!ownerItem.IsInteractable(character)) { continue; }
+                    if (!(ownerItem.GetComponent<ItemContainer>()?.HasRequiredItems(character, addMessage: false) ?? true)) { continue; }
                 }
                 Vector2 itemPos = (rootInventoryOwner ?? item).WorldPosition;
                 float yDist = Math.Abs(character.WorldPosition.Y - itemPos.Y);
@@ -403,7 +404,7 @@ namespace Barotrauma
         private bool CheckItem(Item item)
         {
             if (!item.IsInteractable(character)) { return false; }
-            if (item.IsThisOrAnyContainerIgnoredByAI()) { return false; }
+            if (item.IsThisOrAnyContainerIgnoredByAI(character)) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }

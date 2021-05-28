@@ -650,7 +650,7 @@ namespace Barotrauma
             return dictionary;
         }
 
-        public static void SerializeProperties(ISerializableEntity obj, XElement element, bool saveIfDefault = false)
+        public static void SerializeProperties(ISerializableEntity obj, XElement element, bool saveIfDefault = false, bool ignoreEditable = false)
         {
             var saveProperties = GetProperties<Serialize>(obj);
             foreach (var property in saveProperties)
@@ -667,7 +667,7 @@ namespace Barotrauma
                     foreach (var attribute in property.Attributes.OfType<Serialize>())
                     {
                         if ((attribute.isSaveable && !attribute.defaultValue.Equals(value)) ||
-                            property.Attributes.OfType<Editable>().Any())
+                            (!ignoreEditable && property.Attributes.OfType<Editable>().Any()))
                         {
                             save = true;
                             break;

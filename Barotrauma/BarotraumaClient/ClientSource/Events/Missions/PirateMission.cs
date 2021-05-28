@@ -16,7 +16,6 @@ namespace Barotrauma
                 for (int j = 0; j < itemCount; j++)
                 {
                     Item.ReadSpawnData(msg);
-
                 }
             }
             if (characters.Contains(null))

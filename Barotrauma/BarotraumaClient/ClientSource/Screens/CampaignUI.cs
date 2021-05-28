@@ -21,6 +21,7 @@ namespace Barotrauma
         private GUIComponent locationInfoPanel;
 
         private GUIListBox missionList;
+        private readonly List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
 
         private GUIButton repairHullsButton, replaceShuttlesButton, repairItemsButton;
 
@@ -320,6 +321,10 @@ namespace Barotrauma
                 map.SelectLocation(-1);
             }
             map.Update(deltaTime, mapContainer);
+            foreach (GUITickBox tickBox in missionTickBoxes)
+            {
+                tickBox.Enabled = Campaign.AllowedToManageCampaign();
+            }
         }
 
         public void Update(float deltaTime)
@@ -350,6 +355,7 @@ namespace Barotrauma
 
         public void SelectLocation(Location location, LocationConnection connection)
         {
+            missionTickBoxes.Clear();
             locationInfoPanel.ClearChildren();
             //don't select the map panel if we're looking at some other tab
             if (selectedTab == CampaignMode.InteractionType.Map)
@@ -451,7 +457,10 @@ namespace Barotrauma
                 if (GUI.MouseOn == tickBox) { return false; }
                 if (tickBox != null)
                 {
-                    tickBox.Selected = !tickBox.Selected;
+                    if (Campaign.AllowedToManageCampaign() && tickBox.Enabled)
+                    {
+                        tickBox.Selected = !tickBox.Selected;
+                    }
                 }
                 return true;
             };
@@ -489,26 +498,28 @@ namespace Barotrauma
                         };
                         tickBox.RectTransform.MinSize = new Point(tickBox.Rect.Height, 0);
                         tickBox.RectTransform.IsFixedSize = true;
-                        if (Campaign.AllowedToManageCampaign())
+                        tickBox.Box.DisabledColor = tickBox.Box.Color * 0.8f;
+                        tickBox.Enabled = Campaign.AllowedToManageCampaign();
+                        tickBox.OnSelected += (GUITickBox tb) =>
                         {
-                            tickBox.OnSelected += (GUITickBox tb) =>
+                            if (!Campaign.AllowedToManageCampaign()) { return false; }
+                            
+                            if (tb.Selected)
                             {
-                                if (tb.Selected)
-                                {
-                                    Campaign.Map.CurrentLocation.SelectMission(mission);
-                                }
-                                else
-                                {
-                                    Campaign.Map.CurrentLocation.DeselectMission(mission);
-                                }
-                                if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
-                                    Campaign.AllowedToManageCampaign())
-                                {
-                                    GameMain.Client?.SendCampaignState();
-                                }
-                                return true;
-                            };
-                        }
+                                Campaign.Map.CurrentLocation.SelectMission(mission);
+                            }
+                            else
+                            {
+                                Campaign.Map.CurrentLocation.DeselectMission(mission);
+                            }
+                            if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
+                                Campaign.AllowedToManageCampaign())
+                            {
+                                GameMain.Client?.SendCampaignState();
+                            }
+                            return true;                            
+                        };
+                        missionTickBoxes.Add(tickBox);
 
                         GUILayoutGroup difficultyIndicatorGroup = null;
                         if (mission.Difficulty.HasValue)
@@ -578,6 +589,8 @@ namespace Barotrauma
                 if (prevSelectedLocation == selectedLocation)
                 {
                     missionList.BarScroll = prevMissionListScroll;
+                    missionList.UpdateDimensions();
+                    missionList.UpdateScrollBarSize();
                 }
             }
 
@@ -615,6 +628,7 @@ namespace Barotrauma
                 StartButton.Visible = false;
                 missionList.Enabled = false;
             }
+            //locationInfoPanel?.UpdateAuto(1.0f);
         }
 
         public void SelectTab(CampaignMode.InteractionType tab)

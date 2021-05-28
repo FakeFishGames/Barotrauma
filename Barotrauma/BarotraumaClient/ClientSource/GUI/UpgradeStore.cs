@@ -112,10 +112,10 @@ namespace Barotrauma
         {
             switch (selectedUpgradeTab)
             {
-                case UpgradeTab.Repairs:                    
+                case UpgradeTab.Repairs:
                     SelectTab(UpgradeTab.Repairs);
-                    break;                    
-                case UpgradeTab.Upgrade:                    
+                    break;
+                case UpgradeTab.Upgrade:
                     RefreshUpgradeList();
                     foreach (var itemPreview in itemPreviews)
                     {
@@ -123,7 +123,7 @@ namespace Barotrauma
                         if (!(itemPreview.Value is GUIImage image)) { continue; }
                         image.Sprite = itemPreview.Key.PendingItemSwap.UpgradePreviewSprite;
                     }
-                    break;                    
+                    break;
             }
         }
 
@@ -169,6 +169,11 @@ namespace Barotrauma
                 {
                     // ReSharper disable once PossibleMultipleEnumeration
                     UpdateCategoryIndicators(indicators, component, data.Prefabs, data.Category, campaign, drawnSubmarine, applicableCategories);
+                }
+                var customizeButton = component.FindChild("customizebutton", true);
+                if (customizeButton != null)
+                {
+                    customizeButton.Visible = HasSwappableItems(data.Category);
                 }
             }
 
@@ -625,6 +630,20 @@ namespace Barotrauma
                 frameChild.DefaultColor = frameChild.Color;
                 frameChild.Color = Color.Transparent;
 
+                var weaponSwitchBg = new GUIButton(new RectTransform(new Vector2(0.65f), frameChild.RectTransform, Anchor.TopRight, scaleBasis: ScaleBasis.Smallest)
+                { RelativeOffset = new Vector2(0.04f, 0.0f) }, style: "WeaponSwitchTab")
+                {
+                    Visible = false,
+                    CanBeSelected = false,
+                    UserData = "customizebutton"
+                };
+                weaponSwitchBg.DefaultColor = weaponSwitchBg.Frame.DefaultColor = weaponSwitchBg.Color;
+                var weaponSwitchImg = new GUIImage(new RectTransform(new Vector2(0.7f), weaponSwitchBg.RectTransform, Anchor.Center), "WeaponSwitchIcon", scaleToFit: true)
+                {
+                    CanBeFocused = false
+                };
+                weaponSwitchImg.DefaultColor = weaponSwitchImg.Color;
+
                 /*                     UPGRADE CATEGORY
                  * |--------------------------------------------------------|
                  * |                                                        |
@@ -670,6 +689,7 @@ namespace Barotrauma
                     foreach (GUIComponent itemFrame in itemPreviews.Values)
                     {
                         itemFrame.OutlineColor = itemFrame.Color = previewWhite;
+                        itemFrame.Children.ForEach(c => c.Color = itemFrame.Color);
                     }
                     return true;
                 }
@@ -679,6 +699,9 @@ namespace Barotrauma
                     TrySelectCategory(prefabs, categoryData.Category, sub);
                 }
 
+                var customizeCategoryButton = selectedUpgradeCategoryLayout?.FindChild("customizebutton", recursive: true) as GUIButton;
+                customizeCategoryButton?.OnClicked(customizeCategoryButton, customizeCategoryButton.UserData);
+                
                 return true;
             };
         }
@@ -687,6 +710,16 @@ namespace Barotrauma
         private void TrySelectCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine) => SelectUpgradeCategory(prefabs, category, submarine);
 
         private bool customizeTabOpen;
+
+        private static bool HasSwappableItems(UpgradeCategory category)
+        {
+            if (Submarine.MainSub == null) { return false; }
+            return Submarine.MainSub.GetItems(true).Any(i =>
+                i.Prefab.SwappableItem != null &&
+                !i.HiddenInGame && i.AllowSwapping &&
+                (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) &&
+                Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
+        }
 
         private void SelectUpgradeCategory(List<UpgradePrefab> prefabs, UpgradeCategory category, Submarine submarine)
         {
@@ -698,6 +731,7 @@ namespace Barotrauma
             foreach (GUIComponent itemFrame in itemPreviews.Values)
             {
                 itemFrame.OutlineColor = itemFrame.Color = categoryFrames.Contains(itemFrame) ? GUI.Style.Orange : previewWhite;
+                itemFrame.Children.ForEach(c => c.Color = itemFrame.Color);
             }
 
             highlightWalls = category.IsWallUpgrade;
@@ -706,11 +740,7 @@ namespace Barotrauma
             GUIFrame frame = new GUIFrame(rectT(1.0f, 0.4f, selectedUpgradeCategoryLayout));
             GUIFrame paddedFrame = new GUIFrame(rectT(0.93f, 0.9f, frame, Anchor.Center), style: null);
 
-            bool hasSwappableItems = Submarine.MainSub.GetItems(true).Any(i => 
-                i.Prefab.SwappableItem != null && 
-                !i.HiddenInGame && i.AllowSwapping &&
-                (i.Prefab.SwappableItem.CanBeBought || ItemPrefab.Prefabs.Any(ip => ip.SwappableItem?.ReplacementOnUninstall == i.Prefab.Identifier)) && 
-                Submarine.MainSub.IsEntityFoundOnThisSub(i, true) && category.ItemTags.Any(t => i.HasTag(t)));
+            bool hasSwappableItems = HasSwappableItems(category);
 
             float listHeight = hasSwappableItems ? 0.9f : 1.0f;
 
@@ -725,12 +755,19 @@ namespace Barotrauma
             {
                 GUILayoutGroup buttonLayout = new GUILayoutGroup(rectT(1.0f, 0.1f, paddedFrame, anchor: Anchor.TopLeft), isHorizontal: true);
 
+                GUIButton customizeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.customize"), style: "GUITabButton")
+                {
+                    UserData = "customizebutton"
+                };
+                new GUIImage(new RectTransform(new Vector2(1.0f, 0.75f), customizeButton.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { RelativeOffset = new Vector2(0.015f, 0.0f) }, "WeaponSwitchIcon", scaleToFit: true);
+                customizeButton.TextBlock.RectTransform.RelativeSize = new Vector2(0.7f, 1.0f);
+
                 GUIButton upgradeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.upgrades"), style: "GUITabButton")
                 {
                     Selected = true
                 };
 
-                GUIButton customizeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.customize"), style: "GUITabButton");
+                GUITextBlock.AutoScaleAndNormalize(upgradeButton.TextBlock, customizeButton.TextBlock);
 
                 upgradeButton.OnClicked = delegate
                 {
@@ -742,6 +779,7 @@ namespace Barotrauma
                     foreach (GUIComponent itemFrame in itemPreviews.Values)
                     {
                         itemFrame.OutlineColor = itemFrame.Color = categoryFrames.Contains(itemFrame) ? GUI.Style.Orange : previewWhite;
+                        itemFrame.Children.ForEach(c => c.Color = itemFrame.Color);
                     }
                     return true;
                 };
@@ -754,7 +792,6 @@ namespace Barotrauma
                     CreateSwappableItemList(prefabList, category, submarine);
                     return true;
                 };
-
             }
 
             CreateUpgradePrefabList(prefabList, category, prefabs, submarine);
@@ -779,23 +816,25 @@ namespace Barotrauma
         {
             parent.Content.ClearChildren();
             currentUpgradeCategory = category;
-            IEnumerable<ItemPrefab> availableReplacements = MapEntityPrefab.List.Where(p => 
-                p is ItemPrefab itemPrefab && 
-                category.ItemTags.Any(t => itemPrefab.Tags.Contains(t)) &&
-                (itemPrefab.SwappableItem?.CanBeBought ?? false)).Cast<ItemPrefab>();
             var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.HiddenInGame && i.AllowSwapping && category.ItemTags.Any(t => i.HasTag(t))).ToList();
 
             int slotIndex = 0;
             foreach (Item item in entitiesOnSub)
             {
                 slotIndex++;
-                CreateSwappableItemSlideDown(parent, slotIndex, item, availableReplacements);
+                CreateSwappableItemSlideDown(parent, slotIndex, item, submarine);
             }
         }
 
-        private void CreateSwappableItemSlideDown(GUIListBox parent, int slotIndex, Item item, IEnumerable<ItemPrefab> availableReplacements)
+        private void CreateSwappableItemSlideDown(GUIListBox parent, int slotIndex, Item item, Submarine submarine)
         {
-            if (Campaign == null) { return; }
+            if (Campaign == null || submarine == null) { return; }
+
+            IEnumerable<ItemPrefab> availableReplacements = MapEntityPrefab.List.Where(p =>
+                p is ItemPrefab itemPrefab &&
+                itemPrefab.SwappableItem != null &&
+                itemPrefab.SwappableItem.CanBeBought && 
+                itemPrefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase)).Cast<ItemPrefab>();
 
             var currentOrPending = item.PendingItemSwap ?? item.Prefab;
 
@@ -833,7 +872,7 @@ namespace Barotrauma
                 frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), currentOrPending.UpgradePreviewSprite,
                                 TextManager.GetWithVariable(item.PendingItemSwap != null ? "upgrades.pendingitem" : "upgrades.installeditem", "[itemname]", currentOrPending.Name),
                                 currentOrPending.Description,
-                                0, null, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "StoreRemoveFromCrateButton"));
+                                0, null, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "WeaponUninstallButton"));
 
                 if (canUninstall && frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton refundButton)
                 {
@@ -876,7 +915,7 @@ namespace Barotrauma
                     price, replacement, 
                     addBuyButton: true, 
                     addProgressBar: false,
-                    buttonStyle: isPurchased ? "UpgradeBuyButton" : "StoreAddToCrateButton"));
+                    buttonStyle: isPurchased ? "WeaponInstallButton" : "StoreAddToCrateButton"));
 
                 if (!(frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton buyButton)) { continue; }
                 if (Campaign.Money >= price)
@@ -1234,9 +1273,11 @@ namespace Barotrauma
                         {
                             if (selectedUpgradeCategoryLayout != null)
                             {
-                                if (selectedUpgradeCategoryLayout.FindChild(c => c.UserData as Item == HoveredItem, recursive: true) is GUIButton itemElement && !itemElement.Selected)
+                                if (selectedUpgradeCategoryLayout.FindChild(c => c.UserData as Item == HoveredItem, recursive: true) is GUIButton itemElement)
                                 {
-                                    itemElement.OnClicked(itemElement, itemElement.UserData);
+                                    if (!itemElement.Selected) { itemElement.OnClicked(itemElement, itemElement.UserData); }
+                                    //TODO: enable this if/when we make ScrollToElement work with child elements of different sizes
+                                    //(itemElement.Parent?.Parent?.Parent as GUIListBox)?.ScrollToElement(itemElement);
                                 }
                             }
                         }
@@ -1343,6 +1384,15 @@ namespace Barotrauma
                             HoverCursor = CursorState.Hand,
                             SpriteEffects = item.Rotation > 90.0f && item.Rotation < 270.0f ? SpriteEffects.FlipVertically : SpriteEffects.None
                         };
+                        if (item.Prefab.SwappableItem != null)
+                        {
+                            new GUIImage(new RectTransform(new Vector2(0.8f), itemFrame.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(-0.2f) }, "WeaponSwitchIcon.DropShadow", scaleToFit: true)
+                            {
+                                SelectedColor = GUI.Style.Orange,
+                                Color = previewWhite,
+                                CanBeFocused = false
+                            };
+                        }
                     }
                     else
                     { 

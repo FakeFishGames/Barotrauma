@@ -507,9 +507,10 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                if (item.body != null && !item.body.Enabled) continue;
-                if (item.ParentInventory != null) continue;
-                if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                if (item.body != null && !item.body.Enabled) { continue; }
+                if (item.ParentInventory != null) { continue; }
+                if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
+                if (item.Prefab.RequireCampaignInteract && item.CampaignInteractionType == CampaignMode.InteractionType.None) { continue; }
                 if (Screen.Selected is SubEditorScreen editor && editor.WiringMode && item.GetComponent<ConnectionPanel>() == null) { continue; }
 
                 if (draggingItemToWorld)

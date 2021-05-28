@@ -167,9 +167,9 @@ namespace Barotrauma
             }
         }
 
-        public CharacterInfo GetCharacterInfo()
+        public CharacterInfo GetCharacterInfo(Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
-            var characterElement = ToolBox.SelectWeightedRandom(CustomNPCSets.Keys.ToList(), CustomNPCSets.Values.ToList(), Rand.RandSync.Unsynced);
+            var characterElement = ToolBox.SelectWeightedRandom(CustomNPCSets.Keys.ToList(), CustomNPCSets.Values.ToList(), randSync);
             return characterElement != null ? new CharacterInfo(characterElement) : null;
         }
 

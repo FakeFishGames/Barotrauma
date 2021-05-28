@@ -323,7 +323,11 @@ namespace Barotrauma
                 Campaign.Money -= price;
 
                 itemToRemove.AvailableSwaps.Add(itemToRemove.Prefab);
-                if (itemToInstall != null) { itemToRemove.AvailableSwaps.Add(itemToInstall); }
+                if (itemToInstall != null && !itemToRemove.AvailableSwaps.Contains(itemToInstall)) 
+                {
+                    itemToRemove.PurchasedNewSwap = true;
+                    itemToRemove.AvailableSwaps.Add(itemToInstall); 
+                }
 
                 if (itemToRemove.Prefab != itemToInstall && itemToInstall != null)
                 {
@@ -424,7 +428,12 @@ namespace Barotrauma
 
             List<PurchasedUpgrade> pendingUpgrades = PendingUpgrades;
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            if (Level.Loaded is { Type: LevelData.LevelType.Outpost })
+            {
+                return;
+            }
+
+            if (GameMain.NetworkMember is { IsClient: true })
             {
                 if (loadedUpgrades != null)
                 {
@@ -438,7 +447,7 @@ namespace Barotrauma
             {
                 int newLevel = BuyUpgrade(prefab, category, Submarine.MainSub, level);
                 DebugConsole.Log($"    - {category.Identifier}.{prefab.Identifier} lvl. {level}, new: ({newLevel})");
-                SetUpgradeLevel(prefab, category, Math.Clamp(level, 0, prefab.MaxLevel));
+                SetUpgradeLevel(prefab, category, Math.Clamp(GetRealUpgradeLevel(prefab, category) + level, 0, prefab.MaxLevel));
             }
 
             PendingUpgrades.Clear();
@@ -703,7 +712,7 @@ namespace Barotrauma
 
         private void LoadPendingUpgrades(XElement? element, bool isSingleplayer = true)
         {
-            if (element == null || !element.HasElements) { return; }
+            if (!(element is { HasElements: true })) { return; }
 
             List<PurchasedUpgrade> pendingUpgrades = new List<PurchasedUpgrade>();
 

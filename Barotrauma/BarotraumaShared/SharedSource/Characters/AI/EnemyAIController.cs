@@ -16,6 +16,13 @@ namespace Barotrauma
 
     public enum CirclePhase { Start, CloseIn, FallBack, Advance, Strike }
 
+    public enum WallTargetingMethod
+    {
+        Target = 0x1,
+        Heading = 0x2,
+        Steering = 0x4
+    }
+
     partial class EnemyAIController : AIController
     {
         public static bool DisableEnemyAI;
@@ -54,7 +61,7 @@ namespace Barotrauma
         private float attackLimbResetTimer;
 
         private bool IsAttackRunning => AttackingLimb != null && AttackingLimb.attack.IsRunning;
-        private bool IsCoolDownRunning => AttackingLimb != null && AttackingLimb.attack.CoolDownTimer > 0;
+        private bool IsCoolDownRunning => AttackingLimb != null && AttackingLimb.attack.CoolDownTimer > 0 || _previousAttackingLimb != null && _previousAttackingLimb.attack.CoolDownTimer > 0;
         public float CombatStrength => AIParams.CombatStrength;
         private float Sight => AIParams.Sight;
         private float Hearing => AIParams.Hearing;
@@ -63,14 +70,18 @@ namespace Barotrauma
 
         private FishAnimController FishAnimController => Character.AnimController as FishAnimController;
 
-        //the limb selected for the current attack
         private Limb _attackingLimb;
+        private Limb _previousAttackingLimb;
         public Limb AttackingLimb
         {
             get { return _attackingLimb; }
             private set
             {
                 attackLimbResetTimer = 0;
+                if (_attackingLimb != value)
+                {
+                    _previousAttackingLimb = _attackingLimb;
+                }
                 _attackingLimb = value;
                 attackVector = null;
                 Reverse = _attackingLimb != null && _attackingLimb.attack.Reverse;
@@ -342,6 +353,10 @@ namespace Barotrauma
                         {
                             targetingTag = "weaker";
                         }
+                        else
+                        {
+                            targetingTag = "equal";
+                        }
                     }
                 }
             }
@@ -480,10 +495,6 @@ namespace Barotrauma
                 {
                     CharacterParams.TargetParams targetingParams = null;
                     UpdateTargets(Character, out targetingParams);
-                    if (!IsLatchedOnSub)
-                    {
-                        UpdateWallTarget(requiredHoleCount);
-                    }
                     updateTargetsTimer = updateTargetsInterval * Rand.Range(0.75f, 1.25f);
                     if (SelectedAiTarget == null)
                     {
@@ -493,6 +504,10 @@ namespace Barotrauma
                     {
                         selectedTargetingParams = targetingParams;
                         State = targetingParams.State;
+                    }
+                    if (SelectedAiTarget?.Entity != null && !IsLatchedOnSub && State == AIState.Attack || State == AIState.Aggressive || State == AIState.PassiveAggressive)
+                    {
+                        UpdateWallTarget(requiredHoleCount);
                     }
                 }
             }
@@ -1004,12 +1019,8 @@ namespace Barotrauma
                     if (!w.SectionBodyDisabled(i))
                     {
                         isBroken = false;
-                        Vector2 sectionPos = w.SectionPosition(i);
+                        Vector2 sectionPos = w.SectionPosition(i, world: true);
                         attackWorldPos = sectionPos;
-                        if (w.Submarine != null)
-                        {
-                            attackWorldPos += w.Submarine.Position;
-                        }
                         attackSimPos = ConvertUnits.ToSimUnits(attackWorldPos);
                         break;
                     }
@@ -1027,18 +1038,19 @@ namespace Barotrauma
             bool pursue = false;
             if (IsCoolDownRunning)
             {
-                if (AttackingLimb.attack.CoolDownTimer >= AttackingLimb.attack.CoolDown + AttackingLimb.attack.CurrentRandomCoolDown - AttackingLimb.attack.AfterAttackDelay)
+                var currentAttackLimb = AttackingLimb ?? _previousAttackingLimb;
+                if (currentAttackLimb.attack.CoolDownTimer >= currentAttackLimb.attack.CoolDown + currentAttackLimb.attack.CurrentRandomCoolDown - currentAttackLimb.attack.AfterAttackDelay)
                 {
                     return;
                 }
-                switch (AttackingLimb.attack.AfterAttack)
+                switch (currentAttackLimb.attack.AfterAttack)
                 {
                     case AIBehaviorAfterAttack.Pursue:
                     case AIBehaviorAfterAttack.PursueIfCanAttack:
-                        if (AttackingLimb.attack.SecondaryCoolDown <= 0)
+                        if (currentAttackLimb.attack.SecondaryCoolDown <= 0)
                         {
                             // No (valid) secondary cooldown defined.
-                            if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
+                            if (currentAttackLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                             {
                                 canAttack = false;
                                 pursue = true;
@@ -1051,13 +1063,13 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (AttackingLimb.attack.SecondaryCoolDownTimer <= 0)
+                            if (currentAttackLimb.attack.SecondaryCoolDownTimer <= 0)
                             {
                                 // Don't allow attacking when the attack target has just changed.
                                 if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
                                 {
                                     canAttack = false;
-                                    if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
+                                    if (currentAttackLimb.attack.AfterAttack == AIBehaviorAfterAttack.PursueIfCanAttack)
                                     {
                                         // Fall back if cannot attack.
                                         UpdateFallBack(attackWorldPos, deltaTime, true);
@@ -1068,7 +1080,7 @@ namespace Barotrauma
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var newLimb = GetAttackLimb(attackWorldPos, AttackingLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, currentAttackLimb);
                                     if (newLimb != null)
                                     {
                                         // Attack with the new limb
@@ -1077,7 +1089,7 @@ namespace Barotrauma
                                     else
                                     {
                                         // No new limb was found.
-                                        if (AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
+                                        if (currentAttackLimb.attack.AfterAttack == AIBehaviorAfterAttack.Pursue)
                                         {
                                             canAttack = false;
                                             pursue = true;
@@ -1099,26 +1111,26 @@ namespace Barotrauma
                         break;
                     case AIBehaviorAfterAttack.FallBackUntilCanAttack:
                     case AIBehaviorAfterAttack.FollowThroughUntilCanAttack:
-                        if (AttackingLimb.attack.SecondaryCoolDown <= 0)
+                        if (currentAttackLimb.attack.SecondaryCoolDown <= 0)
                         {
                             // No (valid) secondary cooldown defined.
-                            UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
+                            UpdateFallBack(attackWorldPos, deltaTime, currentAttackLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                             return;
                         }
                         else
                         {
-                            if (AttackingLimb.attack.SecondaryCoolDownTimer <= 0)
+                            if (currentAttackLimb.attack.SecondaryCoolDownTimer <= 0)
                             {
                                 // Don't allow attacking when the attack target has just changed.
                                 if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
                                 {
-                                    UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
+                                    UpdateFallBack(attackWorldPos, deltaTime, currentAttackLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                                     return;
                                 }
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var newLimb = GetAttackLimb(attackWorldPos, AttackingLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, currentAttackLimb);
                                     if (newLimb != null)
                                     {
                                         // Attack with the new limb
@@ -1127,7 +1139,7 @@ namespace Barotrauma
                                     else
                                     {
                                         // No new limb was found.
-                                        UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
+                                        UpdateFallBack(attackWorldPos, deltaTime, currentAttackLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                                         return;
                                     }
                                 }
@@ -1135,13 +1147,13 @@ namespace Barotrauma
                             else
                             {
                                 // Cooldown not yet expired -> steer away from the target
-                                UpdateFallBack(attackWorldPos, deltaTime, AttackingLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
+                                UpdateFallBack(attackWorldPos, deltaTime, currentAttackLimb.attack.AfterAttack == AIBehaviorAfterAttack.FollowThroughUntilCanAttack);
                                 return;
                             }
                         }
                         break;
                     case AIBehaviorAfterAttack.IdleUntilCanAttack:
-                        if (AttackingLimb.attack.SecondaryCoolDown <= 0)
+                        if (currentAttackLimb.attack.SecondaryCoolDown <= 0)
                         {
                             // No (valid) secondary cooldown defined.
                             UpdateIdle(deltaTime, followLastTarget: false);
@@ -1149,7 +1161,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (AttackingLimb.attack.SecondaryCoolDownTimer <= 0)
+                            if (currentAttackLimb.attack.SecondaryCoolDownTimer <= 0)
                             {
                                 // Don't allow attacking when the attack target has just changed.
                                 if (_previousAiTarget != null && SelectedAiTarget != _previousAiTarget)
@@ -1160,7 +1172,7 @@ namespace Barotrauma
                                 else
                                 {
                                     // If the secondary cooldown is defined and expired, check if we can switch the attack
-                                    var newLimb = GetAttackLimb(attackWorldPos, AttackingLimb);
+                                    var newLimb = GetAttackLimb(attackWorldPos, currentAttackLimb);
                                     if (newLimb != null)
                                     {
                                         // Attack with the new limb
@@ -1258,7 +1270,7 @@ namespace Barotrauma
 
                 Vector2 attackLimbPos = Character.AnimController.SimplePhysicsEnabled ? Character.WorldPosition : AttackingLimb.WorldPosition;
                 Vector2 toTarget = attackWorldPos - attackLimbPos;
-                // Add a margin when the target is moving away, because otherwise it might be difficult to reach it (the attack takes some time to perform)
+                // Add a margin when the target is moving away, because otherwise it might be difficult to reach it if the attack takes some time to execute
                 if (wallTarget != null)
                 {
                     if (wallTarget.Structure.Submarine != null)
@@ -1283,9 +1295,14 @@ namespace Barotrauma
 
                 Vector2 CalculateMargin(Vector2 targetVelocity)
                 {
-                    if (targetVelocity == Vector2.Zero) { return targetVelocity; }
+                    if (targetVelocity == Vector2.Zero) { return Vector2.Zero; }
+                    float diff = AttackingLimb.attack.Range - AttackingLimb.attack.DamageRange;
+                    if (diff <= 0 || toTarget.LengthSquared() <= MathUtils.Pow2(AttackingLimb.attack.DamageRange)) { return Vector2.Zero; }
                     float dot = Vector2.Dot(Vector2.Normalize(targetVelocity), Vector2.Normalize(Character.AnimController.Collider.LinearVelocity));
-                    return ConvertUnits.ToDisplayUnits(targetVelocity) * AttackingLimb.attack.Duration * dot;
+                    if (dot <= 0 || !MathUtils.IsValid(dot)) { return Vector2.Zero; }
+                    float distanceOffset = diff * AttackingLimb.attack.Duration;
+                    // Intentionally omit the unit conversion because we use distanceOffset as a multiplier.
+                    return targetVelocity * distanceOffset * dot;
                 }
 
                 // Check that we can reach the target
@@ -1649,7 +1666,7 @@ namespace Barotrauma
                             float GetTargetMaxSpeed() => Character.ApplyTemporarySpeedLimits(Character.AnimController.CurrentSwimParams.MovementSpeed * 0.3f);
                     }
                     SteeringManager.SteeringSeek(steerPos, 10);
-                    if (SelectedAiTarget?.Entity is Character || distance == 0 || distance > ConvertUnits.ToDisplayUnits(avoidLookAheadDistance * 2))
+                    if (SelectedAiTarget?.Entity is Character c && c.Submarine == null || distance == 0 || distance > ConvertUnits.ToDisplayUnits(avoidLookAheadDistance * 2))
                     {
                         SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 30);
                     }
@@ -1813,9 +1830,8 @@ namespace Barotrauma
                                 ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
                             }
                         }
-                        else
+                        else if (!AIParams.HasTag("equal"))
                         {
-                            // Equal strength
                             ChangeTargetState(attacker, canAttack ? AIState.Attack : AIState.Escape, 100);
                         }
                     }
@@ -2151,6 +2167,10 @@ namespace Barotrauma
                                 else if (enemy.CombatStrength < CombatStrength)
                                 {
                                     targetingTag = "weaker";
+                                }
+                                else
+                                {
+                                    targetingTag = "equal";
                                 }
                                 if (targetingTag == "stronger" && (State == AIState.Avoid || State == AIState.Escape || State == AIState.Flee))
                                 {
@@ -2619,91 +2639,163 @@ namespace Barotrauma
         }
 
         private WallTarget wallTarget;
-
+        private readonly List<(Body, int, Vector2)> wallHits = new List<(Body, int, Vector2)>(3);
         private void UpdateWallTarget(int requiredHoleCount)
         {
             wallTarget = null;
-            if (State == AIState.Flee || State == AIState.Escape) { return; }
             if (AIParams.CanOpenDoors && HasValidPath(requireNonDirty: true)) { return; }
             if (SelectedAiTarget == null) { return; }
-            if (SelectedAiTarget.Entity == null) { return; }  
-            Vector2 rayStart = SimPosition;
-            Vector2 rayEnd = SelectedAiTarget.SimPosition;
-            if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
+            if (SelectedAiTarget.Entity == null) { return; }
+            wallHits.Clear();
+            Structure wall = null;
+            if (AIParams.WallTargetingMethod.HasFlag(WallTargetingMethod.Target))
             {
-                rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
-            }
-            else if (SelectedAiTarget.Entity.Submarine == null && Character.Submarine != null)
-            {
-                rayEnd -= Character.Submarine.SimPosition;
-            }
-            Body closestBody = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true, ignoreSensors: CanEnterSubmarine, ignoreDisabledWalls: CanEnterSubmarine);
-            if (Submarine.LastPickedFraction != 1.0f && closestBody != null)
-            {
-                if (closestBody.UserData is Structure wall && wall.Submarine != null && (Character.IsBot || wall.Submarine.Info.IsPlayer || wall.Submarine.Info.IsOutpost && TargetOutposts))
+                Vector2 rayStart = SimPosition;
+                Vector2 rayEnd = SelectedAiTarget.SimPosition;
+                if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
                 {
-                    int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
-                    float sectionDamage = wall.SectionDamage(sectionIndex);
-                    for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
+                    rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
+                }
+                else if (SelectedAiTarget.Entity.Submarine == null && Character.Submarine != null)
+                {
+                    rayEnd -= Character.Submarine.SimPosition;
+                }
+                DoRayCast(rayStart, rayEnd);
+            }
+            if (AIParams.WallTargetingMethod.HasFlag(WallTargetingMethod.Heading))
+            {
+                Vector2 rayStart = SimPosition;
+                Vector2 rayEnd = rayStart + VectorExtensions.Forward(Character.AnimController.Collider.Rotation + MathHelper.PiOver2, avoidLookAheadDistance * 5);
+                if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
+                {
+                    rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
+                    rayEnd -= SelectedAiTarget.Entity.Submarine.SimPosition;
+                }
+                else if (SelectedAiTarget.Entity.Submarine == null && Character.Submarine != null)
+                {
+                    rayStart -= Character.Submarine.SimPosition;
+                    rayEnd -= Character.Submarine.SimPosition;
+                }
+                DoRayCast(rayStart, rayEnd);
+            }
+            if (AIParams.WallTargetingMethod.HasFlag(WallTargetingMethod.Steering))
+            {
+                Vector2 rayStart = SimPosition;
+                Vector2 rayEnd = rayStart + Steering * 5;
+                if (SelectedAiTarget.Entity.Submarine != null && Character.Submarine == null)
+                {
+                    rayStart -= SelectedAiTarget.Entity.Submarine.SimPosition;
+                    rayEnd -= SelectedAiTarget.Entity.Submarine.SimPosition;
+                }
+                else if (SelectedAiTarget.Entity.Submarine == null && Character.Submarine != null)
+                {
+                    rayStart -= Character.Submarine.SimPosition;
+                    rayEnd -= Character.Submarine.SimPosition;
+                }
+                DoRayCast(rayStart, rayEnd);
+            }
+            if (wallHits.Any())
+            {
+                Body closestBody = null;
+                float closestDistance = 0;
+                int sectionIndex = -1;
+                Vector2 sectionPos = Vector2.Zero;
+                foreach ((Body body, int index, Vector2 sectionPosition) in wallHits)
+                {
+                    float distance = Vector2.DistanceSquared(SimPosition, sectionPosition);
+                    if (closestBody == null || closestDistance == 0 || distance < closestDistance)
                     {
-                        if (wall.SectionBodyDisabled(i))
-                        {
-                            if (Character.AnimController.CanEnterSubmarine && CanPassThroughHole(wall, i, requiredHoleCount))
-                            {
-                                sectionIndex = i;
-                                break;
-                            }
-                            else
-                            {
-                                // Ignore and keep breaking other sections
-                                continue;
-                            }
-                        }
-                        if (wall.SectionDamage(i) > sectionDamage)
-                        {
-                            sectionIndex = i;
-                        }
-                    }
-                    Vector2 sectionPos = wall.SectionPosition(sectionIndex);
-                    Vector2 attachTargetNormal;
-                    if (wall.IsHorizontal)
-                    {
-                        attachTargetNormal = new Vector2(0.0f, Math.Sign(WorldPosition.Y - wall.WorldPosition.Y));
-                        sectionPos.Y += (wall.BodyHeight <= 0.0f ? wall.Rect.Height : wall.BodyHeight) / 2 * attachTargetNormal.Y;
-                    }
-                    else
-                    {
-                        attachTargetNormal = new Vector2(Math.Sign(WorldPosition.X - wall.WorldPosition.X), 0.0f);
-                        sectionPos.X += (wall.BodyWidth <= 0.0f ? wall.Rect.Width : wall.BodyWidth) / 2 * attachTargetNormal.X;
-                    }
-                    LatchOntoAI?.SetAttachTarget(wall, ConvertUnits.ToSimUnits(sectionPos), attachTargetNormal);
-                    if (Character.AnimController.CanEnterSubmarine || !wall.SectionBodyDisabled(sectionIndex) && !IsWallDisabled(wall))
-                    {
-                        if (AIParams.TargetOuterWalls || wall.prefab.Tags.Contains("inner") || wall.Submarine != null && wall.Submarine == Character.Submarine)
-                        {
-                            if (wall.NoAITarget && Character.AnimController.CanEnterSubmarine)
-                            {
-                                // Blocked by a wall that shouldn't be targeted. The main intention here is to prevents monsters from entering the the tail and the nose pieces.
-                                IgnoreTarget(SelectedAiTarget);
-                                ResetAITarget();
-                            }
-                            else
-                            {
-                                wallTarget = new WallTarget(sectionPos, wall, sectionIndex);
-                            }
-                        }
+                        closestBody = body;
+                        closestDistance = distance;
+                        wall = closestBody.UserData as Structure;
+                        sectionPos = sectionPosition;
+                        sectionIndex = index;
                     }
                 }
-                if (!Character.AnimController.CanEnterSubmarine && wallTarget == null && selectedTargetingParams?.AttackPattern == AttackPattern.Straight)
+                if (closestBody == null || sectionIndex == -1) { return; }
+                Vector2 attachTargetNormal;
+                if (wall.IsHorizontal)
                 {
-                    if (closestBody.UserData is Structure w && w.Submarine != null && w.Submarine == SelectedAiTarget.Entity?.Submarine || 
-                        closestBody.UserData is Item i && i.Submarine != null && i.Submarine == SelectedAiTarget.Entity?.Submarine)
+                    attachTargetNormal = new Vector2(0.0f, Math.Sign(WorldPosition.Y - wall.WorldPosition.Y));
+                    sectionPos.Y += (wall.BodyHeight <= 0.0f ? wall.Rect.Height : wall.BodyHeight) / 2 * attachTargetNormal.Y;
+                }
+                else
+                {
+                    attachTargetNormal = new Vector2(Math.Sign(WorldPosition.X - wall.WorldPosition.X), 0.0f);
+                    sectionPos.X += (wall.BodyWidth <= 0.0f ? wall.Rect.Width : wall.BodyWidth) / 2 * attachTargetNormal.X;
+                }
+                LatchOntoAI?.SetAttachTarget(wall, ConvertUnits.ToSimUnits(sectionPos), attachTargetNormal);
+                if (Character.AnimController.CanEnterSubmarine || !wall.SectionBodyDisabled(sectionIndex) && !IsWallDisabled(wall))
+                {
+                    if (wall.NoAITarget && Character.AnimController.CanEnterSubmarine)
                     {
-                        // Cannot reach the target, because it's blocked by a disabled wall or a door
+                        // Blocked by a wall that shouldn't be targeted. The main intention here is to prevent monsters from entering the the tail and the nose pieces.
                         IgnoreTarget(SelectedAiTarget);
                         ResetAITarget();
                     }
+                    else
+                    {
+                        wallTarget = new WallTarget(sectionPos, wall, sectionIndex);
+                    }
                 }
+                else
+                {
+                    // Blocked by a disabled wall.
+                    IgnoreTarget(SelectedAiTarget);
+                    ResetAITarget();
+                }
+            }
+
+            void DoRayCast(Vector2 rayStart, Vector2 rayEnd)
+            {
+                Body hitTarget = Submarine.CheckVisibility(rayStart, rayEnd, ignoreSubs: true, ignoreSensors: CanEnterSubmarine, ignoreDisabledWalls: CanEnterSubmarine);
+                if (hitTarget != null && IsValid(hitTarget, out wall))
+                {
+                    int sectionIndex = wall.FindSectionIndex(ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition));
+                    if (sectionIndex >= 0)
+                    {
+                        wallHits.Add((hitTarget, sectionIndex, GetSectionPosition(wall, sectionIndex)));
+                    }
+                }
+            }
+
+            Vector2 GetSectionPosition(Structure wall, int sectionIndex)
+            {
+                float sectionDamage = wall.SectionDamage(sectionIndex);
+                for (int i = sectionIndex - 2; i <= sectionIndex + 2; i++)
+                {
+                    if (wall.SectionBodyDisabled(i))
+                    {
+                        if (Character.AnimController.CanEnterSubmarine && CanPassThroughHole(wall, i, requiredHoleCount))
+                        {
+                            sectionIndex = i;
+                            break;
+                        }
+                        else
+                        {
+                            // Ignore and keep breaking other sections
+                            continue;
+                        }
+                    }
+                    if (wall.SectionDamage(i) > sectionDamage)
+                    {
+                        sectionIndex = i;
+                    }
+                }
+                return wall.SectionPosition(sectionIndex, world: false);
+            }
+
+            bool IsValid(Body hit, out Structure wall)
+            {
+                wall = null;
+                if (Submarine.LastPickedFraction == 1.0f) { return false; }
+                if (!(hit.UserData is Structure w)) { return false; }
+                if (w.Submarine == null) { return false; }
+                if (w.Submarine != SelectedAiTarget.Entity.Submarine) { return false; }
+                if (Character.Submarine == null && w.prefab.Tags.Contains("inner")) { return false; }
+                if (!AIParams.TargetOuterWalls && !w.prefab.Tags.Contains("inner")) { return false; }
+                wall = w;
+                return true;
             }
         }
 
@@ -2712,7 +2804,7 @@ namespace Barotrauma
             if (wallTarget != null && wallTarget.SectionIndex > -1 && CanPassThroughHole(wallTarget.Structure, wallTarget.SectionIndex, requiredHoleCount))
             {
                 WallSection section = wallTarget.Structure.GetSection(wallTarget.SectionIndex);
-                Vector2 targetPos = wallTarget.Structure.SectionPosition(wallTarget.SectionIndex, true);
+                Vector2 targetPos = wallTarget.Structure.SectionPosition(wallTarget.SectionIndex, world: true);
                 return section?.gap != null && SteerThroughGap(wallTarget.Structure, section, targetPos, deltaTime);
             }
             else if (SelectedAiTarget != null)

@@ -196,7 +196,7 @@ namespace Barotrauma
                 UpdaterUtil.SaveFileList("filelist.xml");
             }));
 
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
                 List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Select(f => f.Path).ToList();
@@ -1904,9 +1904,19 @@ namespace Barotrauma
                 spawnPoint = WayPoint.GetRandom(human ? SpawnType.Human : SpawnType.Enemy);
             }
 
-            CharacterTeamType teamType;
-            teamType = args.Length > 2 ? (CharacterTeamType)int.Parse(args[2]) : Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
             if (string.IsNullOrWhiteSpace(args[0])) { return; }
+            CharacterTeamType teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+            if (args.Length > 2)
+            {
+                try
+                {
+                    teamType = (CharacterTeamType)int.Parse(args[2]);
+                }
+                catch
+                {
+                    DebugConsole.ThrowError($"\"{args[2]}\" is not a valid team id.");
+                }
+            }
 
             if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
 

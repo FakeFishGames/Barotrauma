@@ -14,11 +14,14 @@ namespace Barotrauma
         private readonly XElement itemConfig;
 
         private readonly List<Character> characters = new List<Character>();
-        private readonly Dictionary<Character, List<Item>> characterDictionary = new Dictionary<Character, List<Item>>();
+        private readonly Dictionary<Character, List<Item>> characterItems = new Dictionary<Character, List<Item>>();
 
         private readonly int baseEscortedCharacters;
         private readonly float scalingEscortedCharacters;
         private readonly float terroristChance;
+
+        private int calculatedReward;
+        private Submarine missionSub;
 
         private Character vipCharacter;
 
@@ -30,24 +33,43 @@ namespace Barotrauma
         public EscortMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
+            missionSub = sub;
             characterConfig = prefab.ConfigElement.Element("Characters");
-            // Should reflect different escortables, prisoners, VIPs, passengers (where does this comment refer to?)
-
             baseEscortedCharacters = prefab.ConfigElement.GetAttributeInt("baseescortedcharacters", 1);
             scalingEscortedCharacters = prefab.ConfigElement.GetAttributeFloat("scalingescortedcharacters", 0);
             terroristChance = prefab.ConfigElement.GetAttributeFloat("terroristchance", 0);
             itemConfig = prefab.ConfigElement.Element("TerroristItems");
+            CalculateReward();
+        }
+
+        private void CalculateReward()
+        {
+            if (missionSub == null)
+            {
+                calculatedReward = Prefab.Reward;
+                return;
+            }
+
+            int multiplier = CalculateScalingEscortedCharacterCount();
+            calculatedReward = Prefab.Reward * multiplier;
+
+            string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(missionSub))}‖end‖";
+            if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
         }
 
         public override int GetReward(Submarine sub)
         {
-            int multiplier = CalculateScalingEscortedCharacterCount();
-            return Prefab.Reward * multiplier;
+            if (sub != missionSub)
+            {
+                missionSub = sub;
+                CalculateReward();
+            }
+            return calculatedReward;
         }
 
         int CalculateScalingEscortedCharacterCount(bool inMission = false)
         {
-            if (Submarine.MainSub == null || Submarine.MainSub.Info == null) // UI logic failing to get the correct value is not important, but the mission logic must succeed
+            if (missionSub == null || missionSub.Info == null) // UI logic failing to get the correct value is not important, but the mission logic must succeed
             {
                 if (inMission)
                 {
@@ -55,13 +77,13 @@ namespace Barotrauma
                 }
                 return 1;
             }
-            return (int)Math.Round(baseEscortedCharacters + scalingEscortedCharacters * (Submarine.MainSub.Info.RecommendedCrewSizeMin + Submarine.MainSub.Info.RecommendedCrewSizeMax) / 2);
+            return (int)Math.Round(baseEscortedCharacters + scalingEscortedCharacters * (missionSub.Info.RecommendedCrewSizeMin + missionSub.Info.RecommendedCrewSizeMax) / 2);
         }
 
         private void InitEscort()
         {
             characters.Clear();
-            characterDictionary.Clear();
+            characterItems.Clear();
             // VIP transport mission characters stay in the same location; other characters roam at will
             // could be replaced with a designated waypoint for VIPs, such as cargo or crew
             WayPoint explicitStayInHullPos = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
@@ -78,7 +100,7 @@ namespace Barotrauma
                 int count = CalculateScalingEscortedCharacterCount(inMission: true);
                 for (int i = 0; i < count; i++)
                 {
-                    Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(element), characters, characterDictionary, Submarine.MainSub, CharacterTeamType.FriendlyNPC, explicitStayInHullPos, humanPrefabRandSync: randSync);
+                    Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(element), characters, characterItems, Submarine.MainSub, CharacterTeamType.FriendlyNPC, explicitStayInHullPos, humanPrefabRandSync: randSync);
                     if (spawnedCharacter.AIController is HumanAIController humanAI)
                     {
                         humanAI.InitMentalStateManager();
@@ -154,6 +176,13 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Failed to initialize characters for escort mission (characterConfig == null)");
                 return;
+            }
+
+            // to ensure single missions run without issues, default to mainsub
+            if (missionSub == null)
+            {
+                missionSub = Submarine.MainSub;
+                CalculateReward();
             }
 
             if (!IsClient)
@@ -276,7 +305,7 @@ namespace Barotrauma
             // characters that survived will take their items with them, in case players tried to be crafty and steal them
             // this needs to run here in case players abort the mission by going back home
             // TODO: I think this might feel like a bug.
-            foreach (var characterItem in characterDictionary)
+            foreach (var characterItem in characterItems)
             {
                 if (Survived(characterItem.Key) || !completed)
                 {
@@ -291,7 +320,7 @@ namespace Barotrauma
             }
 
             characters.Clear();
-            characterDictionary.Clear();
+            characterItems.Clear();
             failed = !completed;
         }
     }

@@ -115,6 +115,8 @@ namespace Barotrauma
 
         protected Key[] keys;
 
+        public HumanPrefab Prefab;
+
         private CharacterTeamType teamID;
         public CharacterTeamType TeamID
         {
@@ -1365,11 +1367,27 @@ namespace Barotrauma
                 }
             }
         }
+        private List<Item> wearableItems = new List<Item>();
 
         public float GetSkillLevel(string skillIdentifier)
         {
             if (Info?.Job == null) { return 0.0f; }
             float skillLevel = Info.Job.GetSkillLevel(skillIdentifier);
+
+            if (skillIdentifier != null)
+            {
+                for (int i = 0; i < Inventory.Capacity; i++)
+                {
+                    if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
+                    {
+                        if (wearable.SkillModifiers.TryGetValue(skillIdentifier, out float skillValue))
+                        {
+                            skillLevel += skillValue;
+                        }
+                    }
+                }
+            }
+
             foreach (Affliction affliction in CharacterHealth.GetAllAfflictions())
             {
                 skillLevel *= affliction.GetSkillMultiplier();

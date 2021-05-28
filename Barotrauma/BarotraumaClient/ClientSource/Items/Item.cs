@@ -1586,11 +1586,20 @@ namespace Barotrauma
                 }
             }
 
-            var item = new Item(itemPrefab, pos, sub, id: itemId)
+            Item item = null;
+            try
             {
-                SpawnedInOutpost = spawnedInOutpost,
-                AllowStealing = allowStealing
-            };
+                item = new Item(itemPrefab, pos, sub, id: itemId)
+                {
+                    SpawnedInOutpost = spawnedInOutpost,
+                    AllowStealing = allowStealing
+                };
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Failed to spawn item {itemPrefab.Name}", e);
+                throw;
+            }
 
             if (item.body != null)
             {

@@ -535,7 +535,6 @@ namespace Barotrauma
             XDocument doc = new XDocument(newElement);
 
             doc.Root.Add(new XAttribute("name", Name));
-
             if (previewImage != null)
             {
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
@@ -692,8 +691,6 @@ namespace Barotrauma
             }
         }
 
-        static readonly string TempFolder = Path.Combine("Submarine", "Temp");
-
         public static XDocument OpenFile(string file)
         {
             return OpenFile(file, out _);
@@ -723,7 +720,7 @@ namespace Barotrauma
 
             if (extension == ".sub")
             {
-                System.IO.Stream stream = null;
+                System.IO.Stream stream;
                 try
                 {
                     stream = SaveUtil.DecompressFiletoStream(file);

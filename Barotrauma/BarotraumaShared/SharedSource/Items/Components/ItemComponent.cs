@@ -660,7 +660,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public virtual bool HasAccess(Character character)
         {
-            if (item.IgnoreByAI) { return false; }
+            if (character.IsBot && item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (requiredItems.None()) { return true; }
             if (character.Inventory != null)

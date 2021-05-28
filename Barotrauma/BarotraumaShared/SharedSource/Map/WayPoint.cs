@@ -829,7 +829,7 @@ namespace Barotrauma
             {
                 if (assignedWayPoints[i] == null)
                 {
-                    DebugConsole.ThrowError("Couldn't find a waypoint for " + crew[i].Name + "!");
+                    DebugConsole.AddWarning("Couldn't find a waypoint for " + crew[i].Name + "!");
                     assignedWayPoints[i] = WayPointList[0];
                 }
             }

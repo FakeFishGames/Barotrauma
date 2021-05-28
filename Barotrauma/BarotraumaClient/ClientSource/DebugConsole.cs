@@ -241,6 +241,7 @@ namespace Barotrauma
                 case "toggleupperhud":
                 case "togglecharacternames":
                 case "fpscounter":
+                case "showperf":
                 case "dumptofile":
                 case "findentityids":
                 case "setfreecamspeed":

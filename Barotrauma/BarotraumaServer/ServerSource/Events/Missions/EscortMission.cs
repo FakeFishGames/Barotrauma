@@ -19,12 +19,10 @@ namespace Barotrauma
             {
                 character.WriteSpawnData(msg, character.ID, restrictMessageSize: false);
                 msg.Write(terroristCharacters.Contains(character));
-                List<Item> characterItems = characterDictionary[character];
-                // items must be written in a specific sequence so that child items aren't written before their parents
-                msg.Write((ushort)characterItems.Count());
-                foreach (Item item in characterItems)
+                msg.Write((ushort)characterItems[character].Count());
+                foreach (Item item in characterItems[character])
                 {
-                    item.WriteSpawnData(msg, item.ID, item.ParentInventory.Owner?.ID ?? Entity.NullEntityID, 0);
+                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0);
                 }
             }
         }

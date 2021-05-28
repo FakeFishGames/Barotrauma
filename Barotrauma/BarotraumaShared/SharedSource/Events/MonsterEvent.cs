@@ -182,13 +182,6 @@ namespace Barotrauma
         {
             if (disallowed) { return; }
 
-            if (Rand.Value(Rand.RandSync.Server) > prefab.SpawnProbability)
-            {
-                spawnPos = null;
-                Finished();
-                return;
-            }
-
             spawnPos = Vector2.Zero;
             var availablePositions = GetAvailableSpawnPositions();
             var chosenPosition = new Level.InterestingPosition(Point.Zero, Level.PositionType.MainPath, isValid: false);

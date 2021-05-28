@@ -748,7 +748,18 @@ namespace Barotrauma
                             {
                                 owner = ownerItem.ParentInventory?.Owner;
                             }
-                            if (owner is Item container && HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return true; }
+                            if (owner is Item container) 
+                            { 
+                                if (pc.Type == PropertyConditional.ConditionType.HasTag)
+                                {
+                                    //if we're checking for tags, just check the Item object, not the ItemComponents
+                                    if (HasRequiredConditions((container as ISerializableEntity).ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }
+                                }
+                                else
+                                {
+                                    if (HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return true; } 
+                                }                                
+                            }
                             if (owner is Character character && HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }
                         }
                         else

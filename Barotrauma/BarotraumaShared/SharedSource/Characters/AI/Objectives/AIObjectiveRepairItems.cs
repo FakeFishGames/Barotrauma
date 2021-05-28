@@ -16,7 +16,7 @@ namespace Barotrauma
         /// </summary>
         public string RelevantSkill;
 
-        private readonly Item prioritizedItem;
+        public Item PrioritizedItem { get; private set; }
 
         public override bool AllowMultipleInstances => true;
         public override bool AllowInAnySub => true;
@@ -28,7 +28,7 @@ namespace Barotrauma
         public AIObjectiveRepairItems(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1, Item prioritizedItem = null)
             : base(character, objectiveManager, priorityModifier)
         {
-            this.prioritizedItem = prioritizedItem;
+            PrioritizedItem = prioritizedItem;
         }
 
         protected override void CreateObjectives()
@@ -76,7 +76,7 @@ namespace Barotrauma
             {
                 if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier.Equals(RelevantSkill, StringComparison.OrdinalIgnoreCase)))) { return false; }
             }
-            return true;
+            return !HumanAIController.IsItemRepairedByAnother(item, out _);
         }
 
         public static bool ViableForRepair(Item item, Character character, HumanAIController humanAIController)
@@ -139,7 +139,7 @@ namespace Barotrauma
         protected override IEnumerable<Item> GetList() => Item.ItemList;
 
         protected override AIObjective ObjectiveConstructor(Item item) 
-            => new AIObjectiveRepairItem(character, item, objectiveManager, priorityModifier: PriorityModifier, isPriority: item == prioritizedItem);
+            => new AIObjectiveRepairItem(character, item, objectiveManager, priorityModifier: PriorityModifier, isPriority: item == PrioritizedItem);
 
         protected override void OnObjectiveCompleted(AIObjective objective, Item target)
             => HumanAIController.RemoveTargets<AIObjectiveRepairItems, Item>(character, target);
@@ -147,7 +147,7 @@ namespace Barotrauma
         public static bool IsValidTarget(Item item, Character character)
         {
             if (item == null) { return false; }
-            if (item.IgnoreByAI) { return false; }
+            if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.CurrentHull == null) { return false; }

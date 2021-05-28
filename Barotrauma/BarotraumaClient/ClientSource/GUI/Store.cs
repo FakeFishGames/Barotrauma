@@ -838,6 +838,7 @@ namespace Barotrauma
         {
             bool hasPermissions = HasPermissions;
             HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
+            bool refreshingBuyList = listBox == shoppingCrateBuyList;
             int totalPrice = 0;
             foreach (PurchasedItem item in items)
             {
@@ -859,6 +860,7 @@ namespace Barotrauma
                     {
                         numInput.UserData = item;
                         numInput.Enabled = hasPermissions;
+                        numInput.MaxValueInt = GetMaxAvailable(item.ItemPrefab, refreshingBuyList ? StoreTab.Buy : StoreTab.Sell);
                     }
                     SetOwnedLabelText(itemFrame);
                     SetItemFrameStatus(itemFrame, hasPermissions);
@@ -873,7 +875,7 @@ namespace Barotrauma
                 }
                 suppressBuySell = false;
 
-                var price = listBox == shoppingCrateBuyList ?
+                var price = refreshingBuyList ?
                     CurrentLocation.GetAdjustedItemBuyPrice(item.ItemPrefab, priceInfo: priceInfo) :
                     CurrentLocation.GetAdjustedItemSellPrice(item.ItemPrefab, priceInfo: priceInfo);
                 totalPrice += item.Quantity * price;
@@ -884,7 +886,7 @@ namespace Barotrauma
 
             SortItems(listBox, SortingMethod.CategoryAsc);
             listBox.UpdateScrollBarSize();       
-            if (listBox == shoppingCrateBuyList)
+            if (refreshingBuyList)
             {
                 buyTotal = totalPrice;
                 if (IsBuying) { SetShoppingCrateTotalText(); }

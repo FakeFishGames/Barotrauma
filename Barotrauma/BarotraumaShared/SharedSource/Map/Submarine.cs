@@ -1174,7 +1174,7 @@ namespace Barotrauma
             prevPosition = position;
         }
 
-        public void SetPosition(Vector2 position, List<Submarine> checkd = null)
+        public void SetPosition(Vector2 position, List<Submarine> checkd = null, bool forceUndockFromStaticSubmarines = true)
         {
             if (!MathUtils.IsValid(position)) { return; }
 
@@ -1188,7 +1188,7 @@ namespace Barotrauma
 
             foreach (Submarine dockedSub in DockedTo)
             {
-                if (dockedSub.PhysicsBody.BodyType == BodyType.Static)
+                if (dockedSub.PhysicsBody.BodyType == BodyType.Static && forceUndockFromStaticSubmarines)
                 {
                     if (ConnectedDockingPorts.TryGetValue(dockedSub, out DockingPort port))
                     {
@@ -1198,7 +1198,7 @@ namespace Barotrauma
                 }
                 Vector2? expectedLocation = CalculateDockOffset(this, dockedSub);
                 if (expectedLocation == null) { continue; }
-                dockedSub.SetPosition(position + expectedLocation.Value, checkd);
+                dockedSub.SetPosition(position + expectedLocation.Value, checkd, forceUndockFromStaticSubmarines);
                 dockedSub.UpdateTransform(interpolate: false);
             }
         }
@@ -1610,6 +1610,7 @@ namespace Barotrauma
                     }
                     foreach (Item itemToSwap in itemsToSwap)
                     {
+                        itemToSwap.PurchasedNewSwap = item.PurchasedNewSwap;
                         if (itemPrefab != itemToSwap.Prefab) { itemToSwap.PendingItemSwap = itemPrefab; }                       
                     }
                 }

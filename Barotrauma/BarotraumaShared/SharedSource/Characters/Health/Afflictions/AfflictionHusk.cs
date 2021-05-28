@@ -77,7 +77,7 @@ namespace Barotrauma
             else if (Strength < ActiveThreshold)
             {
                 DeactivateHusk();
-                if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: false })
+                if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
                 {
                     character.SpeechImpediment = 100;
                 }
@@ -131,7 +131,7 @@ namespace Barotrauma
                 character.NeedsAir = false;
             }
 
-            if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: false })
+            if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
             {
                 character.SpeechImpediment = 100;
             }

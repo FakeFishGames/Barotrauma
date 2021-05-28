@@ -63,13 +63,16 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            Item itemToDecontain = targetItem ?? sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id) && !i.IgnoreByAI), recursive: false);
+            Item itemToDecontain = 
+                targetItem ?? 
+                sourceContainer.Inventory.FindItem(i => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id) && !i.IgnoreByAI(character)), recursive: false);
+
             if (itemToDecontain == null)
             {
                 Abandon = true;
                 return;
             }
-            if (itemToDecontain.IgnoreByAI)
+            if (itemToDecontain.IgnoreByAI(character))
             {
                 Abandon = true;
                 return;

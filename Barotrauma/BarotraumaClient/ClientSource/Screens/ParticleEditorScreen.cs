@@ -235,7 +235,7 @@ namespace Barotrauma
                 element.Add(new XAttribute("particle", prefab.Identifier));
             }
 
-            SerializableProperty.SerializeProperties(emitterProperties, element, saveIfDefault: false);
+            SerializableProperty.SerializeProperties(emitterProperties, element, saveIfDefault: false, ignoreEditable: true);
 
             StringBuilder sb = new StringBuilder();
 

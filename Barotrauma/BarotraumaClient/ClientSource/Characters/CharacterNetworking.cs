@@ -396,7 +396,9 @@ namespace Barotrauma
                             break;
                         case 6: //NetEntityEvent.Type.AssignCampaignInteraction
                             byte campaignInteractionType = msg.ReadByte();
+                            bool requireConsciousness = msg.ReadBoolean();
                             (GameMain.GameSession?.GameMode as CampaignMode)?.AssignNPCMenuInteraction(this, (CampaignMode.InteractionType)campaignInteractionType);
+                            RequireConsciousnessForCustomInteract = requireConsciousness;
                             break;
                         case 7: //NetEntityEvent.Type.ObjectiveManagerState
                             // 1 = order, 2 = objective
@@ -458,7 +460,7 @@ namespace Barotrauma
         {
             DebugConsole.Log("Reading character spawn data");
 
-            if (GameMain.Client == null) return null;
+            if (GameMain.Client == null) { return null; }
 
             bool noInfo = inc.ReadBoolean();
             ushort id = inc.ReadUInt16();
@@ -474,7 +476,15 @@ namespace Barotrauma
             Character character = null;
             if (noInfo)
             {
-                character = Create(speciesName, position, seed, characterInfo: null, id: id, isRemotePlayer: false);
+                try
+                {
+                    character = Create(speciesName, position, seed, characterInfo: null, id: id, isRemotePlayer: false);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to spawn character {speciesName}", e);
+                    throw;
+                }
                 bool containsStatusData = inc.ReadBoolean();
                 if (containsStatusData)
                 {
@@ -490,8 +500,15 @@ namespace Barotrauma
                 string infoSpeciesName = inc.ReadString();
 
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
-
-                character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
+                try
+                {
+                    character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to spawn character {speciesName}", e);
+                    throw;
+                }
                 character.TeamID = (CharacterTeamType)teamID;
                 character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
                 if (character.CampaignInteractionType != CampaignMode.InteractionType.None)

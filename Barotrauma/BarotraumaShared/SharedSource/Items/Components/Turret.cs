@@ -15,8 +15,8 @@ namespace Barotrauma.Items.Components
     partial class Turret : Powered, IDrawableComponent, IServerSerializable
     {
         private Sprite barrelSprite, railSprite;
-        private List<Tuple<Sprite, Vector2>> chargeSprites = new List<Tuple<Sprite, Vector2>>();
-        private List<Sprite> spinningBarrelSprites = new List<Sprite>();
+        private readonly List<(Sprite sprite, Vector2 position)> chargeSprites = new List<(Sprite sprite, Vector2 position)>();
+        private readonly List<Sprite> spinningBarrelSprites = new List<Sprite>();
 
         private Vector2 barrelPos;
         private Vector2 transformedBarrelPos;
@@ -290,7 +290,7 @@ namespace Barotrauma.Items.Components
                         railSprite = new Sprite(subElement);
                         break;
                     case "chargesprite":
-                        chargeSprites.Add(new Tuple<Sprite, Vector2>(new Sprite(subElement), subElement.GetAttributeVector2("chargetarget", Vector2.Zero)));
+                        chargeSprites.Add((new Sprite(subElement), subElement.GetAttributeVector2("chargetarget", Vector2.Zero)));
                         break;
                     case "spinningbarrelsprite":
                         int spriteCount = subElement.GetAttributeInt("spriteamount", 1);
@@ -1283,7 +1283,6 @@ namespace Barotrauma.Items.Components
 
         private Vector2 GetRelativeFiringPosition(bool useOffset = true)
         {
-            // i don't feel great about this method, should be evaluated again
             Vector2 transformedFiringOffset = Vector2.Zero;
             if (useOffset)
             {

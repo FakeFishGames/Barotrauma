@@ -24,6 +24,19 @@ namespace Barotrauma
 
         private Submarine sub;
 
+        public override string Description
+        {
+            get
+            {
+                if (Submarine.MainSub != sub)
+                {
+                    string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(Submarine.MainSub))}‖end‖";
+                    if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
+                }
+                return description;
+            }
+        }
+
         public CargoMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {

@@ -367,9 +367,9 @@ namespace Barotrauma.Items.Components
             //a wire has been selected -> check if we should start dragging one of the nodes
             float nodeSelectDist = 10, sectionSelectDist = 5;
             highlightedNodeIndex = null;
-            if (MapEntity.SelectedList.Count == 1 && MapEntity.SelectedList[0] is Item)
+            if (MapEntity.SelectedList.Count == 1 && MapEntity.SelectedList.FirstOrDefault() is Item selectedItem)
             {
-                Wire selectedWire = ((Item)MapEntity.SelectedList[0]).GetComponent<Wire>();
+                Wire selectedWire = selectedItem.GetComponent<Wire>();
 
                 if (selectedWire != null)
                 {

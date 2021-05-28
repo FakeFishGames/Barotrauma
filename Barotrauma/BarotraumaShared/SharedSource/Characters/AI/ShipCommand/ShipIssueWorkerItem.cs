@@ -24,8 +24,6 @@ namespace Barotrauma
                 return false;
             }
 
-            if (TargetItem.IgnoreByAI) { return false; }
-
             return true;
         }
     }

@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class TagAction : EventAction
     {
-        public enum SubType { Any= 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8 }
+        public enum SubType { Any = 0, Player = 1, Outpost = 2, Wreck = 4, BeaconStation = 8 }
 
         [Serialize("", true)]
         public string Criteria { get; set; }
@@ -67,6 +67,16 @@ namespace Barotrauma
 #endif
         }
 
+        private void TagHumansByIdentifier(string identifier)
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.Prefab?.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase) ?? false)
+                {
+                    ParentEvent.AddTarget(Tag, c);
+                }
+            }
+        }
         private void TagStructuresByIdentifier(string identifier)
         {
             ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier.Equals(identifier, StringComparison.InvariantCultureIgnoreCase));
@@ -121,6 +131,9 @@ namespace Barotrauma
                         break;
                     case "crew":
                         TagCrew();
+                        break;
+                    case "humanprefabidentifier":
+                        if (kvp.Length > 1) { TagHumansByIdentifier(kvp[1].Trim()); }
                         break;
                     case "structureidentifier":
                         if (kvp.Length > 1) { TagStructuresByIdentifier(kvp[1].Trim()); }

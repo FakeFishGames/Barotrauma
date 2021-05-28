@@ -210,6 +210,10 @@ namespace Barotrauma
 
         public readonly string ReplacementOnUninstall;
 
+        public string SpawnWithId;
+
+        public string SwapIdentifier;
+
         public readonly Vector2 SwapOrigin;
 
         public List<(string requiredTag, string swapTo)> ConnectedItemsToSwap = new List<(string requiredTag, string swapTo)>();
@@ -225,9 +229,11 @@ namespace Barotrauma
         public SwappableItem(XElement element)
         {
             BasePrice = Math.Max(element.GetAttributeInt("price", 0), 0);
+            SwapIdentifier = element.GetAttributeString("swapidentifier", string.Empty);
             CanBeBought = element.GetAttributeBool("canbebought", BasePrice != 0);
             ReplacementOnUninstall = element.GetAttributeString("replacementonuninstall", "");
             SwapOrigin = element.GetAttributeVector2("origin", Vector2.One);
+            SpawnWithId = element.GetAttributeString("spawnwithid", string.Empty);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -352,6 +358,14 @@ namespace Barotrauma
         //if true and the item has trigger areas defined, players can only highlight the item when the cursor is on the trigger
         [Serialize(false, false)]
         public bool RequireCursorInsideTrigger
+        {
+            get;
+            private set;
+        }
+
+        //if true then players can only highlight the item if its targeted for interaction by a campaign event
+        [Serialize(false, false)]
+        public bool RequireCampaignInteract
         {
             get;
             private set;
@@ -730,6 +744,9 @@ namespace Barotrauma
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
+            //only used if the item doesn't have a name/description defined in the currently selected language
+            string fallbackNameIdentifier = element.GetAttributeString("fallbacknameidentifier", "");
+
             //works the same as nameIdentifier, but just replaces the description
             string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
 
@@ -737,11 +754,11 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    name = TextManager.Get("EntityName." + identifier, true) ?? string.Empty;
+                    name = TextManager.Get("EntityName." + identifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
                 else
                 {
-                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                    name = TextManager.Get("EntityName." + nameIdentifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
             }
             else if (Category.HasFlag(MapEntityCategory.Legacy))

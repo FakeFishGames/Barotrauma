@@ -246,42 +246,21 @@ namespace Barotrauma
                                 continue;
                             }
                             availableContainers.Add(itemContainer);
-    #if SERVER
+#if SERVER
                             if (GameMain.Server != null)
                             {
                                 Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
                             }
-    #endif
-                        }                    
-                    }
-
-                    if (itemContainer == null)
-                    {
-                        //no container, place at the waypoint
-                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                        {
-                            Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, position, wp.Submarine, onSpawned: itemSpawned);
+#endif
                         }
-                        else
-                        {
-                            var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                            itemSpawned(item);
-                        }
-                        continue;
                     }
 
-                    //place in the container
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                    {
-                        Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory, onSpawned: itemSpawned);
-                    }
-                    else
-                    {
-                        var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                        itemContainer.Inventory.TryPutItem(item, null);
-                        itemSpawned(item);
-                    }
-
+                    var item = new Item(pi.ItemPrefab, position, wp.Submarine);
+                    itemContainer?.Inventory.TryPutItem(item, null);
+                    itemSpawned(item);
+#if SERVER
+                    Entity.Spawner?.CreateNetworkEvent(item, false);
+#endif
                     static void itemSpawned(Item item)
                     {
                         Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;

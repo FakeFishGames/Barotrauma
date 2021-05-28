@@ -20,8 +20,9 @@ namespace Barotrauma.Items.Components
         private bool castShadows;
         private bool drawBehindSubs;
 
-
         private double lastToggleSignalTime;
+
+        private string prevColorSignal;
 
         public PhysicsBody ParentBody;
 
@@ -326,7 +327,11 @@ namespace Barotrauma.Items.Components
                     IsOn = signal.value != "0";
                     break;
                 case "set_color":
-                    LightColor = XMLExtensions.ParseColor(signal.value, false);
+                    if (signal.value != prevColorSignal)
+                    {
+                        LightColor = XMLExtensions.ParseColor(signal.value, false);
+                        prevColorSignal = signal.value;
+                    }
                     break;
             }
         }

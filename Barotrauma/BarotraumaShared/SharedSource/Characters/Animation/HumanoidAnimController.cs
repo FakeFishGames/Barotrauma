@@ -270,14 +270,16 @@ namespace Barotrauma
                 else
                 {
                     LimbJoint rightWrist = GetJointBetweenLimbs(LimbType.RightForearm, LimbType.RightHand);
+                    if (rightWrist != null)
+                    {
+                        forearmLength = Vector2.Distance(
+                            rightElbow.LimbA.type == LimbType.RightForearm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB,
+                            rightWrist.LimbA.type == LimbType.RightForearm ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
 
-                    forearmLength = Vector2.Distance(
-                        rightElbow.LimbA.type == LimbType.RightForearm ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB,
-                        rightWrist.LimbA.type == LimbType.RightForearm ? rightWrist.LocalAnchorA : rightWrist.LocalAnchorB);
-
-                    forearmLength += Vector2.Distance(
-                        rightHand.PullJointLocalAnchorA,
-                        rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                        forearmLength += Vector2.Distance(
+                            rightHand.PullJointLocalAnchorA,
+                            rightElbow.LimbA.type == LimbType.RightHand ? rightElbow.LocalAnchorA : rightElbow.LocalAnchorB);
+                    }
                 }
             }
         }

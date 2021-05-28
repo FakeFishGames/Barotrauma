@@ -867,9 +867,7 @@ namespace Barotrauma
         {
             int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
             currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers + (int)button.UserData, 1, NetConfig.MaxPlayers);
-
             maxPlayersBox.Text = currMaxPlayers.ToString();
-
             return true;
         }
 
@@ -1322,8 +1320,18 @@ namespace Barotrauma
             };
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
-                Text = maxPlayers.ToString(),
-                CanBeFocused = false
+                Text = maxPlayers.ToString()                
+            };
+            maxPlayersBox.OnEnterPressed += (GUITextBox sender, string text) =>
+            {
+                maxPlayersBox.Deselect();
+                return true;
+            };
+            maxPlayersBox.OnDeselected += (GUITextBox sender, Microsoft.Xna.Framework.Input.Keys key) =>
+            {
+                int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
+                currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers, 1, NetConfig.MaxPlayers);
+                maxPlayersBox.Text = currMaxPlayers.ToString();
             };
             new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
             {

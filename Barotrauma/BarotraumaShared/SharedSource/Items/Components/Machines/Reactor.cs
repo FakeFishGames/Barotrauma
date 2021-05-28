@@ -326,19 +326,24 @@ namespace Barotrauma.Items.Components
                 tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);
                 allowedTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
 
+                DebugConsole.Log($"Degree of success: {degreeOfSuccess}");
+                DebugConsole.Log($"Current load: {currentLoad}");
+                DebugConsole.Log($"Max power output: {MaxPowerOutput}");
+                DebugConsole.Log($"Available fuel: {AvailableFuel}");
+
                 float desiredTurbineOutput = MathHelper.Clamp(correctTurbineOutput, 0.0f, 100.0f);
                 DebugConsole.Log($"Turbine output reset: {targetTurbineOutput}, {turbineOutput} -> {desiredTurbineOutput}");
                 targetTurbineOutput = desiredTurbineOutput;
                 turbineOutput = desiredTurbineOutput;
 
-                float desiredFissionRate = (optimalFissionRate.X + optimalFissionRate.Y) / 2.0f;
-                DebugConsole.Log($"Fission rate reset: {targetFissionRate}, {fissionRate} -> {desiredFissionRate}");
-                targetFissionRate = desiredFissionRate;
-                fissionRate = desiredFissionRate;
-
                 float desiredTemperature = (optimalTemperature.X + optimalTemperature.Y) / 2.0f;
                 DebugConsole.Log($"Temperature reset: {temperature} -> {desiredTemperature}");
                 temperature = desiredTemperature;
+
+                float desiredFissionRate = GetFissionRateForTargetTemperatureAndTurbineOutput(desiredTemperature, desiredTurbineOutput);
+                DebugConsole.Log($"Fission rate reset: {targetFissionRate}, {fissionRate} -> {desiredFissionRate}");
+                targetFissionRate = desiredFissionRate;
+                fissionRate = desiredFissionRate;
             }
 
             loadQueue.Enqueue(currentLoad);
@@ -418,6 +423,12 @@ namespace Barotrauma.Items.Components
         private float GetGeneratedHeat(float fissionRate)
         {
             return fissionRate * (prevAvailableFuel / 100.0f) * 2.0f;
+        }
+
+        private float GetFissionRateForTargetTemperatureAndTurbineOutput(float temperature, float turbineOutput)
+        {
+            if (MathUtils.NearlyEqual(AvailableFuel, 0f)) { return 0f; }
+            return (temperature + turbineOutput) / (AvailableFuel / 100f) / 2f;
         }
 
         /// <summary>

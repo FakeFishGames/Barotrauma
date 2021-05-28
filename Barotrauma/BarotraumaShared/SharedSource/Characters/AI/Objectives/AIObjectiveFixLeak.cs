@@ -38,10 +38,13 @@ namespace Barotrauma
                 Priority = 0;
                 Abandon = true;
             }
-            else if (HumanAIController.IsTrueForAnyCrewMember(other => other != HumanAIController && other.Character.IsBot && other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeak>()?.Leak == Leak))
+            else if (HumanAIController.IsTrueForAnyCrewMember(
+                other => other != HumanAIController && 
+                other.Character.IsBot &&
+                other.ObjectiveManager.GetActiveObjective<AIObjectiveFixLeaks>() is AIObjectiveFixLeaks fixLeaks &&
+                fixLeaks.SubObjectives.Any(so => so is AIObjectiveFixLeak fixObjective && fixObjective.Leak == Leak)))
             {
                 Priority = 0;
-                Abandon = true;
             }
             else
             {

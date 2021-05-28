@@ -34,7 +34,7 @@ namespace Barotrauma
 
         protected override float GetPriority()
         {
-            if (!IsAllowed || Item.IgnoreByAI)
+            if (!IsAllowed || Item.IgnoreByAI(character))
             {
                 Priority = 0;
                 Abandon = true;
@@ -44,10 +44,10 @@ namespace Barotrauma
                 }
                 return Priority;
             }
-            // Ignore items that are being repaired by someone else.
-            if (Item.Repairables.Any(r => r.CurrentFixer != null && r.CurrentFixer != character))
+            if (HumanAIController.IsItemRepairedByAnother(Item, out _))
             {
                 Priority = 0;
+                IsCompleted = true;
             }
             else
             {

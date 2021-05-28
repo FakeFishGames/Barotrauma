@@ -168,7 +168,7 @@ namespace Barotrauma
                     if (eventSet == null) { return; }
                     if (eventSet.OncePerOutpost)
                     {
-                        foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.First))
+                        foreach (EventPrefab ep in eventSet.EventPrefabs.Select(e => e.prefab))
                         {
                             if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
                             {
@@ -374,11 +374,11 @@ namespace Barotrauma
             preloadedSprites.Clear();
         }
 
-        private float CalculateCommonness(Pair<EventPrefab, float> eventPrefab)
+        private float CalculateCommonness(EventPrefab eventPrefab, float baseCommonness)
         {
-            if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab.First)) { return 0.0f; }
-            float retVal = eventPrefab.Second;
-            if (level.LevelData.EventHistory.Contains(eventPrefab.First)) { retVal *= 0.1f; }
+            if (level.LevelData.NonRepeatableEvents.Contains(eventPrefab)) { return 0.0f; }
+            float retVal = baseCommonness;
+            if (level.LevelData.EventHistory.Contains(eventPrefab)) { retVal *= 0.1f; }
             return retVal;
         }
 
@@ -420,8 +420,8 @@ namespace Barotrauma
             }
 
             var suitablePrefabs = eventSet.EventPrefabs.FindAll(e =>
-                string.IsNullOrEmpty(e.First.BiomeIdentifier) ||
-                e.First.BiomeIdentifier.Equals(level.LevelData?.Biome?.Identifier, StringComparison.OrdinalIgnoreCase));
+                string.IsNullOrEmpty(e.prefab.BiomeIdentifier) ||
+                e.prefab.BiomeIdentifier.Equals(level.LevelData?.Biome?.Identifier, StringComparison.OrdinalIgnoreCase));
 
             for (int i = 0; i < applyCount; i++)
             {
@@ -429,14 +429,14 @@ namespace Barotrauma
                 {
                     if (suitablePrefabs.Count > 0)
                     {
-                        List<Pair<EventPrefab, float>> unusedEvents = new List<Pair<EventPrefab, float>>(suitablePrefabs);
+                        var unusedEvents = new List<(EventPrefab prefab, float commonness, float probability)>(suitablePrefabs);
                         for (int j = 0; j < eventSet.EventCount; j++)
                         {
-                            if (unusedEvents.All(e => CalculateCommonness(e) <= 0.0f)) { break; }
-                            var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => CalculateCommonness(e)).ToList(), rand);
-                            if (eventPrefab != null)
+                            if (unusedEvents.All(e => CalculateCommonness(e.prefab, e.commonness) <= 0.0f)) { break; }
+                            (EventPrefab eventPrefab, float commonness, float probability) = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => CalculateCommonness(e.prefab, e.commonness)).ToList(), rand);
+                            if (eventPrefab != null && rand.NextDouble() <= probability)
                             {
-                                var newEvent = eventPrefab.First.CreateInstance();
+                                var newEvent = eventPrefab.CreateInstance();
                                 if (newEvent == null) { continue; }
                                 newEvent.Init(true);
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
@@ -450,7 +450,7 @@ namespace Barotrauma
                                     selectedEvents.Add(eventSet, new List<Event>());
                                 }
                                 selectedEvents[eventSet].Add(newEvent);
-                                unusedEvents.Remove(eventPrefab);
+                                unusedEvents.Remove((eventPrefab, commonness, probability));
                             }
                         }
                     }
@@ -465,9 +465,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    foreach (Pair<EventPrefab, float> eventPrefab in suitablePrefabs)
+                    foreach ((EventPrefab eventPrefab, float commonness, float probability) in suitablePrefabs)
                     {
-                        var newEvent = eventPrefab.First.CreateInstance();
+                        if (rand.NextDouble() > probability) { continue; }
+                        var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null) { continue; }
                         newEvent.Init(true);
 #if DEBUG

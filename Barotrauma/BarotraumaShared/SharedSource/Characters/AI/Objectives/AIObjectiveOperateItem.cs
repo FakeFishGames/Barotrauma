@@ -118,7 +118,7 @@ namespace Barotrauma
                     targetItem.CurrentHull.FireSources.Any() ||
                     HumanAIController.IsItemOperatedByAnother(target, out _) ||
                     Character.CharacterList.Any(c => c.CurrentHull == targetItem.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))
-                    || component.Item.IgnoreByAI || (useController && controller.Item.IgnoreByAI))
+                    || component.Item.IgnoreByAI(character) || useController && controller.Item.IgnoreByAI(character))
                 {
                     Priority = 0;
                 }

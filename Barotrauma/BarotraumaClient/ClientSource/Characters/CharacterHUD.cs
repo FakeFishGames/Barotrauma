@@ -400,7 +400,7 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(character.Position, item.Position) > 500f*500f) { continue; }
                     var body = Submarine.CheckVisibility(character.SimPosition, item.SimPosition, ignoreLevel: true);
                     if (body != null && body.UserData as Item != item) { continue; }
-                    GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Vector2(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color);
+                    GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Vector2(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color, createOffset: false);
                 }
             }
 

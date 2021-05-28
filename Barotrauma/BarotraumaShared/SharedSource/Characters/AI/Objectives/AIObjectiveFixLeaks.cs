@@ -74,7 +74,7 @@ namespace Barotrauma
             // Don't fix a leak on a wall section set to be ignored
             if (gap.ConnectedWall != null)
             {
-                if (gap.ConnectedWall.Sections.Any(s => s.gap == gap && s.IgnoreByAI)) { return false; } 
+                if (gap.ConnectedWall.Sections.Any(s => s.gap == gap && s.IgnoreByAI(character))) { return false; } 
                 if (gap.ConnectedWall.MaxHealth <= 0.0f) { return false; }
             }
             if (gap.ConnectedWall == null || gap.ConnectedDoor != null || gap.Open <= 0 || gap.linkedTo.All(l => l == null)) { return false; }

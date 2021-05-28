@@ -202,7 +202,7 @@ namespace Barotrauma
 
 namespace Barotrauma.Items.Components
 {
-    class Wearable : Pickable, IServerSerializable
+    partial class Wearable : Pickable, IServerSerializable
     {
         private readonly XElement[] wearableElements;
         private readonly WearableSprite[] wearableSprites;
@@ -210,6 +210,7 @@ namespace Barotrauma.Items.Components
         private readonly Limb[] limb;
 
         private readonly List<DamageModifier> damageModifiers;
+        public readonly Dictionary<string, float> SkillModifiers;
 
         public IEnumerable<DamageModifier> DamageModifiers
         {
@@ -265,7 +266,8 @@ namespace Barotrauma.Items.Components
             this.item = item;
 
             damageModifiers = new List<DamageModifier>();
-            
+            SkillModifiers = new Dictionary<string, float>();
+
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
             Variants = element.GetAttributeInt("variants", 0);
             variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
@@ -308,6 +310,18 @@ namespace Barotrauma.Items.Components
                     case "damagemodifier":
                         damageModifiers.Add(new DamageModifier(subElement, item.Name + ", Wearable"));
                         break;
+                    case "skillmodifier":
+                        string skillIdentifier = subElement.GetAttributeString("skillidentifier", string.Empty);
+                        float skillValue = subElement.GetAttributeFloat("skillvalue", 0f);
+                        if (SkillModifiers.ContainsKey(skillIdentifier))
+                        {
+                            SkillModifiers[skillIdentifier] += skillValue;
+                        }
+                        else
+                        {
+                            SkillModifiers.TryAdd(skillIdentifier, skillValue);
+                        }
+                        break;
                 }
             }
         }
@@ -324,7 +338,7 @@ namespace Barotrauma.Items.Components
             {
                 var wearableSprite = wearableSprites[i];
                 if (!wearableSprite.IsInitialized) { wearableSprite.Init(picker.Info?.Gender ?? Gender.None); }
-                if (picker.Info?.Gender != Gender.None && (wearableSprite.Gender != Gender.None))
+                if (picker.Info != null && picker.Info?.Gender != Gender.None && (wearableSprite.Gender != Gender.None))
                 {
                     // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
                     wearableSprite.Gender = picker.Info.Gender;
@@ -386,6 +400,7 @@ namespace Barotrauma.Items.Components
         {
             if (character == null || character.Removed) { return; }
             if (picker == null) { return; }
+
             for (int i = 0; i < wearableSprites.Length; i++)
             {
                 Limb equipLimb = character.AnimController.GetLimb(limbType[i]);

@@ -20,7 +20,7 @@ namespace Barotrauma
         {
             if (battery == null) { return false; }
             var item = battery.Item;
-            if (item.IgnoreByAI) { return false; }
+            if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (item.Submarine == null) { return false; }
             if (item.CurrentHull == null) { return false; }

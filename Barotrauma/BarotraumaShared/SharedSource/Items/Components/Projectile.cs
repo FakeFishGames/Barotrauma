@@ -44,6 +44,8 @@ namespace Barotrauma.Items.Components
 
         private readonly Queue<Impact> impactQueue = new Queue<Impact>();
 
+        private bool removePending;
+
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
 
@@ -274,10 +276,9 @@ namespace Barotrauma.Items.Components
         {
             if (character != null && !characterUsable) { return false; }
 
-
             for (int i = 0; i < HitScanCount; i++)
             {
-                float launchAngle = 0f;
+                float launchAngle;
                 
                 if (StaticSpread)
                 {
@@ -305,6 +306,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
+                    item.body.SetTransform(item.body.SimPosition, launchAngle);
                     float modifiedLaunchImpulse = LaunchImpulse * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse * item.body.Mass);
                 }
@@ -562,12 +564,15 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
-
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
                 HandleProjectileCollision(impact.Fixture, impact.Normal, impact.LinearVelocity);
+            }
+
+            if (!removePending)
+            {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
 
             if (item.body != null && item.body.FarseerBody.IsBullet)
@@ -668,6 +673,10 @@ namespace Barotrauma.Items.Components
             hits.Add(target.Body);
             impactQueue.Enqueue(new Impact(target, contact.Manifold.LocalNormal, item.body.LinearVelocity));
             IsActive = true;
+            if (RemoveOnHit)
+            {
+                item.body.FarseerBody.ResetDynamics();
+            }
             if (hits.Count() >= MaxTargetsToHit || target.Body.UserData is VoronoiCell)
             {
                 Deactivate();
@@ -867,15 +876,10 @@ namespace Barotrauma.Items.Components
 
             if (RemoveOnHit)
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
-                {
-                    //clients aren't allowed to remove items by themselves, so lets hide the projectile until the server tells us to remove it
-                    item.HiddenInGame = Hitscan;
-                }
-                else
-                {
-                    Entity.Spawner?.AddToRemoveQueue(item);
-                }
+                removePending = true;
+                item.HiddenInGame = true;
+                item.body.FarseerBody.Enabled = false;
+                Entity.Spawner?.AddToRemoveQueue(item);                
             }
 
             return true;

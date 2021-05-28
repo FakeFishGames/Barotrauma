@@ -204,6 +204,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize(false, true)]
+        public bool PurchasedNewSwap
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Checks both <see cref="NonInteractable"/> and <see cref="NonPlayerTeamInteractable"/>
         /// </summary>
@@ -705,7 +712,7 @@ namespace Barotrauma
             get { return allPropertyObjects; }
         }
         
-        public bool IgnoreByAI => OrderedToBeIgnored || HasTag("ignorebyai");
+        public bool IgnoreByAI(Character character) => HasTag("ignorebyai") || OrderedToBeIgnored && character.IsOnPlayerTeam;
         public bool OrderedToBeIgnored { get; set; }
 
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, ushort id = Entity.NullEntityID)
@@ -1280,16 +1287,16 @@ namespace Barotrauma
         /// <summary>
         /// Should this item or any of its containers be ignored by the AI?
         /// </summary>
-        public bool IsThisOrAnyContainerIgnoredByAI()
+        public bool IsThisOrAnyContainerIgnoredByAI(Character character)
         {
-            if (IgnoreByAI) { return true; }
+            if (IgnoreByAI(character)) { return true; }
             if (Container == null) { return false; }
-            if (Container.IgnoreByAI) { return true; }
+            if (Container.IgnoreByAI(character)) { return true; }
             var container = Container;
             while (container.Container != null)
             {
                 container = container.Container;
-                if (container.IgnoreByAI) { return true; }
+                if (container.IgnoreByAI(character)) { return true; }
             }
             return false;
         }
@@ -2779,6 +2786,7 @@ namespace Barotrauma
                 item.SpriteDepth = element.GetAttributeFloat("spritedepth", item.SpriteDepth);
                 item.SpriteColor = element.GetAttributeColor("spritecolor", item.SpriteColor);
                 item.Rotation = element.GetAttributeFloat("rotation", item.Rotation);
+                item.PurchasedNewSwap = element.GetAttributeBool("purchasednewswap", false);
 
                 float scaleRelativeToPrefab = element.GetAttributeFloat(item.scale, "scale", "Scale") / oldPrefab.Scale;
                 item.Scale *= scaleRelativeToPrefab;
@@ -2787,16 +2795,41 @@ namespace Barotrauma
                 {
                     Vector2 oldRelativeOrigin = (oldPrefab.SwappableItem.SwapOrigin - oldPrefab.Size / 2) * element.GetAttributeFloat(item.scale, "scale", "Scale");
                     oldRelativeOrigin.Y = -oldRelativeOrigin.Y;
-                    oldRelativeOrigin = MathUtils.RotatePoint(oldRelativeOrigin, item.rotationRad);
+                    oldRelativeOrigin = MathUtils.RotatePoint(oldRelativeOrigin, -item.rotationRad);
                     Vector2 oldOrigin = centerPos + oldRelativeOrigin;
 
                     Vector2 relativeOrigin = (prefab.SwappableItem.SwapOrigin - prefab.Size / 2) * item.Scale;
                     relativeOrigin.Y = -relativeOrigin.Y;
-                    relativeOrigin = MathUtils.RotatePoint(relativeOrigin, item.rotationRad);
+                    relativeOrigin = MathUtils.RotatePoint(relativeOrigin, -item.rotationRad);
                     Vector2 origin = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + relativeOrigin;
 
                     item.rect.Location -= (origin - oldOrigin).ToPoint();
                 }
+
+                if (item.PurchasedNewSwap && !string.IsNullOrEmpty(appliedSwap.SwappableItem?.SpawnWithId))
+                {
+                    var container = item.GetComponent<ItemContainer>();
+                    if (container != null)
+                    {
+                        container.SpawnWithId = appliedSwap.SwappableItem.SpawnWithId;
+                    }
+                    /*string[] splitIdentifier = appliedSwap.SwappableItem.SpawnWithId.Split(',');
+                    foreach (string id in splitIdentifier)
+                    {
+                        ItemPrefab itemToSpawn = ItemPrefab.Find(name: null, identifier: id.Trim());
+                        if (itemToSpawn == null)
+                        {
+                            DebugConsole.ThrowError($"Failed to spawn an item inside the purchased {item.Name} (could not find an item with the identifier \"{id}\").");
+                        }
+                        else
+                        {
+                            var spawnedItem = new Item(itemToSpawn, Vector2.Zero, null);
+                            item.OwnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots, createNetworkEvent: false);
+                            Spawner?.AddToSpawnQueue(itemToSpawn, item.OwnInventory, spawnIfInventoryFull: false);
+                        }
+                    }*/
+                }
+                item.PurchasedNewSwap = false;
             }
 
             float condition = element.GetAttributeFloat("condition", item.MaxCondition);

@@ -250,17 +250,21 @@ namespace Barotrauma
             var parentType = element.Parent?.GetAttributeString("prefabtype", "") ?? string.Empty;
             
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
+
+            //only used if the item doesn't have a name/description defined in the currently selected language
+            string fallbackNameIdentifier = element.GetAttributeString("fallbacknameidentifier", "");
+
             string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
 
             if (string.IsNullOrEmpty(sp.originalName))
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    sp.name = TextManager.Get("EntityName." + sp.identifier, true) ?? string.Empty;
+                    sp.name = TextManager.Get("EntityName." + sp.identifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
                 else
                 {
-                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                    sp.name = TextManager.Get("EntityName." + nameIdentifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
             }
             

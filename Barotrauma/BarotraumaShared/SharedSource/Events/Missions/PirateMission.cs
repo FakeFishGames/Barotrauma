@@ -21,7 +21,7 @@ namespace Barotrauma
 
         private Submarine enemySub;
         private readonly List<Character> characters = new List<Character>();
-        private readonly Dictionary<Character, List<Item>> characterDictionary = new Dictionary<Character, List<Item>>();
+        private readonly Dictionary<Character, List<Item>> characterItems = new Dictionary<Character, List<Item>>();
 
         // Update the last sighting periodically so that the players can find the pirate sub even if they have lost the track of it.
         private readonly float pirateSightingUpdateFrequency = 30;
@@ -103,17 +103,20 @@ namespace Barotrauma
 
             alternateReward = submarineConfig.GetAttributeInt("alternatereward", Reward);
 
-            string submarineIdentifier = submarineConfig.GetAttributeString("identifier", string.Empty);
-            if (submarineIdentifier == string.Empty)
+            string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", alternateReward)}‖end‖";
+            if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
+
+            string submarinePath = submarineConfig.GetAttributeString("path", string.Empty);
+            if (submarinePath == string.Empty)
             {
-                DebugConsole.ThrowError("No identifier used for submarine for pirate mission!");
+                DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!");
                 return;
             }
             // maybe a little redundant
-            var contentFile = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.EnemySubmarine).FirstOrDefault(x => x.Path == submarineIdentifier);
+            var contentFile = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.EnemySubmarine).FirstOrDefault(x => x.Path == submarinePath);
             if (contentFile == null)
             {
-                DebugConsole.ThrowError("No submarine file found with the identifier!");
+                DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!");
                 return;
             }
 
@@ -187,14 +190,13 @@ namespace Barotrauma
                 reactor.PowerUpImmediately();
             }
             enemySub.EnableMaintainPosition();
-            enemySub.SetPosition(spawnPos);
             enemySub.TeamID = CharacterTeamType.None;
         }
 
         private void InitPirates()
         {
             characters.Clear();
-            characterDictionary.Clear();
+            characterItems.Clear();
 
             if (characterConfig == null)
             {
@@ -222,13 +224,13 @@ namespace Barotrauma
 
                     if (characterType == null)
                     {
-                        DebugConsole.ThrowError("No character types defined in CharacterTypes for a declared type identifier in mission file " + this);
+                        DebugConsole.ThrowError($"No character types defined in CharacterTypes for a declared type identifier in mission \"{Prefab.Identifier}\".");
                         return;
                     }
 
                     XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, RandomnessModifier);
 
-                    Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(variantElement), characters, characterDictionary, enemySub, CharacterTeamType.None, null);
+                    Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(variantElement), characters, characterItems, enemySub, CharacterTeamType.None, null);
                     if (!commanderAssigned)
                     {
                         bool isCommander = variantElement.GetAttributeBool("iscommander", false);
@@ -240,6 +242,14 @@ namespace Barotrauma
                                 humanAIController.ShipCommandManager.patrolPositions.Add(patrolPos);
                             }
                             commanderAssigned = true;
+                        }
+                    }
+
+                    foreach (Item item in spawnedCharacter.Inventory.AllItems)
+                    {
+                        if (item?.Prefab.Identifier == "idcard")
+                        {
+                            item.AddTag("id_pirate");
                         }
                     }
                 }
@@ -297,9 +307,10 @@ namespace Barotrauma
             {
                 InitPirateShip(spawnPos);
             }
+            enemySub.SetPosition(spawnPos);
 
-            // flipping the sub on the frame it is moved into place must be done after it's been moved, or it breaks item connections to the submarine
-            // creating the pirates have to be done after the sub has been flipped, or it seems to break the AI pathing
+            // flipping the sub on the frame it is moved into place must be done after it's been moved, or it breaks item connections in the submarine
+            // creating the pirates has to be done after the sub has been flipped, or it seems to break the AI pathing
             enemySub.FlipX();
             enemySub.ShowSonarMarker = false;
 
@@ -375,7 +386,7 @@ namespace Barotrauma
                 completed = true;
             }
             characters.Clear();
-            characterDictionary.Clear();
+            characterItems.Clear();
             failed = !completed;
         }
     }

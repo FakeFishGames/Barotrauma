@@ -538,16 +538,18 @@ namespace Barotrauma.Items.Components
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        if (hull.Submarine != subs[i]) continue;
-                        if (hull.WorldRect.Y < hullRects[i].Y - hullRects[i].Height) continue;
-                        if (hull.WorldRect.Y - hull.WorldRect.Height > hullRects[i].Y) continue;
+                        if (hull.Submarine != subs[i]) { continue; }
+                        if (hull.WorldRect.Y - 5 < hullRects[i].Y - hullRects[i].Height) { continue; }
+                        if (hull.WorldRect.Y - hull.WorldRect.Height + 5 > hullRects[i].Y) { continue; }
 
                         if (i == 0) //left hull
                         {
+                            if (hull.WorldPosition.X > hullRects[0].Center.X) { continue; }
                             leftSubRightSide = Math.Max(hull.WorldRect.Right, leftSubRightSide);
                         }
                         else //upper hull
                         {
+                            if (hull.WorldPosition.X < hullRects[1].Center.X) { continue; }
                             rightSubLeftSide = Math.Min(hull.WorldRect.X, rightSubLeftSide);
                         }
                     }
@@ -591,8 +593,11 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                int expand = 5;
                 for (int i = 0; i < 2; i++)
                 {
+                    hullRects[i].X -= expand;
+                    hullRects[i].Width += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
@@ -636,16 +641,18 @@ namespace Barotrauma.Items.Components
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        if (hull.Submarine != subs[i]) continue;
-                        if (hull.WorldRect.Right < hullRects[i].X) continue;
-                        if (hull.WorldRect.X > hullRects[i].Right) continue;
+                        if (hull.Submarine != subs[i]) { continue; }
+                        if (hull.WorldRect.Right - 5 < hullRects[i].X) { continue; }
+                        if (hull.WorldRect.X + 5 > hullRects[i].Right) { continue; }
 
                         if (i == 0) //lower hull
                         {
+                            if (hull.WorldPosition.Y > hullRects[i].Y - hullRects[i].Height / 2) { continue; }
                             lowerSubTop = Math.Max(hull.WorldRect.Y, lowerSubTop);
                         }
                         else //upper hull
                         {
+                            if (hull.WorldPosition.Y < hullRects[i].Y - hullRects[i].Height / 2) { continue; }
                             upperSubBottom = Math.Min(hull.WorldRect.Y - hull.WorldRect.Height, upperSubBottom);
                         }
                     }
@@ -705,8 +712,11 @@ namespace Barotrauma.Items.Components
                 }
 
 
+                int expand = 5;
                 for (int i = 0; i < 2; i++)
                 {
+                    hullRects[i].Y += expand;
+                    hullRects[i].Height += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);

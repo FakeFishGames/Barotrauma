@@ -136,8 +136,9 @@ namespace Barotrauma
         }
 
         public override bool IsMentallyUnstable => 
-            MentalStateManager?.CurrentMentalType != MentalStateManager.MentalType.Normal && 
-            MentalStateManager?.CurrentMentalType != MentalStateManager.MentalType.Confused;
+            MentalStateManager == null ? false :
+            MentalStateManager.CurrentMentalType != MentalStateManager.MentalType.Normal && 
+            MentalStateManager.CurrentMentalType != MentalStateManager.MentalType.Confused;
 
         public ShipCommandManager ShipCommandManager { get; private set; }
 
@@ -740,9 +741,10 @@ namespace Barotrauma
             suitableContainer = null;
             if (character.FindItem(ref itemIndex, out Item targetContainer, ignoredItems: ignoredItems, positionalReference: containableItem, customPriorityFunction: i =>
             {
-                if (i.IsThisOrAnyContainerIgnoredByAI()) { return 0; }
+                if (i.IsThisOrAnyContainerIgnoredByAI(character)) { return 0; }
                 var container = i.GetComponent<ItemContainer>();
                 if (container == null) { return 0; }
+                if (!container.HasAccess(character)) { return 0; }
                 if (!container.Inventory.CanBePut(containableItem)) { return 0; }
                 if (container.ShouldBeContained(containableItem, out bool isRestrictionsDefined))
                 {
@@ -1032,11 +1034,11 @@ namespace Barotrauma
                     return;
                 }
                 float cumulativeDamage = GetDamageDoneByAttacker(attacker);
-                if (!Character.IsSecurity && attacker.IsBot && !IsMentallyUnstable && !attacker.AIController.IsMentallyUnstable && Character.CombatAction == null)
+                bool isAccidental = attacker.IsBot && !IsMentallyUnstable && !attacker.AIController.IsMentallyUnstable && Character.CombatAction == null;
+                if (isAccidental)
                 {
-                    if (cumulativeDamage > 1)
+                    if (!Character.IsSecurity && cumulativeDamage > 1)
                     {
-                        // Don't retaliate on damage done by friendly NPC, because we know it's accidental, unless if it's a berserking AI
                         AddCombatObjective(AIObjectiveCombat.CombatMode.Retreat, attacker);
                     }
                 }
@@ -1109,7 +1111,7 @@ namespace Barotrauma
             {
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
-                    if (otherCharacter == Character || otherCharacter.IsDead || otherCharacter.IsUnconscious || otherCharacter.Removed) { continue; }
+                    if (otherCharacter == Character || otherCharacter.IsUnconscious || otherCharacter.Removed) { continue; }
                     if (otherCharacter.Submarine != Character.Submarine) { continue; }
                     if (otherCharacter.Submarine != attacker.Submarine) { continue; }
                     if (otherCharacter.Info?.Job == null || otherCharacter.IsInstigator) { continue; }
@@ -1921,18 +1923,45 @@ namespace Barotrauma
 
         private static bool FilterCrewMember(Character self, Character other) => other != null && !other.IsDead && !other.Removed && other.AIController is HumanAIController humanAi && humanAi.IsFriendly(self);
 
-        public static bool IsItemOperatedByAnother(Character character, ItemComponent target, out Character operatingCharacter)
+        public static bool IsItemTargetedBySomeone(ItemComponent target, CharacterTeamType team, out Character operatingCharacter)
         {
             operatingCharacter = null;
-            if (character == null) { return false; }
-            if (target?.Item == null) { return false; }
-            bool isOrder = IsOrderedToOperateThis(character.AIController);
-            foreach (var c in Character.CharacterList)
+            foreach (Character c in Character.CharacterList)
             {
-                if (c == character) { continue; }
-                if (c.IsDead || c.IsIncapacitated) { continue; }
-                if (!IsFriendly(character, c, onlySameTeam: true)) { continue; }
+                if (c.Removed) { continue; }
+                if (c.TeamID != team) { continue; }
+                if (c.IsIncapacitated) { continue; }
+                bool isOperated = c.SelectedConstruction == target.Item;
+                if (!isOperated)
+                {
+                    if (c.AIController is HumanAIController humanAI)
+                    {
+                        isOperated = humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item);
+                    }
+                }
                 operatingCharacter = c;
+                if (isOperated)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // There's some duplicate logic in the two methods below, but making them use the same code would require some changes in the target classes so that we could use exactly the same checks.
+        // And even then there would be some differences that could end up being confusing (like the exception for steering).
+        public bool IsItemOperatedByAnother(ItemComponent target, out Character other)
+        {
+            other = null;
+            if (target?.Item == null) { return false; }
+            bool isOrder = IsOrderedToOperateThis(Character.AIController);
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c == Character) { continue; }
+                if (c.Removed) { continue; }
+                if (c.TeamID != Character.TeamID) { continue; }
+                if (c.IsIncapacitated) { continue; }
+                other = c;
                 if (c.IsPlayer)
                 {
                     if (c.SelectedConstruction == target.Item)
@@ -1963,7 +1992,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder == operatingAI.ObjectiveManager.CurrentObjective)
+                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder != operatingAI.ObjectiveManager.CurrentObjective)
                             {
                                 // The other bot is ordered to do something else
                                 continue;
@@ -1971,12 +2000,12 @@ namespace Barotrauma
                             if (target is Steering)
                             {
                                 // Steering is hard-coded -> cannot use the required skills collection defined in the xml
-                                if (character.GetSkillLevel("helm") <= c.GetSkillLevel("helm"))
+                                if (Character.GetSkillLevel("helm") <= c.GetSkillLevel("helm"))
                                 {
                                     return true;
                                 }
                             }
-                            else if (target.DegreeOfSuccess(character) <= target.DegreeOfSuccess(c))
+                            else if (target.DegreeOfSuccess(Character) <= target.DegreeOfSuccess(c))
                             {
                                 return true;
                             }
@@ -1985,7 +2014,65 @@ namespace Barotrauma
                 }
             }
             return false;
-            bool IsOrderedToOperateThis(AIController ai) => ai is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item;
+            bool IsOrderedToOperateThis(AIController ai) => ai is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.Component.Item == target.Item;
+        }
+
+        public bool IsItemRepairedByAnother(Item target, out Character other)
+        {
+            other = null;
+            if (Character == null) { return false; }
+            if (target == null) { return false; }
+            bool isOrder = IsOrderedToRepairThis(Character.AIController as HumanAIController);
+            foreach (var c in Character.CharacterList)
+            {
+                if (c == Character) { continue; }
+                if (c.TeamID != Character.TeamID) { continue; }
+                if (c.IsIncapacitated) { continue; }
+                other = c;
+                if (c.IsPlayer)
+                {
+                    if (target.Repairables.Any(r => r.CurrentFixer == c))
+                    {
+                        // If the other character is player, don't try to repair
+                        return true;
+                    }
+                }
+                else if (c.AIController is HumanAIController operatingAI)
+                {
+                    var repairItemsObjective = operatingAI.ObjectiveManager.GetObjective<AIObjectiveRepairItems>();
+                    if (repairItemsObjective == null) { continue; }
+                    if (repairItemsObjective.SubObjectives.None(o => o is AIObjectiveRepairItem repairObjective && repairObjective.Item == target))
+                    {
+                        // Not targeting the same item.
+                        continue;
+                    }
+                    bool isTargetOrdered = IsOrderedToRepairThis(operatingAI);
+                    if (!isOrder && isTargetOrdered)
+                    {
+                        // If the other bot is ordered to repair the item, let him do it, unless we are ordered too
+                        return true;
+                    }
+                    else
+                    {
+                        if (isOrder && !isTargetOrdered)
+                        {
+                            // We are ordered and the target is not -> allow to repair
+                            continue;
+                        }
+                        else
+                        {
+                            if (!isTargetOrdered && operatingAI.ObjectiveManager.CurrentOrder != operatingAI.ObjectiveManager.CurrentObjective)
+                            {
+                                // The other bot is ordered to do something else
+                                continue;
+                            }
+                            return target.Repairables.Max(r => r.DegreeOfSuccess(Character)) <= target.Repairables.Max(r => r.DegreeOfSuccess(c));
+                        }
+                    }
+                }
+            }
+            return false;
+            bool IsOrderedToRepairThis(HumanAIController ai) => ai.ObjectiveManager.CurrentOrder is AIObjectiveRepairItems repairOrder && repairOrder.PrioritizedItem == target;
         }
 
         #region Wrappers
@@ -1994,7 +2081,6 @@ namespace Barotrauma
         public bool IsTrueForAnyCrewMember(Func<HumanAIController, bool> predicate) => IsTrueForAnyCrewMember(Character, predicate);
         public bool IsTrueForAllCrewMembers(Func<HumanAIController, bool> predicate) => IsTrueForAllCrewMembers(Character, predicate);
         public int CountCrew(Func<HumanAIController, bool> predicate = null, bool onlyActive = true, bool onlyBots = false) => CountCrew(Character, predicate, onlyActive, onlyBots);
-        public bool IsItemOperatedByAnother(ItemComponent target, out Character operatingCharacter) => IsItemOperatedByAnother(Character, target, out operatingCharacter);
         #endregion
     }
 }

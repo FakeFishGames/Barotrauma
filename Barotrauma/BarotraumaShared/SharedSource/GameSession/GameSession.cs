@@ -549,7 +549,10 @@ namespace Barotrauma
                     if (port.IsHorizontal || port.Docked) { continue; }
                     if (port.Item.Submarine == level.StartOutpost)
                     {
-                        outPostPort = port;
+                        if (port.DockingTarget == null)
+                        {
+                            outPostPort = port;
+                        }
                         continue;
                     }
                     if (port.Item.Submarine != Submarine) { continue; }

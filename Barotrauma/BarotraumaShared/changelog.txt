@@ -1,4 +1,81 @@
-------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
+v0.1400.2.0 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Further improvements/balancing to the pulse laser and chaingun, including sounds and improved particle effects.
+- Adjusted the amount of loot in pirate subs.
+- Motion detectors that are set to detect wall can also detect other submarines.
+- Doors/hatches can be damaged by projectiles.
+- The loaders for newly purchased weapons spawn with one free ammo box.
+- Improvements to the weapon customization menu.
+- Hammerhead and Golden Hammerhead: Increased health, added some protection on claws and the tail end. Slightly increase the slow swimming speed and animations. The claws don't break anymore when shot with coilgun.
+- Hammerheads and Husks don't avoid gun fire anymore. Pets now avoid gun fire. 
+
+Fixes:
+- Fixed upgrades resetting if you return to an outpost after purchasing upgrades.
+- Draw coilgun and railgun muzzle flashes in front of subs.
+- Fixed motion detectors detecting level walls unreliably.
+- Fixed characters triggering motion sensors that are only set to be triggered by walls.
+- Fixed items taken from abandoned outposts sometimes reappearing when returning to the outpost.
+- Fixed highlighting items sometimes breaking after dropping a metal crate or some other container whose inventory is always visible when the item is equipped.
+- Fixed bots putting minerals in the closest locker instead of preferring those that have been tagged with the "mineralcontainer" tag
+- Fixed bots not respecting the access restrictions when choosing a where to put items into.
+- Fixed bots being able to take items from secure cabinets if the item is inside another container inside the cabinet.
+- Fixes to hull generation between docking ports. Should fix tiny gaps between the hulls that caused characters to briefly teleport outside the sub when passing through the port, and hulls generating incorrectly when the main submarine has hulls at both sides of the docking port.
+- Fixed captain's pipe, harmonica and pipe tobacco not spawning in crates when purchased.
+- Fixed console errors when trying to overwrite an existing item assembly in the sub editor.
+- Fixed the margin calculations that in some cases made it impossible for Bonethreshers (and possibly other monsters) to reach a moving target.
+- Fixed CargoManager only spawning one crate of each type and dropping the rest of the items on the floor in multiplayer.
+- Fixed abyss monsters sometimes being unable to hit the sub and just keep pushing the sub.
+- Define "tool", "weapon", and "provocative" targeting params to be ignored if the creature is not in the same sub as the target. Fixes some odd cases where the monsters e.g. target some item inside the sub when they are outside.
+- Fixed occasional excessive camera shake when a large monster is lodged between the sub and the level.
+- Fixed ballast flora not getting cleared from respawn shuttles when the shuttle despawns.
+- Fixed ability to leave the level with a pirate sub.
+- Fixed turret hardpoints appearing in the minimap view when giving an Operate Weapons order.
+- Fixed ability to switch back to a sub you've left behind using the outpost terminals.
+- Fixed doors without integrated buttons getting instantly opened by clicking on them when you have access to the button.
+- Fixed chaingun barrel's sprite depth not being affected by the depth of the item, causing the barrels to be drawn in front of the item if it's depth is larger than 0.13.
+- Fixed ability to switch control to the hostages with Z and X keys during hostage missions.
+- Fixed abyss and combat suits not getting autofilled with oxygen tanks when placing the initial supplies to a sub.
+- Fixed previously selected missions reappearing when you retry a level, even though they don't show up in the mission selection menu.
+- Fixed inability to type in the "max players" field in the "host server" tab.
+- Fixed rotated weapons with a different origin getting misaligned when swapping them.
+- Fixed item sell quantity sometimes appearing "maxed out" at a quantity less than what the player is actually selling.
+- Fixed crashing when the team id argument for the "spawn" console command is formatted incorrectly, mention the argument in the command's help text.
+- Docking port whack-a-mole part n: fixed respawn shuttle's ports not showing up on the sonar.
+- More descriptive error message when a client fails to spawn an entity due to it's ID being taken up by something else ("Failed to read event for entity EntitySpawner (ID xxx taken by yyyy)").
+- Fixed cargo mission reward displaying as 0 in the popups at the start of a round.
+- Fixed clients being able to toggle missions on/off without campaign management permissions.
+- Fixed bots trying to clean up seeds and put items into bags that were moved to somewhere the bot can't access them, causing the bot to be stuck trying to reach the target.
+- Fixed wrecks and beacons sometimes spawning  too close to the start and end positions when there's no outpost present.
+- Fixed "Ignore This" order affecting all NPCs. It should only affect the bots in a player team.
+- Fixed "Ignore This" order restricting player access to doors.
+- Fixed bots targeting same targets when fixing/repairing.
+- Fixed monsters sometimes getting stuck "dancing" near the submarine because they try to avoid and target it at the same time.
+- Fixed cold caverns always having a wreck. There's now 50% chance for a wreck in cold caverns.
+- Monster events: Fixed many higher difficulty subsets spawning multiple monster events when they should spawn only one
+- Monster events: Fixed Watcher spawns post difficulty level 20 trigger the event cooldown when they shouldn't
+- Fixed inability to talk to the "Husk Cultist" event NPC when returning to them a second time. (Other events could have been affected, too.)
+- Fixed security guards starting to shoot each other if one of them accidentally does damage on any friendly character (Only unstable).
+
+Modding:
+- Fixed overriding nav terminals with a mod resetting the changes to the custom interface buttons.
+- Fixed status effect conditionals that check a parent container's tags checking the container's components, not just the item itself. Resulted in tag inequality checks always succeeding, because the components don't have any tags.
+- Fixed crashing if a scripted event tries to spawn a human prefab that can't be found (i.e. if a mod uses a non-existent human prefab identifier).
+- RemoveItemAction can be used to remove tagged items directly, not just items in a tagged character's inventory.
+- Replaced "spawnprobability" attribute in monster events with a generic "probability" attribute that can be used for any type of event.
+- Option to spawn particles across the ray cast from a hitscan projectile (see "pulselaserbolt").
+- Fixed linked subs included in outpost modules being positioned incorrectly.
+- Added "swapidentifier" to SwappableItem definitions. Can be used to restrict which items in a given category can be swapped with each other (e.g. if you want to add custom upgradeable turrets but not make them swappable with the vanilla turrets).
+- Made SecondaryUse status effects work with ranged weapons.
+- Added "equal" targeting tag to enemy AI. Makes it possible to define how monsters react to monsters with the same combat strength.
+- TagAction can be used to tag characters based on the human prefab identifier.
+- Fixed a crash in the character editor that happened when a humanoid character had an elbow joint but didn't (yet) have a wrist joint.
+- The "avoid gun fire" parameter now defaults to false.
+- Added "equal" targeting tag for monster AI definitions.
+
+---------------------------------------------------------------------------------------------------------
 v0.1400.1.0 (unstable)
 ---------------------------------------------------------------------------------------------------------
 
@@ -73,7 +150,7 @@ Modding:
 - Option to configure the number of gates between biomes (see MapGenerationParameters.xml).
 - Fixed "publishing [mod] in the steam workshop failed" error when trying to publish a mod that contains enemy subs.
 
-------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
 v0.1400.0.0 (unstable)
 ---------------------------------------------------------------------------------------------------------
 
@@ -125,7 +202,7 @@ Modding:
 - Renamed "Inflitrate" to "CanOpenDoors" and rewrote the tooltip.
 - Added "scalemultiplier" (Vector2) for particle emitters so that the effects can be scaled just in one axis instead of both.
 
-------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------
 v0.13.3.11
 ---------------------------------------------------------------------------------------------------------
 

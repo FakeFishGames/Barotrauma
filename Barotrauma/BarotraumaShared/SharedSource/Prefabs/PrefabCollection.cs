@@ -35,13 +35,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns the active prefab with identifier k.
+        /// Returns the active prefab with the identifier.
         /// </summary>
-        /// <param name="k">Prefab identifier</param>
-        /// <returns>Active prefab with identifier k</returns>
-        public T this[string k]
+        /// <param name="identifier">Prefab identifier</param>
+        /// <returns>Active prefab with the identifier</returns>
+        public T this[string identifier]
         {
-            get { return prefabs[k].Last(); }
+            get { return prefabs[identifier].Last(); }
         }
 
         /// <summary>
@@ -63,13 +63,13 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Returns true if a prefab with identifier k exists, false otherwise.
+        /// Returns true if a prefab with the identifier exists, false otherwise.
         /// </summary>
-        /// <param name="k">Prefab identifier</param>
-        /// <returns>Whether a prefab with identifier k exists or not</returns>
-        public bool ContainsKey(string k)
+        /// <param name="identifier">Prefab identifier</param>
+        /// <returns>Whether a prefab with the identifier exists or not</returns>
+        public bool ContainsKey(string identifier)
         {
-            return prefabs.ContainsKey(k);
+            return prefabs.ContainsKey(identifier);
         }
 
         /// <summary>
@@ -93,10 +93,9 @@ namespace Barotrauma
             //Handle bad overrides and duplicates
             if (basePrefabExists && !isOverride)
             {
-                DebugConsole.ThrowError($"Error registering \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T).ToString()}): base already exists; try overriding\n{Environment.StackTrace}");
+                DebugConsole.ThrowError($"Failed to add the prefab \"{prefab.OriginalName}\", \"{prefab.Identifier}\" ({typeof(T)}): a prefab with the same identifier already exists; try overriding\n{Environment.StackTrace}");
                 return;
             }
-
 
             //Add to list
             if (!basePrefabExists)

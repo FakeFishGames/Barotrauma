@@ -296,6 +296,12 @@ namespace Barotrauma
                             }
                         }
                     }
+
+                    foreach (ItemComponent component in item.Components)
+                    {
+                        component.AddTooltipInfo(ref description);
+                    }
+
                     if (item.Prefab.ShowContentsInTooltip && item.OwnInventory != null)
                     {
                         foreach (string itemName in item.OwnInventory.AllItems.Select(it => it.Name).Distinct())
@@ -949,6 +955,15 @@ namespace Barotrauma
                         (slot.EquipButtonRect.Contains(PlayerInput.MousePosition) && item != null && item.AllowedSlots.Contains(InvSlotType.Any)))
                     {
                         return CursorState.Hand;
+                    }
+                    var container = item?.GetComponent<ItemContainer>();
+                    if (container == null) { continue; }
+                    if (container.Inventory.visualSlots != null)
+                    {
+                        if (container.Inventory.visualSlots.Any(slot => slot.IsHighlighted))
+                        {
+                            return CursorState.Hand;
+                        }
                     }
                 }
             }

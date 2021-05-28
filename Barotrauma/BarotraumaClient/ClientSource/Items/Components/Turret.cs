@@ -267,7 +267,7 @@ namespace Barotrauma.Items.Components
                     }
                     else if (chargeSoundChannel != null)
                     {
-                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(1f, 2f, chargeRatio);
+                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(0.5f, 1.5f, chargeRatio);
                     }
                     break;
                 default:
@@ -363,13 +363,13 @@ namespace Barotrauma.Items.Components
 
             float chargeRatio = currentChargeTime / MaxChargeTime;
 
-            foreach (Tuple<Sprite, Vector2> chargeSprite in chargeSprites)
+            foreach ((Sprite chargeSprite, Vector2 position) in chargeSprites)
             {
-                chargeSprite.Item1?.Draw(spriteBatch,
-                    drawPos - MathUtils.RotatePoint(new Vector2(chargeSprite.Item2.X * chargeRatio, chargeSprite.Item2.Y * chargeRatio) * item.Scale, rotation + MathHelper.PiOver2),
+                chargeSprite?.Draw(spriteBatch,
+                    drawPos - MathUtils.RotatePoint(new Vector2(position.X * chargeRatio, position.Y * chargeRatio) * item.Scale, rotation + MathHelper.PiOver2),
                     item.SpriteColor,
                     rotation + MathHelper.PiOver2, item.Scale,
-                    SpriteEffects.None, item.SpriteDepth + (chargeSprite.Item1.Depth - item.Sprite.Depth));
+                    SpriteEffects.None, item.SpriteDepth + (chargeSprite.Depth - item.Sprite.Depth));
             }
 
             int spinningBarrelCount = spinningBarrelSprites.Count;
@@ -380,7 +380,7 @@ namespace Barotrauma.Items.Components
                 Sprite spinningBarrel = spinningBarrelSprites[i];
                 float barrelCirclePosition = (MaxCircle * i / spinningBarrelCount + currentBarrelSpin) % MaxCircle;
 
-                float newDepth = spinningBarrel.Depth + (barrelCirclePosition > HalfCircle ? -0.001f : 0.001f);
+                float newDepth = item.SpriteDepth + (spinningBarrel.Depth - item.Sprite.Depth) + (barrelCirclePosition > HalfCircle ? 0.0f : 0.001f);
 
                 float barrelColorPosition = (barrelCirclePosition + QuarterCircle) % MaxCircle;
                 float colorOffset = Math.Abs(barrelColorPosition - HalfCircle) / HalfCircle;

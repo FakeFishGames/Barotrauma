@@ -107,27 +107,32 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(NPCSetIdentifier) && !string.IsNullOrEmpty(NPCIdentifier))
             {
                 HumanPrefab humanPrefab = NPCSet.Get(NPCSetIdentifier, NPCIdentifier);
-                ISpatialEntity spawnPos = GetSpawnPos();
-                Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), humanPrefab.GetCharacterInfo(), onSpawn: newCharacter =>
+                if (humanPrefab != null)
                 {
-                    newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
-                    newCharacter.EnableDespawn = false;
-                    humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
-                    if (LootingIsStealing)
+                    ISpatialEntity spawnPos = GetSpawnPos();
+                    Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), humanPrefab.GetCharacterInfo(), onSpawn: newCharacter =>
                     {
-                        foreach (Item item in newCharacter.Inventory.AllItems)
+                        if (newCharacter == null) { return; }
+                        newCharacter.Prefab = humanPrefab;
+                        newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
+                        newCharacter.EnableDespawn = false;
+                        humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
+                        if (LootingIsStealing)
                         {
-                            item.SpawnedInOutpost = true;
-                            item.AllowStealing = false;
+                            foreach (Item item in newCharacter.Inventory.AllItems)
+                            {
+                                item.SpawnedInOutpost = true;
+                                item.AllowStealing = false;
+                            }
                         }
-                    }
-                    humanPrefab.InitializeCharacter(newCharacter, spawnPos);
-                    if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
-                    {
-                        ParentEvent.AddTarget(TargetTag, newCharacter);
-                    }
-                    spawnedEntity = newCharacter;
-                });
+                        humanPrefab.InitializeCharacter(newCharacter, spawnPos);
+                        if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
+                        {
+                            ParentEvent.AddTarget(TargetTag, newCharacter);
+                        }
+                        spawnedEntity = newCharacter;
+                    });
+                }
             }
             else if (!string.IsNullOrEmpty(SpeciesName))
             {
@@ -197,8 +202,7 @@ namespace Barotrauma
                 }
             }
 
-            spawned = true;
-            
+            spawned = true;            
         }
 
         public static Vector2 OffsetSpawnPos(Vector2 pos, float offsetAmount)

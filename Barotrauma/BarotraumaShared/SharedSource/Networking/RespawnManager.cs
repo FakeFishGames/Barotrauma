@@ -274,6 +274,7 @@ namespace Barotrauma.Networking
                 if (hull.Submarine != RespawnShuttle) { continue; }
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
+                hull.BallastFlora?.Kill();
             }
 
             foreach (Character c in Character.CharacterList)

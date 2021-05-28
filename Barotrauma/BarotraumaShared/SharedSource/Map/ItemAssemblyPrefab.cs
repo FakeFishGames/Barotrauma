@@ -36,7 +36,7 @@ namespace Barotrauma
 
         public Rectangle Bounds;
 
-        public ItemAssemblyPrefab(string filePath)
+        public ItemAssemblyPrefab(string filePath, bool allowOverwrite = false)
         {
             FilePath = filePath;
             XDocument doc = XMLExtensions.TryLoadXml(filePath);
@@ -113,6 +113,10 @@ namespace Barotrauma
                 new Rectangle(0, 0, 1, 1) :
                 new Rectangle(minX, minY, maxX - minX, maxY - minY);
 
+            if (allowOverwrite && Prefabs.ContainsKey(identifier))
+            {
+                Prefabs.Remove(Prefabs[identifier]);
+            }
             Prefabs.Add(this, doc.Root.IsOverride());
         }
 

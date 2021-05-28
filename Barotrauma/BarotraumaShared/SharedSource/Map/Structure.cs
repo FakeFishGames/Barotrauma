@@ -27,7 +27,7 @@ namespace Barotrauma
         public Submarine Submarine => Wall.Submarine;
         public Rectangle WorldRect => Submarine == null ? rect :
             new Rectangle((int)(rect.X + Submarine.Position.X), (int)(rect.Y + Submarine.Position.Y), rect.Width, rect.Height);
-        public bool IgnoreByAI => OrderedToBeIgnored;
+        public bool IgnoreByAI(Character character) => OrderedToBeIgnored && character.IsOnPlayerTeam;
         public bool OrderedToBeIgnored { get; set; }
 
         public WallSection(Rectangle rect, Structure wall, float damage = 0.0f)
@@ -872,13 +872,17 @@ namespace Barotrauma
 
         public Vector2 SectionPosition(int sectionIndex, bool world = false)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return Vector2.Zero;
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length)
+            {
+                return Vector2.Zero;
+            }
 
             if (Prefab.BodyRotation == 0.0f)
             {
                 Vector2 sectionPos = new Vector2(
                     Sections[sectionIndex].rect.X + Sections[sectionIndex].rect.Width / 2.0f,
                     Sections[sectionIndex].rect.Y - Sections[sectionIndex].rect.Height / 2.0f);
+
                 if (world && Submarine != null)
                 {
                     sectionPos += Submarine.Position;
@@ -897,8 +901,11 @@ namespace Barotrauma
                 {
                     diffFromCenter = ((sectionRect.Y - sectionRect.Height / 2) - (rect.Y - rect.Height / 2)) / (float)rect.Height * BodyHeight;
                 }
-                if (FlippedX) diffFromCenter = -diffFromCenter;
-                
+                if (FlippedX)
+                {
+                    diffFromCenter = -diffFromCenter;
+                }
+               
                 Vector2 sectionPos = Position + new Vector2(
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
                     (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation)) * diffFromCenter;

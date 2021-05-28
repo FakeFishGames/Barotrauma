@@ -186,7 +186,8 @@ namespace Barotrauma
                     foreach (Hull hull in Hull.hullList)
                     {
                         if (hull.Submarine != sub) { continue; }
-                        if (hull.RoomName.Contains("RoomName.", StringComparison.OrdinalIgnoreCase))
+                        if (string.IsNullOrEmpty(hull.RoomName) || 
+                            hull.RoomName.Contains("RoomName.", StringComparison.OrdinalIgnoreCase))
                         {
                             hull.RoomName = hull.CreateRoomName();
                         }
@@ -1436,6 +1437,7 @@ namespace Barotrauma
                 var npc = Character.Create(CharacterPrefab.HumanConfigFile, SpawnAction.OffsetSpawnPos(gotoTarget.WorldPosition, 100.0f), ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
                 npc.AnimController.FindHull(gotoTarget.WorldPosition, true);
                 npc.TeamID = CharacterTeamType.FriendlyNPC;
+                npc.Prefab = humanPrefab;
                 if (!outpost.Info.OutpostNPCs.ContainsKey(humanPrefab.Identifier))
                 {
                     outpost.Info.OutpostNPCs.Add(humanPrefab.Identifier, new List<Character>());

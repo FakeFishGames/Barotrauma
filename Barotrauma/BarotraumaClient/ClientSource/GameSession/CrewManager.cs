@@ -1287,18 +1287,28 @@ namespace Barotrauma
 
         private int TryAdjustIndex(int amount)
         {
-            int index = Character.Controlled == null ? 0 :
-                crewList.Content.GetChildIndex(crewList.Content.GetChildByUserData(Character.Controlled)) + amount;
+            if (Character.Controlled == null) { return 0; }
+
+            int currentIndex = crewList.Content.GetChildIndex(crewList.Content.GetChildByUserData(Character.Controlled));
+            if (currentIndex == -1) { return 0; }
+
             int lastIndex = crewList.Content.CountChildren - 1;
-            if (index > lastIndex)
+
+            int index = currentIndex + amount;
+            for (int i = 0; i < crewList.Content.CountChildren; i++)
             {
-                index = 0;
+                if (index > lastIndex) { index = 0; }
+                if (index < 0) { index = lastIndex; }
+
+                if ((crewList.Content.GetChild(index)?.UserData as Character)?.IsOnPlayerTeam ?? false)
+                {
+                    return index;
+                }
+
+                index += amount;
             }
-            if (index < 0)
-            {
-                index = lastIndex;
-            }
-            return index;
+
+            return 0;
         }
 
         partial void UpdateProjectSpecific(float deltaTime)

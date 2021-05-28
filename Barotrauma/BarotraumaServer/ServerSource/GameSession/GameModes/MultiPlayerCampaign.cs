@@ -260,9 +260,13 @@ namespace Barotrauma
                 {
                     Submarine.MainSub = leavingSub;
                     GameMain.GameSession.Submarine = leavingSub;
+                    GameMain.GameSession.SubmarineInfo = leavingSub.Info;
+                    leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
                     var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
+                    GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
                     foreach (Submarine sub in subsToLeaveBehind)
                     {
+                        GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
                         MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
                         LinkedSubmarine.CreateDummy(leavingSub, sub);
                     }

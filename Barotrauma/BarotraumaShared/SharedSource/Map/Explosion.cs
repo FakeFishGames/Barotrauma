@@ -130,7 +130,7 @@ namespace Barotrauma
 
             float displayRange = Attack.Range;
 
-            Vector2 cameraPos = Character.Controlled != null ? Character.Controlled.WorldPosition : GameMain.GameScreen.Cam.Position;
+            Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
             float cameraDist = Vector2.Distance(cameraPos, worldPosition) / 2.0f;
             GameMain.GameScreen.Cam.Shake = cameraShake * Math.Max((cameraShakeRange - cameraDist) / cameraShakeRange, 0.0f);
 #if CLIENT

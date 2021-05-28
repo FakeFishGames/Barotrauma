@@ -51,24 +51,30 @@ namespace Barotrauma.Particles
         [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
         public float VelocityMax { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(1f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, true)]
         public float ScaleMin { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(1f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(1f, true)]
         public float ScaleMax { get; set; }
 
 
         [Editable(), Serialize("1,1", true)]
         public Vector2 ScaleMultiplier { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = MinValue), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, true)]
         public float EmitInterval { get; set; }
 
-        [Editable, Serialize(0, true)]
+        [Editable(ValueStep = 1, MinValueInt = 0, MaxValueInt = 1000), Serialize(0, true, description: "The number of particles to spawn per frame, or every x seconds if EmitInterval is set.")]
         public int ParticleAmount { get; set; }
 
-        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = MaxValue, MinValueFloat = 0), Serialize(0f, true)]
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 1000.0f, MinValueFloat = 0.0f), Serialize(0f, true)]
         public float ParticlesPerSecond { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 10.0f, MinValueFloat = 0.0f), Serialize(0f, true, description: "If larger than 0, a particle is spawned every x pixels across the ray cast by a hitscan weapon.")]
+        public float EmitAcrossRayInterval { get; set; }
+
+        [Editable(ValueStep = 1, DecimalCount = 2, MaxValueFloat = 100.0f, MinValueFloat = 0.0f), Serialize(0f, true, description: "Delay before the emitter becomes active after being created.")]
+        public float InitialDelay { get; set; }
 
         [Editable, Serialize(false, true)]
         public bool HighQualityCollisionDetection { get; set; }
@@ -115,6 +121,7 @@ namespace Barotrauma.Particles
     {
         private float emitTimer;
         private float burstEmitTimer;
+        private float initialDelay;
 
         public readonly ParticleEmitterPrefab Prefab;
 
@@ -131,8 +138,29 @@ namespace Barotrauma.Particles
 
         public void Emit(float deltaTime, Vector2 position, Hull hullGuess = null, float angle = 0.0f, float particleRotation = 0.0f, float velocityMultiplier = 1.0f, float sizeMultiplier = 1.0f, float amountMultiplier = 1.0f, Color? colorMultiplier = null, ParticlePrefab overrideParticle = null, Tuple<Vector2, Vector2> tracerPoints = null)
         {
+            if (initialDelay < Prefab.Properties.InitialDelay)
+            {
+                initialDelay += deltaTime;
+                return;
+            }
+
             emitTimer += deltaTime * amountMultiplier;
             burstEmitTimer -= deltaTime;
+
+            if (Prefab.Properties.EmitAcrossRayInterval > 0.0f && tracerPoints != null)
+            {
+                Vector2 dir = tracerPoints.Item2 - tracerPoints.Item1;
+                if (dir.LengthSquared() > 0.001f)
+                {
+                    float dist = dir.Length();
+                    dir /= dist;
+                    for (float z = 0.0f; z < dist; z += Prefab.Properties.EmitAcrossRayInterval)
+                    {
+                        Vector2 pos = tracerPoints.Item1 + dir * z;
+                        Emit(pos, hullGuess, angle, particleRotation, velocityMultiplier, sizeMultiplier, colorMultiplier, overrideParticle, tracerPoints: null);
+                    }
+                }
+            }
 
             if (Prefab.Properties.ParticlesPerSecond > 0)
             {

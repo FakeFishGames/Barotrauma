@@ -495,27 +495,19 @@ namespace Barotrauma
             if (submarine == null) { return matchingItems; }
             if (ItemComponentType != null || TargetItems.Length > 0)
             {
-                matchingItems = TargetItems.Length > 0 ?
-                    Item.ItemList.FindAll(it => TargetItems.Contains(it.Prefab.Identifier) || it.HasTag(TargetItems)) :
-                    Item.ItemList.FindAll(it => TryGetTargetItemComponent(it, out _));
-                if (mustBelongToPlayerSub)
+                foreach (var item in Item.ItemList)
                 {
-                    matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineType.Player);
-                }
-                matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
-                if (requiredTeam.HasValue)
-                {
-                    matchingItems.RemoveAll(it => it.Submarine == null || it.Submarine.TeamID != requiredTeam.Value);
-                }
-                matchingItems.RemoveAll(it => it.NonInteractable);
-                if (UseController)
-                {
-                    matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType) && !i.TryFindController(out _));
-                }
-                if (interactableFor != null)
-                {
-                    matchingItems.RemoveAll(it => !it.IsInteractable(interactableFor) ||
-                        (UseController && it.FindController() is Controller c && !c.Item.IsInteractable(interactableFor)));
+                    if (TargetItems.Length > 0 && !TargetItems.Contains(item.Prefab.Identifier) && !item.HasTag(TargetItems)) { continue; }
+                    if (TargetItems.Length == 0 && !TryGetTargetItemComponent(item, out _)) { continue; }
+                    if (mustBelongToPlayerSub && item.Submarine?.Info != null && item.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                    if (item.Submarine != submarine && !submarine.DockedTo.Contains(item.Submarine)) { continue; }
+                    if (requiredTeam.HasValue && (item.Submarine == null || item.Submarine.TeamID != requiredTeam.Value)) { continue; }
+                    if (item.NonInteractable) { continue; }
+                    if (ItemComponentType != null && item.Components.None(c => c.GetType() == ItemComponentType)) { continue; }
+                    Controller controller = null;
+                    if (UseController && !item.TryFindController(out controller)) { continue; }
+                    if (interactableFor != null && (!item.IsInteractable(interactableFor) || (UseController && !controller.Item.IsInteractable(interactableFor)))) { continue; }
+                    matchingItems.Add(item);
                 }
             }
             return matchingItems;

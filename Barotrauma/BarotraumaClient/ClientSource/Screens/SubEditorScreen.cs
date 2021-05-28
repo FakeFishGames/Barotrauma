@@ -2373,10 +2373,10 @@ namespace Barotrauma
 
             new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, saveFrame.RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
 
-            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.3f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 300) });
+            var innerFrame = new GUIFrame(new RectTransform(new Vector2(0.25f, 0.35f), saveFrame.RectTransform, Anchor.Center) { MinSize = new Point(400, 350) });
             GUILayoutGroup paddedSaveFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), innerFrame.RectTransform, Anchor.Center))
             {
-                AbsoluteSpacing = 5,
+                AbsoluteSpacing = GUI.IntScale(5),
                 Stretch = true
             };
 
@@ -2393,15 +2393,22 @@ namespace Barotrauma
             };
 #endif
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedSaveFrame.RectTransform), 
-                TextManager.Get("SaveItemAssemblyDialogDescription"));
-            descriptionBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedSaveFrame.RectTransform))
+            var descriptionContainer = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), paddedSaveFrame.RectTransform));
+            descriptionBox = new GUITextBox(new RectTransform(Vector2.One, descriptionContainer.Content.RectTransform, Anchor.TopLeft),
+                font: GUI.SmallFont, style: "GUITextBoxNoBorder", wrap: true, textAlignment: Alignment.TopLeft)
             {
-                UserData = "description",
-                Wrap = true,
-                Text = ""
+                Padding = new Vector4(10 * GUI.Scale)
             };
-            
+
+            descriptionBox.OnTextChanged += (textBox, text) =>
+            {
+                Vector2 textSize = textBox.Font.MeasureString(descriptionBox.WrappedText);
+                textBox.RectTransform.NonScaledSize = new Point(textBox.RectTransform.NonScaledSize.X, Math.Max(descriptionContainer.Content.Rect.Height, (int)textSize.Y + 10));
+                descriptionContainer.UpdateScrollBarSize();
+                descriptionContainer.BarScroll = 1.0f;
+                return true;
+            };
+
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), paddedSaveFrame.RectTransform), style: null);
             new GUIButton(new RectTransform(new Vector2(0.25f, 1.0f), buttonArea.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("Cancel"))
@@ -2417,6 +2424,7 @@ namespace Barotrauma
             {
                 OnClicked = SaveAssembly
             };
+            buttonArea.RectTransform.MinSize = new Point(0, buttonArea.Children.First().RectTransform.MinSize.Y);
         }
 
         /// <summary>
@@ -2460,7 +2468,7 @@ namespace Barotrauma
                 }
             }
 
-            bool hideInMenus = !(nameBox.Parent.GetChildByUserData("hideinmenus") is GUITickBox hideInMenusTickBox) ? false : hideInMenusTickBox.Selected;
+            bool hideInMenus = nameBox.Parent.GetChildByUserData("hideinmenus") is GUITickBox hideInMenusTickBox && hideInMenusTickBox.Selected;
 #if DEBUG
             string saveFolder = ItemAssemblyPrefab.VanillaSaveFolder;
 #else
@@ -2479,7 +2487,6 @@ namespace Barotrauma
             }
 #endif
             string filePath = Path.Combine(saveFolder, nameBox.Text + ".xml");
-
             if (File.Exists(filePath))
             {
                 var msgBox = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("ItemAssemblyFileExistsWarning"), new[] { TextManager.Get("Yes"), TextManager.Get("No") });
@@ -2494,18 +2501,27 @@ namespace Barotrauma
             }
             else
             {
-                Save();
+                var identifier = nameBox.Text.ToLowerInvariant().Replace(" ", "");
+                var existingPrefab = MapEntityPrefab.Find(null, identifier, showErrorMessages: false);
+                if (existingPrefab != null && System.IO.Path.GetDirectoryName(existingPrefab.FilePath) == ItemAssemblyPrefab.VanillaSaveFolder)
+                {
+                    var msgBox = new GUIMessageBox(TextManager.Get("Warning"), TextManager.Get("ItemAssemblyVanillaFileExistsWarning"));
+                }
+                else
+                {
+                    Save();
+                }
             }
 
             void Save()
             {
-                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList, nameBox.Text, descriptionBox.Text, hideInMenus));
+                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList.ToList(), nameBox.Text, descriptionBox.Text, hideInMenus));
 #if DEBUG
                 doc.Save(filePath);
 #else
                 doc.SaveSafe(filePath);
 #endif
-                new ItemAssemblyPrefab(filePath);
+                new ItemAssemblyPrefab(filePath, allowOverwrite: true);
                 UpdateEntityList();
             }
 
@@ -3002,8 +3018,11 @@ namespace Barotrauma
                     new ContextMenuOption("SubEditor.PasteAssembly",  isEnabled: true,  () => PasteAssembly()),
                     new ContextMenuOption("Editor.SelectSame", isEnabled: targets.Count > 0, onSelected: delegate
                     {
-                        IEnumerable<MapEntity> matching = MapEntity.mapEntityList.Where(e => e.prefab != null && targets.Any(t => t.prefab?.Identifier == e.prefab.Identifier) && !MapEntity.SelectedList.Contains(e));
-                        MapEntity.SelectedList.AddRange(matching);
+                        foreach (MapEntity match in MapEntity.mapEntityList.Where(e => e.prefab != null && targets.Any(t => t.prefab?.Identifier == e.prefab.Identifier) && !MapEntity.SelectedList.Contains(e)))
+                        {
+                            if (MapEntity.SelectedList.Contains(match)) { continue; }
+                            MapEntity.SelectedList.Add(match);
+                        }
                     }),
                     new ContextMenuOption("SubEditor.AddImage",            isEnabled: true, onSelected: ImageManager.CreateImageWizard),
                     new ContextMenuOption("SubEditor.ToggleImageEditing",  isEnabled: true, onSelected: delegate
@@ -4716,9 +4735,9 @@ namespace Barotrauma
                         CloseItem();
                     }
                 }
-                else if (MapEntity.SelectedList.Count == 1 && WiringMode)
+                else if (MapEntity.SelectedList.Count == 1 && WiringMode && MapEntity.SelectedList.FirstOrDefault() is Item item)
                 {
-                    (MapEntity.SelectedList[0] as Item)?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
+                    item.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                 }
 
                 CharacterHUD.Update((float)deltaTime, dummyCharacter, cam);

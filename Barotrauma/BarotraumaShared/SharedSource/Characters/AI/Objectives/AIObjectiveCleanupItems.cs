@@ -82,16 +82,17 @@ namespace Barotrauma
 
         public static bool IsValidContainer(Item container, Character character, bool allowUnloading = true) =>
             allowUnloading &&
-            !container.IgnoreByAI && 
+            !container.IgnoreByAI(character) && 
             container.IsInteractable(character) && 
             container.HasTag("allowcleanup") && 
             container.ParentInventory == null && container.OwnInventory != null && container.OwnInventory.AllItems.Any() && 
+            container.GetComponent<ItemContainer>() is ItemContainer itemContainer && itemContainer.HasAccess(character) &&
             IsItemInsideValidSubmarine(container, character);
 
         public static bool IsValidTarget(Item item, Character character, bool checkInventory, bool allowUnloading = true)
         {
             if (item == null) { return false; }
-            if (item.IgnoreByAI) { return false; }
+            if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (item.SpawnedInOutpost) { return false; }
             if (item.ParentInventory != null)

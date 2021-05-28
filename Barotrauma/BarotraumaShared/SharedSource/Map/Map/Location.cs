@@ -13,14 +13,14 @@ namespace Barotrauma
         public class TakenItem
         {
             public readonly ushort OriginalID;
-            public readonly ushort OriginalContainerID;
             public readonly ushort ModuleIndex;
             public readonly string Identifier;
+            public readonly int OriginalContainerIndex;
 
-            public TakenItem(string identifier, UInt16 originalID, UInt16 originalContainerID, ushort moduleIndex)
+            public TakenItem(string identifier, UInt16 originalID, UInt16 originalContainerIndex, ushort moduleIndex)
             {
                 OriginalID = originalID;
-                OriginalContainerID = originalContainerID;
+                OriginalContainerIndex = originalContainerIndex;
                 ModuleIndex = moduleIndex;
                 Identifier = identifier;
             }
@@ -29,11 +29,7 @@ namespace Barotrauma
             {
                 System.Diagnostics.Debug.Assert(item.OriginalModuleIndex >= 0, "Trying to add a non-outpost item to a location's taken items");
 
-                if (item.OriginalContainerID != Entity.NullEntityID)
-                {
-                    OriginalContainerID = item.OriginalContainerID;
-                }
-
+                OriginalContainerIndex = item.OriginalContainerIndex;
                 OriginalID = item.ID;
                 ModuleIndex = (ushort) item.OriginalModuleIndex;
                 Identifier = item.prefab.Identifier;
@@ -41,14 +37,14 @@ namespace Barotrauma
 
             public bool IsEqual(TakenItem obj)
             {
-                return obj.OriginalID == OriginalID && obj.OriginalContainerID == OriginalContainerID && obj.ModuleIndex == ModuleIndex && obj.Identifier == Identifier;
+                return obj.OriginalID == OriginalID && obj.OriginalContainerIndex == OriginalContainerIndex && obj.ModuleIndex == ModuleIndex && obj.Identifier == Identifier;
             }
 
             public bool Matches(Item item)
             {
-                if (item.OriginalContainerID != Entity.NullEntityID)
+                if (item.OriginalContainerIndex != Entity.NullEntityID)
                 {
-                    return item.OriginalContainerID == OriginalContainerID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.OriginalContainerIndex == OriginalContainerIndex && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
                 }
                 else
                 {
@@ -184,7 +180,11 @@ namespace Barotrauma
         private readonly List<Mission> selectedMissions = new List<Mission>();
         public IEnumerable<Mission> SelectedMissions
         {
-            get { return selectedMissions; }
+            get 
+            {
+                selectedMissions.RemoveAll(m => !availableMissions.Contains(m));
+                return selectedMissions; 
+            }
         }
 
         public void SelectMission(Mission mission)
@@ -345,9 +345,9 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken item id \"{takenItemSplit[1]}\"");
                     continue;
                 }
-                if (!ushort.TryParse(takenItemSplit[2], out ushort containerId))
+                if (!ushort.TryParse(takenItemSplit[2], out ushort containerIndex))
                 {
-                    DebugConsole.ThrowError($"Error in saved location: could not parse taken container id \"{takenItemSplit[2]}\"");
+                    DebugConsole.ThrowError($"Error in saved location: could not parse taken container index \"{takenItemSplit[2]}\"");
                     continue;
                 }
                 if (!ushort.TryParse(takenItemSplit[3], out ushort moduleIndex))
@@ -355,7 +355,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken item module index \"{takenItemSplit[3]}\"");
                     continue;
                 }
-                takenItems.Add(new TakenItem(takenItemSplit[0], id, containerId, moduleIndex));
+                takenItems.Add(new TakenItem(takenItemSplit[0], id, containerIndex, moduleIndex));
             }
 
             killedCharacterIdentifiers = element.GetAttributeIntArray("killedcharacters", new int[0]).ToHashSet();
@@ -1153,7 +1153,7 @@ namespace Barotrauma
             {
                 locationElement.Add(new XAttribute(
                     "takenitems",
-                    string.Join(',', takenItems.Select(it => it.Identifier + ";" + it.OriginalID + ";" + it.OriginalContainerID + ";" + it.ModuleIndex))));
+                    string.Join(',', takenItems.Select(it => it.Identifier + ";" + it.OriginalID + ";" + it.OriginalContainerIndex + ";" + it.ModuleIndex))));
             }
             if (killedCharacterIdentifiers.Any())
             {

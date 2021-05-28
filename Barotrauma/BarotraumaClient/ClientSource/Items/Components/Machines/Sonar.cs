@@ -1094,7 +1094,10 @@ namespace Barotrauma.Items.Components
                 if (!dockingPort.Item.Submarine.ShowSonarMarker && dockingPort.Item.Submarine != item.Submarine && !dockingPort.Item.Submarine.Info.IsOutpost) { continue; }
 
                 //don't show the docking ports of the opposing team on the sonar
-                if (item.Submarine != null && item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle && dockingPort.Item.Submarine.Info.Type != SubmarineType.Outpost)
+                if (item.Submarine != null && 
+                    item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                    dockingPort.Item.Submarine != GameMain.NetworkMember?.RespawnManager?.RespawnShuttle &&
+                    dockingPort.Item.Submarine.Info.Type != SubmarineType.Outpost)
                 {
                     // specifically checking for friendlyNPC seems more logical here
                     if (dockingPort.Item.Submarine.TeamID != item.Submarine.TeamID && dockingPort.Item.Submarine.TeamID != CharacterTeamType.FriendlyNPC) { continue; } 

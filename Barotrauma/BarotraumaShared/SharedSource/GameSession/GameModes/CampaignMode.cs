@@ -494,7 +494,7 @@ namespace Barotrauma
                     if (Level.Loaded.StartOutpost.DockedTo.Any())
                     {
                         var dockedSub = Level.Loaded.StartOutpost.DockedTo.FirstOrDefault();
-                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { return null; }
+                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != leavingPlayers.FirstOrDefault()?.TeamID) { return null; }
                         return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                     }
 
@@ -522,7 +522,7 @@ namespace Barotrauma
                     if (Level.Loaded.EndOutpost.DockedTo.Any())
                     {
                         var dockedSub = Level.Loaded.EndOutpost.DockedTo.FirstOrDefault();
-                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { return null; }
+                        if (dockedSub == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle || dockedSub.TeamID != leavingPlayers.FirstOrDefault()?.TeamID) { return null; }
                         return dockedSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : dockedSub;
                     }
 

@@ -1894,25 +1894,44 @@ namespace Barotrauma
         private void CalculateTunnelDistanceField(int density)
         {
             distanceField = new List<(Point point, double distance)>();
-            for (int x = 0; x < Size.X; x += density)
+
+            if (Mirrored)
             {
-                for (int y = 0; y < Size.Y; y += density)
+                for (int x = Size.X - 1; x >= 0; x -= density)
                 {
-                    Point point = new Point(x, y);
-                    double shortestDistSqr = double.PositiveInfinity;
-                    foreach (Tunnel tunnel in Tunnels)
+                    for (int y = 0; y < Size.Y; y += density)
                     {
-                        for (int i = 1; i < tunnel.Nodes.Count; i++)
-                        {
-                            shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.LineSegmentToPointDistanceSquared(tunnel.Nodes[i - 1], tunnel.Nodes[i], point));
-                        }
+                        addPoint(x, y);
                     }
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startPosition.X, (double)startPosition.Y));
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startExitPosition.X, (double)borders.Bottom));
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endPosition.X, (double)endPosition.Y));
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endExitPosition.X, (double)borders.Bottom));
-                    distanceField.Add((point, Math.Sqrt(shortestDistSqr)));
                 }
+            }
+            else
+            {
+                for (int x = 0; x < Size.X; x += density)
+                {
+                    for (int y = 0; y < Size.Y; y += density)
+                    {
+                        addPoint(x, y);
+                    }
+                }
+            }
+
+            void addPoint(int x, int y)
+            {
+                Point point = new Point(x, y);
+                double shortestDistSqr = double.PositiveInfinity;
+                foreach (Tunnel tunnel in Tunnels)
+                {
+                    for (int i = 1; i < tunnel.Nodes.Count; i++)
+                    {
+                        shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.LineSegmentToPointDistanceSquared(tunnel.Nodes[i - 1], tunnel.Nodes[i], point));
+                    }
+                }
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startPosition.X, (double)startPosition.Y));
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startExitPosition.X, (double)borders.Bottom));
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endPosition.X, (double)endPosition.Y));
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endExitPosition.X, (double)borders.Bottom));
+                distanceField.Add((point, Math.Sqrt(shortestDistSqr)));
             }
         }
 
@@ -3554,7 +3573,7 @@ namespace Barotrauma
                 {
                     spawnPos.Y = Math.Min(Size.Y - outpost.Borders.Height * 0.6f, spawnPos.Y + outpost.Borders.Height / 2);
                 }
-                outpost.SetPosition(spawnPos);
+                outpost.SetPosition(spawnPos, forceUndockFromStaticSubmarines: false);
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;

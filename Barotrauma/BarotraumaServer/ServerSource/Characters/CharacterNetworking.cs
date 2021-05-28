@@ -283,7 +283,7 @@ namespace Barotrauma
 
             if (extraData != null)
             {
-                int min = 0, max = 9;
+                const int min = 0, max = 9;
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
@@ -331,6 +331,7 @@ namespace Barotrauma
                     case NetEntityEvent.Type.AssignCampaignInteraction:
                         msg.WriteRangedInteger(6, min, max);
                         msg.Write((byte)CampaignInteractionType);
+                        msg.Write(RequireConsciousnessForCustomInteract);
                         break;
                     case NetEntityEvent.Type.ObjectiveManagerState:
                         msg.WriteRangedInteger(7, min, max);

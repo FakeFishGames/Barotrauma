@@ -61,7 +61,7 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (item.IgnoreByAI)
+            if (item.IgnoreByAI(character))
             {
                 Abandon = true;
                 return;

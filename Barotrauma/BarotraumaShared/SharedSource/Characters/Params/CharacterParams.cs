@@ -526,7 +526,7 @@ namespace Barotrauma
             [Serialize(false, true, description: "Does the character attack when provoked? When enabled, overrides the predefined targeting state with Attack and increases the priority of it."), Editable()]
             public bool AttackWhenProvoked { get; private set; }
 
-            [Serialize(true, true, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
+            [Serialize(false, true, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
             public bool AvoidGunfire { get; private set; }
 
             [Serialize(3f, true, description: "How long the creature avoids gunfire. Also used when the creature is unlatched."), Editable(minValue: 0f, maxValue: 100f)]
@@ -564,6 +564,9 @@ namespace Barotrauma
 
             [Serialize(0f, true, description: ""), Editable]
             public float AggressionCumulation { get; private set; }
+
+            [Serialize(WallTargetingMethod.Target, true, description: ""), Editable]
+            public WallTargetingMethod WallTargetingMethod { get; private set; }
 
             public IEnumerable<TargetParams> Targets => targets;
             protected readonly List<TargetParams> targets = new List<TargetParams>();

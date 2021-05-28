@@ -64,7 +64,7 @@ namespace Barotrauma
         protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
-            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI()))
+            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI(character)))
             {
                 Abandon = true;
                 return false;
@@ -87,11 +87,11 @@ namespace Barotrauma
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI();
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI(character);
 
         protected override void Act(float deltaTime)
         {
-            if (container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI())
+            if (container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character))
             {
                 Abandon = true;
                 return;
@@ -147,7 +147,7 @@ namespace Barotrauma
                         DialogueIdentifier = "dialogcannotreachtarget",
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
-                            container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI() ||
+                            container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character) ||
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,
                         SpeakIfFails = !objectiveManager.IsCurrentOrder<AIObjectiveCleanupItems>()

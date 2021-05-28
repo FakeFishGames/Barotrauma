@@ -71,7 +71,7 @@ namespace Barotrauma
                 if (sparks)
                 {
                     GameMain.ParticleManager.CreateParticle("spark", worldPosition,
-                        Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
+                        Rand.Vector(Rand.Range(1200.0f, 2400.0f)), 0.0f, hull);
                 }
             }
 

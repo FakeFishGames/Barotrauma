@@ -243,7 +243,7 @@ namespace Barotrauma
         /// </summary>
         public int OriginalModuleIndex = -1;
 
-        public UInt16 OriginalContainerID;
+        public int OriginalContainerIndex = -1;
 
         public virtual string Name
         {
@@ -509,9 +509,9 @@ namespace Barotrauma
             mapEntityList.Remove(this);
 
 #if CLIENT
-            if (selectedList.Contains(this))
+            if (SelectedList.Contains(this))
             {
-                selectedList = selectedList.FindAll(e => e != this);
+                SelectedList = SelectedList.Where(e => e != this).ToHashSet();
             }
 #endif
 

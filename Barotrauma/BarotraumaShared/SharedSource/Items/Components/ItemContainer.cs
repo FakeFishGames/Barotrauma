@@ -22,6 +22,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool alwaysContainedItemsSpawned;
+
         public ItemInventory Inventory;
 
         private readonly List<ActiveContainedItem> activeContainedItems = new List<ActiveContainedItem>();
@@ -208,6 +210,11 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (!string.IsNullOrEmpty(SpawnWithId) && !alwaysContainedItemsSpawned)
+            {
+                SpawnAlwaysContainedItems();
+            }
+
             if (item.ParentInventory is CharacterInventory)
             {
                 item.SetContainedItemPositions();
@@ -418,11 +425,13 @@ namespace Barotrauma.Items.Components
                         if (!isEditor && (Entity.Spawner == null || Entity.Spawner.Removed) && GameMain.NetworkMember == null)
                         {
                             var spawnedItem = new Item(prefab, Vector2.Zero, null);
-                            Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots, createNetworkEvent: false);
+                            Inventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots, createNetworkEvent: false); 
+                            alwaysContainedItemsSpawned = true;
                         }
                         else
                         {
-                            Entity.Spawner?.AddToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false);
+                            IsActive = true;
+                            Entity.Spawner?.AddToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false, onSpawned: (Item item) => { alwaysContainedItemsSpawned = true; });
                         }
                     }
                 }

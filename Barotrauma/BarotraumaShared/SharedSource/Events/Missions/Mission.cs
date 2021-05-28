@@ -400,8 +400,6 @@ namespace Barotrauma
         // putting these here since both escort and pirate missions need them. could be tucked away into another class that they can inherit from (or use composition)
         protected HumanPrefab CreateHumanPrefabFromElement(XElement element)
         {
-            HumanPrefab humanPrefab = null;
-
             if (element.Attribute("name") != null)
             {
                 DebugConsole.ThrowError("Error in mission \"" + Name + "\" - use character identifiers instead of names to configure the characters.");
@@ -411,8 +409,7 @@ namespace Barotrauma
 
             string characterIdentifier = element.GetAttributeString("identifier", "");
             string characterFrom = element.GetAttributeString("from", "");
-            humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
-
+            HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
             if (humanPrefab == null)
             {
                 DebugConsole.ThrowError("Couldn't spawn character for mission: character prefab \"" + characterIdentifier + "\" not found");
@@ -428,9 +425,11 @@ namespace Barotrauma
             {
                 positionToStayIn = WayPoint.GetRandom(SpawnType.Human, null, submarine);
             }
-            var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
+
+            var characterInfo = humanPrefab.GetCharacterInfo(Rand.RandSync.Server) ?? new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
             characterInfo.TeamID = teamType;
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
+            spawnedCharacter.Prefab = humanPrefab;
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);
             humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.Server, createNetworkEvents: false);
 

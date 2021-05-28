@@ -239,6 +239,9 @@ namespace Barotrauma
         private static SavingIndicatorState savingIndicatorState = SavingIndicatorState.None;
         private static float? timeUntilSavingIndicatorDisabled;
 
+        private static string loadedSpritesText;
+        private static DateTime loadedSpritesUpdateTime;
+
         private enum SavingIndicatorState
         {
             None,
@@ -454,9 +457,12 @@ namespace Barotrauma
                         "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
                         Color.Lerp(GUI.Style.Green, GUI.Style.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
 
-                    DrawString(spriteBatch, new Vector2(10, 115),
-                        "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)",
-                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    if (loadedSpritesText == null || DateTime.Now > loadedSpritesUpdateTime)
+                    {
+                        loadedSpritesText = "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)";
+                        loadedSpritesUpdateTime = DateTime.Now + new TimeSpan(0, 0, seconds: 5);
+                    }
+                    DrawString(spriteBatch, new Vector2(10, 115), loadedSpritesText, Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     if (debugDrawSounds)
                     {
@@ -1365,8 +1371,9 @@ namespace Barotrauma
 
                 float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
                 float angle = MathUtils.VectorToAngle(diff);
+                float originalAngle = angle;
 
-                float minAngleDiff = 0.05f;
+                const float minAngleDiff = 0.05f;
                 bool overlapFound = true;
                 int iterations = 0;
                 while (overlapFound && iterations < 10)
@@ -1388,18 +1395,24 @@ namespace Barotrauma
 
                 usedIndicatorAngles.Add(angle);
 
-                Vector2 unclampedDiff = new Vector2(
-                    (float)Math.Cos(angle) * screenDist,
-                    (float)-Math.Sin(angle) * screenDist);
-
                 Vector2 iconDiff = new Vector2(
+                    (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist + 10),
+                    (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist + 10));
+
+                angle = MathHelper.Lerp(originalAngle, angle, MathHelper.Clamp(((screenDist + 10f) - iconDiff.Length()) / 10f, 0f, 1f));
+
+                /*Vector2 unclampedDiff = new Vector2(
+                    (float)Math.Cos(angle) * screenDist,
+                    (float)-Math.Sin(angle) * screenDist);*/
+
+                iconDiff = new Vector2(
                     (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist),
                     (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
 
                 Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
                 sprite.Draw(spriteBatch, iconPos, color * alpha, rotate: 0.0f, scale: symbolScale);
 
-                if (unclampedDiff.Length() - 10 > iconDiff.Length())
+                if (/*unclampedDiff.Length()*/ screenDist - 10 > iconDiff.Length())
                 {
                     Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
                     Vector2 arrowOffset = normalizedDiff * sprite.size.X * symbolScale * 0.7f;

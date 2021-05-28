@@ -179,7 +179,7 @@ namespace Barotrauma
         {
             if (speaker == null) { return; }
             speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
-            speaker.ActiveConversation = this;
+            speaker.ActiveConversation = null;
             speaker.SetCustomInteract(null, null);
 #if SERVER
             GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
