@@ -997,8 +997,7 @@ namespace Barotrauma
                             return editor.GetMouseCursorState();
                         // Portrait area during gameplay
                         case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
-                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ||
-                                Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea).Contains(PlayerInput.MousePosition))
+                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) || CharacterHealth.IsMouseOnHealthBar())
                             {
                                 return CursorState.Hand;
                             }

@@ -8,7 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class MotionSensor : ItemComponent
     {
-        private const float UpdateInterval = 0.1f;
         private float rangeX, rangeY;
 
         private Vector2 detectOffset;
@@ -75,6 +74,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 100.0f, DecimalCount = 2), Serialize(0.1f, true, description: "How often the sensor checks if there's something moving near it. Higher values are better for performance.", alwaysUseInstanceValues: true)]
+        public float UpdateInterval
+        {
+            get;
+            set;
+        }
+
         private int maxOutputLength;
         [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
         public int MaxOutputLength
@@ -135,6 +141,9 @@ namespace Barotrauma.Items.Components
             {
                 rangeX = rangeY = element.GetAttributeFloat("range", 0.0f);
             }
+
+            //randomize update timer so all sensors aren't updated during the same frame
+            updateTimer = Rand.Range(0.0f, UpdateInterval);
         }
 
         public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)

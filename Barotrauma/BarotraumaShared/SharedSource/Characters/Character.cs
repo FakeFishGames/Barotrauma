@@ -2377,6 +2377,10 @@ namespace Barotrauma
                         var item = FindItemAtPosition(mouseSimPos, aimAssist);
                         
                         focusedItem = CanInteract ? item : null;
+                        if (focusedItem != null && focusedItem.CampaignInteractionType != CampaignMode.InteractionType.None)
+                        {
+                            FocusedCharacter = null;
+                        }
                         findFocusedTimer = 0.05f;
                     }
                 }

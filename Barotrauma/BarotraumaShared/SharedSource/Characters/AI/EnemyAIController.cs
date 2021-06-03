@@ -66,7 +66,7 @@ namespace Barotrauma
         private float Sight => AIParams.Sight;
         private float Hearing => AIParams.Hearing;
         private float FleeHealthThreshold => AIParams.FleeHealthThreshold;
-        private bool AggressiveBoarding => AIParams.AggressiveBoarding;
+        private bool IsAggressiveBoarder => AIParams.AggressiveBoarding;
 
         private FishAnimController FishAnimController => Character.AnimController as FishAnimController;
 
@@ -1271,7 +1271,7 @@ namespace Barotrauma
                 Vector2 attackLimbPos = Character.AnimController.SimplePhysicsEnabled ? Character.WorldPosition : AttackingLimb.WorldPosition;
                 Vector2 toTarget = attackWorldPos - attackLimbPos;
                 // Add a margin when the target is moving away, because otherwise it might be difficult to reach it if the attack takes some time to execute
-                if (wallTarget != null)
+                if (wallTarget != null && Character.Submarine == null)
                 {
                     if (wallTarget.Structure.Submarine != null)
                     {
@@ -1440,10 +1440,11 @@ namespace Barotrauma
                         else
                         {
                             pathSteering.SteeringSeek(steerPos, 2, startNodeFilter: n => (n.Waypoint.CurrentHull == null) == (Character.CurrentHull == null), checkVisiblity: true);
-                            // Switch to Idle when cannot reach the target and if cannot damage the walls
-                            if ((!canAttackWalls || wallTarget == null) && !pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
+                            if (!pathSteering.IsPathDirty && pathSteering.CurrentPath.Unreachable)
                             {
                                 State = AIState.Idle;
+                                IgnoreTarget(SelectedAiTarget);
+                                ResetAITarget();
                                 return;
                             }
                         }
@@ -1674,16 +1675,6 @@ namespace Barotrauma
             }
             if (canAttack)
             {
-                if (SelectedAiTarget.Entity is Item targetItem)
-                {
-                    var door = targetItem.GetComponent<Door>();
-                    if (door != null && door.CanBeTraversed)
-                    {
-                        ResetAITarget();
-                        State = PreviousState;
-                        return;
-                    }
-                }
                 if (!UpdateLimbAttack(deltaTime, AttackingLimb, attackSimPos, distance, attackTargetLimb))
                 {
                     IgnoreTarget(SelectedAiTarget);
@@ -2292,25 +2283,24 @@ namespace Barotrauma
                             var section = s.Sections[i];
                             if (section.gap == null) { continue; }
                             bool leadsInside = !section.gap.IsRoomToRoom && section.gap.FlowTargetHull != null;
-                            isInnerWall = isInnerWall || !leadsInside;
                             if (Character.AnimController.CanEnterSubmarine)
                             {
                                 if (!isCharacterInside)
                                 {
                                     if (CanPassThroughHole(s, i))
                                     {
-                                        valueModifier *= leadsInside ? (AggressiveBoarding ? 5 : 1) : 0;
+                                        valueModifier *= leadsInside ? (IsAggressiveBoarder ? 3 : 1) : 0;
                                     }
-                                    else if (AggressiveBoarding && leadsInside && canAttackWalls && AIParams.TargetOuterWalls)
+                                    else if (IsAggressiveBoarder && leadsInside && canAttackWalls && AIParams.TargetOuterWalls)
                                     {
-                                        // Up to 100% priority increase for every gap in the wall when an aggressive boarder is outside
-                                        valueModifier *= 1 + section.gap.Open;
+                                        // Up to 25% priority increase for every gap in the wall when an aggressive boarder is outside
+                                        valueModifier *= 1 + section.gap.Open * 0.25f;
                                     }
                                 }
                                 else
                                 {
                                     // Inside
-                                    if (AggressiveBoarding)
+                                    if (IsAggressiveBoarder)
                                     {
                                         if (!isInnerWall)
                                         {
@@ -2326,6 +2316,10 @@ namespace Barotrauma
                                         {
                                             valueModifier = 0;
                                             break;
+                                        }
+                                        else
+                                        {
+                                            valueModifier = 0.1f;
                                         }
                                     }
                                     else
@@ -2350,7 +2344,7 @@ namespace Barotrauma
                                     valueModifier = 0;
                                     break;
                                 }
-                                else if (AggressiveBoarding)
+                                else if (IsAggressiveBoarder)
                                 {
                                     // Up to 100% priority increase for every gap in the wall when an aggressive boarder is outside
                                     // (Bonethreshers)
@@ -2384,17 +2378,24 @@ namespace Barotrauma
                             // Ignore broken and open doors, if cannot enter submarine
                             continue;
                         }
-                        if (AggressiveBoarding)
+                        if (IsAggressiveBoarder)
                         {
-                            // Increase the priority if the character is outside and the door is from outside to inside
                             if (character.CurrentHull == null)
                             {
-                                valueModifier *= isOpen ? 5 : 1;
+                                // Increase the priority if the character is outside and the door is from outside to inside
+                                if (door.CanBeTraversed)
+                                {
+                                    valueModifier = 3;
+                                }
+                                else if (door.LinkedGap != null)
+                                {
+                                    valueModifier = 1 + door.LinkedGap.Open;
+                                }
                             }
                             else
                             {
                                 // Inside -> ignore open doors and outer doors
-                                valueModifier *= isOpen || isOutdoor ? 0 : 1;
+                                valueModifier = isOpen || isOutdoor ? 0 : 1;
                             }
                         }
                     }
@@ -2643,9 +2644,9 @@ namespace Barotrauma
         private void UpdateWallTarget(int requiredHoleCount)
         {
             wallTarget = null;
-            if (AIParams.CanOpenDoors && HasValidPath(requireNonDirty: true)) { return; }
             if (SelectedAiTarget == null) { return; }
             if (SelectedAiTarget.Entity == null) { return; }
+            if (HasValidPath(requireNonDirty: true)) { return; }
             wallHits.Clear();
             Structure wall = null;
             if (AIParams.WallTargetingMethod.HasFlag(WallTargetingMethod.Target))
@@ -2729,9 +2730,12 @@ namespace Barotrauma
                 {
                     if (wall.NoAITarget && Character.AnimController.CanEnterSubmarine)
                     {
+                        bool isTargetingDoor = SelectedAiTarget.Entity is Item i && i.GetComponent<Door>() != null;
                         // Blocked by a wall that shouldn't be targeted. The main intention here is to prevent monsters from entering the the tail and the nose pieces.
-                        IgnoreTarget(SelectedAiTarget);
-                        ResetAITarget();
+                        if (!isTargetingDoor)
+                        {
+                            ResetAITarget();
+                        }
                     }
                     else
                     {
@@ -2741,7 +2745,6 @@ namespace Barotrauma
                 else
                 {
                     // Blocked by a disabled wall.
-                    IgnoreTarget(SelectedAiTarget);
                     ResetAITarget();
                 }
             }

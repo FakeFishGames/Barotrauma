@@ -46,6 +46,7 @@ namespace Barotrauma
 
         public List<PurchasedItem> ItemsInBuyCrate { get; } = new List<PurchasedItem>();
         public List<PurchasedItem> ItemsInSellCrate { get; } = new List<PurchasedItem>();
+        public List<PurchasedItem> ItemsInSellFromSubCrate { get; } = new List<PurchasedItem>();
         public List<PurchasedItem> PurchasedItems { get; } = new List<PurchasedItem>();
         public List<SoldItem> SoldItems { get; } = new List<SoldItem>();
 
@@ -55,6 +56,7 @@ namespace Barotrauma
 
         public Action OnItemsInBuyCrateChanged;
         public Action OnItemsInSellCrateChanged;
+        public Action OnItemsInSellFromSubCrateChanged;
         public Action OnPurchasedItemsChanged;
         public Action OnSoldItemsChanged;
         
@@ -73,6 +75,12 @@ namespace Barotrauma
         {
             ItemsInSellCrate.Clear();
             OnItemsInSellCrateChanged?.Invoke();
+        }
+
+        public void ClearItemsInSellFromSubCrate()
+        {
+            ItemsInSellFromSubCrate.Clear();
+            OnItemsInSellFromSubCrateChanged?.Invoke();
         }
 
         public void SetPurchasedItems(List<PurchasedItem> items)

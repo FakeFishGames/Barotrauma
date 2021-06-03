@@ -117,6 +117,9 @@ namespace Barotrauma
             [Serialize(0.0f, true)]
             public float Delay { get; private set; }
 
+            [Serialize(false, true)]
+            public bool CampaignOnly { get; private set; }
+
             public TriggerEvent(XElement element)
             {
                 SerializableProperty.DeserializeProperties(this, element);

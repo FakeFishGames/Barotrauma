@@ -213,7 +213,14 @@ namespace Barotrauma
                 if (dialogOpened)
                 {
 #if CLIENT
-                    Character.DisableControls = true;
+                    if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "ConversationAction"))
+                    {
+                        Character.DisableControls = true;
+                    }
+                    else
+                    {
+                        Reset();
+                    }
 #endif
                     if (ShouldInterrupt())
                     {

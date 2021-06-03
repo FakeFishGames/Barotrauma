@@ -766,14 +766,14 @@ namespace Barotrauma
             if (!wayPoint2.linkedTo.Contains(this)) { wayPoint2.linkedTo.Add(this); }
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null, Ruin ruin = null, bool useSyncedRand = false)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, Ruin ruin = null, bool useSyncedRand = false)
         {
             return WayPointList.GetRandom(wp =>
                 wp.Submarine == sub && 
                 wp.ParentRuin == ruin &&
                 wp.spawnType == spawnType &&
-                (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob.Prefab))
-                , useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
+                (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob)), 
+                useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
         }
 
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)

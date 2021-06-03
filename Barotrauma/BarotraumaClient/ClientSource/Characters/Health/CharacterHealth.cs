@@ -698,6 +698,12 @@ namespace Barotrauma
             }
         }
 
+        public static bool IsMouseOnHealthBar()
+        {
+            if (Character.Controlled?.CharacterHealth == null) { return false; }
+            return Character.Controlled.CharacterHealth.healthBar.State == GUIComponent.ComponentState.Hover;
+        }
+
         public void UpdateHUD(float deltaTime)
         {
             if (GUI.DisableHUD) return;
@@ -966,11 +972,9 @@ namespace Barotrauma
                 highlightedLimbIndex = -1;
             }
 
-            Rectangle hoverArea = Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea);
-
             healthBarHolder.CanBeFocused = healthBar.CanBeFocused = healthBarShadow.CanBeFocused = !Character.ShouldLockHud();
             if (Character.AllowInput && UseHealthWindow && healthBar.Enabled && healthBar.CanBeFocused &&
-                hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
+                (GUI.IsMouseOn(healthBar) || highlightedAfflictionIcon != null) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonClicked())
@@ -1087,8 +1091,11 @@ namespace Barotrauma
             DrawStatusHUD(spriteBatch);
         }
 
+
+        private Pair<Affliction, string> highlightedAfflictionIcon = null;
         public void DrawStatusHUD(SpriteBatch spriteBatch)
         {
+            highlightedAfflictionIcon = null;
             //Rectangle interactArea = healthBar.Rect;
             if (Character.Controlled?.SelectedCharacter == null && openHealthWindow == null)
             {
@@ -1103,7 +1110,6 @@ namespace Barotrauma
                     statusIcons.Add(new Pair<Affliction, string>(affliction, affliction.Prefab.Name));
                 }
 
-                Pair<Affliction, string> highlightedIcon = null;
                 Vector2 highlightedIconPos = Vector2.Zero;
                 Rectangle afflictionArea = HUDLayoutSettings.AfflictionAreaLeft;
 
@@ -1124,9 +1130,9 @@ namespace Barotrauma
                     AfflictionPrefab afflictionPrefab = affliction.Prefab;
 
                     Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
-                    if (afflictionIconRect.Contains(PlayerInput.MousePosition) && !Character.ShouldLockHud())
+                    if (afflictionIconRect.Contains(PlayerInput.MousePosition) && !Character.ShouldLockHud() && GUI.MouseOn == null)
                     {
-                        highlightedIcon = statusIcon;
+                        highlightedAfflictionIcon = statusIcon;
                         highlightedIconPos = afflictionIconRect.Location.ToVector2();
                     }
 
@@ -1146,7 +1152,7 @@ namespace Barotrauma
                         highlightedIcon == statusIcon ? slot.HoverColor : slot.Color);*/
 
 
-                    float alphaMultiplier = highlightedIcon == statusIcon ? 1f : 0.8f;
+                    float alphaMultiplier = highlightedAfflictionIcon == statusIcon ? 1f : 0.8f;
 
                     afflictionPrefab.Icon?.Draw(spriteBatch,
                         pos.ToVector2(),
@@ -1161,9 +1167,9 @@ namespace Barotrauma
                         pos.Y += iconSize + (int)(5 * GUI.Scale);
                 }
 
-                if (highlightedIcon != null)
+                if (highlightedAfflictionIcon != null)
                 {
-                    string nameTooltip = highlightedIcon.Second;
+                    string nameTooltip = highlightedAfflictionIcon.Second;
                     Vector2 offset = GUI.Font.MeasureString(nameTooltip);
 
                     GUI.DrawString(spriteBatch,

@@ -94,19 +94,19 @@ namespace Barotrauma.Tutorials
             patient2.AIController.Enabled = false;
 
             var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
-            var subPatient1 = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "3");
+            var subPatient1 = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
             subPatient1.TeamID = CharacterTeamType.Team1;
             subPatient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient1);
 
             var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("securityofficer"));
-            var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "3");
+            var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
             subPatient2.TeamID = CharacterTeamType.Team1;
             subPatient2.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.InternalDamage, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient2);
 
             var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
-            var subPatient3 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "3");
+            var subPatient3 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
             subPatient3.TeamID = CharacterTeamType.Team1;
             subPatient3.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 20.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient3);

@@ -84,8 +84,7 @@ namespace Barotrauma
         {
             characters.Clear();
             characterItems.Clear();
-            // VIP transport mission characters stay in the same location; other characters roam at will
-            // could be replaced with a designated waypoint for VIPs, such as cargo or crew
+
             WayPoint explicitStayInHullPos = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
             Rand.RandSync randSync = Rand.RandSync.Server;
 
@@ -95,12 +94,30 @@ namespace Barotrauma
                 randSync = Rand.RandSync.Unsynced; 
             }
 
+            //if any of the escortees have a job defined, try to use a spawnpoint designated for that job
+            foreach (XElement element in characterConfig.Elements())
+            {
+                var humanPrefab = GetHumanPrefabFromElement(element);
+                if (humanPrefab == null || string.IsNullOrEmpty(humanPrefab.Job) || humanPrefab.Job.Equals("any", StringComparison.OrdinalIgnoreCase)) { continue; }
+
+                var jobPrefab = humanPrefab.GetJobPrefab();
+                if (jobPrefab != null)
+                {
+                    var jobSpecificSpawnPos = WayPoint.GetRandom(SpawnType.Human, jobPrefab, Submarine.MainSub);
+                    if (jobSpecificSpawnPos != null) 
+                    {
+                        explicitStayInHullPos = jobSpecificSpawnPos;
+                        break;
+                    }
+                }
+            }
+
             foreach (XElement element in characterConfig.Elements())
             {
                 int count = CalculateScalingEscortedCharacterCount(inMission: true);
                 for (int i = 0; i < count; i++)
                 {
-                    Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(element), characters, characterItems, Submarine.MainSub, CharacterTeamType.FriendlyNPC, explicitStayInHullPos, humanPrefabRandSync: randSync);
+                    Character spawnedCharacter = CreateHuman(GetHumanPrefabFromElement(element), characters, characterItems, Submarine.MainSub, CharacterTeamType.FriendlyNPC, explicitStayInHullPos, humanPrefabRandSync: randSync);
                     if (spawnedCharacter.AIController is HumanAIController humanAI)
                     {
                         humanAI.InitMentalStateManager();

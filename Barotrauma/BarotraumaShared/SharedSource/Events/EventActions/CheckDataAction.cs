@@ -23,7 +23,17 @@ namespace Barotrauma
 
         protected PropertyConditional.OperatorType Operator { get; set; }
 
-        public CheckDataAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public CheckDataAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        {
+            if (string.IsNullOrEmpty(Condition))
+            {
+                Condition = element.GetAttributeString("value", string.Empty);
+                if (string.IsNullOrEmpty(Condition))
+                {
+                    DebugConsole.ThrowError($"Error in scripted event \"{parentEvent.Prefab.Identifier}\". CheckDataAction with no condition set ({element}).");
+                }
+            }
+        }
 
         protected override bool? DetermineSuccess()
         {

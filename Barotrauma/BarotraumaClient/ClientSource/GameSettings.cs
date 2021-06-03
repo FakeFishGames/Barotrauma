@@ -1077,8 +1077,8 @@ namespace Barotrauma
                 new RectTransform(new Vector2(0.5f, 1.0f), voiceInputContainerHorizontal.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"), font: GUI.SubHeadingFont);
-            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
+            var voiceKeybindLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), voiceInputContainer.RectTransform), TextManager.Get("InputType.Voice"), font: GUI.SubHeadingFont);
+            var voiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), voiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.Voice))
             {
                 SelectedColor = Color.Gold * 0.3f,
                 UserData = InputType.Voice
@@ -1089,13 +1089,15 @@ namespace Barotrauma
                 new RectTransform(new Vector2(0.5f, 1.0f), voiceInputContainerHorizontal.RectTransform),
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), localVoiceInputContainer.RectTransform), TextManager.Get("InputType.LocalVoice"), font: GUI.SubHeadingFont);
-            var localVoiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), localVoiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.LocalVoice))
+            var localVoiceKeybindLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), localVoiceInputContainer.RectTransform), TextManager.Get("InputType.LocalVoice"), font: GUI.SubHeadingFont);
+            var localVoiceKeyBox = new GUITextBox(new RectTransform(new Vector2(0.3f, 1.0f), localVoiceInputContainer.RectTransform, Anchor.TopRight), text: KeyBindText(InputType.LocalVoice))
             {
                 SelectedColor = Color.Gold * 0.3f,
                 UserData = InputType.LocalVoice
             };
             localVoiceKeyBox.OnSelected += KeyBoxSelected;
+
+            voiceKeybindLabel.RectTransform.SizeChanged += () => { GUITextBlock.AutoScaleAndNormalize(voiceKeybindLabel, localVoiceKeybindLabel); };
 
             var cutoffPreventionText = new GUITextBlock(new RectTransform(textBlockScale, voiceChatContent.RectTransform), TextManager.Get("CutoffPrevention"), font: GUI.SubHeadingFont)
             {

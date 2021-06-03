@@ -480,7 +480,10 @@ namespace Barotrauma
 
             if (IsSelected || IsHighlighted)
             {
-                GUI.DrawRectangle(spriteBatch, new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2)), new Vector2(rect.Width, rect.Height), 
+                Vector2 drawPos = new Vector2(DrawPosition.X - rect.Width / 2, -(DrawPosition.Y + rect.Height / 2));
+                Vector2 drawSize = new Vector2(MathF.Ceiling(rect.Width + Math.Abs(drawPos.X - (int)drawPos.X)), MathF.Ceiling(rect.Height + Math.Abs(drawPos.Y - (int)drawPos.Y)));
+                drawPos = new Vector2(MathF.Floor(drawPos.X), MathF.Floor(drawPos.Y));
+                GUI.DrawRectangle(spriteBatch, drawPos, drawSize, 
                     Color.White, false, 0, thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
 
                 foreach (Rectangle t in Prefab.Triggers)

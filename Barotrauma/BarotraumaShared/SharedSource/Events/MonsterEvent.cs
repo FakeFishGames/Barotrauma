@@ -431,7 +431,15 @@ namespace Barotrauma
                 float scatterAmount = scatter;
                 if (spawnPosType.HasFlag(Level.PositionType.SidePath))
                 {
-                    scatterAmount = Math.Min(scatter, Level.Loaded.Tunnels.Where(t => t.Type == Level.TunnelType.SidePath).Min(t => t.MinWidth) / 2);
+                    var sidePaths = Level.Loaded.Tunnels.Where(t => t.Type == Level.TunnelType.SidePath);
+                    if (sidePaths.Any())
+                    {
+                        scatterAmount = Math.Min(scatter, sidePaths.Min(t => t.MinWidth) / 2);
+                    }
+                    else
+                    {
+                        scatterAmount = scatter;
+                    }
                 }
                 else if (!spawnPosType.HasFlag(Level.PositionType.MainPath))
                 {

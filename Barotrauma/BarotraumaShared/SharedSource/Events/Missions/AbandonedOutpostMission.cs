@@ -185,7 +185,7 @@ namespace Barotrauma
 
                     if (element.Attribute("identifier") != null && element.Attribute("from") != null)
                     {
-                        HumanPrefab humanPrefab = CreateHumanPrefabFromElement(element);
+                        HumanPrefab humanPrefab = GetHumanPrefabFromElement(element);
                         for (int i = 0; i < count; i++)
                         {
                             LoadHuman(humanPrefab, element, submarine);

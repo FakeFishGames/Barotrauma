@@ -191,6 +191,8 @@ namespace Barotrauma
             }
             enemySub.EnableMaintainPosition();
             enemySub.TeamID = CharacterTeamType.None;
+            //make the enemy sub withstand atleast the same depth as the player sub
+            enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
         }
 
         private void InitPirates()
@@ -230,7 +232,7 @@ namespace Barotrauma
 
                     XElement variantElement = GetRandomDifficultyModifiedElement(characterType, enemyCreationDifficulty, RandomnessModifier);
 
-                    Character spawnedCharacter = CreateHuman(CreateHumanPrefabFromElement(variantElement), characters, characterItems, enemySub, CharacterTeamType.None, null);
+                    Character spawnedCharacter = CreateHuman(GetHumanPrefabFromElement(variantElement), characters, characterItems, enemySub, CharacterTeamType.None, null);
                     if (!commanderAssigned)
                     {
                         bool isCommander = variantElement.GetAttributeBool("iscommander", false);

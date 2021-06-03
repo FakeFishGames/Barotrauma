@@ -417,7 +417,7 @@ namespace Barotrauma
             if (isControlledCharacterNull) { return null; }
 #endif
             if (order.Category == OrderCategory.Operate && HumanAIController.IsItemTargetedBySomeone(order.TargetItemComponent, controlledCharacter != null ? controlledCharacter.TeamID : CharacterTeamType.Team1, out Character operatingCharacter) &&
-            (isControlledCharacterNull || operatingCharacter.CanHearCharacter(controlledCharacter)))
+                (isControlledCharacterNull || operatingCharacter.CanHearCharacter(controlledCharacter)))
             {
                 return operatingCharacter;
             }

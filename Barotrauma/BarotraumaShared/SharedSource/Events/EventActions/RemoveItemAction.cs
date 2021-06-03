@@ -20,11 +20,7 @@ namespace Barotrauma
         { 
             if (string.IsNullOrWhiteSpace(ItemIdentifier))
             {
-                ItemIdentifier = element.GetAttributeString("itemidentifiers", "");
-            }
-            if (string.IsNullOrWhiteSpace(ItemIdentifier))
-            {
-                DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\" - RemoveItemAction without an item identifier.");
+                ItemIdentifier = element.GetAttributeString("itemidentifiers", null) ?? element.GetAttributeString("identifier", "");
             }
         }
 
@@ -66,7 +62,7 @@ namespace Barotrauma
                         var item = inventory.FindItem(it => 
                             it != null && 
                             !removedItems.Contains(it) &&
-                            it.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase), recursive: true);
+                            (string.IsNullOrEmpty(ItemIdentifier) || it.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase)), recursive: true);
                         if (item == null) { break; }
                         Entity.Spawner.AddToRemoveQueue(item);
                         removedItems.Add(item);
@@ -74,7 +70,7 @@ namespace Barotrauma
                 }
                 else if (target is Item item)
                 {
-                    if (item.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase))
+                    if (string.IsNullOrEmpty(ItemIdentifier) || item.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase))
                     {
                         Entity.Spawner.AddToRemoveQueue(item);
                         removedItems.Add(item);

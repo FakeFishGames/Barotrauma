@@ -1514,6 +1514,9 @@ namespace Barotrauma
                     case SubmarineType.Wreck:
                         contentType = ContentType.Wreck;
                         break;
+                    case SubmarineType.EnemySubmarine:
+                        contentType = ContentType.EnemySubmarine;
+                        break;
                 }
                 if (contentType != ContentType.Submarine)
                 {
@@ -1829,7 +1832,12 @@ namespace Barotrauma
             subTypeContainer.RectTransform.MinSize = new Point(0, subTypeContainer.RectTransform.Children.Max(c => c.MinSize.Y));
             foreach (SubmarineType subType in Enum.GetValues(typeof(SubmarineType)))
             {
-                subTypeDropdown.AddItem(TextManager.Get("submarinetype."+subType.ToString().ToLowerInvariant()), subType);
+                string textTag = "SubmarineType." + subType;
+                if (subType == SubmarineType.EnemySubmarine && !TextManager.ContainsTag(textTag))
+                {
+                    textTag = "MissionType.Pirate";
+                }
+                subTypeDropdown.AddItem(TextManager.Get(textTag), subType);
             }
 
             //---------------------------------------
@@ -2591,8 +2599,13 @@ namespace Barotrauma
             {
                 if (prevSub == null || prevSub.Type != sub.Type)
                 {
+                    string textTag = "SubmarineType." + sub.Type;
+                    if (sub.Type == SubmarineType.EnemySubmarine && !TextManager.ContainsTag(textTag))
+                    {
+                        textTag = "MissionType.Pirate";
+                    }
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), subList.Content.RectTransform) { MinSize = new Point(0, 35) },
-                        TextManager.Get("SubmarineType." + sub.Type), font: GUI.LargeFont, textAlignment: Alignment.Center, style: "ListBoxElement")
+                        TextManager.Get(textTag), font: GUI.LargeFont, textAlignment: Alignment.Center, style: "ListBoxElement")
                     {
                         CanBeFocused = false
                     };

@@ -7,13 +7,15 @@ namespace Barotrauma.Items.Components
     {
         private void GetDamageModifierText(ref string description, float damageMultiplier, string afflictionIdentifier)
         {
+            int roundedValue = (int)Math.Round((1 - damageMultiplier) * 100);
+            if (roundedValue == 0) { return; }
             string colorStr = XMLExtensions.ColorToString(GUI.Style.Green);
-            description += $"\n  ‖color:{colorStr}‖-{Math.Round((1 - damageMultiplier) * 100)}%‖color:end‖ {TextManager.Get("AfflictionName." + afflictionIdentifier, true) ?? afflictionIdentifier}";
+            description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("+0;-#")}%‖color:end‖ {TextManager.Get("AfflictionName." + afflictionIdentifier, true) ?? afflictionIdentifier}";
         }
 
         public override void AddTooltipInfo(ref string description)
         {
-            if (damageModifiers.Any(d => d.DamageMultiplier != 1f) || SkillModifiers.Any())
+            if (damageModifiers.Any(d => !MathUtils.NearlyEqual(d.DamageMultiplier, 1f)) || SkillModifiers.Any())
             {
                 description += "\n";
             }
@@ -22,7 +24,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {
-                    if (damageModifier.DamageMultiplier == 1f)
+                    if (MathUtils.NearlyEqual(damageModifier.DamageMultiplier, 1f))
                     {
                         continue;
                     }
@@ -42,7 +44,9 @@ namespace Barotrauma.Items.Components
                 foreach (var skillModifier in SkillModifiers)
                 {
                     string colorStr = XMLExtensions.ColorToString(GUI.Style.Green);
-                    description += $"\n  ‖color:{colorStr}‖+{skillModifier.Value}‖color:end‖ {TextManager.Get("SkillName." + skillModifier.Key, true) ?? skillModifier.Key}";
+                    int roundedValue = (int)Math.Round(skillModifier.Value);
+                    if (roundedValue == 0) { continue; }
+                    description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("+0;-#")}‖color:end‖ {TextManager.Get("SkillName." + skillModifier.Key, true) ?? skillModifier.Key}";
                 }
             }
         }

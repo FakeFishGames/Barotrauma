@@ -558,12 +558,14 @@ namespace Barotrauma
             {
                 CargoManager.ClearItemsInBuyCrate();
                 CargoManager.ClearItemsInSellCrate();
+                CargoManager.ClearItemsInSellFromSubCrate();
             }
             else
             {
                 if (GameMain.NetworkMember.IsServer)
                 {
                     CargoManager?.ClearItemsInBuyCrate();
+                    // TODO: CargoManager?.ClearItemsInSellFromSubCrate();
                 }
                 else if (GameMain.NetworkMember.IsClient)
                 {

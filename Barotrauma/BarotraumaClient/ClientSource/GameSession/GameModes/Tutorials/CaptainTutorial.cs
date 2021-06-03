@@ -123,17 +123,17 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_lockedDoor_2, null, false);
 
             var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("mechanic"));
-            captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job, Submarine.MainSub).WorldPosition, "mechanic");
+            captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "mechanic");
             captain_mechanic.TeamID = CharacterTeamType.Team1;
             captain_mechanic.GiveJobItems();
 
             var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("securityofficer"));
-            captain_security = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job, Submarine.MainSub).WorldPosition, "securityofficer");
+            captain_security = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "securityofficer");
             captain_security.TeamID = CharacterTeamType.Team1;
             captain_security.GiveJobItems();
 
             var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer"));
-            captain_engineer = Character.Create(engineerInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job, Submarine.MainSub).WorldPosition, "engineer");
+            captain_engineer = Character.Create(engineerInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "engineer");
             captain_engineer.TeamID = CharacterTeamType.Team1;
             captain_engineer.GiveJobItems();
 

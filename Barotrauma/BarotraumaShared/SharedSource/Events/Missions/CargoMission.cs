@@ -42,7 +42,7 @@ namespace Barotrauma
         {
             this.sub = sub;
             itemConfig = prefab.ConfigElement.Element("Items");
-            requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.9f), 1.0f);            
+            requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.98f), 1.0f);            
             DetermineCargo();
         }
 

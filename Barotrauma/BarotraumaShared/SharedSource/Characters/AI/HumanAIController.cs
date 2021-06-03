@@ -1926,26 +1926,33 @@ namespace Barotrauma
         public static bool IsItemTargetedBySomeone(ItemComponent target, CharacterTeamType team, out Character operatingCharacter)
         {
             operatingCharacter = null;
+            float highestPriority = -1.0f;
+            float highestPriorityModifier = -1.0f;
             foreach (Character c in Character.CharacterList)
             {
                 if (c.Removed) { continue; }
                 if (c.TeamID != team) { continue; }
                 if (c.IsIncapacitated) { continue; }
-                bool isOperated = c.SelectedConstruction == target.Item;
-                if (!isOperated)
+                if (c.SelectedConstruction == target.Item)
                 {
-                    if (c.AIController is HumanAIController humanAI)
-                    {
-                        isOperated = humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveOperateItem operateObjective && operateObjective.Component.Item == target.Item);
-                    }
-                }
-                operatingCharacter = c;
-                if (isOperated)
-                {
+                    operatingCharacter = c;
                     return true;
                 }
+                if (c.AIController is HumanAIController humanAI)
+                {
+                    foreach (var objective in humanAI.ObjectiveManager.Objectives)
+                    {
+                        if (!(objective is AIObjectiveOperateItem operateObjective)) { continue; }
+                        if (operateObjective.Component.Item != target.Item) { continue; }
+                        if (operateObjective.Priority < highestPriority) { continue; }
+                        if (operateObjective.PriorityModifier < highestPriorityModifier) { continue; }
+                        operatingCharacter = c;
+                        highestPriority = operateObjective.Priority;
+                        highestPriorityModifier = operateObjective.PriorityModifier;
+                    }
+                }
             }
-            return false;
+            return operatingCharacter != null;
         }
 
         // There's some duplicate logic in the two methods below, but making them use the same code would require some changes in the target classes so that we could use exactly the same checks.

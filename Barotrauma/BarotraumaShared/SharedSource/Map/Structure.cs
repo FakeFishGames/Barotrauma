@@ -53,7 +53,16 @@ namespace Barotrauma
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
         private readonly List<Vector2> bodyDebugDimensions = new List<Vector2>();
 
-        public bool Indestructible;
+#if DEBUG
+        [Serialize(false, true), Editable]
+#else
+        [Serialize(false, true)]
+#endif
+        public bool Indestructible
+        {
+            get;
+            set;
+        }
 
         //sections of the wall that are supposed to be rendered
         public WallSection[] Sections
@@ -798,7 +807,7 @@ namespace Barotrauma
 
         public void AddDamage(int sectionIndex, float damage, Character attacker = null)
         {
-            if (!Prefab.Body || Prefab.Platform || Indestructible ) { return; }
+            if (!Prefab.Body || Prefab.Platform || Indestructible) { return; }
 
             if (sectionIndex < 0 || sectionIndex > Sections.Length - 1) { return; }
 

@@ -17,7 +17,7 @@ namespace Barotrauma
             public readonly string Identifier;
             public readonly int OriginalContainerIndex;
 
-            public TakenItem(string identifier, UInt16 originalID, UInt16 originalContainerIndex, ushort moduleIndex)
+            public TakenItem(string identifier, UInt16 originalID, int originalContainerIndex, ushort moduleIndex)
             {
                 OriginalID = originalID;
                 OriginalContainerIndex = originalContainerIndex;
@@ -345,7 +345,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken item id \"{takenItemSplit[1]}\"");
                     continue;
                 }
-                if (!ushort.TryParse(takenItemSplit[2], out ushort containerIndex))
+                if (!int.TryParse(takenItemSplit[2], out int containerIndex))
                 {
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken container index \"{takenItemSplit[2]}\"");
                     continue;
@@ -576,6 +576,10 @@ namespace Barotrauma
                     if (missionCount > 0) 
                     { 
                         weight /= missionCount * 2;
+                    }
+                    if (destination.IsRadiated())
+                    {
+                        weight *= 0.001f;
                     }
                 }
                 return weight;

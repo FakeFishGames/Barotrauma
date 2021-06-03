@@ -23,7 +23,7 @@ namespace Barotrauma
         HideInMenus = 2
     }
 
-    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation }
+    public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine }
     public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
 
     partial class SubmarineInfo : IDisposable

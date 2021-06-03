@@ -293,6 +293,7 @@ namespace Barotrauma
         /// </summary>
         private void TryTriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
+            if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
             if (trigger.Delay > 0)
             {
                 if (!delayedTriggerEvents.Any(t => t.TriggerEvent == trigger))
@@ -311,6 +312,7 @@ namespace Barotrauma
         /// </summary>
         private void TriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
+            if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
             var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier.Equals(trigger.EventIdentifier, StringComparison.OrdinalIgnoreCase));
             if (eventPrefab == null)
             {
@@ -398,7 +400,7 @@ namespace Barotrauma
         public virtual void AdjustLevelData(LevelData levelData) { }
 
         // putting these here since both escort and pirate missions need them. could be tucked away into another class that they can inherit from (or use composition)
-        protected HumanPrefab CreateHumanPrefabFromElement(XElement element)
+        protected HumanPrefab GetHumanPrefabFromElement(XElement element)
         {
             if (element.Attribute("name") != null)
             {

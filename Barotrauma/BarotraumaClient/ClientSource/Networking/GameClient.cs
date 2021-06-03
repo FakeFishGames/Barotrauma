@@ -527,7 +527,7 @@ namespace Barotrauma.Networking
                     string pwMsg = TextManager.Get("PasswordRequired");
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
-                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, (int)(170 * Math.Max(1.0f, GUI.Scale))));
+                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, GUI.IntScale(170)));
                     var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
                     var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
                     {
@@ -537,7 +537,8 @@ namespace Barotrauma.Networking
 
                     if (wrongPassword)
                     {
-                        new GUITextBlock(new RectTransform(new Vector2(1f, 0.33f), passwordHolder.RectTransform), TextManager.Language == "English" ? TextManager.Get("incorrectpassword") : "Incorrect password", GUI.Style.Red, GUI.Font, textAlignment: Alignment.Center);
+                        var incorrectPasswordText = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), passwordHolder.RectTransform), TextManager.Get("incorrectpassword"), GUI.Style.Red, GUI.Font, textAlignment: Alignment.Center);
+                        incorrectPasswordText.RectTransform.MinSize = new Point(0, (int)incorrectPasswordText.TextSize.Y);
                         passwordHolder.Recalculate();
                     }
 

@@ -1,4 +1,34 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1400.3.0 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Increased the health of the hammerhead mission variants to match the previous buff of the default characters.
+- Made it possible to sell items on the sub through a new store tab in singleplayer.
+- Miscellaneous improvements and fixes to the new scripted events.
+- Allow clicking on the main menu buttons when the credits are open.
+- Added a dummy lightcomponent to turret hardpoints to make it possible to adjust the properties of the lights that will be installed on the hardpoint.
+- Option to adjust motion sensor's update interval in the sub editor.
+- Display pirate subs in a separate category in the sub editor.
+- Escortees spawn at a spawnpoint suitable for their job if one is found. Shouldn't have an effect in the vanilla subs because they don't have specific spawnpoints for the escortees' jobs.
+
+Fixes:
+- Fixed pirate subs getting crushed by pressure in levels later in the campaign.
+- Hide the event variant of the psychosis artifact in the sub editor.
+- Fixed less suitable characters getting quick-assigned for an order (e.g. captain getting assigned the "operate reactor" order).
+- Fixed missions sometimes unlocking in paths leading to an irradiated location even if there's a more suitable path available.
+- Fixed some campaign-specific scripted events triggering in abandoned outposts in the mission mode.
+- Fixed mudraptors no longer targeting doors.
+- Fixed white rectangle around selected items in the sub editor being slightly off if the item's position/size is not a whole number.
+- Fixed "incorrect password" text overlapping with the buttons in the password prompt.
+- Fixed "could not parse taken container index" error when stealing items that didn't spawn in a container in an outpost and returning to that outpost.
+- Fixed z-fighting in Medium Weapons Display Case.
+- Fixed inability to drop through broken hatches.
+- Fixed sprite bleed in IC-4 block's inventory icon.
+- Fixed damage modifiers in item tooltips always starting with a minus sign even if the modifier is positive, and skill modifiers always starting with "+".
+- Fixed healthbar and affliction area being clickable even if there's an UI element in front of them, and even if there's no afflictions in the affliction area. Most noticeable when editing an electrical components properties.
+
+---------------------------------------------------------------------------------------------------------
 v0.1400.2.0 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

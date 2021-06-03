@@ -637,7 +637,7 @@ namespace Barotrauma
                         impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
                     }
                 }
-                return true;
+                return !f2.IsSensor;
             }
 
             Vector2 colliderBottom = GetColliderBottom();
@@ -1541,6 +1541,7 @@ namespace Barotrauma
                     case Physics.CollisionLevel:
                         if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) { return -1; }
                         if (fixture.Body.UserData is Submarine && character.Submarine != null) { return -1; }
+                        if (fixture.IsSensor) { return -1; }
                         if (fraction < standOnFloorFraction)
                         {
                             standOnFloorFraction = fraction;
