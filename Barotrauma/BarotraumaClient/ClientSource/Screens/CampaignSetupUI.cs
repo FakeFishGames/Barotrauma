@@ -6,6 +6,7 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System.Globalization;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -42,6 +43,12 @@ namespace Barotrauma
         }
         
         public GUITickBox EnableRadiationToggle { get; set; }
+        public GUILayoutGroup CampaignSettingsContent { get; set; }
+
+        public GUIButton CampaignCustomizeButton { get; set; }
+        public GUIMessageBox CampaignCustomizeSettings { get; set; }
+
+        public GUITextBlock MaxMissionCountText;
 
         private readonly bool isMultiplayer;
 
@@ -177,10 +184,19 @@ namespace Barotrauma
                     if (isMultiplayer)
                     {
                         settings.RadiationEnabled = GameMain.NetLobbyScreen.IsRadiationEnabled();
+                        settings.MaxMissionCount = GameMain.NetLobbyScreen.GetMaxMissionCount();
                     }
                     else
                     {
                         settings.RadiationEnabled = EnableRadiationToggle?.Selected ?? false;
+                        if (MaxMissionCountText != null && Int32.TryParse(MaxMissionCountText.Text, out int missionCount))
+                        {
+                            settings.MaxMissionCount = missionCount;
+                        }
+                        else
+                        {
+                            settings.MaxMissionCount = CampaignSettings.DefaultMaxMissionCount;
+                        }
                     }
 
                     if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
@@ -265,14 +281,14 @@ namespace Barotrauma
 
             if (!isMultiplayer)
             {
-                if (MapGenerationParams.Instance.RadiationParams != null)
+                CampaignCustomizeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1f), buttonContainer.RectTransform, Anchor.CenterLeft), TextManager.Get("SettingsButton"))
                 {
-                    EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 1f), buttonContainer.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                    OnClicked = (tb, userdata) =>
                     {
-                        Selected = true,
-                        ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
-                    };
-                }
+                        CreateCustomizeWindow();
+                        return true;
+                    }
+                };
 
                 var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
                 {
@@ -288,6 +304,52 @@ namespace Barotrauma
 
             if (submarines != null) { UpdateSubList(submarines); }
             UpdateLoadMenu(saveFiles);
+        }
+
+        private void CreateCustomizeWindow()
+        {
+            CampaignCustomizeSettings = new GUIMessageBox("", "", new string[] { TextManager.Get("OK") }, new Vector2(0.2f, 0.2f));
+            CampaignCustomizeSettings.Buttons[0].OnClicked += CampaignCustomizeSettings.Close;
+
+            CampaignSettingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), CampaignCustomizeSettings.Content.RectTransform, Anchor.TopCenter))
+            {
+                RelativeSpacing = 0.1f
+            };
+
+            if (MapGenerationParams.Instance.RadiationParams != null)
+            {
+                EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), CampaignSettingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
+                {
+                    Selected = true,
+                    ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
+                };
+            }
+            var maxMissionCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), CampaignSettingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) 
+            { 
+                Stretch = true,
+                ToolTip = TextManager.Get("maxmissioncounttooltip")
+            };
+            var maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", fallBackTag: "missions"), wrap: true);
+            var maxMissionCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), maxMissionCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
+            var maxMissionCountButtons = new GUIButton[2];
+            maxMissionCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleLeft")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text) - 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
+                    return true;
+                }
+            };
+            MaxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), CampaignSettings.DefaultMaxMissionCount.ToString(), textAlignment: Alignment.Center, style: "GUITextBox");
+            maxMissionCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleRight")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text) + 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
+                    return true;
+                }
+            };
+            maxMissionCountContainer.Children.ForEach(c => c.ToolTip = maxMissionCountSettingHolder.ToolTip);
         }
 
         private void CreateMultiplayerCampaignSubList(RectTransform parent)

@@ -244,12 +244,12 @@ namespace Barotrauma
             availableIssues.Sort((x, y) => y.Importance.CompareTo(x.Importance));
             attendedIssues.Sort((x, y) => x.Importance.CompareTo(y.Importance));
 
-            ShipIssueWorker mostImportantIssue = availableIssues.First();
+            ShipIssueWorker mostImportantIssue = availableIssues.FirstOrDefault();
 
             float bestValue = 0f;
             Character bestCharacter = null;
 
-            if (mostImportantIssue.Importance > MinimumIssueThreshold)
+            if (mostImportantIssue != null && mostImportantIssue.Importance > MinimumIssueThreshold)
             {
                 IEnumerable<Character> bestCharacters = CrewManager.GetCharactersSortedForOrder(mostImportantIssue.SuggestedOrderPrefab, AlliedCharacters, character, true);
 
@@ -296,7 +296,7 @@ namespace Barotrauma
                 }
             }
 
-            if (bestCharacter != null)
+            if (bestCharacter != null && mostImportantIssue != null)
             {
 #if DEBUG
                 ShipCommandLog("Setting " + mostImportantIssue + " for character " + bestCharacter);

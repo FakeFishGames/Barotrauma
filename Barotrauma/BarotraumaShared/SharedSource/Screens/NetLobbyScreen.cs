@@ -53,7 +53,41 @@ namespace Barotrauma
             return GameMain.Server.ServerSettings.RadiationEnabled;
 #endif
         }
-        
+
+        public void SetMaxMissionCount(int maxMissionCount)
+        {
+#if SERVER
+            if (GameMain.Server != null)
+            {
+                if (maxMissionCount < CampaignSettings.MinMissionCountLimit) maxMissionCount = CampaignSettings.MaxMissionCountLimit;
+                if (maxMissionCount > CampaignSettings.MaxMissionCountLimit) maxMissionCount = CampaignSettings.MinMissionCountLimit;
+
+                GameMain.Server.ServerSettings.MaxMissionCount = maxMissionCount;
+                lastUpdateID++;
+            }
+#endif
+#if CLIENT
+            (maxMissionCountText as GUITextBlock).Text = maxMissionCount.ToString();
+#endif
+        }
+
+        public int GetMaxMissionCount()
+        {
+#if CLIENT
+            // this seems rather silly, but it matches the radiation enabled check structurally. is this right?
+            if (maxMissionCountText != null && Int32.TryParse(maxMissionCountText.Text, out int result))
+            {
+                return result;
+            }
+            else
+            {
+                return 0;
+            }
+#elif SERVER
+            return GameMain.Server.ServerSettings.MaxMissionCount;
+#endif
+        }
+
         public void ToggleTraitorsEnabled(int dir)
         {
 #if SERVER

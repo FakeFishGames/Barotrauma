@@ -416,7 +416,7 @@ namespace Barotrauma
                                     int optionIndex = msg.ReadRangedInteger(-1, orderPrefab.AllOptions.Length);
                                     if (optionIndex > -1)
                                     {
-                                        option = orderPrefab.Options[optionIndex];
+                                        option = orderPrefab.AllOptions[optionIndex];
                                     }
                                 }
                                 GameMain.GameSession?.CrewManager?.SetOrderHighlight(this, orderPrefab.Identifier, option);

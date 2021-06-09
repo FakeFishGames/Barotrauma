@@ -1555,8 +1555,13 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(specialSavePath) &&
                 (string.IsNullOrEmpty(Submarine.MainSub?.Info.FilePath) || Path.GetFileNameWithoutExtension(Submarine.MainSub.Info.Name) != nameBox.Text || Path.GetDirectoryName(Submarine.MainSub?.Info.FilePath) != specialSavePath))
             {
+                string submarineTypeTag = "SubmarineType." + Submarine.MainSub.Info.Type;
+                if (Submarine.MainSub.Info.Type == SubmarineType.EnemySubmarine && !TextManager.ContainsTag(submarineTypeTag))
+                {
+                    submarineTypeTag = "MissionType.Pirate";
+                }
                 var msgBox = new GUIMessageBox("", TextManager.GetWithVariables("savesubtospecialfolderprompt",
-                    new string[] { "[type]", "[outpostpath]" }, new string[] { TextManager.Get("submarinetype." + Submarine.MainSub.Info.Type), specialSavePath }),
+                    new string[] { "[type]", "[outpostpath]" }, new string[] { TextManager.Get(submarineTypeTag), specialSavePath }),
                     new string[] { TextManager.Get("yes"), TextManager.Get("no") });
                 msgBox.Buttons[0].OnClicked = (bt, userdata) =>
                 {

@@ -807,22 +807,22 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < 2; i++)
             {
                 Gap doorGap = i == 0 ? Door?.LinkedGap : DockingTarget?.Door?.LinkedGap;
-                if (doorGap == null) continue;
+                if (doorGap == null) { continue; }
                 doorGap.DisableHullRechecks = true;
-                if (doorGap.linkedTo.Count >= 2) continue;
+                if (doorGap.linkedTo.Count >= 2) { continue; }
 
                 if (IsHorizontal)
                 {
                     if (item.WorldPosition.X < DockingTarget.item.WorldPosition.X)
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[0])) doorGap.linkedTo.Add(hulls[0]);
+                        if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }
                     else
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
+                        if (!doorGap.linkedTo.Contains(hulls[1])) { doorGap.linkedTo.Add(hulls[1]); }
                     }
                     //make sure the left hull is linked to the gap first (gap logic assumes that the first hull is the one to the left)
-                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].Rect.X > doorGap.linkedTo[1].Rect.X)
+                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].WorldRect.X > doorGap.linkedTo[1].WorldRect.X)
                     {
                         var temp = doorGap.linkedTo[0];
                         doorGap.linkedTo[0] = doorGap.linkedTo[1];
@@ -831,16 +831,16 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (item.WorldPosition.Y < DockingTarget.item.WorldPosition.Y)
+                    if (item.WorldPosition.Y > DockingTarget.item.WorldPosition.Y)
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[0])) doorGap.linkedTo.Add(hulls[0]);
+                        if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }
                     else
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
+                        if (!doorGap.linkedTo.Contains(hulls[1])) { doorGap.linkedTo.Add(hulls[1]); }
                     }
                     //make sure the upper hull is linked to the gap first (gap logic assumes that the first hull is above the second one)
-                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].Rect.Y < doorGap.linkedTo[1].Rect.Y)
+                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].WorldRect.Y < doorGap.linkedTo[1].WorldRect.Y)
                     {
                         var temp = doorGap.linkedTo[0];
                         doorGap.linkedTo[0] = doorGap.linkedTo[1];

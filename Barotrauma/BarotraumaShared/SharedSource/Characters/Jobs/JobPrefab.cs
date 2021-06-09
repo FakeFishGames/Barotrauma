@@ -300,7 +300,6 @@ namespace Barotrauma
             }
             foreach (XElement element in mainElement.Elements())
             {
-                if (!element.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase)) { continue; }
                 if (element.IsOverride())
                 {
                     var job = new JobPrefab(element.FirstElement(), file.Path)
@@ -311,6 +310,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (!element.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase)) { continue; }
                     var job = new JobPrefab(element, file.Path)
                     {
                         ContentPackage = file.ContentPackage

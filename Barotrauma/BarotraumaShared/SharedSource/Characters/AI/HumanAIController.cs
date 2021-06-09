@@ -479,7 +479,7 @@ namespace Barotrauma
                         Character.AnimController.InWater ||
                         Character.AnimController.HeadInWater ||
                         Character.CurrentHull == null ||
-                        (Character.Submarine.TeamID != Character.TeamID && !Character.IsEscorted) || // these instances should maybe be combined to a method
+                        (Character.Submarine?.TeamID != Character.TeamID && !Character.IsEscorted) || // these instances should maybe be combined to a method
                         ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() ||
                         ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
                     if (oxygenLow && Character.CurrentHull.Oxygen > 0)

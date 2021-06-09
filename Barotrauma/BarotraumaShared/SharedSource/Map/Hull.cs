@@ -574,6 +574,9 @@ namespace Barotrauma
             Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
             
             BallastFlora?.OnMapLoaded();
+#if CLIENT
+            lastAmbientLightEditTime = 0.0;
+#endif
         }
 
         public void AddToGrid(Submarine submarine)
@@ -683,6 +686,11 @@ namespace Barotrauma
 
         public void AddFireSource(FireSource fireSource)
         {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                //clients aren't allowed to create fire sources in hulls whose IDs have been freed (dynamic hulls between docking ports), because they can't be synced
+                if (IdFreed) { return; }
+            }
             if (fireSource is DummyFireSource dummyFire)
             {
                 FakeFireSources.Add(dummyFire);

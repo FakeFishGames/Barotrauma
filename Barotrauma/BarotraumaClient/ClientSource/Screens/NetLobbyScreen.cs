@@ -45,6 +45,10 @@ namespace Barotrauma
 
         private readonly GUITickBox radiationEnabledTickBox;
 
+        private readonly GUIButton[] maxMissionCountButtons;
+        private readonly GUITextBlock maxMissionCountText;
+        private readonly GUITextBlock maxMissionCountDescription;
+
         private readonly GUIButton[] traitorProbabilityButtons;
         private readonly GUITextBlock traitorProbabilityText;
 
@@ -1158,6 +1162,31 @@ namespace Barotrauma
                 };
             }
 
+            var maxMissionCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
+            maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", fallBackTag: "missions"), wrap: true)
+            {
+                ToolTip = TextManager.Get("maxmissioncounttooltip")
+            };
+            var maxMissionCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), maxMissionCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
+            maxMissionCountButtons = new GUIButton[2];
+            maxMissionCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleLeft")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, maxMissionCount: -1);
+                    return true;
+                }
+            };
+            maxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), "0", textAlignment: Alignment.Center, style: "GUITextBox");
+            maxMissionCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleRight")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, maxMissionCount: 1);
+                    return true;
+                }
+            };
+            maxMissionCountSettingHolder.Children.ForEach(c => c.ToolTip = maxMissionCountSettingHolder.ToolTip);
 
             List<GUIComponent> settingsElements = settingsContent.Children.ToList();
             for (int i = 0; i < settingsElements.Count; i++)
@@ -1311,6 +1340,13 @@ namespace Barotrauma
             {
                 radiationEnabledTickBox.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             }
+            maxMissionCountDescription.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            maxMissionCountText.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            foreach (var button in maxMissionCountButtons)
+            {
+                button.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            }
+
             traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled = 
                 !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);

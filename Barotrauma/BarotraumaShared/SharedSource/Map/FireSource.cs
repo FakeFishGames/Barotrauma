@@ -94,7 +94,7 @@ namespace Barotrauma
         public FireSource(Vector2 worldPosition, Hull spawningHull = null, bool isNetworkMessage = false)
         {
             hull = Hull.FindHull(worldPosition, spawningHull);
-            if (hull == null || worldPosition.Y < hull.WorldSurface) return;
+            if (hull == null || worldPosition.Y < hull.WorldSurface) { return; }
 
 #if CLIENT
             if (!isNetworkMessage && GameMain.Client != null) { return; }

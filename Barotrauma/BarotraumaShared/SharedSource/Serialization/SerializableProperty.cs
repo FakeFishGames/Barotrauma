@@ -790,7 +790,7 @@ namespace Barotrauma
                     }
                 }
 
-                void FixValue(SerializableProperty property, object parentObject, XAttribute attribute)
+                static void FixValue(SerializableProperty property, object parentObject, XAttribute attribute)
                 {
                     if (attribute.Value.Length > 0 && attribute.Value[0] == '*')
                     {
@@ -811,6 +811,29 @@ namespace Barotrauma
                         else if (property.PropertyType == typeof(Point))
                         {
                             property.TrySetValue(parentObject, ((Point)property.GetValue(parentObject)).Multiply(multiplier));
+                        }
+                    }
+                    else if (attribute.Value.Length > 0 && attribute.Value[0] == '+')
+                    {
+                        if (property.PropertyType == typeof(int))
+                        {
+                            float.TryParse(attribute.Value.Substring(1), NumberStyles.Float, CultureInfo.InvariantCulture, out float addition);
+                            property.TrySetValue(parentObject, (int)(((int)property.GetValue(parentObject)) + addition));
+                        }
+                        else if (property.PropertyType == typeof(float))
+                        {
+                            float.TryParse(attribute.Value.Substring(1), NumberStyles.Float, CultureInfo.InvariantCulture, out float addition);
+                            property.TrySetValue(parentObject, (float)property.GetValue(parentObject) + addition);
+                        }
+                        else if (property.PropertyType == typeof(Vector2))
+                        {
+                            var addition = XMLExtensions.ParseVector2(attribute.Value.Substring(1));
+                            property.TrySetValue(parentObject, (Vector2)property.GetValue(parentObject) + addition);
+                        }
+                        else if (property.PropertyType == typeof(Point))
+                        {
+                            var addition = XMLExtensions.ParsePoint(attribute.Value.Substring(1));
+                            property.TrySetValue(parentObject, ((Point)property.GetValue(parentObject)) + addition);
                         }
                     }
                     else

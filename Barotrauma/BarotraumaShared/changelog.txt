@@ -1,4 +1,35 @@
 ---------------------------------------------------------------------------------------------------------
+v0.14.4.0 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Restrict the number of missions you can choose per level to 2.
+- Removed Endworm's weak point in the mouth.
+- Alien/physicorium shells now break the limbs again, like they used to. Reduced the damage from 1000 to 800.
+- Pulse laser doesn't bypass all the damagemodifiers anymore (because it uses burndamage instead of burn). Increased the damage slightly.
+
+Fixes:
+- Fixed some incorrect room names in the beacon stations.
+- Fixed propeller damage area triggering very inaccurately, particularly on shuttle engines.
+- Fixed hull indicators fading in when loading a sub in the editor (they should only get hidden and fade in when editing the ambient light value).
+- Fixed inability to override jobs with mods (unstable only).
+- Fixed rotated levelobjects emitting particles in a wrong direction (e.g. cave vents).
+- Fixed LevelTriggers staying active when the character who activated them leaves them (e.g. gas vents draining oxygen even after you've left their trigger area). Unstable only.
+- Removed duplicate front piece from pirate Humpback.
+- Fixed boss health bar not showing up when damaging boss monsters with the pulse laser.
+- Fixed gaps sometimes getting linked incorrectly to the hulls between docking hatches, preventing water from flowing down from the lower hull in mirrored subs. Happened in mirrored Kastrull for example.
+- Fixed fires in hulls between docking ports never going out client-side.
+- Fixed Moloch's armor not always breaking when shot with a railgun.
+- Fixed Moloch's armor breaking when shot with canister shots or chainguns.
+- Fixed the armor penetration of railgun shell not working.
+- Fixed a crash related to bots entering dry rooms inside alien ruins. (unstable only)
+- Fixed nav terminal's, sonar monitor's and status monitor's selection rectangles being offset from the sprite in the sub editor.
+- Fixed mirrored pumps emitting particles from the wrong side of the pump.
+- Fixed turret icon not switching back to the previous one in the sub preview when cancelling a pending turret upgrade.
+- Fixed occasional "sequence contains no elements" crash when updating pirate AI.
+- Fixed occasional "index out of range" console errors when a client receives an update about the pirates' AI state.
+
+---------------------------------------------------------------------------------------------------------
 v0.1400.3.0 (unstable)
 ---------------------------------------------------------------------------------------------------------
 

@@ -169,40 +169,43 @@ namespace Barotrauma
                 }
             }
 
-            if (EditWater)
+            if (!IdFreed)
             {
-                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(WorldRect, position))
+                if (EditWater)
                 {
-                    if (PlayerInput.PrimaryMouseButtonHeld())
+                    Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (Submarine.RectContains(WorldRect, position))
                     {
-                        WaterVolume += 1500.0f;
-                        networkUpdatePending = true;
-                        serverUpdateDelay = 0.5f;
+                        if (PlayerInput.PrimaryMouseButtonHeld())
+                        {
+                            WaterVolume += 1500.0f;
+                            networkUpdatePending = true;
+                            serverUpdateDelay = 0.5f;
+                        }
+                        else if (PlayerInput.SecondaryMouseButtonHeld())
+                        {
+                            WaterVolume -= 1500.0f;
+                            networkUpdatePending = true;
+                            serverUpdateDelay = 0.5f;
+                        }
                     }
-                    else if (PlayerInput.SecondaryMouseButtonHeld())
+                }
+                else if (EditFire)
+                {
+                    Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
+                    if (Submarine.RectContains(WorldRect, position))
                     {
-                        WaterVolume -= 1500.0f;
-                        networkUpdatePending = true;
-                        serverUpdateDelay = 0.5f;
+                        if (PlayerInput.PrimaryMouseButtonClicked())
+                        {
+                            new FireSource(position, this, isNetworkMessage: true);
+                            networkUpdatePending = true;
+                            serverUpdateDelay = 0.5f;
+                        }
                     }
                 }
             }
-            else if (EditFire)
-            {
-                Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-                if (Submarine.RectContains(WorldRect, position))
-                {
-                    if (PlayerInput.PrimaryMouseButtonClicked())
-                    {
-                        new FireSource(position, this, isNetworkMessage: true);
-                        networkUpdatePending = true;
-                        serverUpdateDelay = 0.5f;
-                    }
-                }
-            }
-      
-            if (waterVolume < 1.0f) return;
+
+            if (waterVolume < 1.0f) { return; }
             for (int i = 1; i < waveY.Length - 1; i++)
             {
                 float maxDelta = Math.Max(Math.Abs(rightDelta[i]), Math.Abs(leftDelta[i]));

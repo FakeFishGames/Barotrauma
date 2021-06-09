@@ -684,6 +684,8 @@ namespace Barotrauma
             if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
             if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
 
+            CheckTooManyMissions(Map.CurrentLocation, sender);
+
             List<PurchasedItem> currentBuyCrateItems = new List<PurchasedItem>(CargoManager.ItemsInBuyCrate);
             currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity));
             buyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, i.Quantity));

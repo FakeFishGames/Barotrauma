@@ -72,6 +72,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public Character Attacker { get; set; }
+
         public IEnumerable<Body> Hits
         {
             get { return hits; }
@@ -723,7 +725,7 @@ namespace Barotrauma.Items.Components
                 if (limb.IsSevered || limb.character == null || limb.character.Removed) { return false; }
 
                 limb.character.LastDamageSource = item;
-                if (Attack != null) { attackResult = Attack.DoDamageToLimb(User, limb, item.WorldPosition, 1.0f); }
+                if (Attack != null) { attackResult = Attack.DoDamageToLimb(User ?? Attacker, limb, item.WorldPosition, 1.0f); }
                 if (limb.character != null) { character = limb.character; }
             }
             else if (target.Body.UserData is Item targetItem)
@@ -731,18 +733,18 @@ namespace Barotrauma.Items.Components
                 if (targetItem.Removed) { return false; }
                 if (Attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 
                 {
-                    attackResult = Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f); 
+                    attackResult = Attack.DoDamage(User ?? Attacker, targetItem, item.WorldPosition, 1.0f); 
                 }
             }
             else if (target.Body.UserData is IDamageable damageable)
             {
-                if (Attack != null) { attackResult = Attack.DoDamage(User, damageable, item.WorldPosition, 1.0f); }
+                if (Attack != null) { attackResult = Attack.DoDamage(User ?? Attacker, damageable, item.WorldPosition, 1.0f); }
             }
             else if (target.Body.UserData is VoronoiCell voronoiCell && voronoiCell.IsDestructible && Attack != null && Math.Abs(Attack.LevelWallDamage) > 0.0f)
             {
                 if (Level.Loaded?.ExtraWalls.Find(w => w.Body == target.Body) is DestructibleLevelWall destructibleWall)
                 {
-                    attackResult = Attack.DoDamage(User, destructibleWall, item.WorldPosition, 1.0f);
+                    attackResult = Attack.DoDamage(User ?? Attacker, destructibleWall, item.WorldPosition, 1.0f);
                 }
             }
 

@@ -210,7 +210,7 @@ namespace Barotrauma
                     if (ParticleEmitterTriggers[i] != null && !ParticleEmitterTriggers[i].IsTriggered) { continue; }
                     Vector2 emitterPos = LocalToWorld(Prefab.EmitterPositions[i]);
                     ParticleEmitters[i].Emit(deltaTime, emitterPos, hullGuess: null,
-                        angle: ParticleEmitters[i].Prefab.Properties.CopyEntityAngle ? -CurrentRotation + MathHelper.PiOver2 : 0.0f);
+                        angle: ParticleEmitters[i].Prefab.Properties.CopyEntityAngle ? -CurrentRotation + MathHelper.Pi : 0.0f);
                 }
             }
 

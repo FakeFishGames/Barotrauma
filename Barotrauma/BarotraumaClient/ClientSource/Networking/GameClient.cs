@@ -2088,6 +2088,7 @@ namespace Barotrauma.Networking
                             float autoRestartTimer = autoRestartEnabled ? inc.ReadSingle() : 0.0f;
 
                             bool radiationEnabled = inc.ReadBoolean();
+                            byte maxMissionCount = inc.ReadByte();
 
                             //ignore the message if we already a more up-to-date one
                             //or if we're still waiting for the initial update
@@ -2153,6 +2154,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetRadiationEnabled(radiationEnabled);
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);
                                 GameMain.NetLobbyScreen.SetBotCount(botCount);
+                                GameMain.NetLobbyScreen.SetMaxMissionCount(maxMissionCount);
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;

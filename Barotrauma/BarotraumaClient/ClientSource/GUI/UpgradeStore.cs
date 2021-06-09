@@ -119,9 +119,15 @@ namespace Barotrauma
                     RefreshUpgradeList();
                     foreach (var itemPreview in itemPreviews)
                     {
-                        if (itemPreview.Key?.PendingItemSwap?.UpgradePreviewSprite == null) { continue; }
-                        if (!(itemPreview.Value is GUIImage image)) { continue; }
-                        image.Sprite = itemPreview.Key.PendingItemSwap.UpgradePreviewSprite;
+                        if (!(itemPreview.Value is GUIImage image) || itemPreview.Key == null) { continue; }
+                        if (itemPreview.Key.PendingItemSwap == null)
+                        {
+                            image.Sprite = itemPreview.Key.Prefab.UpgradePreviewSprite;
+                        }
+                        else if (itemPreview.Key.PendingItemSwap.UpgradePreviewSprite != null)
+                        {
+                            image.Sprite = itemPreview.Key.PendingItemSwap.UpgradePreviewSprite;
+                        }
                     }
                     break;
             }
@@ -241,7 +247,7 @@ namespace Barotrauma
             GUILayoutGroup tooltipLayout = new GUILayoutGroup(rectT(0.95f,0.95f, ItemInfoFrame, Anchor.Center)) { Stretch = true };
             new GUITextBlock(rectT(1, 0, tooltipLayout), string.Empty, font: GUI.SubHeadingFont) { UserData = "itemname" };
             new GUITextBlock(rectT(1, 0, tooltipLayout), TextManager.Get("UpgradeUITooltip.UpgradeListHeader"));
-            new GUIListBox(rectT(1, 0.5f, tooltipLayout), style: null) { ScrollBarVisible = false, AutoHideScrollBar = false, UserData = "upgradelist"};
+            new GUIListBox(rectT(1, 0.5f, tooltipLayout), style: null) { ScrollBarVisible = false, AutoHideScrollBar = false, SmoothScroll = true, UserData = "upgradelist"};
             new GUITextBlock(rectT(1, 0, tooltipLayout), string.Empty) { UserData = "moreindicator" };
             ItemInfoFrame.Children.ForEach(c => { c.CanBeFocused = false; c.Children.ForEach(c2 => c2.CanBeFocused = false); });
 
@@ -1276,8 +1282,7 @@ namespace Barotrauma
                                 if (selectedUpgradeCategoryLayout.FindChild(c => c.UserData as Item == HoveredItem, recursive: true) is GUIButton itemElement)
                                 {
                                     if (!itemElement.Selected) { itemElement.OnClicked(itemElement, itemElement.UserData); }
-                                    //TODO: enable this if/when we make ScrollToElement work with child elements of different sizes
-                                    //(itemElement.Parent?.Parent?.Parent as GUIListBox)?.ScrollToElement(itemElement);
+                                    (itemElement.Parent?.Parent?.Parent as GUIListBox)?.ScrollToElement(itemElement);
                                 }
                             }
                         }

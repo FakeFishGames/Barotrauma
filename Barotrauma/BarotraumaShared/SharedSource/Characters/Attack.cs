@@ -514,7 +514,7 @@ namespace Barotrauma
 
             DamageParticles(deltaTime, worldPosition);
 
-            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration:Penetration);
+            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration: Penetration);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)

@@ -516,7 +516,7 @@ namespace Barotrauma
         [Serialize(null, false)]
         public string EquipConfirmationText { get; set; }
 
-        [Serialize(true, false, description: "Can the item be rotated in the sprite editor.")]
+        [Serialize(true, false, description: "Can the item be rotated in the submarine editor.")]
         public bool AllowRotatingInEditor { get; set; }
 
         [Serialize(false, false)]

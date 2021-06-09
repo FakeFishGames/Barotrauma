@@ -17,25 +17,33 @@ namespace Barotrauma
         // Anything that uses this field I wasn't sure if actually needed the proper campaign settings to be passed down
         public static CampaignSettings Unsure = Empty;
         public bool RadiationEnabled { get; set; }
+        public int MaxMissionCount { get; set; }
+
+        public const int DefaultMaxMissionCount = 2;
+        public const int MaxMissionCountLimit = 10;
+        public const int MinMissionCountLimit = 1;
 
         public CampaignSettings(IReadMessage inc)
         {
             RadiationEnabled = inc.ReadBoolean();
+            MaxMissionCount = inc.ReadInt32();
         }
         
         public CampaignSettings(XElement element)
         {
             RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLower(), true);
+            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLower(), DefaultMaxMissionCount);
         }
 
         public void Serialize(IWriteMessage msg)
         {
             msg.Write(RadiationEnabled);
+            msg.Write(MaxMissionCount);
         }
 
         public XElement Save()
         {
-            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLower(), RadiationEnabled));
+            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLower(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLower().ToLower(), MaxMissionCount));
         }
     }
 
@@ -873,6 +881,26 @@ namespace Barotrauma
             base.Remove();
             map?.Remove();
             map = null;
+        }
+
+        public int NumberOfMissionsAtLocation(Location location)
+        {
+            return Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location));
+        }
+
+        public void CheckTooManyMissions(Location currentLocation, Client sender)
+        {
+            foreach (Location location in currentLocation.Connections.Select(c => c.OtherLocation(currentLocation)))
+            {
+                if (NumberOfMissionsAtLocation(location) > Settings.MaxMissionCount)
+                {
+                    DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.Name}! Count was {NumberOfMissionsAtLocation(location)}. Deselecting extra missions.");
+                    foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.MaxMissionCount).ToList())
+                    {
+                        currentLocation.DeselectMission(mission);
+                    }
+                }
+            }
         }
     }
 }

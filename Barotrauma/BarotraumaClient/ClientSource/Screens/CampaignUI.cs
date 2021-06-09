@@ -23,6 +23,8 @@ namespace Barotrauma
         private GUIListBox missionList;
         private readonly List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
 
+        private bool hasMaxMissions;
+
         private GUIButton repairHullsButton, replaceShuttlesButton, repairItemsButton;
 
         private SubmarineSelection submarineSelection;
@@ -323,7 +325,17 @@ namespace Barotrauma
             map.Update(deltaTime, mapContainer);
             foreach (GUITickBox tickBox in missionTickBoxes)
             {
-                tickBox.Enabled = Campaign.AllowedToManageCampaign();
+                bool disable = hasMaxMissions && !tickBox.Selected;
+                tickBox.Enabled = Campaign.AllowedToManageCampaign() && !disable;
+                tickBox.Box.DisabledColor = disable ? tickBox.Box.Color * 0.5f : tickBox.Box.Color * 0.8f;
+                foreach (GUIComponent child in tickBox.Parent.Parent.Children)
+                {
+                    if (child is GUITextBlock textBlock)
+                    {
+                        textBlock.SelectedTextColor = textBlock.HoverTextColor = textBlock.TextColor = 
+                            disable ? new Color(textBlock.TextColor, 0.5f) : new Color(textBlock.TextColor, 1.0f);
+                    }
+                }
             }
         }
 
@@ -498,7 +510,6 @@ namespace Barotrauma
                         };
                         tickBox.RectTransform.MinSize = new Point(tickBox.Rect.Height, 0);
                         tickBox.RectTransform.IsFixedSize = true;
-                        tickBox.Box.DisabledColor = tickBox.Box.Color * 0.8f;
                         tickBox.Enabled = Campaign.AllowedToManageCampaign();
                         tickBox.OnSelected += (GUITickBox tb) =>
                         {
@@ -512,6 +523,9 @@ namespace Barotrauma
                             {
                                 Campaign.Map.CurrentLocation.DeselectMission(mission);
                             }
+
+                            UpdateMaxMissions(connection.OtherLocation(currentDisplayLocation));
+
                             if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
                                 Campaign.AllowedToManageCampaign())
                             {
@@ -593,8 +607,19 @@ namespace Barotrauma
                     missionList.UpdateScrollBarSize();
                 }
             }
+            UpdateMaxMissions(connection.OtherLocation(currentDisplayLocation));
 
-            StartButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.1f), content.RectTransform),
+            var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true);
+
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), buttonArea.RectTransform), "", font: GUI.Style.SubHeadingFont)
+            {
+                TextGetter = () =>
+                {
+                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(Campaign.GetCurrentDisplayLocation())}/{Campaign.Settings.MaxMissionCount}");
+                }
+            };
+
+            StartButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonArea.RectTransform),
                 TextManager.Get("StartCampaignButton"), style: "GUIButtonLarge")
             {
                 OnClicked = (GUIButton btn, object obj) =>
@@ -620,6 +645,8 @@ namespace Barotrauma
                 Enabled = true,
                 Visible = Campaign.AllowedToEndRound()
             };
+
+            buttonArea.RectTransform.MinSize = new Point(0, StartButton.RectTransform.MinSize.Y);
 
             if (Level.Loaded != null &&
                 connection?.LevelData == Level.Loaded.LevelData &&
@@ -691,6 +718,11 @@ namespace Barotrauma
         public static string GetMoney()
         {
             return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.Money));
+        }
+
+        private void UpdateMaxMissions(Location location)
+        {
+            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.MaxMissionCount;
         }
     }
 }

@@ -637,7 +637,7 @@ namespace Barotrauma
                         impactQueue.Enqueue(new Impact(f1, f2, contact, velocity));
                     }
                 }
-                return !f2.IsSensor;
+                return true;
             }
 
             Vector2 colliderBottom = GetColliderBottom();

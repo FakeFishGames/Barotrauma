@@ -59,9 +59,7 @@ namespace Barotrauma
 
         private bool useGridLayout;
 
-        private float targetScroll;
-
-        private GUIComponent pendingScroll;
+        private GUIComponent scrollToElement;
 
         public bool AllowMouseWheelScroll { get; set; } = true;
 
@@ -238,8 +236,6 @@ namespace Barotrauma
 
         public GUIComponent DraggedElement => draggedElement;
         
-        private bool scheduledScroll = false;
-
         private readonly bool isHorizontal;
 
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
@@ -429,7 +425,14 @@ namespace Barotrauma
             int index = children.IndexOf(component);
             if (index < 0) { return; }
 
-            targetScroll = MathHelper.Clamp(MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, (children.Count - 0.9f), index)), ScrollBar.MinValue, ScrollBar.MaxValue);
+            if (!Content.Children.Contains(component) || !component.Visible)
+            {
+                scrollToElement = null;
+            }
+            else
+            {
+                scrollToElement = component;
+            }
         }
 
         public void ScrollToEnd(float duration)
@@ -533,7 +536,7 @@ namespace Barotrauma
                 }
             }
             
-            if (SelectTop && Content.Children.Any() && pendingScroll == null)
+            if (SelectTop && Content.Children.Any() && scrollToElement == null)
             {
                 GUIComponent component = Content.Children.FirstOrDefault(c => (c.Rect.Y - Content.Rect.Y) / (float)c.Rect.Height > -0.1f);
 
@@ -563,7 +566,6 @@ namespace Barotrauma
                     {
                         if (SelectTop)
                         {
-                            pendingScroll = child;
                             ScrollToElement(child);
                             Select(i, autoScroll: false, takeKeyBoardFocus: true);
                         }
@@ -728,25 +730,29 @@ namespace Barotrauma
                     }
                 }
             }
-            
-            if (SmoothScroll)
-            {
-                if (targetScroll > -1)
-                {
-                    float distance = Math.Abs(targetScroll - BarScroll);
-                    float speed = Math.Max(distance * BarSize, 0.1f);
-                    BarScroll = (1.0f - speed) * BarScroll + speed * targetScroll;
-                    if (MathUtils.NearlyEqual(BarScroll, targetScroll) || GUIScrollBar.DraggingBar != null)
-                    {
-                        targetScroll = -1;
-                        pendingScroll = null;
-                    }
-                }
-            }
 
+            if (scrollToElement != null)
+            {
+                if (!scrollToElement.Visible || !Content.Children.Contains(scrollToElement))
+                {
+                    scrollToElement = null;
+                }
+                else
+                {
+                    float diff = isHorizontal ? scrollToElement.Rect.X - Content.Rect.X : scrollToElement.Rect.Y - Content.Rect.Y;
+                    float speed = MathHelper.Clamp(Math.Abs(diff) * 0.1f, 5.0f, 100.0f);
+                    System.Diagnostics.Debug.WriteLine(speed);
+                    if (Math.Abs(diff) < speed || GUIScrollBar.DraggingBar != null)
+                    {
+                        speed = Math.Abs(diff);
+                        scrollToElement = null;
+                    }
+                    BarScroll += speed * Math.Sign(diff) / TotalSize;
+                } 
+            }
+            
             if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && AllowMouseWheelScroll && PlayerInput.ScrollWheelSpeed != 0)
             {
-                float speed = PlayerInput.ScrollWheelSpeed / 500.0f * BarSize;
                 if (SmoothScroll)
                 {
                     if (ClampScrollToElements)
@@ -761,13 +767,6 @@ namespace Barotrauma
                         {
                             SelectNext(takeKeyBoardFocus: true);
                         }
-                    }
-                    else
-                    {
-                        pendingScroll = null;
-                        if (targetScroll < 0) { targetScroll = BarScroll; }
-                        targetScroll -= speed;
-                        targetScroll = Math.Clamp(targetScroll, ScrollBar.MinValue, ScrollBar.MaxValue);
                     }
                 }
                 else
@@ -799,7 +798,6 @@ namespace Barotrauma
                     Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
                     if (SmoothScroll)
                     {
-                        pendingScroll = child;
                         ScrollToElement(child);
                     }
                     break;
@@ -819,7 +817,6 @@ namespace Barotrauma
                     Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
                     if (SmoothScroll)
                     {
-                        pendingScroll = child;
                         ScrollToElement(child);
                     }
                     break;

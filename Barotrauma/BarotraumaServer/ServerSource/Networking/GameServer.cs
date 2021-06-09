@@ -1899,6 +1899,7 @@ namespace Barotrauma.Networking
                 }
 
                 outmsg.Write(serverSettings.RadiationEnabled);
+                outmsg.Write((byte)serverSettings.MaxMissionCount);
             }
             else
             {

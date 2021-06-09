@@ -10,7 +10,7 @@ namespace Barotrauma.Items.Components
             int roundedValue = (int)Math.Round((1 - damageMultiplier) * 100);
             if (roundedValue == 0) { return; }
             string colorStr = XMLExtensions.ColorToString(GUI.Style.Green);
-            description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("+0;-#")}%‖color:end‖ {TextManager.Get("AfflictionName." + afflictionIdentifier, true) ?? afflictionIdentifier}";
+            description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("-0;+#")}%‖color:end‖ {AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, StringComparison.OrdinalIgnoreCase))?.Name ?? afflictionIdentifier}";
         }
 
         public override void AddTooltipInfo(ref string description)

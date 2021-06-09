@@ -691,6 +691,29 @@ namespace Barotrauma
             get { return Prefab.Linkable; }
         }
 
+        /// <summary>
+        /// Can be used to move the item from XML (e.g. to correct the positions of items whose sprite origin has been changed)
+        /// </summary>
+        public float PositionX
+        {
+            get { return Position.X; }
+            private set
+            {
+                Move(new Vector2((value - Position.X) * Scale, 0.0f));
+            }
+        }
+        /// <summary>
+        /// Can be used to move the item from XML (e.g. to correct the positions of items whose sprite origin has been changed)
+        /// </summary>
+        public float PositionY
+        {
+            get { return Position.Y; }
+            private set
+            {
+                Move(new Vector2(0.0f, (value - Position.Y) * Scale));
+            }
+        }
+
         public BallastFloraBranch Infector { get; set; }
 
         public ItemPrefab PendingItemSwap { get; set; }

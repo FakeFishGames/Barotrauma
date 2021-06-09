@@ -1164,15 +1164,18 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var startButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.BottomRight);
+            var startButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.BottomRight)
+            {
+                RelativeSpacing = 0.05f
+            };
             campaignSetupUI.StartButton.RectTransform.Parent = startButtonContainer.RectTransform;
             campaignSetupUI.StartButton.RectTransform.MinSize = new Point(
                 (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
                 campaignSetupUI.StartButton.RectTransform.MinSize.Y);
             startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
-            if (campaignSetupUI.EnableRadiationToggle != null)
+            if (campaignSetupUI.CampaignCustomizeButton != null)
             {
-                campaignSetupUI.EnableRadiationToggle.RectTransform.Parent = startButtonContainer.RectTransform;
+                campaignSetupUI.CampaignCustomizeButton.RectTransform.Parent = startButtonContainer.RectTransform;
             }
             campaignSetupUI.InitialMoneyText.RectTransform.Parent = startButtonContainer.RectTransform;
         }

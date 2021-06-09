@@ -892,6 +892,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        // we do not serialize this value because it relies on a default setting
+        public int MaxMissionCount { get; set; } = CampaignSettings.DefaultMaxMissionCount;
 
         public void SetPassword(string password)
         {
