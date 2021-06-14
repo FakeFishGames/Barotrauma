@@ -822,7 +822,7 @@ namespace Barotrauma
         {
             parent.Content.ClearChildren();
             currentUpgradeCategory = category;
-            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.HiddenInGame && i.AllowSwapping && category.ItemTags.Any(t => i.HasTag(t))).ToList();
+            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.HiddenInGame && i.AllowSwapping && i.Prefab.SwappableItem != null && category.ItemTags.Any(t => i.HasTag(t))).ToList();
 
             int slotIndex = 0;
             foreach (Item item in entitiesOnSub)
@@ -872,7 +872,7 @@ namespace Barotrauma
             {
                 bool canUninstall = item.PendingItemSwap != null || !string.IsNullOrEmpty(currentOrPending.SwappableItem?.ReplacementOnUninstall);
 
-                bool isUninstallPending = item.PendingItemSwap?.Identifier == item.Prefab.SwappableItem.ReplacementOnUninstall;
+                bool isUninstallPending = item.Prefab.SwappableItem != null && item.PendingItemSwap?.Identifier == item.Prefab.SwappableItem.ReplacementOnUninstall;
                 if (isUninstallPending) { canUninstall = false; }
 
                 frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), currentOrPending.UpgradePreviewSprite,

@@ -599,7 +599,7 @@ namespace Barotrauma
                 if (c.IsDead) 
                 {
                     CrewManager.RemoveCharacterInfo(c.Info);
-                    c.DespawnNow();
+                    c.DespawnNow(createNetworkEvents: false);
                 }
             }
 

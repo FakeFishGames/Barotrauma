@@ -607,7 +607,8 @@ namespace Barotrauma
                     missionList.UpdateScrollBarSize();
                 }
             }
-            UpdateMaxMissions(connection.OtherLocation(currentDisplayLocation));
+            var destination = connection.OtherLocation(currentDisplayLocation);
+            UpdateMaxMissions(destination);
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true);
 
@@ -615,7 +616,7 @@ namespace Barotrauma
             {
                 TextGetter = () =>
                 {
-                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(Campaign.GetCurrentDisplayLocation())}/{Campaign.Settings.MaxMissionCount}");
+                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.MaxMissionCount}");
                 }
             };
 

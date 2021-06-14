@@ -525,7 +525,15 @@ namespace Barotrauma
 
         public string GetOptionName(string id)
         {
-            return Prefab == null ? OptionNames[id] : Prefab.OptionNames[id];
+            if (Prefab == null)
+            {
+                if (OptionNames.ContainsKey(id)) { return OptionNames[id]; }
+            }
+            else
+            {
+                if (Prefab.OptionNames.ContainsKey(id)) { return Prefab.OptionNames[id]; }
+            }
+            return string.Empty;
         }
 
         public string GetOptionName(int index)

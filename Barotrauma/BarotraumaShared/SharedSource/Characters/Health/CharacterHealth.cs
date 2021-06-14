@@ -627,7 +627,10 @@ namespace Barotrauma
                 Kill();
             }
 #if CLIENT
-            selectedLimbIndex = -1;
+            if (CharacterHealth.OpenHealthWindow != this)
+            {
+                selectedLimbIndex = -1;
+            }
 #endif
         }
 

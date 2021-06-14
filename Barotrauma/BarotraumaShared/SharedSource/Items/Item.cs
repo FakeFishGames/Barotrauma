@@ -2005,26 +2005,36 @@ namespace Barotrauma
             SendSignal(signal, connection);
         }
 
+        private readonly HashSet<(Signal Signal, Connection Connection)> delayedSignals = new HashSet<(Signal Signal, Connection Connection)>();
+
         public void SendSignal(Signal signal, Connection connection)
         {
             LastSentSignalRecipients.Clear();
             if (connections == null || connection == null) { return; }
 
             signal.stepsTaken++;
-            
+
+            //if the signal has been passed through this item multiple times already, interrupt it to prevent infinite loops
+            if (signal.stepsTaken > 5 && signal.source != null)
+            {
+                if (signal.source.LastSentSignalRecipients.AtLeast(3, recipient => recipient == connection))
+                {
+                    return;
+                }
+            }
+
+            //use a coroutine to prevent infinite loops by creating a one 
+            //frame delay if the "signal chain" gets too long
             if (signal.stepsTaken > 10)
             {
-                //if the signal has been passed through this item multiple times already, interrupt it to prevent infinite loops
-                if (signal.source != null)
+                //if there's an equal signal waiting to be sent
+                //to the same connection, don't add a new one
+                signal.stepsTaken = 0;
+                if (!delayedSignals.Contains((signal, connection)))
                 {
-                    if (signal.source.LastSentSignalRecipients.Count(recipient => recipient == connection) > 2)
-                    {
-                        return;
-                    }
+                    delayedSignals.Add((signal, connection));
+                    CoroutineManager.StartCoroutine(DelaySignal(signal, connection));
                 }
-                //use a coroutine to prevent infinite loops by creating a one 
-                //frame delay if the "signal chain" gets too long
-                CoroutineManager.StartCoroutine(DelaySignal(signal, connection));
             }
             else
             {
@@ -2045,7 +2055,8 @@ namespace Barotrauma
             //wait one frame
             yield return CoroutineStatus.Running;
 
-            signal.stepsTaken = 0;
+            delayedSignals.Remove((signal, connection));
+
             signal.source = this;
             connection.SendSignal(signal);
 

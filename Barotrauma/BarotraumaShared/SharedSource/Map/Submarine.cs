@@ -374,7 +374,7 @@ namespace Barotrauma
         public WreckAI WreckAI { get; private set; }
         public bool CreateWreckAI()
         {
-            WreckAI = new WreckAI(this);
+            WreckAI = WreckAI.Create(this);
             return WreckAI != null;
         }
 
@@ -1570,7 +1570,7 @@ namespace Barotrauma
             Rectangle dimensions = CalculateDimensions();
             element.Add(new XAttribute("dimensions", XMLExtensions.Vector2ToString(dimensions.Size.ToVector2())));
             var cargoContainers = GetCargoContainers();
-            element.Add(new XAttribute("cargocapacity", cargoContainers.Sum(c => c.freeSlots)));
+            element.Add(new XAttribute("cargocapacity", cargoContainers.Sum(c => c.container.Capacity)));
             element.Add(new XAttribute("recommendedcrewsizemin", Info.RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
             element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));

@@ -297,10 +297,10 @@ namespace Barotrauma
             SlotSize = !isFourByThree ? (SlotSpriteSmall.size * UIScale).ToPoint() : (SlotSpriteSmall.size * UIScale * .925f).ToPoint();
             int bottomOffset = SlotSize.Y + Spacing * 2 + ContainedIndicatorHeight;
 
+            hideButton.Visible = false;
+
             if (visualSlots == null) { CreateSlots(); }
             if (visualSlots.None()) { return; }
-
-            hideButton.Visible = false;
 
             switch (layout)
             {
@@ -1103,6 +1103,7 @@ namespace Barotrauma
         public void DrawOwn(SpriteBatch spriteBatch)
         {
             if (!AccessibleWhenAlive && !character.IsDead) { return; }
+            if (capacity == 0) { return; }
             if (visualSlots == null) { CreateSlots(); }
             if (GameMain.GraphicsWidth != screenResolution.X ||
                 GameMain.GraphicsHeight != screenResolution.Y ||

@@ -752,8 +752,9 @@ namespace Barotrauma
             float radialDistortStrength = 0.0f;
             float chromaticAberrationStrength = 0.0f;
             float grainStrength = 0.0f;
-            Color grainColor = Color.White;
+            Color grainColor = Color.Transparent;
 
+            float oxygenLowStrength = 0.0f;
             if (Character.IsUnconscious)
             {
                 blurStrength = 1.0f;
@@ -761,14 +762,13 @@ namespace Barotrauma
             }
             else if (OxygenAmount < 100.0f)
             {
-                // TODO disable some of these?
-                blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - Vitality / MaxVitality);
-                distortStrength = blurStrength;
-                distortSpeed = (blurStrength + 1.0f);
+                oxygenLowStrength = Math.Min(1.0f - (OxygenAmount - LowOxygenThreshold) / LowOxygenThreshold, 1.0f);
+                blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - Vitality / MaxVitality) * oxygenLowStrength;
+                distortStrength = blurStrength * oxygenLowStrength;
+                distortSpeed = blurStrength + 1.0f;
                 distortSpeed *= distortSpeed * distortSpeed * distortSpeed;
-                
-                
-                grainStrength = MathHelper.Lerp(0.5f, 10.0f, 1.0f - (OxygenAmount - LowOxygenThreshold) / LowOxygenThreshold);
+
+                grainStrength = MathHelper.Lerp(0.5f, 10.0f, oxygenLowStrength);
                 grainColor = oxygenLowGrainColor;
             }
 
@@ -778,7 +778,12 @@ namespace Barotrauma
                 blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
                 radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
                 chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
-                grainStrength = Math.Max(grainStrength, affliction.GetScreenGrainStrength());
+                float afflictionGrainStrength = affliction.GetScreenGrainStrength();
+                if (afflictionGrainStrength > 0.0f)
+                {
+                    grainStrength = Math.Max(grainStrength, affliction.GetScreenGrainStrength());
+                    grainColor = Color.Lerp(grainColor, Color.White, (float)Math.Pow(1.0f - oxygenLowStrength, 2));
+                }
             }
             foreach (LimbHealth limbHealth in limbHealths)
             {

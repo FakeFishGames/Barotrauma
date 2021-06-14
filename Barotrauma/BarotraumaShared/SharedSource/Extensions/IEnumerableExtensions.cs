@@ -154,5 +154,22 @@ namespace Barotrauma.Extensions
         {
             if (value != null) { source.Add(value); }
         }
+
+        /// <summary>
+        /// Returns whether a given collection has at least a certain amount
+        /// of elements for which the predicate returns true.
+        /// </summary>
+        /// <param name="source">Input collection</param>
+        /// <param name="amount">How many elements to match before stopping</param>
+        /// <param name="predicate">Predicate used to evaluate the elements</param>
+        public static bool AtLeast<T>(this IEnumerable<T> source, int amount, Predicate<T> predicate)
+        {
+            foreach (T elem in source)
+            {
+                if (predicate(elem)) { amount--; }
+                if (amount <= 0) { return true; }
+            }
+            return false;
+        }
     }
 }

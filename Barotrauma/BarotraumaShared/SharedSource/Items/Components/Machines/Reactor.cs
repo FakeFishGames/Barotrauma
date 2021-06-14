@@ -783,7 +783,7 @@ namespace Barotrauma.Items.Components
                 case "set_fissionrate":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
-                        targetFissionRate = newFissionRate;
+                        targetFissionRate = MathHelper.Clamp(newFissionRate, 0.0f, 100.0f);
                         if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
 #if CLIENT
                         FissionRateScrollBar.BarScroll = targetFissionRate / 100.0f;
@@ -793,7 +793,7 @@ namespace Barotrauma.Items.Components
                 case "set_turbineoutput":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
-                        targetTurbineOutput = newTurbineOutput;
+                        targetTurbineOutput = MathHelper.Clamp(newTurbineOutput, 0.0f, 100.0f);
                         if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }                       
 #if CLIENT
                         TurbineOutputScrollBar.BarScroll = targetTurbineOutput / 100.0f;

@@ -421,21 +421,32 @@ namespace Barotrauma.Particles
 
         private void ApplyDrag(float dragCoefficient, float deltaTime)
         {
+            Vector2 relativeVel = velocity;
+            if (currentHull?.Submarine != null)
+            {
+                relativeVel = velocity - ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+            }
 
-            float speed = velocity.Length();
-            velocity /= speed;
+            float speed = relativeVel.Length();
+
+            relativeVel /= speed;
 
             float drag = speed * speed * dragCoefficient * 0.01f * deltaTime;
             if (drag > speed)
             {
-                velocity = Vector2.Zero;
+                relativeVel = Vector2.Zero;
             }
             else
             {
                 speed -= drag;
-                velocity *= speed;
+                relativeVel *= speed;
             }
 
+            velocity = relativeVel;
+            if (currentHull?.Submarine != null)
+            {
+                velocity += ConvertUnits.ToDisplayUnits(currentHull.Submarine.Velocity);
+            }
         }
 
 

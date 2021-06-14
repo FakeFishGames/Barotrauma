@@ -37,7 +37,14 @@ namespace Barotrauma
 
         private static bool IsThalamus(MapEntityPrefab entityPrefab, string tag) => entityPrefab.HasSubCategory("thalamus") || entityPrefab.Tags.Contains(tag);
 
-        public WreckAI(Submarine wreck)
+        public static WreckAI Create(Submarine wreck)
+        {
+            var wreckAI = new WreckAI(wreck);
+            if (wreckAI.Config == null) { return null; }
+            return wreckAI;
+        }
+
+        private WreckAI(Submarine wreck)
         {
             Wreck = wreck;
             Config = WreckAIConfig.GetRandom();

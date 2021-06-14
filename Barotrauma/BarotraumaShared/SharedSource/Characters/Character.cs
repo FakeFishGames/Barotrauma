@@ -2990,11 +2990,14 @@ namespace Barotrauma
             Spawner.AddToRemoveQueue(this);
         }
 
-        public void DespawnNow()
+        public void DespawnNow(bool createNetworkEvents = true)
         {
             despawnTimer = GameMain.Config.CorpseDespawnDelay;
             UpdateDespawn(1.0f, ignoreThresholds: true);
-            Spawner.Update();
+            if (createNetworkEvents)
+            {
+                Spawner.Update();
+            }
         }
 
         public static void RemoveByPrefab(CharacterPrefab prefab)
