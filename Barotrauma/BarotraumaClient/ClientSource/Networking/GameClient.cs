@@ -988,15 +988,21 @@ namespace Barotrauma.Networking
                 string errorMsg = $"Mission equality check failed. Mission count doesn't match the server (server: {missionCount}, client: {GameMain.GameSession.Missions.Count()})";
                 throw new Exception(errorMsg);
             }
-            foreach (Mission mission in GameMain.GameSession.Missions)
+            List<string> serverMissionIdentifiers = new List<string>();
+            for (int i = 0; i < missionCount; i++)
             {
-                string missionIdentifier = inc.ReadString() ?? "";
-                if (missionIdentifier != mission.Prefab.Identifier)
+                serverMissionIdentifiers.Add(inc.ReadString() ?? "");
+            }
+
+            if (missionCount > 0)
+            {
+                if (!GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier).OrderBy(id => id).SequenceEqual(serverMissionIdentifiers.OrderBy(id => id)))
                 {
-                    string errorMsg = $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server (server: {missionIdentifier ?? "null"}, client: {mission.Prefab.Identifier})";
+                    string errorMsg = $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server (server: {string.Join(", ", serverMissionIdentifiers)}, client: {string.Join(", ", GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier))})";
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     throw new Exception(errorMsg);
                 }
+                GameMain.GameSession.EnforceMissionOrder(serverMissionIdentifiers);
             }
 
             byte equalityCheckValueCount = inc.ReadByte();

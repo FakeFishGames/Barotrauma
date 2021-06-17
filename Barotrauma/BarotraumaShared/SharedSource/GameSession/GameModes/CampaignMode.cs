@@ -294,7 +294,7 @@ namespace Barotrauma
                     else
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, huntingGroundsMissionPrefabs.Select(p => (float)p.Commonness).ToList(), rand);
+                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, huntingGroundsMissionPrefabs.Select(p => (float)Math.Max(p.Commonness, 0.1f)).ToList(), rand);
                         if (!Missions.Any(m => m.Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))))
                         {
                             extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));

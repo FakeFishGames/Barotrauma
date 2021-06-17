@@ -640,6 +640,18 @@ namespace Barotrauma
             return missions.IndexOf(mission);
         }
 
+        public void EnforceMissionOrder(List<string> missionIdentifiers)
+        {
+            List<Mission> sortedMissions = new List<Mission>();
+            foreach (string missionId in missionIdentifiers)
+            {
+                var matchingMission = missions.Find(m => m.Prefab.Identifier == missionId);
+                sortedMissions.Add(matchingMission);
+                missions.Remove(matchingMission);
+            }
+            missions.AddRange(sortedMissions);
+        }
+
         partial void UpdateProjSpecific(float deltaTime);
 
         public void EndRound(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)

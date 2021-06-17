@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.14.6.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "entity not found" errors when receiving attack data for a character that's been removed (most often a terminal cell).
+- Fixed occasional "mission equality check failed" errors when starting a round with multiple missions selected.
+- Fixed outpost events not triggering in levels with a difficulty between 40-41.
+- Fixed hunting grounds missions only spawning endworms.
+- Fixed 2nd part of the Jacov Subra event chain not triggering.
+
+---------------------------------------------------------------------------------------------------------
 v0.14.5.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -69,7 +79,6 @@ Changes:
 - Docking ports can't be rewired in outpost levels because it can be abused to force to submarine to depart from the outpost.
 - Allow clicking on the main menu buttons when the credits are open.
 - Option to adjust motion sensor's update interval in the sub editor.
-
 
 Fixes:
 - Fixed clients timing out at the start of a multiplayer round if loading the campaign save takes more than 30 seconds.

@@ -358,9 +358,9 @@ namespace Barotrauma
                             int attackLimbIndex = msg.ReadByte();
                             UInt16 targetEntityID = msg.ReadUInt16();
                             int targetLimbIndex = msg.ReadByte();
+                            Vector2 targetSimPos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
                             //255 = entity already removed, no need to do anything
                             if (attackLimbIndex == 255 || Removed) { break; }
-                            Vector2 targetSimPos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
                             if (attackLimbIndex >= AnimController.Limbs.Length)
                             {
                                 DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
