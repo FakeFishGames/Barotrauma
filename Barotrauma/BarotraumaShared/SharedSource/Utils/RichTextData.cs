@@ -26,6 +26,7 @@ namespace Barotrauma
             sanitizedText = text;
             if (!string.IsNullOrEmpty(text) && text.Contains(definitionIndicator))
             {
+                text = text.Replace("\r", "");
                 string[] segments = text.Split(definitionIndicator);
 
                 sanitizedText = string.Empty;

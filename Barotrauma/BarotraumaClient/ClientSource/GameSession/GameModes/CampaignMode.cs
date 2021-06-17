@@ -189,7 +189,7 @@ namespace Barotrauma
                 case TransitionType.None:
                 default:
                     if (Level.Loaded.Type == LevelData.LevelType.Outpost &&
-                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags?.Contains("airlock") ?? false)))
+                        (Character.Controlled?.Submarine?.Info.Type == SubmarineType.Player || (Character.Controlled?.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false)))
                     {
                         buttonText = TextManager.GetWithVariable("LeaveLocation", "[locationname]", Level.Loaded.StartLocation?.Name ?? "[ERROR]");
                         endRoundButton.Visible = !ForceMapUI && !ShowCampaignUI;
@@ -287,6 +287,7 @@ namespace Barotrauma
             {
                 case InteractionType.None:
                 case InteractionType.Talk:
+                case InteractionType.Examine:
                     return;
                 case InteractionType.Upgrade when !UpgradeManager.CanUpgradeSub():
                     UpgradeManager.CreateUpgradeErrorMessage(TextManager.Get("Dialog.CantUpgrade"), IsSinglePlayer, npc);

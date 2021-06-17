@@ -63,6 +63,8 @@ namespace Barotrauma
 
         private GUIListBox afflictionTooltip;
 
+        private static readonly Color oxygenLowGrainColor = new Color(0.1f, 0.1f, 0.1f, 1f);
+
         private struct HeartratePosition
         {
             public float Time;
@@ -671,17 +673,19 @@ namespace Barotrauma
             bloodParticleTimer -= deltaTime * (affliction.Strength / 10.0f);
             if (bloodParticleTimer <= 0.0f)
             {
-                var emitter = Character.BloodEmitters.FirstOrDefault();
-                float particleMinScale = emitter != null ? emitter.Prefab.ScaleMin : 0.5f;
-                float particleMaxScale = emitter != null ? emitter.Prefab.ScaleMax : 1;
+                bool inWater = Character.AnimController.InWater;
+                var drawTarget = inWater ? Particles.ParticlePrefab.DrawTargetType.Water : Particles.ParticlePrefab.DrawTargetType.Air;
+                var emitter = Character.BloodEmitters.FirstOrDefault(e => e.Prefab.ParticlePrefab.DrawTarget == drawTarget || e.Prefab.ParticlePrefab.DrawTarget == Particles.ParticlePrefab.DrawTargetType.Both);
+                float particleMinScale = emitter?.Prefab.Properties.ScaleMin ?? 0.5f;
+                float particleMaxScale = emitter?.Prefab.Properties.ScaleMax ?? 1;
                 float severity = Math.Min(affliction.Strength / affliction.Prefab.MaxStrength * Character.Params.BleedParticleMultiplier, 1);
                 float bloodParticleSize = MathHelper.Lerp(particleMinScale, particleMaxScale, severity);
-                bool inWater = Character.AnimController.InWater;
                 if (!inWater)
                 {
                     bloodParticleSize *= 2.0f;
                 }
 
+                // TODO: use the blood emitter?
                 var blood = GameMain.ParticleManager.CreateParticle(
                     inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
                     targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, Character.AnimController.CurrentHull);
@@ -692,6 +696,12 @@ namespace Barotrauma
                 }
                 bloodParticleTimer = MathHelper.Lerp(2, 0.5f, severity);
             }
+        }
+
+        public static bool IsMouseOnHealthBar()
+        {
+            if (Character.Controlled?.CharacterHealth == null) { return false; }
+            return Character.Controlled.CharacterHealth.healthBar.State == GUIComponent.ComponentState.Hover;
         }
 
         public void UpdateHUD(float deltaTime)
@@ -742,7 +752,9 @@ namespace Barotrauma
             float radialDistortStrength = 0.0f;
             float chromaticAberrationStrength = 0.0f;
             float grainStrength = 0.0f;
+            Color grainColor = Color.Transparent;
 
+            float oxygenLowStrength = 0.0f;
             if (Character.IsUnconscious)
             {
                 blurStrength = 1.0f;
@@ -750,10 +762,14 @@ namespace Barotrauma
             }
             else if (OxygenAmount < 100.0f)
             {
-                blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - Vitality / MaxVitality);
-                distortStrength = blurStrength;
-                distortSpeed = (blurStrength + 1.0f);
+                oxygenLowStrength = Math.Min(1.0f - (OxygenAmount - LowOxygenThreshold) / LowOxygenThreshold, 1.0f);
+                blurStrength = MathHelper.Lerp(0.5f, 1.0f, 1.0f - Vitality / MaxVitality) * oxygenLowStrength;
+                distortStrength = blurStrength * oxygenLowStrength;
+                distortSpeed = blurStrength + 1.0f;
                 distortSpeed *= distortSpeed * distortSpeed * distortSpeed;
+
+                grainStrength = MathHelper.Lerp(0.5f, 10.0f, oxygenLowStrength);
+                grainColor = oxygenLowGrainColor;
             }
 
             foreach (Affliction affliction in afflictions)
@@ -762,7 +778,12 @@ namespace Barotrauma
                 blurStrength = Math.Max(blurStrength, affliction.GetScreenBlurStrength());
                 radialDistortStrength = Math.Max(radialDistortStrength, affliction.GetRadialDistortStrength());
                 chromaticAberrationStrength = Math.Max(chromaticAberrationStrength, affliction.GetChromaticAberrationStrength());
-                grainStrength = Math.Max(grainStrength, affliction.GetScreenGrainStrength());
+                float afflictionGrainStrength = affliction.GetScreenGrainStrength();
+                if (afflictionGrainStrength > 0.0f)
+                {
+                    grainStrength = Math.Max(grainStrength, affliction.GetScreenGrainStrength());
+                    grainColor = Color.Lerp(grainColor, Color.White, (float)Math.Pow(1.0f - oxygenLowStrength, 2));
+                }
             }
             foreach (LimbHealth limbHealth in limbHealths)
             {
@@ -778,6 +799,7 @@ namespace Barotrauma
             Character.RadialDistortStrength = radialDistortStrength;
             Character.ChromaticAberrationStrength = chromaticAberrationStrength;
             Character.GrainStrength = grainStrength;
+            Character.GrainColor = grainColor;
             if (blurStrength > 0.0f)
             {
                 distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;
@@ -955,11 +977,9 @@ namespace Barotrauma
                 highlightedLimbIndex = -1;
             }
 
-            Rectangle hoverArea = Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea);
-
             healthBarHolder.CanBeFocused = healthBar.CanBeFocused = healthBarShadow.CanBeFocused = !Character.ShouldLockHud();
             if (Character.AllowInput && UseHealthWindow && healthBar.Enabled && healthBar.CanBeFocused &&
-                hoverArea.Contains(PlayerInput.MousePosition) && Inventory.SelectedSlot == null)
+                (GUI.IsMouseOn(healthBar) || highlightedAfflictionIcon != null) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonClicked())
@@ -1076,8 +1096,11 @@ namespace Barotrauma
             DrawStatusHUD(spriteBatch);
         }
 
+
+        private Pair<Affliction, string> highlightedAfflictionIcon = null;
         public void DrawStatusHUD(SpriteBatch spriteBatch)
         {
+            highlightedAfflictionIcon = null;
             //Rectangle interactArea = healthBar.Rect;
             if (Character.Controlled?.SelectedCharacter == null && openHealthWindow == null)
             {
@@ -1092,7 +1115,6 @@ namespace Barotrauma
                     statusIcons.Add(new Pair<Affliction, string>(affliction, affliction.Prefab.Name));
                 }
 
-                Pair<Affliction, string> highlightedIcon = null;
                 Vector2 highlightedIconPos = Vector2.Zero;
                 Rectangle afflictionArea = HUDLayoutSettings.AfflictionAreaLeft;
 
@@ -1113,9 +1135,9 @@ namespace Barotrauma
                     AfflictionPrefab afflictionPrefab = affliction.Prefab;
 
                     Rectangle afflictionIconRect = new Rectangle(pos, new Point(iconSize));
-                    if (afflictionIconRect.Contains(PlayerInput.MousePosition) && !Character.ShouldLockHud())
+                    if (afflictionIconRect.Contains(PlayerInput.MousePosition) && !Character.ShouldLockHud() && GUI.MouseOn == null)
                     {
-                        highlightedIcon = statusIcon;
+                        highlightedAfflictionIcon = statusIcon;
                         highlightedIconPos = afflictionIconRect.Location.ToVector2();
                     }
 
@@ -1135,7 +1157,7 @@ namespace Barotrauma
                         highlightedIcon == statusIcon ? slot.HoverColor : slot.Color);*/
 
 
-                    float alphaMultiplier = highlightedIcon == statusIcon ? 1f : 0.8f;
+                    float alphaMultiplier = highlightedAfflictionIcon == statusIcon ? 1f : 0.8f;
 
                     afflictionPrefab.Icon?.Draw(spriteBatch,
                         pos.ToVector2(),
@@ -1150,9 +1172,9 @@ namespace Barotrauma
                         pos.Y += iconSize + (int)(5 * GUI.Scale);
                 }
 
-                if (highlightedIcon != null)
+                if (highlightedAfflictionIcon != null)
                 {
-                    string nameTooltip = highlightedIcon.Second;
+                    string nameTooltip = highlightedAfflictionIcon.Second;
                     Vector2 offset = GUI.Font.MeasureString(nameTooltip);
 
                     GUI.DrawString(spriteBatch,
@@ -1315,7 +1337,7 @@ namespace Barotrauma
                 child.Recalculate();
             }
 
-            if (buttonToSelect != null) { buttonToSelect.OnClicked(buttonToSelect, "selectaffliction"); }
+            buttonToSelect?.OnClicked(buttonToSelect, "selectaffliction");
 
             afflictionIconContainer.RecalculateChildren();
 
@@ -2004,7 +2026,7 @@ namespace Barotrauma
                         existingAffliction.PeriodicEffectTimers[periodicEffect.First] = periodicEffect.Second;
                         foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
                         {
-                            existingAffliction.ApplyStatusEffect(effect, deltaTime: 1.0f, this, targetLimb: null);
+                            existingAffliction.ApplyStatusEffect(ActionType.OnActive, effect, deltaTime: 1.0f, this, targetLimb: null);
                         }
                     }
                 }
@@ -2071,7 +2093,7 @@ namespace Barotrauma
                             foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
                             {
                                 Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == limbHealths.IndexOf(newAffliction.First));
-                                existingAffliction.ApplyStatusEffect(effect, deltaTime: 1.0f, this, targetLimb: targetLimb);
+                                existingAffliction.ApplyStatusEffect(ActionType.OnActive, effect, deltaTime: 1.0f, this, targetLimb: targetLimb);
                             }
                         }
                     }

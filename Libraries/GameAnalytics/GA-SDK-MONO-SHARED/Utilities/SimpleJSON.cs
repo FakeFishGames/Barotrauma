@@ -595,10 +595,7 @@ namespace GameAnalyticsSDK.Net.Utilities
                             break;
                         }
                         stack.Push(new JSONObject());
-                        if (ctx != null)
-                        {
-                            ctx.Add(TokenName, stack.Peek());
-                        }
+                        ctx?.Add(TokenName, stack.Peek());
                         TokenName = "";
                         Token.Length = 0;
                         ctx = stack.Peek();
@@ -612,10 +609,7 @@ namespace GameAnalyticsSDK.Net.Utilities
                         }
 
                         stack.Push(new JSONArray());
-                        if (ctx != null)
-                        {
-                            ctx.Add(TokenName, stack.Peek());
-                        }
+                        ctx?.Add(TokenName, stack.Peek());
                         TokenName = "";
                         Token.Length = 0;
                         ctx = stack.Peek();

@@ -291,8 +291,7 @@ namespace Barotrauma
 
                     break;
                 case ServerNetObject.ENTITY_EVENT:
-
-                    int eventType = msg.ReadRangedInteger(0, 6);
+                    int eventType = msg.ReadRangedInteger(0, 9);
                     switch (eventType)
                     {
                         case 0: //NetEntityEvent.Type.InventoryState
@@ -303,9 +302,9 @@ namespace Barotrauma
                                 GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ClientRead:NoInventory" + ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
 
                                 //read anyway to prevent messing up reading the rest of the message
-                                UInt16 lastEventID = msg.ReadUInt16();
-                                byte itemCount = msg.ReadByte();
-                                for (int i = 0; i < itemCount; i++)
+                                _ = msg.ReadUInt16();
+                                byte inventoryItemCount = msg.ReadByte();
+                                for (int i = 0; i < inventoryItemCount; i++)
                                 {
                                     msg.ReadUInt16();
                                 }
@@ -354,56 +353,102 @@ namespace Barotrauma
                                 info?.SetSkillLevel(skillIdentifier, skillLevel, Position + Vector2.UnitY * 150.0f);
                             }
                             break;
-                        case 4: //NetEntityEvent.Type.ExecuteAttack
+                        case 4: // NetEntityEvent.Type.SetAttackTarget
+                        case 5: //NetEntityEvent.Type.ExecuteAttack
                             int attackLimbIndex = msg.ReadByte();
                             UInt16 targetEntityID = msg.ReadUInt16();
                             int targetLimbIndex = msg.ReadByte();
-
+                            Vector2 targetSimPos = new Vector2(msg.ReadSingle(), msg.ReadSingle());
                             //255 = entity already removed, no need to do anything
                             if (attackLimbIndex == 255 || Removed) { break; }
-
                             if (attackLimbIndex >= AnimController.Limbs.Length)
                             {
-                                DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
+                                DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
                                 break;
                             }
                             Limb attackLimb = AnimController.Limbs[attackLimbIndex];
                             Limb targetLimb = null;
                             if (!(FindEntityByID(targetEntityID) is IDamageable targetEntity))
                             {
-                                DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Target entity not found (ID {targetEntityID})");
+                                DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Target entity not found (ID {targetEntityID})");
                                 break;
                             }
                             if (targetEntity is Character targetCharacter)
                             {
                                 if (targetLimbIndex >= targetCharacter.AnimController.Limbs.Length)
                                 {
-                                    DebugConsole.ThrowError($"Received invalid ExecuteAttack message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
+                                    DebugConsole.ThrowError($"Received invalid SetAttack/ExecuteAttack message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
                                     break;
                                 }
                                 targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
                             }
                             if (attackLimb?.attack != null)
                             {
-                                attackLimb.ExecuteAttack(targetEntity, targetLimb, out _);
+                                if (eventType == 4)
+                                {
+                                    SetAttackTarget(attackLimb, targetEntity, targetSimPos);
+                                }
+                                else
+                                {
+                                    attackLimb.ExecuteAttack(targetEntity, targetLimb, out _);
+                                }
                             }
                             break;
-                        case 5: //NetEntityEvent.Type.AssignCampaignInteraction
+                        case 6: //NetEntityEvent.Type.AssignCampaignInteraction
                             byte campaignInteractionType = msg.ReadByte();
+                            bool requireConsciousness = msg.ReadBoolean();
                             (GameMain.GameSession?.GameMode as CampaignMode)?.AssignNPCMenuInteraction(this, (CampaignMode.InteractionType)campaignInteractionType);
+                            RequireConsciousnessForCustomInteract = requireConsciousness;
                             break;
-                        case 6: //NetEntityEvent.Type.ObjectiveManagerOrderState
-                            bool properData = msg.ReadBoolean();
-                            if (!properData) { break; }
-                            int orderIndex = msg.ReadRangedInteger(0, Order.PrefabList.Count);
-                            var orderPrefab = Order.PrefabList[orderIndex];
-                            string option = null;
-                            if (orderPrefab.HasOptions)
+                        case 7: //NetEntityEvent.Type.ObjectiveManagerState
+                            // 1 = order, 2 = objective
+                            int msgType = msg.ReadRangedInteger(0, 2);
+                            if (msgType == 0) { break; }
+                            bool validData = msg.ReadBoolean();
+                            if (!validData) { break; }
+                            if (msgType == 1)
                             {
-                                int optionIndex = msg.ReadRangedInteger(0, orderPrefab.Options.Length);
-                                option = orderPrefab.Options[optionIndex];
+                                int orderIndex = msg.ReadRangedInteger(0, Order.PrefabList.Count);
+                                var orderPrefab = Order.PrefabList[orderIndex];
+                                string option = null;
+                                if (orderPrefab.HasOptions)
+                                {
+                                    int optionIndex = msg.ReadRangedInteger(-1, orderPrefab.AllOptions.Length);
+                                    if (optionIndex > -1)
+                                    {
+                                        option = orderPrefab.AllOptions[optionIndex];
+                                    }
+                                }
+                                GameMain.GameSession?.CrewManager?.SetOrderHighlight(this, orderPrefab.Identifier, option);
                             }
-                            GameMain.GameSession.CrewManager.SetHighlightedOrderIcon(this, orderPrefab.Identifier, option);
+                            else if (msgType == 2)
+                            {
+                                string identifier = msg.ReadString();
+                                string option = msg.ReadString();
+                                ushort objectiveTargetEntityId = msg.ReadUInt16();
+                                var objectiveTargetEntity = FindEntityByID(objectiveTargetEntityId);
+                                GameMain.GameSession?.CrewManager?.CreateObjectiveIcon(this, identifier, option, objectiveTargetEntity);
+                            }
+                            break;
+                        case 8: //NetEntityEvent.Type.TeamChange
+                            byte newTeamId = msg.ReadByte();
+                            ChangeTeam((CharacterTeamType)newTeamId);
+                            break;
+                        case 9: //NetEntityEvent.Type.AddToCrew
+                            GameMain.GameSession.CrewManager.AddCharacter(this);
+                            CharacterTeamType teamID = (CharacterTeamType)msg.ReadByte();
+                            ushort itemCount = msg.ReadUInt16();
+                            for (int i = 0; i < itemCount; i++)
+                            {
+                                ushort itemID = msg.ReadUInt16();
+                                if (!(Entity.FindEntityByID(itemID) is Item item)) { continue; }
+                                item.AllowStealing = true;
+                                var wifiComponent = item.GetComponent<Items.Components.WifiComponent>();
+                                if (wifiComponent != null)
+                                {
+                                    wifiComponent.TeamID = teamID;
+                                }
+                            }
                             break;
                     }
                     msg.ReadPadBits();
@@ -415,7 +460,7 @@ namespace Barotrauma
         {
             DebugConsole.Log("Reading character spawn data");
 
-            if (GameMain.Client == null) return null;
+            if (GameMain.Client == null) { return null; }
 
             bool noInfo = inc.ReadBoolean();
             ushort id = inc.ReadUInt16();
@@ -431,7 +476,15 @@ namespace Barotrauma
             Character character = null;
             if (noInfo)
             {
-                character = Create(speciesName, position, seed, characterInfo: null, id: id, isRemotePlayer: false);
+                try
+                {
+                    character = Create(speciesName, position, seed, characterInfo: null, id: id, isRemotePlayer: false);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to spawn character {speciesName}", e);
+                    throw;
+                }
                 bool containsStatusData = inc.ReadBoolean();
                 if (containsStatusData)
                 {
@@ -447,8 +500,15 @@ namespace Barotrauma
                 string infoSpeciesName = inc.ReadString();
 
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
-
-                character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
+                try
+                {
+                    character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to spawn character {speciesName}", e);
+                    throw;
+                }
                 character.TeamID = (CharacterTeamType)teamID;
                 character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
                 if (character.CampaignInteractionType != CampaignMode.InteractionType.None)
@@ -471,7 +531,7 @@ namespace Barotrauma
                         var x = inc.ReadSingle();
                         var y = inc.ReadSingle();
                         var hull = FindEntityByID(inc.ReadUInt16()) as Hull;
-                        targetPosition = new OrderTarget(new Vector2(x, y), hull, true);
+                        targetPosition = new OrderTarget(new Vector2(x, y), hull, creatingFromExistingData: true);
                     }
 
                     if (orderPrefabIndex >= 0 && orderPrefabIndex < Order.PrefabList.Count)
@@ -485,7 +545,7 @@ namespace Barotrauma
                                 new Order(orderPrefab, targetPosition, orderGiver: orderGiver);
                             character.SetOrder(order,
                                 orderOptionIndex >= 0 && orderOptionIndex < orderPrefab.Options.Length ? orderPrefab.Options[orderOptionIndex] : null,
-                                orderPriority, orderGiver, speak: false);
+                                orderPriority, orderGiver, speak: false, force: true);
                         }
                         else
                         {

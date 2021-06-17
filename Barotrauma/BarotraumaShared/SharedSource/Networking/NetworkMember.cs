@@ -79,7 +79,6 @@ namespace Barotrauma.Networking
         TRAITOR_MESSAGE,
         MISSION,
         EVENTACTION,
-        RESET_UPGRADES,     //inform the clients that the upgrades on the submarine have been reset
         CREW,               //anything related to managing bots in multiplayer
         READY_CHECK         //start, end and update a ready check 
     }

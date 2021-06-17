@@ -94,7 +94,13 @@ namespace Barotrauma
 
         public bool IsLocalPlayer => Controlled == this;
         public bool IsPlayer => Controlled == this || IsRemotePlayer;
+
+        /// <summary>
+        /// Is the character player or does it have an active ship command manager (an AI controlled sub)? Bots in the player team are not treated as commanders.
+        /// </summary>
+        public bool IsCommanding => IsPlayer || (AIController is HumanAIController humanAI && humanAI.ShipCommandManager != null && humanAI.ShipCommandManager.Active);
         public bool IsBot => !IsPlayer && AIController is HumanAIController humanAI && humanAI.Enabled;
+        public bool IsEscorted { get; set; }
 
         public readonly Dictionary<string, SerializableProperty> Properties;
         public Dictionary<string, SerializableProperty> SerializableProperties
@@ -109,6 +115,8 @@ namespace Barotrauma
 
         protected Key[] keys;
 
+        public HumanPrefab Prefab;
+
         private CharacterTeamType teamID;
         public CharacterTeamType TeamID
         {
@@ -117,6 +125,101 @@ namespace Barotrauma
             {
                 teamID = value;
                 if (info != null) { info.TeamID = value; }
+            }
+        }
+
+        protected readonly Dictionary<string, ActiveTeamChange> activeTeamChanges = new Dictionary<string, ActiveTeamChange>();
+        protected ActiveTeamChange currentTeamChange;
+        const string OriginalTeamIdentifier = "original";
+
+        public void SetOriginalTeam(CharacterTeamType newTeam)
+        {
+            TryRemoveTeamChange(OriginalTeamIdentifier);
+            currentTeamChange = new ActiveTeamChange(newTeam, ActiveTeamChange.TeamChangePriorities.Base);
+            TryAddNewTeamChange(OriginalTeamIdentifier, currentTeamChange);
+        }
+
+        protected void ChangeTeam(CharacterTeamType newTeam)
+        {
+            if (newTeam == teamID)
+            {
+                return;
+            }
+            teamID = newTeam;
+            if (info != null) { info.TeamID = newTeam; }
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                return;
+            }
+            // clear up any duties the character might have had from its old team (autonomous objectives are automatically recreated)
+            SetOrder(Order.GetPrefab("dismissed"), orderOption: null, priority: 3, orderGiver: this, speak: false);
+
+#if SERVER
+            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.TeamChange });
+#endif
+        }
+
+        public bool HasTeamChange(string identifier)
+        {
+            return activeTeamChanges.ContainsKey(identifier);
+        }
+
+        public bool TryAddNewTeamChange(string identifier, ActiveTeamChange newTeamChange)
+        {
+            bool success = activeTeamChanges.TryAdd(identifier, newTeamChange);
+            if (success)
+            {
+                if (currentTeamChange == null)
+                {
+                    // set team logic to use active team changes as soon as the first team change is added
+                    SetOriginalTeam(TeamID);
+                }
+            }
+            else
+            {
+#if DEBUG
+                DebugConsole.ThrowError("Tried to add an existing team change! Make sure to check if the team change exists first.");
+#endif
+            }
+            return success;
+        }
+        public bool TryRemoveTeamChange(string identifier)
+        {
+            if (activeTeamChanges.TryGetValue(identifier, out ActiveTeamChange removedTeamChange))
+            {
+                if (currentTeamChange == removedTeamChange)
+                {
+                    currentTeamChange = activeTeamChanges[OriginalTeamIdentifier];
+                }
+            }
+            return activeTeamChanges.Remove(identifier);
+        }
+
+        public void UpdateTeam()
+        {
+            if (currentTeamChange == null)
+            {
+                return;
+            }
+
+            ActiveTeamChange bestTeamChange = currentTeamChange;
+            foreach (var desiredTeamChange in activeTeamChanges) // order of iteration matters because newest is preferred when multiple same-priority team changes exist
+            {
+                if (bestTeamChange.TeamChangePriority < desiredTeamChange.Value.TeamChangePriority)
+                {
+                    bestTeamChange = desiredTeamChange.Value;
+                }
+            }
+            if (TeamID != bestTeamChange.DesiredTeamId) 
+            {
+                ChangeTeam(bestTeamChange.DesiredTeamId);
+                currentTeamChange = bestTeamChange;
+
+                if (bestTeamChange.AggressiveBehavior) // this seemed like the least disruptive way to induce aggressive behavior
+                {
+                    SetOrder(Order.GetPrefab("fightintruders"), orderOption: null, priority: 3, orderGiver: this, speak: false);
+                }
             }
         }
 
@@ -336,9 +439,10 @@ namespace Barotrauma
         private Action<Character, Character> onCustomInteract;
         public ConversationAction ActiveConversation;
 
+        public bool RequireConsciousnessForCustomInteract = true;
         public bool AllowCustomInteract
         {
-            get { return !IsIncapacitated && Stun <= 0.0f && !Removed; }
+            get { return (!RequireConsciousnessForCustomInteract || (!IsIncapacitated && Stun <= 0.0f)) && !Removed; }
         }
 
         private float lockHandsTimer;
@@ -919,7 +1023,6 @@ namespace Barotrauma
             {
                 teamID = Info.TeamID;
             }
-
             keys = new Key[Enum.GetNames(typeof(InputType)).Length];
             for (int i = 0; i < Enum.GetNames(typeof(InputType)).Length; i++)
             {
@@ -1119,17 +1222,17 @@ namespace Barotrauma
                 switch (inputType)
                 {
                     case InputType.Left:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Left)) && (prevDequeuedInput.HasFlag(InputNetFlags.Left));
+                        return dequeuedInput.HasFlag(InputNetFlags.Left) && !prevDequeuedInput.HasFlag(InputNetFlags.Left);
                     case InputType.Right:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Right)) && (prevDequeuedInput.HasFlag(InputNetFlags.Right));
+                        return dequeuedInput.HasFlag(InputNetFlags.Right) && !prevDequeuedInput.HasFlag(InputNetFlags.Right);
                     case InputType.Up:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Up)) && (prevDequeuedInput.HasFlag(InputNetFlags.Up));
+                        return dequeuedInput.HasFlag(InputNetFlags.Up) && !prevDequeuedInput.HasFlag(InputNetFlags.Up);
                     case InputType.Down:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Down)) && (prevDequeuedInput.HasFlag(InputNetFlags.Down));
+                        return dequeuedInput.HasFlag(InputNetFlags.Down) && !prevDequeuedInput.HasFlag(InputNetFlags.Down);
                     case InputType.Run:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Run)) && (prevDequeuedInput.HasFlag(InputNetFlags.Run));
+                        return dequeuedInput.HasFlag(InputNetFlags.Run) && prevDequeuedInput.HasFlag(InputNetFlags.Run);
                     case InputType.Crouch:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Crouch)) && (prevDequeuedInput.HasFlag(InputNetFlags.Crouch));
+                        return dequeuedInput.HasFlag(InputNetFlags.Crouch) && !prevDequeuedInput.HasFlag(InputNetFlags.Crouch);
                     case InputType.Select:
                         return dequeuedInput.HasFlag(InputNetFlags.Select); //TODO: clean up the way this input is registered
                     case InputType.Deselect:
@@ -1139,11 +1242,11 @@ namespace Barotrauma
                     case InputType.Grab:
                         return dequeuedInput.HasFlag(InputNetFlags.Grab);
                     case InputType.Use:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Use)) && (prevDequeuedInput.HasFlag(InputNetFlags.Use));
+                        return dequeuedInput.HasFlag(InputNetFlags.Use) && !prevDequeuedInput.HasFlag(InputNetFlags.Use);
                     case InputType.Shoot:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Shoot)) && (prevDequeuedInput.HasFlag(InputNetFlags.Shoot));
+                        return dequeuedInput.HasFlag(InputNetFlags.Shoot) && !prevDequeuedInput.HasFlag(InputNetFlags.Shoot);
                     case InputType.Ragdoll:
-                        return !(dequeuedInput.HasFlag(InputNetFlags.Ragdoll)) && (prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll));
+                        return dequeuedInput.HasFlag(InputNetFlags.Ragdoll) && !prevDequeuedInput.HasFlag(InputNetFlags.Ragdoll);
                     default:
                         return false;
                 }
@@ -1264,11 +1367,27 @@ namespace Barotrauma
                 }
             }
         }
+        private List<Item> wearableItems = new List<Item>();
 
         public float GetSkillLevel(string skillIdentifier)
         {
             if (Info?.Job == null) { return 0.0f; }
             float skillLevel = Info.Job.GetSkillLevel(skillIdentifier);
+
+            if (skillIdentifier != null)
+            {
+                for (int i = 0; i < Inventory.Capacity; i++)
+                {
+                    if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
+                    {
+                        if (wearable.SkillModifiers.TryGetValue(skillIdentifier, out float skillValue))
+                        {
+                            skillLevel += skillValue;
+                        }
+                    }
+                }
+            }
+
             foreach (Affliction affliction in CharacterHealth.GetAllAfflictions())
             {
                 skillLevel *= affliction.GetSkillMultiplier();
@@ -1420,6 +1539,16 @@ namespace Barotrauma
             // Reset, status effects should set the values again, if the conditions match
             greatestPositiveHealthMultiplier = 1f;
             greatestNegativeHealthMultiplier = 1f;
+        }
+
+        /// <summary>
+        /// Can be used to modify a character's health for runtime session. Change with AddHealthMultiplier
+        /// </summary>
+        public float StaticHealthMultiplier { get; private set; } = 1;
+
+        public void AddStaticHealthMultiplier(float newMultiplier)
+        {
+            StaticHealthMultiplier *= newMultiplier;
         }
 
         /// <summary>
@@ -1595,83 +1724,89 @@ namespace Barotrauma
                 }
             }
 #endif
-
             if (attackCoolDown > 0.0f)
             {
                 attackCoolDown -= deltaTime;
             }
-            else if (IsKeyDown(InputType.Attack) && (IsRemotePlayer || Controlled == this || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)))
+            else if (IsKeyDown(InputType.Attack))
             {
-                Vector2 attackPos = SimPosition + ConvertUnits.ToSimUnits(cursorPosition - Position);
-                List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
-                ignoredBodies.Add(AnimController.Collider.FarseerBody);
-
-                var body = Submarine.PickBody(
-                    SimPosition,
-                    attackPos,
-                    ignoredBodies,
-                    Physics.CollisionCharacter | Physics.CollisionWall);
-
-                IDamageable attackTarget = null;
-                if (body != null)
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
                 {
-                    attackPos = Submarine.LastPickedPosition;
-
-                    if (body.UserData is Submarine sub)
-                    {
-                        body = Submarine.PickBody(
-                            SimPosition - ((Submarine)body.UserData).SimPosition,
-                            attackPos - ((Submarine)body.UserData).SimPosition,
-                            ignoredBodies,
-                            Physics.CollisionWall);
-
-                        if (body != null)
-                        {
-                            attackPos = Submarine.LastPickedPosition + sub.SimPosition;
-                            attackTarget = body.UserData as IDamageable;
-                        }
-                    }
-                    else
-                    {
-                        if (body.UserData is IDamageable)
-                        {
-                            attackTarget = (IDamageable)body.UserData;
-                        }
-                        else if (body.UserData is Limb)
-                        {
-                            attackTarget = ((Limb)body.UserData).character;
-                        }
-                    }
+                    currentAttackTarget.AttackLimb?.UpdateAttack(deltaTime, currentAttackTarget.AttackPos, currentAttackTarget.DamageTarget, out _);
                 }
-                var currentContexts = GetAttackContexts();
-                var validLimbs = AnimController.Limbs.Where(l =>
+                else if (IsPlayer)
                 {
-                    if (l.IsSevered || l.IsStuck) { return false; }
-                    if (l.Disabled) { return false; }
-                    var attack = l.attack;
-                    if (attack == null) { return false; }
-                    if (attack.CoolDownTimer > 0) { return false; }
-                    if (!attack.IsValidContext(currentContexts)) { return false; }
-                    if (attackTarget != null)
+                    Vector2 attackPos = SimPosition + ConvertUnits.ToSimUnits(cursorPosition - Position);
+                    List<Body> ignoredBodies = AnimController.Limbs.Select(l => l.body.FarseerBody).ToList();
+                    ignoredBodies.Add(AnimController.Collider.FarseerBody);
+
+                    var body = Submarine.PickBody(
+                        SimPosition,
+                        attackPos,
+                        ignoredBodies,
+                        Physics.CollisionCharacter | Physics.CollisionWall);
+
+                    IDamageable attackTarget = null;
+                    if (body != null)
                     {
-                        if (!attack.IsValidTarget(attackTarget)) { return false; }
-                        if (attackTarget is ISerializableEntity se && attackTarget is Character)
+                        attackPos = Submarine.LastPickedPosition;
+
+                        if (body.UserData is Submarine sub)
                         {
-                            if (attack.Conditionals.Any(c => !c.Matches(se))) { return false; }
+                            body = Submarine.PickBody(
+                                SimPosition - ((Submarine)body.UserData).SimPosition,
+                                attackPos - ((Submarine)body.UserData).SimPosition,
+                                ignoredBodies,
+                                Physics.CollisionWall);
+
+                            if (body != null)
+                            {
+                                attackPos = Submarine.LastPickedPosition + sub.SimPosition;
+                                attackTarget = body.UserData as IDamageable;
+                            }
+                        }
+                        else
+                        {
+                            if (body.UserData is IDamageable)
+                            {
+                                attackTarget = (IDamageable)body.UserData;
+                            }
+                            else if (body.UserData is Limb)
+                            {
+                                attackTarget = ((Limb)body.UserData).character;
+                            }
                         }
                     }
-                    if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(this))) { return false; }
-                    return true;
-                });
-                var sortedLimbs = validLimbs.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition));
-                // Select closest
-                var attackLimb = sortedLimbs.FirstOrDefault();
-                if (attackLimb != null)
-                {
-                    attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget, out AttackResult attackResult);
-                    if (!attackLimb.attack.IsRunning)
+                    var currentContexts = GetAttackContexts();
+                    var validLimbs = AnimController.Limbs.Where(l =>
                     {
-                        attackCoolDown = 1.0f;
+                        if (l.IsSevered || l.IsStuck) { return false; }
+                        if (l.Disabled) { return false; }
+                        var attack = l.attack;
+                        if (attack == null) { return false; }
+                        if (attack.CoolDownTimer > 0) { return false; }
+                        if (!attack.IsValidContext(currentContexts)) { return false; }
+                        if (attackTarget != null)
+                        {
+                            if (!attack.IsValidTarget(attackTarget)) { return false; }
+                            if (attackTarget is ISerializableEntity se && attackTarget is Character)
+                            {
+                                if (attack.Conditionals.Any(c => !c.Matches(se))) { return false; }
+                            }
+                        }
+                        if (attack.Conditionals.Any(c => c.TargetSelf && !c.Matches(this))) { return false; }
+                        return true;
+                    });
+                    var sortedLimbs = validLimbs.OrderBy(l => Vector2.DistanceSquared(ConvertUnits.ToDisplayUnits(l.SimPosition), cursorPosition));
+                    // Select closest
+                    var attackLimb = sortedLimbs.FirstOrDefault();
+                    if (attackLimb != null)
+                    {
+                        attackLimb.UpdateAttack(deltaTime, attackPos, attackTarget, out AttackResult attackResult);
+                        if (!attackLimb.attack.IsRunning)
+                        {
+                            attackCoolDown = 1.0f;
+                        }
                     }
                 }
             }
@@ -1746,6 +1881,24 @@ namespace Barotrauma
             }
         }
 
+        private struct AttackTargetData
+        {
+            public Limb AttackLimb { get; set; }
+            public IDamageable DamageTarget { get; set; }
+            public Vector2 AttackPos { get; set; }
+        }
+
+        private AttackTargetData currentAttackTarget;
+        public void SetAttackTarget(Limb attackLimb, IDamageable damageTarget, Vector2 attackPos)
+        {
+            currentAttackTarget = new AttackTargetData()
+            {
+                AttackLimb = attackLimb,
+                DamageTarget = damageTarget,
+                AttackPos = attackPos
+            };
+        }
+
         public bool CanSeeCharacter(Character target)
         {
             if (target.Removed) { return false; }
@@ -1791,19 +1944,19 @@ namespace Barotrauma
             return AnimController.GetLimb(LimbType.Head) ?? AnimController.GetLimb(LimbType.Torso) ?? AnimController.MainLimb;
         }
 
-        public bool CanSeeTarget(ISpatialEntity target, Limb seeingLimb = null)
+        public bool CanSeeTarget(ISpatialEntity target, ISpatialEntity seeingEntity = null)
         {
-            seeingLimb ??= GetSeeingLimb();
-            if (seeingLimb == null) { return false; }
-            ISpatialEntity seeingEntity = AnimController.SimplePhysicsEnabled ? this : seeingLimb as ISpatialEntity;
+            seeingEntity ??= AnimController.SimplePhysicsEnabled ? this as ISpatialEntity : GetSeeingLimb() as ISpatialEntity;
+            if (seeingEntity == null) { return false; }
+            ISpatialEntity sourceEntity = seeingEntity ;
             // TODO: Could we just use the method below? If not, let's refactor it so that we can.
-            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - seeingEntity.WorldPosition);
+            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceEntity.WorldPosition);
             Body closestBody;
             //both inside the same sub (or both outside)
             //OR the we're inside, the other character outside
             if (target.Submarine == Submarine || target.Submarine == null)
             {
-                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
+                closestBody = Submarine.CheckVisibility(sourceEntity.SimPosition, sourceEntity.SimPosition + diff);
             }
             //we're outside, the other character inside
             else if (Submarine == null)
@@ -1813,7 +1966,7 @@ namespace Barotrauma
             //both inside different subs
             else
             {
-                closestBody = Submarine.CheckVisibility(seeingEntity.SimPosition, seeingEntity.SimPosition + diff);
+                closestBody = Submarine.CheckVisibility(sourceEntity.SimPosition, sourceEntity.SimPosition + diff);
                 if (!IsBlocking(closestBody))
                 {
                     closestBody = Submarine.CheckVisibility(target.SimPosition, target.SimPosition - diff);
@@ -1842,51 +1995,43 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// TODO: ensure that works. CheckVisibility takes positions in sim space, but this method uses world positions
-        /// </summary>
-        public bool CanSeeCharacter(Character target, Vector2 sourceWorldPos)
-        {
-            Vector2 diff = ConvertUnits.ToSimUnits(target.WorldPosition - sourceWorldPos);
-            Body closestBody;
-            if (target.Submarine == null)
-            {
-                closestBody = Submarine.CheckVisibility(sourceWorldPos, sourceWorldPos + diff);
-                if (closestBody == null) { return true; }
-            }
-            else
-            {
-                closestBody = Submarine.CheckVisibility(target.WorldPosition, target.WorldPosition - diff);
-                if (closestBody == null) { return true; }
-            }
-            Structure wall = closestBody.UserData as Structure;
-            Item item = closestBody.UserData as Item;
-            Door door = item?.GetComponent<Door>();
-            return (wall == null || !wall.CastShadow) && (door == null || door.CanBeTraversed);
-        }
-
-        /// <summary>
         /// A simple check if the character Dir is towards the target or not. Uses the world coordinates.
         /// </summary>
         public bool IsFacing(Vector2 targetWorldPos) => AnimController.Dir > 0 && targetWorldPos.X > WorldPosition.X || AnimController.Dir < 0 && targetWorldPos.X < WorldPosition.X;
 
-        public bool HasItem(Item item, bool requireEquipped = false) => requireEquipped ? HasEquippedItem(item) : item.IsOwnedBy(this);
+        public bool HasItem(Item item, bool requireEquipped = false, InvSlotType? slotType = null) => requireEquipped ? HasEquippedItem(item) : item.IsOwnedBy(this);
 
-        public bool HasEquippedItem(Item item)
+        public bool HasEquippedItem(Item item, InvSlotType? slotType = null)
         {
             if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.GetItemAt(i) == item) { return true; }
+                if (slotType.HasValue)
+                {
+                    if (!slotType.Value.HasFlag(Inventory.SlotTypes[i])) { continue; }
+                }
+                else if (Inventory.SlotTypes[i] == InvSlotType.Any)
+                {
+                    continue;
+                }
+                if (Inventory.GetItemAt(i) == item) { return true; }
             }
             return false;
         }
 
-        public bool HasEquippedItem(string tagOrIdentifier, bool allowBroken = true)
+        public bool HasEquippedItem(string tagOrIdentifier, bool allowBroken = true, InvSlotType? slotType = null)
         {
             if (Inventory == null) { return false; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
+                if (slotType.HasValue)
+                {
+                    if (!slotType.Value.HasFlag(Inventory.SlotTypes[i])) { continue; }
+                }
+                else if (Inventory.SlotTypes[i] == InvSlotType.Any) 
+                { 
+                    continue; 
+                }
                 var item = Inventory.GetItemAt(i);
                 if (item == null) { continue; }
                 if (!allowBroken && item.Condition <= 0.0f) { continue; }
@@ -1895,12 +2040,19 @@ namespace Barotrauma
             return false;
         }
 
-        public Item GetEquippedItem(string tagOrIdentifier)
+        public Item GetEquippedItem(string tagOrIdentifier, InvSlotType? slotType = null)
         {
             if (Inventory == null) { return null; }
             for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
+                if (slotType.HasValue)
+                {
+                    if (!slotType.Value.HasFlag(Inventory.SlotTypes[i])) { continue; }
+                }
+                else if (Inventory.SlotTypes[i] == InvSlotType.Any)
+                {
+                    continue;
+                }
                 var item = Inventory.GetItemAt(i);
                 if (item == null) { continue; }
                 if (item.Prefab.Identifier == tagOrIdentifier || item.HasTag(tagOrIdentifier)) { return item; }
@@ -2022,7 +2174,7 @@ namespace Barotrauma
             bool hidden = item.HiddenInGame;
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen) { hidden = false; }
-#endif  
+#endif
             if (!CanInteract || hidden || !item.IsInteractable(this)) { return false; }
 
             if (item.ParentInventory != null)
@@ -2086,7 +2238,10 @@ namespace Barotrauma
             Rectangle itemDisplayRect = new Rectangle(item.InteractionRect.X, item.InteractionRect.Y - item.InteractionRect.Height, item.InteractionRect.Width, item.InteractionRect.Height);
 
             // Get the point along the line between lowerBodyPosition and upperBodyPosition which is closest to the center of itemDisplayRect
-            Vector2 playerDistanceCheckPosition = Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition);
+            Vector2 playerDistanceCheckPosition =
+                lowerBodyPosition.Y < upperBodyPosition.Y ?
+                Vector2.Clamp(itemDisplayRect.Center.ToVector2(), lowerBodyPosition, upperBodyPosition) :
+                Vector2.Clamp(itemDisplayRect.Center.ToVector2(), upperBodyPosition, lowerBodyPosition);
 
             // If playerDistanceCheckPosition is inside the itemDisplayRect then we consider the character to within 0 distance of the item
             if (itemDisplayRect.Contains(playerDistanceCheckPosition))
@@ -2124,7 +2279,7 @@ namespace Barotrauma
                     itemPosition -= Submarine.SimPosition;
                 }
                 var body = Submarine.CheckVisibility(SimPosition, itemPosition, ignoreLevel: true);
-                if (body != null && body.UserData as Item != item) { return false; }
+                if (body != null && body.UserData as Item != item && Submarine.LastPickedFixture?.UserData as Item != item) { return false; }
             }
 
             return true;
@@ -2222,6 +2377,10 @@ namespace Barotrauma
                         var item = FindItemAtPosition(mouseSimPos, aimAssist);
                         
                         focusedItem = CanInteract ? item : null;
+                        if (focusedItem != null && focusedItem.CampaignInteractionType != CampaignMode.InteractionType.None)
+                        {
+                            FocusedCharacter = null;
+                        }
                         findFocusedTimer = 0.05f;
                     }
                 }
@@ -2360,28 +2519,25 @@ namespace Barotrauma
                 {
                     if (!(c is AICharacter) && !c.IsRemotePlayer) continue;
 
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                    if (c.IsPlayer || (c.IsBot && !c.IsDead))
+                    {
+                        c.Enabled = true;
+                    }
+                    else if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                     {
                         //disable AI characters that are far away from all clients and the host's character and not controlled by anyone
-                        if (c.IsPlayer || (c.IsBot && !c.IsDead))
+                        float closestPlayerDist = c.GetDistanceToClosestPlayer();
+                        if (closestPlayerDist > c.Params.DisableDistance)
+                        {
+                            c.Enabled = false;
+                            if (c.IsDead && c.AIController is EnemyAIController)
+                            {
+                                Spawner?.AddToRemoveQueue(c);
+                            }
+                        }
+                        else if (closestPlayerDist < c.Params.DisableDistance * 0.9f)
                         {
                             c.Enabled = true;
-                        }
-                        else
-                        {
-                            float closestPlayerDist = c.GetDistanceToClosestPlayer();
-                            if (closestPlayerDist > c.Params.DisableDistance)
-                            {
-                                c.Enabled = false;
-                                if (c.IsDead && c.AIController is EnemyAIController)
-                                {
-                                    Spawner?.AddToRemoveQueue(c);
-                                }
-                            }
-                            else if (closestPlayerDist < c.Params.DisableDistance * 0.9f)
-                            {
-                                c.Enabled = true;
-                            }
                         }
                     }
                     else if (Submarine.MainSub != null)
@@ -2834,11 +2990,14 @@ namespace Barotrauma
             Spawner.AddToRemoveQueue(this);
         }
 
-        public void DespawnNow()
+        public void DespawnNow(bool createNetworkEvents = true)
         {
             despawnTimer = GameMain.Config.CorpseDespawnDelay;
             UpdateDespawn(1.0f, ignoreThresholds: true);
-            Spawner.Update();
+            if (createNetworkEvents)
+            {
+                Spawner.Update();
+            }
         }
 
         public static void RemoveByPrefab(CharacterPrefab prefab)
@@ -2899,10 +3058,16 @@ namespace Barotrauma
             return !string.IsNullOrEmpty(ChatMessage.ApplyDistanceEffect("message", messageType, speaker, this));
         }
 
-        public void SetOrder(Order order, string orderOption, int priority, Character orderGiver, bool speak = true)
+        /// <param name="force">Force an order to be set for the character, bypassing hearing checks</param>
+        public void SetOrder(Order order, string orderOption, int priority, Character orderGiver, bool speak = true, bool force = false)
         {
             //set the character order only if the character is close enough to hear the message
-            if (orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
+            if (!force && orderGiver != null && !CanHearCharacter(orderGiver)) { return; }
+
+            if (order.OrderGiver != orderGiver)
+            {
+                order.OrderGiver = orderGiver;
+            }
 
             // If there's another character operating the same device, make them dismiss themself
             if (order != null && order.Category == OrderCategory.Operate && order.TargetEntity != null)
@@ -2911,6 +3076,7 @@ namespace Barotrauma
                 {
                     if (character == this) { continue; }
                     if (character.TeamID != TeamID) { continue; }
+                    if (!(character.AIController is HumanAIController)) { continue; }
                     if (!HumanAIController.IsActive(character)) { continue; }
                     foreach (var currentOrder in character.CurrentOrders)
                     {
@@ -2918,7 +3084,7 @@ namespace Barotrauma
                         if (currentOrder.Order.Category != OrderCategory.Operate) { continue; }
                         if (currentOrder.Order.Identifier != order.Identifier) { continue; }
                         if (currentOrder.Order.TargetEntity != order.TargetEntity) { continue; }
-                        character.SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character);
+                        character.SetOrder(Order.GetPrefab("dismissed"), Order.GetDismissOrderOption(currentOrder), currentOrder.ManualPriority, character, speak: speak, force: force);
                         break;
                     }
                 }
@@ -2934,6 +3100,12 @@ namespace Barotrauma
                 humanAI.SetOrder(order, orderOption, priority, orderGiver, speak);
             }
             SetOrderProjSpecific(order, orderOption, priority);
+        }
+
+        /// <param name="force">Force an order to be set for the character, bypassing hearing checks</param>
+        public void SetOrder(OrderInfo orderInfo, Character orderGiver, bool speak = true, bool force = false)
+        {
+            SetOrder(orderInfo.Order, orderInfo.OrderOption, orderInfo.ManualPriority, orderGiver, speak: speak, force: force);
         }
 
         private void AddCurrentOrder(OrderInfo newOrder)
@@ -3154,7 +3326,7 @@ namespace Barotrauma
         /// <summary>
         /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage.
         /// </summary>
-        public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null)
+        public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null, float penetration = 0f)
         {
             if (Removed)
             {
@@ -3170,7 +3342,7 @@ namespace Barotrauma
 
             var attackResult = targetLimb == null ?
                 AddDamage(worldPosition, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, out limbHit, attacker, attack.DamageMultiplier) :
-                DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker, attack.DamageMultiplier);
+                DamageLimb(worldPosition, targetLimb, attack.Afflictions.Keys, attack.Stun, playSound, attackImpulse, attacker, attack.DamageMultiplier, penetration: penetration);
 
             if (limbHit == null) { return new AttackResult(); }
             Vector2 forceWorld = attack.TargetImpulseWorld + attack.TargetForceWorld;
@@ -3302,7 +3474,7 @@ namespace Barotrauma
             GameMain.Config.RecentlyEncounteredCreatures.Add(other.SpeciesName);
         }
 
-        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true)
+        public AttackResult DamageLimb(Vector2 worldPosition, Limb hitLimb, IEnumerable<Affliction> afflictions, float stun, bool playSound, float attackImpulse, Character attacker = null, float damageMultiplier = 1, bool allowStacking = true, float penetration = 0f)
         {
             if (Removed) { return new AttackResult(); }
 
@@ -3354,7 +3526,7 @@ namespace Barotrauma
             }
             bool wasDead = IsDead;
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
-            AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound, damageMultiplier: damageMultiplier);
+            AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound, damageMultiplier: damageMultiplier, penetration: penetration);
             CharacterHealth.ApplyDamage(hitLimb, attackResult, allowStacking);
             if (attacker != this)
             {
@@ -3412,9 +3584,9 @@ namespace Barotrauma
 
         /// <summary>
         /// Is the character knocked down regardless whether the technical state is dead, unconcious, paralyzed, or stunned. 
-        /// With stunning, the parameter uses a half a second delay before the character is treated as knocked down. The purpose of this is to ignore minor stunning. If you don't want to to ignore any stun, use the Stun property.
+        /// With stunning, the parameter uses an one second delay before the character is treated as knocked down. The purpose of this is to ignore minor stunning. If you don't want to to ignore any stun, use the Stun property.
         /// </summary>
-        public bool IsKnockedDown => IsDead || IsIncapacitated || CharacterHealth.StunTimer > 0.5f || IsRagdolled;
+        public bool IsKnockedDown => IsRagdolled || CharacterHealth.StunTimer > 1.0f || IsIncapacitated;
 
         public void SetStun(float newStun, bool allowStunDecrease = false, bool isNetworkMessage = false)
         {
@@ -3457,7 +3629,7 @@ namespace Barotrauma
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    statusEffect.GetNearbyTargets(WorldPosition, targets);
+                    targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
                     statusEffect.Apply(actionType, deltaTime, this, targets);
                 }
                 else
@@ -3499,6 +3671,11 @@ namespace Barotrauma
             {
                 // OnDamaged is called only for the limb that is hit.
                 AnimController.Limbs.ForEach(l => l.ApplyStatusEffects(actionType, deltaTime));
+            }
+            //OnActive effects are handled by the afflictions themselves
+            if (actionType != ActionType.OnActive)
+            {
+                CharacterHealth.ApplyAfflictionStatusEffects(actionType);
             }
         }
 
@@ -3643,10 +3820,7 @@ namespace Barotrauma
                 return;
             }
 
-            if (aiTarget != null)
-            {
-                aiTarget.Remove();
-            }
+            aiTarget?.Remove();
 
             aiTarget = new AITarget(this);
             CharacterHealth.RemoveAllAfflictions();
@@ -3738,8 +3912,9 @@ namespace Barotrauma
             AnimController.FindHull(worldPos, true);
         }
 
-        public void SaveInventory(Inventory inventory, XElement parentElement)
+        public static void SaveInventory(Inventory inventory, XElement parentElement)
         {
+            if (inventory == null || parentElement == null) { return; }
             var items = inventory.AllItems.Distinct();
             foreach (Item item in items)
             {
@@ -3756,6 +3931,14 @@ namespace Barotrauma
                     SaveInventory(container.Inventory, childInvElement);
                 }
             }
+        }
+
+        /// <summary>
+        /// Calls <see cref="SaveInventory(Barotrauma.Inventory, XElement)"/> using 'Inventory' and 'Info.InventoryData'
+        /// </summary>
+        public void SaveInventory()
+        {
+            SaveInventory(Inventory, Info?.InventoryData);
         }
 
         public void SpawnInventoryItems(Inventory inventory, XElement itemData)
@@ -4011,15 +4194,38 @@ namespace Barotrauma
         public bool IsEngineer => HasJob("engineer");
         public bool IsMechanic => HasJob("mechanic");
         public bool IsMedic => HasJob("medicaldoctor");
-        public bool IsSecurity => HasJob("securityofficer");
+        public bool IsSecurity => HasJob("securityofficer") || HasJob("vipsecurityofficer");
         public bool IsAssistant => HasJob("assistant");
         public bool IsWatchman => HasJob("watchman");
+        public bool IsVip => HasJob("prisoner");
+        public bool IsPrisoner => HasJob("prisoner");
+        public Color? UniqueNameColor { get; set; } = null;
 
         public bool HasJob(string identifier) => Info?.Job?.Prefab.Identifier == identifier;
 
         public bool IsProtectedFromPressure()
         {
             return PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f);
+        }
+    }
+
+    class ActiveTeamChange
+    {
+        public CharacterTeamType DesiredTeamId { get; }
+        public enum TeamChangePriorities
+        {
+            Base, // given to characters when generated or when their base team is set
+            Willful, // cognitive, willful team changes, such as prisoners escaping 
+            Absolute // possession, insanity, the like
+        }
+        public TeamChangePriorities TeamChangePriority { get; }
+        public bool AggressiveBehavior { get; }
+
+        public ActiveTeamChange(CharacterTeamType desiredTeamId, TeamChangePriorities teamChangePriority, bool aggressiveBehavior = false)
+        {
+            DesiredTeamId = desiredTeamId;
+            TeamChangePriority = teamChangePriority;
+            AggressiveBehavior = aggressiveBehavior;
         }
     }
 }

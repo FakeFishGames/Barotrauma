@@ -548,6 +548,11 @@ namespace Barotrauma.Items.Components
                 }
                 return true;
             }
+            else if (targetBody.UserData is LevelObject levelObject && levelObject.Prefab.TakeLevelWallDamage)
+            {
+                levelObject.AddDamage(-LevelWallFixAmount, deltaTime, item);                
+                return true;
+            }
             else if (targetBody.UserData is Character targetCharacter)
             {
                 if (targetCharacter.Removed) { return false; }

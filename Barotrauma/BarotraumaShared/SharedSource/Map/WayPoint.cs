@@ -192,17 +192,37 @@ namespace Barotrauma
             float minDist = 100.0f;
             float heightFromFloor = 110.0f;
             float hullMinHeight = 100;
-
             foreach (Hull hull in Hull.hullList)
             {
                 // Ignore hulls that a human couldn't fit in.
                 // Doesn't take multi-hull rooms into account, but it's probably best to leave them to be setup manually.
                 if (hull.Rect.Height < hullMinHeight) { continue; }
-                // Don't create waypoints if there's no floor.
-                Vector2 floorPos = new Vector2(hull.SimPosition.X, ConvertUnits.ToSimUnits(hull.Rect.Y - hull.RectHeight - 50));
-                Body floor = Submarine.PickBody(hull.SimPosition, floorPos, collisionCategory: Physics.CollisionWall | Physics.CollisionPlatform, customPredicate: f => !(f.Body.UserData is Submarine));
+                // Do five raycasts to check if there's a floor. Don't create waypoints unless we can find a floor.
+                Body floor = null;
+                for (int i = 0; i < 5; i++)
+                {
+                    float horizontalOffset = 0;
+                    switch (i)
+                    {
+                        case 1:
+                            horizontalOffset = hull.RectWidth * 0.2f;
+                            break;
+                        case 2:
+                            horizontalOffset = hull.RectWidth * 0.4f;
+                            break;
+                        case 3:
+                            horizontalOffset = -hull.RectWidth * 0.2f;
+                            break;
+                        case 4:
+                            horizontalOffset = -hull.RectWidth * 0.4f;
+                            break;
+                    }
+                    horizontalOffset = ConvertUnits.ToSimUnits(horizontalOffset);
+                    Vector2 floorPos = new Vector2(hull.SimPosition.X + horizontalOffset, ConvertUnits.ToSimUnits(hull.Rect.Y - hull.RectHeight - 50));
+                    floor = Submarine.PickBody(new Vector2(hull.SimPosition.X + horizontalOffset, hull.SimPosition.Y), floorPos, collisionCategory: Physics.CollisionWall | Physics.CollisionPlatform, customPredicate: f => !(f.Body.UserData is Submarine));
+                    if (floor != null) { break; }
+                }
                 if (floor == null) { continue; }
-                // Make sure that the waypoints don't go higher than the halfway of the room.
                 float waypointHeight = hull.Rect.Height > heightFromFloor * 2 ? heightFromFloor : hull.Rect.Height / 2;
                 if (hull.Rect.Width < diffFromHullEdge * 3.0f)
                 {
@@ -223,12 +243,42 @@ namespace Barotrauma
                         new WayPoint(new Vector2(hull.Rect.X + hull.Rect.Width / 2.0f, hull.Rect.Y - hull.Rect.Height + waypointHeight), SpawnType.Path, submarine);
                     }
                 }
-            }            
+            }
+
+            // Platforms
+            foreach (Structure platform in Structure.WallList)
+            {
+                if (!platform.IsPlatform) { continue; }
+                float waypointHeight = heightFromFloor;
+                WayPoint prevWaypoint = null;
+                for (float x = platform.Rect.X + diffFromHullEdge; x <= platform.Rect.Right - diffFromHullEdge; x += minDist)
+                {
+                    WayPoint wayPoint = new WayPoint(new Vector2(x, platform.Rect.Y + waypointHeight), SpawnType.Path, submarine);
+                    if (prevWaypoint != null)
+                    {
+                        wayPoint.ConnectTo(prevWaypoint);
+                    }
+                    // If the waypoint is close to hull waypoints, remove it.
+                    if (wayPoint != null)
+                    {
+                        for (int dir = -1; dir <= 1; dir += 2)
+                        {
+                            if (wayPoint.FindClosest(dir, horizontalSearch: true, tolerance: new Vector2(minDist, heightFromFloor), ignored: prevWaypoint.ToEnumerable()) != null)
+                            {
+                                wayPoint.Remove();
+                                wayPoint = null;
+                                break;
+                            }
+                        }
+                    }
+                    prevWaypoint = wayPoint;
+                }
+            }
 
             float outSideWaypointInterval = 100.0f;
             if (submarine.Info.Type != SubmarineType.OutpostModule)
             {
-                List<WayPoint> outsideWaypoints = new List<WayPoint>();
+                List<(WayPoint, int)> outsideWaypoints = new List<(WayPoint, int)>();
 
                 Rectangle borders = Hull.GetBorders();
                 int originalWidth = borders.Width;
@@ -260,7 +310,7 @@ namespace Barotrauma
                             new Vector2(x, borders.Y - borders.Height * i) + submarine.HiddenSubPosition,
                             SpawnType.Path, submarine);
 
-                        outsideWaypoints.Add(wayPoint);
+                        outsideWaypoints.Add((wayPoint, i));
 
                         if (x == borders.X + outSideWaypointInterval)
                         {
@@ -284,7 +334,7 @@ namespace Barotrauma
                             new Vector2(borders.X + borders.Width * i, y) + submarine.HiddenSubPosition,
                             SpawnType.Path, submarine);
 
-                        outsideWaypoints.Add(wayPoint);
+                        outsideWaypoints.Add((wayPoint, i));
 
                         if (y == borders.Y - borders.Height)
                         {
@@ -302,8 +352,9 @@ namespace Barotrauma
                 Vector2 center = ConvertUnits.ToSimUnits(submarine.HiddenSubPosition);
                 float halfHeight = ConvertUnits.ToSimUnits(borders.Height / 2);
                 // Try to move the waypoints so that they are near the walls, roughly following the shape of the sub.
-                foreach (WayPoint wp in outsideWaypoints)
+                foreach (var wayPoint in outsideWaypoints)
                 {
+                    WayPoint wp = wayPoint.Item1;
                     float xDiff = center.X - wp.SimPosition.X;
                     Vector2 targetPos = new Vector2(center.X - xDiff * 0.5f, center.Y);
                     Body wall = Submarine.PickBody(wp.SimPosition, targetPos, collisionCategory: Physics.CollisionWall, customPredicate: f => !(f.Body.UserData is Submarine));
@@ -331,8 +382,9 @@ namespace Barotrauma
                 var removals = new List<WayPoint>();
                 WayPoint previous = null;
                 float tooClose = outSideWaypointInterval / 2;
-                foreach (WayPoint wp in outsideWaypoints)
+                foreach (var wayPoint in outsideWaypoints)
                 {
+                    WayPoint wp = wayPoint.Item1;
                     if (wp.CurrentHull != null ||
                         Submarine.PickBody(wp.SimPosition, wp.SimPosition + Vector2.Normalize(center - wp.SimPosition) * 0.1f, collisionCategory: Physics.CollisionWall | Physics.CollisionItem, customPredicate: f => !(f.Body.UserData is Submarine), allowInsideFixture: true) != null)
                     {
@@ -341,8 +393,9 @@ namespace Barotrauma
                         previous = wp;
                         continue;
                     }
-                    foreach (WayPoint otherWp in outsideWaypoints)
+                    foreach (var otherWayPoint in outsideWaypoints)
                     {
+                        WayPoint otherWp = otherWayPoint.Item1;
                         if (otherWp == wp) { continue; }
                         if (removals.Contains(otherWp)) { continue; }
                         float sqrDist = Vector2.DistanceSquared(wp.Position, otherWp.Position);
@@ -356,13 +409,12 @@ namespace Barotrauma
                 }
                 foreach (WayPoint wp in removals)
                 {
-                    outsideWaypoints.Remove(wp);
+                    outsideWaypoints.RemoveAll(w => w.Item1 == wp);
                     wp.Remove();
                 }
-                // Connect loose ends (TODO: this sometimes fails, creating the connection to a wrong node)
                 for (int i = 0; i < outsideWaypoints.Count; i++)
                 {
-                    WayPoint current = outsideWaypoints[i];
+                    WayPoint current = outsideWaypoints[i].Item1;
                     if (current.linkedTo.Count > 1) { continue; }
                     WayPoint next = null;
                     int maxConnections = 2;
@@ -371,18 +423,11 @@ namespace Barotrauma
                     {
                         if (current.linkedTo.Count >= maxConnections) { break; }
                         tooFar /= current.linkedTo.Count;
-                        // First try to find a loose end
-                        next = current.FindClosestOutside(outsideWaypoints, tolerance: tooFar, filter: wp => wp != next && wp.linkedTo.None(e => current.linkedTo.Contains(e)) && wp.linkedTo.Count < 2);
-                        // Then accept any connection that not connected to the existing connection
-                        next ??= current.FindClosestOutside(outsideWaypoints, tolerance: tooFar, filter: wp => wp != next && wp.linkedTo.None(e => current.linkedTo.Contains(e)));
+                        next = current.FindClosestOutside(outsideWaypoints, tolerance: tooFar, filter: wp => wp.Item1 != next && wp.Item1.linkedTo.None(e => current.linkedTo.Contains(e)) && wp.Item1.linkedTo.Count < 2 && wp.Item2 < i);
                         if (next != null)
                         {
                             current.ConnectTo(next);
                         }
-                    }
-                    if (current.linkedTo.Count == 1)
-                    {
-                        DebugConsole.ThrowError($"Couldn't automatically link waypoint {current.ID}. You should do it manually.");
                     }
                 }
             }
@@ -532,7 +577,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            closest = ladderPoint.FindClosest(dir, horizontalSearch: true, new Vector2(150, 70), ladderPoint.ConnectedGap?.ConnectedDoor?.Body.FarseerBody, ignored: ladderPoints);
+                            closest = ladderPoint.FindClosest(dir, horizontalSearch: true, new Vector2(150, 100), ladderPoint.ConnectedGap?.ConnectedDoor?.Body.FarseerBody, ignored: ladderPoints);
                         }
                         if (closest == null) { continue; }
                         ladderPoint.ConnectTo(closest);
@@ -601,11 +646,18 @@ namespace Barotrauma
                 }
             }
 
-            var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && !w.linkedTo.Any());
-
+            var orphans = WayPointList.FindAll(w => w.spawnType == SpawnType.Path && w.linkedTo.None());
             foreach (WayPoint wp in orphans)
             {
                 wp.Remove();
+            }
+
+            foreach (WayPoint wp in WayPointList)
+            {
+                if (wp.CurrentHull == null && wp.Ladders == null && wp.linkedTo.Count < 2)
+                {
+                    DebugConsole.ThrowError($"Couldn't automatically link the waypoint {wp.ID} outside of the submarine. You should do it manually. The waypoint ID is shown in red color.");
+                }
             }
 
             //re-disable the bodies of the doors that are supposed to be open
@@ -617,18 +669,20 @@ namespace Barotrauma
             return true;
         }
 
-        private WayPoint FindClosestOutside(IEnumerable<WayPoint> waypointList, float tolerance, Body ignoredBody = null, IEnumerable<WayPoint> ignored = null, Func<WayPoint, bool> filter = null)
+        private WayPoint FindClosestOutside(IEnumerable<(WayPoint, int)> waypointList, float tolerance, Body ignoredBody = null, IEnumerable<WayPoint> ignored = null, Func<(WayPoint, int), bool> filter = null)
         {
             float closestDist = 0;
             WayPoint closest = null;
-            foreach (WayPoint wp in waypointList)
+            foreach (var wayPoint in waypointList)
             {
+                WayPoint wp = wayPoint.Item1;
                 if (wp.SpawnType != SpawnType.Path || wp == this) { continue; }
                 // Ignore if already linked
                 if (linkedTo.Contains(wp)) { continue; }
                 if (ignored != null && ignored.Contains(wp)) { continue; }
-                if (filter != null && !filter(wp)) { continue; }
+                if (filter != null && !filter(wayPoint)) { continue; }
                 float sqrDist = Vector2.DistanceSquared(Position, wp.Position);
+                if (sqrDist > tolerance * tolerance) { continue; }
                 if (closest == null || sqrDist < closestDist)
                 {
                     var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, ignoreLevel: true, ignoreSubs: true, ignoreSensors: false);
@@ -712,14 +766,14 @@ namespace Barotrauma
             if (!wayPoint2.linkedTo.Contains(this)) { wayPoint2.linkedTo.Add(this); }
         }
 
-        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, Job assignedJob = null, Submarine sub = null, Ruin ruin = null, bool useSyncedRand = false)
+        public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, Ruin ruin = null, bool useSyncedRand = false)
         {
             return WayPointList.GetRandom(wp =>
                 wp.Submarine == sub && 
                 wp.ParentRuin == ruin &&
                 wp.spawnType == spawnType &&
-                (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob.Prefab))
-                , useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
+                (assignedJob == null || (assignedJob != null && wp.AssignedJob == assignedJob)), 
+                useSyncedRand ? Rand.RandSync.Server : Rand.RandSync.Unsynced);
         }
 
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
@@ -775,7 +829,7 @@ namespace Barotrauma
             {
                 if (assignedWayPoints[i] == null)
                 {
-                    DebugConsole.ThrowError("Couldn't find a waypoint for " + crew[i].Name + "!");
+                    DebugConsole.AddWarning("Couldn't find a waypoint for " + crew[i].Name + "!");
                     assignedWayPoints[i] = WayPointList[0];
                 }
             }

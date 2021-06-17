@@ -40,9 +40,5 @@ Libraries/webm_mem_playback/opus_x64_linux/
 # Win
 desktop.ini
 
-# Merge script
+#Merge script
 temp.txt
-
-# Private assets
-Barotrauma/BarotraumaShared/Content/*
-.github/ISSUE_TEMPLATE/release-checklist.md

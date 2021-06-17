@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveFindSafety : AIObjective
     {
-        public override string DebugTag => "find safety";
+        public override string Identifier { get; set; } = "find safety";
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
@@ -32,12 +32,12 @@ namespace Barotrauma
 
         public AIObjectiveFindSafety(Character character, AIObjectiveManager objectiveManager, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier) { }
 
-        protected override bool Check() => false;
+        protected override bool CheckObjectiveSpecific() => false;
         public override bool CanBeCompleted => true;
 
         private bool resetPriority;
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {

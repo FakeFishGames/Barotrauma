@@ -607,15 +607,18 @@ namespace Barotrauma
                             tooltip = (new Rectangle(typeChangeIconPos.ToPoint(), new Point(30)), location.LastTypeChangeMessage);
                         }
                     }
-                    if (location != CurrentLocation && CurrentLocation.AvailableMissions.Any(m => m.Locations.Contains(location)) && generationParams.MissionIcon != null)
+                    if (location != CurrentLocation && generationParams.MissionIcon != null)
                     {
-                        Vector2 missionIconPos = pos + new Vector2(1.35f, 0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
-                        float missionIconScale = 18.0f / generationParams.MissionIcon.SourceRect.Width;
-                        generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, generationParams.IndicatorColor, scale: missionIconScale * zoom);
-                        if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom && IsPreferredTooltip(missionIconPos))
+                        if ((CurrentLocation == currentDisplayLocation && CurrentLocation.AvailableMissions.Any(m => m.Locations.Contains(location))) || location.AvailableMissions.Any(m => m.Prefab.Type == MissionType.GoTo))
                         {
-                            var availableMissions = CurrentLocation.AvailableMissions.Where(m => m.Locations.Contains(location));
-                            tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), TextManager.Get("mission") + '\n'+ string.Join('\n', availableMissions.Select(m => "- " + m.Name)));
+                            Vector2 missionIconPos = pos + new Vector2(1.35f, 0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
+                            float missionIconScale = 18.0f / generationParams.MissionIcon.SourceRect.Width;
+                            generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, generationParams.IndicatorColor, scale: missionIconScale * zoom);
+                            if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom && IsPreferredTooltip(missionIconPos))
+                            {
+                                var availableMissions = CurrentLocation.AvailableMissions.Where(m => m.Locations.Contains(location)).Concat(location.AvailableMissions.Where(m => m.Prefab.Type == MissionType.GoTo)).Distinct();
+                                tooltip = (new Rectangle(missionIconPos.ToPoint(), new Point(30)), TextManager.Get("mission") + '\n'+ string.Join('\n', availableMissions.Select(m => "- " + m.Name)));
+                            }
                         }
                     }
 

@@ -391,7 +391,7 @@ namespace Barotrauma
         }
 
         private static Dictionary<string, List<string>> cachedLines = new Dictionary<string, List<string>>();
-        public static string GetRandomLine(string filePath)
+        public static string GetRandomLine(string filePath, Rand.RandSync randSync = Rand.RandSync.Server)
         {
             List<string> lines;
             if (cachedLines.ContainsKey(filePath))
@@ -418,7 +418,7 @@ namespace Barotrauma
             }
 
             if (lines.Count == 0) return "";
-            return lines[Rand.Range(0, lines.Count, Rand.RandSync.Server)];
+            return lines[Rand.Range(0, lines.Count, randSync)];
         }
 
         /// <summary>

@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFires : AIObjectiveLoop<Hull>
     {
-        public override string DebugTag => "extinguish fires";
+        public override string Identifier { get; set; } = "extinguish fires";
         public override bool ForceRun => true;
         public override bool AllowInAnySub => true;
 

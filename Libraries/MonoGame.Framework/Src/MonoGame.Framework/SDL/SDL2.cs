@@ -146,6 +146,8 @@ internal static class Sdl
         public Joystick.DeviceEvent JoystickDevice;
         [FieldOffset(0)]
         public GameController.DeviceEvent ControllerDevice;
+        [FieldOffset(0)]
+        public DropEvent DropEvent;
     }
 
     public struct Rectangle
@@ -171,6 +173,10 @@ internal static class Sdl
     {
         GetError(SDL_Init(flags));
     }
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_sdl_free(IntPtr ptr);
+    public static d_sdl_free Free = FuncLoader.LoadFunction<d_sdl_free>(NativeLibrary, "SDL_free");
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_sdl_disablescreensaver();
@@ -309,6 +315,15 @@ internal static class Sdl
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate int d_sdl_sethint(string name, string value);
     public static d_sdl_sethint SetHint = FuncLoader.LoadFunction<d_sdl_sethint>(NativeLibrary, "SDL_SetHint");
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DropEvent
+    {
+        public EventType Type;
+        public uint Timestamp;
+        public IntPtr File;
+        public uint WndowID;
+    }
 
     public static class Window
     {

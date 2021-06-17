@@ -64,6 +64,7 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
             float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
+            bool sendOutputImmediately = true;
             switch (Function)
             {
                 case FunctionType.Sin:
@@ -105,11 +106,13 @@ namespace Barotrauma.Items.Components
                     {
                         timeSinceReceived[0] = 0.0f;
                         float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                        sendOutputImmediately = false;
                     }
                     else if (connection.Name == "signal_in_y")
                     {
                         timeSinceReceived[1] = 0.0f;
                         float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                        sendOutputImmediately = false;
                     }
                     else
                     {
@@ -121,9 +124,11 @@ namespace Barotrauma.Items.Components
                 default:
                     throw new NotImplementedException($"Function {Function} has not been implemented.");
             }
-
-            signal.value = value.ToString("G", CultureInfo.InvariantCulture);
-            item.SendSignal(signal, "signal_out");
+            if (sendOutputImmediately)
+            {
+                signal.value = value.ToString("G", CultureInfo.InvariantCulture);
+                item.SendSignal(signal, "signal_out");
+            }
         }
     }
 }

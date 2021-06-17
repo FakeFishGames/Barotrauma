@@ -224,10 +224,7 @@ namespace Barotrauma.Tutorials
 
         public virtual void Update(float deltaTime)
         {
-            if (videoPlayer != null)
-            {
-                videoPlayer.Update();
-            }
+            videoPlayer?.Update();
 
             if (activeObjectives != null)
             {

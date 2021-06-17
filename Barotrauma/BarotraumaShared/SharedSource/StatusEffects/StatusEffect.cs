@@ -668,9 +668,10 @@ namespace Barotrauma
             return true;
         }
 
-        public void GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets)
+        public IEnumerable<ISerializableEntity> GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets = null)
         {
-            if (Range <= 0.0f) { return; }
+            targets ??= new List<ISerializableEntity>();
+            if (Range <= 0.0f) { return targets; }
             if (HasTargetType(TargetType.NearbyCharacters))
             {
                 foreach (Character c in Character.CharacterList)
@@ -707,6 +708,7 @@ namespace Barotrauma
                     }
                 }
             }
+            return targets;
 
             bool CheckDistance(ISpatialEntity e)
             {
@@ -746,7 +748,18 @@ namespace Barotrauma
                             {
                                 owner = ownerItem.ParentInventory?.Owner;
                             }
-                            if (owner is Item container && HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return true; }
+                            if (owner is Item container) 
+                            { 
+                                if (pc.Type == PropertyConditional.ConditionType.HasTag)
+                                {
+                                    //if we're checking for tags, just check the Item object, not the ItemComponents
+                                    if (HasRequiredConditions((container as ISerializableEntity).ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }
+                                }
+                                else
+                                {
+                                    if (HasRequiredConditions(container.AllPropertyObjects, pc.ToEnumerable(), targetingContainer: true)) { return true; } 
+                                }                                
+                            }
                             if (owner is Character character && HasRequiredConditions(character.ToEnumerable(), pc.ToEnumerable(), targetingContainer: true)) { return true; }
                         }
                         else
@@ -1235,6 +1248,12 @@ namespace Barotrauma
                                     Projectile projectile = newItem.GetComponent<Projectile>();
                                     if (projectile != null && user != null && sourceBody != null && entity != null)
                                     {
+                                        var rope = newItem.GetComponent<Rope>();
+                                        if (rope != null && sourceBody.UserData is Limb sourceLimb)
+                                        {
+                                            rope.Attach(sourceLimb, newItem);
+                                        }
+
                                         float spread = MathHelper.ToRadians(Rand.Range(-itemSpawnInfo.AimSpread, itemSpawnInfo.AimSpread));
                                         var worldPos = sourceBody.Position;
                                         float rotation = itemSpawnInfo.Rotation;

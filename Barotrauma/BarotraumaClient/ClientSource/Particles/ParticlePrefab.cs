@@ -53,6 +53,10 @@ namespace Barotrauma.Particles
         [Editable(0.0f, float.MaxValue), Serialize(5.0f, false, description: "How many seconds the particle remains alive.")]
         public float LifeTime { get; private set; }
 
+        [Editable(0.0f, float.MaxValue), Serialize(0.0f, false, description: "Will randomize lifetime value between lifetime and lifetimeMin. If left to 0 will use only lifetime value.")]
+        public float LifeTimeMin { get; private set; }
+
+
         [Editable, Serialize(0.0f, false, description: "How long it takes for the particle to appear after spawning it.")]
         public float StartDelayMin { get; private set; }
         [Editable, Serialize(0.0f, false, description: "How long it takes for the particle to appear after spawning it.")]
@@ -118,10 +122,10 @@ namespace Barotrauma.Particles
         [Editable, Serialize(false, false, description: "Should the particle face the direction it's moving towards.")]
         public bool RotateToDirection { get; private set; }
 
-        [Editable, Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through air.")]
+        [Editable(0.0f, float.MaxValue, DecimalCount = 3), Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through air.")]
         public float Drag { get; private set; }
 
-        [Editable, Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through water.")]
+        [Editable(0.0f, float.MaxValue, DecimalCount = 3), Serialize(0.0f, false, description: "Drag applied to the particle when it's moving through water.")]
         public float WaterDrag { get; private set; }
 
         private Vector2 velocityChange;
@@ -193,8 +197,14 @@ namespace Barotrauma.Particles
         [Editable, Serialize("1.0,1.0,1.0,1.0", false, description: "The initial color of the particle.")]
         public Color StartColor { get; private set; }
 
+        [Editable, Serialize("1.0,1.0,1.0,1.0", false, description: "The initial color of the particle.")]
+        public Color MiddleColor { get; private set; }
+
         [Editable, Serialize("1.0,1.0,1.0,1.0", false, description: "The color of the particle at the end of its lifetime.")]
         public Color EndColor { get; private set; }
+
+        [Editable, Serialize(false, false, description: "If true the color will go from StartColor to EndcColor and back to StartColor.")]
+        public bool UseMiddleColor { get; private set; }
         
         [Editable, Serialize(DrawTargetType.Air, false, description: "Should the particle be rendered in air, water or both.")]
         public DrawTargetType DrawTarget { get; private set; }
@@ -289,7 +299,7 @@ namespace Barotrauma.Particles
                 StartRotationMin = element.GetAttributeFloat("startrotation", 0.0f);
                 StartRotationMax = StartRotationMin;
             }
-            
+
             if (CollisionRadius <= 0.0f) CollisionRadius = Sprites.Count > 0 ? 1 : Sprites[0].SourceRect.Width / 2.0f;
         }
 

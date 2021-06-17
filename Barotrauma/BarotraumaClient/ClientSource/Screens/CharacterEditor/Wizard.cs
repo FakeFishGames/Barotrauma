@@ -305,7 +305,7 @@ namespace Barotrauma.CharacterEditor
                                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), mainElement.RectTransform, Anchor.CenterLeft), TextManager.Get("ContentPackage"));
                                 var rightContainer = new GUIFrame(new RectTransform(new Vector2(0.7f, 1), mainElement.RectTransform, Anchor.CenterRight), style: null);
                                 contentPackageDropDown = new GUIDropDown(new RectTransform(new Vector2(1.0f, 0.5f), rightContainer.RectTransform, Anchor.TopRight));
-                                foreach (ContentPackage cp in ContentPackage.AllPackages)
+                                foreach (ContentPackage cp in GameMain.Config.AllEnabledPackages)
                                 {
 #if !DEBUG
                                 if (cp == GameMain.VanillaContent) { continue; }

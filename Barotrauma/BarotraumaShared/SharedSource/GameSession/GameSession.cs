@@ -162,6 +162,18 @@ namespace Barotrauma
 
         private GameMode InstantiateGameMode(GameModePreset gameModePreset, string seed, SubmarineInfo selectedSub, CampaignSettings settings, IEnumerable<MissionPrefab> missionPrefabs = null, MissionType missionType = MissionType.None)
         {
+            if (gameModePreset.GameModeType == typeof(CoOpMode) || gameModePreset.GameModeType == typeof(PvPMode))
+            {
+                //don't allow hidden mission types (e.g. GoTo) in single mission modes
+                var missionTypes = (MissionType[])Enum.GetValues(typeof(MissionType));
+                for (int i = 0; i < missionTypes.Length; i++)
+                {
+                    if (MissionPrefab.HiddenMissionClasses.Contains(missionTypes[i]))
+                    {
+                        missionType &= ~missionTypes[i];
+                    }
+                }
+            }
             if (gameModePreset.GameModeType == typeof(CoOpMode))
             {
                 return missionPrefabs != null ?
@@ -353,9 +365,20 @@ namespace Barotrauma
                     }
                 }
             }
-            if (GameMode is PvPMode && Submarine.MainSubs[1] == null)
+
+            foreach (Mission mission in GameMode.Missions)
             {
-                Submarine.MainSubs[1] = new Submarine(SubmarineInfo, true);
+                // setting difficulty for missions that may involve difficulty-related submarine creation
+                mission.SetDifficulty(levelData?.Difficulty ?? 0f);
+            }
+
+            if (Submarine.MainSubs[1] == null)
+            {
+                var enemySubmarineInfo = GameMode is PvPMode ? SubmarineInfo : GameMode.Missions.FirstOrDefault(m => m.EnemySubmarineInfo != null)?.EnemySubmarineInfo;
+                if (enemySubmarineInfo != null)
+                {
+                    Submarine.MainSubs[1] = new Submarine(enemySubmarineInfo, true);
+                }
             }
 
             if (GameMain.NetworkMember?.ServerSettings?.LockAllDefaultWires ?? false)
@@ -526,7 +549,10 @@ namespace Barotrauma
                     if (port.IsHorizontal || port.Docked) { continue; }
                     if (port.Item.Submarine == level.StartOutpost)
                     {
-                        outPostPort = port;
+                        if (port.DockingTarget == null)
+                        {
+                            outPostPort = port;
+                        }
                         continue;
                     }
                     if (port.Item.Submarine != Submarine) { continue; }
@@ -612,6 +638,18 @@ namespace Barotrauma
         public int GetMissionIndex(Mission mission)
         {
             return missions.IndexOf(mission);
+        }
+
+        public void EnforceMissionOrder(List<string> missionIdentifiers)
+        {
+            List<Mission> sortedMissions = new List<Mission>();
+            foreach (string missionId in missionIdentifiers)
+            {
+                var matchingMission = missions.Find(m => m.Prefab.Identifier == missionId);
+                sortedMissions.Add(matchingMission);
+                missions.Remove(matchingMission);
+            }
+            missions.AddRange(sortedMissions);
         }
 
         partial void UpdateProjSpecific(float deltaTime);

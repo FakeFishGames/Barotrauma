@@ -101,7 +101,8 @@ namespace Barotrauma
                     case "cargo":
                         CargoManager.LoadPurchasedItems(subElement);
                         break;
-                    case "pendingupgrades":
+                    case "pendingupgrades": //backwards compatibility
+                    case "upgrademanager":
                         UpgradeManager = new UpgradeManager(this, subElement, isSingleplayer: true);
                         break;
                     case "pets":
@@ -229,6 +230,7 @@ namespace Barotrauma
             {
                 PetBehavior.LoadPets(petsElement);
             }
+            CrewManager.LoadActiveOrders();
 
             GUI.DisableSavingIndicatorDelayed();
         }
@@ -264,10 +266,7 @@ namespace Barotrauma
                 prevControlled.AIController.Enabled = false;
             }
             Character.Controlled = null;
-            if (prevControlled != null)
-            {
-                prevControlled.ClearInputs();
-            }
+            prevControlled?.ClearInputs();
 
             GUI.DisableHUD = true;
             while (GameMain.Instance.LoadingScreenOpen)
@@ -303,7 +302,7 @@ namespace Barotrauma
                         yield return CoroutineStatus.Success;
                     }
                     overlayTextColor = Color.Lerp(Color.Transparent, Color.White, (timer - 1.0f) / fadeInDuration);
-                    timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
+                    timer = Math.Min(timer + CoroutineManager.UnscaledDeltaTime, textDuration);
                     yield return CoroutineStatus.Running;
                 }
                 var outpost = GameMain.GameSession.Level.StartOutpost;
@@ -331,7 +330,7 @@ namespace Barotrauma
                 while (timer < fadeInDuration)
                 {
                     overlayColor = Color.Lerp(Color.LightGray, Color.Transparent, timer / fadeInDuration);
-                    timer += CoroutineManager.DeltaTime;
+                    timer += CoroutineManager.UnscaledDeltaTime;
                     yield return CoroutineStatus.Running;
                 }
                 overlayColor = Color.Transparent;
@@ -446,9 +445,13 @@ namespace Barotrauma
                 {
                     Submarine.MainSub = leavingSub;
                     GameMain.GameSession.Submarine = leavingSub;
+                    GameMain.GameSession.SubmarineInfo = leavingSub.Info;
+                    leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
                     var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
+                    GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
                     foreach (Submarine sub in subsToLeaveBehind)
                     {
+                        GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
                         MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
                         LinkedSubmarine.CreateDummy(leavingSub, sub);
                     }
@@ -479,6 +482,8 @@ namespace Barotrauma
                 PendingSubmarineSwitch = null;
                 EnableRoundSummaryGameOverState();
             }
+
+            CrewManager?.ClearCurrentOrders();
 
             //--------------------------------------
 
@@ -558,7 +563,7 @@ namespace Barotrauma
             }
 
 #if DEBUG
-            if (PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.R))
+            if (GUI.KeyboardDispatcher.Subscriber == null && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.M))
             {
                 if (GUIMessageBox.MessageBoxes.Any()) { GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.MessageBoxes.Last()); }
 
@@ -735,9 +740,10 @@ namespace Barotrauma
                 if (c.Inventory != null)
                 {
                     c.Info.InventoryData = new XElement("inventory");
-                    c.SaveInventory(c.Inventory, c.Info.InventoryData);
+                    c.SaveInventory();
                     c.Inventory?.DeleteAllItems();
                 }
+                c.Info.SaveOrderData();
             }
 
             petsElement = new XElement("pets");
@@ -748,7 +754,7 @@ namespace Barotrauma
             CampaignMetadata.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
-            UpgradeManager?.SavePendingUpgrades(modeElement, UpgradeManager?.PendingUpgrades);
+            UpgradeManager?.Save(modeElement);
             element.Add(modeElement);
         }
     }

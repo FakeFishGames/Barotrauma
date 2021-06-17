@@ -186,16 +186,12 @@ namespace Barotrauma.Networking
             if (updateReturnTimer > 1.0f)
             {
                 updateReturnTimer = 0.0f;
-
-                if (shuttleSteering != null)
-                {
-                    shuttleSteering.SetDestinationLevelStart();
-                }
-                UpdateReturningProjSpecific();
+                shuttleSteering?.SetDestinationLevelStart();
+                UpdateReturningProjSpecific(deltaTime);
             }
         }
 
-        partial void UpdateReturningProjSpecific();
+        partial void UpdateReturningProjSpecific(float deltaTime);
         
         private IEnumerable<object> ForceShuttleToPos(Vector2 position, float speed)
         {
@@ -278,6 +274,7 @@ namespace Barotrauma.Networking
                 if (hull.Submarine != RespawnShuttle) { continue; }
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
+                hull.BallastFlora?.Kill();
             }
 
             foreach (Character c in Character.CharacterList)

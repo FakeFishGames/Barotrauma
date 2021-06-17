@@ -46,7 +46,7 @@ namespace Barotrauma
             int price = BasePrice;
             for (int i = 1; i <= level; i++)
             {
-                price += (int)(price * MathHelper.Lerp( IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
+                price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
             }
             return location?.GetAdjustedMechanicalCost(price) ?? price;
         }

@@ -1,16 +1,20 @@
 using Barotrauma.Networking;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
 {
     partial class AbandonedOutpostMission : Mission
     {
+        private readonly List<Item> spawnedItems = new List<Item>();
+
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
-            if (characters.Count == 0)
+            msg.Write((ushort)spawnedItems.Count);
+            foreach (Item item in spawnedItems)
             {
-                throw new InvalidOperationException("Server attempted to write AbandonedOutpostMission data when no characters had been spawned.");
+                item.WriteSpawnData(msg, item.ID, Entity.NullEntityID, 0);
             }
 
             msg.Write((byte)characters.Count);
@@ -22,7 +26,7 @@ namespace Barotrauma
                 msg.Write((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {
-                    item.WriteSpawnData(msg, item.ID, item.ParentInventory.Owner?.ID ?? Entity.NullEntityID, 0);
+                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0);
                 }
             }
         }

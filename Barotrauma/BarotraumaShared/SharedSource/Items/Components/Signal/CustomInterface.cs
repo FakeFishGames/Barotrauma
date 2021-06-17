@@ -95,7 +95,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string[] labels;
-        [Serialize("", true, description: "The texts displayed on the buttons/tickboxes, separated by commas.")]
+        [Serialize("", true, description: "The texts displayed on the buttons/tickboxes, separated by commas.", alwaysUseInstanceValues: true)]
         public string Labels
         {
             get { return string.Join(",", labels); }
@@ -111,7 +111,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string[] signals;
-        [Serialize("", true, description: "The signals sent when the buttons are pressed or the tickboxes checked, separated by commas.")]
+        [Serialize("", true, description: "The signals sent when the buttons are pressed or the tickboxes checked, separated by commas.", alwaysUseInstanceValues: true)]
         public string Signals
         {
             //use semicolon as a separator because comma may be needed in the signals (for color or vector values for example)

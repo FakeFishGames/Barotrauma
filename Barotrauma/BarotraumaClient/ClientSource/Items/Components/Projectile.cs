@@ -1,12 +1,18 @@
 ﻿using Barotrauma.Networking;
+using Barotrauma.Particles;
+using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Projectile : ItemComponent
     {
+        private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+
         public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
         {
             bool launch = msg.ReadBoolean();
@@ -94,6 +100,31 @@ namespace Barotrauma.Items.Components
             else
             {
                 Unstick();
+            }
+        }
+
+        partial void LaunchProjSpecific(Vector2 startLocation, Vector2 endLocation)
+        {
+            Vector2 particlePos = item.WorldPosition;
+            float rotation = -item.body.Rotation;
+            if (item.body.Dir < 0.0f) { rotation += MathHelper.Pi; }
+            Tuple<Vector2, Vector2> tracerPoints = new Tuple<Vector2, Vector2>(startLocation, endLocation);
+            foreach (ParticleEmitter emitter in particleEmitters)
+            {
+                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier, tracerPoints: tracerPoints);
+            }
+        }
+
+        partial void InitProjSpecific(XElement element)
+        {
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "particleemitter":
+                        particleEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                }
             }
         }
     }

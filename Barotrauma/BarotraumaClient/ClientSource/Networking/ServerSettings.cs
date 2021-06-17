@@ -151,7 +151,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? radiationEnabled = null, bool? useRespawnShuttle = null)
+        public void ClientAdminWrite(NetFlags dataToSend, int? missionTypeOr = null, int? missionTypeAnd = null, float? levelDifficulty = null, bool? autoRestart = null, int traitorSetting = 0, int botCount = 0, int botSpawnMode = 0, bool? radiationEnabled = null, bool? useRespawnShuttle = null, int maxMissionCount = 0)
         {
             if (!GameMain.Client.HasPermission(Networking.ClientPermissions.ManageSettings)) return;
 
@@ -217,6 +217,8 @@ namespace Barotrauma.Networking
                 outMsg.Write(autoRestart != null);
                 outMsg.Write(autoRestart ?? false);
                 outMsg.Write(radiationEnabled ?? RadiationEnabled);
+                outMsg.Write((byte)maxMissionCount + 1);
+
                 outMsg.WritePadBits();
             }
 
@@ -744,6 +746,10 @@ namespace Barotrauma.Networking
             var allowRewiring = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowRewiring"));
             GetPropertyData("AllowRewiring").AssignGUIComponent(allowRewiring);
+
+            var allowWifiChatter = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform), 
+                TextManager.Get("ServerSettingsAllowWifiChat"));
+            GetPropertyData("AllowLinkingWifiToChat").AssignGUIComponent(allowWifiChatter);
 
             var allowDisguises = new GUITickBox(new RectTransform(new Vector2(0.48f, 0.05f), tickBoxContainer.Content.RectTransform),
                 TextManager.Get("ServerSettingsAllowDisguises"));

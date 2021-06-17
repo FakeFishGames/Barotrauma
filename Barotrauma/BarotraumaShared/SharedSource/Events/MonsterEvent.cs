@@ -88,7 +88,7 @@ namespace Barotrauma
             }
 
             offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
-            scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 1000), 0, 3000);
+            scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
 
             if (GameMain.NetworkMember != null)
             {
@@ -182,18 +182,11 @@ namespace Barotrauma
         {
             if (disallowed) { return; }
 
-            if (Rand.Value(Rand.RandSync.Server) > prefab.SpawnProbability)
-            {
-                spawnPos = null;
-                Finished();
-                return;
-            }
-
             spawnPos = Vector2.Zero;
             var availablePositions = GetAvailableSpawnPositions();
             var chosenPosition = new Level.InterestingPosition(Point.Zero, Level.PositionType.MainPath, isValid: false);
-            bool isSubOrWreck = spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Wreck;
-            if (affectSubImmediately && !isSubOrWreck && spawnPosType != Level.PositionType.Abyss)
+            bool isRuinOrWreck = spawnPosType.HasFlag(Level.PositionType.Ruin) || spawnPosType.HasFlag(Level.PositionType.Wreck);
+            if (affectSubImmediately && !isRuinOrWreck && !spawnPosType.HasFlag(Level.PositionType.Abyss))
             {
                 if (availablePositions.None())
                 {
@@ -264,7 +257,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!isSubOrWreck)
+                if (!isRuinOrWreck)
                 {
                     float minDistance = 20000;
                     var refSub = GetReferenceSub();
@@ -375,7 +368,7 @@ namespace Barotrauma
             if (spawnPending)
             {
                 //wait until there are no submarines at the spawnpos
-                if (spawnPosType == Level.PositionType.MainPath || spawnPosType == Level.PositionType.SidePath || spawnPosType == Level.PositionType.Abyss)
+                if (spawnPosType.HasFlag(Level.PositionType.MainPath) || spawnPosType.HasFlag(Level.PositionType.SidePath) || spawnPosType.HasFlag(Level.PositionType.Abyss))
                 {
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
@@ -387,7 +380,7 @@ namespace Barotrauma
 
                 //if spawning in a ruin/cave, wait for someone to be close to it to spawning 
                 //unnecessary monsters in places the players might never visit during the round
-                if (spawnPosType == Level.PositionType.Ruin || spawnPosType == Level.PositionType.Cave || spawnPosType == Level.PositionType.Wreck)
+                if (spawnPosType.HasFlag(Level.PositionType.Ruin) || spawnPosType.HasFlag(Level.PositionType.Cave) || spawnPosType.HasFlag(Level.PositionType.Wreck))
                 {
                     bool someoneNearby = false;
                     float minDist = Sonar.DefaultSonarRange * 0.8f;
@@ -415,16 +408,19 @@ namespace Barotrauma
                 }
 
 
-                if (spawnPosType == Level.PositionType.Abyss || spawnPosType == Level.PositionType.AbyssCave)
+                if (spawnPosType.HasFlag(Level.PositionType.Abyss) || spawnPosType.HasFlag(Level.PositionType.AbyssCave))
                 {
+                    bool anyInAbyss = false;
                     foreach (Submarine submarine in Submarine.Loaded)
                     {
-                        if (submarine.Info.Type != SubmarineType.Player) { continue; }
-                        if (submarine.WorldPosition.Y > 0)
+                        if (submarine.Info.Type != SubmarineType.Player || submarine == GameMain.NetworkMember?.RespawnManager?.RespawnShuttle) { continue; }
+                        if (submarine.WorldPosition.Y < 0)
                         {
-                            return;
+                            anyInAbyss = true;
+                            break;
                         }
                     }
+                    if (!anyInAbyss) { return; }
                 }
 
                 spawnPending = false;
@@ -432,7 +428,23 @@ namespace Barotrauma
                 //+1 because Range returns an integer less than the max value
                 int amount = Rand.Range(minAmount, maxAmount + 1);
                 monsters = new List<Character>();
-                float offsetAmount = spawnPosType == Level.PositionType.MainPath || spawnPosType == Level.PositionType.SidePath ? scatter : 100;
+                float scatterAmount = scatter;
+                if (spawnPosType.HasFlag(Level.PositionType.SidePath))
+                {
+                    var sidePaths = Level.Loaded.Tunnels.Where(t => t.Type == Level.TunnelType.SidePath);
+                    if (sidePaths.Any())
+                    {
+                        scatterAmount = Math.Min(scatter, sidePaths.Min(t => t.MinWidth) / 2);
+                    }
+                    else
+                    {
+                        scatterAmount = scatter;
+                    }
+                }
+                else if (!spawnPosType.HasFlag(Level.PositionType.MainPath))
+                {
+                    scatterAmount = 0;
+                }
                 for (int i = 0; i < amount; i++)
                 {
                     string seed = Level.Loaded.Seed + i.ToString();
@@ -443,8 +455,8 @@ namespace Barotrauma
 						
                         System.Diagnostics.Debug.Assert(GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer, "Clients should not create monster events.");
 
-                        Vector2 pos = spawnPos.Value + Rand.Vector(offsetAmount);
-                        if (spawnPosType == Level.PositionType.MainPath || spawnPosType == Level.PositionType.SidePath)
+                        Vector2 pos = spawnPos.Value + Rand.Vector(scatterAmount);
+                        if (scatterAmount > 0)
                         {
                             if (Submarine.Loaded.Any(s => ToolBox.GetWorldBounds(s.Borders.Center, s.Borders.Size).ContainsWorld(pos)))
                             {

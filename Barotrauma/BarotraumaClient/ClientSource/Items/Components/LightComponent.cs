@@ -16,44 +16,43 @@ namespace Barotrauma.Items.Components
 
         public Vector2 DrawSize
         {
-            get { return new Vector2(light.Range * 2, light.Range * 2); }
+            get { return new Vector2(Light.Range * 2, Light.Range * 2); }
         }
 
-        private LightSource light;
-        public LightSource Light
-        {
-            get { return light; }
-        }
+        public LightSource Light { get; }
 
         public override void OnScaleChanged()
         {
-            light.SpriteScale = Vector2.One * item.Scale;
-            light.Position = ParentBody != null ? ParentBody.Position : item.Position;
+            Light.SpriteScale = Vector2.One * item.Scale;
+            Light.Position = ParentBody != null ? ParentBody.Position : item.Position;
         }
 
         partial void SetLightSourceState(bool enabled, float brightness)
         {
-            if (light == null) { return; }
-            light.Enabled = enabled;
-            light.Color = LightColor.Multiply(brightness);
+            if (Light == null) { return; }
+            Light.Enabled = enabled;
+            if (enabled)
+            {
+                Light.Color = LightColor.Multiply(brightness);
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
-            if (light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn)
+            if (Light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn)
             {
-                Vector2 origin = light.LightSprite.Origin;
-                if ((light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = light.LightSprite.SourceRect.Width - origin.X; }
-                if ((light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = light.LightSprite.SourceRect.Height - origin.Y; }
-                light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, origin, -light.Rotation, item.Scale, light.LightSpriteEffect, itemDepth - 0.0001f);
+                Vector2 origin = Light.LightSprite.Origin;
+                if ((Light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = Light.LightSprite.SourceRect.Width - origin.X; }
+                if ((Light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = Light.LightSprite.SourceRect.Height - origin.Y; }
+                Light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 
         public override void FlipX(bool relativeToSub)
         {
-            if (light?.LightSprite != null && item.Prefab.CanSpriteFlipX && item.body == null)
+            if (Light?.LightSprite != null && item.Prefab.CanSpriteFlipX && item.body == null)
             {
-                light.LightSpriteEffect = light.LightSpriteEffect == SpriteEffects.None ?
+                Light.LightSpriteEffect = Light.LightSpriteEffect == SpriteEffects.None ?
                     SpriteEffects.FlipHorizontally : SpriteEffects.None;                
             }
         }
@@ -93,7 +92,7 @@ namespace Barotrauma.Items.Components
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
-            light.Remove();
+            Light.Remove();
         }
     }
 }

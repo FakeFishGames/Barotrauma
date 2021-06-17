@@ -272,7 +272,9 @@ namespace Barotrauma
         }
 
         public SerializableEntityEditor(RectTransform parent, ISerializableEntity entity, bool inGame, bool showName, string style = "", int elementHeight = 24, ScalableFont titleFont = null)
-            : this(parent, entity, inGame ? SerializableProperty.GetProperties<InGameEditable>(entity) : SerializableProperty.GetProperties<Editable>(entity), showName, style, elementHeight, titleFont)
+            : this(parent, entity, inGame ? 
+                SerializableProperty.GetProperties<InGameEditable>(entity).Union(SerializableProperty.GetProperties<ConditionallyEditable>(entity).Where(p => p.GetAttribute<ConditionallyEditable>()?.IsEditable(entity) ?? false)) 
+                : SerializableProperty.GetProperties<Editable>(entity).Where(p => p.GetAttribute<ConditionallyEditable>()?.IsEditable(entity) ?? true), showName, style, elementHeight, titleFont)
         {
         }
 
@@ -446,6 +448,13 @@ namespace Barotrauma
                         if (SetPropertyValue(property, entity, tickBox.Selected))
                         {
                             TrySendNetworkUpdate(entity, property);
+                        }
+                        // Ensure that the values stay in sync (could be that we force the value in the property accessor).
+                        bool propertyValue = (bool)property.GetValue(entity);
+                        if (tickBox.Selected != propertyValue)
+                        {
+                            tickBox.Selected = propertyValue;
+                            tickBox.Flash(Color.Red);
                         }
                         return true;
                     }

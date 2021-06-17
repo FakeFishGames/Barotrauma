@@ -1,5 +1,7 @@
 ﻿using Barotrauma.Networking;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -15,9 +17,45 @@ namespace Barotrauma
         private static readonly Dictionary<Client, ConversationAction> lastActiveAction = new Dictionary<Client, ConversationAction>();
 
         private readonly HashSet<Client> targetClients = new HashSet<Client>();
+        private readonly Dictionary<Client, DateTime> ignoredClients = new Dictionary<Client, DateTime>();
+
         public IEnumerable<Client> TargetClients
         {
-            get { return targetClients; }
+            get
+            {
+                UpdateIgnoredClients();
+                return targetClients.Where(c => !ignoredClients.ContainsKey(c));
+            }
+        }
+
+        private void UpdateIgnoredClients()
+        {
+            if (ignoredClients.Any())
+            {
+                HashSet<Client> clientsToRemove = null;
+                foreach (var k in ignoredClients.Keys)
+                {
+                    if (ignoredClients[k] < DateTime.Now)
+                    {
+                        clientsToRemove ??= new HashSet<Client>();
+                        clientsToRemove.Add(k);
+                    }
+                }
+                if (!(clientsToRemove is null))
+                {
+                    foreach (var k in clientsToRemove)
+                    {
+                        ignoredClients.Remove(k);
+                    }
+                }
+            }
+        }
+
+        public void IgnoreClient(Client c, float seconds)
+        {
+            if (!ignoredClients.ContainsKey(c)) { ignoredClients.Add(c, DateTime.Now); }
+            ignoredClients[c] = DateTime.Now + TimeSpan.FromSeconds(seconds);
+            Reset();
         }
 
         private bool IsBlockedByAnotherConversation(IEnumerable<Entity> targets)

@@ -22,80 +22,23 @@ namespace Barotrauma.Networking
             int? wallSectionIndex = null;
             if (type == ChatMessageType.Order)
             {
-                int orderIndex = msg.ReadByte();
-                orderTargetCharacter = Entity.FindEntityByID(msg.ReadUInt16()) as Character;
-                orderTargetEntity = Entity.FindEntityByID(msg.ReadUInt16()) as Entity;
-                
-                Order orderPrefab = null;
-                int? orderOptionIndex = null;
-                string orderOption = null;
-
-                // The option of a Dismiss order is written differently so we know what order we target
-                // now that the game supports multiple current orders simultaneously
-                if (orderIndex >= 0 && orderIndex < Order.PrefabList.Count)
+                var orderMessageInfo = OrderChatMessage.ReadOrder(msg);
+                if (orderMessageInfo.OrderIndex < 0 || orderMessageInfo.OrderIndex >= Order.PrefabList.Count)
                 {
-                    orderPrefab = Order.PrefabList[orderIndex];
-                    if (orderPrefab.Identifier != "dismissed")
-                    {
-                        orderOptionIndex = msg.ReadByte();
-                    }
-                    // Does the dismiss order have a specified target?
-                    else if(msg.ReadBoolean())
-                    {
-                        int identifierCount = msg.ReadByte();
-                        if (identifierCount > 0)
-                        {
-                            int dismissedOrderIndex = msg.ReadByte();
-                            Order dismissedOrderPrefab = null;
-                            if (dismissedOrderIndex >= 0 && dismissedOrderIndex < Order.PrefabList.Count)
-                            {
-                                dismissedOrderPrefab = Order.PrefabList[dismissedOrderIndex];
-                                orderOption = dismissedOrderPrefab.Identifier;
-                            }
-                            if (identifierCount > 1)
-                            {
-                                int dismissedOrderOptionIndex = msg.ReadByte();
-                                if (dismissedOrderPrefab != null)
-                                {
-                                    var options = dismissedOrderPrefab.Options;
-                                    if (options != null && dismissedOrderOptionIndex >= 0 && dismissedOrderOptionIndex < options.Length)
-                                    {
-                                        orderOption += $".{options[dismissedOrderOptionIndex]}";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    orderOptionIndex = msg.ReadByte();
-                }
-
-                int orderPriority = msg.ReadByte();
-                orderTargetType = (Order.OrderTargetType)msg.ReadByte();
-                if (msg.ReadBoolean())
-                {
-                    var x = msg.ReadSingle();
-                    var y = msg.ReadSingle();
-                    var hull = Entity.FindEntityByID(msg.ReadUInt16()) as Hull;
-                    orderTargetPosition = new OrderTarget(new Vector2(x, y), hull, true);
-                }
-                else if (orderTargetType == Order.OrderTargetType.WallSection)
-                {
-                    wallSectionIndex = msg.ReadByte();
-                }
-
-                if (orderIndex < 0 || orderIndex >= Order.PrefabList.Count)
-                {
-                    DebugConsole.ThrowError($"Invalid order message from client \"{c.Name}\" - order index out of bounds ({orderIndex}).");
+                    DebugConsole.ThrowError($"Invalid order message from client \"{c.Name}\" - order index out of bounds ({orderMessageInfo.OrderIndex}).");
                     if (NetIdUtils.IdMoreRecent(ID, c.LastSentChatMsgID)) { c.LastSentChatMsgID = ID; }
                     return;
                 }
-
-                orderPrefab ??= Order.PrefabList[orderIndex];
-                orderOption ??= orderOptionIndex == null || orderOptionIndex < 0 || orderOptionIndex >= orderPrefab.Options.Length ? "" : orderPrefab.Options[orderOptionIndex.Value];
-                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderPriority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character)
+                orderTargetCharacter = orderMessageInfo.TargetCharacter;
+                orderTargetEntity = orderMessageInfo.TargetEntity;
+                orderTargetPosition = orderMessageInfo.TargetPosition;
+                orderTargetType = orderMessageInfo.TargetType;
+                wallSectionIndex = orderMessageInfo.WallSectionIndex;
+                var orderPrefab = orderMessageInfo.OrderPrefab ?? Order.PrefabList[orderMessageInfo.OrderIndex];
+                string orderOption = orderMessageInfo.OrderOption ??
+                    (orderMessageInfo.OrderOptionIndex == null || orderMessageInfo.OrderOptionIndex < 0 || orderMessageInfo.OrderOptionIndex >= orderPrefab.Options.Length ?
+                        "" : orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value]);
+                orderMsg = new OrderChatMessage(orderPrefab, orderOption, orderMessageInfo.Priority, orderTargetPosition ?? orderTargetEntity as ISpatialEntity, orderTargetCharacter, c.Character)
                 {
                     WallSectionIndex = wallSectionIndex
                 };
@@ -176,44 +119,47 @@ namespace Barotrauma.Networking
             if (type == ChatMessageType.Order)
             {
                 if (c.Character == null || c.Character.SpeechImpediment >= 100.0f || c.Character.IsDead) { return; }
-                Order order = null;
                 if (orderMsg.Order.IsReport)
                 {
                     HumanAIController.ReportProblem(orderMsg.Sender, orderMsg.Order);
                 }
-                else if (orderTargetCharacter != null && !orderMsg.Order.TargetAllCharacters)
+                Order order = orderTargetType switch
                 {
-                    switch (orderTargetType)
+                    Order.OrderTargetType.Entity =>
+                        new Order(orderMsg.Order, orderTargetEntity, orderMsg.Order?.GetTargetItemComponent(orderTargetEntity as Item), orderGiver: orderMsg.Sender),
+                    Order.OrderTargetType.Position =>
+                        new Order(orderMsg.Order, orderTargetPosition, orderGiver: orderMsg.Sender),
+                    Order.OrderTargetType.WallSection when orderTargetEntity is Structure s && wallSectionIndex.HasValue =>
+                        new Order(orderMsg.Order, s, wallSectionIndex, orderGiver: orderMsg.Sender),
+                    _ => throw new NotImplementedException()
+                };
+                if (order != null)
+                {
+                    if (order.TargetAllCharacters)
                     {
-                        case Order.OrderTargetType.Entity:
-                            order = new Order(orderMsg.Order.Prefab, orderTargetEntity, orderMsg.Order.Prefab?.GetTargetItemComponent(orderTargetEntity as Item), orderGiver: orderMsg.Sender);
-                            break;
-                        case Order.OrderTargetType.Position:
-                            order = new Order(orderMsg.Order.Prefab, orderTargetPosition, orderGiver: orderMsg.Sender);
-                            break;
+                        if (order.IsIgnoreOrder)
+                        {
+                            switch (orderTargetType)
+                            {
+                                case Order.OrderTargetType.Entity:
+                                    if (!(orderTargetEntity is IIgnorable ignorableEntity)) { break; }
+                                    ignorableEntity.OrderedToBeIgnored = order.Identifier == "ignorethis";
+                                    break;
+                                case Order.OrderTargetType.Position:
+                                    throw new NotImplementedException();
+                                case Order.OrderTargetType.WallSection:
+                                    if (!wallSectionIndex.HasValue) { break; }
+                                    if (!(orderTargetEntity is Structure s)) { break; }
+                                    if (!(s.GetSection(wallSectionIndex.Value) is IIgnorable ignorableWall)) { break; }
+                                    ignorableWall.OrderedToBeIgnored = order.Identifier == "ignorethis";
+                                    break;
+                            }
+                        }
+                        GameMain.GameSession?.CrewManager?.AddOrder(order, order.IsIgnoreOrder ? (float?)null : order.FadeOutTime);
                     }
-                    if (order != null)
+                    else if (orderTargetCharacter != null)
                     {
                         orderTargetCharacter.SetOrder(order, orderMsg.OrderOption, orderMsg.OrderPriority, orderMsg.Sender);
-                    }
-                }
-                else if (orderMsg.Order.IsIgnoreOrder)
-                {
-                    switch (orderTargetType)
-                    {
-                        case Order.OrderTargetType.Entity:
-                            if (orderTargetEntity is IIgnorable ignorableEntity)
-                            {
-                                ignorableEntity.OrderedToBeIgnored = orderMsg.Order.Identifier == "ignorethis";
-                            }
-                            break;
-                        case Order.OrderTargetType.WallSection:
-                            if (!wallSectionIndex.HasValue) { break; }
-                            if (orderTargetEntity is Structure s && s.GetSection(wallSectionIndex.Value) is IIgnorable ignorableWall)
-                            {
-                                ignorableWall.OrderedToBeIgnored = orderMsg.Order.Identifier == "ignorethis";
-                            }
-                            break;
                     }
                 }
                 GameMain.Server.SendOrderChatMessage(orderMsg);

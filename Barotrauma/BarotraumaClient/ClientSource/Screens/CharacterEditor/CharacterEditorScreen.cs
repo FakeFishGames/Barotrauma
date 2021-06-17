@@ -4731,7 +4731,7 @@ namespace Barotrauma.CharacterEditor
                             rotation: 0,
                             origin: orig,
                             sourceRectangle: wearable.InheritSourceRect ? limb.ActiveSprite.SourceRect : wearable.Sprite.SourceRect,
-                            scale: (wearable.InheritTextureScale ? 1 : 1 / RagdollParams.TextureScale) * spriteSheetZoom,
+                            scale: (wearable.InheritTextureScale ? 1 : wearable.Scale / RagdollParams.TextureScale) * spriteSheetZoom,
                             effects: SpriteEffects.None,
                             color: Color.White,
                             layerDepth: 0);

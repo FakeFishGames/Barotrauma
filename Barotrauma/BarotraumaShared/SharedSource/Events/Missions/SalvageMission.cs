@@ -43,8 +43,8 @@ namespace Barotrauma
             }
         }
 
-        public SalvageMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        public SalvageMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
         {
             containerTag = prefab.ConfigElement.GetAttributeString("containertag", "");
 
@@ -205,7 +205,7 @@ namespace Barotrauma
             }
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (item == null)
             {

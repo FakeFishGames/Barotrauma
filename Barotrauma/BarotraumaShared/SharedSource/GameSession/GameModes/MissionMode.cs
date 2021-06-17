@@ -21,7 +21,7 @@ namespace Barotrauma
             Location[] locations = { GameMain.GameSession.StartLocation, GameMain.GameSession.EndLocation };
             foreach (MissionPrefab missionPrefab in missionPrefabs)
             {
-                missions.Add(missionPrefab.Instantiate(locations));
+                missions.Add(missionPrefab.Instantiate(locations, Submarine.MainSub));
             }
         }
 

@@ -34,6 +34,11 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        public bool TemporarilyLocked
+        {
+            get { return Level.IsLoadedOutpost && item.GetComponent<DockingPort>() != null; }
+        }
+
         //connection panels can't be deactivated externally (by signals or status effects)
         public override bool IsActive
         {

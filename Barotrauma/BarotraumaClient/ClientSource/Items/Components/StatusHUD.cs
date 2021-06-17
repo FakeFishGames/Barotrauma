@@ -17,15 +17,6 @@ namespace Barotrauma.Items.Components
             TextManager.Get("CatastrophicBleeding")
         };
 
-        private static readonly string[] HealthTexts = 
-        {
-            TextManager.Get("NoInjuries"),
-            TextManager.Get("MinorInjuries"),
-            TextManager.Get("Injuries"),
-            TextManager.Get("MajorInjuries"),
-            TextManager.Get("CriticalInjuries")
-        };
-
         private static readonly string[] OxygenTexts = 
         {
             TextManager.Get("OxygenNormal"),
@@ -55,6 +46,8 @@ namespace Barotrauma.Items.Components
 
         private Character equipper;
 
+        private bool isEquippable;
+
         public IEnumerable<Character> VisibleCharacters
         {
             get 
@@ -64,14 +57,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void OnItemLoaded()
+        {
+            isEquippable = item.GetComponent<Pickable>() != null;
+            if (!isEquippable) { IsActive = true; }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             base.Update(deltaTime, cam);
 
-            if (equipper == null || equipper.Removed)
+            Entity refEntity = equipper;
+            if (isEquippable)
             {
-                IsActive = false;
-                return;
+                if (equipper == null || equipper.Removed)
+                {
+                    IsActive = false;
+                    return;
+                }
+            }
+            else
+            {
+                refEntity = item;
             }
             
             if (updateTimer > 0.0f)
@@ -85,11 +92,11 @@ namespace Barotrauma.Items.Components
             {
                 if (c == equipper || !c.Enabled || c.Removed) { continue; }
 
-                float dist = Vector2.DistanceSquared(equipper.WorldPosition, c.WorldPosition);
+                float dist = Vector2.DistanceSquared(refEntity.WorldPosition, c.WorldPosition);
                 if (dist < Range * Range)
                 {
-                    Vector2 diff = c.WorldPosition - equipper.WorldPosition;
-                    if (Submarine.CheckVisibility(equipper.SimPosition, equipper.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
+                    Vector2 diff = c.WorldPosition - refEntity.WorldPosition;
+                    if (Submarine.CheckVisibility(refEntity.SimPosition, refEntity.SimPosition + ConvertUnits.ToSimUnits(diff)) == null)
                     {
                         visibleCharacters.Add(c);
                     }
@@ -147,9 +154,13 @@ namespace Barotrauma.Items.Components
 
             List<string> texts = new List<string>();
             List<Color> textColors = new List<Color>();
-
             texts.Add(target.Info == null ? target.DisplayName : target.Info.DisplayName);
-            textColors.Add(GUI.Style.TextColor);            
+            Color nameColor = GUI.Style.TextColor;
+            if (Character.Controlled != null && target.TeamID != Character.Controlled.TeamID)
+            {
+                nameColor = target.TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+            }
+            textColors.Add(nameColor);
             
             if (target.IsDead)
             {

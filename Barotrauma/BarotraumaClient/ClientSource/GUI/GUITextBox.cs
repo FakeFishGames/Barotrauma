@@ -49,8 +49,11 @@ namespace Barotrauma
             get { return _caretIndex; }
             set
             {
-                _caretIndex = value;
-                caretPosDirty = true;
+                if (value >= 0)
+                {
+                    _caretIndex = value;
+                    caretPosDirty = true;
+                }
             }
         }
         private bool caretPosDirty;
@@ -454,7 +457,7 @@ namespace Barotrauma
             }
             if (!isSelecting)
             {
-                isSelecting = PlayerInput.KeyDown(Keys.LeftShift) || PlayerInput.KeyDown(Keys.RightShift);
+                isSelecting = PlayerInput.IsShiftDown();
             }
 
             if (mouseHeldInside && !PlayerInput.PrimaryMouseButtonHeld())
@@ -879,15 +882,22 @@ namespace Barotrauma
             selectionEndIndex = Math.Min(CaretIndex, textDrawn.Length);
             selectionEndPos = caretPos;
             selectedCharacters = Math.Abs(selectionStartIndex - selectionEndIndex);
-            if (IsLeftToRight)
+            try
             {
-                selectedText = Text.Substring(selectionStartIndex, selectedCharacters);
-                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, selectedCharacters)) * TextBlock.TextScale;
+                if (IsLeftToRight)
+                {
+                    selectedText = Text.Substring(selectionStartIndex, Math.Min(selectedCharacters, Text.Length));
+                    selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionStartIndex, Math.Min(selectedCharacters, textDrawn.Length))) * TextBlock.TextScale;
+                }
+                else
+                {
+                    selectedText = Text.Substring(selectionEndIndex, Math.Min(selectedCharacters, Text.Length));
+                    selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, Math.Min(selectedCharacters, textDrawn.Length))) * TextBlock.TextScale;
+                }
             }
-            else
+            catch (ArgumentOutOfRangeException exception)
             {
-                selectedText = Text.Substring(selectionEndIndex, Math.Min(selectedCharacters, textDrawn.Length - selectionEndIndex));
-                selectionRectSize = Font.MeasureString(textDrawn.Substring(selectionEndIndex, selectedCharacters)) * TextBlock.TextScale;
+                DebugConsole.ThrowError($"GUITextBox: Invalid selection: ({exception})");
             }
         }
     }

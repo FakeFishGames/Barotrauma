@@ -45,6 +45,10 @@ namespace Barotrauma
 
         private readonly GUITickBox radiationEnabledTickBox;
 
+        private readonly GUIButton[] maxMissionCountButtons;
+        private readonly GUITextBlock maxMissionCountText;
+        private readonly GUITextBlock maxMissionCountDescription;
+
         private readonly GUIButton[] traitorProbabilityButtons;
         private readonly GUITextBlock traitorProbabilityText;
 
@@ -929,7 +933,7 @@ namespace Barotrauma
                 }
             };
             QuitCampaignButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.3f), campaignContent.RectTransform),
-                TextManager.Get("pausemenusavequit"), textAlignment: Alignment.Center)
+                TextManager.Get("quitbutton"), textAlignment: Alignment.Center)
             {
                 OnClicked = (_, __) => 
                 {
@@ -969,6 +973,16 @@ namespace Barotrauma
                     UserData = missionType,
                 };
 
+                if (MissionPrefab.HiddenMissionClasses.Contains(missionType))
+                {
+                    missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform), string.Empty)
+                    {
+                        UserData = (int)missionType,
+                        Visible = false,
+                        CanBeFocused = false
+                    };
+                    continue;
+                }
                 missionTypeTickBoxes[index] = new GUITickBox(new RectTransform(Vector2.One, frame.RectTransform),
                     TextManager.Get("MissionType." + missionType.ToString()))
                 {
@@ -1148,6 +1162,31 @@ namespace Barotrauma
                 };
             }
 
+            var maxMissionCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), settingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
+            maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", fallBackTag: "missions"), wrap: true)
+            {
+                ToolTip = TextManager.Get("maxmissioncounttooltip")
+            };
+            var maxMissionCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), maxMissionCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
+            maxMissionCountButtons = new GUIButton[2];
+            maxMissionCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleLeft")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, maxMissionCount: -1);
+                    return true;
+                }
+            };
+            maxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), "0", textAlignment: Alignment.Center, style: "GUITextBox");
+            maxMissionCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 1.0f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleRight")
+            {
+                OnClicked = (button, obj) =>
+                {
+                    GameMain.Client.ServerSettings.ClientAdminWrite(ServerSettings.NetFlags.Misc, maxMissionCount: 1);
+                    return true;
+                }
+            };
+            maxMissionCountSettingHolder.Children.ForEach(c => c.ToolTip = maxMissionCountSettingHolder.ToolTip);
 
             List<GUIComponent> settingsElements = settingsContent.Children.ToList();
             for (int i = 0; i < settingsElements.Count; i++)
@@ -1301,6 +1340,13 @@ namespace Barotrauma
             {
                 radiationEnabledTickBox.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             }
+            maxMissionCountDescription.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            maxMissionCountText.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            foreach (var button in maxMissionCountButtons)
+            {
+                button.Enabled = CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
+            }
+
             traitorProbabilityButtons[0].Enabled = traitorProbabilityButtons[1].Enabled = traitorProbabilityText.Enabled = 
                 !CampaignFrame.Visible && !CampaignSetupFrame.Visible && GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
             botCountButtons[0].Enabled = botCountButtons[1].Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings);
@@ -1322,7 +1368,7 @@ namespace Barotrauma
             roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
             roundControlsHolder.Recalculate();
 
-            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted && SelectedMode != GameModePreset.MultiPlayerCampaign;
+            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
 
             RefreshGameModeContent();
         }
@@ -3214,7 +3260,12 @@ namespace Barotrauma
         {
             for (int i = 0; i < missionTypeTickBoxes.Length; i++)
             {
-                MissionType missionType = (MissionType)((int)missionTypeTickBoxes[i].UserData);
+                MissionType missionType = (MissionType)(int)missionTypeTickBoxes[i].UserData;
+                if (MissionPrefab.HiddenMissionClasses.Contains(missionType))
+                {
+                    missionTypeTickBoxes[i].Parent.Visible = false;
+                    continue;
+                }
                 if (SelectedMode == GameModePreset.Mission)
                 {
                     missionTypeTickBoxes[i].Parent.Visible = MissionPrefab.CoOpMissionClasses.ContainsKey(missionType);
@@ -3269,7 +3320,7 @@ namespace Barotrauma
                 CampaignFrame.Visible = CampaignSetupFrame.Visible = false;
             }
 
-            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted && SelectedMode != GameModePreset.MultiPlayerCampaign;
+            ReadyToStartBox.Parent.Visible = !GameMain.Client.GameStarted;
 
             StartButton.Visible = 
                 GameMain.Client.HasPermission(ClientPermissions.ManageRound) && 

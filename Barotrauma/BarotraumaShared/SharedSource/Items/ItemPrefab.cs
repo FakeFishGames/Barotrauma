@@ -3,6 +3,7 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -39,21 +40,24 @@ namespace Barotrauma
             public readonly List<ItemPrefab> ItemPrefabs;
             public int Amount;
             public readonly float MinCondition;
+            public readonly float MaxCondition;
             public readonly bool UseCondition;
 
-            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, bool useCondition)
+            public RequiredItem(ItemPrefab itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition)
             {
                 ItemPrefabs = new List<ItemPrefab>() { itemPrefab };
                 Amount = amount;
                 MinCondition = minCondition;
+                MaxCondition = maxCondition;
                 UseCondition = useCondition;
             }
 
-            public RequiredItem(IEnumerable<ItemPrefab> itemPrefabs, int amount, float minCondition, bool useCondition)
+            public RequiredItem(IEnumerable<ItemPrefab> itemPrefabs, int amount, float minCondition, float maxCondition, bool useCondition)
             {
                 ItemPrefabs = new List<ItemPrefab>(itemPrefabs);
                 Amount = amount;
                 MinCondition = minCondition;
+                MaxCondition = maxCondition;
                 UseCondition = useCondition;
             }
         }
@@ -71,7 +75,7 @@ namespace Barotrauma
         {
             TargetItem = itemPrefab;
             string displayName = element.GetAttributeString("displayname", "");
-            DisplayName = string.IsNullOrEmpty(displayName) ? itemPrefab.Name : TextManager.Get($"DisplayName.{displayName}");
+            DisplayName = string.IsNullOrEmpty(displayName) ? itemPrefab.Name : TextManager.GetWithVariable($"DisplayName.{displayName}", "[itemname]", itemPrefab.Name);
 
             SuitableFabricatorIdentifiers = element.GetAttributeStringArray("suitablefabricators", new string[0]);
 
@@ -107,6 +111,7 @@ namespace Barotrauma
                         }
 
                         float minCondition = subElement.GetAttributeFloat("mincondition", 1.0f);
+                        float maxCondition = subElement.GetAttributeFloat("maxcondition", 1.0f);
                         //Substract mincondition from required item's condition or delete it regardless?
                         bool useCondition = subElement.GetAttributeBool("usecondition", true);
                         int count = subElement.GetAttributeInt("count", 1);
@@ -119,10 +124,12 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            var existing = RequiredItems.Find(r => r.ItemPrefabs.Count == 1 && r.ItemPrefabs[0] == requiredItem && MathUtils.NearlyEqual(r.MinCondition, minCondition));
+                            var existing = RequiredItems.Find(r => 
+                                r.ItemPrefabs.Count == 1 && r.ItemPrefabs[0] == requiredItem && 
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) && MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(requiredItem, count, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
@@ -138,10 +145,13 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            var existing = RequiredItems.Find(r => r.ItemPrefabs.SequenceEqual(matchingItems) && MathUtils.NearlyEqual(r.MinCondition, minCondition));
+                            var existing = RequiredItems.Find(r => 
+                                r.ItemPrefabs.SequenceEqual(matchingItems) && 
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing == null)
                             {
-                                RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, useCondition));
+                                RequiredItems.Add(new RequiredItem(matchingItems, count, minCondition, maxCondition, useCondition));
                             }
                             else
                             {
@@ -188,6 +198,56 @@ namespace Barotrauma
                 //spawn probability defined but amount isn't, assume amount is 1
                 MinAmount = MaxAmount = 1;
                 SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
+            }
+        }
+    }
+
+    class SwappableItem
+    {
+        public int BasePrice { get; }
+
+        public readonly bool CanBeBought;
+
+        public readonly string ReplacementOnUninstall;
+
+        public string SpawnWithId;
+
+        public string SwapIdentifier;
+
+        public readonly Vector2 SwapOrigin;
+
+        public List<(string requiredTag, string swapTo)> ConnectedItemsToSwap = new List<(string requiredTag, string swapTo)>();
+
+        public readonly Sprite SchematicSprite;
+
+        public int GetPrice(Location location = null)
+        {
+            int price = BasePrice;
+            return location?.GetAdjustedMechanicalCost(price) ?? price;
+        }
+
+        public SwappableItem(XElement element)
+        {
+            BasePrice = Math.Max(element.GetAttributeInt("price", 0), 0);
+            SwapIdentifier = element.GetAttributeString("swapidentifier", string.Empty);
+            CanBeBought = element.GetAttributeBool("canbebought", BasePrice != 0);
+            ReplacementOnUninstall = element.GetAttributeString("replacementonuninstall", "");
+            SwapOrigin = element.GetAttributeVector2("origin", Vector2.One);
+            SpawnWithId = element.GetAttributeString("spawnwithid", string.Empty);
+
+            foreach (XElement subElement in element.Elements())
+            {
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "schematicsprite":
+                        SchematicSprite = new Sprite(subElement);
+                        break;
+                    case "swapconnecteditem":
+                        ConnectedItemsToSwap.Add(
+                            (subElement.GetAttributeString("tag", ""), 
+                            subElement.GetAttributeString("swapto", "")));
+                        break;
+                }
             }
         }
     }
@@ -298,6 +358,14 @@ namespace Barotrauma
         //if true and the item has trigger areas defined, players can only highlight the item when the cursor is on the trigger
         [Serialize(false, false)]
         public bool RequireCursorInsideTrigger
+        {
+            get;
+            private set;
+        }
+
+        //if true then players can only highlight the item if its targeted for interaction by a campaign event
+        [Serialize(false, false)]
+        public bool RequireCampaignInteract
         {
             get;
             private set;
@@ -448,7 +516,7 @@ namespace Barotrauma
         [Serialize(null, false)]
         public string EquipConfirmationText { get; set; }
 
-        [Serialize(true, false, description: "Can the item be rotated in the sprite editor.")]
+        [Serialize(true, false, description: "Can the item be rotated in the submarine editor.")]
         public bool AllowRotatingInEditor { get; set; }
 
         [Serialize(false, false)]
@@ -460,6 +528,12 @@ namespace Barotrauma
             get;
             private set;
         } = new List<PreferredContainer>();
+
+        public SwappableItem SwappableItem
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         /// How likely it is for the item to spawn in a level of a given type.
@@ -670,6 +744,9 @@ namespace Barotrauma
             //nameidentifier can be used to make multiple items use the same names and descriptions
             string nameIdentifier = element.GetAttributeString("nameidentifier", "");
 
+            //only used if the item doesn't have a name/description defined in the currently selected language
+            string fallbackNameIdentifier = element.GetAttributeString("fallbacknameidentifier", "");
+
             //works the same as nameIdentifier, but just replaces the description
             string descriptionIdentifier = element.GetAttributeString("descriptionidentifier", "");
 
@@ -677,11 +754,11 @@ namespace Barotrauma
             {
                 if (string.IsNullOrEmpty(nameIdentifier))
                 {
-                    name = TextManager.Get("EntityName." + identifier, true) ?? string.Empty;
+                    name = TextManager.Get("EntityName." + identifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
                 else
                 {
-                    name = TextManager.Get("EntityName." + nameIdentifier, true) ?? string.Empty;
+                    name = TextManager.Get("EntityName." + nameIdentifier, true, "EntityName." + fallbackNameIdentifier) ?? string.Empty;
                 }
             }
             else if (Category.HasFlag(MapEntityCategory.Legacy))
@@ -830,6 +907,17 @@ namespace Barotrauma
                         break;
                     }
 #if CLIENT
+                    case "upgradepreviewsprite":
+                        {
+                            string iconFolder = "";
+                            if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                            {
+                                iconFolder = Path.GetDirectoryName(filePath);
+                            }
+                            UpgradePreviewSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
+                            UpgradePreviewScale = subElement.GetAttributeFloat("scale", 1.0f);
+                        }
+                        break;
                     case "inventoryicon":
                         {
                             string iconFolder = "";
@@ -862,15 +950,15 @@ namespace Barotrauma
                         }
                         break;
                     case "damagedinfectedsprite":
-                    {
-                        string iconFolder = "";
-                        if (!subElement.GetAttributeString("texture", "").Contains("/"))
                         {
-                            iconFolder = Path.GetDirectoryName(filePath);
-                        }
+                            string iconFolder = "";
+                            if (!subElement.GetAttributeString("texture", "").Contains("/"))
+                            {
+                                iconFolder = Path.GetDirectoryName(filePath);
+                            }
 
-                        DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
-                    }
+                            DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
+                        }
                         break;
                     case "brokensprite":
                         string brokenSpriteFolder = "";
@@ -962,6 +1050,9 @@ namespace Barotrauma
                         {
                             PreferredContainers.Add(preferredContainer);
                         }
+                        break;
+                    case "swappableitem":
+                        SwappableItem = new SwappableItem(subElement);
                         break;
                     case "trigger":
                         Rectangle trigger = new Rectangle(0, 0, 10, 10)
@@ -1142,6 +1233,54 @@ namespace Barotrauma
             {
                 return DefaultPrice?.Price;
             }
+        }
+
+        public ImmutableDictionary<string, PriceInfo> GetBuyPricesUnder(int maxCost = 0)
+        {
+            Dictionary<string, PriceInfo> priceLocations = new Dictionary<string, PriceInfo>();
+            foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+            {
+                PriceInfo priceInfo = locationPrice.Value;
+
+                if (priceInfo == null)
+                {
+                    continue;
+                }
+                if (!priceInfo.CanBeBought)
+                {
+                    continue;
+                }
+                if (priceInfo.Price < maxCost || maxCost == 0)
+                {
+                    priceLocations.Add(locationPrice.Key, priceInfo);
+                }
+            }
+            return priceLocations.ToImmutableDictionary();
+        }
+
+        public ImmutableDictionary<string, PriceInfo> GetSellPricesOver(int minCost = 0, bool sellingImportant = true)
+        {
+            Dictionary<string, PriceInfo> priceLocations = new Dictionary<string, PriceInfo>();
+
+            if (!CanBeSold && sellingImportant)
+            {
+                return priceLocations.ToImmutableDictionary();
+            }
+
+            foreach (KeyValuePair<string, PriceInfo> locationPrice in locationPrices)
+            {
+                PriceInfo priceInfo = locationPrice.Value;
+
+                if (priceInfo == null)
+                {
+                    continue;
+                }
+                if (priceInfo.Price > minCost)
+                {
+                    priceLocations.Add(locationPrice.Key, priceInfo);
+                }
+            }
+            return priceLocations.ToImmutableDictionary();
         }
 
         public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary)

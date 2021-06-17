@@ -35,7 +35,7 @@ namespace Barotrauma
             Cave = 0x4,
             Ruin = 0x8,
             Wreck = 0x10,
-            BeaconStation = 0x20,
+            BeaconStation = 0x20, // Not used anywhere
             Abyss = 0x40,
             AbyssCave = 0x80
         }
@@ -325,9 +325,11 @@ namespace Barotrauma
             get { return LevelData.Seed; }
         }
 
+
+        public static float? ForcedDifficulty;
         public float Difficulty
         {
-            get { return LevelData.Difficulty; }
+            get { return ForcedDifficulty ?? LevelData.Difficulty; }
         }
 
         public LevelData.LevelType Type
@@ -387,7 +389,7 @@ namespace Barotrauma
 
         private void Generate(bool mirror)
         {
-            if (Loaded != null) { Loaded.Remove(); }
+            Loaded?.Remove();
             Loaded = this;
             Generating = true;
 
@@ -1152,7 +1154,7 @@ namespace Barotrauma
             }
 
             CreateWrecks();
-            CreateBeaconStation(cells);
+            CreateBeaconStation();
 
             EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.Server));
 
@@ -1892,25 +1894,44 @@ namespace Barotrauma
         private void CalculateTunnelDistanceField(int density)
         {
             distanceField = new List<(Point point, double distance)>();
-            for (int x = 0; x < Size.X; x += density)
+
+            if (Mirrored)
             {
-                for (int y = 0; y < Size.Y; y += density)
+                for (int x = Size.X - 1; x >= 0; x -= density)
                 {
-                    Point point = new Point(x, y);
-                    double shortestDistSqr = double.PositiveInfinity;
-                    foreach (Tunnel tunnel in Tunnels)
+                    for (int y = 0; y < Size.Y; y += density)
                     {
-                        for (int i = 1; i < tunnel.Nodes.Count; i++)
-                        {
-                            shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.LineSegmentToPointDistanceSquared(tunnel.Nodes[i - 1], tunnel.Nodes[i], point));
-                        }
+                        addPoint(x, y);
                     }
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startPosition.X, (double)startPosition.Y));
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startExitPosition.X, (double)borders.Bottom));
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endPosition.X, (double)endPosition.Y));
-                    shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endExitPosition.X, (double)borders.Bottom));
-                    distanceField.Add((point, Math.Sqrt(shortestDistSqr)));
                 }
+            }
+            else
+            {
+                for (int x = 0; x < Size.X; x += density)
+                {
+                    for (int y = 0; y < Size.Y; y += density)
+                    {
+                        addPoint(x, y);
+                    }
+                }
+            }
+
+            void addPoint(int x, int y)
+            {
+                Point point = new Point(x, y);
+                double shortestDistSqr = double.PositiveInfinity;
+                foreach (Tunnel tunnel in Tunnels)
+                {
+                    for (int i = 1; i < tunnel.Nodes.Count; i++)
+                    {
+                        shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.LineSegmentToPointDistanceSquared(tunnel.Nodes[i - 1], tunnel.Nodes[i], point));
+                    }
+                }
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startPosition.X, (double)startPosition.Y));
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)startExitPosition.X, (double)borders.Bottom));
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endPosition.X, (double)endPosition.Y));
+                shortestDistSqr = Math.Min(shortestDistSqr, MathUtils.DistanceSquared((double)point.X, (double)point.Y, (double)endExitPosition.X, (double)borders.Bottom));
+                distanceField.Add((point, Math.Sqrt(shortestDistSqr)));
             }
         }
 
@@ -2710,14 +2731,21 @@ namespace Barotrauma
             return position;
         }
 
-        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Vector2 position, Func<InterestingPosition, bool> filter = null)
+        public bool TryGetInterestingPositionAwayFromPoint(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Vector2 position, Vector2 awayPoint, float minDistFromPoint, Func<InterestingPosition, bool> filter = null)
         {
-            bool success = TryGetInterestingPosition(useSyncedRand, positionType, minDistFromSubs, out Point pos, filter);
+            bool success = TryGetInterestingPosition(useSyncedRand, positionType, minDistFromSubs, out Point pos, awayPoint, minDistFromPoint, filter);
             position = pos.ToVector2();
             return success;
         }
 
-        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Point position, Func<InterestingPosition, bool> filter = null)
+        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Vector2 position, Func<InterestingPosition, bool> filter = null)
+        {
+            bool success = TryGetInterestingPosition(useSyncedRand, positionType, minDistFromSubs, out Point pos, Vector2.Zero, minDistFromPoint: 0, filter);
+            position = pos.ToVector2();
+            return success;
+        }
+
+        public bool TryGetInterestingPosition(bool useSyncedRand, PositionType positionType, float minDistFromSubs, out Point position, Vector2 awayPoint, float minDistFromPoint = 0f, Func<InterestingPosition, bool> filter = null)
         {
             if (!PositionsOfInterest.Any())
             {
@@ -2755,6 +2783,11 @@ namespace Barotrauma
                     farEnoughPositions.RemoveAll(p => Vector2.DistanceSquared(p.Position.ToVector2(), sub.WorldPosition) < minDistFromSubs * minDistFromSubs);
                 }
             }
+            if (minDistFromPoint > 0.0f)
+            {
+                farEnoughPositions.RemoveAll(p => Vector2.DistanceSquared(p.Position.ToVector2(), awayPoint) < minDistFromPoint * minDistFromPoint);
+            }
+
             if (!farEnoughPositions.Any())
             {
                 string errorMsg = "Could not find a position of interest far enough from the submarines. (PositionType: " + positionType + ", minDistFromSubs: " + minDistFromSubs + ")\n" + Environment.StackTrace.CleanupStackTrace();
@@ -2826,7 +2859,7 @@ namespace Barotrauma
             if (index < 0 || index >= bottomPositions.Count - 1) { return new Vector2(xPosition, BottomPos); }
 
             float t = (xPosition - bottomPositions[index].X) / (bottomPositions[index + 1].X - bottomPositions[index].X);
-            Debug.Assert(t < 1.0f);
+            Debug.Assert(t <= 1.0f);
             t = MathHelper.Clamp(t, 0.0f, 1.0f);
 
             float yPos = MathHelper.Lerp(bottomPositions[index].Y, bottomPositions[index + 1].Y, t);
@@ -2993,20 +3026,30 @@ namespace Barotrauma
             return originalTag + "_" + shortSeed;
         }
 
+        public bool IsCloseToStart(Vector2 position, float minDist) => IsCloseToStart(position.ToPoint(), minDist);
+        public bool IsCloseToEnd(Vector2 position, float minDist) => IsCloseToEnd(position.ToPoint(), minDist);
+
+        public bool IsCloseToStart(Point position, float minDist)
+        {
+            return MathUtils.LineSegmentToPointDistanceSquared(StartPosition.ToPoint(), StartExitPosition.ToPoint(), position) < minDist * minDist;
+        }
+
+        public bool IsCloseToEnd(Point position, float minDist)
+        {
+            return MathUtils.LineSegmentToPointDistanceSquared(EndPosition.ToPoint(), EndExitPosition.ToPoint(), position) < minDist * minDist;
+        }
+
         private Submarine SpawnSubOnPath(string subName, ContentFile contentFile, SubmarineType type)
         {
             var tempSW = new Stopwatch();
 
             // Min distance between a sub and the start/end/other sub.
             float minDistance = Sonar.DefaultSonarRange;
-            float squaredMinDistance = minDistance * minDistance;
-            Vector2 start = startPosition.ToVector2();
-            Vector2 end = endPosition.ToVector2();
             var waypoints = WayPoint.WayPointList.Where(wp =>
                 wp.Submarine == null &&
                 wp.SpawnType == SpawnType.Path &&
-                Vector2.DistanceSquared(wp.WorldPosition, start) > squaredMinDistance &&
-                Vector2.DistanceSquared(wp.WorldPosition, end) > squaredMinDistance).ToList();
+                !IsCloseToStart(wp.WorldPosition, minDistance) && 
+                !IsCloseToEnd(wp.WorldPosition, minDistance)).ToList();
 
             var subDoc = SubmarineInfo.OpenFile(contentFile.Path);
             Rectangle subBorders = Submarine.GetBorders(subDoc.Root);
@@ -3094,12 +3137,11 @@ namespace Barotrauma
                 sub.SetPosition(spawnPoint);
                 wreckPositions.Add(sub, positions);
                 blockedRects.Add(sub, rects);
-
                 return sub;
             }
             else
             {
-                DebugConsole.NewMessage($"Failed to position wreck {subName}. Used {tempSW.ElapsedMilliseconds.ToString()} (ms).", Color.Red);
+                DebugConsole.NewMessage($"Failed to position wreck {subName}. Used {tempSW.ElapsedMilliseconds} (ms).", Color.Red);
                 return null;
             }
 
@@ -3150,7 +3192,7 @@ namespace Barotrauma
                 else
                 {
                     var sp = spawnPoint;
-                    if (Wrecks.Any(w => Vector2.DistanceSquared(w.WorldPosition, sp) < squaredMinDistance))
+                    if (Wrecks.Any(w => Vector2.DistanceSquared(w.WorldPosition, sp) < minDistance * minDistance))
                     {
                         Debug.WriteLine($"Invalid position {spawnPoint}. Too close to other wreck(s).");
                         return false;
@@ -3306,18 +3348,25 @@ namespace Barotrauma
             }
             wreckFiles.Shuffle(Rand.RandSync.Server);
 
-            int wreckCount = Math.Min(Loaded.GenerationParams.WreckCount, wreckFiles.Count);
+            int minWreckCount = Math.Min(Loaded.GenerationParams.MinWreckCount, wreckFiles.Count);
+            int maxWreckCount = Math.Min(Loaded.GenerationParams.MaxWreckCount, wreckFiles.Count);
+            int wreckCount = Rand.Range(minWreckCount, maxWreckCount + 1, Rand.RandSync.Server);
+
+            if (GameMain.GameSession?.GameMode?.Missions.Any(m => m.Prefab.RequireWreck) ?? false)
+            {
+                wreckCount = Math.Max(wreckCount, 1);
+            }
+
             Wrecks = new List<Submarine>(wreckCount);
             for (int i = 0; i < wreckCount; i++)
             {
                 ContentFile contentFile = wreckFiles[i];
                 if (contentFile == null) { continue; }
                 string wreckName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path);
-                // For storing the translations. Used only for debugging.
                 SpawnSubOnPath(wreckName, contentFile, SubmarineType.Wreck);
             }
             totalSW.Stop();
-            Debug.WriteLine($"{Wrecks.Count} wrecks created in { totalSW.ElapsedMilliseconds.ToString()} (ms)");
+            Debug.WriteLine($"{Wrecks.Count} wrecks created in { totalSW.ElapsedMilliseconds} (ms)");
         }
 
         private bool HasStartOutpost()
@@ -3365,11 +3414,8 @@ namespace Barotrauma
 
             for (int i = 0; i < 2; i++)
             {
-                if (Submarine.MainSubs.Length > 1 && Submarine.MainSubs[0] != null && Submarine.MainSubs[1] != null)
-                {
-                    continue;
-                }
-
+                if (GameMain.GameSession?.GameMode is PvPMode) { continue; }
+                
                 bool isStart = (i == 0) == !Mirrored;
                 if (isStart)
                 {
@@ -3527,7 +3573,7 @@ namespace Barotrauma
                 {
                     spawnPos.Y = Math.Min(Size.Y - outpost.Borders.Height * 0.6f, spawnPos.Y + outpost.Borders.Height / 2);
                 }
-                outpost.SetPosition(spawnPos);
+                outpost.SetPosition(spawnPos, forceUndockFromStaticSubmarines: false);
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;
@@ -3550,7 +3596,7 @@ namespace Barotrauma
             }
         }
 
-        private void CreateBeaconStation(List<VoronoiCell> mainPath)
+        private void CreateBeaconStation()
         {
             if (!LevelData.HasBeaconStation) { return; }
             var beaconStationFiles = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.BeaconStation).ToList();

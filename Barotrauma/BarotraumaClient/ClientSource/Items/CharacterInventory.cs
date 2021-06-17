@@ -297,10 +297,10 @@ namespace Barotrauma
             SlotSize = !isFourByThree ? (SlotSpriteSmall.size * UIScale).ToPoint() : (SlotSpriteSmall.size * UIScale * .925f).ToPoint();
             int bottomOffset = SlotSize.Y + Spacing * 2 + ContainedIndicatorHeight;
 
+            hideButton.Visible = false;
+
             if (visualSlots == null) { CreateSlots(); }
             if (visualSlots.None()) { return; }
-
-            hideButton.Visible = false;
 
             switch (layout)
             {
@@ -537,9 +537,12 @@ namespace Barotrauma
             }
             
             List<SlotReference> hideSubInventories = new List<SlotReference>();
+            //remove highlighted subinventory slots that can no longer be accessed
             highlightedSubInventorySlots.RemoveWhere(s => 
                 s.ParentInventory == this &&
                 ((s.SlotIndex < 0 || s.SlotIndex >= slots.Length || slots[s.SlotIndex] == null) || (Character.Controlled != null && !Character.Controlled.CanAccessInventory(s.Inventory))));
+            //remove highlighted subinventory slots that refer to items no longer in this inventory
+            highlightedSubInventorySlots.RemoveWhere(s => s.Item != null && s.ParentInventory == this && s.Item.ParentInventory != this);
             foreach (var highlightedSubInventorySlot in highlightedSubInventorySlots)
             {
                 if (highlightedSubInventorySlot.ParentInventory == this)
@@ -910,7 +913,7 @@ namespace Barotrauma
                 else if (allowEquip) //doubleclicked and no other inventory is selected
                 {
                     //not equipped -> attempt to equip
-                    if (!character.HasEquippedItem(item))
+                    if (!character.HasEquippedItem(item) || item.GetComponents<Pickable>().Count() > 1)
                     {
                         return QuickUseAction.Equip;
                     }
@@ -1100,6 +1103,7 @@ namespace Barotrauma
         public void DrawOwn(SpriteBatch spriteBatch)
         {
             if (!AccessibleWhenAlive && !character.IsDead) { return; }
+            if (capacity == 0) { return; }
             if (visualSlots == null) { CreateSlots(); }
             if (GameMain.GraphicsWidth != screenResolution.X ||
                 GameMain.GraphicsHeight != screenResolution.Y ||

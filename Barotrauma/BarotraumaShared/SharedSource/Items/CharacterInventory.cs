@@ -114,6 +114,17 @@ namespace Barotrauma
 
         public bool IsInLimbSlot(Item item, InvSlotType limbSlot)
         {
+            if (limbSlot == (InvSlotType.LeftHand | InvSlotType.RightHand))
+            {
+                int rightHandSlot = FindLimbSlot(InvSlotType.RightHand);
+                int leftHandSlot = FindLimbSlot(InvSlotType.LeftHand);
+                if (rightHandSlot > -1 && slots[rightHandSlot].Contains(item) &&
+                    leftHandSlot > -1 && slots[leftHandSlot].Contains(item))
+                {
+                    return true;
+                }
+            }
+
             for (int i = 0; i < slots.Length; i++)
             {
                 if (SlotTypes[i] == limbSlot && slots[i].Contains(item)) { return true; }
@@ -205,13 +216,41 @@ namespace Barotrauma
 
             if (allowedSlots != null && !allowedSlots.Contains(InvSlotType.Any))
             {
-                int slot = FindLimbSlot(allowedSlots.First());
-                if (slot > -1 && slots[slot].Items.Any(it => it != item) && slots[slot].First().AllowDroppingOnSwapWith(item))
+                bool allSlotsTaken = true;
+                foreach (var allowedSlot in allowedSlots)
                 {
-                    foreach (Item existingItem in slots[slot].Items.ToList())
+                    if (allowedSlot == (InvSlotType.RightHand | InvSlotType.LeftHand))
                     {
-                        existingItem.Drop(user);
-                        if (existingItem.ParentInventory != null) { existingItem.ParentInventory.RemoveItem(existingItem); }
+                        int rightHandSlot = FindLimbSlot(InvSlotType.RightHand);
+                        int leftHandSlot = FindLimbSlot(InvSlotType.LeftHand);
+                        if (rightHandSlot > -1 && slots[rightHandSlot].CanBePut(item) &&
+                            leftHandSlot > -1 && slots[leftHandSlot].CanBePut(item))
+                        {
+                            allSlotsTaken = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        int slot = FindLimbSlot(allowedSlot);
+                        if (slot > -1 && slots[slot].CanBePut(item))
+                        {
+                            allSlotsTaken = false;
+                            break;
+                        }
+                    }
+
+                }
+                if (allSlotsTaken)
+                {
+                    int slot = FindLimbSlot(allowedSlots.First());
+                    if (slot > -1 && slots[slot].Items.Any(it => it != item) && slots[slot].First().AllowDroppingOnSwapWith(item))
+                    {
+                        foreach (Item existingItem in slots[slot].Items.ToList())
+                        {
+                            existingItem.Drop(user);
+                            if (existingItem.ParentInventory != null) { existingItem.ParentInventory.RemoveItem(existingItem); }
+                        }
                     }
                 }
             }
@@ -304,7 +343,7 @@ namespace Barotrauma
 
                 for (int i = 0; i < capacity; i++)
                 {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && slots[i].Empty())
+                    if (allowedSlot.HasFlag(SlotTypes[i]) && item.GetComponents<Pickable>().Any(p => p.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i]))) && slots[i].Empty())
                     {
 #if CLIENT
                         if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
@@ -390,7 +429,7 @@ namespace Barotrauma
 
             if (SlotTypes[index] == InvSlotType.Any)
             {
-                if (!item.AllowedSlots.Contains(InvSlotType.Any)) { return false; }
+                if (!item.GetComponents<Pickable>().Any(p => p.AllowedSlots.Contains(InvSlotType.Any))) { return false; }
                 if (slots[index].Any()) { return slots[index].Contains(item); }
                 PutItem(item, index, user, true, createNetworkEvent);
                 return true;
@@ -399,20 +438,23 @@ namespace Barotrauma
             InvSlotType placeToSlots = InvSlotType.None;
 
             bool slotsFree = true;
-            foreach (InvSlotType allowedSlot in item.AllowedSlots)
+            foreach (Pickable pickable in item.GetComponents<Pickable>())
             {
-                if (!allowedSlot.HasFlag(SlotTypes[index])) { continue; }
-#if CLIENT
-                if (PersonalSlots.HasFlag(allowedSlot)) { hidePersonalSlots = false; }
-#endif
-                for (int i = 0; i < capacity; i++)
+                foreach (InvSlotType allowedSlot in pickable.AllowedSlots)
                 {
-                    if (allowedSlot.HasFlag(SlotTypes[i]) && slots[i].Any() && !slots[i].Contains(item))
+                    if (!allowedSlot.HasFlag(SlotTypes[index])) { continue; }
+    #if CLIENT
+                    if (PersonalSlots.HasFlag(allowedSlot)) { hidePersonalSlots = false; }
+    #endif
+                    for (int i = 0; i < capacity; i++)
                     {
-                        slotsFree = false;
-                        break;
+                        if (allowedSlot.HasFlag(SlotTypes[i]) && slots[i].Any() && !slots[i].Contains(item))
+                        {
+                            slotsFree = false;
+                            break;
+                        }
+                        placeToSlots = allowedSlot;
                     }
-                    placeToSlots = allowedSlot;
                 }
             }
 

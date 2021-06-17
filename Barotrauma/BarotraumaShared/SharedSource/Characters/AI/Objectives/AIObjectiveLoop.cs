@@ -40,7 +40,7 @@ namespace Barotrauma
             : base(character, objectiveManager, priorityModifier, option) { }
 
         protected override void Act(float deltaTime) { }
-        protected override bool Check() => false;
+        protected override bool CheckObjectiveSpecific() => false;
         public override bool CanBeCompleted => true;
         public override bool AbandonWhenCannotCompleteSubjectives => false;
         public override bool AllowSubObjectiveSorting => true;
@@ -106,7 +106,7 @@ namespace Barotrauma
             UpdateTargets();
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (!IsAllowed)
             {

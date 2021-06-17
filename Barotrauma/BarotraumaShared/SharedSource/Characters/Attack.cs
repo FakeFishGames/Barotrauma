@@ -51,7 +51,7 @@ namespace Barotrauma
         public readonly Limb HitLimb;
 
         public readonly List<DamageModifier> AppliedDamageModifiers;
-        
+
         public AttackResult(List<Affliction> afflictions, Limb hitLimb, List<DamageModifier> appliedDamageModifiers = null)
         {
             HitLimb = hitLimb;
@@ -136,6 +136,9 @@ namespace Barotrauma
             get =>_itemDamage * DamageMultiplier;
             set => _itemDamage = value;
         }
+
+        [Serialize(0.0f, true, description: "Percentage of damage mitigation ignored when hitting armored body parts (deflecting limbs)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1f)]
+        public float Penetration { get; private set; }
 
         /// <summary>
         /// Currently only used with variants. Used for multiplying all the damage.
@@ -304,7 +307,7 @@ namespace Barotrauma
             return totalDamage * DamageMultiplier;
         }
 
-        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f)
+        public Attack(float damage, float bleedingDamage, float burnDamage, float structureDamage, float itemDamage, float range = 0.0f, float penetration = 0f)
         {
             if (damage > 0.0f) Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(damage), null);
             if (bleedingDamage > 0.0f) Afflictions.Add(AfflictionPrefab.Bleeding.Instantiate(bleedingDamage), null);
@@ -314,6 +317,7 @@ namespace Barotrauma
             DamageRange = range;
             StructureDamage = LevelWallDamage = structureDamage;
             ItemDamage = itemDamage;
+            Penetration = Penetration;
         }
 
         public Attack(XElement element, string parentDebugName)
@@ -391,14 +395,12 @@ namespace Barotrauma
                 Affliction affliction;
                 string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
                 afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, System.StringComparison.OrdinalIgnoreCase));
-                if (afflictionPrefab != null)
+                if (afflictionPrefab == null)
                 {
-                    affliction = afflictionPrefab.Instantiate(0.0f);
+                    DebugConsole.ThrowError($"Couldn't find the affliction with the identifier {afflictionIdentifier} referenced in {element.Document.ParseContentPathFromUri()}");
+                    continue;
                 }
-                else
-                {
-                    affliction = new Affliction(null, 0);
-                }
+                affliction = afflictionPrefab.Instantiate(0.0f);
                 affliction.Deserialize(subElement);
                 //backwards compatibility
                 if (subElement.Attribute("amount") != null && subElement.Attribute("strength") == null)
@@ -478,8 +480,8 @@ namespace Barotrauma
                     if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                         effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
-                        var targets = new List<ISerializableEntity>();
-                        effect.GetNearbyTargets(worldPosition, targets);
+                        targets.Clear();
+                        targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));
                         effect.Apply(effectType, deltaTime, targetEntity, targets);
                     }
                     if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
@@ -492,6 +494,7 @@ namespace Barotrauma
             return attackResult;
         }
 
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
         public AttackResult DoDamageToLimb(Character attacker, Limb targetLimb, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null)
         {
             if (targetLimb == null)
@@ -511,7 +514,7 @@ namespace Barotrauma
 
             DamageParticles(deltaTime, worldPosition);
 
-            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb);
+            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration: Penetration);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)
@@ -536,8 +539,8 @@ namespace Barotrauma
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
-                    var targets = new List<ISerializableEntity>();
-                    effect.GetNearbyTargets(worldPosition, targets);
+                    targets.Clear();
+                    targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));                
                     effect.Apply(effectType, deltaTime, targetLimb.character, targets);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))

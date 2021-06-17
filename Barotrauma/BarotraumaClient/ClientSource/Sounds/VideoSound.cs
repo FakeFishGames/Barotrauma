@@ -114,10 +114,7 @@ namespace Barotrauma.Sounds
         {
             lock (mutex)
             {
-                if (soundChannel != null)
-                {
-                    soundChannel.Dispose();
-                }
+                soundChannel?.Dispose();
                 base.Dispose();
             }
         }

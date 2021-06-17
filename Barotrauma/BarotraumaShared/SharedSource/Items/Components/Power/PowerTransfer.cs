@@ -359,7 +359,7 @@ namespace Barotrauma.Items.Components
                     {
                         //other junction boxes don't need to receive the signal in the pass-through signal connections
                         //because we relay it straight to the connected items without going through the whole chain of junction boxes
-                        if (ic is PowerTransfer && !(ic is RelayComponent) && connection.Name.Contains("signal")) { continue; }
+                        if (ic is PowerTransfer && !(ic is RelayComponent)) { continue; }
                         ic.ReceiveSignal(signal, recipient);
                     }
 

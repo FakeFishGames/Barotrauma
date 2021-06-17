@@ -39,10 +39,7 @@ namespace Barotrauma
 
         partial void DamageParticles(float deltaTime, Vector2 worldPosition)
         {
-            if (particleEmitter != null)
-            {
-                particleEmitter.Emit(deltaTime, worldPosition);
-            }
+            particleEmitter?.Emit(deltaTime, worldPosition);
 
             if (sound != null)
             {

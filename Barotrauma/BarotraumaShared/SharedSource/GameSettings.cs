@@ -616,7 +616,8 @@ namespace Barotrauma
                                f.Type == ContentType.Outpost ||
                                f.Type == ContentType.OutpostModule ||
                                f.Type == ContentType.Wreck ||
-                               f.Type == ContentType.BeaconStation)) { SubmarineInfo.RefreshSavedSubs(); }
+                               f.Type == ContentType.BeaconStation ||
+                               f.Type == ContentType.EnemySubmarine)) { SubmarineInfo.RefreshSavedSubs(); }
             if (files.Any(f => f.Type == ContentType.NPCSets)) { NPCSet.LoadSets(); }
             if (files.Any(f => f.Type == ContentType.OutpostConfig)) { OutpostGenerationParams.LoadPresets(); }
             if (files.Any(f => f.Type == ContentType.Factions)) { FactionPrefab.LoadFactions(); }

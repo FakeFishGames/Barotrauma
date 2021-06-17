@@ -635,6 +635,13 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(false, true)]
+        public bool AllowLinkingWifiToChat
+        {
+            get;
+            set;
+        }
+
         [Serialize(true, true)]
         public bool AllowFriendlyFire
         {
@@ -885,6 +892,8 @@ namespace Barotrauma.Networking
             get;
             set;
         }
+        // we do not serialize this value because it relies on a default setting
+        public int MaxMissionCount { get; set; } = CampaignSettings.DefaultMaxMissionCount;
 
         public void SetPassword(string password)
         {

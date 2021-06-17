@@ -531,7 +531,7 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (!mechanic.HasEquippedItem("divingsuit"));
+            } while (!mechanic.HasEquippedItem("divingsuit", slotType: InvSlotType.OuterClothes));
             SetHighlight(mechanic_divingSuitContainer.Item, false);
             RemoveCompletedObjective(segments[8]);
             SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, true);

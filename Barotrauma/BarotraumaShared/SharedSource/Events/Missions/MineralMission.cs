@@ -26,7 +26,7 @@ namespace Barotrauma
             }
         }
 
-        public MineralMission(MissionPrefab prefab, Location[] locations) : base(prefab, locations)
+        public MineralMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
             var configElement = prefab.ConfigElement.Element("Items");
             foreach (var c in configElement.GetChildElements("Item"))
@@ -115,7 +115,7 @@ namespace Barotrauma
             FindRelevantLevelResources();
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (IsClient) { return; }
             switch (State)

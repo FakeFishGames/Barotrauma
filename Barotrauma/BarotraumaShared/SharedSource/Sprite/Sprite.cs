@@ -28,7 +28,7 @@ namespace Barotrauma
                             return spr;
                         }
                         return null;
-                    }).Where(s => s!=null).ToList();
+                    }).Where(s => s != null).ToList();
                 }
                 return retVal;
             }

@@ -59,5 +59,25 @@ namespace Barotrauma
                 newTask.PerformWait();
             }
         }
+
+        public static void AddOnMainThread<T>(this List<T> list, T element)
+        {
+            RequestExecutionOnMainThread(() => { list.Add(element); });
+        }
+
+        public static void AddRangeOnMainThread<T>(this List<T> list, IEnumerable<T> elements)
+        {
+            RequestExecutionOnMainThread(() => { list.AddRange(elements); });
+        }
+
+        public static void RemoveOnMainThread<T>(this List<T> list, T element)
+        {
+            RequestExecutionOnMainThread(() => { list.Remove(element); });
+        }
+
+        public static void ClearOnMainThread<T>(this List<T> list)
+        {
+            RequestExecutionOnMainThread(() => { list.Clear(); });
+        }
     }
 }

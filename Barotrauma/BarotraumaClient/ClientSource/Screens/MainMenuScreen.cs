@@ -469,18 +469,17 @@ namespace Barotrauma
 
             this.game = game;
 
-            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null);
-            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, menuTabs[(int)Tab.Credits].RectTransform, Anchor.Center), style: "GUIBackgroundBlocker");
+            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
+            {
+                CanBeFocused = false
+            };
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, menuTabs[(int)Tab.Credits].RectTransform, Anchor.Center), style: "GUIBackgroundBlocker")
+            {
+                CanBeFocused = false
+            };
 
             var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
-
-            new GUIButton(new RectTransform(new Vector2(0.1f, 0.05f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.BottomLeft) { RelativeOffset = new Vector2(0.25f, 0.02f) },
-                TextManager.Get("Back"), style: "GUIButtonLarge")
-            {
-                OnClicked = SelectTab
-            };
-
         }
 #endregion
 
@@ -867,9 +866,7 @@ namespace Barotrauma
         {
             int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
             currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers + (int)button.UserData, 1, NetConfig.MaxPlayers);
-
             maxPlayersBox.Text = currMaxPlayers.ToString();
-
             return true;
         }
 
@@ -1167,15 +1164,18 @@ namespace Barotrauma
                 StartNewGame = StartGame
             };
 
-            var startButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.BottomRight);
+            var startButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), innerNewGame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.BottomRight)
+            {
+                RelativeSpacing = 0.05f
+            };
             campaignSetupUI.StartButton.RectTransform.Parent = startButtonContainer.RectTransform;
             campaignSetupUI.StartButton.RectTransform.MinSize = new Point(
                 (int)(campaignSetupUI.StartButton.TextBlock.TextSize.X * 1.5f),
                 campaignSetupUI.StartButton.RectTransform.MinSize.Y);
             startButtonContainer.RectTransform.MinSize = new Point(0, campaignSetupUI.StartButton.RectTransform.MinSize.Y);
-            if (campaignSetupUI.EnableRadiationToggle != null)
+            if (campaignSetupUI.CampaignCustomizeButton != null)
             {
-                campaignSetupUI.EnableRadiationToggle.RectTransform.Parent = startButtonContainer.RectTransform;
+                campaignSetupUI.CampaignCustomizeButton.RectTransform.Parent = startButtonContainer.RectTransform;
             }
             campaignSetupUI.InitialMoneyText.RectTransform.Parent = startButtonContainer.RectTransform;
         }
@@ -1322,8 +1322,18 @@ namespace Barotrauma
             };
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
-                Text = maxPlayers.ToString(),
-                CanBeFocused = false
+                Text = maxPlayers.ToString()                
+            };
+            maxPlayersBox.OnEnterPressed += (GUITextBox sender, string text) =>
+            {
+                maxPlayersBox.Deselect();
+                return true;
+            };
+            maxPlayersBox.OnDeselected += (GUITextBox sender, Microsoft.Xna.Framework.Input.Keys key) =>
+            {
+                int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
+                currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers, 1, NetConfig.MaxPlayers);
+                maxPlayersBox.Text = currMaxPlayers.ToString();
             };
             new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
             {

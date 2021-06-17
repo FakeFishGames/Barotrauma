@@ -207,7 +207,8 @@ namespace Barotrauma
                     SpawnedInOutpost = validContainer.Key.Item.SpawnedInOutpost,
                     AllowStealing = validContainer.Key.Item.AllowStealing,
                     OriginalModuleIndex = validContainer.Key.Item.OriginalModuleIndex,
-                    OriginalContainerID = validContainer.Key.Item.ID
+                    OriginalContainerIndex = 
+                        Item.ItemList.Where(it => it.Submarine == validContainer.Key.Item.Submarine && it.OriginalModuleIndex == validContainer.Key.Item.OriginalModuleIndex).ToList().IndexOf(validContainer.Key.Item)
                 };
                 foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
                 {

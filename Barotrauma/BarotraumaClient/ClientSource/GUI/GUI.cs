@@ -208,6 +208,19 @@ namespace Barotrauma
             get { return pauseMenuOpen; }
         }
 
+        public static bool InputBlockingMenuOpen
+        {
+            get
+            {
+                return PauseMenuOpen ||
+                    SettingsMenuOpen ||
+                    DebugConsole.IsOpen ||
+                    GameSession.IsTabMenuOpen ||
+                    (GameMain.GameSession?.GameMode?.Paused ?? false) ||
+                    CharacterHUD.IsCampaignInterfaceOpen;
+            }
+        }
+
         public static bool PreventPauseMenuToggle = false;
 
         public static Color ScreenOverlayColor
@@ -225,6 +238,9 @@ namespace Barotrauma
         private static float savingIndicatorColorLerpAmount;
         private static SavingIndicatorState savingIndicatorState = SavingIndicatorState.None;
         private static float? timeUntilSavingIndicatorDisabled;
+
+        private static string loadedSpritesText;
+        private static DateTime loadedSpritesUpdateTime;
 
         private enum SavingIndicatorState
         {
@@ -441,9 +457,12 @@ namespace Barotrauma
                         "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
                         Color.Lerp(GUI.Style.Green, GUI.Style.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, SmallFont);
 
-                    DrawString(spriteBatch, new Vector2(10, 115),
-                        "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)",
-                        Color.White, Color.Black * 0.5f, 0, SmallFont);
+                    if (loadedSpritesText == null || DateTime.Now > loadedSpritesUpdateTime)
+                    {
+                        loadedSpritesText = "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)";
+                        loadedSpritesUpdateTime = DateTime.Now + new TimeSpan(0, 0, seconds: 5);
+                    }
+                    DrawString(spriteBatch, new Vector2(10, 115), loadedSpritesText, Color.White, Color.Black * 0.5f, 0, SmallFont);
 
                     if (debugDrawSounds)
                     {
@@ -978,8 +997,7 @@ namespace Barotrauma
                             return editor.GetMouseCursorState();
                         // Portrait area during gameplay
                         case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
-                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ||
-                                Rectangle.Union(HUDLayoutSettings.AfflictionAreaLeft, HUDLayoutSettings.HealthBarArea).Contains(PlayerInput.MousePosition))
+                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) || CharacterHealth.IsMouseOnHealthBar())
                             {
                                 return CursorState.Hand;
                             }
@@ -1331,7 +1349,7 @@ namespace Barotrauma
 
         /// <param name="createOffset">Should the indicator move based on the camera position?</param>
         /// <param name="overrideAlpha">Override the distance-based alpha value with the specified alpha value</param>
-        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color,
+        public static void DrawIndicator(SpriteBatch spriteBatch, in Vector2 worldPosition, Camera cam, in Vector2 visibleRange, Sprite sprite, in Color color,
             bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
         {
             Vector2 diff = worldPosition - cam.WorldViewCenter;
@@ -1339,9 +1357,9 @@ namespace Barotrauma
 
             float symbolScale = Math.Min(64.0f / sprite.size.X, 1.0f) * scaleMultiplier * Scale;
 
-            if (overrideAlpha.HasValue || dist > hideDist)
+            if (overrideAlpha.HasValue || (dist > visibleRange.X && dist < visibleRange.Y))
             {
-                float alpha = overrideAlpha ?? Math.Min((dist - hideDist) / 100.0f, 1.0f);
+                float alpha = overrideAlpha ?? MathUtils.Min((dist - visibleRange.X) / 100.0f, 1.0f - ((dist - visibleRange.Y + 100f) / 100.0f), 1.0f);
                 Vector2 targetScreenPos = cam.WorldToScreen(worldPosition);
 
                 if (!createOffset)
@@ -1352,8 +1370,9 @@ namespace Barotrauma
 
                 float screenDist = Vector2.Distance(cam.WorldToScreen(cam.WorldViewCenter), targetScreenPos);
                 float angle = MathUtils.VectorToAngle(diff);
+                float originalAngle = angle;
 
-                float minAngleDiff = 0.05f;
+                const float minAngleDiff = 0.05f;
                 bool overlapFound = true;
                 int iterations = 0;
                 while (overlapFound && iterations < 10)
@@ -1375,24 +1394,36 @@ namespace Barotrauma
 
                 usedIndicatorAngles.Add(angle);
 
-                Vector2 unclampedDiff = new Vector2(
-                    (float)Math.Cos(angle) * screenDist,
-                    (float)-Math.Sin(angle) * screenDist);
-
                 Vector2 iconDiff = new Vector2(
+                    (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist + 10),
+                    (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist + 10));
+
+                angle = MathHelper.Lerp(originalAngle, angle, MathHelper.Clamp(((screenDist + 10f) - iconDiff.Length()) / 10f, 0f, 1f));
+
+                /*Vector2 unclampedDiff = new Vector2(
+                    (float)Math.Cos(angle) * screenDist,
+                    (float)-Math.Sin(angle) * screenDist);*/
+
+                iconDiff = new Vector2(
                     (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist),
                     (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
 
                 Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
                 sprite.Draw(spriteBatch, iconPos, color * alpha, rotate: 0.0f, scale: symbolScale);
 
-                if (unclampedDiff.Length() - 10 > iconDiff.Length())
+                if (/*unclampedDiff.Length()*/ screenDist - 10 > iconDiff.Length())
                 {
                     Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
                     Vector2 arrowOffset = normalizedDiff * sprite.size.X * symbolScale * 0.7f;
                     Arrow.Draw(spriteBatch, iconPos + arrowOffset, color * alpha, MathUtils.VectorToAngle(arrowOffset) + MathHelper.PiOver2, scale: 0.5f);
                 }
             }
+        }
+
+        public static void DrawIndicator(SpriteBatch spriteBatch, Vector2 worldPosition, Camera cam, float hideDist, Sprite sprite, Color color,
+            bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
+        {
+            DrawIndicator(spriteBatch, worldPosition, cam, new Vector2(hideDist, float.PositiveInfinity), sprite, color, createOffset, scaleMultiplier, overrideAlpha);
         }
 
         public static void DrawLine(SpriteBatch sb, Vector2 start, Vector2 end, Color clr, float depth = 0.0f, float width = 1)
@@ -1493,6 +1524,22 @@ namespace Barotrauma
                 sb.Draw(t, new Vector2(rect.X + thickness, rect.Bottom - thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
                 sb.Draw(t, new Vector2(rect.Right - thickness, rect.Y + thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height - thickness * 2f), SpriteEffects.None, depth);
             }
+        }
+
+        public static void DrawFilledRectangle(SpriteBatch sb, Vector2 start, Vector2 size, Color clr, float depth = 0.0f)
+        {
+            if (size.X < 0)
+            {
+                start.X += size.X;
+                size.X = -size.X;
+            }
+            if (size.Y < 0)
+            {
+                start.Y += size.Y;
+                size.Y = -size.Y;
+            }
+
+            sb.Draw(t, start, null, clr, 0f, Vector2.Zero, size, SpriteEffects.None, depth);
         }
 
         public static void DrawRectangle(SpriteBatch sb, Vector2 center, float width, float height, float rotation, Color clr, float depth = 0.0f, float thickness = 1)
@@ -1971,6 +2018,30 @@ namespace Barotrauma
             }
             return frame;
         }
+
+        public static GUIMessageBox AskForConfirmation(string header, string body, Action onConfirm, Action onDeny = null)
+        {
+            string[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
+            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
+
+            // Cancel button
+            msgBox.Buttons[1].OnClicked = delegate
+            {
+                onDeny?.Invoke();
+                msgBox.Close();
+                return true;
+            };
+
+            // Ok button
+            msgBox.Buttons[0].OnClicked = delegate
+            {
+                onConfirm.Invoke();
+                msgBox.Close();
+                return true;
+            };
+            return msgBox;
+        }
+
         #endregion
 
         #region Element positioning
@@ -2098,7 +2169,7 @@ namespace Barotrauma
                     for (int j = i + 1; j < elements.Count; j++)
                     {
                         Rectangle rect2 = elements[j].Rect;
-                        if (!rect1.Intersects(rect2)) continue;
+                        if (!rect1.Intersects(rect2)) { continue; }
 
                         intersections = true;
                         Point centerDiff = rect1.Center - rect2.Center;
@@ -2127,10 +2198,10 @@ namespace Barotrauma
                         elements[j].RectTransform.ScreenSpaceOffset += moveAmount2.ToPoint();
                     }
 
-                    if (disallowedAreas == null) continue;
+                    if (disallowedAreas == null) { continue; }
                     foreach (Rectangle rect2 in disallowedAreas)
                     {
-                        if (!rect1.Intersects(rect2)) continue;
+                        if (!rect1.Intersects(rect2)) { continue; } 
                         intersections = true;
 
                         Point centerDiff = rect1.Center - rect2.Center;
@@ -2148,7 +2219,7 @@ namespace Barotrauma
                 iterations++;
             }
 
-            Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
+            static Vector2 ClampMoveAmount(Rectangle Rect, Rectangle clampTo, Vector2 moveAmount)
             {
                 if (Rect.Y < clampTo.Y)
                 {
@@ -2221,6 +2292,7 @@ namespace Barotrauma
                     }
                 };
 
+                bool IsOutpostLevel() => GameMain.GameSession != null && Level.IsLoadedOutpost;
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
@@ -2253,45 +2325,22 @@ namespace Barotrauma
                             };
                             return true;
                         };
-                        var saveAndQuitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
+                        if (IsOutpostLevel())
                         {
-                            UserData = "save"
-                        };
-                        saveAndQuitButton.OnClicked += (btn, userdata) =>
-                        {
-                            //Only allow saving mid-round in outpost levels. Quitting in the middle of a mission reset progress to the start of the round.
-                            if (GameMain.GameSession == null)
+                            var saveAndQuitButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.1f), buttonContainer.RectTransform), TextManager.Get("PauseMenuSaveQuit"))
                             {
-                                pauseMenuOpen = false;
-
-                            }
-                            else if (GameMain.GameSession?.Campaign == null || Level.IsLoadedOutpost)
-                            {
-                                pauseMenuOpen = false;
-                                GameMain.QuitToMainMenu(save: true);
-                            }
-                            else
-                            {
-                                var msgBox = new GUIMessageBox("", TextManager.Get("PauseMenuSaveAndQuitVerification", fallBackTag: "pausemenuquitverification"), new string[] { TextManager.Get("Yes"), TextManager.Get("Cancel") })
-                                {
-                                    UserData = "verificationprompt"
-                                };
-                                msgBox.Buttons[0].OnClicked = (_, userdata) =>
+                                UserData = "save",
+                                OnClicked = (btn, userData) =>
                                 {
                                     pauseMenuOpen = false;
-                                    GameMain.QuitToMainMenu(save: false);
+                                    if (IsOutpostLevel())
+                                    {
+                                        GameMain.QuitToMainMenu(save: true);
+                                    }
                                     return true;
-                                };
-                                msgBox.Buttons[0].OnClicked += msgBox.Close;
-                                msgBox.Buttons[1].OnClicked = (_, userdata) =>
-                                {
-                                    pauseMenuOpen = false;
-                                    msgBox.Close();
-                                    return true;
-                                };
-                            }
-                            return true;
-                        };
+                                }
+                            };
+                        }
                     }
                     else if (GameMain.GameSession.GameMode is TestGameMode)
                     {
@@ -2313,7 +2362,7 @@ namespace Barotrauma
                             OnClicked = (btn, userdata) =>
                             {
                                 if (!GameMain.Client.HasPermission(ClientPermissions.ManageRound)) { return false; }
-                                if (GameMain.GameSession.GameMode is CampaignMode || (!Submarine.MainSub.AtStartExit && !Submarine.MainSub.AtEndExit))
+                                if (GameMain.GameSession.GameMode is CampaignMode && !IsOutpostLevel() || (!Submarine.MainSub.AtStartExit && !Submarine.MainSub.AtEndExit))
                                 {
                                     var msgBox = new GUIMessageBox("", 
                                         TextManager.Get(GameMain.GameSession.GameMode is CampaignMode ? "PauseMenuReturnToServerLobbyVerification" : "EndRoundSubNotAtLevelEnd"), 

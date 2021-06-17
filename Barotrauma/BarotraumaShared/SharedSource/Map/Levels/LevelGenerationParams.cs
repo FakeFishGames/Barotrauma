@@ -496,8 +496,11 @@ namespace Barotrauma
         [Serialize(1, true, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int RuinCount { get; set; }
 
+        [Serialize(1, true, description: "The minimum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        public int MinWreckCount { get; set; }
+
         [Serialize(1, true, description: "The maximum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
-        public int WreckCount { get; set; }
+        public int MaxWreckCount { get; set; }
 
         // TODO: Move the wreck parameters under a separate class?
 #region Wreck parameters

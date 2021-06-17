@@ -150,11 +150,8 @@ namespace Barotrauma
                 {
                     max += Character.Info.Job.Prefab.VitalityModifier;
                 }
+                max *= Character.StaticHealthMultiplier;
                 return max * Character.HealthMultiplier;
-            }
-            set
-            {
-                maxVitality = Math.Max(0, value);
             }
         }
 
@@ -630,7 +627,10 @@ namespace Barotrauma
                 Kill();
             }
 #if CLIENT
-            selectedLimbIndex = -1;
+            if (CharacterHealth.OpenHealthWindow != this)
+            {
+                selectedLimbIndex = -1;
+            }
 #endif
         }
 
@@ -831,6 +831,32 @@ namespace Barotrauma
             DisplayVitalityDelay = 0.0f;
             DisplayedVitality = Vitality;
 #endif
+        }
+
+        // We need to use another list of the afflictions when we call the status effects triggered by afflictions,
+        // because those status effects may add or remove other afflictions while iterating the collection.
+        private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
+        public void ApplyAfflictionStatusEffects(ActionType type)
+        {
+            for (int i = 0; i < limbHealths.Count; i++)
+            {
+                for (int j = limbHealths[i].Afflictions.Count - 1; j >= 0; j--)
+                {
+                    var affliction = limbHealths[i].Afflictions[j];
+                    Limb targetLimb = Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == i);
+                    if (targetLimb == null)
+                    {
+                        targetLimb = Character.AnimController.MainLimb;
+                    }
+                    affliction.ApplyStatusEffects(type, 1.0f, this, targetLimb);
+                }
+            }
+            afflictionsCopy.Clear();
+            afflictionsCopy.AddRange(afflictions);
+            for (int i = afflictionsCopy.Count - 1; i >= 0; i--)
+            {
+                afflictionsCopy[i].ApplyStatusEffects(type, 1.0f, this, targetLimb: null);
+            }
         }
 
         public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()

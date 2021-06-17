@@ -538,16 +538,18 @@ namespace Barotrauma.Items.Components
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        if (hull.Submarine != subs[i]) continue;
-                        if (hull.WorldRect.Y < hullRects[i].Y - hullRects[i].Height) continue;
-                        if (hull.WorldRect.Y - hull.WorldRect.Height > hullRects[i].Y) continue;
+                        if (hull.Submarine != subs[i]) { continue; }
+                        if (hull.WorldRect.Y - 5 < hullRects[i].Y - hullRects[i].Height) { continue; }
+                        if (hull.WorldRect.Y - hull.WorldRect.Height + 5 > hullRects[i].Y) { continue; }
 
                         if (i == 0) //left hull
                         {
+                            if (hull.WorldPosition.X > hullRects[0].Center.X) { continue; }
                             leftSubRightSide = Math.Max(hull.WorldRect.Right, leftSubRightSide);
                         }
                         else //upper hull
                         {
+                            if (hull.WorldPosition.X < hullRects[1].Center.X) { continue; }
                             rightSubLeftSide = Math.Min(hull.WorldRect.X, rightSubLeftSide);
                         }
                     }
@@ -591,8 +593,11 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
+                int expand = 5;
                 for (int i = 0; i < 2; i++)
                 {
+                    hullRects[i].X -= expand;
+                    hullRects[i].Width += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
@@ -636,16 +641,18 @@ namespace Barotrauma.Items.Components
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        if (hull.Submarine != subs[i]) continue;
-                        if (hull.WorldRect.Right < hullRects[i].X) continue;
-                        if (hull.WorldRect.X > hullRects[i].Right) continue;
+                        if (hull.Submarine != subs[i]) { continue; }
+                        if (hull.WorldRect.Right - 5 < hullRects[i].X) { continue; }
+                        if (hull.WorldRect.X + 5 > hullRects[i].Right) { continue; }
 
                         if (i == 0) //lower hull
                         {
+                            if (hull.WorldPosition.Y > hullRects[i].Y - hullRects[i].Height / 2) { continue; }
                             lowerSubTop = Math.Max(hull.WorldRect.Y, lowerSubTop);
                         }
                         else //upper hull
                         {
+                            if (hull.WorldPosition.Y < hullRects[i].Y - hullRects[i].Height / 2) { continue; }
                             upperSubBottom = Math.Min(hull.WorldRect.Y - hull.WorldRect.Height, upperSubBottom);
                         }
                     }
@@ -705,8 +712,11 @@ namespace Barotrauma.Items.Components
                 }
 
 
+                int expand = 5;
                 for (int i = 0; i < 2; i++)
                 {
+                    hullRects[i].Y += expand;
+                    hullRects[i].Height += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint((subs[i].WorldPosition - subs[i].HiddenSubPosition));
                     hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
                     hulls[i].AddToGrid(subs[i]);
@@ -797,22 +807,22 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < 2; i++)
             {
                 Gap doorGap = i == 0 ? Door?.LinkedGap : DockingTarget?.Door?.LinkedGap;
-                if (doorGap == null) continue;
+                if (doorGap == null) { continue; }
                 doorGap.DisableHullRechecks = true;
-                if (doorGap.linkedTo.Count >= 2) continue;
+                if (doorGap.linkedTo.Count >= 2) { continue; }
 
                 if (IsHorizontal)
                 {
                     if (item.WorldPosition.X < DockingTarget.item.WorldPosition.X)
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[0])) doorGap.linkedTo.Add(hulls[0]);
+                        if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }
                     else
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
+                        if (!doorGap.linkedTo.Contains(hulls[1])) { doorGap.linkedTo.Add(hulls[1]); }
                     }
                     //make sure the left hull is linked to the gap first (gap logic assumes that the first hull is the one to the left)
-                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].Rect.X > doorGap.linkedTo[1].Rect.X)
+                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].WorldRect.X > doorGap.linkedTo[1].WorldRect.X)
                     {
                         var temp = doorGap.linkedTo[0];
                         doorGap.linkedTo[0] = doorGap.linkedTo[1];
@@ -821,16 +831,16 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    if (item.WorldPosition.Y < DockingTarget.item.WorldPosition.Y)
+                    if (item.WorldPosition.Y > DockingTarget.item.WorldPosition.Y)
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[0])) doorGap.linkedTo.Add(hulls[0]);
+                        if (!doorGap.linkedTo.Contains(hulls[0])) { doorGap.linkedTo.Add(hulls[0]); }
                     }
                     else
                     {
-                        if (!doorGap.linkedTo.Contains(hulls[1])) doorGap.linkedTo.Add(hulls[1]);
+                        if (!doorGap.linkedTo.Contains(hulls[1])) { doorGap.linkedTo.Add(hulls[1]); }
                     }
                     //make sure the upper hull is linked to the gap first (gap logic assumes that the first hull is above the second one)
-                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].Rect.Y < doorGap.linkedTo[1].Rect.Y)
+                    if (doorGap.linkedTo.Count > 1 && doorGap.linkedTo[0].WorldRect.Y < doorGap.linkedTo[1].WorldRect.Y)
                     {
                         var temp = doorGap.linkedTo[0];
                         doorGap.linkedTo[0] = doorGap.linkedTo[1];
@@ -887,10 +897,7 @@ namespace Barotrauma.Items.Components
             }
 
             var wire = item.GetComponent<Wire>();
-            if (wire != null)
-            {
-                wire.Drop(null);
-            }
+            wire?.Drop(null);
 
             if (joint != null)
             {
@@ -991,7 +998,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (DockingTarget.Door != null && doorBody != null)
                     {
-                        doorBody.Enabled = DockingTarget.Door.Body.Enabled;
+                        doorBody.Enabled = DockingTarget.Door.Body.Enabled && !(DockingTarget.Door.Body.FarseerBody.FixtureList.FirstOrDefault()?.IsSensor ?? false);                        
                     }
                     dockingState = MathHelper.Lerp(dockingState, 1.0f, deltaTime * 10.0f);
                 }

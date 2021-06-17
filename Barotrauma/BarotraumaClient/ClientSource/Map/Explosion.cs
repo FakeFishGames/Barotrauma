@@ -71,15 +71,15 @@ namespace Barotrauma
                 if (sparks)
                 {
                     GameMain.ParticleManager.CreateParticle("spark", worldPosition,
-                        Rand.Vector(Rand.Range(500.0f, 800.0f)), 0.0f, hull);
+                        Rand.Vector(Rand.Range(1200.0f, 2400.0f)), 0.0f, hull);
                 }
             }
 
             if (flash)
             {
-                float displayRange = flashRange.HasValue ? flashRange.Value : Attack.Range;
+                float displayRange = flashRange ?? Attack.Range;
                 if (displayRange < 0.1f) { return; }
-                var light = new LightSource(worldPosition, displayRange, Color.LightYellow, null);
+                var light = new LightSource(worldPosition, displayRange, flashColor, null);
                 CoroutineManager.StartCoroutine(DimLight(light));
             }
         }

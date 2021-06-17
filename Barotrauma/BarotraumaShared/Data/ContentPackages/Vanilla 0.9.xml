@@ -38,10 +38,13 @@
   <Item file="Content/Items/Reactor/reactor.xml" />
   <Item file="Content/Items/Tools/tools.xml" />
   <Item file="Content/Items/Weapons/coilgun.xml" />
+  <Item file="Content/Items/Weapons/chaingun.xml" />
   <Item file="Content/Items/Weapons/depthcharge.xml" />
   <Item file="Content/Items/Weapons/dischargecoil.xml" />
   <Item file="Content/Items/Weapons/explosives.xml" />
+  <Item file="Content/Items/Weapons/pulselaser.xml" />
   <Item file="Content/Items/Weapons/railgun.xml" />
+  <Item file="Content/Items/Weapons/turrethardpoint.xml" />
   <Item file="Content/Items/Weapons/weapons.xml" />
   <Item file="Content/Items/Legacy/legacycommand.xml" />
   <Item file="Content/Items/Legacy/legacycontainers.xml" />
@@ -59,6 +62,7 @@
   <Item file="Content/Items/Gardening/growableplants.xml" />
   <Item file="Content/Items/Gardening/gardeningtools.xml" />
   <Item file="Content/Items/Gardening/plantproducts.xml" />
+  <Item file="Content/Map/Pirates/PirateItems.xml" />
   <Character file="Content/Characters/Balloon/Balloon.xml" />
   <Character file="Content/Characters/Carrier/Carrier.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
@@ -105,6 +109,7 @@
   <Character file="Content/Characters/Variants/Hammerheadgold_m.xml" />
   <Character file="Content/Characters/Variants/Crawler_hatchling/Crawler_hatchling.xml" />
   <Character file="Content/Characters/Variants/Mudraptor_hatchling/Mudraptor_hatchling.xml" />
+  <Character file="Content/Characters/Variants/Mudraptor_passive/Mudraptor_passive.xml" />
   <Character file="Content/Characters/Variants/Tigerthresher_hatchling/Tigerthresher_hatchling.xml" />
   <MapCreature file="Content/Items/Gardening/ballastflora.xml" />
   <Wreck file="Content/Map/Wrecks/Dugong_Wrecked.sub" />
@@ -144,6 +149,7 @@
   <Afflictions file="Content/Afflictions.xml" />
   <Structure file="Content/Map/StructurePrefabs.xml" />
   <Structure file="Content/Map/Outposts/OutpostStructurePrefabs.xml" />
+  <Structure file="Content/Map/Pirates/PirateStructures.xml" />
   <Item file="Content/Map/Outposts/OutpostItems.xml" />
   <Structure file="Content/Items/Shipwrecks/StructurePrefabsWrecked.xml" />
   <Structure file="Content/Map/Thalamus/thalamusstructures.xml" />
@@ -252,4 +258,7 @@
   <OutpostModule file="Content/Map/Outposts/MineModule_04.sub" />
   <OutpostModule file="Content/Map/Outposts/HallModuleHorizontal_Abandoned.sub" />
   <OutpostModule file="Content/Map/Outposts/HallModuleVertical_Abandoned.sub" />
+  <EnemySubmarine file="Content/Map/EnemySubmarines/DugongPirate.sub"/>
+  <EnemySubmarine file="Content/Map/EnemySubmarines/HumpbackPirate.sub"/>
+  <EnemySubmarine file="Content/Map/EnemySubmarines/Typhon2Pirate.sub"/>
 </contentpackage>

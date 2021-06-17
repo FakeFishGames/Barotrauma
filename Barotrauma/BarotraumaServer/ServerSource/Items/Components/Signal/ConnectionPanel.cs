@@ -41,7 +41,7 @@ namespace Barotrauma.Items.Components
             }
 
             //don't allow rewiring locked panels
-            if (Locked || !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return; }
+            if (Locked || TemporarilyLocked || !GameMain.NetworkMember.ServerSettings.AllowRewiring) { return; }
 
             item.CreateServerEvent(this);
 

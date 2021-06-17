@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
 
-        public bool HasMultipleLimbsOfSameType => Limbs.Length > limbDictionary.Count;
+        public bool HasMultipleLimbsOfSameType => limbs == null ? false : Limbs.Length > limbDictionary.Count;
 
         private bool frozen;
         public bool Frozen
@@ -416,10 +416,7 @@ namespace Barotrauma
 
         protected void CreateColliders()
         {
-            if (collider != null)
-            {
-                collider.ForEach(c => c.Remove());
-            }
+            collider?.ForEach(c => c.Remove());
             DebugConsole.Log($"Creating colliders from {RagdollParams.Name}.");
             collider = new List<PhysicsBody>();
             foreach (var cParams in RagdollParams.Colliders)
@@ -479,10 +476,7 @@ namespace Barotrauma
 
         protected void CreateLimbs()
         {
-            if (limbs != null)
-            {
-                limbs.ForEach(l => l.Remove());
-            }
+            limbs?.ForEach(l => l.Remove());
             DebugConsole.Log($"Creating limbs from {RagdollParams.Name}.");
             limbDictionary = new Dictionary<LimbType, Limb>();
             limbs = new Limb[RagdollParams.Limbs.Count];
@@ -1547,6 +1541,7 @@ namespace Barotrauma
                     case Physics.CollisionLevel:
                         if (!fixture.CollidesWith.HasFlag(Physics.CollisionCharacter)) { return -1; }
                         if (fixture.Body.UserData is Submarine && character.Submarine != null) { return -1; }
+                        if (fixture.IsSensor) { return -1; }
                         if (fraction < standOnFloorFraction)
                         {
                             standOnFloorFraction = fraction;

@@ -74,6 +74,20 @@ namespace Barotrauma
         private string rawAfflictionTypeString;
         private string[] parsedAfflictionIdentifiers;
         private string[] parsedAfflictionTypes;
+        public string[] ParsedAfflictionIdentifiers
+        {
+            get
+            {
+                return parsedAfflictionIdentifiers;
+            }
+        }
+        public string[] ParsedAfflictionTypes
+        {
+            get
+            {
+                return parsedAfflictionTypes;
+            }
+        }
 
         public DamageModifier(XElement element, string parentDebugName)
         {

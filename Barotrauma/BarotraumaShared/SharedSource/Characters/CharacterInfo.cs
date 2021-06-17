@@ -149,6 +149,7 @@ namespace Barotrauma
 
         public XElement InventoryData;
         public XElement HealthData;
+        public XElement OrderData;
 
         private static ushort idCounter;
         private const string disguiseName = "???";
@@ -455,7 +456,7 @@ namespace Barotrauma
         public bool IsAttachmentsLoaded => HairIndex > -1 && BeardIndex > -1 && MoustacheIndex > -1 && FaceAttachmentIndex > -1;
 
         // Used for creating the data
-        public CharacterInfo(string speciesName, string name = "", string originalName = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public CharacterInfo(string speciesName, string name = "", string originalName = "", JobPrefab jobPrefab = null, string ragdollFileName = null, int variant = 0, Rand.RandSync randSync = Rand.RandSync.Unsynced, string npcIdentifier = "")
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -484,8 +485,12 @@ namespace Barotrauma
             {
                 Name = name;
             }
-            else
+            else if (!string.IsNullOrEmpty(npcIdentifier) && TextManager.Get("npctitle." + npcIdentifier, true) is string npcTitle)
             {
+                Name = npcTitle;
+            }
+            else
+            { 
                 name = "";
                 if (CharacterConfigElement.Element("name") != null)
                 {
@@ -493,7 +498,7 @@ namespace Barotrauma
                     if (firstNamePath != "")
                     {
                         firstNamePath = firstNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
-                        Name = ToolBox.GetRandomLine(firstNamePath);
+                        Name = ToolBox.GetRandomLine(firstNamePath, randSync);
                     }
 
                     string lastNamePath = CharacterConfigElement.Element("name").GetAttributeString("lastname", "");
@@ -501,7 +506,7 @@ namespace Barotrauma
                     {
                         lastNamePath = lastNamePath.Replace("[GENDER]", (Head.gender == Gender.Female) ? "female" : "male");
                         if (Name != "") Name += " ";
-                        Name += ToolBox.GetRandomLine(lastNamePath);
+                        Name += ToolBox.GetRandomLine(lastNamePath, randSync);
                     }
                 }
             }
@@ -1019,7 +1024,273 @@ namespace Barotrauma
             return charElement;
         }
 
-        public void ApplyHealthData(Character character, XElement healthData)
+        public static void SaveOrders(XElement parentElement, params OrderInfo[] orders)
+        {
+            if (parentElement == null || orders == null || orders.None()) { return; }
+            // If an order is invalid, we discard the order and increase the priority of the following orders so
+            // 1) the highest priority value will remain equal to CharacterInfo.HighestManualOrderPriority; and
+            // 2) the order priorities will remain sequential.
+            int priorityIncrease = 0;
+            var linkedSubs = GetLinkedSubmarines();
+            foreach (var orderInfo in orders)
+            {
+                var order = orderInfo.Order;
+                if (order == null || string.IsNullOrEmpty(order.Identifier))
+                {
+                    DebugConsole.ThrowError("Error saving an order - the order or its identifier is null");
+                    priorityIncrease++;
+                    continue;
+                }
+                int? linkedSubIndex = null;
+                bool targetAvailableInNextLevel = true;
+                if (order.TargetSpatialEntity != null)
+                {
+                    var entitySub = order.TargetSpatialEntity.Submarine;
+                    bool isOutside = entitySub == null;
+                    bool canBeOnLinkedSub = !isOutside && Submarine.MainSub != null && entitySub != Submarine.MainSub && linkedSubs.Any();
+                    bool isOnConnectedLinkedSub = false;
+                    if (canBeOnLinkedSub)
+                    {
+                        for (int i = 0; i < linkedSubs.Count; i++)
+                        {
+                            var ls = linkedSubs[i];
+                            if (!ls.LoadSub) { continue; }
+                            if (ls.Sub != entitySub) { continue; }
+                            linkedSubIndex = i;
+                            isOnConnectedLinkedSub = Submarine.MainSub.GetConnectedSubs().Contains(entitySub);
+                            break;
+                        }
+                    }
+                    targetAvailableInNextLevel = !isOutside && GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null && (isOnConnectedLinkedSub || entitySub == Submarine.MainSub);
+                    if (!targetAvailableInNextLevel)
+                    {
+                        if (!order.CanBeGeneralized)
+                        {
+                            DebugConsole.Log($"Trying to save an order ({order.Identifier}) targeting an entity that won't be connected to the main sub in the next level. The order requires a target so it won't be saved.");
+                            priorityIncrease++;
+                            continue;
+                        }
+                        else
+                        {
+                            DebugConsole.Log($"Saving an order ({order.Identifier}) targeting an entity that won't be connected to the main sub in the next level. The order will be saved as a generalized version.");
+                        }
+                    }
+                }
+                if (orderInfo.ManualPriority < 1)
+                {
+                    DebugConsole.ThrowError($"Error saving an order ({order.Identifier}) - the order priority is less than 1");
+                    priorityIncrease++;
+                    continue;
+                }
+                var orderElement = new XElement("order",
+                    new XAttribute("id", order.Identifier),
+                    new XAttribute("priority", orderInfo.ManualPriority + priorityIncrease),
+                    new XAttribute("targettype", (int)order.TargetType));
+                if (!string.IsNullOrEmpty(orderInfo.OrderOption))
+                {
+                    orderElement.Add(new XAttribute("option", orderInfo.OrderOption));
+                }
+                if (order.OrderGiver != null)
+                {
+                    orderElement.Add(new XAttribute("ordergiverinfoid", order.OrderGiver.Info.ID));
+                }
+                if (order.TargetSpatialEntity?.Submarine is Submarine targetSub)
+                {
+                    if (targetSub == Submarine.MainSub)
+                    {
+                        orderElement.Add(new XAttribute("onmainsub", true));
+                    }
+                    else if(linkedSubIndex.HasValue)
+                    {
+                        orderElement.Add(new XAttribute("linkedsubindex", linkedSubIndex));
+                    }
+                }
+                switch (order.TargetType)
+                {
+                    case Order.OrderTargetType.Entity when targetAvailableInNextLevel && order.TargetEntity is Entity e:
+                        orderElement.Add(new XAttribute("targetid", (uint)e.ID));
+                        break;
+                    case Order.OrderTargetType.Position when targetAvailableInNextLevel && order.TargetSpatialEntity is OrderTarget ot:
+                        var orderTargetElement = new XElement("ordertarget");
+                        var position = ot.WorldPosition;
+                        if (ot.Hull != null)
+                        {
+                            orderTargetElement.Add(new XAttribute("hullid", (uint)ot.Hull.ID));
+                            position -= ot.Hull.WorldPosition;
+                        }
+                        orderTargetElement.Add(new XAttribute("position", $"{position.X},{position.Y}"));
+                        orderElement.Add(orderTargetElement);
+                        break;
+                    case Order.OrderTargetType.WallSection when targetAvailableInNextLevel && order.TargetEntity is Structure s && order.WallSectionIndex.HasValue:
+                        orderElement.Add(new XAttribute("structureid", s.ID));
+                        orderElement.Add(new XAttribute("wallsectionindex", order.WallSectionIndex.Value));
+                        break;
+                }
+                parentElement.Add(orderElement);
+            }
+        }
+
+        /// <summary>
+        /// Save current orders to the parameter element
+        /// </summary>
+        public static void SaveOrderData(CharacterInfo characterInfo, XElement parentElement)
+        {
+            var currentOrders = new List<OrderInfo>(characterInfo.CurrentOrders);
+            // Sort the current orders to make sure the one with the highest priority comes first
+            currentOrders.Sort((x, y) => y.ManualPriority.CompareTo(x.ManualPriority));
+            SaveOrders(parentElement, currentOrders.ToArray());
+        }
+
+        /// <summary>
+        /// Save current orders to <see cref="OrderData"/>
+        /// </summary>
+        public void SaveOrderData()
+        {
+            OrderData = new XElement("orders");
+            SaveOrderData(this, OrderData);
+        }
+
+        public static void ApplyOrderData(Character character, XElement orderData)
+        {
+            if (character == null) { return; }
+            var orders = LoadOrders(orderData);
+            foreach (var order in orders)
+            {
+                character.SetOrder(order, order.Order?.OrderGiver, speak: false, force: true);
+            }
+        }
+
+        public void ApplyOrderData()
+        {
+            ApplyOrderData(Character, OrderData);
+        }
+
+        public static List<OrderInfo> LoadOrders(XElement ordersElement)
+        {
+            var orders = new List<OrderInfo>();
+            if (ordersElement == null) { return orders; }
+            // If an order is invalid, we discard the order and increase the priority of the following orders so
+            // 1) the highest priority value will remain equal to CharacterInfo.HighestManualOrderPriority; and
+            // 2) the order priorities will remain sequential.
+            int priorityIncrease = 0;
+            var linkedSubs = GetLinkedSubmarines();
+            foreach (var orderElement in ordersElement.GetChildElements("order"))
+            {
+                Order order = null;
+                string orderIdentifier = orderElement.GetAttributeString("id", "");
+                var orderPrefab = Order.GetPrefab(orderIdentifier);
+                if (orderPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Error loading a previously saved order - can't find an order prefab with the identifier \"{orderIdentifier}\"");
+                    priorityIncrease++;
+                    continue;
+                }
+                var targetType = (Order.OrderTargetType)orderElement.GetAttributeInt("targettype", 0);
+                int orderGiverInfoId = orderElement.GetAttributeInt("ordergiverinfoid", -1);
+                var orderGiver = orderGiverInfoId >= 0 ? Character.CharacterList.FirstOrDefault(c => c.Info?.ID == orderGiverInfoId) : null;
+                Entity targetEntity = null;
+                switch (targetType)
+                {
+                    case Order.OrderTargetType.Entity:
+                        ushort targetId = (ushort)orderElement.GetAttributeUInt("targetid", Entity.NullEntityID);
+                        if (!GetTargetEntity(targetId, out targetEntity)) { continue; }
+                        var targetComponent = orderPrefab.GetTargetItemComponent(targetEntity as Item);
+                        order = new Order(orderPrefab, targetEntity, targetComponent, orderGiver: orderGiver);
+                        break;
+                    case Order.OrderTargetType.Position:
+                        var orderTargetElement = orderElement.GetChildElement("ordertarget");
+                        var position = orderTargetElement.GetAttributeVector2("position", Vector2.Zero);
+                        ushort hullId = (ushort)orderTargetElement.GetAttributeUInt("hullid", 0);
+                        if (!GetTargetEntity(hullId, out targetEntity)) { continue; }
+                        if (!(targetEntity is Hull targetPositionHull))
+                        {
+                            DebugConsole.ThrowError($"Error loading a previously saved order ({orderIdentifier}) - entity with the ID {hullId} is of type {targetEntity?.GetType()} instead of Hull");
+                            priorityIncrease++;
+                            continue;
+                        }
+                        var orderTarget = new OrderTarget(targetPositionHull.WorldPosition + position, targetPositionHull);
+                        order = new Order(orderPrefab, orderTarget, orderGiver: orderGiver);
+                        break;
+                    case Order.OrderTargetType.WallSection:
+                        ushort structureId = (ushort)orderElement.GetAttributeInt("structureid", Entity.NullEntityID);
+                        if (!GetTargetEntity(structureId, out targetEntity)) { continue; }
+                        int wallSectionIndex = orderElement.GetAttributeInt("wallsectionindex", 0);
+                        if (!(targetEntity is Structure targetStructure))
+                        {
+                            DebugConsole.ThrowError($"Error loading a previously saved order ({orderIdentifier}) - entity with the ID {structureId} is of type {targetEntity?.GetType()} instead of Structure");
+                            priorityIncrease++;
+                            continue;
+                        }
+                        order = new Order(orderPrefab, targetStructure, wallSectionIndex, orderGiver: orderGiver);
+                        break;
+                }
+                string orderOption = orderElement.GetAttributeString("option", "");
+                int manualPriority = orderElement.GetAttributeInt("priority", 0) + priorityIncrease;
+                var orderInfo = new OrderInfo(order, orderOption, manualPriority);
+                orders.Add(orderInfo);
+
+                bool GetTargetEntity(ushort targetId, out Entity targetEntity)
+                {
+                    targetEntity = null;
+                    if (targetId == Entity.NullEntityID) { return true; }
+                    Submarine parentSub = null;
+                    if (orderElement.GetAttributeBool("onmainsub", false))
+                    {
+                        parentSub = Submarine.MainSub;
+                    }
+                    else
+                    {
+                        int linkedSubIndex = orderElement.GetAttributeInt("linkedsubindex", -1);
+                        if (linkedSubIndex >= 0 && linkedSubIndex < linkedSubs.Count &&
+                            linkedSubs[linkedSubIndex] is LinkedSubmarine linkedSub && linkedSub.LoadSub)
+                        {
+                            parentSub = linkedSub.Sub;
+                        }
+                    }
+                    if (parentSub != null)
+                    {
+                        targetId = GetOffsetId(parentSub, targetId);
+                        targetEntity = Entity.FindEntityByID(targetId);
+                    }
+                    else
+                    {
+                        if (!orderPrefab.CanBeGeneralized)
+                        {
+                            DebugConsole.ThrowError($"Error loading a previously saved order ({orderIdentifier}). Can't find the parent sub of the target entity. The order requires a target so it can't be loaded at all.");
+                            priorityIncrease++;
+                            return false;
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Trying to load a previously saved order ({orderIdentifier}). Can't find the parent sub of the target entity. The order doesn't require a target so a more generic version of the order will be loaded instead.");
+                        }
+                    }
+                    return true;
+                }
+            }
+            return orders;
+        }
+
+        private static List<LinkedSubmarine> GetLinkedSubmarines()
+        {
+            return Entity.GetEntities()
+                .OfType<LinkedSubmarine>()
+                .Where(ls => ls.Submarine == Submarine.MainSub)
+                .OrderBy(e => e.ID)
+                .ToList();
+        }
+
+        private static ushort GetOffsetId(Submarine parentSub, ushort id)
+        {
+            if (parentSub != null)
+            {
+                var idRemap = new IdRemap(parentSub.Info.SubmarineElement, parentSub.IdOffset);
+                return idRemap.GetOffsetId(id);
+            }
+            return id;
+        }
+
+        public static void ApplyHealthData(Character character, XElement healthData)
         {
             if (healthData != null) { character?.CharacterHealth.Load(healthData); }
         }

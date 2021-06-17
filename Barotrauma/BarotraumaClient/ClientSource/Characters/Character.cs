@@ -102,11 +102,13 @@ namespace Barotrauma
             set { chromaticAberrationStrength = MathHelper.Clamp(value, 0.0f, 100.0f); }
         }
         
+        public Color GrainColor { get; set; }
+        
         private float grainStrength;
         public float GrainStrength
         {
             get => grainStrength;
-            set => grainStrength = MathHelper.Clamp(value, 0.0f, 1.0f);
+            set => grainStrength = Math.Max(0, value);
         }
 
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
@@ -199,7 +201,7 @@ namespace Barotrauma
         /// </summary>
         public void ControlLocalPlayer(float deltaTime, Camera cam, bool moveCam = true)
         {
-            if (DisableControls || GUI.PauseMenuOpen || GUI.SettingsMenuOpen)
+            if (DisableControls || GUI.InputBlockingMenuOpen)
             {
                 foreach (Key key in keys)
                 {
@@ -321,7 +323,7 @@ namespace Barotrauma
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 
-            if (!GUI.PauseMenuOpen && !GUI.SettingsMenuOpen)
+            if (!GUI.InputBlockingMenuOpen)
             {
                 if (SelectedConstruction != null &&
                     (SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
@@ -505,14 +507,16 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                if (item.body != null && !item.body.Enabled) continue;
-                if (item.ParentInventory != null) continue;
-                if (ignoredItems != null && ignoredItems.Contains(item)) continue;
+                if (item.body != null && !item.body.Enabled) { continue; }
+                if (item.ParentInventory != null) { continue; }
+                if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
+                if (item.Prefab.RequireCampaignInteract && item.CampaignInteractionType == CampaignMode.InteractionType.None) { continue; }
                 if (Screen.Selected is SubEditorScreen editor && editor.WiringMode && item.GetComponent<ConnectionPanel>() == null) { continue; }
 
                 if (draggingItemToWorld)
                 {
                     if (item.OwnInventory == null || 
+                        !item.OwnInventory.Container.AllowDragAndDrop ||
                         !item.OwnInventory.CanBePut(CharacterInventory.DraggingItems.First()) ||
                         !CanAccessInventory(item.OwnInventory))
                     {
@@ -677,7 +681,7 @@ namespace Barotrauma
                     else
                     {
                         //Ideally it shouldn't send the character entirely if we can't see them but /shrug, this isn't the most hacker-proof game atm
-                        hudInfoVisible = controlled.CanSeeCharacter(this, controlled.ViewTarget == null ? controlled.WorldPosition : controlled.ViewTarget.WorldPosition);
+                        hudInfoVisible = controlled.CanSeeTarget(this, controlled.ViewTarget);
                     }
                     hudInfoTimer = Rand.Range(0.5f, 1.0f);
                 }
@@ -859,7 +863,14 @@ namespace Barotrauma
                     Color nameColor = Color.White;
                     if (Controlled != null && TeamID != Controlled.TeamID)
                     {
-                        nameColor = TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
+                        if (TeamID == CharacterTeamType.FriendlyNPC)
+                        {
+                            nameColor = UniqueNameColor ?? Color.SkyBlue;
+                        }
+                        else
+                        {
+                            nameColor = GUI.Style.Red;
+                        }
                     }
                     if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
                     {

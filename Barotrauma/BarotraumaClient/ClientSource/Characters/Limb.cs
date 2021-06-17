@@ -997,7 +997,7 @@ namespace Barotrauma
                 }
                 wearableColor = wearableItemComponent.Item.GetSpriteColor();
             }
-            float textureScale = wearable.InheritTextureScale ? TextureScale : 1;
+            float textureScale = wearable.InheritTextureScale ? TextureScale : wearable.Scale;
 
             wearable.Sprite.Draw(spriteBatch,
                 new Vector2(body.DrawPosition.X, -body.DrawPosition.Y),

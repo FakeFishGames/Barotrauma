@@ -378,7 +378,7 @@ namespace Barotrauma.Networking
 
             if (gameStarted)
             {
-                if (respawnManager != null) { respawnManager.Update(deltaTime); }
+                respawnManager?.Update(deltaTime);
 
                 entityEventManager.Update(connectedClients);
 
@@ -406,10 +406,7 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (TraitorManager != null)
-                {
-                    TraitorManager.Update(deltaTime);
-                }
+                TraitorManager?.Update(deltaTime);
 
                 if (serverSettings.Voting.VoteRunning)
                 {
@@ -433,7 +430,7 @@ namespace Barotrauma.Networking
                     connectedClients.All(c => c.Character == null || c.Character.IsDead || c.Character.IsIncapacitated);
 
                 bool subAtLevelEnd = false;
-                if (Submarine.MainSub != null && Submarine.MainSubs[1] == null)
+                if (Submarine.MainSub != null && !(GameMain.GameSession.GameMode is PvPMode))
                 {
                     if (Level.Loaded?.EndOutpost != null)
                     {
@@ -488,8 +485,10 @@ namespace Barotrauma.Networking
                 }
                 else if (isCrewDead && (GameMain.GameSession?.GameMode is CampaignMode))
                 {
+#if !DEBUG
                     endRoundDelay = 1.0f;
                     endRoundTimer += deltaTime;
+#endif
                 }
                 else
                 {
@@ -537,7 +536,8 @@ namespace Barotrauma.Networking
                     initiatedStartGame = false;
                 }
             }
-            else if (Screen.Selected == GameMain.NetLobbyScreen && !gameStarted && !initiatedStartGame)
+            else if (Screen.Selected == GameMain.NetLobbyScreen && !gameStarted && !initiatedStartGame && 
+                    (GameMain.NetLobbyScreen.SelectedMode != GameModePreset.MultiPlayerCampaign || GameMain.GameSession?.GameMode is MultiPlayerCampaign))
             {
                 if (serverSettings.AutoRestart)
                 {
@@ -1207,6 +1207,7 @@ namespace Barotrauma.Networking
                 mpCampaign.ServerReadCrew(inc, sender);
             }
         }
+
         private void ReadReadyToSpawnMessage(IReadMessage inc, Client sender)
         {
             sender.SpectateOnly = inc.ReadBoolean() && (serverSettings.AllowSpectating || sender.Connection == OwnerConnection);
@@ -1315,6 +1316,12 @@ namespace Barotrauma.Networking
                         if (gameStarted)
                         {
                             Log("Client \"" + GameServer.ClientLogName(sender) + "\" ended the round.", ServerLog.MessageType.ServerMessage);
+                            if (mpCampaign != null && Level.IsLoadedOutpost)
+                            {
+                                mpCampaign.SaveInventories();
+                                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+                                SaveUtil.SaveGame(GameMain.GameSession.SavePath);
+                            }
                             EndGame();                            
                         }
                     }
@@ -1491,7 +1498,6 @@ namespace Barotrauma.Networking
 
             inc.ReadPadBits();
         }
-
 
         private void ClientWrite(Client c)
         {
@@ -1893,6 +1899,7 @@ namespace Barotrauma.Networking
                 }
 
                 outmsg.Write(serverSettings.RadiationEnabled);
+                outmsg.Write((byte)serverSettings.MaxMissionCount);
             }
             else
             {
@@ -2251,10 +2258,6 @@ namespace Barotrauma.Networking
                     {
                         client.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, client.Name);
                     }
-                    else
-                    {
-                        client.CharacterInfo.ClearCurrentOrders();
-                    }
                     characterInfos.Add(client.CharacterInfo);
                     if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob.First)
                     {
@@ -2340,7 +2343,8 @@ namespace Barotrauma.Networking
                     else
                     {
                         characterData.SpawnInventoryItems(spawnedCharacter, spawnedCharacter.Inventory);
-                        characterData.ApplyHealthData(spawnedCharacter.Info, spawnedCharacter);
+                        characterData.ApplyHealthData(spawnedCharacter);
+                        characterData.ApplyOrderData(spawnedCharacter);
                         spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
                         characterData.HasSpawned = true;
                     }
@@ -2362,7 +2366,7 @@ namespace Barotrauma.Networking
                 if (hadBots)
                 {
                     //loaded existing bots -> init them
-                    crewManager?.InitRound();
+                    crewManager.InitRound();
                 }
                 else
                 {
@@ -2372,6 +2376,7 @@ namespace Barotrauma.Networking
             }
 
             campaign?.LoadPets();
+            crewManager?.LoadActiveOrders();
 
             foreach (Submarine sub in Submarine.MainSubs)
             {
@@ -2516,6 +2521,8 @@ namespace Barotrauma.Networking
             {
                 mission.ServerWriteInitial(msg, client);
             }
+            msg.Write(GameMain.GameSession.CrewManager != null);
+            GameMain.GameSession.CrewManager?.ServerWriteActiveOrders(msg);
         }
 
         public void EndGame(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
@@ -3274,7 +3281,6 @@ namespace Barotrauma.Networking
             if (voteType != VoteType.PurchaseSub)
             {
                 SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(targetSubmarine, deliveryFee);
-                GameMain.GameSession.Campaign.UpgradeManager.RefundResetAndReload(newSub, true);
             }
 
             serverSettings.Voting.StopSubmarineVote(true);
@@ -3314,7 +3320,6 @@ namespace Barotrauma.Networking
             serverSettings.SaveClientPermissions();
         }
 
-
         private IEnumerable<object> SendClientPermissionsAfterClientListSynced(Client recipient, Client client)
         {
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
@@ -3330,7 +3335,6 @@ namespace Barotrauma.Networking
             SendClientPermissions(recipient, client);
             yield return CoroutineStatus.Success;
         }
-
 
         private void SendClientPermissions(Client recipient, Client client)
         {

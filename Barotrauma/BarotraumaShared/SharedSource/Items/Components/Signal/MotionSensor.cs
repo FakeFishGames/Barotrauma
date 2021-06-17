@@ -8,7 +8,6 @@ namespace Barotrauma.Items.Components
 {
     partial class MotionSensor : ItemComponent
     {
-        private const float UpdateInterval = 0.1f;
         private float rangeX, rangeY;
 
         private Vector2 detectOffset;
@@ -19,7 +18,8 @@ namespace Barotrauma.Items.Components
         {
             Any,
             Human,
-            Monster
+            Monster,
+            Wall
         }
 
         [Serialize(false, false, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
@@ -72,6 +72,13 @@ namespace Barotrauma.Items.Components
                 detectOffset.X = MathHelper.Clamp(value.X, -rangeX, rangeX);
                 detectOffset.Y = MathHelper.Clamp(value.Y, -rangeY, rangeY);
             }
+        }
+
+        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 100.0f, DecimalCount = 2), Serialize(0.1f, true, description: "How often the sensor checks if there's something moving near it. Higher values are better for performance.", alwaysUseInstanceValues: true)]
+        public float UpdateInterval
+        {
+            get;
+            set;
         }
 
         private int maxOutputLength;
@@ -134,6 +141,9 @@ namespace Barotrauma.Items.Components
             {
                 rangeX = rangeY = element.GetAttributeFloat("range", 0.0f);
             }
+
+            //randomize update timer so all sensors aren't updated during the same frame
+            updateTimer = Rand.Range(0.0f, UpdateInterval);
         }
 
         public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
@@ -153,7 +163,7 @@ namespace Barotrauma.Items.Components
             if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(new Signal(signalOut, 1), "state_out"); }
 
             updateTimer -= deltaTime;
-            if (updateTimer > 0.0f) return;
+            if (updateTimer > 0.0f) { return; }
 
             MotionDetected = false;
             updateTimer = UpdateInterval;
@@ -163,6 +173,7 @@ namespace Barotrauma.Items.Components
                 if (Math.Abs(item.body.LinearVelocity.X) > MinimumVelocity || Math.Abs(item.body.LinearVelocity.Y) > MinimumVelocity)
                 {
                     MotionDetected = true;
+                    return;
                 }
             }
 
@@ -171,42 +182,94 @@ namespace Barotrauma.Items.Components
             float broadRangeX = Math.Max(rangeX * 2, 500);
             float broadRangeY = Math.Max(rangeY * 2, 500);
 
-            foreach (Character c in Character.CharacterList)
+            if (item.CurrentHull == null && item.Submarine != null && Level.Loaded != null &&
+                (Target == TargetType.Wall || Target == TargetType.Any))
             {
-                if (IgnoreDead && c.IsDead) { continue; }
-
-                //ignore characters that have spawned a second or less ago
-                //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
-                if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
-
-                switch (Target)
+                if (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity)
                 {
-                    case TargetType.Human:
-                        if (!c.IsHuman) { continue; }
-                        break;
-                    case TargetType.Monster:
-                        if (c.IsHuman || c.IsPet) { continue; }
-                        break;
+                    var cells = Level.Loaded.GetCells(item.WorldPosition, 1);
+                    foreach (var cell in cells)
+                    {
+                        if (cell.IsPointInside(item.WorldPosition))
+                        {
+                            MotionDetected = true;
+                            return;
+                        }
+                        foreach (var edge in cell.Edges)
+                        {
+                            Vector2 e1 = edge.Point1 + cell.Translation;
+                            Vector2 e2 = edge.Point2 + cell.Translation;
+                            if (MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.Right, detectRect.Y)) ||
+                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Bottom), new Vector2(detectRect.Right, detectRect.Bottom)) ||
+                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.X, detectRect.Y), new Vector2(detectRect.X, detectRect.Bottom)) ||
+                                MathUtils.LinesIntersect(e1, e2, new Vector2(detectRect.Right, detectRect.Y), new Vector2(detectRect.Right, detectRect.Bottom)))
+                            {
+                                MotionDetected = true;
+                                return;
+                            }
+                        }
+                    }
                 }
-
-                //do a rough check based on the position of the character's collider first
-                //before the more accurate limb-based check
-                if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
+                foreach (Submarine sub in Submarine.Loaded)
                 {
-                    continue;
-                }
+                    if (sub == item.Submarine) { continue; }
 
-                foreach (Limb limb in c.AnimController.Limbs)
-                {
-                    if (limb.IsSevered) { continue; }
-                    if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) { continue; }
-                    if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                    Vector2 relativeVelocity = item.Submarine.Velocity - sub.Velocity;
+                    if (Math.Abs(relativeVelocity.X) < MinimumVelocity && Math.Abs(relativeVelocity.Y) < MinimumVelocity) { continue; }
+
+                    Rectangle worldBorders = new Rectangle(
+                        sub.Borders.X + (int)sub.WorldPosition.X,
+                        sub.Borders.Y + (int)sub.WorldPosition.Y - sub.Borders.Height,
+                        sub.Borders.Width,
+                        sub.Borders.Height);
+
+                    if (worldBorders.Intersects(detectRect))
                     {
                         MotionDetected = true;
-                        break;
+                        return;
                     }
                 }
             }
+
+            if (Target != TargetType.Wall)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (IgnoreDead && c.IsDead) { continue; }
+
+                    //ignore characters that have spawned a second or less ago
+                    //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
+                    if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
+
+                    switch (Target)
+                    {
+                        case TargetType.Human:
+                            if (!c.IsHuman) { continue; }
+                            break;
+                        case TargetType.Monster:
+                            if (c.IsHuman || c.IsPet) { continue; }
+                            break;
+                    }
+
+                    //do a rough check based on the position of the character's collider first
+                    //before the more accurate limb-based check
+                    if (Math.Abs(c.WorldPosition.X - detectPos.X) > broadRangeX || Math.Abs(c.WorldPosition.Y - detectPos.Y) > broadRangeY)
+                    {
+                        continue;
+                    }
+
+                    foreach (Limb limb in c.AnimController.Limbs)
+                    {
+                        if (limb.IsSevered) { continue; }
+                        if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) { continue; }
+                        if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
+                        {
+                            MotionDetected = true;
+                            return;
+                        }
+                    }
+                }
+            }           
         }
 
         public override void FlipX(bool relativeToSub)

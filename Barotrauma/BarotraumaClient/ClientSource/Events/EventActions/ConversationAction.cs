@@ -55,6 +55,12 @@ namespace Barotrauma
         {
             Debug.Assert(actionInstance == null || actionId == null);
 
+            if (GUI.InputBlockingMenuOpen)
+            {
+                if (actionId.HasValue) { SendIgnore(actionId.Value); }
+                return;
+            }
+
             shouldFadeToBlack = fadeToBlack;
 
             if (lastMessageBox != null && !lastMessageBox.Closed && GUIMessageBox.MessageBoxes.Contains(lastMessageBox))
@@ -365,6 +371,15 @@ namespace Barotrauma
             outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
             outmsg.Write(actionId);
             outmsg.Write((byte)selectedOption);
+            GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
+        }
+
+        private static void SendIgnore(UInt16 actionId)
+        {
+            IWriteMessage outmsg = new WriteOnlyMessage();
+            outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
+            outmsg.Write(actionId);
+            outmsg.Write(byte.MaxValue);
             GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
         }
 

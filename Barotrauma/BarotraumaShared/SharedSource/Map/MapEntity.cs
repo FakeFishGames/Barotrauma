@@ -243,7 +243,7 @@ namespace Barotrauma
         /// </summary>
         public int OriginalModuleIndex = -1;
 
-        public UInt16 OriginalContainerID;
+        public int OriginalContainerIndex = -1;
 
         public virtual string Name
         {
@@ -280,7 +280,7 @@ namespace Barotrauma
         public void ResolveLinks(IdRemap childRemap)
         {
             if (unresolvedLinkedToID == null) { return; }
-            for (int i=0;i<unresolvedLinkedToID.Count;i++)
+            for (int i = 0; i < unresolvedLinkedToID.Count; i++)
             {
                 int srcId = unresolvedLinkedToID[i];
                 int targetId = childRemap.GetOffsetId(srcId);
@@ -420,7 +420,7 @@ namespace Barotrauma
                 if (cloneItem == null) { continue; }
 
                 var door = cloneItem.GetComponent<Door>();
-                if (door != null) { door.RefreshLinkedGap(); }
+                door?.RefreshLinkedGap();
 
                 var cloneWire = cloneItem.GetComponent<Wire>();
                 if (cloneWire == null) continue;
@@ -509,9 +509,9 @@ namespace Barotrauma
             mapEntityList.Remove(this);
 
 #if CLIENT
-            if (selectedList.Contains(this))
+            if (SelectedList.Contains(this))
             {
-                selectedList = selectedList.FindAll(e => e != this);
+                SelectedList = SelectedList.Where(e => e != this).ToHashSet();
             }
 #endif
 
@@ -649,7 +649,10 @@ namespace Barotrauma
                     else
                     {
                         object newEntity = loadMethod.Invoke(t, new object[] { element, submarine, idRemap });
-                        if (newEntity != null) entities.Add((MapEntity)newEntity);
+                        if (newEntity != null)
+                        {
+                            entities.Add((MapEntity)newEntity);
+                        }
                     }
                 }
                 catch (TargetInvocationException e)

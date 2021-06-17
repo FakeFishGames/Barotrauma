@@ -189,6 +189,10 @@ namespace Barotrauma
                 if (roomName == value) { return; }
                 roomName = value;
                 DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+                if (!IsWetRoom && ForceAsWetRoom)
+                {
+                    IsWetRoom = true;
+                }
             }
         }
 
@@ -326,6 +330,42 @@ namespace Barotrauma
             {
                 if (!MathUtils.IsValid(value)) return;
                 oxygen = MathHelper.Clamp(value, 0.0f, Volume); 
+            }
+        }
+
+        private bool ForceAsWetRoom => 
+            roomName != null && (
+            roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || 
+            roomName.Contains("bilge", StringComparison.OrdinalIgnoreCase) || 
+            roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase));
+
+        private bool isWetRoom;
+        [Editable, Serialize(false, true, description: "It's normal for this hull to be filled with water. If the room name contains 'ballast', 'bilge', or 'airlock', you can't disable this setting.")]
+        public bool IsWetRoom
+        {
+            get { return isWetRoom; }
+            set
+            {
+                isWetRoom = value;
+                if (ForceAsWetRoom)
+                {
+                    isWetRoom = true;
+                }
+            }
+        }
+
+        private bool avoidStaying;
+        [Editable, Serialize(false, true, description: "Bots avoid staying here, but they are still allowed to access the room when needed and go through it. Forced true for wet rooms.")]
+        public bool AvoidStaying
+        {
+            get { return avoidStaying || IsWetRoom; }
+            set
+            {
+                avoidStaying = value;
+                if (IsWetRoom)
+                {
+                    avoidStaying = true;
+                }
             }
         }
 
@@ -534,6 +574,9 @@ namespace Barotrauma
             Pressure = rect.Y - rect.Height + waterVolume / rect.Width;
             
             BallastFlora?.OnMapLoaded();
+#if CLIENT
+            lastAmbientLightEditTime = 0.0;
+#endif
         }
 
         public void AddToGrid(Submarine submarine)
@@ -643,6 +686,11 @@ namespace Barotrauma
 
         public void AddFireSource(FireSource fireSource)
         {
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+            {
+                //clients aren't allowed to create fire sources in hulls whose IDs have been freed (dynamic hulls between docking ports), because they can't be synced
+                if (IdFreed) { return; }
+            }
             if (fireSource is DummyFireSource dummyFire)
             {
                 FakeFireSources.Add(dummyFire);
@@ -705,19 +753,22 @@ namespace Barotrauma
 
             Oxygen -= OxygenDeteriorationSpeed * deltaTime;
 
-            if ((Character.Controlled?.CharacterHealth?.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+            if (FakeFireSources.Count > 0)
             {
-                for (int i = FakeFireSources.Count - 1; i >= 0; i--)
+                if ((Character.Controlled?.CharacterHealth?.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
                 {
-                    if (FakeFireSources[i].CausedByPsychosis)
+                    for (int i = FakeFireSources.Count - 1; i >= 0; i--)
                     {
-                        FakeFireSources[i].Remove();
+                        if (FakeFireSources[i].CausedByPsychosis)
+                        {
+                            FakeFireSources[i].Remove();
+                        }
                     }
                 }
+                FireSource.UpdateAll(FakeFireSources, deltaTime);
             }
 
             FireSource.UpdateAll(FireSources, deltaTime);
-            FireSource.UpdateAll(FakeFireSources, deltaTime);
 
             foreach (Decal decal in decals)
             {

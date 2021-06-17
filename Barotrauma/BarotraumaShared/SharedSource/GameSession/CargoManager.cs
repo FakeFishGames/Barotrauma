@@ -46,6 +46,7 @@ namespace Barotrauma
 
         public List<PurchasedItem> ItemsInBuyCrate { get; } = new List<PurchasedItem>();
         public List<PurchasedItem> ItemsInSellCrate { get; } = new List<PurchasedItem>();
+        public List<PurchasedItem> ItemsInSellFromSubCrate { get; } = new List<PurchasedItem>();
         public List<PurchasedItem> PurchasedItems { get; } = new List<PurchasedItem>();
         public List<SoldItem> SoldItems { get; } = new List<SoldItem>();
 
@@ -55,6 +56,7 @@ namespace Barotrauma
 
         public Action OnItemsInBuyCrateChanged;
         public Action OnItemsInSellCrateChanged;
+        public Action OnItemsInSellFromSubCrateChanged;
         public Action OnPurchasedItemsChanged;
         public Action OnSoldItemsChanged;
         
@@ -73,6 +75,12 @@ namespace Barotrauma
         {
             ItemsInSellCrate.Clear();
             OnItemsInSellCrateChanged?.Invoke();
+        }
+
+        public void ClearItemsInSellFromSubCrate()
+        {
+            ItemsInSellFromSubCrate.Clear();
+            OnItemsInSellFromSubCrateChanged?.Invoke();
         }
 
         public void SetPurchasedItems(List<PurchasedItem> items)
@@ -246,42 +254,21 @@ namespace Barotrauma
                                 continue;
                             }
                             availableContainers.Add(itemContainer);
-    #if SERVER
+#if SERVER
                             if (GameMain.Server != null)
                             {
                                 Entity.Spawner.CreateNetworkEvent(itemContainer.Item, false);
                             }
-    #endif
-                        }                    
-                    }
-
-                    if (itemContainer == null)
-                    {
-                        //no container, place at the waypoint
-                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                        {
-                            Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, position, wp.Submarine, onSpawned: itemSpawned);
+#endif
                         }
-                        else
-                        {
-                            var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                            itemSpawned(item);
-                        }
-                        continue;
                     }
 
-                    //place in the container
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                    {
-                        Entity.Spawner.AddToSpawnQueue(pi.ItemPrefab, itemContainer.Inventory, onSpawned: itemSpawned);
-                    }
-                    else
-                    {
-                        var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                        itemContainer.Inventory.TryPutItem(item, null);
-                        itemSpawned(item);
-                    }
-
+                    var item = new Item(pi.ItemPrefab, position, wp.Submarine);
+                    itemContainer?.Inventory.TryPutItem(item, null);
+                    itemSpawned(item);
+#if SERVER
+                    Entity.Spawner?.CreateNetworkEvent(item, false);
+#endif
                     static void itemSpawned(Item item)
                     {
                         Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;

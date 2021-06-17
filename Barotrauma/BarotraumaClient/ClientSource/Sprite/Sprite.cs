@@ -121,7 +121,7 @@ namespace Barotrauma
             }
         }
 
-        public void ReloadTexture(bool updateAllSprites = false) => ReloadTexture(updateAllSprites ? LoadedSprites.Where(s => s.Texture == texture) : new Sprite[] { this });
+        public void ReloadTexture(bool updateAllSprites = false) => ReloadTexture(updateAllSprites ? LoadedSprites.Where(s => s.texture == texture).ToList() : new List<Sprite>() { this });
 
         public void ReloadTexture(IEnumerable<Sprite> spritesToUpdate)
         {

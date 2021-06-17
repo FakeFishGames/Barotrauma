@@ -38,6 +38,10 @@ namespace Barotrauma
         /// Effects applied to entities that are inside the trigger
         /// </summary>
         private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
+        public IEnumerable<StatusEffect> StatusEffects
+        {
+            get { return statusEffects; }
+        }
 
         /// <summary>
         /// Attacks applied to entities that are inside the trigger
@@ -140,6 +144,11 @@ namespace Barotrauma
             get;
             private set;
         }
+        public float GlobalForceDecreaseInterval
+        {
+            get;
+            private set;
+        }
 
         private readonly TriggerForceMode forceMode;
         public TriggerForceMode ForceMode
@@ -200,7 +209,7 @@ namespace Barotrauma
                 PhysicsBody = new PhysicsBody(element, scale)
                 {
                     CollisionCategories = Physics.CollisionLevel,
-                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall
+                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionProjectile | Physics.CollisionWall,
                 };
                 PhysicsBody.FarseerBody.OnCollision += PhysicsBody_OnCollision;
                 PhysicsBody.FarseerBody.OnSeparation += PhysicsBody_OnSeparation;
@@ -234,6 +243,7 @@ namespace Barotrauma
             ForceFluctuationInterval = element.GetAttributeFloat("forcefluctuationinterval", 0.01f);
             ForceFluctuationStrength = Math.Max(element.GetAttributeFloat("forcefluctuationstrength", 0.0f), 0.0f);
             ForceFalloff = element.GetAttributeBool("forcefalloff", true);
+            GlobalForceDecreaseInterval = element.GetAttributeFloat("globalforcedecreaseinterval", 0.0f);
 
             ForceVelocityLimit = ConvertUnits.ToSimUnits(element.GetAttributeFloat("forcevelocitylimit", float.MaxValue));
             string forceModeStr = element.GetAttributeString("forcemode", "Force");
@@ -434,6 +444,8 @@ namespace Barotrauma
             }
         }
 
+        private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
         public void Update(float deltaTime)
         {
             if (ParentTrigger != null && !ParentTrigger.IsTriggered) { return; }
@@ -457,7 +469,13 @@ namespace Barotrauma
 
             if (!UseNetworkSyncing || isNotClient)
             {
-                if (ForceFluctuationStrength > 0.0f)
+                if (GlobalForceDecreaseInterval > 0.0f && Level.Loaded?.LevelObjectManager != null && 
+                    Level.Loaded.LevelObjectManager.GlobalForceDecreaseTimer % (GlobalForceDecreaseInterval * 2) < GlobalForceDecreaseInterval)
+                {
+                    NeedsNetworkSyncing |= currentForceFluctuation > 0.0f;
+                    currentForceFluctuation = 0.0f;                    
+                }
+                else if (ForceFluctuationStrength > 0.0f)
                 {
                     //no need for force fluctuation (or network updates) if the trigger limits velocity and there are no triggerers
                     if (forceMode != TriggerForceMode.LimitVelocity || triggerers.Any())
@@ -509,6 +527,7 @@ namespace Barotrauma
             {
                 foreach (StatusEffect effect in statusEffects)
                 {
+                    if (effect.type == ActionType.OnBroken) { continue; }
                     Vector2? position = null;
                     if (effect.HasTargetType(StatusEffect.TargetType.This)) { position = WorldPosition; }
                     if (triggerer is Character character)
@@ -533,8 +552,8 @@ namespace Barotrauma
                     if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                         effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
-                        var targets = new List<ISerializableEntity>();
-                        effect.GetNearbyTargets(worldPosition, targets);
+                        targets.Clear();
+                        targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));
                         effect.Apply(effect.type, deltaTime, triggerer, targets);
                     }
                 }

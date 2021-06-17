@@ -199,13 +199,9 @@ namespace Barotrauma.Items.Components
                 }
                 
                 Color neutralColor = Color.DarkCyan;
-                if (hull.RoomName != null)
+                if (hull.IsWetRoom)
                 {
-                    if (hull.RoomName.Contains("ballast") || hull.RoomName.Contains("Ballast") ||
-                        hull.RoomName.Contains("airlock") || hull.RoomName.Contains("Airlock"))
-                    {
-                        neutralColor = new Color(9, 80, 159);
-                    }
+                    neutralColor = new Color(9, 80, 159);
                 }
 
                 if (hullData.Distort)

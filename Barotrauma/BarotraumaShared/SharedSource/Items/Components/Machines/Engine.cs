@@ -172,14 +172,23 @@ namespace Barotrauma.Items.Components
 
             float scaledDamageRange = propellerDamage.DamageRange * item.Scale;
 
-            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale;
+            Vector2 propellerWorldPos = item.WorldPosition + PropellerPos * item.Scale; 
+            float broadRange = Math.Max(scaledDamageRange * 2, 500);
             foreach (Character character in Character.CharacterList)
             {
                 if (!character.Enabled || character.Removed) { continue; }
-                float distSqr = Vector2.DistanceSquared(character.WorldPosition, propellerWorldPos);
-                if (distSqr > scaledDamageRange * scaledDamageRange) { continue; }
-                character.LastDamageSource = item;
-                propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
+                if (Math.Abs(character.WorldPosition.X - propellerWorldPos.X) > broadRange) { continue; }
+                if (Math.Abs(character.WorldPosition.Y - propellerWorldPos.Y) > broadRange) { continue; }
+
+                foreach (Limb limb in character.AnimController.Limbs)
+                {
+                    if (limb.IsSevered || !limb.body.Enabled) { continue; }
+                    float distSqr = Vector2.DistanceSquared(limb.WorldPosition, propellerWorldPos);
+                    if (distSqr > scaledDamageRange * scaledDamageRange) { continue; }
+                    character.LastDamageSource = item;
+                    propellerDamage.DoDamage(null, character, propellerWorldPos, 1.0f, true);
+                    break;
+                }
             }
         }
 

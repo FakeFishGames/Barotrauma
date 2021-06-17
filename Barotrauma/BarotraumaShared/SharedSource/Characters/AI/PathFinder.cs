@@ -410,7 +410,10 @@ namespace Barotrauma
             if (end.state == 0 || end.Parent == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage("Path not found. " + errorMsgStr, Color.Yellow);
+                if (errorMsgStr != null)
+                {
+                    DebugConsole.NewMessage("Path not found. " + errorMsgStr, Color.Yellow);
+                }
 #endif
                 return new SteeringPath(true);
             }

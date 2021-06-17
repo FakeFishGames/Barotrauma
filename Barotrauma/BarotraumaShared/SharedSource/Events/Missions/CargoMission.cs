@@ -15,17 +15,112 @@ namespace Barotrauma
         private readonly Dictionary<Item, UInt16> parentInventoryIDs = new Dictionary<Item, UInt16>();
         private readonly Dictionary<Item, byte> parentItemContainerIndices = new Dictionary<Item, byte>();
 
-        private int requiredDeliveryAmount;
+        private float requiredDeliveryAmount;
 
-        public CargoMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        private readonly List<(XElement element, ItemContainer container)> itemsToSpawn = new List<(XElement element, ItemContainer container)>();
+        private int? rewardPerCrate;
+        private int calculatedReward;
+        private int maxItemCount;
+
+        private Submarine sub;
+
+        public override string Description
         {
+            get
+            {
+                if (Submarine.MainSub != sub)
+                {
+                    string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(Submarine.MainSub))}‖end‖";
+                    if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
+                }
+                return description;
+            }
+        }
+
+        public CargoMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
+        {
+            this.sub = sub;
             itemConfig = prefab.ConfigElement.Element("Items");
-            requiredDeliveryAmount = prefab.ConfigElement.GetAttributeInt("requireddeliveryamount", 0);
+            requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.98f), 1.0f);            
+            DetermineCargo();
+        }
+
+        private void DetermineCargo()
+        {
+            if (this.sub == null || itemConfig == null)
+            {
+                calculatedReward = Prefab.Reward;
+                return;
+            }
+
+            itemsToSpawn.Clear();
+            List<(ItemContainer container, int freeSlots)> containers = sub.GetCargoContainers();
+            containers.Sort((c1, c2) => { return c2.container.Capacity.CompareTo(c1.container.Capacity); });
+
+            maxItemCount = 0;
+            foreach (XElement subElement in itemConfig.Elements())
+            {
+                int maxCount = subElement.GetAttributeInt("maxcount", 10);
+                maxItemCount += maxCount;
+            }
+
+            for (int i = 0; i < containers.Count; i++)
+            {
+                foreach (XElement subElement in itemConfig.Elements())
+                {
+                    int maxCount = subElement.GetAttributeInt("maxcount", 10);
+                    if (itemsToSpawn.Count(it => it.element == subElement) >= maxCount) { continue; }
+                    ItemPrefab itemPrefab = FindItemPrefab(subElement);
+                    while (containers[i].freeSlots > 0 && containers[i].container.Inventory.CanBePut(itemPrefab))
+                    {
+                        containers[i] = (containers[i].container, containers[i].freeSlots - 1);
+                        itemsToSpawn.Add((subElement, containers[i].container));
+                        if (itemsToSpawn.Count(it => it.element == subElement) >= maxCount) { break; }
+                    }
+                }
+            }
+
+            if (!itemsToSpawn.Any())
+            {
+                itemsToSpawn.Add((itemConfig.Elements().First(), null));
+            }
+
+            calculatedReward = 0;
+            foreach (var itemToSpawn in itemsToSpawn)
+            {
+                int price = itemToSpawn.element.GetAttributeInt("reward", Prefab.Reward / itemsToSpawn.Count);
+                if (rewardPerCrate.HasValue)
+                {
+                    if (price != rewardPerCrate.Value) { rewardPerCrate = -1; }
+                }
+                else
+                {
+                    rewardPerCrate = price;
+                }
+                calculatedReward += price;
+            }
+            if (rewardPerCrate.HasValue && rewardPerCrate < 0) { rewardPerCrate = null; }
+
+            string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub))}‖end‖";
+            if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
+        }
+
+        public override int GetReward(Submarine sub)
+        {
+            if (sub != this.sub)
+            {
+                this.sub = sub;
+                DetermineCargo();
+            }
+            return calculatedReward;
         }
 
         private void InitItems()
         {
+            this.sub = Submarine.MainSub;
+            DetermineCargo();
+
             items.Clear();
             parentInventoryIDs.Clear();
             parentItemContainerIndices.Clear();
@@ -36,20 +131,15 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (XElement subElement in itemConfig.Elements())
+            foreach (var (element, container) in itemsToSpawn)
             {
-                LoadItemAsChild(subElement, null);
+                LoadItemAsChild(element, container?.Item);
             }
 
-            if (requiredDeliveryAmount == 0) { requiredDeliveryAmount = items.Count; }
-            if (requiredDeliveryAmount > items.Count)
-            {
-                DebugConsole.AddWarning($"Error in mission \"{Prefab.Identifier}\". Required delivery amount is {requiredDeliveryAmount} but there's only {items.Count} items to deliver.");
-                requiredDeliveryAmount = items.Count;
-            }
+            if (requiredDeliveryAmount <= 0.0f) { requiredDeliveryAmount = 1.0f; }
         }
 
-        private void LoadItemAsChild(XElement element, Item parent)
+        private ItemPrefab FindItemPrefab(XElement element)
         {
             ItemPrefab itemPrefab;
             if (element.Attribute("name") != null)
@@ -60,7 +150,6 @@ namespace Barotrauma
                 if (itemPrefab == null)
                 {
                     DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \"" + itemName + "\" not found");
-                    return;
                 }
             }
             else
@@ -70,15 +159,15 @@ namespace Barotrauma
                 if (itemPrefab == null)
                 {
                     DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \"" + itemIdentifier + "\" not found");
-                    return;
                 }
             }
+            return itemPrefab;
+        }
 
-            if (itemPrefab == null)
-            {
-                DebugConsole.ThrowError("Couldn't spawn item for cargo mission: item prefab \"" + element.Name.ToString() + "\" not found");
-                return;
-            }
+
+        private void LoadItemAsChild(XElement element, Item parent)
+        {
+            ItemPrefab itemPrefab = FindItemPrefab(element);
 
             WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub, useSyncedRand: true);
             if (cargoSpawnPos == null)
@@ -88,7 +177,6 @@ namespace Barotrauma
             }
 
             var cargoRoom = cargoSpawnPos.CurrentHull;
-
             if (cargoRoom == null)
             {
                 DebugConsole.ThrowError("A waypoint marked as Cargo must be placed inside a room!");
@@ -140,7 +228,7 @@ namespace Barotrauma
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
                 int deliveredItemCount = items.Count(i => i.CurrentHull != null && !i.Removed && i.Condition > 0.0f);
-                if (deliveredItemCount >= requiredDeliveryAmount)
+                if (deliveredItemCount / (float)items.Count >= requiredDeliveryAmount)
                 {
                     GiveReward();
                     completed = true;

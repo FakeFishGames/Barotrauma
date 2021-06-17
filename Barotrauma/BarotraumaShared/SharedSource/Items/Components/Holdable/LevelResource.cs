@@ -75,6 +75,14 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
+        public override void Move(Vector2 amount)
+        {
+            if (trigger != null && amount.LengthSquared() > 0.00001f)
+            {
+                trigger.SetTransform(item.SimPosition, 0.0f);
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (holdable != null && !holdable.Attached)

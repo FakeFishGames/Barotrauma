@@ -150,16 +150,21 @@ namespace Barotrauma
         //legacy support
         public readonly string[] AppropriateJobs;
         public readonly string[] Options;
+        public readonly string[] HiddenOptions;
+        public readonly string[] AllOptions;
         private readonly Dictionary<string, string> OptionNames;
 
         public readonly Dictionary<string, Sprite> OptionSprites;
 
-        private readonly Dictionary<string, Sprite> minimapIcons;
-        public Dictionary<string, Sprite> MinimapIcons => IsPrefab ? minimapIcons : Prefab.minimapIcons;
-
         public readonly bool MustSetTarget;
+        /// <summary>
+        /// Can the order be turned into a non-entity-targeting one if it was originally created with a target entity.
+        /// Note: if MustSetTarget is true, CanBeGeneralized will always be false.
+        /// </summary>
+        public readonly bool CanBeGeneralized;
         public readonly string AppropriateSkill;
         public readonly bool Hidden;
+        public readonly bool IgnoreAtOutpost;
 
         public bool HasOptions => (IsPrefab ? Options : Prefab.Options).Length > 1;
         public bool IsPrefab { get; private set; }
@@ -307,11 +312,15 @@ namespace Barotrauma
             TargetAllCharacters = orderElement.GetAttributeBool("targetallcharacters", false);
             AppropriateJobs = orderElement.GetAttributeStringArray("appropriatejobs", new string[0]);
             Options = orderElement.GetAttributeStringArray("options", new string[0]);
+            HiddenOptions = orderElement.GetAttributeStringArray("hiddenoptions", new string[0]);
+            AllOptions = Options.Concat(HiddenOptions).ToArray();
             var category = orderElement.GetAttributeString("category", null);
             if (!string.IsNullOrWhiteSpace(category)) { this.Category = (OrderCategory)Enum.Parse(typeof(OrderCategory), category, true); }
             MustSetTarget = orderElement.GetAttributeBool("mustsettarget", false);
+            CanBeGeneralized = !MustSetTarget && orderElement.GetAttributeBool("canbegeneralized", true);
             AppropriateSkill = orderElement.GetAttributeString("appropriateskill", null);
             Hidden = orderElement.GetAttributeBool("hidden", false);
+            IgnoreAtOutpost = orderElement.GetAttributeBool("ignoreatoutpost", false);
 
             var optionNames = TextManager.Get("OrderOptions." + Identifier, true)?.Split(',', '，') ??
                 orderElement.GetAttributeStringArray("optionnames", new string[0]);
@@ -348,15 +357,6 @@ namespace Barotrauma
                 }
             }
 
-            minimapIcons = new Dictionary<string, Sprite>();
-            var minimapIconElements = orderElement.GetChildElements("minimapicon");
-            foreach (XElement minimapIconElement in minimapIconElements)
-            {
-                var id = minimapIconElement.GetAttributeString("id", null);
-                if (string.IsNullOrWhiteSpace(id)) { continue; }
-                minimapIcons.Add(id, new Sprite(minimapIconElement.GetChildElement("sprite"), lazyLoad: true));
-            }
-
             IsPrefab = true;
             MustManuallyAssign = orderElement.GetAttributeBool("mustmanuallyassign", false);
             IsIgnoreOrder = Identifier == "ignorethis" || Identifier == "unignorethis";
@@ -366,7 +366,7 @@ namespace Barotrauma
         /// <summary>
         /// Constructor for order instances
         /// </summary>
-        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null, bool isAutonomous = false)
+        public Order(Order prefab, Entity targetEntity, ItemComponent targetItem, Character orderGiver = null)
         {
             Prefab = prefab.Prefab ?? prefab;
 
@@ -384,12 +384,14 @@ namespace Barotrauma
             AppropriateJobs       = prefab.AppropriateJobs;
             FadeOutTime           = prefab.FadeOutTime;
             MustSetTarget         = prefab.MustSetTarget;
+            CanBeGeneralized      = prefab.CanBeGeneralized;
             AppropriateSkill      = prefab.AppropriateSkill;
             Category              = prefab.Category;
             MustManuallyAssign    = prefab.MustManuallyAssign;
             IsIgnoreOrder         = prefab.IsIgnoreOrder;
             DrawIconWhenContained = prefab.DrawIconWhenContained;
             Hidden                = prefab.Hidden;
+            IgnoreAtOutpost       = prefab.IgnoreAtOutpost;
 
             OrderGiver = orderGiver;
             TargetEntity = targetEntity;
@@ -413,12 +415,18 @@ namespace Barotrauma
             IsPrefab = false;
         }
 
+        /// <summary>
+        /// Constructor for order instances
+        /// </summary>
         public Order(Order prefab, OrderTarget target, Character orderGiver = null) : this(prefab, targetEntity: null, targetItem: null, orderGiver)
         {
             TargetPosition = target;
             TargetType = OrderTargetType.Position;
         }
 
+        /// <summary>
+        /// Constructor for order instances
+        /// </summary>
         public Order(Order prefab, Structure wall, int? sectionIndex, Character orderGiver = null) : this(prefab, targetEntity: wall, null, orderGiver: orderGiver)
         {
             WallSectionIndex = sectionIndex;
@@ -487,27 +495,19 @@ namespace Barotrauma
             if (submarine == null) { return matchingItems; }
             if (ItemComponentType != null || TargetItems.Length > 0)
             {
-                matchingItems = TargetItems.Length > 0 ?
-                    Item.ItemList.FindAll(it => TargetItems.Contains(it.Prefab.Identifier) || it.HasTag(TargetItems)) :
-                    Item.ItemList.FindAll(it => TryGetTargetItemComponent(it, out _));
-                if (mustBelongToPlayerSub)
+                foreach (var item in Item.ItemList)
                 {
-                    matchingItems.RemoveAll(it => it.Submarine?.Info != null && it.Submarine.Info.Type != SubmarineType.Player);
-                }
-                matchingItems.RemoveAll(it => it.Submarine != submarine && !submarine.DockedTo.Contains(it.Submarine));
-                if (requiredTeam.HasValue)
-                {
-                    matchingItems.RemoveAll(it => it.Submarine == null || it.Submarine.TeamID != requiredTeam.Value);
-                }
-                matchingItems.RemoveAll(it => it.NonInteractable);
-                if (UseController)
-                {
-                    matchingItems.RemoveAll(i => i.Components.None(c => c.GetType() == ItemComponentType) && !i.TryFindController(out _));
-                }
-                if (interactableFor != null)
-                {
-                    matchingItems.RemoveAll(it => !it.IsInteractable(interactableFor) ||
-                        (UseController && it.FindController() is Controller c && !c.Item.IsInteractable(interactableFor)));
+                    if (TargetItems.Length > 0 && !TargetItems.Contains(item.Prefab.Identifier) && !item.HasTag(TargetItems)) { continue; }
+                    if (TargetItems.Length == 0 && !TryGetTargetItemComponent(item, out _)) { continue; }
+                    if (mustBelongToPlayerSub && item.Submarine?.Info != null && item.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                    if (item.Submarine != submarine && !submarine.DockedTo.Contains(item.Submarine)) { continue; }
+                    if (requiredTeam.HasValue && (item.Submarine == null || item.Submarine.TeamID != requiredTeam.Value)) { continue; }
+                    if (item.NonInteractable) { continue; }
+                    if (ItemComponentType != null && item.Components.None(c => c.GetType() == ItemComponentType)) { continue; }
+                    Controller controller = null;
+                    if (UseController && !item.TryFindController(out controller)) { continue; }
+                    if (interactableFor != null && (!item.IsInteractable(interactableFor) || (UseController && !controller.Item.IsInteractable(interactableFor)))) { continue; }
+                    matchingItems.Add(item);
                 }
             }
             return matchingItems;
@@ -525,7 +525,15 @@ namespace Barotrauma
 
         public string GetOptionName(string id)
         {
-            return Prefab == null ? OptionNames[id] : Prefab.OptionNames[id];
+            if (Prefab == null)
+            {
+                if (OptionNames.ContainsKey(id)) { return OptionNames[id]; }
+            }
+            else
+            {
+                if (Prefab.OptionNames.ContainsKey(id)) { return Prefab.OptionNames[id]; }
+            }
+            return string.Empty;
         }
 
         public string GetOptionName(int index)

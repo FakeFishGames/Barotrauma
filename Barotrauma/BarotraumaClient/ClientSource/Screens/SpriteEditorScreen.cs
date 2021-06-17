@@ -363,7 +363,10 @@ namespace Barotrauma
                     "VineSprite",
                     "LeafSprite",
                     "FlowerSprite",
-                    "DecorativeSprite"
+                    "DecorativeSprite",
+                    "BarrelSprite",
+                    "RailSprite",
+                    "SchematicSprite"
                 };
 
                 foreach (string spriteElementName in spriteElementNames)

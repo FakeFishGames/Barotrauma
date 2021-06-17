@@ -196,7 +196,7 @@ namespace Barotrauma
                 UpdaterUtil.SaveFileList("filelist.xml");
             }));
 
-            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
+            commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
                 List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Select(f => f.Path).ToList();
@@ -652,15 +652,20 @@ namespace Barotrauma
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("heal", "heal [character name]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed.", (string[] args) =>
+            commands.Add(new Command("heal", "heal [character name] [all]: Restore the specified character to full health. If the name parameter is omitted, the controlled character will be healed. By default only heals common afflictions such as physical damage and blood loss: use the \"all\" argument to heal everything, including poisonings/addictions/etc.", (string[] args) =>
             {
-                Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
+                bool healAll = args.Length > 1 && args[1].Equals("all", StringComparison.OrdinalIgnoreCase);
+                Character healedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(healAll ? args.Take(args.Length - 1).ToArray() : args);
                 if (healedCharacter != null)
                 {
                     healedCharacter.SetAllDamage(0.0f, 0.0f, 0.0f);
                     healedCharacter.Oxygen = 100.0f;
                     healedCharacter.Bloodloss = 0.0f;
                     healedCharacter.SetStun(0.0f, true);
+                    if (healAll)
+                    {
+                        healedCharacter.CharacterHealth.RemoveAllAfflictions();
+                    }
                 }
             },
             () =>
@@ -1449,6 +1454,20 @@ namespace Barotrauma
                 return new[] { primaries, identifiers };
             }));
 
+            commands.Add(new Command("setdifficulty|forcedifficulty", "difficulty [0-100]. Leave the parameter empty to disable.", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    Level.ForcedDifficulty = null;
+                    NewMessage($"Forced difficulty level disabled.", Color.Green);
+                }
+                else if (float.TryParse(args[0], out float difficulty))
+                {
+                    Level.ForcedDifficulty = difficulty;
+                    NewMessage($"Set the difficulty level to { Level.ForcedDifficulty }.", Color.Yellow);
+                }
+            }, isCheat: true));
+
             commands.Add(new Command("difficulty|leveldifficulty", "difficulty [0-100]: Change the level difficulty setting in the server lobby.", null));
             
             commands.Add(new Command("autoitemplacerdebug|outfitdebug", "autoitemplacerdebug: Toggle automatic item placer debug info on/off. The automatically placed items are listed in the debug console at the start of a round.", (string[] args) =>
@@ -1592,7 +1611,7 @@ namespace Barotrauma
             commands.Add(new Command("control", "control [character name]: Start controlling the specified character (client-only).", null, () =>
             {
                 return new string[][] { ListCharacterNames() };
-            }));
+            }, isCheat: true));
             commands.Add(new Command("los", "Toggle the line of sight effect on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
@@ -1886,6 +1905,18 @@ namespace Barotrauma
             }
 
             if (string.IsNullOrWhiteSpace(args[0])) { return; }
+            CharacterTeamType teamType = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;
+            if (args.Length > 2)
+            {
+                try
+                {
+                    teamType = (CharacterTeamType)int.Parse(args[2]);
+                }
+                catch
+                {
+                    DebugConsole.ThrowError($"\"{args[2]}\" is not a valid team id.");
+                }
+            }
 
             if (spawnPoint != null) { spawnPosition = spawnPoint.WorldPosition; }
 
@@ -1896,8 +1927,7 @@ namespace Barotrauma
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (GameMain.GameSession != null)
                 {
-                    //TODO: a way to select which team to spawn to?
-                    spawnedCharacter.TeamID = Character.Controlled != null ? Character.Controlled.TeamID : CharacterTeamType.Team1;                    
+                    spawnedCharacter.TeamID = teamType;
 #if CLIENT
                     GameMain.GameSession.CrewManager.AddCharacter(spawnedCharacter);          
 #endif

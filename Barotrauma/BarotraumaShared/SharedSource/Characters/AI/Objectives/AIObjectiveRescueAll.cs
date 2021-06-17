@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
-        public override string DebugTag => "rescue all";
+        public override string Identifier { get; set; } = "rescue all";
         public override bool ForceRun => true;
         public override bool InverseTargetEvaluation => true;
         public override bool AllowOutsideSubmarine => true;

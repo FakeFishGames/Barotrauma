@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class AIObjectiveCombat : AIObjective
     {
-        public override string DebugTag => "combat";
+        public override string Identifier { get; set; } = "combat";
 
         public override bool KeepDivingGearOn => true;
         public override bool IgnoreUnsafeHulls => true;
@@ -92,11 +92,6 @@ namespace Barotrauma
         private readonly float distanceCheckInterval = 0.2f;
         private float distanceTimer;
 
-        /// <summary>
-        /// Aborts the objective when this condition is true
-        /// </summary>
-        public Func<bool> abortCondition;
-
         public bool allowHoldFire;
 
         /// <summary>
@@ -152,7 +147,7 @@ namespace Barotrauma
             HumanAIController.SortTimer = 0;
         }
 
-        public override float GetPriority()
+        protected override float GetPriority()
         {
             if (character.TeamID == CharacterTeamType.FriendlyNPC && Enemy != null)
             {
@@ -186,7 +181,7 @@ namespace Barotrauma
             {
                 findSafety.Priority = 0;
             }
-            if (!character.IsOnPlayerTeam && !objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
+            if (!AllowCoolDown && !character.IsOnPlayerTeam && !objectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>())
             {
                 distanceTimer -= deltaTime;
                 if (distanceTimer < 0)
@@ -197,7 +192,7 @@ namespace Barotrauma
             }
         }
 
-        protected override bool Check()
+        protected override bool CheckObjectiveSpecific()
         {
             if (sqrDistance > maxDistance * maxDistance)
             {
@@ -209,11 +204,6 @@ namespace Barotrauma
 
         protected override void Act(float deltaTime)
         {
-            if (abortCondition != null && abortCondition())
-            {
-                Abandon = true;
-                return;
-            }
             if (AllowCoolDown)
             {
                 coolDownTimer -= deltaTime;
@@ -358,6 +348,7 @@ namespace Barotrauma
                     TryAddSubObjective(ref seekWeaponObjective,
                         constructor: () => new AIObjectiveGetItem(character, "weapon", objectiveManager, equip: true, checkInventory: false)
                         {
+                            AllowStealing = HumanAIController.IsMentallyUnstable,
                             GetItemPriority = i =>
                             {
                                 if (Weapon != null && (i == Weapon || i.Prefab.Identifier == Weapon.Prefab.Identifier)) { return 0; }
@@ -799,10 +790,13 @@ namespace Barotrauma
             }
             if (character.TeamID == CharacterTeamType.FriendlyNPC)
             {
-                // Confiscate stolen goods.
+                // Confiscate stolen goods and all weapons
                 foreach (var item in Enemy.Inventory.AllItemsMod)
                 {
-                    if (item.StolenDuringRound)
+                    if (character.TeamID == CharacterTeamType.FriendlyNPC && item.StolenDuringRound ||
+                        item.HasTag("weapon") ||
+                        item.GetComponent<MeleeWeapon>() != null ||
+                        item.GetComponent<RangedWeapon>() != null)
                     {
                         item.Drop(character);
                         character.Inventory.TryPutItem(item, character, CharacterInventory.anySlot);
@@ -894,7 +888,8 @@ namespace Barotrauma
                 if (ammunitionIdentifiers != null)
                 {
                     // Try reload ammunition from inventory
-                    ammunition = character.Inventory.FindItem(i => ammunitionIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0, true);
+                    bool IsInsideHeadset(Item i) => i.ParentInventory?.Owner is Item ownerItem && ownerItem.HasTag("mobileradio");
+                    ammunition = character.Inventory.FindItem(i => ammunitionIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0 && !IsInsideHeadset(i), recursive: true);
                     if (ammunition != null)
                     {
                         var container = Weapon.GetComponent<ItemContainer>();

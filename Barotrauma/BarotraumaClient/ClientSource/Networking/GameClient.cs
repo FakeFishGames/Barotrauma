@@ -527,7 +527,7 @@ namespace Barotrauma.Networking
                     string pwMsg = TextManager.Get("PasswordRequired");
 
                     var msgBox = new GUIMessageBox(pwMsg, "", new string[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
-                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, (int)(170 * Math.Max(1.0f, GUI.Scale))));
+                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, GUI.IntScale(170)));
                     var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), msgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
                     var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
                     {
@@ -537,7 +537,8 @@ namespace Barotrauma.Networking
 
                     if (wrongPassword)
                     {
-                        new GUITextBlock(new RectTransform(new Vector2(1f, 0.33f), passwordHolder.RectTransform), TextManager.Language == "English" ? TextManager.Get("incorrectpassword") : "Incorrect password", GUI.Style.Red, GUI.Font, textAlignment: Alignment.Center);
+                        var incorrectPasswordText = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), passwordHolder.RectTransform), TextManager.Get("incorrectpassword"), GUI.Style.Red, GUI.Font, textAlignment: Alignment.Center);
+                        incorrectPasswordText.RectTransform.MinSize = new Point(0, (int)incorrectPasswordText.TextSize.Y);
                         passwordHolder.Recalculate();
                     }
 
@@ -643,7 +644,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", new string[2] { "[message]", "[targetsite]" }, new string[2] { e.Message, e.TargetSite.ToString() }));
                 Disconnect();
-                GameMain.MainMenuScreen.Select();
+                GameMain.ServerListScreen.Select();
                 return;
             }
 
@@ -659,10 +660,7 @@ namespace Barotrauma.Networking
             {
                 EndVoteTickBox.Visible = serverSettings.Voting.AllowEndVoting && HasSpawned && !(GameMain.GameSession?.GameMode is CampaignMode);
 
-                if (respawnManager != null)
-                {
-                    respawnManager.Update(deltaTime);
-                }
+                respawnManager?.Update(deltaTime);
 
                 if (updateTimer <= DateTime.Now)
                 {
@@ -936,9 +934,6 @@ namespace Barotrauma.Networking
                         }
                     }
                     break;
-                case ServerPacketHeader.RESET_UPGRADES:
-                    campaign?.UpgradeManager.ClientRead(inc);
-                    break;
                 case ServerPacketHeader.CREW:
                     campaign?.ClientReadCrew(inc);
                     break;
@@ -993,15 +988,21 @@ namespace Barotrauma.Networking
                 string errorMsg = $"Mission equality check failed. Mission count doesn't match the server (server: {missionCount}, client: {GameMain.GameSession.Missions.Count()})";
                 throw new Exception(errorMsg);
             }
-            foreach (Mission mission in GameMain.GameSession.Missions)
+            List<string> serverMissionIdentifiers = new List<string>();
+            for (int i = 0; i < missionCount; i++)
             {
-                string missionIdentifier = inc.ReadString() ?? "";
-                if (missionIdentifier != mission.Prefab.Identifier)
+                serverMissionIdentifiers.Add(inc.ReadString() ?? "");
+            }
+
+            if (missionCount > 0)
+            {
+                if (!GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier).OrderBy(id => id).SequenceEqual(serverMissionIdentifiers.OrderBy(id => id)))
                 {
-                    string errorMsg = $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server (server: {missionIdentifier ?? "null"}, client: {mission.Prefab.Identifier})";
+                    string errorMsg = $"Mission equality check failed. The mission selected at your end doesn't match the one loaded by the server (server: {string.Join(", ", serverMissionIdentifiers)}, client: {string.Join(", ", GameMain.GameSession.Missions.Select(m => m.Prefab.Identifier))})";
                     GameAnalyticsManager.AddErrorEventOnce("GameClient.StartGame:MissionsDontMatch" + Level.Loaded.Seed, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
                     throw new Exception(errorMsg);
                 }
+                GameMain.GameSession.EnforceMissionOrder(serverMissionIdentifiers);
             }
 
             byte equalityCheckValueCount = inc.ReadByte();
@@ -1044,6 +1045,11 @@ namespace Barotrauma.Networking
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
                 mission.ClientReadInitial(inc);
+            }
+
+            if (inc.ReadBoolean())
+            {
+                CrewManager.ClientReadActiveOrders(inc);
             }
 
             roundInitStatus = RoundInitStatus.Started;
@@ -1308,10 +1314,7 @@ namespace Barotrauma.Networking
             Client.ReadPermissions(inc, out permissions, out permittedCommands);
 
             Client targetClient = ConnectedClients.Find(c => c.ID == clientID);
-            if (targetClient != null)
-            {
-                targetClient.SetPermissions(permissions, permittedCommands);
-            }
+            targetClient?.SetPermissions(permissions, permittedCommands);
             if (clientID == myID)
             {
                 SetMyPermissions(permissions, permittedCommands.Select(command => command.names[0]));
@@ -1422,7 +1425,7 @@ namespace Barotrauma.Networking
 
             while (CoroutineManager.IsCoroutineRunning("EndGame"))
             {
-                if (EndCinematic != null) { EndCinematic.Stop(); }
+                EndCinematic?.Stop();
                 yield return CoroutineStatus.Running;
             }
 
@@ -1609,6 +1612,9 @@ namespace Barotrauma.Networking
             DateTime? timeOut = null;
             DateTime requestFinalizeTime = DateTime.Now;
             TimeSpan requestFinalizeInterval = new TimeSpan(0, 0, 2);
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.Write((byte)ClientPacketHeader.REQUEST_STARTGAMEFINALIZE);
+            clientPeer.Send(msg, DeliveryMethod.Unreliable);
 
             while (true)
             {
@@ -1618,7 +1624,7 @@ namespace Barotrauma.Networking
                     {
                         if (DateTime.Now > requestFinalizeTime)
                         {
-                            IWriteMessage msg = new WriteOnlyMessage();
+                            msg = new WriteOnlyMessage();
                             msg.Write((byte)ClientPacketHeader.REQUEST_STARTGAMEFINALIZE);
                             clientPeer.Send(msg, DeliveryMethod.Unreliable);
                             requestFinalizeTime = DateTime.Now + requestFinalizeInterval;
@@ -1648,12 +1654,11 @@ namespace Barotrauma.Networking
                         break;
                     }
 
-                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize)
-                    {
-                        break;
-                    }
+                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
 
                     clientPeer.Update((float)Timing.Step);
+
+                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
                 }
                 catch (Exception e)
                 {
@@ -2089,6 +2094,7 @@ namespace Barotrauma.Networking
                             float autoRestartTimer = autoRestartEnabled ? inc.ReadSingle() : 0.0f;
 
                             bool radiationEnabled = inc.ReadBoolean();
+                            byte maxMissionCount = inc.ReadByte();
 
                             //ignore the message if we already a more up-to-date one
                             //or if we're still waiting for the initial update
@@ -2154,6 +2160,7 @@ namespace Barotrauma.Networking
                                 GameMain.NetLobbyScreen.SetRadiationEnabled(radiationEnabled);
                                 GameMain.NetLobbyScreen.SetBotSpawnMode(botSpawnMode);
                                 GameMain.NetLobbyScreen.SetBotCount(botCount);
+                                GameMain.NetLobbyScreen.SetMaxMissionCount(maxMissionCount);
                                 GameMain.NetLobbyScreen.SetAutoRestart(autoRestartEnabled, autoRestartTimer);
 
                                 serverSettings.VoiceChatEnabled = voiceChatEnabled;
@@ -2752,6 +2759,8 @@ namespace Barotrauma.Networking
 
         public void Vote(VoteType voteType, object data)
         {
+            if (clientPeer == null) return;
+
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.UPDATE_LOBBY);
             msg.Write((byte)ClientNetObject.VOTE);
@@ -3289,16 +3298,24 @@ namespace Barotrauma.Networking
             {
                 string respawnText = string.Empty;
                 Color textColor = Color.White;
-                bool canChooseRespawn = 
-                    GameMain.GameSession.GameMode is CampaignMode && 
-                    Character.Controlled == null && 
+                bool canChooseRespawn =
+                    GameMain.GameSession.GameMode is CampaignMode &&
+                    Character.Controlled == null &&
                     Level.Loaded?.Type != LevelData.LevelType.Outpost &&
                     (characterInfo == null || HasSpawned);
-                if (respawnManager.CurrentState == RespawnManager.State.Waiting &&
-                    respawnManager.RespawnCountdownStarted)
+                if (respawnManager.CurrentState == RespawnManager.State.Waiting)
                 {
-                    float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
-                    respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                    if (respawnManager.RespawnCountdownStarted)
+                    {
+                        float timeLeft = (float)(respawnManager.RespawnTime - DateTime.Now).TotalSeconds;
+                        respawnText = TextManager.GetWithVariable(respawnManager.UsingShuttle ? "RespawnShuttleDispatching" : "RespawningIn", "[time]", ToolBox.SecondsToReadableTime(timeLeft));
+                    }
+                    else if (respawnManager.PendingRespawnCount > 0)
+                    {
+                        respawnText = TextManager.GetWithVariables("RespawnWaitingForMoreDeadPlayers", 
+                            new string[] { "[deadplayers]", "[requireddeadplayers]" },
+                            new string[] { respawnManager.PendingRespawnCount.ToString(), respawnManager.RequiredRespawnCount.ToString() });
+                    }
                 }
                 else if (respawnManager.CurrentState == RespawnManager.State.Transporting && 
                     respawnManager.ReturnCountdownStarted)

@@ -69,6 +69,7 @@ namespace Barotrauma.Items.Components
             item.IsShootable = true;
             // TODO: should define this in xml if we have ranged weapons that don't require aim to use
             item.RequireAimToUse = true;
+            characterUsable = true;
             InitProjSpecific(element);
         }
 
@@ -149,6 +150,11 @@ namespace Barotrauma.Items.Components
             LaunchProjSpecific();
 
             return true;
+        }
+
+        public override bool SecondaryUse(float deltaTime, Character character = null)
+        {
+            return characterUsable || character == null;
         }
 
         public Projectile FindProjectile(bool triggerOnUseOnContainers = false)

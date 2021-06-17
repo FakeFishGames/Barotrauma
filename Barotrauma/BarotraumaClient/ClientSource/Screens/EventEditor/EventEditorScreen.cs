@@ -227,7 +227,7 @@ namespace Barotrauma
         public static GUIMessageBox AskForConfirmation(string header, string body, Func<bool> onConfirm)
         {
             string[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
-            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons, new Vector2(0.2f, 0.175f), minSize: new Point(300, 175));
+            GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons);
 
             // Cancel button
             msgBox.Buttons[1].OnClicked = delegate

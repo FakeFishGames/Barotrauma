@@ -296,6 +296,12 @@ namespace Barotrauma
                             }
                         }
                     }
+
+                    foreach (ItemComponent component in item.Components)
+                    {
+                        component.AddTooltipInfo(ref description);
+                    }
+
                     if (item.Prefab.ShowContentsInTooltip && item.OwnInventory != null)
                     {
                         foreach (string itemName in item.OwnInventory.AllItems.Select(it => it.Name).Distinct())
@@ -320,6 +326,11 @@ namespace Barotrauma
                         toolTip += $"‖color:{conditionColorStr}‖ ({(int)item.ConditionPercentage} %)‖color:end‖";
                     }
                     if (!string.IsNullOrEmpty(description)) { toolTip += '\n' + description; }
+                    if (item.prefab.ContentPackage != GameMain.VanillaContent && item.prefab.ContentPackage != null)
+                    {
+                        colorStr = XMLExtensions.ColorToString(Color.MediumPurple);
+                        toolTip += $"\n‖color:{colorStr}‖{item.prefab.ContentPackage.Name}‖color:end‖";
+                    }
                 }
                 if (itemsInSlot.Count() > 1)
                 {
@@ -945,6 +956,15 @@ namespace Barotrauma
                     {
                         return CursorState.Hand;
                     }
+                    var container = item?.GetComponent<ItemContainer>();
+                    if (container == null) { continue; }
+                    if (container.Inventory.visualSlots != null)
+                    {
+                        if (container.Inventory.visualSlots.Any(slot => slot.IsHighlighted))
+                        {
+                            return CursorState.Hand;
+                        }
+                    }
                 }
             }
             
@@ -1120,9 +1140,10 @@ namespace Barotrauma
                 if (selectedSlot == null)
                 {
                     if (DraggingItemToWorld &&
-                        Character.Controlled.FocusedItem?.OwnInventory != null &&
-                        (Character.Controlled.FocusedItem.GetComponent<ItemContainer>()?.HasRequiredItems(Character.Controlled, addMessage: false) ?? false) &&
-                        Character.Controlled.FocusedItem.OwnInventory.CanBePut(DraggingItems.FirstOrDefault()))
+                        Character.Controlled.FocusedItem is { OwnInventory: { } inventory } item && item.GetComponent<ItemContainer>() is { } container && 
+                        container.HasRequiredItems(Character.Controlled, addMessage: false) && 
+                        container.AllowDragAndDrop && 
+                        inventory.CanBePut(DraggingItems.FirstOrDefault()))
                     {
                         bool anySuccess = false;
                         foreach (Item it in DraggingItems)
@@ -1575,7 +1596,7 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if (!item.AllowStealing && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if ((!item.AllowStealing || (inventory != null && inventory.slots[slotIndex].Items.Any(it => !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
                     Vector2 iconSize = new Vector2(25 * GUI.Scale);

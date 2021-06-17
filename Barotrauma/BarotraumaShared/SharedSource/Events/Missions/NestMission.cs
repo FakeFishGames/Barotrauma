@@ -46,8 +46,8 @@ namespace Barotrauma
             }
         }
 
-        public NestMission(MissionPrefab prefab, Location[] locations)
-            : base(prefab, locations)
+        public NestMission(MissionPrefab prefab, Location[] locations, Submarine sub)
+            : base(prefab, locations, sub)
         {
             itemConfig = prefab.ConfigElement.Element("Items");
 
@@ -216,7 +216,7 @@ namespace Barotrauma
             level.LevelObjectManager.PlaceNestObjects(level, cave, nestPosition, nestObjectRadius, nestObjectAmount);
         }
 
-        public override void Update(float deltaTime)
+        protected override void UpdateMissionSpecific(float deltaTime)
         {
             if (IsClient)
             {

@@ -25,12 +25,12 @@ namespace Barotrauma
         private readonly float screenColorRange, screenColorDuration;
 
         private bool sparks, shockwave, flames, smoke, flash, underwaterBubble;
-        private bool playTinnitus;
-        private bool applyFireEffects;
-        private string[] ignoreFireEffectsForTags;
-        private bool ignoreCover;
-        private bool onlyInside;
-        private bool onlyOutside;
+        private readonly Color flashColor;
+        private readonly bool playTinnitus;
+        private readonly bool applyFireEffects;
+        private readonly string[] ignoreFireEffectsForTags;
+        private readonly bool ignoreCover;
+        private readonly bool onlyInside,onlyOutside;
         private readonly float flashDuration;
         private readonly float? flashRange;
         private readonly string decal;
@@ -81,6 +81,7 @@ namespace Barotrauma
             flash           = element.GetAttributeBool("flash", true);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
             if (element.Attribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
+            flashColor = element.GetAttributeColor("flashcolor", Color.LightYellow);
 
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
             BallastFloraDamage = element.GetAttributeFloat("ballastfloradamage", 0.0f);
@@ -129,7 +130,7 @@ namespace Barotrauma
 
             float displayRange = Attack.Range;
 
-            Vector2 cameraPos = Character.Controlled != null ? Character.Controlled.WorldPosition : GameMain.GameScreen.Cam.Position;
+            Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
             float cameraDist = Vector2.Distance(cameraPos, worldPosition) / 2.0f;
             GameMain.GameScreen.Cam.Shake = cameraShake * Math.Max((cameraShakeRange - cameraDist) / cameraShakeRange, 0.0f);
 #if CLIENT
@@ -395,7 +396,7 @@ namespace Barotrauma
                 for (int i = 0; i < structure.SectionCount; i++)
                 {
                     float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
-                    if (distFactor <= 0.0f) continue;
+                    if (distFactor <= 0.0f) { continue; }
 
                     structure.AddDamage(i, damage * distFactor, attacker);
 
@@ -412,6 +413,19 @@ namespace Barotrauma
 
             if (Level.Loaded != null && !MathUtils.NearlyEqual(levelWallDamage, 0.0f))
             {
+                if (Level.Loaded?.LevelObjectManager != null)
+                {
+                    foreach (var levelObject in Level.Loaded.LevelObjectManager.GetAllObjects(worldPosition, worldRange))
+                    {
+                        if (levelObject.Prefab.TakeLevelWallDamage)
+                        {
+                            float distFactor = 1.0f - (Vector2.Distance(levelObject.WorldPosition, worldPosition) / worldRange);
+                            if (distFactor <= 0.0f) { continue; }
+                            levelObject.AddDamage(levelWallDamage * distFactor, 1.0f, null);
+                        }
+                    }
+                }
+
                 for (int i = Level.Loaded.ExtraWalls.Count - 1; i >= 0; i--)
                 {
                     if (!(Level.Loaded.ExtraWalls[i] is DestructibleLevelWall destructibleWall)) { continue; }

@@ -69,12 +69,15 @@ namespace Barotrauma
             if (Strength < DormantThreshold)
             {
                 DeactivateHusk();
-                State = InfectionState.Dormant;
+                if (Strength > Math.Min(1.0f, DormantThreshold))
+                {
+                    State = InfectionState.Dormant;
+                }
             }
             else if (Strength < ActiveThreshold)
             {
                 DeactivateHusk();
-                if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: false })
+                if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
                 {
                     character.SpeechImpediment = 100;
                 }
@@ -128,7 +131,7 @@ namespace Barotrauma
                 character.NeedsAir = false;
             }
 
-            if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: false })
+            if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
             {
                 character.SpeechImpediment = 100;
             }

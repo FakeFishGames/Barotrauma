@@ -178,26 +178,26 @@ namespace Barotrauma.Items.Components
                     ToolTip = fi.TargetItem.Description
                 };
                 
-                    var container = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform),
-                        childAnchor: Anchor.CenterLeft, isHorizontal: true) { RelativeSpacing = 0.02f };
+                var container = new GUILayoutGroup(new RectTransform(Vector2.One, frame.RectTransform),
+                    childAnchor: Anchor.CenterLeft, isHorizontal: true) { RelativeSpacing = 0.02f };
                     
-                        var itemIcon = fi.TargetItem.InventoryIcon ?? fi.TargetItem.sprite;
-                        if (itemIcon != null)
-                        {
-                            new GUIImage(new RectTransform(new Point(frame.Rect.Height,frame.Rect.Height), container.RectTransform),
-                                itemIcon, scaleToFit: true)
-                            {
-                                Color = fi.TargetItem.InventoryIconColor,
-                                ToolTip = fi.TargetItem.Description
-                            };
-                        }
+                var itemIcon = fi.TargetItem.InventoryIcon ?? fi.TargetItem.sprite;
+                if (itemIcon != null)
+                {
+                    new GUIImage(new RectTransform(new Point(frame.Rect.Height,frame.Rect.Height), container.RectTransform),
+                        itemIcon, scaleToFit: true)
+                    {
+                        Color = fi.TargetItem.InventoryIconColor,
+                        ToolTip = fi.TargetItem.Description
+                    };
+                }
 
-                        new GUITextBlock(new RectTransform(new Vector2(0.85f, 1f), container.RectTransform), GetRecipeNameAndAmount(fi))
-                        {
-                            Padding = Vector4.Zero,
-                            AutoScaleVertical = true,
-                            ToolTip = fi.TargetItem.Description
-                        };
+                new GUITextBlock(new RectTransform(new Vector2(0.85f, 1f), container.RectTransform), GetRecipeNameAndAmount(fi))
+                {
+                    Padding = Vector4.Zero,
+                    AutoScaleVertical = true,
+                    ToolTip = fi.TargetItem.Description
+                };
             }
         }
 
@@ -366,6 +366,10 @@ namespace Barotrauma.Items.Components
                         if (requiredItem.UseCondition && requiredItem.MinCondition < 1.0f)
                         {
                             toolTipText += " " + (int)Math.Round(requiredItem.MinCondition * 100) + "%";
+                        }
+                        else if (requiredItem.MaxCondition <= 0.0f)
+                        {
+                            toolTipText = TextManager.GetWithVariable("displayname.emptyitem", "[itemname]", toolTipText);
                         }
                         if (!string.IsNullOrEmpty(requiredItem.ItemPrefabs.First().Description))
                         {

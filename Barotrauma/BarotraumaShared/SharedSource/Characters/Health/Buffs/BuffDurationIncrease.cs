@@ -42,7 +42,7 @@ namespace Barotrauma
         private float GetDiminishMultiplier()
         {
             if (Strength < Prefab.ActivationThreshold) { return 1.0f; }
-            AfflictionPrefab.Effect currentEffect = Prefab.GetActiveEffect(Strength);
+            AfflictionPrefab.Effect currentEffect = GetActiveEffect();
             if (currentEffect == null) { return 1.0f; }
 
             float multiplier = MathHelper.Lerp(

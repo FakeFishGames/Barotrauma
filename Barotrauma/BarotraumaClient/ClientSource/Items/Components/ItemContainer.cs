@@ -14,6 +14,11 @@ namespace Barotrauma.Items.Components
 
         private GUICustomComponent guiCustomComponent;
 
+        /// <summary>
+        /// Can be used to set the sprite depth individually for each contained item
+        /// </summary>
+        private float[] containedSpriteDepths;
+
         public Sprite InventoryTopSprite
         {
             get { return inventoryTopSprite; }
@@ -153,6 +158,8 @@ namespace Barotrauma.Items.Components
                 //if a GUIFrame has been defined, draw the inventory inside it
                 CreateGUI();
             }
+
+            containedSpriteDepths = element.GetAttributeFloatArray("containedspritedepths", new float[0]);
         }
 
         protected override void CreateGUI()
@@ -316,6 +323,10 @@ namespace Barotrauma.Items.Components
                 if (item.FlippedY) { origin.Y = containedItem.Sprite.SourceRect.Height - origin.Y; }
 
                 float containedSpriteDepth = ContainedSpriteDepth < 0.0f ? containedItem.Sprite.Depth : ContainedSpriteDepth;
+                if (i < containedSpriteDepths.Length)
+                {
+                    containedSpriteDepth = containedSpriteDepths[i];
+                }
                 containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
 
                 containedItem.Sprite.Draw(

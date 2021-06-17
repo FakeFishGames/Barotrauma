@@ -354,7 +354,7 @@ namespace Barotrauma
                 }
             }
 
-            sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition);
+            sub.SetPosition(sub.WorldPosition - Submarine.WorldPosition, forceUndockFromStaticSubmarines: false);
             sub.Submarine = Submarine;
         }
 
