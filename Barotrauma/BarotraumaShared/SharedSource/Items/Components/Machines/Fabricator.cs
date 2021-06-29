@@ -290,9 +290,9 @@ namespace Barotrauma.Items.Components
                     {
                         foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
                         {
-                            if (!availableIngredients.ContainsKey(requiredPrefab.Name)) { continue; }
+                            if (!availableIngredients.ContainsKey(requiredPrefab.Identifier)) { continue; }
 
-                            var availablePrefabs = availableIngredients[requiredPrefab.Name];
+                            var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
                             var availablePrefab = availablePrefabs.FirstOrDefault(potentialPrefab =>
                             {
                                 return potentialPrefab.ConditionPercentage >= requiredItem.MinCondition * 100.0f &&
@@ -381,9 +381,9 @@ namespace Barotrauma.Items.Components
                 int availablePrefabsAmount = 0;
                 foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
                 {
-                    if (!availableIngredients.ContainsKey(requiredPrefab.Name)) { continue; }
+                    if (!availableIngredients.ContainsKey(requiredPrefab.Identifier)) { continue; }
 
-                    var availablePrefabs = availableIngredients[requiredPrefab.Name];
+                    var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
                     foreach (Item availablePrefab in availablePrefabs)
                     {
                         if (availablePrefab.Condition / availablePrefab.Prefab.Health >= requiredItem.MinCondition &&
@@ -469,13 +469,13 @@ namespace Barotrauma.Items.Components
             Dictionary<String, List<Item>> ingredientsDictionary = new Dictionary<String, List<Item>>();
             for (int i = 0; i < availableIngredients.Count; i++)
             {
-                var itemName = availableIngredients[i].Name;
-                if (!ingredientsDictionary.ContainsKey(itemName))
+                var itemIdentifier = availableIngredients[i].prefab.Identifier;
+                if (!ingredientsDictionary.ContainsKey(itemIdentifier))
                 {
-                    ingredientsDictionary[itemName] = new List<Item>(availableIngredients.Count);
+                    ingredientsDictionary[itemIdentifier] = new List<Item>(availableIngredients.Count);
                 }
 
-                ingredientsDictionary[itemName].Add(availableIngredients[i]);
+                ingredientsDictionary[itemIdentifier].Add(availableIngredients[i]);
             }
 
             return ingredientsDictionary;
@@ -498,9 +498,9 @@ namespace Barotrauma.Items.Components
                 {
                     foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
                     {
-                        if (!availableIngredients.ContainsKey(requiredPrefab.Name)) { continue; }
+                        if (!availableIngredients.ContainsKey(requiredPrefab.Identifier)) { continue; }
 
-                        var availablePrefabs = availableIngredients[requiredPrefab.Name];
+                        var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
                         var availablePrefab = availablePrefabs.FirstOrDefault(potentialPrefab =>
                         {
                             return !usedItems.Contains(potentialPrefab) &&

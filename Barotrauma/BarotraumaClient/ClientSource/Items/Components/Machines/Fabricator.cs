@@ -322,9 +322,9 @@ namespace Barotrauma.Items.Components
                     }
 
                     requiredItem.ItemPrefabs
-                        .Where(requiredPrefab => availableIngredients.ContainsKey(requiredPrefab.Name))
+                        .Where(requiredPrefab => availableIngredients.ContainsKey(requiredPrefab.Identifier))
                         .ForEach(requiredPrefab => {
-                            var availablePrefabs = availableIngredients[requiredPrefab.Name];
+                            var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
 
                             availablePrefabs
                                 .Where(availablePrefab => availablePrefab.ParentInventory != inputContainer.Inventory)
