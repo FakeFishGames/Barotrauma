@@ -372,7 +372,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateRequiredTimeProjSpecific();
 
-        private bool CanBeFabricated(FabricationRecipe fabricableItem, Dictionary<String, List<Item>> availableIngredients)
+        private bool CanBeFabricated(FabricationRecipe fabricableItem, Dictionary<string, List<Item>> availableIngredients)
         {
             if (fabricableItem == null) { return false; }
 
@@ -434,7 +434,7 @@ namespace Barotrauma.Items.Components
         /// Get a list of all items available in the input container and linked containers
         /// </summary>
         /// <returns></returns>
-        private Dictionary<String, List<Item>> GetAvailableIngredients()
+        private Dictionary<string, List<Item>> GetAvailableIngredients()
         {
             List<Item> availableIngredients = new List<Item>();
             availableIngredients.AddRange(inputContainer.Inventory.AllItems);
@@ -466,7 +466,7 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
-            Dictionary<String, List<Item>> ingredientsDictionary = new Dictionary<String, List<Item>>();
+            Dictionary<string, List<Item>> ingredientsDictionary = new Dictionary<string, List<Item>>();
             for (int i = 0; i < availableIngredients.Count; i++)
             {
                 var itemIdentifier = availableIngredients[i].prefab.Identifier;

@@ -344,7 +344,7 @@ namespace Barotrauma.Items.Components
                         });
 
                     if (slotIndex >= inputContainer.Capacity) { break; }
-                        
+
                     var itemIcon = requiredItem.ItemPrefabs.First().InventoryIcon ?? requiredItem.ItemPrefabs.First().sprite;
                     Rectangle slotRect = inputContainer.Inventory.visualSlots[slotIndex].Rect;
                     itemIcon.Draw(
