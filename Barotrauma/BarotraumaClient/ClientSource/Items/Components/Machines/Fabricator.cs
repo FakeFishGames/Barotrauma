@@ -318,27 +318,27 @@ namespace Barotrauma.Items.Components
                         slotIndex++;
                     }
 
-                    //highlight suitable ingredients in linked inventories
-                    foreach (Item item in availableIngredients)
-                    {
-                        if (item.ParentInventory != inputContainer.Inventory && IsItemValidIngredient(item, requiredItem))
-                        {
-                            int availableSlotIndex = item.ParentInventory.FindIndex(item);
-                            //slots are null if the inventory has never been displayed 
-                            //(linked item, but the UI is not set to be displayed at the same time)
-                            if (item.ParentInventory.visualSlots != null)
-                            {
-                                if (item.ParentInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
+                    requiredItem.ItemPrefabs.ForEach(requiredPrefab => {
+                        if (!availableIngredients.ContainsKey(requiredPrefab.Name)) { return; }
+
+                        var availablePrefabs = availableIngredients[requiredPrefab.Name];
+                        
+                        availablePrefabs
+                            .Where(availablePrefab => availablePrefab.ParentInventory != inputContainer.Inventory)
+                            .Where(availablePrefab => availablePrefab.ParentInventory.visualSlots != null) //slots are null if the inventory has never been displayed 
+                            .ForEach(availablePrefab => {                                                  //(linked item, but the UI is not set to be displayed at the same time)
+                                int availableSlotIndex = item.ParentInventory.FindIndex(availablePrefab);
+                                
+                                if (availablePrefab.ParentInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
                                 {
-                                    item.ParentInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
+                                    availablePrefab.ParentInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
                                     if (slotIndex < inputContainer.Capacity)
                                     {
                                         inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Green, 0.5f, 0.5f, 0.2f);
                                     }
                                 }
-                            }
-                        }
-                    }
+                            });
+                    });
 
                     if (slotIndex >= inputContainer.Capacity) { break; }
                     
