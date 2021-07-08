@@ -572,6 +572,8 @@ namespace Barotrauma.Networking
                         GameMain.ServerListScreen.Select();
                         return true;
                     };
+                    yield return CoroutineStatus.Running;
+                    passwordBox.Select();
 
                     while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                     {
