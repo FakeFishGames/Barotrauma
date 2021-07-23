@@ -174,7 +174,7 @@ namespace Barotrauma
 
             if (!character.IsIncapacitated && character.Stun <= 0.0f && !IsCampaignInterfaceOpen)
             {
-                if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null)
+                if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null && Screen.Selected != GameMain.SubEditorScreen)
                 {
                     bool mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
                     if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
@@ -391,7 +391,7 @@ namespace Barotrauma
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
 
                     var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
-                    GUI.DrawIndicator(spriteBatch, npc.WorldPosition, cam, npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, iconStyle.GetDefaultSprite(), iconStyle.Color);
+                    GUI.DrawIndicator(spriteBatch, npc.WorldPosition, cam, npc.CurrentHull == character.CurrentHull ? 500.0f : 100.0f, iconStyle.GetDefaultSprite(), iconStyle.Color);
                 }
 
                 foreach (Item item in Item.ItemList)
@@ -405,17 +405,17 @@ namespace Barotrauma
             }
 
             if (character.SelectedConstruction != null && 
-                (character.CanInteractWith(Character.Controlled.SelectedConstruction) || Screen.Selected == GameMain.SubEditorScreen))
+                (character.CanInteractWith(character.SelectedConstruction) || Screen.Selected == GameMain.SubEditorScreen))
             {
-                character.SelectedConstruction.DrawHUD(spriteBatch, cam, Character.Controlled);
+                character.SelectedConstruction.DrawHUD(spriteBatch, cam, character);
             }
-            if (Character.Controlled.Inventory != null)
+            if (character.Inventory != null)
             {
-                foreach (Item item in Character.Controlled.Inventory.AllItems)
+                foreach (Item item in character.Inventory.AllItems)
                 {
-                    if (Character.Controlled.HasEquippedItem(item))
+                    if (character.HasEquippedItem(item))
                     {
-                        item.DrawHUD(spriteBatch, cam, Character.Controlled);
+                        item.DrawHUD(spriteBatch, cam, character);
                     }
                 }
             }

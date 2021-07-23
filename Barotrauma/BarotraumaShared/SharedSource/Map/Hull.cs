@@ -525,7 +525,13 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            return new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
+            var clone = new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
+            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
+            {
+                if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
+                clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
+            }
+            return clone;
         }
 
         public static EntityGrid GenerateEntityGrid(Rectangle worldRect)

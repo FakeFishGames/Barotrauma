@@ -296,10 +296,12 @@ namespace Barotrauma
                 return;
             }
 
+            var linkedItems = GetLinkedItemsToSwap(itemToRemove);
+
             int price = 0;
             if (!itemToRemove.AvailableSwaps.Contains(itemToInstall))
             {
-                price = itemToInstall.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation);
+                price = itemToInstall.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count;
             }
 
             if (force)
@@ -309,7 +311,7 @@ namespace Barotrauma
 
             if (Campaign.Money >= price)
             {
-                PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToRemove);
+                PurchasedItemSwaps.RemoveAll(p => linkedItems.Contains(p.ItemToRemove));
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
                     // only make the NPC speak if more than 5 minutes have passed since the last purchased service
@@ -322,23 +324,27 @@ namespace Barotrauma
 
                 Campaign.Money -= price;
 
-                itemToRemove.AvailableSwaps.Add(itemToRemove.Prefab);
-                if (itemToInstall != null && !itemToRemove.AvailableSwaps.Contains(itemToInstall)) 
+                foreach (Item itemToSwap in linkedItems)
                 {
-                    itemToRemove.PurchasedNewSwap = true;
-                    itemToRemove.AvailableSwaps.Add(itemToInstall); 
+                    itemToSwap.AvailableSwaps.Add(itemToSwap.Prefab);
+                    if (itemToInstall != null && !itemToSwap.AvailableSwaps.Contains(itemToInstall)) 
+                    {
+                        itemToSwap.PurchasedNewSwap = true;
+                        itemToSwap.AvailableSwaps.Add(itemToInstall); 
+                    }
+
+                    if (itemToSwap.Prefab != itemToInstall && itemToInstall != null)
+                    {
+                        itemToSwap.PendingItemSwap = itemToInstall;
+                        PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToSwap, itemToInstall));
+                        DebugLog($"CLIENT: Swapped item \"{itemToSwap.Name}\" with \"{itemToInstall.Name}\".", Color.Orange);
+                    }
+                    else
+                    {
+                        DebugLog($"CLIENT: Cancelled swapping the item \"{itemToSwap.Name}\" with \"{(itemToSwap.PendingItemSwap?.Name ?? null)}\".", Color.Orange);
+                    }
                 }
 
-                if (itemToRemove.Prefab != itemToInstall && itemToInstall != null)
-                {
-                    itemToRemove.PendingItemSwap = itemToInstall;
-                    PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
-                    DebugLog($"CLIENT: Swapped item \"{itemToRemove.Name}\" with \"{itemToInstall.Name}\".", Color.Orange);
-                }
-                else
-                {
-                    DebugLog($"CLIENT: Cancelled swapping the item \"{itemToRemove.Name}\" with \"{(itemToRemove.PendingItemSwap?.Name ?? null)}\".", Color.Orange);
-                }
                 OnUpgradesChanged?.Invoke();
             }
             else
@@ -382,28 +388,53 @@ namespace Barotrauma
                 }
             }
 
-            if (itemToRemove.PendingItemSwap == null)
+            var linkedItems = GetLinkedItemsToSwap(itemToRemove);
+
+            foreach (Item itemToCancel in linkedItems)
             {
-                var replacement = MapEntityPrefab.Find("", swappableItem.ReplacementOnUninstall) as ItemPrefab;
-                if (replacement == null)
+                if (itemToCancel.PendingItemSwap == null)
                 {
-                    DebugConsole.ThrowError($"Failed to uninstall item \"{itemToRemove.Name}\". Could not find the replacement item \"{swappableItem.ReplacementOnUninstall}\".");
-                    return;
+                    var replacement = MapEntityPrefab.Find("", swappableItem.ReplacementOnUninstall) as ItemPrefab;
+                    if (replacement == null)
+                    {
+                        DebugConsole.ThrowError($"Failed to uninstall item \"{itemToCancel.Name}\". Could not find the replacement item \"{swappableItem.ReplacementOnUninstall}\".");
+                        return;
+                    }
+                    PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToCancel);
+                    PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToCancel, replacement));
+                    DebugLog($"Uninstalled item item \"{itemToCancel.Name}\".", Color.Orange);
+                    itemToCancel.PendingItemSwap = replacement;
                 }
-                PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToRemove);
-                PurchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, replacement));
-                DebugLog($"Uninstalled item item \"{itemToRemove.Name}\".", Color.Orange);
-                itemToRemove.PendingItemSwap = replacement;
+                else
+                {
+                    PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToCancel);
+                    DebugLog($"Cancelled swapping the item \"{itemToCancel.Name}\" with \"{itemToCancel.PendingItemSwap.Name}\".", Color.Orange);
+                    itemToCancel.PendingItemSwap = null;
+                }
             }
-            else
-            {
-                PurchasedItemSwaps.RemoveAll(p => p.ItemToRemove == itemToRemove);
-                DebugLog($"Cancelled swapping the item \"{itemToRemove.Name}\" with \"{itemToRemove.PendingItemSwap.Name}\".", Color.Orange);
-                itemToRemove.PendingItemSwap = null;
-            }
+
 #if CLIENT
             OnUpgradesChanged?.Invoke();
 #endif       
+        }
+
+        public List<Item> GetLinkedItemsToSwap(Item item)
+        {
+            List<Item> linkedItems = new List<Item>() { item };
+            foreach (MapEntity linkedEntity in item.linkedTo)
+            {
+                foreach (MapEntity secondLinkedEntity in linkedEntity.linkedTo)
+                {
+                    if (!(secondLinkedEntity is Item linkedItem) || linkedItem == item) { continue; }
+                    if (linkedItem.AllowSwapping &&
+                        linkedItem.Prefab.SwappableItem != null && linkedItem.Prefab.SwappableItem.CanBeBought &&
+                        linkedItem.Prefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase))
+                    {
+                        linkedItems.Add(linkedItem);
+                    }
+                }
+            }
+            return linkedItems;
         }
 
         /// <summary>
@@ -565,7 +596,7 @@ namespace Barotrauma
         /// <param name="submarine"></param>
         /// <param name="level"></param>
         /// <returns>New level that was applied, -1 if no upgrades were applied.</returns>
-        private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1)
+        private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1, Submarine parentSub = null)
         {
             int? newLevel = null;
             if (category.IsWallUpgrade)
@@ -604,6 +635,7 @@ namespace Barotrauma
 
             foreach (Submarine loadedSub in Submarine.Loaded.Where(sub => sub != submarine))
             {
+                if (loadedSub == parentSub) { continue; }
                 XElement? root = loadedSub.Info?.SubmarineElement;
                 if (root == null) { continue; }
 
@@ -615,7 +647,7 @@ namespace Barotrauma
                     ushort dockingPortID = (ushort) root.GetAttributeInt("originallinkedto", 0);
                     if (dockingPortID > 0 && submarine.GetItems(true).Any(item => item.ID == dockingPortID))
                     {
-                        BuyUpgrade(prefab, category, loadedSub, level);
+                        BuyUpgrade(prefab, category, loadedSub, level, submarine);
                     }
                 }
             }

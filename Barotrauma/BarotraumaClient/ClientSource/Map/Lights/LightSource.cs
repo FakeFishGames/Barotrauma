@@ -617,14 +617,10 @@ namespace Barotrauma.Lights
 
         private List<Vector2> FindRaycastHits()
         {
-            if (!CastShadows)
-            {
-                return null;
-            }
-            if (Range < 1.0f || Color.A < 1) { return null; }
+            if (!CastShadows || Range < 1.0f || Color.A < 1) { return null; }
 
             Vector2 drawPos = position;
-            if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+            if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
 
             var hulls = new List<ConvexHull>();
             foreach (ConvexHullList chList in hullsInRange)
@@ -826,13 +822,13 @@ namespace Barotrauma.Lights
                 Vector2 dirNormal = new Vector2(-dir.Y, dir.X) * 3;
 
                 //do two slightly offset raycasts to hit the segment itself and whatever's behind it
-                Pair<int,Vector2> intersection1 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 - dirNormal, visibleSegments);
-                Pair<int,Vector2> intersection2 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 + dirNormal, visibleSegments);
+                var intersection1 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 - dirNormal, visibleSegments);
+                var intersection2 = RayCast(drawPos, drawPos + dir * boundsExtended * 2 + dirNormal, visibleSegments);
 
-                if (intersection1.First < 0) return null;
-                if (intersection2.First < 0) return null;
-                Segment seg1 = visibleSegments[intersection1.First];
-                Segment seg2 = visibleSegments[intersection2.First];
+                if (intersection1.index < 0) return null;
+                if (intersection2.index < 0) return null;
+                Segment seg1 = visibleSegments[intersection1.index];
+                Segment seg2 = visibleSegments[intersection2.index];
                 
                 bool isPoint1 = MathUtils.LineToPointDistanceSquared(seg1.Start.WorldPos, seg1.End.WorldPos, p.WorldPos) < 25.0f;
                 bool isPoint2 = MathUtils.LineToPointDistanceSquared(seg2.Start.WorldPos, seg2.End.WorldPos, p.WorldPos) < 25.0f;
@@ -849,12 +845,12 @@ namespace Barotrauma.Lights
                         hullList.IsHidden.Remove(seg2.ConvexHull);
                     }
                 }
-                else if (intersection1.First != intersection2.First)
+                else if (intersection1.index != intersection2.index)
                 {
                     //the raycasts landed on different segments
                     //we definitely want to generate new geometry here
-                    output.Add(isPoint1 ? p.WorldPos : intersection1.Second);
-                    output.Add(isPoint2 ? p.WorldPos : intersection2.Second);
+                    output.Add(isPoint1 ? p.WorldPos : intersection1.pos);
+                    output.Add(isPoint2 ? p.WorldPos : intersection2.pos);
 
                     foreach (ConvexHullList hullList in hullsInRange)
                     {
@@ -884,7 +880,7 @@ namespace Barotrauma.Lights
             return output;
         }
 
-        private Pair<int, Vector2> RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
+        private (int index, Vector2 pos) RayCast(Vector2 rayStart, Vector2 rayEnd, List<Segment> segments)
         {
             Vector2? closestIntersection = null;
             int segment = -1;
@@ -943,8 +939,7 @@ namespace Barotrauma.Lights
                 }
             }
             
-            Pair<int, Vector2> retVal = new Pair<int, Vector2>(segment, closestIntersection == null ? rayEnd : (Vector2)closestIntersection);
-            return retVal;
+            return (segment, closestIntersection == null ? rayEnd : (Vector2)closestIntersection);
         }
 
 
@@ -1281,11 +1276,6 @@ namespace Barotrauma.Lights
         {
             if (Range < 1.0f || Color.A < 1 || CurrentBrightness <= 0.0f) { return; }
 
-            if (CastShadows)
-            {
-                CheckHullsInRange();
-            }          
-
             //if the light doesn't cast shadows, we can simply render the texture without having to calculate the light volume
             if (!CastShadows)
             {
@@ -1298,16 +1288,27 @@ namespace Barotrauma.Lights
                 float scale = Range / (currentTexture.Width / 2.0f);
 
                 Vector2 drawPos = position;
-                if (ParentSub != null) drawPos += ParentSub.DrawPosition;
+                if (ParentSub != null) { drawPos += ParentSub.DrawPosition; }
                 drawPos.Y = -drawPos.Y;
 
                 spriteBatch.Draw(currentTexture, drawPos, null, Color.Multiply(CurrentBrightness), -rotation, center, scale, SpriteEffects.None, 1);
                 return;
             }
 
+            CheckHullsInRange();
+
             if (NeedsRecalculation)
             {
                 var verts = FindRaycastHits();
+                if (verts == null)
+                {
+#if DEBUG
+                    DebugConsole.ThrowError($"Failed to generate vertices for a light source. Range: {Range}, color: {Color}, brightness: {CurrentBrightness}, parent: {ParentBody?.UserData ?? "Unknown"}");
+#endif
+                    Enabled = false;
+                    return;
+                }
+
                 CalculateLightVertices(verts);
 
                 lastRecalculationTime = (float)Timing.TotalTime;

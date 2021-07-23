@@ -576,7 +576,7 @@ namespace Barotrauma
             get { return pressureProtection; }
             set
             {
-                pressureProtection = Math.Max(value, 0.0f);
+                pressureProtection = Math.Max(value, pressureProtection);
                 pressureProtectionLastSet = Timing.TotalTime;
             }
         }
@@ -881,6 +881,8 @@ namespace Barotrauma
                 return AnimController.MainLimb.body.DrawPosition;
             }
         }
+
+        public bool IsInFriendlySub => Submarine != null && Submarine.TeamID == TeamID;
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
@@ -2065,10 +2067,9 @@ namespace Barotrauma
             if (!CanInteract || inventory.Locked) { return false; }
 
             //the inventory belongs to some other character
-            if (inventory.Owner is Character && inventory.Owner != this)
+            if (inventory.Owner is Character character && inventory.Owner != this)
             {
-                var owner = (Character)inventory.Owner;
-
+                var owner = character;
                 //can only be accessed if the character is incapacitated and has been selected
                 return SelectedCharacter == owner && owner.CanInventoryBeAccessed;
             }
@@ -2361,7 +2362,7 @@ namespace Barotrauma
 #if CLIENT
             if (isLocalPlayer)
             {
-                if (!IsMouseOnUI)
+                if (!IsMouseOnUI && (ViewTarget == null || ViewTarget == this))
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
@@ -2832,7 +2833,7 @@ namespace Barotrauma
             {
                 if (Timing.TotalTime > pressureProtectionLastSet + 0.1)
                 {
-                    PressureProtection = 0.0f;
+                    pressureProtection = 0.0f;
                 }
             }
             if (NeedsWater)
@@ -2994,10 +2995,7 @@ namespace Barotrauma
         {
             despawnTimer = GameMain.Config.CorpseDespawnDelay;
             UpdateDespawn(1.0f, ignoreThresholds: true);
-            if (createNetworkEvents)
-            {
-                Spawner.Update();
-            }
+            Spawner.Update(createNetworkEvents);
         }
 
         public static void RemoveByPrefab(CharacterPrefab prefab)
@@ -3526,6 +3524,7 @@ namespace Barotrauma
             }
             bool wasDead = IsDead;
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
+            float prevVitality = CharacterHealth.Vitality;
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound, damageMultiplier: damageMultiplier, penetration: penetration);
             CharacterHealth.ApplyDamage(hitLimb, attackResult, allowStacking);
             if (attacker != this)
@@ -3534,7 +3533,7 @@ namespace Barotrauma
                 OnAttackedProjSpecific(attacker, attackResult, stun);
                 if (!wasDead)
                 {
-                    TryAdjustAttackerSkill(attacker, -attackResult.Damage);
+                    TryAdjustAttackerSkill(attacker, CharacterHealth.Vitality - prevVitality);
                     if (IsDead)
                     {
                         attacker?.RecordKill(this);
@@ -4001,7 +4000,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    canBePutInOriginalInventory = inventory.CanBePut(newItem, slotIndices[0]);
+                    canBePutInOriginalInventory = inventory.CanBePut(newItem, slotIndices[0], ignoreCondition: true);
                 }
 
                 if (canBePutInOriginalInventory)

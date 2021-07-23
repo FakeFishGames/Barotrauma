@@ -741,7 +741,6 @@ namespace Barotrauma
                 {
                     float diff = isHorizontal ? scrollToElement.Rect.X - Content.Rect.X : scrollToElement.Rect.Y - Content.Rect.Y;
                     float speed = MathHelper.Clamp(Math.Abs(diff) * 0.1f, 5.0f, 100.0f);
-                    System.Diagnostics.Debug.WriteLine(speed);
                     if (Math.Abs(diff) < speed || GUIScrollBar.DraggingBar != null)
                     {
                         speed = Math.Abs(diff);

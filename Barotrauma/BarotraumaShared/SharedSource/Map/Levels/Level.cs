@@ -1837,7 +1837,7 @@ namespace Barotrauma
 
             foreach (RuinShape ruinShape in ruin.RuinShapes)
             {
-                var tooClose = GetTooCloseCells(ruinShape.Rect.Center.ToVector2(), Math.Max(ruinShape.Rect.Width, ruinShape.Rect.Height));
+                var tooClose = GetTooCloseCells(ruinShape.Rect.Center.ToVector2(), Math.Max(ruinShape.Rect.Width, ruinShape.Rect.Height) * 4);
 
                 foreach (VoronoiCell cell in tooClose)
                 {
@@ -1984,7 +1984,7 @@ namespace Barotrauma
         private DestructibleLevelWall CreateIceSpire(List<GraphEdge> usedSpireEdges)
         {
             const float maxLength = 15000.0f;
-
+            float minEdgeLength = 100.0f;
             var mainPathPos = PositionsOfInterest.Where(pos => pos.PositionType == PositionType.MainPath).GetRandom(Rand.RandSync.Server);
             double closestDistSqr = double.PositiveInfinity;
             GraphEdge closestEdge = null;
@@ -1999,8 +1999,9 @@ namespace Barotrauma
                     if (edge.Center.Y > Size.Y / 2 && (edge.Center.X < Size.X * 0.3f || edge.Center.X > Size.X * 0.7f)) { continue; }
                     if (Vector2.DistanceSquared(edge.Center, StartPosition) < maxLength * maxLength) { continue; }
                     if (Vector2.DistanceSquared(edge.Center, EndPosition) < maxLength * maxLength) { continue; }
-                    //don't spawn on very long edges
-                    if (Vector2.DistanceSquared(edge.Point1, edge.Point2) > 1000.0f * 1000.0f) { continue; }
+                    //don't spawn on very long or very short edges
+                    float edgeLengthSqr = Vector2.DistanceSquared(edge.Point1, edge.Point2);
+                    if (edgeLengthSqr > 1000.0f * 1000.0f || edgeLengthSqr < minEdgeLength * minEdgeLength) { continue; }
                     //don't spawn on edges facing away from the main path
                     if (Vector2.Dot(Vector2.Normalize(mainPathPos.Position.ToVector2()) - edge.Center, edge.GetNormal(cell)) < 0.5f) { continue; }
                     double distSqr = MathUtils.DistanceSquared(edge.Center.X, edge.Center.Y, mainPathPos.Position.X, mainPathPos.Position.Y);
@@ -3048,8 +3049,10 @@ namespace Barotrauma
             var waypoints = WayPoint.WayPointList.Where(wp =>
                 wp.Submarine == null &&
                 wp.SpawnType == SpawnType.Path &&
+                wp.WorldPosition.X < EndExitPosition.X &&
                 !IsCloseToStart(wp.WorldPosition, minDistance) && 
-                !IsCloseToEnd(wp.WorldPosition, minDistance)).ToList();
+                !IsCloseToEnd(wp.WorldPosition, minDistance)
+                ).ToList();
 
             var subDoc = SubmarineInfo.OpenFile(contentFile.Path);
             Rectangle subBorders = Submarine.GetBorders(subDoc.Root);
@@ -3134,7 +3137,7 @@ namespace Barotrauma
                 }
                 tempSW.Stop();
                 Debug.WriteLine($"Sub {sub.Info.Name} loaded in { tempSW.ElapsedMilliseconds} (ms)");
-                sub.SetPosition(spawnPoint);
+                sub.SetPosition(spawnPoint, forceUndockFromStaticSubmarines: false);
                 wreckPositions.Add(sub, positions);
                 blockedRects.Add(sub, rects);
                 return sub;

@@ -6,6 +6,11 @@ namespace Barotrauma
     {
         public bool HasSpawned;
 
+        public bool HasItemData
+        {
+            get { return itemData != null; }
+        }
+
         partial void InitProjSpecific(Client client)
         {
             ClientEndPoint = client.Connection.EndPointString;

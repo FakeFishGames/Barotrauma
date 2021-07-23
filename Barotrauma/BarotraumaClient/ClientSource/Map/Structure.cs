@@ -83,7 +83,7 @@ namespace Barotrauma
             convexHulls.Add(h);
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {

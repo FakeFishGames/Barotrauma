@@ -479,7 +479,7 @@ namespace Barotrauma
             {
                 CalculateLimbDepths();
                 var controller = character.SelectedConstruction?.GetComponent<Controller>();
-                if (controller != null && controller.ControlCharacterPose && controller.User == character)
+                if (controller != null && controller.ControlCharacterPose && controller.User == character && controller.UserInCorrectPosition)
                 {
                     if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
                     {

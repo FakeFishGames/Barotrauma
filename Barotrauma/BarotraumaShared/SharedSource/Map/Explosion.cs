@@ -42,7 +42,7 @@ namespace Barotrauma
 
         public Explosion(float range, float force, float damage, float structureDamage, float itemDamage, float empStrength = 0.0f, float ballastFloraStrength = 0.0f)
         {
-            Attack = new Attack(damage, 0.0f, 0.0f, structureDamage, itemDamage, range)
+            Attack = new Attack(damage, 0.0f, 0.0f, structureDamage, itemDamage, Math.Min(range, 1000000))
             {
                 SeverLimbsProbability = 1.0f
             };

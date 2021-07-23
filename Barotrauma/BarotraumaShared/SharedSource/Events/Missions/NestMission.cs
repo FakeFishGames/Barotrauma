@@ -107,7 +107,7 @@ namespace Barotrauma
                 //ruin/cave/wreck items are allowed to spawn close to the sub
                 float minDistance = spawnPositionType == Level.PositionType.Ruin || spawnPositionType == Level.PositionType.Cave || spawnPositionType == Level.PositionType.Wreck ?
                     0.0f : Level.Loaded.Size.X * 0.3f;
-                nestPosition = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
+                Level.Loaded.TryGetInterestingPosition(true, spawnPositionType, 0.0f, out Vector2 nestPosition);
                 List<GraphEdge> spawnEdges = new List<GraphEdge>();
                 if (spawnPositionType == Level.PositionType.Cave)
                 {

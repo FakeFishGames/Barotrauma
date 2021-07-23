@@ -562,6 +562,7 @@ namespace Barotrauma.Items.Components
                         //use linked projectile containers in case they have to react to the turret being launched somehow
                         //(play a sound, spawn more projectiles)
                         if (!(e is Item linkedItem)) { continue; }
+                        if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
                         if (linkedItem.Condition <= 0.0f) 
                         {
                             loaderBroken = true;
@@ -971,6 +972,7 @@ namespace Barotrauma.Items.Components
             foreach (MapEntity e in item.linkedTo)
             {
                 if (!item.IsInteractable(character)) { continue; }
+                if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
                 if (e is Item projectileContainer)
                 {
                     var container = projectileContainer.GetComponent<ItemContainer>();
@@ -1323,6 +1325,7 @@ namespace Barotrauma.Items.Components
             CheckProjectileContainer(item, projectiles, out bool _);
             foreach (MapEntity e in item.linkedTo)
             {
+                if (!item.prefab.IsLinkAllowed(e.prefab)) { continue; }
                 if (e is Item projectileContainer)
                 {
                     CheckProjectileContainer(projectileContainer, projectiles, out bool stopSearching);

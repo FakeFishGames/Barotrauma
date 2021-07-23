@@ -475,14 +475,16 @@ namespace Barotrauma
                 bool needsGear = NeedsDivingGear(Character.CurrentHull, out _);
                 if (!needsGear || oxygenLow)
                 {
-                    bool shouldKeepTheGearOn = 
+                    bool isCurrentObjectiveFindSafety = ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>();
+                    bool shouldKeepTheGearOn =
+                        isCurrentObjectiveFindSafety ||
                         Character.AnimController.InWater ||
                         Character.AnimController.HeadInWater ||
                         Character.CurrentHull == null ||
-                        (Character.Submarine?.TeamID != Character.TeamID && !Character.IsEscorted) || // these instances should maybe be combined to a method
-                        ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>() ||
+                        Character.Submarine == null ||
+                        (Character.Submarine.TeamID != Character.TeamID && !Character.IsEscorted) ||
                         ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
-                    if (oxygenLow && Character.CurrentHull.Oxygen > 0)
+                    if (oxygenLow && Character.CurrentHull.Oxygen > 0 && (!isCurrentObjectiveFindSafety || Character.OxygenAvailable < 1))
                     {
                         shouldKeepTheGearOn = false;
                     }
@@ -1348,13 +1350,15 @@ namespace Barotrauma
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingSuit(Character character, float conditionPercentage = 0) => HasItem(character, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true,
-            predicate: (Item item) => { return character.HasEquippedItem(item, InvSlotType.OuterClothes); });
+        public static bool HasDivingSuit(Character character, float conditionPercentage = 0) 
+            => HasItem(character, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true,
+                predicate: (Item item) => character.HasEquippedItem(item, InvSlotType.OuterClothes));
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingMask(Character character, float conditionPercentage = 0) => HasItem(character, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true);
+        public static bool HasDivingMask(Character character, float conditionPercentage = 0) 
+            => HasItem(character, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true);
 
         private static List<Item> matchingItems = new List<Item>();
 
@@ -2048,7 +2052,7 @@ namespace Barotrauma
                 {
                     var repairItemsObjective = operatingAI.ObjectiveManager.GetObjective<AIObjectiveRepairItems>();
                     if (repairItemsObjective == null) { continue; }
-                    if (repairItemsObjective.SubObjectives.None(o => o is AIObjectiveRepairItem repairObjective && repairObjective.Item == target))
+                    if (!(repairItemsObjective.SubObjectives.FirstOrDefault(o => o is AIObjectiveRepairItem) is AIObjectiveRepairItem activeObjective) || activeObjective.Item != target)
                     {
                         // Not targeting the same item.
                         continue;

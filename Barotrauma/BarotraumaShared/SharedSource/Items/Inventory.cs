@@ -28,22 +28,25 @@ namespace Barotrauma
                 get { return items.Count; }
             }
 
-            public bool CanBePut(Item item)
+            public bool CanBePut(Item item, bool ignoreCondition = false)
             {
                 if (item == null) { return false; }
                 if (items.Count > 0)
                 {
-                    if (item.IsFullCondition)
+                    if (!ignoreCondition)
                     {
-                        if (items.Any(it => !it.IsFullCondition)) { return false; }
-                    }
-                    else if (MathUtils.NearlyEqual(item.Condition, 0.0f))
-                    {
-                        if (items.Any(it => !MathUtils.NearlyEqual(it.Condition, 0.0f))) { return false; }
-                    }
-                    else
-                    {
-                        return false;
+                        if (item.IsFullCondition)
+                        {
+                            if (items.Any(it => !it.IsFullCondition)) { return false; }
+                        }
+                        else if (MathUtils.NearlyEqual(item.Condition, 0.0f))
+                        {
+                            if (items.Any(it => !MathUtils.NearlyEqual(it.Condition, 0.0f))) { return false; }
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                     if (items[0].Prefab.Identifier != item.Prefab.Identifier ||
                         items.Count + 1 > item.Prefab.MaxStackSize)
@@ -54,12 +57,31 @@ namespace Barotrauma
                 return true;
             }
 
-            public bool CanBePut(ItemPrefab itemPrefab)
+            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null)
             {
                 if (itemPrefab == null) { return false; }
                 if (items.Count > 0)
                 {
-                    if (items.Any(it => !it.IsFullCondition)) { return false; }
+                    if (condition.HasValue)
+                    {
+                        if (MathUtils.NearlyEqual(condition.Value, 0.0f))
+                        {
+                            if (items.Any(it => it.Condition > 0.0f)) { return false; }
+                        }
+                        else if (MathUtils.NearlyEqual(condition.Value, itemPrefab.Health))
+                        {
+                            if (items.Any(it => !it.IsFullCondition)) { return false; }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (items.Any(it => !it.IsFullCondition)) { return false; }
+                    }
+
                     if (items[0].Prefab.Identifier != itemPrefab.Identifier ||
                         items.Count + 1 > itemPrefab.MaxStackSize)
                     {
@@ -70,13 +92,31 @@ namespace Barotrauma
             }
 
             /// <param name="maxStackSize">Defaults to <see cref="ItemPrefab.MaxStackSize"/> if null</param>
-            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null)
+            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null, float? condition = null)
             {
                 if (itemPrefab == null) { return 0; }
                 maxStackSize ??= itemPrefab.MaxStackSize;
                 if (items.Count > 0)
                 {
-                    if (items.Any(it => !it.IsFullCondition)) { return 0; }
+                    if (condition.HasValue)
+                    {
+                        if (MathUtils.NearlyEqual(condition.Value, 0.0f))
+                        {
+                            if (items.Any(it => it.Condition > 0.0f)) { return 0; }
+                        }
+                        else if (MathUtils.NearlyEqual(condition.Value, itemPrefab.Health))
+                        {
+                            if (items.Any(it => !it.IsFullCondition)) { return 0; }
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        if (items.Any(it => !it.IsFullCondition)) { return 0; }
+                    }
                     if (items[0].Prefab.Identifier != itemPrefab.Identifier) { return 0; }
                     return maxStackSize.Value - items.Count;
                 }
@@ -373,42 +413,42 @@ namespace Barotrauma
         /// <summary>
         /// Can the item be put in the specified slot.
         /// </summary>
-        public virtual bool CanBePut(Item item, int i)
+        public virtual bool CanBePut(Item item, int i, bool ignoreCondition = false)
         {
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
-            return slots[i].CanBePut(item);
+            return slots[i].CanBePut(item, ignoreCondition);
         }
 
-        public bool CanBePut(ItemPrefab itemPrefab)
+        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null)
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePut(itemPrefab, i)) { return true; }
+                if (CanBePut(itemPrefab, i, condition)) { return true; }
             }
             return false;
         }
 
-        public virtual bool CanBePut(ItemPrefab itemPrefab, int i)
+        public virtual bool CanBePut(ItemPrefab itemPrefab, int i, float? condition = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
-            return slots[i].CanBePut(itemPrefab);
+            return slots[i].CanBePut(itemPrefab, condition);
         }
 
-        public int HowManyCanBePut(ItemPrefab itemPrefab)
+        public int HowManyCanBePut(ItemPrefab itemPrefab, float? condition = null)
         {
             int count = 0;
             for (int i = 0; i < capacity; i++)
             {
-                count += HowManyCanBePut(itemPrefab, i);
+                count += HowManyCanBePut(itemPrefab, i, condition);
             }
             return count;
         }
 
-        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i)
+        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
         {
             if (i < 0 || i >= slots.Length) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab);
+            return slots[i].HowManyCanBePut(itemPrefab, condition: condition);
         }
 
         /// <summary>

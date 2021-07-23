@@ -411,11 +411,7 @@ namespace Barotrauma.Networking
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
                 if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
                 {
-                    var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
-                    if (respawnPenaltyAffliction != null)
-                    {
-                        character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction.Instantiate(10.0f));
-                    }
+                    GiveRespawnPenaltyAffliction(character);
                 }
 
                 if (characterData == null || characterData.HasSpawned)

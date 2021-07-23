@@ -183,7 +183,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void SetDifficulty(float difficulty) { }
+        public virtual void SetLevel(LevelData level) { }
 
         public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
@@ -423,13 +423,16 @@ namespace Barotrauma
 
         protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.Server, bool giveTags = true)
         {
-            if (positionToStayIn == null) 
-            {
-                positionToStayIn = WayPoint.GetRandom(SpawnType.Human, null, submarine);
-            }
-
             var characterInfo = humanPrefab.GetCharacterInfo(Rand.RandSync.Server) ?? new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
             characterInfo.TeamID = teamType;
+
+            if (positionToStayIn == null) 
+            {
+                positionToStayIn = 
+                    WayPoint.GetRandom(SpawnType.Human, characterInfo.Job?.Prefab, submarine) ??
+                    WayPoint.GetRandom(SpawnType.Human, null, submarine);
+            }
+
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
             spawnedCharacter.Prefab = humanPrefab;
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);

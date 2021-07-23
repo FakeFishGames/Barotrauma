@@ -300,9 +300,9 @@ namespace Barotrauma
                     if (containedItem == null) { continue; }
                     if (predicate == null || predicate(containedItem))
                     {
-                        if (character.Submarine != Submarine.MainSub && avoidDroppingInSea)
+                        if (avoidDroppingInSea && !character.IsInFriendlySub)
                         {
-                            // If we are outside of main sub, try to put the item in the inventory instead dropping it in the sea.
+                            // If we are not inside a friendly sub (= same team), try to put the item in the inventory instead dropping it.
                             if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
                             {
                                 continue;

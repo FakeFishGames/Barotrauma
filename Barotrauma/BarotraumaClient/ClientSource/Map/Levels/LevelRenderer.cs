@@ -23,6 +23,14 @@ namespace Barotrauma
 
         public LevelWallVertexBuffer(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Texture2D wallTexture, Texture2D edgeTexture, Color color)
         {
+            if (wallVertices.Length == 0)
+            {
+                throw new ArgumentException("Failed to instantiate a LevelWallVertexBuffer (no wall vertices).");
+            }
+            if (wallVertices.Length == 0)
+            {
+                throw new ArgumentException("Failed to instantiate a LevelWallVertexBuffer (no wall edge vertices).");
+            }
             this.wallVertices = LevelRenderer.GetColoredVertices(wallVertices, color);
             WallBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, wallVertices.Length, BufferUsage.WriteOnly);
             WallBuffer.SetData(this.wallVertices);

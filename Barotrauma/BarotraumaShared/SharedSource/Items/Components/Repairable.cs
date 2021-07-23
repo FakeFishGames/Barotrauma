@@ -139,7 +139,7 @@ namespace Barotrauma.Items.Components
             //backwards compatibility
             var repairThresholdAttribute = 
                 element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("showrepairuithreshold", StringComparison.OrdinalIgnoreCase)) ??
-                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("airepairth44reshold", StringComparison.OrdinalIgnoreCase));
+                element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals("airepairthreshold", StringComparison.OrdinalIgnoreCase));
             if (repairThresholdAttribute != null)
             {
                 if (float.TryParse(repairThresholdAttribute.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float repairThreshold))
@@ -349,7 +349,7 @@ namespace Barotrauma.Items.Components
                         foreach (Skill skill in requiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
+                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
                                 SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f),
                                 CurrentFixer.Position + Vector2.UnitY * 100.0f);
                         }
@@ -379,7 +379,7 @@ namespace Barotrauma.Items.Components
                         foreach (Skill skill in requiredSkills)
                         {
                             float characterSkillLevel = CurrentFixer.GetSkillLevel(skill.Identifier);
-                            CurrentFixer.Info.IncreaseSkillLevel(skill.Identifier,
+                            CurrentFixer.Info?.IncreaseSkillLevel(skill.Identifier,
                                 SkillSettings.Current.SkillIncreasePerSabotage / Math.Max(characterSkillLevel, 1.0f),
                                 CurrentFixer.Position + Vector2.UnitY * 100.0f);
                         }

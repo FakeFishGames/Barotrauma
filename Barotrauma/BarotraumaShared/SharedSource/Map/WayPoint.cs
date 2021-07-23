@@ -779,6 +779,7 @@ namespace Barotrauma
         public static WayPoint[] SelectCrewSpawnPoints(List<CharacterInfo> crew, Submarine submarine)
         {
             List<WayPoint> subWayPoints = WayPointList.FindAll(wp => wp.Submarine == submarine);
+            subWayPoints.Shuffle();
 
             List<WayPoint> unassignedWayPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human);
 
@@ -789,7 +790,7 @@ namespace Barotrauma
                 //try to give the crew member a spawnpoint that hasn't been assigned to anyone and matches their job                
                 for (int n = 0; n < unassignedWayPoints.Count; n++)
                 {
-                    if (crew[i].Job.Prefab != unassignedWayPoints[n].AssignedJob) continue;
+                    if (crew[i].Job.Prefab != unassignedWayPoints[n].AssignedJob) { continue; }
                     assignedWayPoints[i] = unassignedWayPoints[n];
                     unassignedWayPoints.RemoveAt(n);
 
@@ -800,17 +801,17 @@ namespace Barotrauma
             //go through the crewmembers that don't have a spawnpoint yet (if any)
             for (int i = 0; i < crew.Count; i++)
             {
-                if (assignedWayPoints[i] != null) continue;
+                if (assignedWayPoints[i] != null) { continue; }
 
                 //try to assign a spawnpoint that matches the job, even if the spawnpoint is already assigned to someone else
                 foreach (WayPoint wp in subWayPoints)
                 {
-                    if (wp.spawnType != SpawnType.Human || wp.AssignedJob != crew[i].Job.Prefab) continue;
+                    if (wp.spawnType != SpawnType.Human || wp.AssignedJob != crew[i].Job.Prefab) { continue; }
 
                     assignedWayPoints[i] = wp;
                     break;
                 }
-                if (assignedWayPoints[i] != null) continue;
+                if (assignedWayPoints[i] != null) { continue; }
 
                 //try to assign a spawnpoint that isn't meant for any specific job
                 var nonJobSpecificPoints = subWayPoints.FindAll(wp => wp.spawnType == SpawnType.Human && wp.AssignedJob == null);
@@ -819,7 +820,7 @@ namespace Barotrauma
                     assignedWayPoints[i] = nonJobSpecificPoints[Rand.Int(nonJobSpecificPoints.Count, Rand.RandSync.Server)];
                 }
 
-                if (assignedWayPoints[i] != null) continue;
+                if (assignedWayPoints[i] != null) { continue; }
 
                 //everything else failed -> just give a random spawnpoint inside the sub
                 assignedWayPoints[i] = GetRandom(SpawnType.Human, null, submarine, useSyncedRand: true);

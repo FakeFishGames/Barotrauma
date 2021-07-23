@@ -82,13 +82,13 @@ namespace Barotrauma.Items.Components
             get { return nodes; }
         }
 
-        private readonly List<Pair<Character,Node>> charactersInRange = new List<Pair<Character, Node>>();
+        private readonly List<(Character character, Node node)> charactersInRange = new List<(Character character, Node node)>();
 
         private bool charging;
 
         private float timer;
 
-        private Attack attack;
+        private readonly Attack attack;
 
         public ElectricalDischarger(Item item, XElement element) : 
             base(item, element)
@@ -114,8 +114,8 @@ namespace Barotrauma.Items.Components
         {
             //already active, do nothing
             if (IsActive) { return false; }
-
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+            if (character != null && !CharacterUsable) { return false; }
 
             CurrPowerConsumption = powerConsumption;
             charging = true;
@@ -182,9 +182,9 @@ namespace Barotrauma.Items.Components
             FindNodes(item.WorldPosition, Range);
             if (attack != null)
             {
-                foreach (Pair<Character, Node> characterInRange in charactersInRange)
+                foreach ((Character character, Node node) in charactersInRange)
                 {
-                    characterInRange.First.ApplyAttack(null, characterInRange.Second.WorldPosition, attack, 1.0f);
+                    character.ApplyAttack(null, node.WorldPosition, attack, 1.0f);
                 }
             }
             DischargeProjSpecific();
@@ -315,7 +315,6 @@ namespace Barotrauma.Items.Components
 
             if (closestIndex == -1 || closestDist > currentRange)
             {
-                int originalParentNodeIndex = parentNodeIndex;
                 //nothing in range, create some arcs to random directions
                 for (int i = 0; i < Rand.Int(4); i++)
                 {
@@ -455,7 +454,7 @@ namespace Barotrauma.Items.Components
                 AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
                 nodes.Add(new Node(targetPos, parentNodeIndex));
                 entitiesInRange.RemoveAt(closestIndex);
-                charactersInRange.Add(new Pair<Character, Node>(character, nodes[parentNodeIndex]));
+                charactersInRange.Add((character, nodes[parentNodeIndex]));
                 FindNodes(entitiesInRange, targetPos, nodes.Count - 1, currentRange);
             }     
         }

@@ -234,7 +234,10 @@ namespace Barotrauma.Items.Components
 
             //use a smoothed "correct output" instead of the actual correct output based on the load
             //so the player doesn't have to keep adjusting the rate impossibly fast when the load fluctuates heavily
-            correctTurbineOutput += MathHelper.Clamp((load / MaxPowerOutput * 100.0f) - correctTurbineOutput, -10.0f, 10.0f) * deltaTime;
+            if (!MathUtils.NearlyEqual(MaxPowerOutput, 0.0f))
+            {
+                correctTurbineOutput += MathHelper.Clamp((load / MaxPowerOutput * 100.0f) - correctTurbineOutput, -10.0f, 10.0f) * deltaTime;
+            }
 
             //calculate tolerances of the meters based on the skills of the user
             //more skilled characters have larger "sweet spots", making it easier to keep the power output at a suitable level
@@ -320,7 +323,7 @@ namespace Barotrauma.Items.Components
                 //reset the fission rate, turbine output and
                 //temperature to optimal levels to prevent fires
                 //at the start of the round
-                correctTurbineOutput = currentLoad / MaxPowerOutput * 100.0f;
+                correctTurbineOutput = MathUtils.NearlyEqual(MaxPowerOutput, 0.0f) ? 0.0f : currentLoad / MaxPowerOutput * 100.0f;
                 tolerance = MathHelper.Lerp(2.5f, 10.0f, degreeOfSuccess);
                 optimalTurbineOutput = new Vector2(correctTurbineOutput - tolerance, correctTurbineOutput + tolerance);
                 tolerance = MathHelper.Lerp(5.0f, 20.0f, degreeOfSuccess);

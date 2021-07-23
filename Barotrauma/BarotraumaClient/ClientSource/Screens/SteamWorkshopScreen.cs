@@ -1089,6 +1089,7 @@ namespace Barotrauma
             itemContentPackage = ContentPackage.CreatePackage(sub.Name, Path.Combine(destinationFolder, SteamManager.MetadataFileName), corePackage: false);
             SteamManager.CreateWorkshopItemStaging(itemContentPackage, out itemEditor);
 
+            bool fileMoved = false;
             string submarineDir = Path.GetDirectoryName(sub.FilePath);
             if (submarineDir != Path.GetDirectoryName(destinationFolder))
             {
@@ -1097,14 +1098,18 @@ namespace Barotrauma
                 {
                     File.Move(sub.FilePath, destinationPath);
                 }
+                fileMoved = true;
                 sub.FilePath = destinationPath;
             }
             
             itemContentPackage.AddFile(sub.FilePath, ContentType.Submarine);
             itemContentPackage.Name = sub.Name;
             itemContentPackage.Save(itemContentPackage.Path);
-            //ContentPackage.List.Add(itemContentPackage);
-            //GameMain.Config.SelectContentPackage(itemContentPackage);
+
+            if (fileMoved)
+            {
+                GameMain.Config.EnableRegularPackage(itemContentPackage);
+            }
 
             itemEditor = itemEditor?.WithTitle(sub.Name).WithTag("Submarine").WithDescription(sub.Description);
 

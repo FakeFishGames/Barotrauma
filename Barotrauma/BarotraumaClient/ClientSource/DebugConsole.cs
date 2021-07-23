@@ -641,6 +641,8 @@ namespace Barotrauma
             commands.Add(new Command("wikiimage_sub", "Save an image of the main submarine with a transparent background.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
+                MapEntity.SelectedList.Clear();
+                MapEntity.mapEntityList.ForEach(me => me.IsHighlighted = false);
                 WikiImage.Create(Submarine.MainSub);
             }));
 

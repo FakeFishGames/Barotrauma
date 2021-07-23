@@ -132,17 +132,17 @@ namespace Barotrauma
             return false;
         }
 
-        public override bool CanBePut(Item item, int i)
+        public override bool CanBePut(Item item, int i, bool ignoreCondition = false)
         {
             return 
-                base.CanBePut(item, i) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && 
+                base.CanBePut(item, i, ignoreCondition) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && 
                 (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 
-        public override bool CanBePut(ItemPrefab itemPrefab, int i)
+        public override bool CanBePut(ItemPrefab itemPrefab, int i, float? condition)
         {
             return 
-                base.CanBePut(itemPrefab, i) &&
+                base.CanBePut(itemPrefab, i, condition) &&
                 (SlotTypes[i] == InvSlotType.Any || slots[i].ItemCount < 1);
         }
 
@@ -214,7 +214,7 @@ namespace Barotrauma
                 }
             }
 
-            if (allowedSlots != null && !allowedSlots.Contains(InvSlotType.Any))
+            if (allowedSlots != null && allowedSlots.Any() && !allowedSlots.Contains(InvSlotType.Any))
             {
                 bool allSlotsTaken = true;
                 foreach (var allowedSlot in allowedSlots)

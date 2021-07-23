@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Extensions;
+using FarseerPhysics;
 
 namespace Barotrauma.Items.Components
 {
@@ -60,7 +61,21 @@ namespace Barotrauma.Items.Components
                 Drawable = !hideItems;
             }
         }
-        
+
+#if DEBUG
+        [Editable]
+#endif
+        [Serialize("0.0,0.0", false, description: "The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).")]
+        public Vector2 ItemPos { get; set; }
+
+#if DEBUG
+        [Editable]
+#endif
+        [Serialize("0.0,0.0", false, description: "The interval at which the contained items are spaced apart from each other (in pixels).")]
+        public Vector2 ItemInterval { get; set; }
+        [Serialize(100, false, description: "How many items are placed in a row before starting a new row.")]
+        public int ItemsPerRow { get; set; }
+
         [Serialize(true, false, description: "Should the inventory of this item be visible when the item is selected.")]
         public bool DrawInventory
         {
@@ -113,6 +128,13 @@ namespace Barotrauma.Items.Components
 
         [Serialize("", false, description: "Specify an item for the container to spawn with.")]
         public string SpawnWithId
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, false, description: "Should the items configured using SpawnWithId spawn if this item is broken.")]
+        public bool SpawnWithIdWhenBroken
         {
             get;
             set;
@@ -335,20 +357,66 @@ namespace Barotrauma.Items.Components
 
         public void SetContainedItemPositions()
         {
-            Vector2 simPos = item.SimPosition;
-            Vector2 displayPos = item.Position;
+            Vector2 transformedItemPos = ItemPos * item.Scale;
+            Vector2 transformedItemInterval = ItemInterval * item.Scale;
+            Vector2 transformedItemIntervalHorizontal = new Vector2(transformedItemInterval.X, 0.0f);
+            Vector2 transformedItemIntervalVertical = new Vector2(0.0f, transformedItemInterval.Y);
+            if (item.body == null)
+            {
+                if (item.FlippedX)
+                {
+                    transformedItemPos.X = -transformedItemPos.X;
+                    transformedItemPos.X += item.Rect.Width;
+                    transformedItemInterval.X = -transformedItemInterval.X;
+                    transformedItemIntervalHorizontal.X = -transformedItemIntervalHorizontal.X;
+                }
+                if (item.FlippedY)
+                {
+                    transformedItemPos.Y = -transformedItemPos.Y;
+                    transformedItemPos.Y -= item.Rect.Height;
+                    transformedItemInterval.Y = -transformedItemInterval.Y;
+                    transformedItemIntervalVertical.Y = -transformedItemIntervalVertical.Y;
+                }
+                transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                if (Math.Abs(item.Rotation) > 0.01f)
+                {
+                    Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
+                    transformedItemPos = Vector2.Transform(transformedItemPos, transform);
+                    transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
+                    transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
+                    transformedItemIntervalVertical = Vector2.Transform(transformedItemIntervalVertical, transform);
+                }
+            }
+            else
+            {
+                Matrix transform = Matrix.CreateRotationZ(item.body.Rotation);
+                if (item.body.Dir == -1.0f)
+                {
+                    transformedItemPos.X = -transformedItemPos.X;
+                    transformedItemInterval.X = -transformedItemInterval.X;
+                    transformedItemIntervalHorizontal.X = -transformedItemIntervalHorizontal.X;
+                }
+                transformedItemPos = Vector2.Transform(transformedItemPos, transform);
+                transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
+                transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
+                transformedItemPos += item.Position;
+            }
+
             float currentRotation = itemRotation;
             if (item.body != null)
             {
                 currentRotation += item.body.Rotation;
             }
 
+            int i = 0;
+            Vector2 currentItemPos = transformedItemPos;
             foreach (Item contained in Inventory.AllItems)
             {
                 if (contained.body != null)
                 {
                     try
                     {
+                        Vector2 simPos = ConvertUnits.ToSimUnits(currentItemPos);
                         contained.body.FarseerBody.SetTransformIgnoreContacts(ref simPos, currentRotation);
                         contained.body.SetPrevTransform(contained.body.SimPosition, contained.body.Rotation);
                         contained.body.UpdateDrawPosition();
@@ -365,14 +433,29 @@ namespace Barotrauma.Items.Components
 
                 contained.Rect =
                     new Rectangle(
-                        (int)(displayPos.X - contained.Rect.Width / 2.0f),
-                        (int)(displayPos.Y + contained.Rect.Height / 2.0f),
+                        (int)(currentItemPos.X - contained.Rect.Width / 2.0f),
+                        (int)(currentItemPos.Y + contained.Rect.Height / 2.0f),
                         contained.Rect.Width, contained.Rect.Height);
 
                 contained.Submarine = item.Submarine;
                 contained.CurrentHull = item.CurrentHull;
-
                 contained.SetContainedItemPositions();
+
+                i++;
+                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
+                {
+                    //interval set on both axes -> use a grid layout
+                    currentItemPos += transformedItemIntervalHorizontal;
+                    if (i % ItemsPerRow == 0)
+                    {
+                        currentItemPos = transformedItemPos;
+                        currentItemPos += transformedItemIntervalVertical * (i / ItemsPerRow);
+                    }
+                }
+                else
+                {
+                    currentItemPos += transformedItemInterval;
+                }
             }
         }
 
@@ -410,7 +493,7 @@ namespace Barotrauma.Items.Components
 
         private void SpawnAlwaysContainedItems()
         {
-            if (SpawnWithId.Length > 0)
+            if (SpawnWithId.Length > 0 && (item.Condition > 0.0f || SpawnWithIdWhenBroken))
             {
                 string[] splitIds = SpawnWithId.Split(',');
                 foreach (string id in splitIds)

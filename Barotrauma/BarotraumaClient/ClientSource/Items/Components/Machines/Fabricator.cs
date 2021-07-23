@@ -561,7 +561,8 @@ namespace Barotrauma.Items.Components
         private bool StartButtonClicked(GUIButton button, object obj)
         {
             if (selectedItem == null) { return false; }
-            if (fabricatedItem == null && !outputContainer.Inventory.CanBePut(selectedItem.TargetItem))
+            if (fabricatedItem == null && 
+                !outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition))
             {
                 outputSlot.Flash(GUI.Style.Red);
                 return false;

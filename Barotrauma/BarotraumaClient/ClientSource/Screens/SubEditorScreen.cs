@@ -4696,7 +4696,7 @@ namespace Barotrauma
                         CloseItem();
                     }
                 }                
-                MapEntity.UpdateEditor(cam);
+                MapEntity.UpdateEditor(cam, (float)deltaTime);
             }
 
             entityMenuOpenState = entityMenuOpen && !WiringMode ? 

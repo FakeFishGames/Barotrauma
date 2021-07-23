@@ -66,6 +66,11 @@ namespace Barotrauma
 
         public bool AlwaysUseEuclideanDistance { get; set; } = true;
 
+        /// <summary>
+        /// If true, the distance to the destination is calculated from the character's AimSourcePos (= shoulder) instead of the collider's position
+        /// </summary>
+        public bool UseDistanceRelativeToAimSourcePos { get; set; } = false;
+
         public override bool AbandonWhenCannotCompleteSubjectives => !repeat;
 
         public override bool AllowOutsideSubmarine => AllowGoingOutside;
@@ -589,7 +594,9 @@ namespace Barotrauma
                     float xDiff = Math.Abs(Target.WorldPosition.X - character.WorldPosition.X);
                     return xDiff <= CloseEnough;
                 }
-                return Vector2.DistanceSquared(Target.WorldPosition, character.WorldPosition) < CloseEnough * CloseEnough;
+
+                Vector2 sourcePos = UseDistanceRelativeToAimSourcePos ? character.AnimController.AimSourceWorldPos : character.WorldPosition;
+                return Vector2.DistanceSquared(Target.WorldPosition, sourcePos) < CloseEnough * CloseEnough;
             }
         }
 

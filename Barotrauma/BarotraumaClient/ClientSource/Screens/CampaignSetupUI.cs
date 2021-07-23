@@ -318,9 +318,10 @@ namespace Barotrauma
 
             if (MapGenerationParams.Instance.RadiationParams != null)
             {
+                bool prevRadiationToggleEnabled = EnableRadiationToggle?.Selected ?? true;
                 EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), CampaignSettingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUI.Style.Font)
                 {
-                    Selected = true,
+                    Selected = prevRadiationToggleEnabled,
                     ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
                 };
             }
@@ -340,7 +341,9 @@ namespace Barotrauma
                     return true;
                 }
             };
-            MaxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), CampaignSettings.DefaultMaxMissionCount.ToString(), textAlignment: Alignment.Center, style: "GUITextBox");
+
+            string prevMaxMissionCountText = MaxMissionCountText?.Text ?? CampaignSettings.DefaultMaxMissionCount.ToString();
+            MaxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), prevMaxMissionCountText, textAlignment: Alignment.Center, style: "GUITextBox");
             maxMissionCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleRight")
             {
                 OnClicked = (button, obj) =>
@@ -806,11 +809,12 @@ namespace Barotrauma
                 UserData = "savefileframe"
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0.2f), saveFileFrame.RectTransform, Anchor.TopCenter)
+            var titleText = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.2f), saveFileFrame.RectTransform, Anchor.TopCenter)
             {
                 RelativeOffset = new Vector2(0, 0.05f)
             }, 
             Path.GetFileNameWithoutExtension(fileName), font: GUI.LargeFont, textAlignment: Alignment.Center);
+            titleText.Text = ToolBox.LimitString(titleText.Text, titleText.Font, titleText.Rect.Width);
 
             var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.5f), saveFileFrame.RectTransform, Anchor.Center)
             {

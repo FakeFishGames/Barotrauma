@@ -23,6 +23,10 @@ namespace Barotrauma.Items.Components
 
         public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
         {
+            if (DraggingConnected?.Item.Removed ?? false)
+            {
+                DraggingConnected = null;
+            }
             Rectangle panelRect = panel.GuiFrame.Rect;
             int x = panelRect.X, y = panelRect.Y;
             int width = panelRect.Width, height = panelRect.Height;

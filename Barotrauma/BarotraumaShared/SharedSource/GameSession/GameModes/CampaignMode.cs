@@ -651,6 +651,7 @@ namespace Barotrauma
                 location.ClearMissions();
                 location.Discovered = false;
                 location.LevelData?.EventHistory?.Clear();
+                location.UnlockInitialMissions();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
@@ -700,7 +701,7 @@ namespace Barotrauma
             if (npc == null || interactor == null) { yield return CoroutineStatus.Failure; }
 
             HumanAIController humanAI = npc.AIController as HumanAIController;
-            if (humanAI == null) { yield return CoroutineStatus.Failure; }
+            if (humanAI == null) { yield return CoroutineStatus.Success; }
 
             var waitOrder = Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase));
             humanAI.SetForcedOrder(waitOrder, string.Empty, null);
@@ -719,8 +720,10 @@ namespace Barotrauma
 #if CLIENT
             ShowCampaignUI = false;
 #endif
-
-            humanAI.ClearForcedOrder();
+            if (!npc.Removed)
+            {
+                humanAI.ClearForcedOrder();
+            }
             yield return CoroutineStatus.Success;
         }
 
@@ -729,13 +732,16 @@ namespace Barotrauma
         public void AssignNPCMenuInteraction(Character character, InteractionType interactionType)
         {
             character.CampaignInteractionType = interactionType;
-            if (interactionType == InteractionType.None) 
+            character.CharacterHealth.UseHealthWindow =
+                interactionType == InteractionType.None ||
+                interactionType == InteractionType.Examine ||
+                interactionType == InteractionType.Talk;
+
+            if (interactionType == InteractionType.None)
             {
                 character.SetCustomInteract(null, null);
-                return; 
+                return;
             }
-            character.CharacterHealth.UseHealthWindow = false;
-            //character.CanInventoryBeAccessed = false;
             character.SetCustomInteract(
                 NPCInteract,
 #if CLIENT

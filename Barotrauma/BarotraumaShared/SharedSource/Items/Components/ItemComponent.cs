@@ -42,7 +42,7 @@ namespace Barotrauma.Items.Components
         protected bool canBeCombined;
         protected bool removeOnCombined;
 
-        public bool WasUsed;
+        public bool WasUsed, WasSecondaryUsed;
 
         public readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
 

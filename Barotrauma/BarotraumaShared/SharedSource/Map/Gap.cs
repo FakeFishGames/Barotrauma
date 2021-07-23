@@ -56,6 +56,7 @@ namespace Barotrauma
             get { return open; }
             set 
             {
+                if (float.IsNaN(value)) { return; }
                 if (value > open) { openedTimer = 1.0f; }
                 open = MathHelper.Clamp(value, 0.0f, 1.0f); 
             }

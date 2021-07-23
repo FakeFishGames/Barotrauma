@@ -552,7 +552,7 @@ namespace Barotrauma
                 if (Vector2.DistanceSquared(Character.Controlled.WorldPosition, gap.ConnectedDoor.Item.WorldPosition) > 400 * 400) { continue; }
                 if (!gap.IsRoomToRoom)
                 {
-                    if (!(Character.Controlled.GetEquippedItem("deepdiving") is Item)) { continue; }
+                    if (!(Character.Controlled.GetEquippedItem("deepdiving", InvSlotType.OuterClothes) is Item)) { continue; }
                     if (Character.Controlled.IsProtectedFromPressure()) { continue; }
                     if (DisplayHint("divingsuitwarning", extendTextTag: false)) { return; }
                     continue;

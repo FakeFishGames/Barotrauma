@@ -224,12 +224,7 @@ namespace Barotrauma
                 {
                     endRoundButton.ToolTip = buttonText;
                 }
-                if (Character.Controlled?.ViewTarget is Item item)
-                {
-                    Turret turret = item.GetComponent<Turret>();
-                    endRoundButton.RectTransform.ScreenSpaceOffset = turret == null ? Point.Zero : new Point(0, (int)(turret.UIElementHeight * 1.25f));
-                }
-                else if (Character.Controlled?.CharacterHealth?.SuicideButton?.Visible ?? false)
+                if (Character.Controlled?.CharacterHealth?.SuicideButton?.Visible ?? false)
                 {
                     endRoundButton.RectTransform.ScreenSpaceOffset = new Point(0, Character.Controlled.CharacterHealth.SuicideButton.Rect.Height);
                 }

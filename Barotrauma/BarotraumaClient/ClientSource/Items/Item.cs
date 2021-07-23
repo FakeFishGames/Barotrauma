@@ -22,6 +22,8 @@ namespace Barotrauma
 
         private readonly List<ItemComponent> activeHUDs = new List<ItemComponent>();
 
+        private readonly List<SerializableEntityEditor> activeEditors = new List<SerializableEntityEditor>();
+
         public GUIComponentStyle IconStyle { get; private set; } = null;
         partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
         {
@@ -40,7 +42,6 @@ namespace Barotrauma
         public float LastImpactSoundTime;
         public const float ImpactSoundInterval = 0.2f;
 
-        private bool editingHUDRefreshPending;
         private float editingHUDRefreshTimer;
 
         private ContainedItemSprite activeContainedSprite;
@@ -581,12 +582,16 @@ namespace Barotrauma
             }
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
-            if (editingHUD == null || editingHUD.UserData as Item != this || 
-                (editingHUDRefreshPending && editingHUDRefreshTimer <= 0.0f))
+            if (editingHUD == null || editingHUD.UserData as Item != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
+                editingHUDRefreshTimer = 1.0f;
+            }
+            if (editingHUDRefreshTimer <= 0.0f)
+            {
+                activeEditors.ForEach(e => e?.RefreshValues());
                 editingHUDRefreshTimer = 1.0f;
             }
 
@@ -605,6 +610,11 @@ namespace Barotrauma
             }
 
             if (Character.Controlled == null) { activeHUDs.Clear(); }
+
+            foreach (ItemComponent ic in components)
+            {
+                ic.UpdateEditing(deltaTime);
+            }
 
             if (!Linkable) { return; }
 
@@ -632,7 +642,7 @@ namespace Barotrauma
 
         public GUIComponent CreateEditingHUD(bool inGame = false)
         {
-            editingHUDRefreshPending = false;
+            activeEditors.Clear();
 
             int heightScaled = (int)(20 * GUI.Scale);
             editingHUD = new GUIFrame(new RectTransform(new Vector2(0.3f, 0.25f), GUI.Canvas, Anchor.CenterRight) { MinSize = new Point(400, 0) }) { UserData = this };
@@ -643,6 +653,7 @@ namespace Barotrauma
             };
 
             var itemEditor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont) { UserData = this };
+            activeEditors.Add(itemEditor);
             itemEditor.Children.First().Color = Color.Black * 0.7f;
             if (!inGame)
             {
@@ -782,6 +793,7 @@ namespace Barotrauma
 
                 var componentEditor = new SerializableEntityEditor(listBox.Content.RectTransform, ic, inGame, showName: !inGame, titleFont: GUI.SubHeadingFont) { UserData = ic };
                 componentEditor.Children.First().Color = Color.Black * 0.7f;
+                activeEditors.Add(componentEditor);
 
                 if (inGame)
                 {
@@ -976,7 +988,7 @@ namespace Barotrauma
                 Screen.Selected == GameMain.SubEditorScreen)
             {
                 GUIComponent prevEditingHUD = editingHUD;
-                UpdateEditing(cam);
+                UpdateEditing(cam, deltaTime);
                 editingHUDCreated = editingHUD != null && editingHUD != prevEditingHUD;
             }
 
@@ -996,7 +1008,7 @@ namespace Barotrauma
             {
                 if (prefab.IsLinkAllowed(entity.prefab) && entity is Item i)
                 {
-                    if (!i.DisplaySideBySideWhenLinked) continue;
+                    if (!i.DisplaySideBySideWhenLinked) { continue; }
                     activeComponents.AddRange(i.components);
                 }
             }
@@ -1029,6 +1041,8 @@ namespace Barotrauma
                     }
                 }
             }
+
+            activeHUDs.Sort((h1, h2) => { return h2.HudLayer.CompareTo(h1.HudLayer); });
 
             //active HUDs have changed, need to reposition
             if (!prevActiveHUDs.SequenceEqual(activeHUDs) || editingHUDCreated)
@@ -1132,8 +1146,6 @@ namespace Barotrauma
             }
             texts.Add(new ColoredText(nameText, GUI.Style.TextColor, false, false));
 
-            bool noComponentText = true;
-
             if (CampaignInteractionType != CampaignMode.InteractionType.None)
             {
                 texts.Add(new ColoredText(TextManager.GetWithVariable($"CampaignInteraction.{CampaignInteractionType}", "[key]", GameMain.Config.KeyBindText(InputType.Use)), Color.Cyan, false, false));
@@ -1159,7 +1171,6 @@ namespace Barotrauma
                         }
                     }
                     texts.Add(new ColoredText(ic.DisplayMsg, color, false, false));
-                    noComponentText = false;
                 }
             }
             if (PlayerInput.IsShiftDown() && CrewManager.DoesItemHaveContextualOrders(this))
@@ -1295,7 +1306,6 @@ namespace Barotrauma
                     break;
                 case NetEntityEvent.Type.ChangeProperty:
                     ReadPropertyChange(msg, false);
-                    editingHUDRefreshPending = true;
                     break;
                 case NetEntityEvent.Type.Upgrade:
                     string identifier = msg.ReadString();

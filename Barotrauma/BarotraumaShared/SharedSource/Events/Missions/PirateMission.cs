@@ -28,6 +28,8 @@ namespace Barotrauma
         private float pirateSightingUpdateTimer;
         private Vector2? lastSighting;
 
+        private LevelData levelData;
+
         public override int TeamCount => 2;
 
         private bool outsideOfSonarRange;
@@ -83,21 +85,24 @@ namespace Barotrauma
             characterTypeConfig = prefab.ConfigElement.Element("CharacterTypes");
             addedMissionDifficultyPerPlayer = prefab.ConfigElement.GetAttributeFloat("addedmissiondifficultyperplayer", 0);
 
-            // for campaign missions, set difficulty at construction
+            // for campaign missions, set level at construction
             LevelData levelData = locations[0].Connections.Where(c => c.Locations.Contains(locations[1])).FirstOrDefault()?.LevelData ?? locations[0]?.LevelData;
-            
-            SetDifficulty(levelData?.Difficulty ?? Level.Loaded?.Difficulty ?? 0f);
+            if (levelData != null)
+            {
+                SetLevel(levelData);
+            }
         }
 
-        public override void SetDifficulty(float difficulty)
+        public override void SetLevel(LevelData level)
         {
-            if (missionDifficulty > 0f)
+            if (levelData != null)
             {
-                // difficulty already set
+                //level already set
                 return;
             }
 
-            missionDifficulty = difficulty;
+            levelData = level;
+            missionDifficulty = level?.Difficulty ?? 0;
 
             XElement submarineConfig = GetRandomDifficultyModifiedElement(submarineTypeConfig, missionDifficulty, ShipRandomnessModifier);
 
@@ -123,23 +128,24 @@ namespace Barotrauma
             submarineInfo = new SubmarineInfo(contentFile.Path);
         }
 
-        private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier)
+        private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier, Random rand)
         {
-            return Math.Abs(levelDifficulty - preferredDifficulty + (Rand.Range(-randomnessModifier, randomnessModifier, Rand.RandSync.Server)));
+            return Math.Abs(levelDifficulty - preferredDifficulty + MathHelper.Lerp(-randomnessModifier, randomnessModifier, (float)rand.NextDouble()));
         }
-        private int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty)
+        private int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty, Random rand)
         {
-            return Math.Max((int)Math.Round(minAmount + (maxAmount - minAmount) * ((levelDifficulty + Rand.Range(-RandomnessModifier, RandomnessModifier, Rand.RandSync.Server)) / MaxDifficulty)), minAmount);
+            return Math.Max((int)Math.Round(minAmount + (maxAmount - minAmount) * (levelDifficulty + MathHelper.Lerp(-RandomnessModifier, RandomnessModifier, (float)rand.NextDouble())) / MaxDifficulty), minAmount);
         }
 
         private XElement GetRandomDifficultyModifiedElement(XElement parentElement, float levelDifficulty, float randomnessModifier)
         {
+            Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
             // look for the element that is closest to our difficulty, with some randomness
             XElement bestElement = null;
             float bestValue = float.MaxValue;
             foreach (XElement element in parentElement.Elements())
             {
-                float applicabilityValue = GetDifficultyModifiedValue(element.GetAttributeFloat(0f, "preferreddifficulty"), levelDifficulty, randomnessModifier);
+                float applicabilityValue = GetDifficultyModifiedValue(element.GetAttributeFloat(0f, "preferreddifficulty"), levelDifficulty, randomnessModifier, rand);
                 if (applicabilityValue < bestValue)
                 {
                     bestElement = element;
@@ -154,11 +160,11 @@ namespace Barotrauma
             Vector2 patrolPos = enemySub.WorldPosition;
             Point subSize = enemySub.GetDockedBorders().Size;
 
-            if (!Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out preferredSpawnPos))
+            if (!Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out preferredSpawnPos))
             {
                 DebugConsole.ThrowError("Could not spawn pirate submarine in an interesting location! " + this);
             }
-            if (!Level.Loaded.TryGetInterestingPositionAwayFromPoint(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out patrolPos, preferredSpawnPos, minDistFromPoint: 10000f))
+            if (!Level.Loaded.TryGetInterestingPositionAwayFromPoint(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out patrolPos, preferredSpawnPos, minDistFromPoint: 10000f))
             {
                 DebugConsole.ThrowError("Could not give pirate submarine an interesting location to patrol to! " + this);
             }
@@ -182,7 +188,7 @@ namespace Barotrauma
             }
         }
 
-        private void InitPirateShip(Vector2 spawnPos)
+        private void InitPirateShip()
         {
             enemySub.NeutralizeBallast();
             if (enemySub.GetItems(alsoFromConnectedSubs: false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
@@ -193,6 +199,7 @@ namespace Barotrauma
             enemySub.TeamID = CharacterTeamType.None;
             //make the enemy sub withstand atleast the same depth as the player sub
             enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
+            enemySub.ImmuneToBallastFlora = true;
         }
 
         private void InitPirates()
@@ -214,12 +221,14 @@ namespace Barotrauma
 
             float enemyCreationDifficulty = missionDifficulty + playerCount * addedMissionDifficultyPerPlayer;
 
+            Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
+
             bool commanderAssigned = false;
             foreach (XElement element in characterConfig.Elements())
             {
                 // it is possible to get more than the "max" amount of characters if the modified difficulty is high enough; this is intentional
                 // if necessary, another "hard max" value could be used to clamp the value for performance/gameplay concerns
-                int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty);
+                int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty, rand);
                 for (int i = 0; i < amountCreated; i++)
                 {
                     XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeString("typeidentifier", string.Empty) == element.GetAttributeString("typeidentifier", string.Empty)).FirstOrDefault();
@@ -307,7 +316,7 @@ namespace Barotrauma
 #endif
             if (!IsClient)
             {
-                InitPirateShip(spawnPos);
+                InitPirateShip();
             }
             enemySub.SetPosition(spawnPos);
 

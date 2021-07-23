@@ -24,6 +24,8 @@ namespace Barotrauma
 
         private Submarine sub;
 
+        private readonly List<CargoMission> previouslySelectedMissions = new List<CargoMission>();
+
         public override string Description
         {
             get
@@ -42,7 +44,13 @@ namespace Barotrauma
         {
             this.sub = sub;
             itemConfig = prefab.ConfigElement.Element("Items");
-            requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.98f), 1.0f);            
+            requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.98f), 1.0f);
+            //this can get called between rounds when the client receives a campaign save
+            //don't attempt to determine cargo if the sub hasn't been fully loaded
+            if (sub == null || sub.Loading || sub.Removed || Submarine.Unloading)
+            {
+                return;
+            }
             DetermineCargo();
         }
 
@@ -57,6 +65,30 @@ namespace Barotrauma
             itemsToSpawn.Clear();
             List<(ItemContainer container, int freeSlots)> containers = sub.GetCargoContainers();
             containers.Sort((c1, c2) => { return c2.container.Capacity.CompareTo(c1.container.Capacity); });
+
+            previouslySelectedMissions.Clear();
+            if (GameMain.GameSession?.StartLocation?.SelectedMissions != null)
+            {
+                bool isPriorMission = true;
+                foreach (Mission mission in GameMain.GameSession.StartLocation.SelectedMissions)
+                {
+                    if (!(mission is CargoMission otherMission)) { continue; }
+                    if (mission == this) { isPriorMission = false; }
+                    previouslySelectedMissions.Add(otherMission);                    
+                    if (!isPriorMission) { continue; }
+                    foreach (var (element, container) in otherMission.itemsToSpawn)
+                    {
+                        for (int i = 0; i < containers.Count; i++)
+                        {
+                            if (containers[i].container == container)
+                            {
+                                containers[i] = (containers[i].container, containers[i].freeSlots - 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
             maxItemCount = 0;
             foreach (XElement subElement in itemConfig.Elements())
@@ -87,9 +119,9 @@ namespace Barotrauma
             }
 
             calculatedReward = 0;
-            foreach (var itemToSpawn in itemsToSpawn)
+            foreach (var (element, container) in itemsToSpawn)
             {
-                int price = itemToSpawn.element.GetAttributeInt("reward", Prefab.Reward / itemsToSpawn.Count);
+                int price = element.GetAttributeInt("reward", Prefab.Reward / itemsToSpawn.Count);
                 if (rewardPerCrate.HasValue)
                 {
                     if (price != rewardPerCrate.Value) { rewardPerCrate = -1; }
@@ -108,7 +140,28 @@ namespace Barotrauma
 
         public override int GetReward(Submarine sub)
         {
-            if (sub != this.sub)
+            bool missionsChanged = false;
+            if (GameMain.GameSession?.StartLocation?.SelectedMissions != null)
+            {
+                List<Mission> currentMissions = GameMain.GameSession.StartLocation.SelectedMissions.Where(m => m is CargoMission).ToList();
+                if (currentMissions.Count != previouslySelectedMissions.Count)
+                {
+                    missionsChanged = true;
+                }
+                else
+                {
+                    for (int i = 0; i < previouslySelectedMissions.Count; i++)
+                    {
+                        if (previouslySelectedMissions[i] != currentMissions[i])
+                        {
+                            missionsChanged = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (sub != this.sub || missionsChanged)
             {
                 this.sub = sub;
                 DetermineCargo();

@@ -844,10 +844,11 @@ namespace Barotrauma.Items.Components
             ClearConnections();
             base.RemoveComponentSpecific();
 #if CLIENT
+            if (DraggingWire == this) { draggingWire = null; }
             overrideSprite?.Remove();
             overrideSprite = null;
             wireSprite = null;
 #endif
-        }        
+        }
     }
 }

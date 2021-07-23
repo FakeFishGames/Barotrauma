@@ -192,6 +192,7 @@ namespace Barotrauma
             if (!SelectedMissions.Contains(mission) && mission != null)
             {
                 selectedMissions.Add(mission);
+                selectedMissions.Sort((m1, m2) => availableMissions.IndexOf(m1).CompareTo(availableMissions.IndexOf(m2)));
             }
         }
 
@@ -459,6 +460,18 @@ namespace Barotrauma
             }
 
             CreateStore(force: true);
+        }
+
+        public void UnlockInitialMissions()
+        {
+            if (Type.MissionIdentifiers.Any())
+            {
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(Rand.RandSync.Server));
+            }
+            if (Type.MissionTags.Any())
+            {
+                UnlockMissionByTag(Type.MissionTags.GetRandom(Rand.RandSync.Server));
+            }
         }
 
         public void UnlockMission(MissionPrefab missionPrefab, LocationConnection connection)

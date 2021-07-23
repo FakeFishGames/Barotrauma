@@ -1,4 +1,110 @@
 ---------------------------------------------------------------------------------------------------------
+v0.14.7.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- If multiple turrets have been linked to the same loader, the turrets can't be swapped individually (both need to be swapped at the same time to prevent turrets from getting linked to an incorrect type of loader).
+- Emergency lights don't cast shadows by default (they have such a short range that disabling the shadows usually doesn't make a difference visually, but improves the performance of the subs).
+- Allow closing the submarine previews with esc.
+- Made ballast pumps in Kastrull's drone indestructible (because they're impossible to access without breaking the walls/floors).
+- Made exploding coilgun ammo more expensive and increased the capacity of the ammo boxes a bit.
+- Made pirate subs immune to ballast flora.
+- Security's stun guns spawn fully loaded.
+- Reduced escort missions' base commonness. Doesn't have an effect in the campaign because the commonness is defined in the mission events, but fixes escort missions being much more common than other mission types in mission mode.
+- Destroying a reactor with explosives depletes the fuel rods.
+
+Fixes:
+- Fixed enemies sometimes not spawning at all during a mission. Happened when the game selected the "stowaway" event to occur during the mission.
+- Fixed pirate and escort missions not being available from late-game outposts.
+- Fixed occasional "unauthorized multithreaded access to RandSync.Server" errors when starting a pirate mission in multiplayer.
+- Fixed crashing with a "E_INVALIDARG" SharpDXException if an ice spire happens to generate on a very short level wall edge.
+- Fixed batteries always recharging at "full speed" when not full, regardless of how much power is being drawn from the battery. E.g. a battery that's only connected to a lamp drawing 5 kW of power would always recharge at the full 500 kWmin.
+- Fixed traitor items sometimes spawning in non-interactable or hidden containers.
+- Fixed turret rotation limit widgets working unreliably in the sub editor.
+- Fixed barrels being misaligned on scaled turrets in the sub preview.
+- Stores don't offer/request sealed supply crates as daily specials.
+- Fixed campaign settings (radiation enabled, max missions) resetting when reopening the campaign settings menu.
+- Fixed hitscan projectiles not hitting structures outside hulls when the turret itself is inside a hull.
+- Fixed inability to swap items between the character's inventory and a container in some situations in multiplayer (when the container was right at the edge of the character's interaction range).
+- Fixed bots being unable to repair the pump in Typhon's bottom airlock.
+- Fixed crashing when repairing or fabricating something as a husk (or some other character with no CharacterInfo).
+- Fixed crashing when reviving someone using CPR as a character with no CharacterInfo (e.g. husk).
+- Fixed upgrades using the original value from a previous item when swapping to a new one (e.g. swapping a railgun to a coilgun sets the power consumption to the railgun's power consumption). More specifically, this happened when the campaign was saved and reloaded after purchasing the upgrade, and the item was swapped after that.
+- Fixed wrecks sometimes being positioned right side of the exit position.
+- Fixed characters not getting knocked down at the last stage of husk infection if they have the Vigor buff.
+- Fixed discharge coil triggering when trying to rewire it.
+- Fixed some ActionTypes having the same value (e.g. OnFire == OnDamaged). Caused wrong type of status effects triggering in some cases, for example OnDamage effects when an indestructible thalamus organ is on fire.
+- Fixed items that are set to be hidden in-game being visible in the sub preview.
+- Fixed bots being unable to weld leaks that are too high above them, even if they're actually in reach. Happened because the distance to the leak was calculated relative to the character's position, even though the range of the welding tool is relative to the character's shoulder.
+- Fixed cargo mission rewards being displayed incorrectly when there's multiple cargo missions selected and not enough capacity for all the cargo.
+- Fixed caret getting misplaced when clicking on a textbox with padding.
+- Fixed headset only being able to send signals to each wifi component once.
+- Fixed bots sometimes ignoring broken devices. Happened when another bot had selected the device as their repair target, even if the bot was currently repairing something else.
+- Fixed nav terminal labels sometimes being draw under linked status monitor HUDs.
+- Fixed bots sometimes not fixing airlock doors/hatches. More specifically, doors whose center point was outside a hull.
+- Fixed medic bots grabbing the target and never letting go when there's no suitable treatments available anywhere in the sub, or when they're in an outpost and not carrying any suitable treatments.
+- Fixed ability to select other items when operating periscopes. Didn't cause problems in vanilla subs, but in custom subs where the turret was placed close to the periscope and other interactable items, it was possible to accidentally select something else when trying to fire.
+- Made nav terminal's "velocity_in" input change the target velocity, not just the steering input, making it possible to adjust the velocity with signals when using autopilot.
+- Fixed text fields in a component's editing menu not refreshing until you've interacted with another component.
+- Fixed ruins sometimes overlapping with level walls (when they happen to spawn next to a very large cell).
+- Fixed ability to "partially open" the health interface in the sub editor, causing the inventory layout to get messed up when clicking on the character portrait even though the health interface isn't drawn.
+- Fixed ability to keep dragging an item from a stunned/ragdolled character's inventory after they get back up.
+- Fixed nuclear weapons not damaging ballast flora.
+- Fixed normal uniforms deflecting projectiles even though they shouldn't.
+- Fixed clients who've opted to spawn with reaper's tax getting a new character if the round ends before the client respawns.
+- Fixed occasional crash with the error message "collection was modified; enumeration operation may not execute" when loading mods on startup.
+- Fixed ability to keep dragging the previously equipped wire in the sub editor after you equip another wire with the wire hotkeys.
+- Fixed characters' sprite depth changing during the "autowalk" towards a bed or chair.
+- Require the sub to move a bit faster to crush characters between the sub and a wall. Previously essentially any non-zero velocity was enough to crush a character, even if the sub didn't appear to move.
+- Fixed nests sometimes getting placed outside caves. Happened when the game tried to position the nest above an opening at the bottom of the cave.
+- Fixed inability to use the health interface on the escorted characters.
+- Fixed 1st client (usually the host) always spawning at the same spawnpoint in multiplayer even if there's multiple suitable ones available.
+- Fixed stacked partially used items (e.g. stacked explosives that have been damaged) dropping from character inventories at the start of a round.
+- Fixed occasional freezing when replacing lost shuttles after purchasing submarine upgrades.
+- Adjusted Endworm's colliders so that you can't hit the tail between the armor segments before first breaking the armor (making it less easy to cut the worm in half).
+- Fixed hull properties not carrying over when copying hulls in the sub editor.
+- Fixed occasional "collection was modified" exception in CargoMission.DetermineCargo. Happened if the client received an updated campaign save while trying to load the sub between rounds.
+- Fixed a broken waypoint in Berilia's cargo bay.
+- Fixed seeds sometimes vanishing when trying to plant them in MP. 
+- Fixed planter boxes displaying the "uproot" message when empty.
+- Fixed depth charges going through doors and hatches.
+- Fixed ability to dock docking hatches to ports and vice versa.
+- Fixed camera being able to focus on a turret when a periscope's "position_out" connection is wired to a turret's "power_in" connection.
+- Fixed water detectors not detecting very small (water depth < 1px) amounts of water in hulls.
+- Fixed duffel bags not spawning at the end of a round if the character hasn't despawned/respawned yet (i.e. if the character's corpse is still present in the sub).
+- Fixed wrecked Dugong's distress signal being impossible to receive due to "allow cross-team communication" being set to false on the wifi component sending the signal.
+- Fixed fabricator being unable to stack empty items in the output slots, preventing empty tanks from being fabricated when the output slots are occupied even if additional tanks could be stacked on them.
+- Fixed messed up "Shuttle Shell A Glass A" sprite.
+- Fixed delay components not working if the delay is set to 0.
+- Fixed loaders getting slightly misaligned when swapping an empty hardpoint with some weapon.
+- Fixed pumps placed in the sub editor being off by default.
+- Fixed weapon skill increases not being capped according to the max vitality of the target. Resulted in enormous weapon skill gains when doing massive amounts of damage (more than the target's max vitality), e.g. by shooting a hammerhead matriarch in the egg sack with a nuke.
+- Fixed ability to delete vanilla beacon stations and pirate subs in the sub editor.
+- Fixed pirate subs sometimes spawning in side paths that are too narrow for the sub to pass through.
+- Fixed an exploit that allowed creating game-crashing infinite signal loops using wifi components.
+- Fixed a typo in the abyss diving suit description (100,000 m -> 10,000 m).
+- Fixed several vanilla sub docking hatches requiring a welding tool instead of a wrench to repair them.
+- Fixed "Operate Weapons" order being available when interacting with a turret directly, leading to a crash when trying to do so.
+- Fixed missions disappearing from abandoned outposts after finishing the campaign.
+- Fixed canister shells refilling automatically between rounds.
+- Fixed turrets working with incorrect loader types (e.g. coilgun being able to fire laser bolts when linked to a pulse laser loader).
+- Fixed "exterior pressure exceeds diving suit capabilities" hint popping up when carrying a diving suit.
+
+Modding:
+- Added support for "additive" event sets which get added on top of another normal event set, allowing mods to spawn additional types of monsters without having to touch the vanilla event sets. See the "transitevents" event set in OutpostEvents.xml for an usage example.
+- Fixed subs appearing to disappear after being published in the Workshop, because the content package the sub gets moved to wasn't automatically selected.
+- Fixed MaxTargetsToHit not working on hitscan projectiles.
+- Fixed offsets not being taken into account when positioning contained items, causing status effects to happen at the position of the container instead of the position of the contained item. Didn't have a noticeable effect in the vanilla game because most contained items are positioned close to the container's origin.
+- Fixed spawnpoint's job restrictions being ignored when spawning pirates and escortees.
+- It's now possible to use multiple equipped WifiComponents at the same time: instead of finding the first equipped item and seeing if it can receive/transmit, the game now goes through the items until it finds one that can.
+- Fixed crashing when trying to pick an item that can't be put in any type of inventory slot from a container. Doesn't happen in the vanilla game because there are no such items in any container.
+- Fixed crashing during wreck generation if there's any thalamus organs outside hulls.
+- Fixed crashing if a wall whose max health is set to 0 in the sub editor takes damage.
+- Fixed crashing if a reactor's maximum output is set to 0 and it's set to be on by default.
+- Fixed a crashing due to a null reference exception if a status effect uses "target" instead of "targets" or "targettypes" in the definition.
+- Fixed shuttles docked to a wreck undocking during level generation.
+
+---------------------------------------------------------------------------------------------------------
 v0.14.6.0
 ---------------------------------------------------------------------------------------------------------
 

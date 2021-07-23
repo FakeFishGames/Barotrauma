@@ -76,7 +76,8 @@ namespace Barotrauma
             //These need to exist at compile time, so it is a little awkward
             //I would love to see a better way to do this
             AllowLinkingWifiToChat,
-            IsSwappableItem
+            IsSwappableItem,
+            AllowRotating
         }
 
         public bool IsEditable(ISerializableEntity entity)
@@ -86,7 +87,13 @@ namespace Barotrauma
                 case ConditionType.AllowLinkingWifiToChat:
                     return GameMain.NetworkMember?.ServerSettings?.AllowLinkingWifiToChat ?? true;
                 case ConditionType.IsSwappableItem:
-                    return entity is Item item && item.Prefab.SwappableItem != null;
+                    {
+                        return entity is Item item && item.Prefab.SwappableItem != null;
+                    }
+                case ConditionType.AllowRotating:
+                    {
+                        return entity is Item item && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
+                    }
             }
             return false;
         }

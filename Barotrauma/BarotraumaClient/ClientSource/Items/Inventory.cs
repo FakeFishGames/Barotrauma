@@ -1104,6 +1104,8 @@ namespace Barotrauma
 
         public static void UpdateDragging()
         {
+            DraggingItems.RemoveAll(it => !Character.Controlled.CanInteractWith(it));
+
             if (DraggingItems.Any() && PlayerInput.PrimaryMouseButtonReleased())
             {
                 Character.Controlled.ClearInputs();

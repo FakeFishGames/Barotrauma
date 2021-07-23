@@ -377,7 +377,7 @@ namespace Barotrauma
             return removeQueue.Contains(entity);
         }
 
-        public void Update()
+        public void Update(bool createNetworkEvents = true)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             while (spawnQueue.Count > 0)
@@ -387,10 +387,13 @@ namespace Barotrauma
                 var spawnedEntity = entitySpawnInfo.Spawn();
                 if (spawnedEntity != null)
                 {
-                    CreateNetworkEventProjSpecific(spawnedEntity, false);
-                    if (spawnedEntity is Item)
+                    if (createNetworkEvents) 
+                    { 
+                        CreateNetworkEventProjSpecific(spawnedEntity, false); 
+                    }
+                    if (spawnedEntity is Item item)
                     {
-                        ((Item)spawnedEntity).Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
+                        item.Condition = ((ItemSpawnInfo)entitySpawnInfo).Condition;
                     }
                     entitySpawnInfo.OnSpawned(spawnedEntity);
                 }
@@ -403,7 +406,10 @@ namespace Barotrauma
                 {
                     item.SendPendingNetworkUpdates();
                 }
-                CreateNetworkEventProjSpecific(removedEntity, true);
+                if (createNetworkEvents)
+                {
+                    CreateNetworkEventProjSpecific(removedEntity, true);
+                }
                 removedEntity.Remove();
             }
         }

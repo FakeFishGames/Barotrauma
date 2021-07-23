@@ -1131,7 +1131,9 @@ namespace Barotrauma
                 {
                     if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                     {
-                        var sortResult = itemX.ItemPrefab.Name.CompareTo(itemY.ItemPrefab.Name);
+                        int sortResult = itemX.ItemPrefab.Name != itemY.ItemPrefab.Name ?
+                            itemX.ItemPrefab.Name.CompareTo(itemY.ItemPrefab.Name) :
+                            itemX.ItemPrefab.Identifier.CompareTo(itemY.ItemPrefab.Identifier);
                         if (sortingMethod == SortingMethod.AlphabeticalDesc) { sortResult *= -1; }
                         return sortResult;
                     }

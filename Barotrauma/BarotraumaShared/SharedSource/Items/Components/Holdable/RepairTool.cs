@@ -678,7 +678,7 @@ namespace Barotrauma.Items.Components
                 Reset();
                 previousGap = leak;
             }
-            Vector2 fromCharacterToLeak = leak.WorldPosition - character.WorldPosition;
+            Vector2 fromCharacterToLeak = leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             float dist = fromCharacterToLeak.Length();
             float reach = AIObjectiveFixLeak.CalculateReach(this, character);
 
@@ -692,10 +692,10 @@ namespace Barotrauma.Items.Components
             if (!character.AnimController.InWater)
             {
                 // TODO: use the collider size?
-                if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController &&
+                if (!character.AnimController.InWater && character.AnimController is HumanoidAnimController humanAnim &&
                     Math.Abs(fromCharacterToLeak.X) < 100.0f && fromCharacterToLeak.Y < 0.0f && fromCharacterToLeak.Y > -150.0f)
                 {
-                    ((HumanoidAnimController)character.AnimController).Crouching = true;
+                    humanAnim.Crouching = true;
                 }
             }
             if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.inWater))

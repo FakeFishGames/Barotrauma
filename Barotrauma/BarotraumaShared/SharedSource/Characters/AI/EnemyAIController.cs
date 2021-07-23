@@ -2595,7 +2595,7 @@ namespace Barotrauma
             {
                 if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
                 {
-                    if (!(SelectedAiTarget.Entity is Structure wall))
+                    if (!(SelectedAiTarget?.Entity is Structure wall))
                     {
                         wall = wallTarget?.Structure;
                     }

@@ -10,8 +10,8 @@ namespace Barotrauma
         [Serialize("", true)]
         public string NPCTag { get; set; }
 
-        [Serialize(0, true)]
-        public int TeamTag { get; set; }
+        [Serialize(CharacterTeamType.None, true)]
+        public CharacterTeamType TeamTag { get; set; }
 
         [Serialize(false, true)]
         public bool AddToCrew { get; set; }
@@ -29,11 +29,10 @@ namespace Barotrauma
             affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
             foreach (var npc in affectedNpcs)
             {
-                CharacterTeamType newTeam = (CharacterTeamType)TeamTag;
                 // characters will still remain on friendlyNPC team for rest of the tick
-                npc.SetOriginalTeam(newTeam);
+                npc.SetOriginalTeam(TeamTag);
 
-                if (AddToCrew && (newTeam == CharacterTeamType.Team1 || newTeam == CharacterTeamType.Team2))
+                if (AddToCrew && (TeamTag == CharacterTeamType.Team1 || TeamTag == CharacterTeamType.Team2))
                 {
                     npc.Info.StartItemsGiven = true;
 
@@ -44,11 +43,11 @@ namespace Barotrauma
                         var wifiComponent = item.GetComponent<Items.Components.WifiComponent>();
                         if (wifiComponent != null)
                         {
-                            wifiComponent.TeamID = newTeam;
+                            wifiComponent.TeamID = TeamTag;
                         }
                     }
 #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew, newTeam, npc.Inventory.AllItems.Select(it => it.ID).ToArray() });
+                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew, TeamTag, npc.Inventory.AllItems.Select(it => it.ID).ToArray() });
 #endif
                 }
             }

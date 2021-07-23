@@ -44,20 +44,6 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-#if DEBUG
-        [Editable]
-#endif
-        [Serialize("0.0,0.0", false, description: "The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).")]
-        public Vector2 ItemPos { get; set; }
-
-#if DEBUG
-        [Editable]
-#endif
-        [Serialize("0.0,0.0", false, description: "The interval at which the contained items are spaced apart from each other (in pixels).")]
-        public Vector2 ItemInterval { get; set; }
-        [Serialize(100, false, description: "How many items are placed in a row before starting a new row.")]
-        public int ItemsPerRow { get; set; }
-
         /// <summary>
         /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
         /// </summary>
@@ -291,7 +277,6 @@ namespace Barotrauma.Items.Components
                 transformedItemPos = Vector2.Transform(transformedItemPos, transform);
                 transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                 transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
-
                 transformedItemPos += item.DrawPosition;
             }
 
