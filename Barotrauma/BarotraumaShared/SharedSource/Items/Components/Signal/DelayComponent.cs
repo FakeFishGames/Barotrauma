@@ -109,7 +109,14 @@ namespace Barotrauma.Items.Components
                 case "set_delay":
                     float val;
                     if (float.TryParse(signal.value, out val))
+                    {
+                        if (signalQueue.Count > 0 && val != Delay)
+                        {
+                            prevQueuedSignal = null; //might not be the best but hey it works???
+                            signalQueue.Clear();
+                        }
                         Delay = MathHelper.Clamp(val, 0, 60);
+                    }
                     break;
             }
         }
