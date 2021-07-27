@@ -110,12 +110,13 @@ namespace Barotrauma.Items.Components
                     float val;
                     if (float.TryParse(signal.value, out val))
                     {
-                        if (signalQueue.Count > 0 && val != Delay)
+						float clampval = MathHelper.Clamp(val, 0, 60);
+                        if (signalQueue.Count > 0 && clampval != Delay)
                         {
                             prevQueuedSignal = null; //might not be the best but hey it works???
                             signalQueue.Clear();
                         }
-                        Delay = MathHelper.Clamp(val, 0, 60);
+                        Delay = clampval;
                     }
                     break;
             }
