@@ -342,7 +342,7 @@ namespace Barotrauma.Items.Components
                     allowInsideFixture: true);
 
                 hitBodies.Clear();
-                hitBodies.AddRange(bodies);
+                hitBodies.AddRange(bodies.Distinct());
 
                 lastPickedFraction = Submarine.LastPickedFraction;
                 Type lastHitType = null;

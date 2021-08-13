@@ -2724,7 +2724,7 @@ namespace Barotrauma
 
                 if (tries == 10)
                 {
-                    position = EndPosition - Vector2.UnitY * 300.0f;
+                    position = startPos;
                 }
 
             } while (tries < 10);

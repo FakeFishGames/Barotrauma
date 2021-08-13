@@ -211,7 +211,7 @@ namespace Barotrauma.Items.Components
         {
             for (int i = inputContainer.Inventory.Capacity - 2; i >= 0; i--)
             {
-                while (inputContainer.Inventory.GetItemAt(i) is Item item1 && inputContainer.Inventory.CanBePut(item1, i + 1))
+                while (inputContainer.Inventory.GetItemAt(i) is Item item1 && inputContainer.Inventory.CanBePutInSlot(item1, i + 1))
                 {
                     if (!inputContainer.Inventory.TryPutItem(item1, i + 1, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: true))
                     {

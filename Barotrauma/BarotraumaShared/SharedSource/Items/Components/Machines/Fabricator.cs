@@ -170,7 +170,7 @@ namespace Barotrauma.Items.Components
         private void StartFabricating(FabricationRecipe selectedItem, Character user, bool addToServerLog = true)
         {
             if (selectedItem == null) { return; }
-            if (!outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition)) { return; }
+            if (!outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition * selectedItem.TargetItem.Health)) { return; }
 
 #if CLIENT
             itemList.Enabled = false;
@@ -308,7 +308,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 Character tempUser = user;
-                int amountFittingContainer = outputContainer.Inventory.HowManyCanBePut(fabricatedItem.TargetItem, fabricatedItem.OutCondition);
+                int amountFittingContainer = outputContainer.Inventory.HowManyCanBePut(fabricatedItem.TargetItem, fabricatedItem.OutCondition * fabricatedItem.TargetItem.Health);
                 for (int i = 0; i < fabricatedItem.Amount; i++)
                 {
                     if (i < amountFittingContainer)

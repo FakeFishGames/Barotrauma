@@ -427,7 +427,7 @@ namespace Barotrauma
                 {
                     if (!(secondLinkedEntity is Item linkedItem) || linkedItem == item) { continue; }
                     if (linkedItem.AllowSwapping &&
-                        linkedItem.Prefab.SwappableItem != null && linkedItem.Prefab.SwappableItem.CanBeBought &&
+                        linkedItem.Prefab.SwappableItem != null && (linkedItem.Prefab.SwappableItem.CanBeBought || item.Prefab.SwappableItem.ReplacementOnUninstall == linkedItem.prefab.Identifier) &&
                         linkedItem.Prefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase))
                     {
                         linkedItems.Add(linkedItem);

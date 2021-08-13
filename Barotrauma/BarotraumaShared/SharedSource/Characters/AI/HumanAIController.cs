@@ -480,19 +480,18 @@ namespace Barotrauma
                         isCurrentObjectiveFindSafety ||
                         Character.AnimController.InWater ||
                         Character.AnimController.HeadInWater ||
-                        Character.CurrentHull == null ||
                         Character.Submarine == null ||
                         (Character.Submarine.TeamID != Character.TeamID && !Character.IsEscorted) ||
-                        ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn);
+                        ObjectiveManager.CurrentObjective.GetSubObjectivesRecursive(true).Any(o => o.KeepDivingGearOn) ||
+                        Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10;
+                    bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character;
+                    bool removeDivingSuit = !shouldKeepTheGearOn && !IsOrderedToWait();
                     if (oxygenLow && Character.CurrentHull.Oxygen > 0 && (!isCurrentObjectiveFindSafety || Character.OxygenAvailable < 1))
                     {
                         shouldKeepTheGearOn = false;
+                        // Remove the suit before we pass out
+                        removeDivingSuit = true;
                     }
-                    else if (Character.CurrentHull.OxygenPercentage < HULL_LOW_OXYGEN_PERCENTAGE + 10)
-                    {
-                        shouldKeepTheGearOn = true;
-                    }
-                    bool removeDivingSuit = !shouldKeepTheGearOn && Character.Submarine?.TeamID == Character.TeamID && (!(ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo) || goTo.Target != Character);
                     bool takeMaskOff = !shouldKeepTheGearOn;
                     if (!shouldKeepTheGearOn && !oxygenLow)
                     {

@@ -4506,7 +4506,7 @@ namespace Barotrauma
                             {
                                 var newItem = new Item(itemPrefab, Vector2.Zero, Submarine.MainSub);
                                 
-                                if (inv.CanBePut(itemPrefab, i))
+                                if (inv.CanBePutInSlot(itemPrefab, i, condition: null))
                                 {
                                     bool placedItem = inv.TryPutItem(newItem, i, false, true, dummyCharacter);
                                     spawnedItem |= placedItem;

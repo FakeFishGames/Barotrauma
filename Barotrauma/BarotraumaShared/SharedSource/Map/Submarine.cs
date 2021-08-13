@@ -1266,7 +1266,7 @@ namespace Barotrauma
         {
             List<(ItemContainer container, int freeSlots)> containers = new List<(ItemContainer container, int freeSlots)>();
             var connectedSubs = GetConnectedSubs();
-            foreach (Item item in Item.ItemList)
+            foreach (Item item in Item.ItemList.ToList())
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
                 if (!item.HasTag("cargocontainer")) { continue; }

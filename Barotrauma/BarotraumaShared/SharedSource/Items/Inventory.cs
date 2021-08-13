@@ -380,7 +380,7 @@ namespace Barotrauma
             return ownerItem.ParentInventory.ItemOwnsSelf(item);
         }
 
-        public virtual int FindAllowedSlot(Item item)
+        public virtual int FindAllowedSlot(Item item, bool ignoreCondition = false)
         {
             if (ItemOwnsSelf(item)) { return -1; }
 
@@ -392,7 +392,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].CanBePut(item)) { return i; }
+                if (slots[i].CanBePut(item, ignoreCondition)) { return i; }
             }
 
             return -1;
@@ -405,7 +405,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePut(item, i)) { return true; }
+                if (CanBePutInSlot(item, i)) { return true; }
             }
             return false;
         }
@@ -413,7 +413,7 @@ namespace Barotrauma
         /// <summary>
         /// Can the item be put in the specified slot.
         /// </summary>
-        public virtual bool CanBePut(Item item, int i, bool ignoreCondition = false)
+        public virtual bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
         {
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
@@ -424,12 +424,12 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePut(itemPrefab, i, condition)) { return true; }
+                if (CanBePutInSlot(itemPrefab, i, condition)) { return true; }
             }
             return false;
         }
 
-        public virtual bool CanBePut(ItemPrefab itemPrefab, int i, float? condition = null)
+        public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
             return slots[i].CanBePut(itemPrefab, condition);
@@ -454,16 +454,16 @@ namespace Barotrauma
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false)
         {
-            int slot = FindAllowedSlot(item);
+            int slot = FindAllowedSlot(item, ignoreCondition);
             if (slot < 0) { return false; }
 
             PutItem(item, slot, user, true, createNetworkEvent);
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false)
         {
             if (i < 0 || i >= slots.Length)
             {
@@ -481,12 +481,12 @@ namespace Barotrauma
                     //item in the slot removed as a result of combining -> put this item in the now free slot
                     if (!slots[i].Any())
                     {
-                        return TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent);
+                        return TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, ignoreCondition);
                     }
                     return true;
                 }
             }
-            if (CanBePut(item, i))
+            if (CanBePutInSlot(item, i, ignoreCondition))
             {
                 PutItem(item, i, user, true, createNetworkEvent);
                 return true;

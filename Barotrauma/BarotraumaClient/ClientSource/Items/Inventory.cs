@@ -1104,8 +1104,10 @@ namespace Barotrauma
 
         public static void UpdateDragging()
         {
-            DraggingItems.RemoveAll(it => !Character.Controlled.CanInteractWith(it));
-
+            if (Screen.Selected == GameMain.GameScreen)
+            {
+                DraggingItems.RemoveAll(it => !Character.Controlled.CanInteractWith(it));
+            }
             if (DraggingItems.Any() && PlayerInput.PrimaryMouseButtonReleased())
             {
                 Character.Controlled.ClearInputs();
@@ -1470,7 +1472,7 @@ namespace Barotrauma
 
                 if (DraggingItems.Any() && inventory != null && slotIndex > -1 && slotIndex < inventory.visualSlots.Length)
                 {
-                    if (inventory.CanBePut(DraggingItems.First(), slotIndex))
+                    if (inventory.CanBePutInSlot(DraggingItems.First(), slotIndex))
                     {
                         canBePut = true;
                     }

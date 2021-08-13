@@ -1914,13 +1914,17 @@ namespace Barotrauma
                 i++;
             }
 
-            if (selectedLimbIndex > -1)
+            if (selectedLimbIndex > -1 && selectedLimbText != null)
             {
-                var selectedLimbArea = GetLimbHighlightArea(limbHealths[selectedLimbIndex], drawArea);
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(selectedLimbText.Rect.X, selectedLimbText.Rect.Center.Y),
-                    selectedLimbArea.Center.ToVector2(),
-                    Color.LightGray * 0.5f, width: 4);
+                LimbHealth limbHealth = limbHealths[selectedLimbIndex];
+                if (limbHealth?.IndicatorSprite != null)
+                {
+                    Rectangle selectedLimbArea = GetLimbHighlightArea(limbHealth, drawArea);
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(selectedLimbText.Rect.X, selectedLimbText.Rect.Center.Y),
+                        selectedLimbArea.Center.ToVector2(),
+                        Color.LightGray * 0.5f, width: 4);
+                }
             }
 
             if (draggingMed != null)

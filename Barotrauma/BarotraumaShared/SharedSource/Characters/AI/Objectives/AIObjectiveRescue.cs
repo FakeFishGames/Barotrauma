@@ -312,7 +312,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    if (itemNameList.Count > 0)
+                    if (itemNameList.Any())
                     {
                         string itemListStr = "";
                         if (itemNameList.Count == 1)
@@ -342,12 +342,17 @@ namespace Barotrauma
                                 }
                             });
                     }
+                    else if (cprSuitability <= 0)
+                    {
+                        character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                        Abandon = true;
+                    }
                 }
             }
             else if (!targetCharacter.IsUnconscious)
             {
                 //no suitable treatments found, not inside our own sub (= can't search for more treatments), the target isn't unconscious (= can't give CPR)
-                // -> abandon
+                character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
                 Abandon = true;
                 return;
             }

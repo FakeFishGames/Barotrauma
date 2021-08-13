@@ -205,8 +205,13 @@ namespace Barotrauma
             {
                 foreach (Key key in keys)
                 {
-                    if (key == null) continue;
+                    if (key == null) { continue; }
                     key.Reset();
+                }
+                if (GUI.InputBlockingMenuOpen)
+                {
+                    cursorPosition = 
+                        Position + PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
             }
             else
@@ -280,13 +285,13 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
                 }
-                else if (SelectedConstruction != null && ViewTarget == null && 
+                else if (SelectedConstruction != null && ViewTarget == null &&
                     SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
-                    cursorPosition = 
-                        SelectedConstruction.Position + 
-                        new Vector2(cursorPosition.X % 10.0f, cursorPosition.Y % 10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
+                    cursorPosition =
+                        SelectedConstruction.Position +
+                        PlayerInput.MouseSpeed.ClampLength(10.0f); //apply a little bit of movement to the cursor pos to prevent AFK kicking
                 }
                 else if (!GameMain.Config.EnableMouseLook)
                 {

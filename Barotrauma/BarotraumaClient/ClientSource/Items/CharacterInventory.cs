@@ -133,7 +133,6 @@ namespace Barotrauma
                 hidePersonalSlots = !hidePersonalSlots;
                 return true;
             };
-
             hidePersonalSlots = false;
 
             SlotPositions = new Vector2[SlotTypes.Length];
@@ -258,6 +257,15 @@ namespace Barotrauma
                 if (IsInLimbSlot(item, InvSlotType.Any)) { return true; }
             }
 
+            //don't draw equipment slots in wiring mode
+            if (Screen.Selected == GameMain.SubEditorScreen && GameMain.SubEditorScreen.WiringMode)
+            {
+                if (SlotTypes[i] != InvSlotType.Any && SlotTypes[i] != InvSlotType.LeftHand && SlotTypes[i] != InvSlotType.RightHand)
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -339,7 +347,7 @@ namespace Barotrauma
                             hideButton.RectTransform.SetPosition(Anchor.TopLeft, Pivot.TopLeft);
                             hideButton.RectTransform.NonScaledSize = new Point(HideButtonWidth, HUDLayoutSettings.BottomRightInfoArea.Height);
                             hideButton.RectTransform.AbsoluteOffset = new Point(HUDLayoutSettings.BottomRightInfoArea.Left - HideButtonWidth + GUI.IntScaleCeiling(2f), HUDLayoutSettings.BottomRightInfoArea.Y + GUI.IntScaleCeiling(1f));
-                            hideButton.Visible = true;
+                            hideButton.Visible = Screen.Selected != GameMain.SubEditorScreen || !GameMain.SubEditorScreen.WiringMode;
 
                             SetIndicatorSizes();
                         }

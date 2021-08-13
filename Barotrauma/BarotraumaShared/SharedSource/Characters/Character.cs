@@ -2708,25 +2708,18 @@ namespace Barotrauma
             UpdateAIChatMessages(deltaTime);
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
-            bool allowRagdoll = GameMain.NetworkMember != null ? GameMain.NetworkMember.ServerSettings.AllowRagdollButton : true;
-            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 1f;
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
-            {
-                tooFastToUnragdoll = false;
-            }
+            bool allowRagdoll = GameMain.NetworkMember?.ServerSettings?.AllowRagdollButton ?? true;
+            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 5.0f * 5.0f;
             if (IsForceRagdolled)
             {
                 IsRagdolled = IsForceRagdolled;
-            }
-            else if (IsRemotePlayer)
-            {
-                IsRagdolled = IsKeyDown(InputType.Ragdoll);
             }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
             else if (allowRagdoll && (!IsRagdolled || !tooFastToUnragdoll))
             {
                 if (ragdollingLockTimer > 0.0f)
                 {
+                    SetInput(InputType.Ragdoll, false, true);
                     ragdollingLockTimer -= deltaTime;
                 }
                 else
@@ -2908,7 +2901,7 @@ namespace Barotrauma
         }
 
         private float despawnTimer;
-        private void UpdateDespawn(float deltaTime, bool ignoreThresholds = false)
+        private void UpdateDespawn(float deltaTime, bool ignoreThresholds = false, bool createNetworkEvents = true)
         {
             if (!EnableDespawn) { return; }
 
@@ -2979,10 +2972,10 @@ namespace Barotrauma
                     if (itemContainer == null) { return; }
                     foreach (Item inventoryItem in Inventory.AllItemsMod)
                     {
-                        if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null))
+                        if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null, createNetworkEvent: createNetworkEvents))
                         {
                             //if the item couldn't be put inside the despawn container, just drop it
-                            inventoryItem.Drop(dropper: this);
+                            inventoryItem.Drop(dropper: this, createNetworkEvent: createNetworkEvents);
                         }
                     }
                 }
@@ -2994,7 +2987,7 @@ namespace Barotrauma
         public void DespawnNow(bool createNetworkEvents = true)
         {
             despawnTimer = GameMain.Config.CorpseDespawnDelay;
-            UpdateDespawn(1.0f, ignoreThresholds: true);
+            UpdateDespawn(1.0f, ignoreThresholds: true, createNetworkEvents: createNetworkEvents);
             Spawner.Update(createNetworkEvents);
         }
 
@@ -3990,7 +3983,7 @@ namespace Barotrauma
                     //now there's just one, try to put the extra items where they fit (= stack them)
                     for (int i = 0; i < inventory.Capacity; i++)
                     {
-                        if (inventory.CanBePut(newItem, i))
+                        if (inventory.CanBePutInSlot(newItem, i))
                         {
                             slotIndices[0] = i;
                             canBePutInOriginalInventory = true;
@@ -4000,7 +3993,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    canBePutInOriginalInventory = inventory.CanBePut(newItem, slotIndices[0], ignoreCondition: true);
+                    canBePutInOriginalInventory = inventory.CanBePutInSlot(newItem, slotIndices[0], ignoreCondition: true);
                 }
 
                 if (canBePutInOriginalInventory)

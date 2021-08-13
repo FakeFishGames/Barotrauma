@@ -483,7 +483,7 @@ namespace Barotrauma.Items.Components
                     foreach (ushort id in itemIds[i])
                     {
                         if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
-                        Inventory.TryPutItem(item, i, false, false, null, false);
+                        Inventory.TryPutItem(item, i, false, false, null, createNetworkEvent: false, ignoreCondition: true);
                     }
                 }
                 itemIds = null;

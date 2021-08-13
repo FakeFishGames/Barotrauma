@@ -439,7 +439,8 @@ namespace Barotrauma
             bool mouseOnPortrait = false;
             if (character.Stun <= 0.1f && !character.IsDead)
             {
-                if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null)
+                bool wiringMode = Screen.Selected == GameMain.SubEditorScreen && GameMain.SubEditorScreen.WiringMode;
+                if (CharacterHealth.OpenHealthWindow == null && character.SelectedCharacter == null && !wiringMode)
                 {
                     if (character.Info != null && !character.ShouldLockHud())
                     {

@@ -1,5 +1,34 @@
 ---------------------------------------------------------------------------------------------------------
-v0.14.7.0
+v0.1400.8.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Hide the equipment slots and character portait in wiring mode.
+- Added platforms behind Remora Drone's hatches.
+
+Fixes:
+- Fixed "entity not found" error when ending a pirate mission round after any of the pirates have been killed in multiplayer campaign.
+- Fixed crashing when trying to spawn inventory items for a character who left before respawning during the previous round.
+- Fixed bots following the player when trying to heal them even when they don't have the required items.
+- Fixed bots suffocating when they run out of oxygen tanks if ordered to wait wearing a suit.
+- Fixed bots not equipping a diving suit when they already have a mask when following a target that has a suit equipped.
+- Fixed biome noise loops still playing after the round ends.
+- Fixed detonator rapidly draining condition from flash powder and incendium instead of exploding them immediately (potentially resulting in partially used items).
+- Fixed inability to drag/combine items in cabinets in the sub editor (unstable only).
+- Fixed inability to place items into a stack in the sub editor when the container is full (unstable only).
+- Fixed fabricators still being unable to craft some items when the output slot is not empty, even if the item is stackable  (unstable only).
+- Fixed stacks of half-used items dropping from cabinets between rounds.
+- Another attempt to fix "collection was modifed" exception when instantiating cargo missions in multiplayer.
+- Fixed submarine upgrade menu displaying the same name for different types of turrets linked to the same loader (unstable only).
+- Fixed turret hardpoints linked to the same loader as some turret not getting swapped alongside the turret (unstable only).
+- Fixed nest missions sometimes completing immediately, because the eggs spawn far enough from the initially chosen spawnpoint to be considered "taken away" from the cave (unstable only).
+- Fixed exploit in plastiseal crafting recipe (plastiseal deconstructing to 1 bandage even though 1 bandage can be used to craft 2 plastiseal).
+- Fixed RepairTools applying their effects multiple times to items whose bodies consist of multiple fixtures. Caused minerals to get deattached 3 times faster than they should.
+- Fixed AFK kicks when staying in any of the campaign UIs (store, etc) or other input-blocking menus for too long.
+- Fixed monsters sometimes targeting owners of targeted items although the owner is ignored.
+
+---------------------------------------------------------------------------------------------------------
+v0.1400.7.0
 ---------------------------------------------------------------------------------------------------------
 
 Changes:

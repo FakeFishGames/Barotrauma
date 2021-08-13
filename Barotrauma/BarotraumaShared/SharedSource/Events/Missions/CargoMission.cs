@@ -47,7 +47,7 @@ namespace Barotrauma
             requiredDeliveryAmount = Math.Min(prefab.ConfigElement.GetAttributeFloat("requireddeliveryamount", 0.98f), 1.0f);
             //this can get called between rounds when the client receives a campaign save
             //don't attempt to determine cargo if the sub hasn't been fully loaded
-            if (sub == null || sub.Loading || sub.Removed || Submarine.Unloading)
+            if (sub == null || sub.Loading || sub.Removed || Submarine.Unloading || !Submarine.Loaded.Contains(sub))
             {
                 return;
             }

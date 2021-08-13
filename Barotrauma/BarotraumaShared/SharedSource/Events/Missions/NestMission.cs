@@ -18,7 +18,7 @@ namespace Barotrauma
         //string = filename, point = min,max
         private readonly HashSet<Tuple<CharacterPrefab, Point>> monsterPrefabs = new HashSet<Tuple<CharacterPrefab, Point>>();
 
-        private readonly float itemSpawnRadius = 800.0f;
+        private float itemSpawnRadius = 800.0f;
         private readonly float approachItemsRadius = 1000.0f;
         private readonly float nestObjectRadius = 1000.0f;
         private readonly float monsterSpawnRadius = 3000.0f;
@@ -107,7 +107,8 @@ namespace Barotrauma
                 //ruin/cave/wreck items are allowed to spawn close to the sub
                 float minDistance = spawnPositionType == Level.PositionType.Ruin || spawnPositionType == Level.PositionType.Cave || spawnPositionType == Level.PositionType.Wreck ?
                     0.0f : Level.Loaded.Size.X * 0.3f;
-                Level.Loaded.TryGetInterestingPosition(true, spawnPositionType, 0.0f, out Vector2 nestPosition);
+
+                nestPosition = Level.Loaded.GetRandomItemPos(spawnPositionType, 100.0f, minDistance, 30.0f);
                 List<GraphEdge> spawnEdges = new List<GraphEdge>();
                 if (spawnPositionType == Level.PositionType.Cave)
                 {
@@ -149,20 +150,21 @@ namespace Barotrauma
                         if (!spawnEdges.Any())
                         {
                             GraphEdge closestEdge = null;
-                            float closestDist = float.PositiveInfinity;
+                            float closestDistSqr = float.PositiveInfinity;
                             foreach (var edge in nearbyCells.SelectMany(c => c.Edges))
                             {
                                 if (!edge.NextToCave || !edge.IsSolid) { continue; }
                                 float dist = Vector2.DistanceSquared(edge.Center, nestPosition);
-                                if (dist < closestDist)
+                                if (dist < closestDistSqr)
                                 {
                                     closestEdge = edge;
-                                    closestDist = dist;
+                                    closestDistSqr = dist;
                                 }
                             }
                             if (closestEdge != null)
                             {
                                 spawnEdges.Add(closestEdge);
+                                itemSpawnRadius = Math.Max(itemSpawnRadius, (float)Math.Sqrt(closestDistSqr) * 1.5f);
                             }
                         }
                     }

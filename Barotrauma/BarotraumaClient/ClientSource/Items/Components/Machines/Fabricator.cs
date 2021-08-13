@@ -562,7 +562,7 @@ namespace Barotrauma.Items.Components
         {
             if (selectedItem == null) { return false; }
             if (fabricatedItem == null && 
-                !outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition))
+                !outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition * selectedItem.TargetItem.Health))
             {
                 outputSlot.Flash(GUI.Style.Red);
                 return false;

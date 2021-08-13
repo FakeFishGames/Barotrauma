@@ -242,7 +242,7 @@ namespace Barotrauma
                     Character followTarget = Target as Character;
                     bool needsDivingSuit = targetIsOutside;
                     bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
-                    if (!needsDivingGear && mimic)
+                    if (mimic)
                     {
                         if (HumanAIController.HasDivingSuit(followTarget))
                         {

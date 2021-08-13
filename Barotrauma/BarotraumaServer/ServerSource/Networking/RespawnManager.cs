@@ -426,7 +426,14 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    characterData.SpawnInventoryItems(character, character.Inventory);
+                    if (characterData.HasItemData)
+                    {
+                        characterData.SpawnInventoryItems(character, character.Inventory);
+                    }
+                    else
+                    {
+                        character.GiveJobItems(mainSubSpawnPoints[i]);
+                    }
                     characterData.ApplyHealthData(character);
                     character.GiveIdCardTags(mainSubSpawnPoints[i]);
                     characterData.HasSpawned = true;

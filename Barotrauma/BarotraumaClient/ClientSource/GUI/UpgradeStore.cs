@@ -849,8 +849,19 @@ namespace Barotrauma
             string quantityText = "";
             if (linkedItems.Count > 1)
             {
-                quantityText = " " + TextManager.GetWithVariable("campaignstore.quantity", "[amount]", (linkedItems.Count).ToString());
-                name += quantityText;
+                foreach (ItemPrefab distinctItem in linkedItems.Select(it => it.Prefab).Distinct())
+                {
+                    if (quantityText != string.Empty)
+                    {
+                        quantityText += ", ";
+                    }
+                    int count = linkedItems.Count(it => it.Prefab == distinctItem);
+                    quantityText += distinctItem.Name;
+                    if (count > 1)
+                    {
+                        quantityText += " " + TextManager.GetWithVariable("campaignstore.quantity", "[amount]", count.ToString());
+                    }
+                }
             }
 
             bool isOpen = false;
@@ -873,7 +884,7 @@ namespace Barotrauma
             new GUITextBlock(rectT(0.3f, 1f, buttonLayout), text: slotText, font: GUI.SubHeadingFont);
             GUILayoutGroup group = new GUILayoutGroup(rectT(0.7f, 1f, buttonLayout), isHorizontal: true) { Stretch = true };
 
-            string title = item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : (linkedItems.Count > 1 ? item.Name + quantityText : item.Name);
+            string title = item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : quantityText;
             GUITextBlock text = new GUITextBlock(rectT(0.7f, 1f, group), text: title, font: GUI.SubHeadingFont, textAlignment: Alignment.Right, parseRichText: true)
             {
                 TextColor = GUI.Style.Orange
@@ -896,7 +907,7 @@ namespace Barotrauma
                 if (isUninstallPending) { canUninstall = false; }
 
                 frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), currentOrPending.UpgradePreviewSprite,
-                                TextManager.GetWithVariable(item.PendingItemSwap != null ? "upgrades.pendingitem" : "upgrades.installeditem", "[itemname]", name),
+                                item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", quantityText),
                                 currentOrPending.Description,
                                 0, null, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "WeaponUninstallButton"));
 
