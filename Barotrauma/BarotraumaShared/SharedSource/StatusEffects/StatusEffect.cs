@@ -1052,12 +1052,6 @@ namespace Barotrauma
                             }
                         }
 #endif
-#if CLIENT
-                        if (Character.Controlled == revivedcharacter && Character.Controlled.IsDead)
-                        {
-                            Character.Controlled = revivedcharacter;
-                        }
-#endif
                     }
                 }
             }
