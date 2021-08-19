@@ -231,7 +231,7 @@ namespace Barotrauma
 
             if (character.Inventory != null && husk.Inventory != null)
             {
-                if (character.Inventory.Capacity != husk.Inventory.Capacity)
+                if ((character.Inventory.Capacity != husk.Inventory.Capacity) && (character.IsHuman))
                 {
                     string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
                     DebugConsole.ThrowError(errorMsg);
