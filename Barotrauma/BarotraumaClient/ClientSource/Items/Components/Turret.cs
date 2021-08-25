@@ -304,6 +304,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void UpdateEditing(float deltaTime)
+        {
+            if (Screen.Selected == GameMain.SubEditorScreen && item.IsSelected)
+            {
+                if (widgets.ContainsKey("maxrotation"))
+                {
+                    widgets["maxrotation"].Update(deltaTime);
+                }
+                if (widgets.ContainsKey("minrotation"))
+                {
+                    widgets["minrotation"].Update(deltaTime);
+                }
+            }
+        }
+
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             if (crosshairSprite != null)
@@ -469,7 +484,6 @@ namespace Barotrauma.Items.Components
                 {
                     widget.tooltip = "Min: " + (int)MathHelper.ToDegrees(minRotation);
                     widget.DrawPos = GetDrawPos() + new Vector2((float)Math.Cos(minRotation), (float)Math.Sin(minRotation)) * coneRadius / Screen.Selected.Cam.Zoom * GUI.Scale;
-                    widget.Update(deltaTime);
                 };
             });
 

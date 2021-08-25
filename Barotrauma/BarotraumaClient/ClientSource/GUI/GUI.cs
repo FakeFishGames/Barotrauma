@@ -1005,12 +1005,6 @@ namespace Barotrauma
                         // Sub editor drag and highlight
                         case SubEditorScreen editor:
                         {
-                            // Portrait area
-                            if (editor.WiringMode && HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition))
-                            {
-                                return CursorState.Hand;
-                            }
-                        
                             foreach (var mapEntity in MapEntity.mapEntityList)
                             {
                                 if (MapEntity.StartMovingPos != Vector2.Zero)

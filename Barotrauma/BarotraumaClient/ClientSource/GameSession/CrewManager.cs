@@ -140,8 +140,7 @@ namespace Barotrauma
                                 msg,
                                 ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled)) ? ChatMessageType.Radio : ChatMessageType.Default,
                                 Character.Controlled);
-                            var headset = GetHeadset(Character.Controlled, true);
-                            if (headset != null && headset.CanTransmit())
+                            if (ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent headset))
                             {
                                 Signal s = new Signal(msg, sender: Character.Controlled, source: headset.Item);
                                 headset.TransmitSignal(s, sentFromChat: true);
@@ -608,17 +607,6 @@ namespace Barotrauma
                 GameMain.GameSession.CrewManager.SetCharacterSpeaking(message.Sender);
             }
             ChatBox.AddMessage(message);
-        }
-
-        private WifiComponent GetHeadset(Character character, bool requireEquipped)
-        {
-            if (character?.Inventory == null) { return null; }
-
-            var radioItem = character.Inventory.AllItems.FirstOrDefault(it => it.GetComponent<WifiComponent>() != null);
-            if (radioItem == null) { return null; }
-            if (requireEquipped && !character.HasEquippedItem(radioItem)) { return null; }
-
-            return radioItem.GetComponent<WifiComponent>();
         }
 
         partial void CreateRandomConversation()
@@ -1429,7 +1417,7 @@ namespace Barotrauma
                             }
                         }
 
-                        if (closestNode != null && closestNode == selectedNode)
+                        if (closestNode != null && closestNode.CanBeFocused && closestNode == selectedNode)
                         {
                             timeSelected += deltaTime;
                             if (timeSelected >= selectionTime)
@@ -2485,6 +2473,7 @@ namespace Barotrauma
                     foreach (Order p in Order.PrefabList)
                     {
                         targetComponent = null;
+                        if (p.UseController && itemContext.Components.None(c => c is Controller)) { continue; }
                         if ((p.TargetItems.Length > 0 && (p.TargetItems.Contains(itemContext.Prefab.Identifier) || itemContext.HasTag(p.TargetItems))) ||
                             p.TryGetTargetItemComponent(itemContext, out targetComponent))
                         {
@@ -3444,10 +3433,8 @@ namespace Barotrauma
             bool canIssueOrders = false;
             if (Character.Controlled?.CurrentHull?.Submarine != null && Character.Controlled.SpeechImpediment < 100.0f)
             {
-                WifiComponent radio = GetHeadset(Character.Controlled, true);
                 canIssueOrders = 
-                    radio != null && 
-                    radio.CanTransmit() && 
+                    ChatMessage.CanUseRadio(Character.Controlled) &&
                     Character.Controlled?.CurrentHull?.Submarine?.TeamID == Character.Controlled.TeamID &&
                     !Character.Controlled.CurrentHull.Submarine.Info.IsWreck;
             }

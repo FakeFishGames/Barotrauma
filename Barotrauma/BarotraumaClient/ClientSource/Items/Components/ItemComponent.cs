@@ -167,6 +167,13 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(0, false)]
+        public int HudLayer
+        {
+            get;
+            private set;
+        }
+
         private bool useAlternativeLayout;
         public bool UseAlternativeLayout
         {
@@ -442,6 +449,8 @@ namespace Barotrauma.Items.Components
         }
 
         public virtual void UpdateHUD(Character character, float deltaTime, Camera cam) { }
+
+        public virtual void UpdateEditing(float deltaTime) { }
 
         public virtual void CreateEditingHUD(SerializableEntityEditor editor)
         {

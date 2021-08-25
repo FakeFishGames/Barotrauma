@@ -6,6 +6,11 @@ namespace Barotrauma
     {
         public bool HasSpawned;
 
+        public bool HasItemData
+        {
+            get { return itemData != null; }
+        }
+
         partial void InitProjSpecific(Client client)
         {
             ClientEndPoint = client.Connection.EndPointString;
@@ -32,6 +37,14 @@ namespace Barotrauma
 
         public void SpawnInventoryItems(Character character, Inventory inventory)
         {
+            if (character == null)
+            {
+                throw new System.InvalidOperationException($"Failed to spawn inventory items. Character was null.");
+            }
+            if (itemData == null)
+            {
+                throw new System.InvalidOperationException($"Failed to spawn inventory items for the character \"{character.Name}\". No saved inventory data.");
+            }
             character.SpawnInventoryItems(inventory, itemData);
         }
 

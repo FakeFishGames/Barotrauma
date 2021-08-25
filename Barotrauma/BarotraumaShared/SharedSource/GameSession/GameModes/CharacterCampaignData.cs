@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System.Globalization;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -29,20 +30,30 @@ namespace Barotrauma
         public XElement OrderData { get; private set; }
 
         partial void InitProjSpecific(Client client);
-        public CharacterCampaignData(Client client)
+        public CharacterCampaignData(Client client, bool giveRespawnPenaltyAffliction = false)
         {
             Name = client.Name;
             InitProjSpecific(client);
 
             healthData = new XElement("health");
-            client.Character.CharacterHealth.Save(healthData);
-            if (client.Character.Inventory != null)
+            client.Character?.CharacterHealth?.Save(healthData);
+            if (giveRespawnPenaltyAffliction)
+            {
+                var respawnPenaltyAffliction = RespawnManager.GetRespawnPenaltyAffliction();
+                healthData.Add(new XElement("Affliction",
+                    new XAttribute("identifier", respawnPenaltyAffliction.Identifier),
+                    new XAttribute("strength", respawnPenaltyAffliction.Strength.ToString("G", CultureInfo.InvariantCulture))));
+            }
+            if (client.Character?.Inventory != null)
             {
                 itemData = new XElement("inventory");
                 Character.SaveInventory(client.Character.Inventory, itemData);
             }
             OrderData = new XElement("orders");
-            CharacterInfo.SaveOrderData(client.Character.Info, OrderData);
+            if (client.Character != null)
+            {
+                CharacterInfo.SaveOrderData(client.Character.Info, OrderData);
+            }
         }
         
         public CharacterCampaignData(XElement element)

@@ -576,7 +576,7 @@ namespace Barotrauma
             get { return pressureProtection; }
             set
             {
-                pressureProtection = Math.Max(value, 0.0f);
+                pressureProtection = Math.Max(value, pressureProtection);
                 pressureProtectionLastSet = Timing.TotalTime;
             }
         }
@@ -637,6 +637,8 @@ namespace Barotrauma
         }
 
         public CharacterHealth CharacterHealth { get; private set; }
+
+        public bool DisableHealthWindow;
 
         public float Vitality
         {
@@ -881,6 +883,8 @@ namespace Barotrauma
                 return AnimController.MainLimb.body.DrawPosition;
             }
         }
+
+        public bool IsInFriendlySub => Submarine != null && Submarine.TeamID == TeamID;
 
         public delegate void OnDeathHandler(Character character, CauseOfDeath causeOfDeath);
         public OnDeathHandler OnDeath;
@@ -2065,10 +2069,9 @@ namespace Barotrauma
             if (!CanInteract || inventory.Locked) { return false; }
 
             //the inventory belongs to some other character
-            if (inventory.Owner is Character && inventory.Owner != this)
+            if (inventory.Owner is Character character && inventory.Owner != this)
             {
-                var owner = (Character)inventory.Owner;
-
+                var owner = character;
                 //can only be accessed if the character is incapacitated and has been selected
                 return SelectedCharacter == owner && owner.CanInventoryBeAccessed;
             }
@@ -2319,14 +2322,13 @@ namespace Barotrauma
 
         public void SelectCharacter(Character character)
         {
-            if (character == null) return;
-
+            if (character == null || character == this) { return; }
             SelectedCharacter = character;
         }
 
         public void DeselectCharacter()
         {
-            if (SelectedCharacter == null) return;
+            if (SelectedCharacter == null) { return; }
             SelectedCharacter.AnimController?.ResetPullJoints();
             SelectedCharacter = null;
         }
@@ -2361,7 +2363,7 @@ namespace Barotrauma
 #if CLIENT
             if (isLocalPlayer)
             {
-                if (!IsMouseOnUI)
+                if (!IsMouseOnUI && (ViewTarget == null || ViewTarget == this))
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
@@ -2386,6 +2388,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    FocusedCharacter = null;
                     focusedItem = null;
                 }
                 findFocusedTimer -= deltaTime;
@@ -2707,17 +2710,13 @@ namespace Barotrauma
             UpdateAIChatMessages(deltaTime);
 
             //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
-            bool allowRagdoll = GameMain.NetworkMember != null ? GameMain.NetworkMember.ServerSettings.AllowRagdollButton : true;
-            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 1f;
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
-            {
-                tooFastToUnragdoll = false;
-            }
+            bool allowRagdoll = GameMain.NetworkMember?.ServerSettings?.AllowRagdollButton ?? true;
+            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 5.0f * 5.0f;
             if (IsForceRagdolled)
             {
                 IsRagdolled = IsForceRagdolled;
             }
-            else if (IsRemotePlayer)
+            else if (this != Controlled)
             {
                 IsRagdolled = IsKeyDown(InputType.Ragdoll);
             }
@@ -2726,6 +2725,7 @@ namespace Barotrauma
             {
                 if (ragdollingLockTimer > 0.0f)
                 {
+                    SetInput(InputType.Ragdoll, false, true);
                     ragdollingLockTimer -= deltaTime;
                 }
                 else
@@ -2832,7 +2832,7 @@ namespace Barotrauma
             {
                 if (Timing.TotalTime > pressureProtectionLastSet + 0.1)
                 {
-                    PressureProtection = 0.0f;
+                    pressureProtection = 0.0f;
                 }
             }
             if (NeedsWater)
@@ -2907,7 +2907,7 @@ namespace Barotrauma
         }
 
         private float despawnTimer;
-        private void UpdateDespawn(float deltaTime, bool ignoreThresholds = false)
+        private void UpdateDespawn(float deltaTime, bool ignoreThresholds = false, bool createNetworkEvents = true)
         {
             if (!EnableDespawn) { return; }
 
@@ -2978,10 +2978,10 @@ namespace Barotrauma
                     if (itemContainer == null) { return; }
                     foreach (Item inventoryItem in Inventory.AllItemsMod)
                     {
-                        if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null))
+                        if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null, createNetworkEvent: createNetworkEvents))
                         {
                             //if the item couldn't be put inside the despawn container, just drop it
-                            inventoryItem.Drop(dropper: this);
+                            inventoryItem.Drop(dropper: this, createNetworkEvent: createNetworkEvents);
                         }
                     }
                 }
@@ -2993,11 +2993,8 @@ namespace Barotrauma
         public void DespawnNow(bool createNetworkEvents = true)
         {
             despawnTimer = GameMain.Config.CorpseDespawnDelay;
-            UpdateDespawn(1.0f, ignoreThresholds: true);
-            if (createNetworkEvents)
-            {
-                Spawner.Update();
-            }
+            UpdateDespawn(1.0f, ignoreThresholds: true, createNetworkEvents: createNetworkEvents);
+            Spawner.Update(createNetworkEvents);
         }
 
         public static void RemoveByPrefab(CharacterPrefab prefab)
@@ -3526,6 +3523,7 @@ namespace Barotrauma
             }
             bool wasDead = IsDead;
             Vector2 simPos = hitLimb.SimPosition + ConvertUnits.ToSimUnits(dir);
+            float prevVitality = CharacterHealth.Vitality;
             AttackResult attackResult = hitLimb.AddDamage(simPos, afflictions, playSound, damageMultiplier: damageMultiplier, penetration: penetration);
             CharacterHealth.ApplyDamage(hitLimb, attackResult, allowStacking);
             if (attacker != this)
@@ -3534,7 +3532,7 @@ namespace Barotrauma
                 OnAttackedProjSpecific(attacker, attackResult, stun);
                 if (!wasDead)
                 {
-                    TryAdjustAttackerSkill(attacker, -attackResult.Damage);
+                    TryAdjustAttackerSkill(attacker, CharacterHealth.Vitality - prevVitality);
                     if (IsDead)
                     {
                         attacker?.RecordKill(this);
@@ -3991,7 +3989,7 @@ namespace Barotrauma
                     //now there's just one, try to put the extra items where they fit (= stack them)
                     for (int i = 0; i < inventory.Capacity; i++)
                     {
-                        if (inventory.CanBePut(newItem, i))
+                        if (inventory.CanBePutInSlot(newItem, i))
                         {
                             slotIndices[0] = i;
                             canBePutInOriginalInventory = true;
@@ -4001,7 +3999,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    canBePutInOriginalInventory = inventory.CanBePut(newItem, slotIndices[0]);
+                    canBePutInOriginalInventory = inventory.CanBePutInSlot(newItem, slotIndices[0], ignoreCondition: true);
                 }
 
                 if (canBePutInOriginalInventory)

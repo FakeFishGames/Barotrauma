@@ -172,11 +172,25 @@ namespace Barotrauma
             //refresh the character data of clients who are still in the server
             foreach (Client c in GameMain.Server.ConnectedClients)
             {
+                if (c.HasSpawned && c.CharacterInfo != null && c.CharacterInfo.CauseOfDeath != null && c.CharacterInfo.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
+                {
+                    //the client has opted to spawn this round with Reaper's Tax
+                    if (c.WaitForNextRoundRespawn.HasValue && !c.WaitForNextRoundRespawn.Value)
+                    {
+                        c.CharacterInfo.StartItemsGiven = false;
+                        characterData.RemoveAll(cd => cd.MatchesClient(c));
+                        characterData.Add(new CharacterCampaignData(c, giveRespawnPenaltyAffliction: true));
+                        continue;
+                    }
+                }
                 if (c.Character?.Info == null) { continue; }
-                if (c.Character.IsDead && c.Character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { continue; }
+                if (c.Character.IsDead && c.Character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected)
+                {
+                    continue;
+                }
                 c.CharacterInfo = c.Character.Info;
                 characterData.RemoveAll(cd => cd.MatchesClient(c));
-                characterData.Add(new CharacterCampaignData(c));
+                characterData.Add(new CharacterCampaignData(c));                
             }
 
             //refresh the character data of clients who aren't in the server anymore

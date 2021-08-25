@@ -305,7 +305,22 @@ namespace Barotrauma.Networking
         {
             RespawnCharactersProjSpecific(shuttlePos);
         }
-        
+
+        public static Affliction GetRespawnPenaltyAffliction()
+        {
+            var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
+            return respawnPenaltyAffliction?.Instantiate(10.0f);
+        }
+
+        public static void GiveRespawnPenaltyAffliction(Character character)
+        {
+            var respawnPenaltyAffliction = GetRespawnPenaltyAffliction();
+            if (respawnPenaltyAffliction != null)
+            {
+                character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction);
+            }
+        }
+
         public Vector2 FindSpawnPos()
         {
             if (Level.Loaded == null || Submarine.MainSub == null) { return Vector2.Zero; }

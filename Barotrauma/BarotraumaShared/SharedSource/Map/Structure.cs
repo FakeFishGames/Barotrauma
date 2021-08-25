@@ -1078,7 +1078,7 @@ namespace Barotrauma
 #endif
                 }
 
-                float gapOpen = (damage / MaxHealth - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
+                float gapOpen = MaxHealth <= 0.0f ? 0.0f : (damage / MaxHealth - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
                 Sections[sectionIndex].gap.Open = gapOpen; 
             }
 
@@ -1095,7 +1095,7 @@ namespace Barotrauma
                 {
                     if (damageDiff < 0.0f)
                     {
-                        attacker.Info.IncreaseSkillLevel("mechanical", 
+                        attacker.Info?.IncreaseSkillLevel("mechanical", 
                             -damageDiff * SkillSettings.Current.SkillIncreasePerRepairedStructureDamage / Math.Max(attacker.GetSkillLevel("mechanical"), 1.0f),
                             SectionPosition(sectionIndex));                                    
                     }

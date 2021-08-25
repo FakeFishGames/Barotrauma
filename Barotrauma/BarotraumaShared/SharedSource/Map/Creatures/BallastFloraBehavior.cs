@@ -942,6 +942,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             Anger += 0.01f;
 
+            bool wasRemoved = branch.Removed;
             Branches.Remove(branch);
             branch.Removed = true;
 
@@ -986,9 +987,11 @@ namespace Barotrauma.MapCreatures.Behavior
                 Kill();
                 return;
             }
-
 #if SERVER
-            SendNetworkMessage(this, NetworkHeader.BranchRemove, branch);
+            if (!wasRemoved)
+            {
+                SendNetworkMessage(this, NetworkHeader.BranchRemove, branch);
+            }
 #endif
         }
 

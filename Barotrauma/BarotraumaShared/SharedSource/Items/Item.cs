@@ -149,8 +149,10 @@ namespace Barotrauma
             set
             {
                 parentInventory = value;
-
-                if (parentInventory != null) Container = parentInventory.Owner as Item;                
+                if (parentInventory != null) { Container = parentInventory.Owner as Item; }
+#if SERVER
+                PreviousParentInventory = value;
+#endif
             }
         }
 
@@ -240,7 +242,7 @@ namespace Barotrauma
 
         private float rotationRad;
 
-        [Editable(0.0f, 360.0f, DecimalCount = 1, ValueStep = 1f), Serialize(0.0f, true)]
+        [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, MinValueFloat = 0.0f, MaxValueFloat = 360.0f, DecimalCount = 1, ValueStep = 1f), Serialize(0.0f, true)]
         public float Rotation
         {
             get
@@ -722,11 +724,7 @@ namespace Barotrauma
 
         public override string ToString()
         {
-#if CLIENT
-            return (GameMain.DebugDraw) ? Name + " (ID: " + ID + ")" : Name;
-#elif SERVER
             return Name + " (ID: " + ID + ")";
-#endif
         }
 
         private readonly List<ISerializableEntity> allPropertyObjects = new List<ISerializableEntity>();
@@ -1592,14 +1590,12 @@ namespace Barotrauma
                 {
                     ic.PlaySound(ActionType.Always);
                     ic.UpdateSounds();
-                    if (!ic.WasUsed)
-                    {
-                        ic.StopSounds(ActionType.OnUse);
-                        ic.StopSounds(ActionType.OnSecondaryUse);
-                    }
+                    if (!ic.WasUsed) { ic.StopSounds(ActionType.OnUse); }
+                    if (!ic.WasSecondaryUsed) { ic.StopSounds(ActionType.OnSecondaryUse); }
                 }
 #endif
                 ic.WasUsed = false;
+                ic.WasSecondaryUsed = false;
 
                 if (ic.IsActive)
                 {
@@ -2030,7 +2026,7 @@ namespace Barotrauma
                 //if there's an equal signal waiting to be sent
                 //to the same connection, don't add a new one
                 signal.stepsTaken = 0;
-                if (!delayedSignals.Contains((signal, connection)))
+                if (!delayedSignals.Any(s => s.Connection == connection && s.Signal.source == signal.source && s.Signal.value == signal.value && s.Signal.sender == signal.sender))
                 {
                     delayedSignals.Add((signal, connection));
                     CoroutineManager.StartCoroutine(DelaySignal(signal, connection));
@@ -2052,8 +2048,11 @@ namespace Barotrauma
 
         private IEnumerable<object> DelaySignal(Signal signal, Connection connection)
         {
-            //wait one frame
-            yield return CoroutineStatus.Running;
+            do
+            {
+                //wait at least one frame
+                yield return CoroutineStatus.Running;
+            } while (CoroutineManager.DeltaTime <= 0.0f);
 
             delayedSignals.Remove((signal, connection));
 
@@ -2269,7 +2268,7 @@ namespace Barotrauma
                 if (!ic.HasRequiredContainedItems(character, isControlled)) { continue; }
                 if (ic.SecondaryUse(deltaTime, character))
                 {
-                    ic.WasUsed = true;
+                    ic.WasSecondaryUsed = true;
 
 #if CLIENT
                     ic.PlaySound(ActionType.OnSecondaryUse, character);
@@ -2773,7 +2772,7 @@ namespace Barotrauma
                             int level = subElement.GetAttributeInt("level", 1);
                             if (upgradePrefab != null)
                             {
-                                item.AddUpgrade(new Upgrade(item, upgradePrefab, level, subElement));
+                                item.AddUpgrade(new Upgrade(item, upgradePrefab, level, appliedSwap != null ? null : subElement));
                             }
                             else
                             {

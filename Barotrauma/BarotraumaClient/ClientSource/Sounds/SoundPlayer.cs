@@ -149,7 +149,7 @@ namespace Barotrauma
         {
             OverrideMusicType = null;
 
-            var soundFiles = GameMain.Instance.GetFilesOfType(ContentType.Sounds);
+            var soundFiles = GameMain.Instance.GetFilesOfType(ContentType.Sounds).ToList();
 
             List<XElement> soundElements = new List<XElement>();
             foreach (ContentFile soundFile in soundFiles)
@@ -851,7 +851,7 @@ namespace Barotrauma
                     }
                 }
 
-
+                int noiseLoopIndex = 1;
                 if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
                 {
                     // Find background noise loop for the current biome
@@ -859,7 +859,6 @@ namespace Barotrauma
                         GetSuitableMusicClips(Level.Loaded.LevelData?.Biome?.Identifier, currentIntensity) :
                         Enumerable.Empty<BackgroundMusic>();
 
-                    int noiseLoopIndex = 1;
                     if (suitableNoiseLoops.Count() == 0)
                     {
                         targetMusic[noiseLoopIndex] = null;
@@ -869,6 +868,10 @@ namespace Barotrauma
                     {
                         targetMusic[noiseLoopIndex] = suitableNoiseLoops.GetRandom();
                     }
+                }
+                else
+                {
+                    targetMusic[noiseLoopIndex] = null;
                 }
 
                 //get the appropriate intensity layers for current situation

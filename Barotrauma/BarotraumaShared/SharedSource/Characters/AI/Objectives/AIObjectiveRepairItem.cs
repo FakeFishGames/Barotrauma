@@ -215,7 +215,9 @@ namespace Barotrauma
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
                             // Don't stop in ladders, because we can't interact with other items while holding the ladders.
-                            endNodeFilter = node => node.Waypoint.Ladders == null
+                            endNodeFilter = node => node.Waypoint.Ladders == null,
+                            // Allow repairing hatches and airlock doors.
+                            AllowGoingOutside = HumanAIController.ObjectiveManager.IsCurrentOrder<AIObjectiveRepairItems>() && Item.GetComponent<Door>() != null
                         };
                         if (repairTool != null)
                         {

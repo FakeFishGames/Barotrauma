@@ -368,8 +368,8 @@ namespace Barotrauma
 
             foreach (Mission mission in GameMode.Missions)
             {
-                // setting difficulty for missions that may involve difficulty-related submarine creation
-                mission.SetDifficulty(levelData?.Difficulty ?? 0f);
+                // setting level for missions that may involve difficulty-related submarine creation
+                mission.SetLevel(levelData);
             }
 
             if (Submarine.MainSubs[1] == null)

@@ -2342,7 +2342,15 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        characterData.SpawnInventoryItems(spawnedCharacter, spawnedCharacter.Inventory);
+                        if (!characterData.HasItemData && !characterData.CharacterInfo.StartItemsGiven)
+                        {
+                            //clients who've chosen to spawn with the respawn penalty can have CharacterData without inventory data
+                            spawnedCharacter.GiveJobItems(mainSubWaypoints[i]);
+                        }
+                        else
+                        {
+                            characterData.SpawnInventoryItems(spawnedCharacter, spawnedCharacter.Inventory);
+                        }
                         characterData.ApplyHealthData(spawnedCharacter);
                         characterData.ApplyOrderData(spawnedCharacter);
                         spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
@@ -3058,13 +3066,7 @@ namespace Barotrauma.Networking
                 case ChatMessageType.Radio:
                 case ChatMessageType.Order:
                     if (senderCharacter == null) { return; }
-
-                    //return if senderCharacter doesn't have a working radio
-                    var radio = senderCharacter.Inventory?.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null);
-                    if (radio == null || !senderCharacter.HasEquippedItem(radio)) { return; }
-
-                    senderRadio = radio.GetComponent<WifiComponent>();
-                    if (!senderRadio.CanTransmit()) { return; }
+                    if (!ChatMessage.CanUseRadio(senderCharacter, out senderRadio)) { return; }
                     break;
                 case ChatMessageType.Dead:
                     //character still alive and capable of speaking -> dead chat not allowed

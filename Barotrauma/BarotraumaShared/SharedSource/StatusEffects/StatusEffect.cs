@@ -685,7 +685,7 @@ namespace Barotrauma
             if (HasTargetType(TargetType.NearbyItems))
             {
                 //optimization for powered components that can be easily fetched from Powered.PoweredList
-                if (targetIdentifiers.Count == 1 &&
+                if (targetIdentifiers?.Count == 1 &&
                     (targetIdentifiers.Contains("powered") || targetIdentifiers.Contains("junctionbox") || targetIdentifiers.Contains("relaycomponent")))
                 {
                     foreach (Powered powered in Powered.PoweredList)
@@ -970,6 +970,13 @@ namespace Barotrauma
                     if (targets.FirstOrDefault(t => t is Limb) is Limb targetLimb && !targetLimb.Removed)
                     {
                         position = targetLimb.WorldPosition;
+                    }
+                    else if (HasTargetType(TargetType.Contained))
+                    {
+                        if (targets.FirstOrDefault(t => t is Item) is Item targetItem)
+                        {
+                            position = targetItem.WorldPosition;
+                        }
                     }
                 }
             }

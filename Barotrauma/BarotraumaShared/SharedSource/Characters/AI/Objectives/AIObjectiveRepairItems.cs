@@ -82,6 +82,7 @@ namespace Barotrauma
         public static bool ViableForRepair(Item item, Character character, HumanAIController humanAIController)
         {
             if (!IsValidTarget(item, character)) { return false; }
+            if (item.CurrentHull == null) { return true; }
             if (item.CurrentHull.FireSources.Count > 0) { return false; }
             // Don't repair items in rooms that have enemies inside.
             if (Character.CharacterList.Any(c => c.CurrentHull == item.CurrentHull && !humanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
@@ -150,7 +151,6 @@ namespace Barotrauma
             if (item.IgnoreByAI(character)) { return false; }
             if (!item.IsInteractable(character)) { return false; }
             if (item.IsFullCondition) { return false; }
-            if (item.CurrentHull == null) { return false; }
             if (item.Submarine == null || character.Submarine == null) { return false; }
             //player crew ignores items in outposts
             if (character.IsOnPlayerTeam && item.Submarine.Info.IsOutpost) { return false; }

@@ -408,21 +408,25 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            bool hitSomething = false;
+            int hitCount = 0;
+            Vector2 lastHitPos = item.WorldPosition;
             hits = hits.OrderBy(h => h.Fraction).ToList();
-            foreach (HitscanResult h in hits)
+            for (int i = 0; i < hits.Count; i++)
             {
+                var h = hits[i];
                 item.SetTransform(h.Point, rotation);
                 if (HandleProjectileCollision(h.Fixture, h.Normal, Vector2.Zero))
                 {
-                    LaunchProjSpecific(rayStartWorld, item.WorldPosition);
-                    hitSomething = true;
-                    break;
+                    hitCount++;
+                    if (hitCount >= MaxTargetsToHit || i == hits.Count - 1)
+                    {
+                        LaunchProjSpecific(rayStartWorld, item.WorldPosition);
+                        break;
+                    }
                 }
             }
-
-            //the raycast didn't hit anything -> the projectile flew somewhere outside the level and is permanently lost
-            if (!hitSomething)
+            //the raycast didn't hit anything (or didn't hit enough targets to stop the projectile) -> the projectile flew somewhere outside the level and is permanently lost
+            if (hitCount < MaxTargetsToHit)
             {
                 item.body.SetTransformIgnoreContacts(item.body.SimPosition, rotation);
                 LaunchProjSpecific(rayStartWorld, rayEndWorld);
@@ -467,7 +471,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (fixture.Body.UserData is VineTile) { return true; }
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return true; }
-                if (fixture.Body.UserData as string == "ruinroom") { return true; }
+                if (fixture.Body.UserData as string == "ruinroom" || fixture.Body.UserData is Hull || fixture.UserData is Hull) { return true; }
 
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
                 if (submarine != null)
@@ -505,7 +509,7 @@ namespace Barotrauma.Items.Components
                 if (fixture.Body.UserData is VineTile) { return -1; }
 
                 if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
-                if (fixture.Body?.UserData as string == "ruinroom") { return -1; }
+                if (fixture.Body.UserData as string == "ruinroom" || fixture.Body?.UserData is Hull || fixture.UserData is Hull) { return -1; }
 
                 //ignore everything else than characters, sub walls and level walls
                 if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
@@ -640,7 +644,7 @@ namespace Barotrauma.Items.Components
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) - dir,
                     item.body.SimPosition - ConvertUnits.ToSimUnits(sub.Position) + dir,
                     collisionCategory: Physics.CollisionWall);
-                if (wallBody?.FixtureList?.First() != null && wallBody.UserData is Structure &&
+                if (wallBody?.FixtureList?.First() != null && (wallBody.UserData is Structure || wallBody.UserData is Item) &&
                     //ignore the hit if it's behind the position the item was launched from, and the projectile is travelling in the opposite direction
                     Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0) 
                 {
@@ -738,7 +742,15 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is IDamageable damageable)
             {
-                if (Attack != null) { attackResult = Attack.DoDamage(User ?? Attacker, damageable, item.WorldPosition, 1.0f); }
+                if (Attack != null) 
+                {
+                    Vector2 pos = item.WorldPosition;
+                    if (item.Submarine == null && damageable is Structure structure && structure.Submarine != null && Vector2.DistanceSquared(item.WorldPosition, structure.WorldPosition) > 10000.0f * 10000.0f)
+                    {
+                        item.Submarine = structure.Submarine;
+                    }
+                    attackResult = Attack.DoDamage(User ?? Attacker, damageable, pos, 1.0f); 
+                }
             }
             else if (target.Body.UserData is VoronoiCell voronoiCell && voronoiCell.IsDestructible && Attack != null && Math.Abs(Attack.LevelWallDamage) > 0.0f)
             {

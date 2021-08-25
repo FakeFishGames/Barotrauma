@@ -97,7 +97,7 @@ namespace Barotrauma
                 State = InfectionState.Final;
                 ActivateHusk();
                 ApplyDamage(deltaTime, applyForce: true);
-                character.SetStun(1);
+                character.SetStun(5);
             }
         }
 

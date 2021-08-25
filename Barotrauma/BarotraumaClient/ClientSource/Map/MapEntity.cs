@@ -838,9 +838,9 @@ namespace Barotrauma
 
         public static List<MapEntity> FilteredSelectedList { get; private set; } = new List<MapEntity>();
 
-        public static void UpdateEditor(Camera cam)
+        public static void UpdateEditor(Camera cam, float deltaTime)
         {
-            if (highlightedListBox != null) highlightedListBox.UpdateManually((float)Timing.Step);
+            if (highlightedListBox != null) { highlightedListBox.UpdateManually(deltaTime); }
 
             if (editingHUD != null)
             {
@@ -865,7 +865,7 @@ namespace Barotrauma
             var first = FilteredSelectedList.FirstOrDefault();
             if (first != null)
             {
-                first.UpdateEditing(cam);
+                first.UpdateEditing(cam, deltaTime);
                 if (first.ResizeHorizontal || first.ResizeVertical)
                 {
                     first.UpdateResizing(cam);
@@ -1017,7 +1017,7 @@ namespace Barotrauma
             if (editingHUD != null && editingHUD.UserData == this) editingHUD.AddToGUIUpdateList();
         }
 
-        public virtual void UpdateEditing(Camera cam) { }
+        public virtual void UpdateEditing(Camera cam, float deltaTime) { }
 
         protected static void PositionEditingHUD()
         {

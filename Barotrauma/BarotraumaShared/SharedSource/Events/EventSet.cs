@@ -94,6 +94,8 @@ namespace Barotrauma
 
         public readonly bool TriggerEventCooldown;
 
+        public readonly bool Additive;
+
         public readonly Dictionary<string, float> Commonness;
 
         public readonly List<(EventPrefab prefab, float commonness, float probability)> EventPrefabs;
@@ -116,6 +118,8 @@ namespace Barotrauma
             BiomeIdentifier = element.GetAttributeString("biome", string.Empty);
             MinLevelDifficulty = element.GetAttributeFloat("minleveldifficulty", 0);
             MaxLevelDifficulty = Math.Max(element.GetAttributeFloat("maxleveldifficulty", 100), MinLevelDifficulty);
+
+            Additive = element.GetAttributeBool("additive", false);
 
             string levelTypeStr = element.GetAttributeString("leveltype", "LocationConnection");
             if (!Enum.TryParse(levelTypeStr, true, out LevelType))

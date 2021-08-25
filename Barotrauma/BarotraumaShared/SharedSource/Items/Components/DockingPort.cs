@@ -167,10 +167,9 @@ namespace Barotrauma.Items.Components
         {
             foreach (DockingPort port in list)
             {
-                if (port == this || port.item.Submarine == item.Submarine) continue;
-
-                if (Math.Abs(port.item.WorldPosition.X - item.WorldPosition.X) > DistanceTolerance.X) continue;
-                if (Math.Abs(port.item.WorldPosition.Y - item.WorldPosition.Y) > DistanceTolerance.Y) continue;
+                if (port == this || port.item.Submarine == item.Submarine || port.IsHorizontal != IsHorizontal) { continue; }
+                if (Math.Abs(port.item.WorldPosition.X - item.WorldPosition.X) > DistanceTolerance.X) { continue; }
+                if (Math.Abs(port.item.WorldPosition.Y - item.WorldPosition.Y) > DistanceTolerance.Y) { continue; }
 
                 return port;
             }

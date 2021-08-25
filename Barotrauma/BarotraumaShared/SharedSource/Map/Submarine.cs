@@ -282,9 +282,11 @@ namespace Barotrauma
         }
 
         private float ballastFloraTimer;
+        public bool ImmuneToBallastFlora { get; set; }
         public void AttemptBallastFloraInfection(string identifier, float deltaTime, float probability)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (ImmuneToBallastFlora) { return; }
 
             if (ballastFloraTimer < 1f)
             {
@@ -1264,7 +1266,7 @@ namespace Barotrauma
         {
             List<(ItemContainer container, int freeSlots)> containers = new List<(ItemContainer container, int freeSlots)>();
             var connectedSubs = GetConnectedSubs();
-            foreach (Item item in Item.ItemList)
+            foreach (Item item in Item.ItemList.ToList())
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
                 if (!item.HasTag("cargocontainer")) { continue; }

@@ -201,10 +201,13 @@ namespace Barotrauma
             }
             set
             {
-                if (openHealthWindow == value) return;
-                if (value != null && !value.UseHealthWindow) return;
+                if (openHealthWindow == value) { return; }
+                if (value != null)
+                {
+                    if (!value.UseHealthWindow || value.Character.DisableHealthWindow) { return; }
+                }
 
-                var prevOpenHealthWindow = openHealthWindow;                
+                var prevOpenHealthWindow = openHealthWindow;
 
                 if (prevOpenHealthWindow != null)
                 {
@@ -429,7 +432,7 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), nameContainer.RectTransform, Anchor.CenterLeft),
                 onDraw: (spriteBatch, component) =>
                 {
-                    character.Info.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), Vector2.Zero, component.Rect.Width, false, openHealthWindow?.Character != Character.Controlled);
+                    character.Info?.DrawPortrait(spriteBatch, new Vector2(component.Rect.X, component.Rect.Center.Y - component.Rect.Width / 2), Vector2.Zero, component.Rect.Width, false, openHealthWindow?.Character != Character.Controlled);
                 });
             characterName = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), nameContainer.RectTransform), "", textAlignment: Alignment.CenterLeft, font: GUI.SubHeadingFont)
             {
@@ -438,7 +441,7 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(new Vector2(0.2f, 1.0f), nameContainer.RectTransform),
                 onDraw: (spriteBatch, component) =>
                 {
-                    character.Info.DrawJobIcon(spriteBatch, component.Rect, openHealthWindow?.Character != Character.Controlled);
+                    character.Info?.DrawJobIcon(spriteBatch, component.Rect, openHealthWindow?.Character != Character.Controlled);
                 });
 
 
@@ -821,7 +824,7 @@ namespace Barotrauma
                     OpenHealthWindow = null;
                 }
                 else if (Character.Controlled == Character && 
-                    (Character.Controlled.FocusedCharacter?.CharacterHealth == null || !Character.Controlled.FocusedCharacter.CharacterHealth.UseHealthWindow))
+                    (Character.Controlled.FocusedCharacter?.CharacterHealth == null || !Character.Controlled.FocusedCharacter.CharacterHealth.UseHealthWindow || Character.Controlled.FocusedCharacter.DisableHealthWindow))
                 {
                     OpenHealthWindow = this;
                     forceAfflictionContainerUpdate = true;
@@ -978,7 +981,7 @@ namespace Barotrauma
             }
 
             healthBarHolder.CanBeFocused = healthBar.CanBeFocused = healthBarShadow.CanBeFocused = !Character.ShouldLockHud();
-            if (Character.AllowInput && UseHealthWindow && healthBar.Enabled && healthBar.CanBeFocused &&
+            if (Character.AllowInput && UseHealthWindow && !Character.DisableHealthWindow && healthBar.Enabled && healthBar.CanBeFocused &&
                 (GUI.IsMouseOn(healthBar) || highlightedAfflictionIcon != null) && Inventory.SelectedSlot == null)
             {
                 healthBar.State = GUIComponent.ComponentState.Hover;
@@ -1914,13 +1917,17 @@ namespace Barotrauma
                 i++;
             }
 
-            if (selectedLimbIndex > -1)
+            if (selectedLimbIndex > -1 && selectedLimbText != null)
             {
-                var selectedLimbArea = GetLimbHighlightArea(limbHealths[selectedLimbIndex], drawArea);
-                GUI.DrawLine(spriteBatch,
-                    new Vector2(selectedLimbText.Rect.X, selectedLimbText.Rect.Center.Y),
-                    selectedLimbArea.Center.ToVector2(),
-                    Color.LightGray * 0.5f, width: 4);
+                LimbHealth limbHealth = limbHealths[selectedLimbIndex];
+                if (limbHealth?.IndicatorSprite != null)
+                {
+                    Rectangle selectedLimbArea = GetLimbHighlightArea(limbHealth, drawArea);
+                    GUI.DrawLine(spriteBatch,
+                        new Vector2(selectedLimbText.Rect.X, selectedLimbText.Rect.Center.Y),
+                        selectedLimbArea.Center.ToVector2(),
+                        Color.LightGray * 0.5f, width: 4);
+                }
             }
 
             if (draggingMed != null)

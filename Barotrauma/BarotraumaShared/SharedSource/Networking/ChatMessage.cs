@@ -264,9 +264,17 @@ namespace Barotrauma.Networking
         {
             radio = null;
             if (sender?.Inventory == null || sender.Removed) { return false; }
-            radio = sender.Inventory.AllItems.FirstOrDefault(i => i.GetComponent<WifiComponent>() != null)?.GetComponent<WifiComponent>();
-            if (radio?.Item == null) { return false; }
-            return sender.HasEquippedItem(radio.Item) && radio.CanTransmit();
+
+            foreach (Item item in sender.Inventory.AllItems)
+            {
+                var wifiComponent = item.GetComponent<WifiComponent>();
+                if (wifiComponent == null || !wifiComponent.CanTransmit() || !sender.HasEquippedItem(item)) { continue; }
+                if (radio == null || wifiComponent.Range > radio.Range)
+                {
+                    radio = wifiComponent;
+                }
+            }
+            return radio?.Item != null;
         }
     }
 }

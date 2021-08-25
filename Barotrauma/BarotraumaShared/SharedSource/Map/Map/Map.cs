@@ -484,14 +484,7 @@ namespace Barotrauma
                 {
                     Difficulty = MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f)
                 };
-                if (location.Type.MissionIdentifiers.Any())
-                {
-                    location.UnlockMissionByIdentifier(location.Type.MissionIdentifiers.GetRandom());
-                }
-                if (location.Type.MissionTags.Any())
-                {
-                    location.UnlockMissionByTag(location.Type.MissionTags.GetRandom());
-                }
+                location.UnlockInitialMissions();
             }
             foreach (LocationConnection connection in Connections) 
             { 

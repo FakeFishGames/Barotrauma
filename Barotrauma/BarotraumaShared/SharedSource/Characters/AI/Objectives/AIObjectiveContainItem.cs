@@ -133,7 +133,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (ItemToContain.ParentInventory == character.Inventory && character.Submarine == Submarine.MainSub)
+                        if (ItemToContain.ParentInventory == character.Inventory && character.IsInFriendlySub)
                         {
                             ItemToContain.Drop(character);
                         }

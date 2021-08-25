@@ -186,7 +186,7 @@ namespace Barotrauma.Items.Components
                     texts.Add(CharacterHUD.GetCachedHudText("PlayHint", GameMain.Config.KeyBindText(InputType.Use)));
                     textColors.Add(GUI.Style.Green);
                 }
-                if (target.CharacterHealth.UseHealthWindow && equipper?.FocusedCharacter == target && equipper.CanInteractWith(target, 160f, false))
+                if (target.CharacterHealth.UseHealthWindow && !target.DisableHealthWindow && equipper?.FocusedCharacter == target && equipper.CanInteractWith(target, 160f, false))
                 {
                     texts.Add(CharacterHUD.GetCachedHudText("HealHint", GameMain.Config.KeyBindText(InputType.Health)));
                     textColors.Add(GUI.Style.Green);

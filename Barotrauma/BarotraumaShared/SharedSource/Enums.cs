@@ -18,10 +18,10 @@
         OnFire, InWater, NotInWater,
         OnImpact,
         OnEating,
-        OnDeath = OnBroken,
         OnDamaged,
         OnSevered,
         OnProduceSpawned,
         OnOpen, OnClose,
+        OnDeath = OnBroken,
     }
 }

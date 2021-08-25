@@ -124,13 +124,24 @@ namespace Barotrauma
             }
             MTRandom rand = new MTRandom(seed);
 
-            var initialEventSet = SelectRandomEvents(EventSet.List, rand);
+            EventSet initialEventSet = SelectRandomEvents(EventSet.List, rand);
+            EventSet additiveSet = null;
+            if (initialEventSet != null && initialEventSet.Additive)
+            {
+                additiveSet = initialEventSet;
+                initialEventSet = SelectRandomEvents(EventSet.List.FindAll(e => !e.Additive), rand);
+            }
             if (initialEventSet != null)
             {
                 pendingEventSets.Add(initialEventSet);
                 CreateEvents(initialEventSet, rand);
             }
-            
+            if (additiveSet != null)
+            {
+                pendingEventSets.Add(additiveSet);
+                CreateEvents(additiveSet, rand);
+            }
+
             if (level?.LevelData?.Type == LevelData.LevelType.Outpost)
             {
                 //if the outpost is connected to a locked connection, create an event to unlock it

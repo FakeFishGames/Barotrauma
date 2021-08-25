@@ -2527,9 +2527,8 @@ namespace Barotrauma
                         // Don't target items that we own. 
                         // This is a rare case, and almost entirely related to Humanhusks, so let's check it last to reduce unnecessary checks (although the check shouldn't be expensive)
                         if (owner == character) { continue; }
-                        if (owner != null && IsFriendly(Character, owner))
+                        if (owner != null && (IsFriendly(Character, owner) || owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)))
                         {
-                            // If the item is held by a friendly character, ignore it.
                             continue;
                         }
                     }
@@ -2595,7 +2594,7 @@ namespace Barotrauma
             {
                 if ((SelectedAiTarget != null || wallTarget != null) && IsLatchedOnSub)
                 {
-                    if (!(SelectedAiTarget.Entity is Structure wall))
+                    if (!(SelectedAiTarget?.Entity is Structure wall))
                     {
                         wall = wallTarget?.Structure;
                     }

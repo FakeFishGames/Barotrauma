@@ -404,6 +404,8 @@ namespace Barotrauma
             {
                 var vanillaSubs = vanilla.GetFilesOfType(ContentType.Submarine)
                     .Concat(vanilla.GetFilesOfType(ContentType.Wreck))
+                    .Concat(vanilla.GetFilesOfType(ContentType.BeaconStation))
+                    .Concat(vanilla.GetFilesOfType(ContentType.EnemySubmarine))
                     .Concat(vanilla.GetFilesOfType(ContentType.Outpost))
                     .Concat(vanilla.GetFilesOfType(ContentType.OutpostModule));
                 string pathToCompare = FilePath.Replace(@"\", @"/").ToLowerInvariant();

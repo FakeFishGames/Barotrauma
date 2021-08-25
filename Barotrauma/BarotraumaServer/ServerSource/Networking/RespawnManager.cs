@@ -411,11 +411,7 @@ namespace Barotrauma.Networking
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
                 if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
                 {
-                    var respawnPenaltyAffliction = AfflictionPrefab.List.FirstOrDefault(a => a.AfflictionType.Equals("respawnpenalty", StringComparison.OrdinalIgnoreCase));
-                    if (respawnPenaltyAffliction != null)
-                    {
-                        character.CharacterHealth.ApplyAffliction(targetLimb: null, respawnPenaltyAffliction.Instantiate(10.0f));
-                    }
+                    GiveRespawnPenaltyAffliction(character);
                 }
 
                 if (characterData == null || characterData.HasSpawned)
@@ -430,7 +426,14 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    characterData.SpawnInventoryItems(character, character.Inventory);
+                    if (characterData.HasItemData)
+                    {
+                        characterData.SpawnInventoryItems(character, character.Inventory);
+                    }
+                    else
+                    {
+                        character.GiveJobItems(mainSubSpawnPoints[i]);
+                    }
                     characterData.ApplyHealthData(character);
                     character.GiveIdCardTags(mainSubSpawnPoints[i]);
                     characterData.HasSpawned = true;

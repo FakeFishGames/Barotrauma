@@ -119,6 +119,7 @@ namespace Barotrauma
             addValueDropdown.AddItem(nameof(LimbType), typeof(LimbType));
             addValueDropdown.AddItem(nameof(ReputationAction.ReputationType), typeof(ReputationAction.ReputationType));
             addValueDropdown.AddItem(nameof(SpawnAction.SpawnLocationType), typeof(SpawnAction.SpawnLocationType));
+            addValueDropdown.AddItem(nameof(CharacterTeamType), typeof(CharacterTeamType));
 
             loadButton.OnClicked += (button, o) => Load(loadDropdown.SelectedData as EventPrefab);
             addActionButton.OnClicked += (button, o) => AddAction(addActionDropdown.SelectedData as Type);
