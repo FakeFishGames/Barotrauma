@@ -142,7 +142,7 @@ namespace Barotrauma
                                 npcOrItem = item;
                                 item.CampaignInteractionType = CampaignMode.InteractionType.Examine;
                                 if (player.SelectedConstruction == item ||
-                                    player.Inventory.Contains(item) ||
+                                    player.Inventory != null && player.Inventory.Contains(item) ||
                                     (player.FocusedItem == item && player.IsKeyHit(InputType.Use)))
                                 {
                                     Trigger(e1, e2);

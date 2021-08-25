@@ -732,10 +732,10 @@ namespace Barotrauma
         public void AssignNPCMenuInteraction(Character character, InteractionType interactionType)
         {
             character.CampaignInteractionType = interactionType;
-            character.CharacterHealth.UseHealthWindow =
-                interactionType == InteractionType.None ||
-                interactionType == InteractionType.Examine ||
-                interactionType == InteractionType.Talk;
+            character.DisableHealthWindow =
+                interactionType != InteractionType.None &&
+                interactionType != InteractionType.Examine &&
+                interactionType != InteractionType.Talk;
 
             if (interactionType == InteractionType.None)
             {

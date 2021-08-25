@@ -282,7 +282,7 @@ namespace Barotrauma
                     {
                         Item matchingItem = character.Inventory.FindItemByIdentifier(treatmentSuitability.Key, true);
                         if (matchingItem == null) { continue; }
-                        character.SelectCharacter(targetCharacter);
+                        if (targetCharacter != character) { character.SelectCharacter(targetCharacter); }
                         ApplyTreatment(affliction, matchingItem);
                         //wait a bit longer after applying a treatment to wait for potential side-effects to manifest
                         treatmentTimer = TreatmentDelay * 4;

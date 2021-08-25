@@ -1,34 +1,5 @@
 ---------------------------------------------------------------------------------------------------------
-v0.1400.8.0
----------------------------------------------------------------------------------------------------------
-
-Changes:
-- Hide the equipment slots and character portait in wiring mode.
-- Added platforms behind Remora Drone's hatches.
-
-Fixes:
-- Fixed "entity not found" error when ending a pirate mission round after any of the pirates have been killed in multiplayer campaign.
-- Fixed crashing when trying to spawn inventory items for a character who left before respawning during the previous round.
-- Fixed bots following the player when trying to heal them even when they don't have the required items.
-- Fixed bots suffocating when they run out of oxygen tanks if ordered to wait wearing a suit.
-- Fixed bots not equipping a diving suit when they already have a mask when following a target that has a suit equipped.
-- Fixed biome noise loops still playing after the round ends.
-- Fixed detonator rapidly draining condition from flash powder and incendium instead of exploding them immediately (potentially resulting in partially used items).
-- Fixed inability to drag/combine items in cabinets in the sub editor (unstable only).
-- Fixed inability to place items into a stack in the sub editor when the container is full (unstable only).
-- Fixed fabricators still being unable to craft some items when the output slot is not empty, even if the item is stackable  (unstable only).
-- Fixed stacks of half-used items dropping from cabinets between rounds.
-- Another attempt to fix "collection was modifed" exception when instantiating cargo missions in multiplayer.
-- Fixed submarine upgrade menu displaying the same name for different types of turrets linked to the same loader (unstable only).
-- Fixed turret hardpoints linked to the same loader as some turret not getting swapped alongside the turret (unstable only).
-- Fixed nest missions sometimes completing immediately, because the eggs spawn far enough from the initially chosen spawnpoint to be considered "taken away" from the cave (unstable only).
-- Fixed exploit in plastiseal crafting recipe (plastiseal deconstructing to 1 bandage even though 1 bandage can be used to craft 2 plastiseal).
-- Fixed RepairTools applying their effects multiple times to items whose bodies consist of multiple fixtures. Caused minerals to get deattached 3 times faster than they should.
-- Fixed AFK kicks when staying in any of the campaign UIs (store, etc) or other input-blocking menus for too long.
-- Fixed monsters sometimes targeting owners of targeted items although the owner is ignored.
-
----------------------------------------------------------------------------------------------------------
-v0.1400.7.0
+v0.14.9.0
 ---------------------------------------------------------------------------------------------------------
 
 Changes:
@@ -41,12 +12,15 @@ Changes:
 - Security's stun guns spawn fully loaded.
 - Reduced escort missions' base commonness. Doesn't have an effect in the campaign because the commonness is defined in the mission events, but fixes escort missions being much more common than other mission types in mission mode.
 - Destroying a reactor with explosives depletes the fuel rods.
+- Hide the equipment slots and character portait in wiring mode.
+- Added platforms behind Remora Drone's hatches.
 
 Fixes:
 - Fixed enemies sometimes not spawning at all during a mission. Happened when the game selected the "stowaway" event to occur during the mission.
 - Fixed pirate and escort missions not being available from late-game outposts.
 - Fixed occasional "unauthorized multithreaded access to RandSync.Server" errors when starting a pirate mission in multiplayer.
 - Fixed crashing with a "E_INVALIDARG" SharpDXException if an ice spire happens to generate on a very short level wall edge.
+- Fixed crashing when trying to spawn inventory items for a character who left before respawning during the previous round.
 - Fixed batteries always recharging at "full speed" when not full, regardless of how much power is being drawn from the battery. E.g. a battery that's only connected to a lamp drawing 5 kW of power would always recharge at the full 500 kWmin.
 - Fixed traitor items sometimes spawning in non-interactable or hidden containers.
 - Fixed turret rotation limit widgets working unreliably in the sub editor.
@@ -72,6 +46,7 @@ Fixes:
 - Fixed nav terminal labels sometimes being draw under linked status monitor HUDs.
 - Fixed bots sometimes not fixing airlock doors/hatches. More specifically, doors whose center point was outside a hull.
 - Fixed medic bots grabbing the target and never letting go when there's no suitable treatments available anywhere in the sub, or when they're in an outpost and not carrying any suitable treatments.
+- Fixed bots suffocating when they run out of oxygen tanks if ordered to wait wearing a suit.
 - Fixed ability to select other items when operating periscopes. Didn't cause problems in vanilla subs, but in custom subs where the turret was placed close to the periscope and other interactable items, it was possible to accidentally select something else when trying to fire.
 - Made nav terminal's "velocity_in" input change the target velocity, not just the steering input, making it possible to adjust the velocity with signals when using autopilot.
 - Fixed text fields in a component's editing menu not refreshing until you've interacted with another component.
@@ -118,6 +93,14 @@ Fixes:
 - Fixed canister shells refilling automatically between rounds.
 - Fixed turrets working with incorrect loader types (e.g. coilgun being able to fire laser bolts when linked to a pulse laser loader).
 - Fixed "exterior pressure exceeds diving suit capabilities" hint popping up when carrying a diving suit.
+- Fixed biome noise loops still playing after the round ends.
+- Fixed detonator rapidly draining condition from flash powder and incendium instead of exploding them immediately (potentially resulting in partially used items).
+- Fixed exploit in plastiseal crafting recipe (plastiseal deconstructing to 1 bandage even though 1 bandage can be used to craft 2 plastiseal).
+- Fixed RepairTools applying their effects multiple times to items whose bodies consist of multiple fixtures. Caused minerals to get deattached 3 times faster than they should.
+- Fixed AFK kicks when staying in any of the campaign UIs (store, etc) or other input-blocking menus for too long.
+- Fixed monsters sometimes targeting owners of targeted items although the owner is ignored.
+- Fixed some items held in the left hand rendering in front of the character's thigh.
+- Fixed characters being focusable through UI elements (e.g. item interfaces), causing accidental interactions when the NPC interaction key is bind to LMB.
 
 Modding:
 - Added support for "additive" event sets which get added on top of another normal event set, allowing mods to spawn additional types of monsters without having to touch the vanilla event sets. See the "transitevents" event set in OutpostEvents.xml for an usage example.

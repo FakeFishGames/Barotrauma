@@ -548,7 +548,9 @@ namespace Barotrauma
                     GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
                 textPos.Y += largeTextSize.Y;
             }
-            if (character.FocusedCharacter.CharacterHealth.UseHealthWindow && character.CanInteractWith(character.FocusedCharacter, 160f, false))
+            if (!character.DisableHealthWindow &&
+                character.FocusedCharacter.CharacterHealth.UseHealthWindow &&
+                character.CanInteractWith(character.FocusedCharacter, 160f, false))
             {
                 GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBindText(InputType.Health)),
                     GUI.Style.Green, Color.Black, 2, GUI.SmallFont);

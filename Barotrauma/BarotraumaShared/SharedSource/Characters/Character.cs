@@ -638,6 +638,8 @@ namespace Barotrauma
 
         public CharacterHealth CharacterHealth { get; private set; }
 
+        public bool DisableHealthWindow;
+
         public float Vitality
         {
             get { return CharacterHealth.Vitality; }
@@ -2320,14 +2322,13 @@ namespace Barotrauma
 
         public void SelectCharacter(Character character)
         {
-            if (character == null) return;
-
+            if (character == null || character == this) { return; }
             SelectedCharacter = character;
         }
 
         public void DeselectCharacter()
         {
-            if (SelectedCharacter == null) return;
+            if (SelectedCharacter == null) { return; }
             SelectedCharacter.AnimController?.ResetPullJoints();
             SelectedCharacter = null;
         }
@@ -2387,6 +2388,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    FocusedCharacter = null;
                     focusedItem = null;
                 }
                 findFocusedTimer -= deltaTime;
@@ -2713,6 +2715,10 @@ namespace Barotrauma
             if (IsForceRagdolled)
             {
                 IsRagdolled = IsForceRagdolled;
+            }
+            else if (this != Controlled)
+            {
+                IsRagdolled = IsKeyDown(InputType.Ragdoll);
             }
             //Keep us ragdolled if we were forced or we're too speedy to unragdoll
             else if (allowRagdoll && (!IsRagdolled || !tooFastToUnragdoll))
