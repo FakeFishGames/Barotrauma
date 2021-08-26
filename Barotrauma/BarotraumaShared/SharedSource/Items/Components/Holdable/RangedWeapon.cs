@@ -5,6 +5,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -52,6 +53,21 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(0f, true, description: "The time required for a charge-type turret to charge up before able to fire.")]
+        public float MaxChargeTime
+        {
+            get;
+            private set;
+        }
+
+        private enum ChargingState
+        {
+            Inactive,
+            WindingUp,
+            WindingDown,
+        }
+        private ChargingState currentChargingState;
+
         public Vector2 TransformedBarrelPos
         {
             get
@@ -62,7 +78,10 @@ namespace Barotrauma.Items.Components
                 return Vector2.Transform(flippedPos, bodyTransform);
             }
         }
-                
+
+        private float currentChargeTime;
+        private bool tryingToCharge;
+
         public RangedWeapon(Item item, XElement element)
             : base(item, element)
         {
@@ -88,9 +107,40 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                IsActive = false;
+                // was this an optimization or related to something else? currently disabled for charge-type weapons
+                //IsActive = false;
+                if (MaxChargeTime == 0.0f)
+                {
+                    IsActive = false;
+                    return;
+                }
             }
+
+            float previousChargeTime = currentChargeTime;
+
+            float chargeDeltaTime = tryingToCharge ? deltaTime : -deltaTime;
+            currentChargeTime = Math.Clamp(currentChargeTime + chargeDeltaTime, 0f, MaxChargeTime);
+
+            tryingToCharge = false;
+
+            if (currentChargeTime == 0f)
+            {
+                currentChargingState = ChargingState.Inactive;
+            }
+            else if (currentChargeTime < previousChargeTime)
+            {
+                currentChargingState = ChargingState.WindingDown;
+            }
+            else
+            {
+                // if we are charging up or at maxed charge, remain winding up
+                currentChargingState = ChargingState.WindingUp;
+            }
+
+            UpdateProjSpecific(deltaTime);
         }
+
+        partial void UpdateProjSpecific(float deltaTime);
 
         private float GetSpread(Character user)
         {
@@ -102,11 +152,16 @@ namespace Barotrauma.Items.Components
         private readonly List<Body> limbBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
+            tryingToCharge = true;
             if (character == null || character.Removed) { return false; }
             if ((item.RequireAimToUse && !character.IsKeyDown(InputType.Aim)) || ReloadTimer > 0.0f) { return false; }
+            if (currentChargeTime < MaxChargeTime) { return false; }
 
             IsActive = true;
-            ReloadTimer = reload;
+            ReloadTimer = reload / (1 + character.GetStatValue(StatTypes.RangedAttackSpeed));
+            currentChargeTime = 0f;
+
+            character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, item);
 
             if (item.AiTarget != null)
             {

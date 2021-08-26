@@ -116,15 +116,15 @@ namespace Barotrauma
             private set => Character.Params.Health.CrushDepth = value;
         }
 
-        private List<LimbHealth> limbHealths = new List<LimbHealth>();
+        private readonly List<LimbHealth> limbHealths = new List<LimbHealth>();
         //non-limb-specific afflictions
-        private List<Affliction> afflictions = new List<Affliction>();
+        private readonly List<Affliction> afflictions = new List<Affliction>();
         /// <summary>
         /// Note: returns only the non-limb-secific afflictions. Use GetAllAfflictions or some other method for getting also the limb-specific afflictions.
         /// </summary>
         public IEnumerable<Affliction> Afflictions => afflictions;
 
-        private HashSet<Affliction> irremovableAfflictions = new HashSet<Affliction>();
+        private readonly HashSet<Affliction> irremovableAfflictions = new HashSet<Affliction>();
         private Affliction bloodlossAffliction;
         private Affliction oxygenLowAffliction;
         private Affliction pressureAffliction;
@@ -151,6 +151,7 @@ namespace Barotrauma
                     max += Character.Info.Job.Prefab.VitalityModifier;
                 }
                 max *= Character.StaticHealthMultiplier;
+                max *= 1f + Character.GetStatValue(StatTypes.MaximumHealthMultiplier);
                 return max * Character.HealthMultiplier;
             }
         }
@@ -434,8 +435,19 @@ namespace Barotrauma
                 float temp = afflictions[i].GetResistance(resistanceId);
                 if (temp > resistance) resistance = temp;
             }
+            resistance = 1 - ((1 - resistance) * Character.GetAbilityResistance(resistanceId));
 
             return resistance;
+        }
+
+        public float GetStatValue(StatTypes statType)
+        {
+            float value = 0f;
+            for (int i = 0; i < afflictions.Count; i++)
+            {
+                value += afflictions[i].GetStatValue(statType);
+            }
+            return value;
         }
 
         private readonly List<Affliction> matchingAfflictions = new List<Affliction>();
@@ -468,6 +480,11 @@ namespace Barotrauma
             for (int i = matchingAfflictions.Count - 1; i >= 0; i--)
             {
                 var matchingAffliction = matchingAfflictions[i];
+
+                // kind of bad to create a tuple every time, but I can't think of another way to easily do this
+                var afflictionReduction = (matchingAffliction, reduceAmount);
+                Character.CheckTalents(AbilityEffectType.OnReduceAffliction, afflictionReduction);
+
                 if (matchingAffliction.Strength < reduceAmount)
                 {
                     float surplus = reduceAmount - matchingAffliction.Strength;
@@ -539,9 +556,9 @@ namespace Barotrauma
             else
             {
                 // Instead of using the limbhealth count here, I think it's best to define the max vitality per limb roughly with a constant value.
-                // Therefore with e.g. 80 health, the max damage per limb would be 20.
-                // Having at least 20 damage on both legs would cause maximum limping.
-                float max = MaxVitality / 4;
+                // Therefore with e.g. 80 health, the max damage per limb would be 40.
+                // Having at least 40 damage on both legs would cause maximum limping.
+                float max = MaxVitality / 2;
                 if (string.IsNullOrEmpty(afflictionType))
                 {
                     float damage = GetAfflictionStrength("damage", limb, true);
@@ -738,7 +755,15 @@ namespace Barotrauma
                 affliction.DamagePerSecondTimer += deltaTime;
                 Character.StackSpeedMultiplier(affliction.GetSpeedMultiplier());
             }
-            
+
+            Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.MovementSpeed));
+
+            // maybe a bit of a hacky way to do this. should inquire if there is a better way. M61T
+            if (Character.InWater)
+            {
+                Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.SwimmingSpeed));
+            }
+
             UpdateLimbAfflictionOverlays();
 
             CalculateVitality();
@@ -825,8 +850,8 @@ namespace Barotrauma
         {
             if (Unkillable || Character.GodMode) { return; }
             
-            var causeOfDeath = GetCauseOfDeath();
-            Character.Kill(causeOfDeath.First, causeOfDeath.Second);
+            var (type, affliction) = GetCauseOfDeath();
+            Character.Kill(type, affliction);
 #if CLIENT
             DisplayVitalityDelay = 0.0f;
             DisplayedVitality = Vitality;
@@ -859,7 +884,7 @@ namespace Barotrauma
             }
         }
 
-        public Pair<CauseOfDeathType, Affliction> GetCauseOfDeath()
+        public (CauseOfDeathType type, Affliction affliction) GetCauseOfDeath()
         {
             List<Affliction> currentAfflictions = GetAllAfflictions(true);
 
@@ -880,7 +905,7 @@ namespace Barotrauma
                 causeOfDeath = Character.AnimController.InWater ? CauseOfDeathType.Drowning : CauseOfDeathType.Suffocation;
             }
 
-            return new Pair<CauseOfDeathType, Affliction>(causeOfDeath, strongestAffliction);
+            return (causeOfDeath, strongestAffliction);
         }
 
         // TODO: this method is called a lot (every half second) -> optimize, don't create new class instances and lists every time!
@@ -968,7 +993,7 @@ namespace Barotrauma
         }
 
         private readonly List<Affliction> activeAfflictions = new List<Affliction>();
-        private readonly List<Pair<LimbHealth, Affliction>> limbAfflictions = new List<Pair<LimbHealth, Affliction>>();
+        private readonly List<(LimbHealth limbHealth, Affliction affliction)> limbAfflictions = new List<(LimbHealth limbHealth, Affliction affliction)>();
         public void ServerWrite(IWriteMessage msg)
         {
             activeAfflictions.Clear();
@@ -999,22 +1024,22 @@ namespace Barotrauma
                 foreach (Affliction limbAffliction in limbHealth.Afflictions)
                 {
                     if (limbAffliction.Strength <= 0.0f || limbAffliction.Strength < limbAffliction.Prefab.ActivationThreshold) continue;
-                    limbAfflictions.Add(new Pair<LimbHealth, Affliction>(limbHealth, limbAffliction));
+                    limbAfflictions.Add((limbHealth, limbAffliction));
                 }
             }
 
             msg.Write((byte)limbAfflictions.Count);
-            foreach (var limbAffliction in limbAfflictions)
+            foreach (var (limbHealth, affliction) in limbAfflictions)
             {
-                msg.WriteRangedInteger(limbHealths.IndexOf(limbAffliction.First), 0, limbHealths.Count - 1);
-                msg.Write(limbAffliction.Second.Prefab.UIntIdentifier);
+                msg.WriteRangedInteger(limbHealths.IndexOf(limbHealth), 0, limbHealths.Count - 1);
+                msg.Write(affliction.Prefab.UIntIdentifier);
                 msg.WriteRangedSingle(
-                    MathHelper.Clamp(limbAffliction.Second.Strength, 0.0f, limbAffliction.Second.Prefab.MaxStrength), 
-                    0.0f, limbAffliction.Second.Prefab.MaxStrength, 8);
-                msg.Write((byte)limbAffliction.Second.Prefab.PeriodicEffects.Count());
-                foreach (AfflictionPrefab.PeriodicEffect periodicEffect in limbAffliction.Second.Prefab.PeriodicEffects)
+                    MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
+                    0.0f, affliction.Prefab.MaxStrength, 8);
+                msg.Write((byte)affliction.Prefab.PeriodicEffects.Count());
+                foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
                 {
-                    msg.WriteRangedSingle(limbAffliction.Second.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
+                    msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
                 }
             }
         }

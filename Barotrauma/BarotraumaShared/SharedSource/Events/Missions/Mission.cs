@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -343,19 +345,40 @@ namespace Barotrauma
         public void GiveReward()
         {
             if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
-            campaign.Money += GetReward(Submarine.MainSub);
+            int reward = GetReward(Submarine.MainSub);
+
+            float baseExperienceGain = reward * 0.15f;
+
+            IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters();
+
+            // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
+            var experienceGainMultiplier = new AbilityValue(1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
+            crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
+
+            foreach (Character character in crewCharacters)
+            {
+                character.Info.GiveExperience((int)(baseExperienceGain * experienceGainMultiplier.Value), isMissionExperience: true);
+            }
+
+            // apply money gains afterwards to prevent them from affecting XP gains
+            var moneyGainMultiplier = new AbilityValue(1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, (this, moneyGainMultiplier)));
+            crewCharacters.ForEach(c => moneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
+
+            campaign.Money += (int)(reward * moneyGainMultiplier.Value);
 
             foreach (KeyValuePair<string, float> reputationReward in ReputationRewards)
             {
                 if (reputationReward.Key.Equals("location", StringComparison.OrdinalIgnoreCase))
                 {
-                    Locations[0].Reputation.Value += reputationReward.Value;
-                    Locations[1].Reputation.Value += reputationReward.Value;
+                    Locations[0].Reputation.AddReputation(reputationReward.Value);
+                    Locations[1].Reputation.AddReputation(reputationReward.Value);
                 }
                 else
                 {
                     Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(reputationReward.Key, StringComparison.OrdinalIgnoreCase));
-                    if (faction != null) { faction.Reputation.Value += reputationReward.Value; }
+                    if (faction != null) { faction.Reputation.AddReputation(reputationReward.Value); }
                 }
             }
 

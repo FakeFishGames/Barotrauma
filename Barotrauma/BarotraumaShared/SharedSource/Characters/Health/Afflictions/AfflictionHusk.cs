@@ -212,6 +212,25 @@ namespace Barotrauma
                 husk.Info.TeamID = CharacterTeamType.None;
             }
 
+            if (Prefab is AfflictionPrefabHusk huskPrefab)
+            {
+                if (huskPrefab.ControlHusk)
+                {
+#if SERVER
+                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.CharacterInfo.Character == character);
+                    if (client != null)
+                    {
+                        GameMain.Server.SetClientCharacter(client, husk);
+                    }
+#else
+                    if (!character.IsRemotelyControlled && character == Character.Controlled)
+                    {
+                        Character.Controlled = husk; 
+                    }
+#endif
+                }
+            }
+
             foreach (Limb limb in husk.AnimController.Limbs)
             {
                 if (limb.type == LimbType.None)
@@ -229,15 +248,19 @@ namespace Barotrauma
                 }
             }
 
+            if ((Prefab as AfflictionPrefabHusk)?.TransferBuffs ?? false)
+            {
+                foreach (Affliction affliction in character.CharacterHealth.Afflictions)
+                {
+                    if (affliction.Prefab.IsBuff)
+                    {
+                        husk.CharacterHealth.ApplyAffliction(null, affliction.Prefab.Instantiate(affliction.Strength));
+                    }
+                }
+            }
+
             if (character.Inventory != null && husk.Inventory != null)
             {
-                if (character.Inventory.Capacity != husk.Inventory.Capacity)
-                {
-                    string errorMsg = "Failed to move items from the source character's inventory into a husk's inventory (inventory sizes don't match)";
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("AfflictionHusk.CreateAIHusk:InventoryMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
-                    yield return CoroutineStatus.Success;
-                }
                 for (int i = 0; i < character.Inventory.Capacity && i < husk.Inventory.Capacity; i++)
                 {
                     character.Inventory.GetItemsAt(i).ForEachMod(item => husk.Inventory.TryPutItem(item, i, true, false, null));

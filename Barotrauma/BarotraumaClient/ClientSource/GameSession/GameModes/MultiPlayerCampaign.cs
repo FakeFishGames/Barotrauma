@@ -761,7 +761,7 @@ namespace Barotrauma
                        Faction faction = campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
                        if (faction?.Reputation != null)
                        {
-                           faction.Reputation.Value = rep;
+                           faction.Reputation.SetReputation(rep);
                        }
                        else
                        {
@@ -771,7 +771,7 @@ namespace Barotrauma
 
                     if (reputation.HasValue)
                     {
-                        campaign.Map.CurrentLocation.Reputation.Value = reputation.Value;
+                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation.Value);
                         campaign?.CampaignUI?.UpgradeStore?.RefreshAll();
                     }
 

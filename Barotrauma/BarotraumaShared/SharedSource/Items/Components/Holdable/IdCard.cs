@@ -1,11 +1,29 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class IdCard : Pickable
     {
+        [Serialize(CharacterTeamType.None, true, alwaysUseInstanceValues: true)]
+        public CharacterTeamType TeamID
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0, true, alwaysUseInstanceValues: true)]
+        public int SubmarineSpecificID
+        {
+            get;
+            set;
+        }
+
+        private JobPrefab cachedJobPrefab;
+        private string cachedName;
+
         public IdCard(Item item, XElement element) : base(item, element)
         {
 
@@ -19,6 +37,8 @@ namespace Barotrauma.Items.Components
             {
                 item.AddTag("jobid:" + info.Job.Prefab.Identifier);
             }
+
+            TeamID = info.TeamID;
 
             var head = info.Head;
 
@@ -49,6 +69,49 @@ namespace Barotrauma.Items.Components
         {
             base.Unequip(character);
             character.Info?.CheckDisguiseStatus(true, this);
+        }
+
+        public JobPrefab GetJob()
+        {
+            if (cachedJobPrefab != null)
+            {
+                return cachedJobPrefab;
+            }
+
+            foreach (string tag in item.GetTags())
+            {
+                if (tag.StartsWith("jobid:"))
+                {
+                    string jobIdentifier = tag.Split(':').Last();
+                    if (JobPrefab.Get(jobIdentifier) is { } jobPrefab)
+                    {
+                        cachedJobPrefab = jobPrefab;
+                        return jobPrefab;
+                    }
+                }
+            }
+
+            return null;
+        }
+        
+        public string GetName()
+        {
+            if (cachedName != null)
+            {
+                return cachedName;
+            }
+
+            foreach (string tag in item.GetTags())
+            {
+                if (tag.StartsWith("name:"))
+                {
+                    string ownerName = tag.Split(':').Last();
+                    cachedName = ownerName;
+                    return ownerName;
+                }
+            }
+
+            return null;
         }
     }
 }

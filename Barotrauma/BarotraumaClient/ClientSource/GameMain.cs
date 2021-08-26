@@ -43,6 +43,7 @@ namespace Barotrauma
         public static SteamWorkshopScreen SteamWorkshopScreen;
 
         public static SubEditorScreen SubEditorScreen;
+        public static TestScreen TestScreen;
         public static ParticleEditorScreen ParticleEditorScreen;
         public static LevelEditorScreen LevelEditorScreen;
         public static SpriteEditorScreen SpriteEditorScreen;
@@ -89,7 +90,16 @@ namespace Barotrauma
         public static ParticleManager ParticleManager;
         public static DecalManager DecalManager;
 
-        public static World World;
+        private static World world;
+        public static World World
+        {
+            get
+            {
+                if (world == null) { world = new World(new Vector2(0, -9.82f)); }
+                return world;
+            }
+            set { world = value; }
+        }
 
         public static LoadingScreen TitleScreen;
         private bool loadingScreenOpen;
@@ -239,7 +249,6 @@ namespace Barotrauma
             GameMain.ResetFrameTime();
             fixedTime = new GameTime();
 
-            World = new World(new Vector2(0, -9.82f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;
@@ -567,6 +576,8 @@ namespace Barotrauma
             ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
             AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
             SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
+            TalentPrefab.LoadAll(GetFilesOfType(ContentType.Talents));
+            TalentTree.LoadAll(GetFilesOfType(ContentType.TalentTrees));
             Order.Init();
             EventManagerSettings.Init();
             BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
@@ -620,6 +631,7 @@ namespace Barotrauma
 #endif
 
             SubEditorScreen         = new SubEditorScreen();
+            TestScreen              = new TestScreen();
 
             TitleScreen.LoadState = 75.0f;
         yield return CoroutineStatus.Running;
@@ -792,12 +804,16 @@ namespace Barotrauma
                     }
 
 #if DEBUG
-                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled) && FirstLoad && !PlayerInput.KeyDown(Keys.LeftShift))
+                    if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen && (Config.AutomaticQuickStartEnabled || Config.AutomaticCampaignLoadEnabled || Config.TestScreenEnabled) && FirstLoad && !PlayerInput.KeyDown(Keys.LeftShift))
                     {
                         loadingScreenOpen = false;
                         FirstLoad = false;
 
-                        if (Config.AutomaticQuickStartEnabled)
+                        if (Config.TestScreenEnabled)
+                        {
+                            TestScreen.Select();
+                        } 
+                        else if (Config.AutomaticQuickStartEnabled)
                         {
                             MainMenuScreen.QuickStart();
                         }

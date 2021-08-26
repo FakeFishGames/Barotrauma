@@ -33,7 +33,7 @@ namespace Barotrauma
         public GUIFrame Content { get; private set; }
         public GUIScrollBar ScrollBar { get; private set; }
 
-        private Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
+        private readonly Dictionary<GUIComponent, bool> childVisible = new Dictionary<GUIComponent, bool>();
   
         private int totalSize;
         private bool childrenNeedsRecalculation;
@@ -224,7 +224,7 @@ namespace Barotrauma
             {
                 if (value == false && canDragElements && draggedElement != null)
                 {
-                    draggedElement = null;
+                    DraggedElement = null;
                 }
                 canDragElements = value;
             }
@@ -233,8 +233,21 @@ namespace Barotrauma
         private GUIComponent draggedElement;
         private Rectangle draggedReferenceRectangle;
         private Point draggedReferenceOffset;
+        public bool HasDraggedElementIndexChanged { get; private set; }
 
-        public GUIComponent DraggedElement => draggedElement;
+        public GUIComponent DraggedElement
+        {
+            get
+            {
+                return draggedElement;
+            }
+            set
+            {
+                if (value == draggedElement) { return; }
+                draggedElement = value;
+                HasDraggedElementIndexChanged = false;
+            }
+        }
         
         private readonly bool isHorizontal;
 
@@ -472,7 +485,7 @@ namespace Barotrauma
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     OnRearranged?.Invoke(this, draggedElement.UserData);
-                    draggedElement = null;
+                    DraggedElement = null;
                     RepositionChildren();
                 }
                 else
@@ -518,6 +531,7 @@ namespace Barotrauma
                     if (currIndex != index)
                     {
                         draggedElement.RectTransform.RepositionChildInHierarchy(currIndex);
+                        HasDraggedElementIndexChanged = true;
                     }
 
                     return;
@@ -577,7 +591,7 @@ namespace Barotrauma
 
                     if (CanDragElements && PlayerInput.PrimaryMouseButtonDown() && GUI.MouseOn == child)
                     {
-                        draggedElement = child;
+                        DraggedElement = child;
                         draggedReferenceRectangle = child.Rect;
                         draggedReferenceOffset = child.RectTransform.AbsoluteOffset;
                     }
@@ -750,7 +764,7 @@ namespace Barotrauma
                 } 
             }
             
-            if ((GUI.IsMouseOn(this) || GUI.IsMouseOn(ScrollBar)) && AllowMouseWheelScroll && PlayerInput.ScrollWheelSpeed != 0)
+            if (PlayerInput.ScrollWheelSpeed != 0 && AllowMouseWheelScroll && (FindScrollableParentListBox(GUI.MouseOn) == this || GUI.IsMouseOn(ScrollBar)))
             {
                 if (SmoothScroll)
                 {
@@ -773,7 +787,6 @@ namespace Barotrauma
                     ScrollBar.BarScroll -= (PlayerInput.ScrollWheelSpeed / 500.0f) * BarSize;
                 }
             }
-            
 
             ScrollBar.Enabled = ScrollBarEnabled && BarSize < 1.0f;
             if (AutoHideScrollBar)
@@ -784,6 +797,13 @@ namespace Barotrauma
             {
                 UpdateDimensions();
             }
+        }
+        
+        private static GUIListBox FindScrollableParentListBox(GUIComponent target)
+        {
+            if (target is GUIListBox listBox && listBox.ScrollBarEnabled && listBox.BarSize < 1.0f) { return listBox; }
+            if (target?.Parent == null) { return null; }
+            return FindScrollableParentListBox(target.Parent);
         }
 
         public void SelectNext(bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
@@ -982,7 +1002,7 @@ namespace Barotrauma
             if (child == null) { return; }
             child.RectTransform.Parent = null;
             if (selected.Contains(child)) { selected.Remove(child); }
-            if (draggedElement == child) { draggedElement = null; }
+            if (draggedElement == child) { DraggedElement = null; }
             UpdateScrollBarSize();
         }
 

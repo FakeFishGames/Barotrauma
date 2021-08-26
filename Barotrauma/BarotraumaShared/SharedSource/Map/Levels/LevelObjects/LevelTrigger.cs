@@ -264,7 +264,7 @@ namespace Barotrauma
             var tagsArray = element.GetAttributeStringArray("tags", new string[0]);
             foreach (string tag in tagsArray)
             {
-                tags.Add(tag.ToLower());
+                tags.Add(tag.ToLowerInvariant());
             }
 
             if (triggeredBy.HasFlag(TriggererType.OtherTrigger))
@@ -272,7 +272,7 @@ namespace Barotrauma
                 var otherTagsArray = element.GetAttributeStringArray("allowedothertriggertags", new string[0]);
                 foreach (string tag in otherTagsArray)
                 {
-                    allowedOtherTriggerTags.Add(tag.ToLower());
+                    allowedOtherTriggerTags.Add(tag.ToLowerInvariant());
                 }
             }
 

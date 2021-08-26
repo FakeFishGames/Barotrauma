@@ -105,6 +105,12 @@ namespace Barotrauma.Items.Components
             float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, 1.0f);
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
+
+            if (item.GetComponent<Repairable>()?.IsTinkering ?? false)
+            {
+                currFlow *= 2.5f;
+            }
+
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 

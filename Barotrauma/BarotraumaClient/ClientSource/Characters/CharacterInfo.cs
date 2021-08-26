@@ -170,15 +170,37 @@ namespace Barotrauma
             if (TeamID == CharacterTeamType.FriendlyNPC) { return; }
             if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
 
+            // if we increased by more than 1 in one increase, then display special color (for talents)
+            bool specialIncrease = Math.Abs(newLevel - prevLevel) >= 1.0f;
+
             if ((int)newLevel > (int)prevLevel)
             {
                 int increase = Math.Max((int)newLevel - (int)prevLevel, 1);
                 GUI.AddMessage(
-                    string.Format("+{0} {1}", increase, TextManager.Get("SkillName." + skillIdentifier)), 
-                    GUI.Style.Green,
+                    string.Format("+{0} {1}", increase, TextManager.Get("SkillName." + skillIdentifier)),
+                    specialIncrease ? GUI.Style.Orange : GUI.Style.Green,
                     textPopupPos,
                     Vector2.UnitY * 10.0f,
-                    playSound: false,
+                    playSound: specialIncrease,
+                    subId: Character?.Submarine?.ID ?? -1);
+            }
+        }
+
+        partial void OnExperienceChanged(int prevAmount, int newAmount, Vector2 textPopupPos)
+        {
+            if (Character.Controlled != null && Character.Controlled.TeamID != TeamID) { return; }
+
+            GameSession.TabMenuInstance?.OnExperienceChanged(Character);
+
+            if (newAmount > prevAmount)
+            {
+                int increase = newAmount - prevAmount;
+                GUI.AddMessage(
+                    string.Format("+{0} {1}", increase, TextManager.Get("experienceshort")),
+                    GUI.Style.Blue,
+                    textPopupPos,
+                    Vector2.UnitY * 10.0f,
+                    playSound: true,
                     subId: Character?.Submarine?.ID ?? -1);
             }
         }
@@ -591,6 +613,17 @@ namespace Barotrauma
                 }
                 ch.Job.Skills.RemoveAll(s => !skillLevels.ContainsKey(s.Identifier));
             }
+
+            byte savedStatValueCount = inc.ReadByte();
+            for (int i = 0; i < savedStatValueCount; i++)
+            {
+                int statType = inc.ReadByte();
+                string statIdentifier = inc.ReadString();
+                float statValue = inc.ReadSingle();
+                bool removeOnDeath = inc.ReadBoolean();
+                ch.ChangeSavedStatValue((StatTypes)statType, statValue, statIdentifier, removeOnDeath);
+            }
+
             return ch;
         }
     }

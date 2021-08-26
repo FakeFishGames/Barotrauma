@@ -307,6 +307,7 @@ namespace Barotrauma
         public bool AutomaticQuickStartEnabled { get; set; }
         public bool AutomaticCampaignLoadEnabled { get; set; }
         public bool TextManagerDebugModeEnabled { get; set; }
+        public bool TestScreenEnabled { get; set; }
 
         public bool ModBreakerMode { get; set; }
 #endif
@@ -548,6 +549,12 @@ namespace Barotrauma
                     case ContentType.Text:
                         TextManager.LoadTextPack(file.Path);
                         break;
+                    case ContentType.Talents:
+                        TalentPrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.TalentTrees:
+                        TalentTree.LoadFromFile(file);
+                        break;
 #if CLIENT
                     case ContentType.Particles:
                         GameMain.ParticleManager?.LoadPrefabsFromFile(file);
@@ -593,6 +600,12 @@ namespace Barotrauma
                         break;
                     case ContentType.Text:
                         TextManager.RemoveTextPack(file.Path);
+                        break;
+                    case ContentType.Talents:
+                        TalentPrefab.LoadFromFile(file);
+                        break;
+                    case ContentType.TalentTrees:
+                        TalentTree.LoadFromFile(file);
                         break;
 #if CLIENT
                     case ContentType.Particles:
@@ -703,7 +716,6 @@ namespace Barotrauma
         public string MasterServerUrl { get; set; }
         public string RemoteContentUrl { get; set; }
         public bool AutoCheckUpdates { get; set; }
-        public bool WasGameUpdated { get; set; }
 
         private string playerName;
         public string PlayerName
@@ -796,13 +808,6 @@ namespace Barotrauma
 
             LoadDefaultConfig();
 
-            if (WasGameUpdated)
-            {
-                UpdaterUtil.CleanOldFiles();
-                WasGameUpdated = false;
-                SaveNewDefaultConfig();
-            }
-
             LoadPlayerConfig();
         }
 
@@ -827,7 +832,6 @@ namespace Barotrauma
 
             MasterServerUrl = doc.Root.GetAttributeString("masterserverurl", MasterServerUrl);
             RemoteContentUrl = doc.Root.GetAttributeString("remotecontenturl", RemoteContentUrl);
-            WasGameUpdated = doc.Root.GetAttributeBool("wasgameupdated", WasGameUpdated);
             VerboseLogging = doc.Root.GetAttributeBool("verboselogging", VerboseLogging);
             SaveDebugConsoleLogs = doc.Root.GetAttributeBool("savedebugconsolelogs", SaveDebugConsoleLogs);
             AutoUpdateWorkshopItems = doc.Root.GetAttributeBool("autoupdateworkshopitems", AutoUpdateWorkshopItems);
@@ -887,11 +891,6 @@ namespace Barotrauma
             if (!ShowUserStatisticsPrompt)
             {
                 doc.Root.Add(new XAttribute("senduserstatistics", sendUserStatistics));
-            }
-
-            if (WasGameUpdated)
-            {
-                doc.Root.Add(new XAttribute("wasgameupdated", true));
             }
 
             XElement gMode = doc.Root.Element("graphicsmode");
@@ -1147,6 +1146,7 @@ namespace Barotrauma
                 new XAttribute("disableingamehints", DisableInGameHints)
 #if DEBUG
                 , new XAttribute("automaticquickstartenabled", AutomaticQuickStartEnabled)
+                , new XAttribute(nameof(TestScreenEnabled).ToLower(), TestScreenEnabled)
                 , new XAttribute("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled)
                 , new XAttribute("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled)
                 , new XAttribute("modbreakermode", ModBreakerMode)
@@ -1402,6 +1402,7 @@ namespace Barotrauma
             DisableInGameHints = doc.Root.GetAttributeBool("disableingamehints", DisableInGameHints);
 #if DEBUG
             AutomaticQuickStartEnabled = doc.Root.GetAttributeBool("automaticquickstartenabled", AutomaticQuickStartEnabled);
+            TestScreenEnabled = doc.Root.GetAttributeBool(nameof(TestScreenEnabled).ToLower(), TestScreenEnabled);
             AutomaticCampaignLoadEnabled = doc.Root.GetAttributeBool("automaticcampaignloadenabled", AutomaticCampaignLoadEnabled);
             TextManagerDebugModeEnabled = doc.Root.GetAttributeBool("textmanagerdebugmodeenabled", TextManagerDebugModeEnabled);
             ModBreakerMode = doc.Root.GetAttributeBool("modbreakermode", ModBreakerMode);
@@ -1686,7 +1687,6 @@ namespace Barotrauma
                 Language = "English";
             }
             MasterServerUrl = "http://www.undertowgames.com/baromaster";
-            WasGameUpdated = false;
             VerboseLogging = false;
             SaveDebugConsoleLogs = false;
             AutoUpdateWorkshopItems = true;

@@ -246,6 +246,7 @@ namespace Barotrauma.Items.Components
         public void PlaySound(ActionType type, Character user = null)
         {
             if (!hasSoundsOfType[(int)type]) { return; }
+            if (GameMain.Client?.MidRoundSyncing ?? false) { return; }
 
             if (loopingSound != null)
             {
@@ -429,7 +430,7 @@ namespace Barotrauma.Items.Components
             }
             foreach (ItemComponent component in item.Components)
             {
-                if (component.name.ToLower() == LinkUIToComponent.ToLower())
+                if (component.name.Equals(LinkUIToComponent, StringComparison.OrdinalIgnoreCase))
                 {
                     linkToUIComponent = component;
                 }

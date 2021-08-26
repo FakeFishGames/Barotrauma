@@ -85,7 +85,7 @@ namespace Barotrauma.Items.Components
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: Color.LimeGreen, wrap: true)
+                    textColor: Color.LimeGreen, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
             {
                 CanBeFocused = false
             };

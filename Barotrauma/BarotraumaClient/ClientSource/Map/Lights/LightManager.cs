@@ -238,13 +238,13 @@ namespace Barotrauma.Lights
             //draw a black rectangle on hulls to hide background lights behind subs
             //---------------------------------------------------------------------------------------------------
 
-            if (backgroundObstructor != null)
+            /*if (backgroundObstructor != null)
             {
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
                 spriteBatch.Draw(backgroundObstructor, new Rectangle(0, 0,
                     (int)(GameMain.GraphicsWidth * currLightMapScale), (int)(GameMain.GraphicsHeight * currLightMapScale)), Color.Black);
                 spriteBatch.End();
-            }
+            }*/
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, transformMatrix: spriteBatchTransform);
             Dictionary<Hull, Rectangle> visibleHulls = GetVisibleHulls(cam);                
@@ -258,7 +258,7 @@ namespace Barotrauma.Lights
             spriteBatch.End();
 
             SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidColor"];
-            SolidColorEffect.Parameters["color"].SetValue(AmbientLight.ToVector4());
+            SolidColorEffect.Parameters["color"].SetValue(AmbientLight.Opaque().ToVector4());
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform, effect: SolidColorEffect);
             Submarine.DrawDamageable(spriteBatch, null);
             spriteBatch.End();

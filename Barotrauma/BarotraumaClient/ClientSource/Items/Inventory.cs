@@ -478,7 +478,7 @@ namespace Barotrauma
             }
 
             if (container == null) { return false; }
-            return owner.SelectedCharacter != null|| (!(owner is Character character)) || !container.KeepOpenWhenEquippedBy(character)  || !owner.HasEquippedItem(container.Item);
+            return owner.SelectedCharacter != null|| (!(owner is Character character)) || !container.KeepOpenWhenEquippedBy(character) || !owner.HasEquippedItem(container.Item);
         }
 
         protected virtual bool HideSlot(int i)
@@ -667,6 +667,10 @@ namespace Barotrauma
             if (subInventory.visualSlots == null) { subInventory.CreateSlots(); }
 
             canMove = container.MovableFrame && !subInventory.IsInventoryHoverAvailable(Owner as Character, container) && subInventory.originalPos != Point.Zero;
+            if (this is CharacterInventory characterInventory && characterInventory.CurrentLayout != CharacterInventory.Layout.Default)
+            {
+                canMove = false;
+            }
 
             if (canMove)
             {
@@ -826,11 +830,23 @@ namespace Barotrauma
             return rect.Contains(PlayerInput.MousePosition);
         }
 
+        public static bool IsMouseOnInventory
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Refresh the value of IsMouseOnInventory
+        /// </summary>
+        public static void RefreshMouseOnInventory()
+        {
+            IsMouseOnInventory = DetermineMouseOnInventory();
+        }
+
         /// <summary>
         /// Is the mouse on any inventory element (slot, equip button, subinventory...)
         /// </summary>
-        /// <returns></returns>
-        public static bool IsMouseOnInventory(bool ignoreDraggedItem = false)
+        private static bool DetermineMouseOnInventory(bool ignoreDraggedItem = false)
         {
             if (GameMain.GameSession?.Campaign != null &&
                 (GameMain.GameSession.Campaign.ShowCampaignUI || GameMain.GameSession.Campaign.ForceMapUI))
@@ -1112,7 +1128,7 @@ namespace Barotrauma
             {
                 Character.Controlled.ClearInputs();
 
-                if (!IsMouseOnInventory(ignoreDraggedItem: true) &&
+                if (!DetermineMouseOnInventory(ignoreDraggedItem: true) &&
                     CharacterHealth.OpenHealthWindow != null)
                 {
                     bool dropSuccessful = false;
@@ -1306,7 +1322,9 @@ namespace Barotrauma
         protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
         {
             Rectangle hoverArea;
-            if (!subSlot.Inventory.Movable() || Character.Controlled?.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item))
+            if (!subSlot.Inventory.Movable() || 
+                (Character.Controlled?.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item)) ||
+                (subSlot.ParentInventory is CharacterInventory characterInventory && characterInventory.CurrentLayout != CharacterInventory.Layout.Default))
             {
                 hoverArea = subSlot.Slot.Rect;
                 hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();

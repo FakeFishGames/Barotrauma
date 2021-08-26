@@ -466,7 +466,7 @@ namespace Barotrauma
             {
                 var sub = child.UserData as SubmarineInfo;
                 if (sub == null) { return; }
-                child.Visible = string.IsNullOrEmpty(filter) ? true : sub.DisplayName.ToLower().Contains(filter.ToLower());
+                child.Visible = string.IsNullOrEmpty(filter) || sub.DisplayName.ToLower().Contains(filter.ToLower());
             }
         }
 

@@ -63,6 +63,11 @@
   <Item file="Content/Items/Gardening/gardeningtools.xml" />
   <Item file="Content/Items/Gardening/plantproducts.xml" />
   <Item file="Content/Map/Pirates/PirateItems.xml" />
+  <Item file="Content/Items/Jobgear/Mechanic/mechanic_talent_items.xml" />
+  <Item file="Content/Items/Jobgear/Security/securityofficer_talent_items.xml" />
+  <Item file="Content/Items/Jobgear/Engineer/engineer_talent_items.xml" />
+  <Item file="Content/Items/Jobgear/Medic/medic_talent_items.xml" />
+  <Item file="Content/Items/Jobgear/Captain/captain_talent_items.xml" />
   <Character file="Content/Characters/Balloon/Balloon.xml" />
   <Character file="Content/Characters/Carrier/Carrier.xml" />
   <Character file="Content/Characters/Charybdis/Charybdis.xml" />
@@ -147,6 +152,12 @@
   <Text file="Content/Texts/Korean/KoreanVanilla.xml" />
   <UIStyle file="Content/UI/style.xml" />
   <Afflictions file="Content/Afflictions.xml" />
+  <Afflictions file="Content/Talents/Assistant/AfflictionsAssistant.xml" />
+  <Afflictions file="Content/Talents/Captain/AfflictionsCaptain.xml" />
+  <Afflictions file="Content/Talents/Doctor/AfflictionsDoctor.xml" />
+  <Afflictions file="Content/Talents/Engineer/AfflictionsEngineer.xml" />
+  <Afflictions file="Content/Talents/Mechanic/AfflictionsMechanic.xml" />
+  <Afflictions file="Content/Talents/Security/AfflictionsSecurity.xml" />
   <Structure file="Content/Map/StructurePrefabs.xml" />
   <Structure file="Content/Map/Outposts/OutpostStructurePrefabs.xml" />
   <Structure file="Content/Map/Pirates/PirateStructures.xml" />
@@ -261,4 +272,11 @@
   <EnemySubmarine file="Content/Map/EnemySubmarines/DugongPirate.sub"/>
   <EnemySubmarine file="Content/Map/EnemySubmarines/HumpbackPirate.sub"/>
   <EnemySubmarine file="Content/Map/EnemySubmarines/Typhon2Pirate.sub"/>
+  <Talents file="Content/Talents/Assistant/TalentsAssistant.xml"/>
+  <Talents file="Content/Talents/Security/TalentsSecurity.xml"/>
+  <Talents file="Content/Talents/Engineer/TalentsEngineer.xml"/>
+  <Talents file="Content/Talents/Mechanic/TalentsMechanic.xml"/>
+  <Talents file="Content/Talents/Captain/TalentsCaptain.xml"/>
+  <Talents file="Content/Talents/Doctor/TalentsDoctor.xml"/>
+  <TalentTrees file="Content/Talents/TalentTrees.xml"/>
 </contentpackage>

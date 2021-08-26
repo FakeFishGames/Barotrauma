@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -20,6 +21,14 @@ namespace Barotrauma
                 GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateSkills });
                 prevSentSkill[skillIdentifier] = newLevel;
             }            
+        }
+
+        partial void OnExperienceChanged(int prevAmount, int newAmount, Vector2 textPopupPos)
+        {
+            if (Math.Abs(prevAmount - newAmount) > 0)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(Character, new object[] { NetEntityEvent.Type.UpdateExperience });
+            }
         }
 
         public void ServerWrite(IWriteMessage msg)
@@ -53,6 +62,17 @@ namespace Barotrauma
                 msg.Write((byte)0);
             }
             // TODO: animations
+            msg.Write((byte)savedStatValues.SelectMany(s => s.Value).Count());
+            foreach (var savedStatValuePair in savedStatValues)
+            {
+                foreach (var savedStatValue in savedStatValuePair.Value)
+                {
+                    msg.Write((byte)savedStatValuePair.Key);
+                    msg.Write(savedStatValue.StatIdentifier);
+                    msg.Write(savedStatValue.StatValue);
+                    msg.Write(savedStatValue.RemoveOnDeath);
+                }
+            }
         }
     }
 }

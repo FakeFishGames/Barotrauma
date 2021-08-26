@@ -7,10 +7,15 @@ namespace Barotrauma.Items.Components
 {
     partial class MiniMap : Powered
     {
-        class HullData
+        internal class HullData
         {
-            public float? Oxygen;
-            public float? Water;
+            public float? HullOxygenAmount,
+                          HullWaterAmount;
+
+            public float? ReceivedOxygenAmount,
+                          ReceivedWaterAmount;
+
+            public readonly HashSet<IdCard> Cards = new HashSet<IdCard>();
 
             public bool Distort;
             public float DistortionTimer;
@@ -45,17 +50,45 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Editable, Serialize(true, true, description: "Enable hull status mode.")]
+        public bool EnableHullStatus
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(true, true, description: "Enable electrical view mode.")]
+        public bool EnableElectricalView
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(true, true, description: "Enable hull condition mode.")]
+        public bool EnableHullCondition
+        {
+            get;
+            set;
+        }
+
+        [Editable, Serialize(true, true, description: "Enable item finder mode.")]
+        public bool EnableItemFinder
+        {
+            get;
+            set;
+        }
+
         public MiniMap(Item item, XElement element)
             : base(item, element)
         {
             IsActive = true;
             hullDatas = new Dictionary<Hull, HullData>();
-            InitProjSpecific(element);
+            InitProjSpecific();
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific();
 
-        public override void Update(float deltaTime, Camera cam) 
+        public override void Update(float deltaTime, Camera cam)
         {
             //periodically reset all hull data
             //(so that outdated hull info won't be shown if detectors stop sending signals)
@@ -65,12 +98,28 @@ namespace Barotrauma.Items.Components
                 {
                     if (!hullData.Distort)
                     {
-                        hullData.Oxygen = null;
-                        hullData.Water = null;
+                        hullData.ReceivedOxygenAmount = null;
+                        hullData.ReceivedWaterAmount = null;
                     }
                 }
                 resetDataTime = DateTime.Now + new TimeSpan(0, 0, 1);
             }
+
+#if CLIENT
+            if (cardRefreshTimer > cardRefreshDelay)
+            {
+                if (item.Submarine is { } sub)
+                {
+                    UpdateIDCards(sub);
+                }
+
+                cardRefreshTimer = 0;
+            }
+            else
+            {
+                cardRefreshTimer += deltaTime;
+            }
+#endif
 
             currPowerConsumption = powerConsumption;
             currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
@@ -81,7 +130,7 @@ namespace Barotrauma.Items.Components
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
         }
-        
+
         public override bool Pick(Character picker)
         {
             return picker != null;
@@ -107,11 +156,11 @@ namespace Barotrauma.Items.Components
                     //cheating a bit because water detectors don't actually send the water level
                     if (source.GetComponent<WaterDetector>() == null)
                     {
-                        hullData.Water = Rand.Range(0.0f, 1.0f);
+                        hullData.ReceivedWaterAmount = Rand.Range(0.0f, 1.0f);
                     }
                     else
                     {
-                        hullData.Water = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
+                        hullData.ReceivedWaterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
                     }
                     break;
                 case "oxygen_data_in":
@@ -122,7 +171,7 @@ namespace Barotrauma.Items.Components
                         oxy = Rand.Range(0.0f, 100.0f);
                     }
 
-                    hullData.Oxygen = oxy;
+                    hullData.ReceivedOxygenAmount = oxy;
                     break;
             }
         }

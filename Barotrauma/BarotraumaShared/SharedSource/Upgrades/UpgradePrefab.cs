@@ -249,7 +249,7 @@ namespace Barotrauma
 
         public bool IsDisallowed(Item item)
         {
-            return item.disallowedUpgrades.Contains(Identifier);
+            return item.disallowedUpgrades.Contains(Identifier) || UpgradeCategories.Any(c => item.disallowedUpgrades.Contains(c.Identifier));
         }
 
         public static UpgradePrefab? Find(string identifier)

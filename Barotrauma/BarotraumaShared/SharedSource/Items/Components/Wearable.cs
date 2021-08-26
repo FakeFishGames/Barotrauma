@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -210,7 +211,9 @@ namespace Barotrauma.Items.Components
         private readonly Limb[] limb;
 
         private readonly List<DamageModifier> damageModifiers;
-        public readonly Dictionary<string, float> SkillModifiers;
+        public readonly Dictionary<string, float> SkillModifiers = new Dictionary<string, float>();
+
+        public readonly Dictionary<StatTypes, float> WearableStatValues = new Dictionary<StatTypes, float>();
 
         public IEnumerable<DamageModifier> DamageModifiers
         {
@@ -266,7 +269,6 @@ namespace Barotrauma.Items.Components
             this.item = item;
 
             damageModifiers = new List<DamageModifier>();
-            SkillModifiers = new Dictionary<string, float>();
 
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
             Variants = element.GetAttributeInt("variants", 0);
@@ -322,6 +324,18 @@ namespace Barotrauma.Items.Components
                             SkillModifiers.TryAdd(skillIdentifier, skillValue);
                         }
                         break;
+                    case "statvalue":
+                        StatTypes statType = CharacterAbilityGroup.ParseStatType(subElement.GetAttributeString("stattype", ""), Name);
+                        float statValue = subElement.GetAttributeFloat("value", 0f);
+                        if (WearableStatValues.ContainsKey(statType))
+                        {
+                            WearableStatValues[statType] += statValue;
+                        }
+                        else
+                        {
+                            WearableStatValues.TryAdd(statType, statValue);
+                        }
+                        break;
                 }
             }
         }
@@ -334,6 +348,7 @@ namespace Barotrauma.Items.Components
             }
 
             picker = character;
+
             for (int i = 0; i < wearableSprites.Length; i++ )
             {
                 var wearableSprite = wearableSprites[i];

@@ -1,4 +1,57 @@
 ---------------------------------------------------------------------------------------------------------
+v0.1500.0.0
+---------------------------------------------------------------------------------------------------------
+
+Additions and changes:
+- Groundwork for the upcoming talent system: completing missions gives the characters experience points which can be used to unlock special abilities or buffs. Currently only the captain has talents implemented.
+- Improved bot chatter when orders are being given, rearranged, or dismissed.
+- Damage to arms reduces aiming accuracy.
+- Crippled legs slow the player down more.
+- Improvements to the blood particle effects when a character is bleeding.
+- Added "targetlimb" argument to the giveaffliction command (allows applying the affliction to a specific limb).
+- Players who wander inside a respawn shuttle don't get automatically killed when the shuttle despawns if they weren't part of the respawning crew.
+- Bots no longer ignore severe fire in reactor, engine, or command rooms. The intention for them ignoring the severe fires was to prevent unwanted casualities when the fire can be left untreated and wait for it to fade out when not ordered to extinguish fires.
+- Buffs are transferred to AI-controlled husks when a character transforms.
+- Projectiles shift to the left in multi-slot loaders when firing.
+- Option to make terminals use a monospaced font.
+- Player-controlled monsters can now grab and eat bodies.
+- Added triangle and sawtooth wave types to oscillator component.
+- Added "high_pressure" output to water detector.
+- Water detectors round the water percentage output up, so any amount of water will be at least 1%.
+- Focus on the password field automatically in the server password prompt and allow submitting it with enter.
+- Made pirates a little less accurate when they're operating turrets: they can no longer magically aim exactly at characters inside another sub. 
+- Biome noise loop volume is tied to sound volume instead of music volume.
+- Endworms no longer always bleed to death when their tail is cut.
+- Lever state is visualized on its sprite.
+- Enabled NVidia Optimus on Windows.
+
+Overhauled status monitor: 
+- Improved visuals.
+- Indicates the locations of the crew's ID cards.
+- Indicates the locations of alerts.
+- Electrical view, indicating locations and health of junction boxes, reactor and batteries.
+- Allows searching for items and indicating the hulls in which they're located.
+
+Fixes:
+- Fixed "linesperlogfile" server setting doing nothing.
+- Fixed discharge coils not working when triggered by via a wired button.
+- Fixed hatch waypoint and platforms on Remora Drone.
+- Memory usage optimizations.
+- Fixed bots shooting enemies even when there's a friendly sub between them and the target.
+- Bots take their masks off when if they have successfully equipped a suit.
+- Fixed a pathfinding issue in Remora caused by too sparse waypoint distribution.
+- Fixed disguises not changing the color of a character's name when hovering the cursor over the character.
+- Fixed monsters' attack sounds never playing in multiplayer.
+
+Modding:
+- Implemented an item variant system that works similar to the character variants: you can create new items that inherit the properties of another item and only modify specific aspects of it, reducing the amount of duplicate XML code. See "Depleted Fuel Rod" in engineer_talent_items.xml for an usage example.
+- Removed error message when trying to transfer items to a husk monster and inventory sizes don't match
+- Submarine upgrades can be disallowed by category instead of having to do it separately for each upgrade in the sub editor.
+- Fixed a modding related crash when trying to apply a property value of a wrong type using status effects.
+- Option to create custom husk infections where player control carries over to the transformed creature.
+- Display a console warning when an item's deconstruct output defines an out condition and is also set to copy the condition of the deconstructed item.
+
+---------------------------------------------------------------------------------------------------------
 v0.14.9.0
 ---------------------------------------------------------------------------------------------------------
 

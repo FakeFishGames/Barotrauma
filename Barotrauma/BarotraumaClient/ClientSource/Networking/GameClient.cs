@@ -550,6 +550,13 @@ namespace Barotrauma.Networking
                     okButton.OnClicked += msgBox.Close;
                     var cancelButton = msgBox.Buttons[1];
                     cancelButton.OnClicked += msgBox.Close;
+                    passwordBox.OnEnterPressed += (GUITextBox textBox, string text) =>
+                    {
+                        msgBox.Close();
+                        clientPeer?.SendPassword(passwordBox.Text);
+                        requiresPw = false;
+                        return true;
+                    };
 
                     okButton.OnClicked += (GUIButton button, object obj) =>
                     {
@@ -565,6 +572,8 @@ namespace Barotrauma.Networking
                         GameMain.ServerListScreen.Select();
                         return true;
                     };
+                    yield return CoroutineStatus.Running;
+                    passwordBox.Select();
 
                     while (GUIMessageBox.MessageBoxes.Contains(msgBox))
                     {

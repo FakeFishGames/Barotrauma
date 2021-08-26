@@ -16,6 +16,12 @@ namespace Barotrauma.Items.Components
             set { unsentChanges = value; }
         }
 
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            pathFinder = null;
+        }
+
 
         public void ServerRead(ClientNetObject type, IReadMessage msg, Barotrauma.Networking.Client c)
         {

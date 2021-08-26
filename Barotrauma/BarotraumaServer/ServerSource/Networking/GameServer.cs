@@ -2354,6 +2354,8 @@ namespace Barotrauma.Networking
                         characterData.ApplyHealthData(spawnedCharacter);
                         characterData.ApplyOrderData(spawnedCharacter);
                         spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
+                        spawnedCharacter.LoadTalents();
+
                         characterData.HasSpawned = true;
                     }
                     spawnedCharacter.OwnerClientEndPoint = teamClients[i].Connection.EndPointString;
@@ -2366,6 +2368,8 @@ namespace Barotrauma.Networking
                     spawnedCharacter.TeamID = teamID;
                     spawnedCharacter.GiveJobItems(mainSubWaypoints[i]);
                     spawnedCharacter.GiveIdCardTags(mainSubWaypoints[i]);
+                    // talents are only avilable for players in online sessions, but modders or someone else might want to have them loaded anyway
+                    spawnedCharacter.LoadTalents();
                 }
             }
 
@@ -2431,6 +2435,7 @@ namespace Barotrauma.Networking
 
             roundStartTime = DateTime.Now;
 
+            startGameCoroutine = null;
             yield return CoroutineStatus.Success;
         }
 
@@ -2619,8 +2624,8 @@ namespace Barotrauma.Networking
                 }
             }
 
-            Submarine.Unload();
             entityEventManager.Clear();
+            Submarine.Unload();
             GameMain.NetLobbyScreen.Select();
             Log("Round ended.", ServerLog.MessageType.ServerMessage);
 
@@ -3145,28 +3150,19 @@ namespace Barotrauma.Networking
         public void SendOrderChatMessage(OrderChatMessage message)
         {
             if (message.Sender == null || message.Sender.SpeechImpediment >= 100.0f) { return; }
-            //ChatMessageType messageType = ChatMessage.CanUseRadio(message.Sender) ? ChatMessageType.Radio : ChatMessageType.Default;
-
             //check which clients can receive the message and apply distance effects
             foreach (Client client in ConnectedClients)
             {
-                string modifiedMessage = message.Text;
-
-                if (message.Sender != null &&
-                    client.Character != null && !client.Character.IsDead)
+                if (message.Sender != null && client.Character != null && !client.Character.IsDead)
                 {
                     //too far to hear the msg -> don't send
                     if (!client.Character.CanHearCharacter(message.Sender)) { continue; }
                 }
-
                 SendDirectChatMessage(new OrderChatMessage(message.Order, message.OrderOption, message.OrderPriority, message.TargetEntity, message.TargetCharacter, message.Sender), client);
             }
-
-            string myReceivedMessage = message.Text;
-
-            if (!string.IsNullOrWhiteSpace(myReceivedMessage))
+            if (!string.IsNullOrWhiteSpace(message.Text))
             {
-                AddChatMessage(new OrderChatMessage(message.Order, message.OrderOption, message.OrderPriority, myReceivedMessage, message.TargetEntity, message.TargetCharacter, message.Sender));
+                AddChatMessage(new OrderChatMessage(message.Order, message.OrderOption, message.OrderPriority, message.Text, message.TargetEntity, message.TargetCharacter, message.Sender));
             }
         }
 

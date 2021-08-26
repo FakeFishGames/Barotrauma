@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
 
         private bool attachable, attached, attachedByDefault;
         private Voronoi2.VoronoiCell attachTargetCell;
-        private readonly PhysicsBody body;
+        private PhysicsBody body;
         public PhysicsBody Pusher
         {
             get;
@@ -780,7 +780,19 @@ namespace Barotrauma.Items.Components
                 DeattachFromWall();
             }
         }
-        
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            attachTargetCell = null;
+            if (Pusher != null)
+            {
+                GameMain.World.Remove(Pusher.FarseerBody);
+                Pusher = null;
+            }
+            body = null; 
+        }
+
         public override XElement Save(XElement parentElement)
         {
             if (!attachable)

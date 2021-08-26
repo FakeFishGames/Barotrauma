@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
 
         public GUIButton SabotageButton { get; private set; }
 
+        public GUIButton TinkerButton { get; private set; }
+
         private GUIProgressBar progressBar;
 
         private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
@@ -25,6 +27,7 @@ namespace Barotrauma.Items.Components
 
         private string repairButtonText, repairingText;
         private string sabotageButtonText, sabotagingText;
+        private string tinkerButtonText, tinkeringText;
 
         private FixActions requestStartFixAction;
 
@@ -46,7 +49,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) return false;
-            return item.ConditionPercentage < RepairThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition)));
+            return item.ConditionPercentage < RepairThreshold || character.IsTraitor && item.ConditionPercentage > MinSabotageCondition || (CurrentFixer == character && (!item.IsFullCondition || (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition))) || CanTinker(character);
         }
 
         partial void InitProjSpecific(XElement element)
@@ -148,6 +151,20 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+
+            tinkerButtonText = "Tinker";
+            tinkeringText = "Tinkering";
+            TinkerButton = new GUIButton(new RectTransform(new Vector2(0.8f, 0.15f), paddedFrame.RectTransform, Anchor.BottomCenter), tinkerButtonText, style: "GUIButtonSmall")
+            {
+                IgnoreLayoutGroups = true,
+                Visible = false,
+                OnClicked = (btn, obj) =>
+                {
+                    requestStartFixAction = FixActions.Tinker;
+                    item.CreateClientEvent(this);
+                    return true;
+                }
+            };
         }
 
         partial void UpdateProjSpecific(float deltaTime)
@@ -176,6 +193,7 @@ namespace Barotrauma.Items.Components
                 {
                     case FixActions.Repair:
                     case FixActions.Sabotage:
+                    case FixActions.Tinker:
                         StartRepairing(Character.Controlled, requestStartFixAction);
                         requestStartFixAction = FixActions.None;
                         break;
@@ -225,6 +243,13 @@ namespace Barotrauma.Items.Components
             SabotageButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Sabotage || !character.IsTraitor) ?
                 sabotageButtonText :
                 sabotagingText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
+
+            TinkerButton.Visible = CanTinker(character);
+            TinkerButton.IgnoreLayoutGroups = !TinkerButton.Visible;
+            TinkerButton.Enabled = (currentFixerAction == FixActions.None || (CurrentFixer == character && currentFixerAction != FixActions.Tinker)) && CanTinker(character);
+            TinkerButton.Text = (currentFixerAction == FixActions.None || CurrentFixer != character || currentFixerAction != FixActions.Tinker && CanTinker(character)) ?
+                tinkerButtonText :
+                tinkeringText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
             System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
             foreach (GUIComponent c in GuiFrame.GetChild(0).Children)

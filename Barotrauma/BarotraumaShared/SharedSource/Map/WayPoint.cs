@@ -54,6 +54,8 @@ namespace Barotrauma
             set { spawnType = value; }
         }
 
+        public Action<WayPoint> OnLinksChanged { get; set; }
+
         public override string Name
         {
             get
@@ -761,9 +763,16 @@ namespace Barotrauma
         public void ConnectTo(WayPoint wayPoint2)
         {
             System.Diagnostics.Debug.Assert(this != wayPoint2);
-
-            if (!linkedTo.Contains(wayPoint2)) { linkedTo.Add(wayPoint2); }
-            if (!wayPoint2.linkedTo.Contains(this)) { wayPoint2.linkedTo.Add(this); }
+            if (!linkedTo.Contains(wayPoint2)) 
+            {
+                OnLinksChanged?.Invoke(this);
+                linkedTo.Add(wayPoint2); 
+            }
+            if (!wayPoint2.linkedTo.Contains(this)) 
+            {
+                wayPoint2.OnLinksChanged?.Invoke(wayPoint2);
+                wayPoint2.linkedTo.Add(this); 
+            }
         }
 
         public static WayPoint GetRandom(SpawnType spawnType = SpawnType.Human, JobPrefab assignedJob = null, Submarine sub = null, Ruin ruin = null, bool useSyncedRand = false)
@@ -986,14 +995,18 @@ namespace Barotrauma
         public override void ShallowRemove()
         {
             base.ShallowRemove();
-
             WayPointList.Remove(this);
         }
 
         public override void Remove()
         {
             base.Remove();
-
+            CurrentHull = null;
+            ConnectedGap = null;
+            Tunnel = null;
+            Stairs = null;
+            Ladders = null;
+            OnLinksChanged = null;
             WayPointList.Remove(this);
         }
     

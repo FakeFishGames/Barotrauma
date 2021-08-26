@@ -418,14 +418,14 @@ namespace Barotrauma
                             ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
                                 (option2) =>
                                 {
-                                    if (option2.ToLower() == "y") { GameMain.SubEditorScreen.AutoHull(); }
+                                    if (option2.ToLowerInvariant() == "y") { GameMain.SubEditorScreen.AutoHull(); }
                                 });
                         });
                 }
                 else
                 {
                     ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
-                        (option) => { if (option.ToLower() == "y") GameMain.SubEditorScreen.AutoHull(); });
+                        (option) => { if (option.ToLowerInvariant() == "y") GameMain.SubEditorScreen.AutoHull(); });
                 }
             }));
 
@@ -608,7 +608,7 @@ namespace Barotrauma
                 ShowQuestionPrompt($"Some keybinds may render the game unusable, are you sure you want to make these keybinds persistent? ({Keybinds.Count} keybind(s) assigned) Y/N",
                     (option2) =>
                     {
-                        if (option2.ToLower() != "y")
+                        if (option2.ToLowerInvariant() != "y")
                         {
                             NewMessage("Aborted.", GUI.Style.Red);
                             return;
@@ -688,6 +688,9 @@ namespace Barotrauma
             AssignRelayToServer("money", true);
             AssignRelayToServer("setskill", true);
             AssignRelayToServer("readycheck", true);
+
+            AssignRelayToServer("givetalent", true);
+            AssignRelayToServer("giveexperience", true);
 
             AssignOnExecute("control", (string[] args) =>
             {

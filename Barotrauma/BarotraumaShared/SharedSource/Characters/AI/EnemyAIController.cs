@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -37,6 +38,12 @@ namespace Barotrauma
                 PreviousState = _state;
                 OnStateChanged(_state, value);
                 _state = value;
+                if (_state == AIState.Attack)
+                {
+#if CLIENT
+                    Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
+#endif
+                }
             }
         }
 
@@ -50,6 +57,8 @@ namespace Barotrauma
         private readonly float updateTargetsInterval = 1;
         private readonly float updateMemoriesInverval = 1;
         private readonly float attackLimbResetInterval = 2;
+        // Min priority for the memorized targets. The actual value fades gradually, unless kept fresh by selecting the target.
+        private const float minPriority = 10;
 
         private readonly float avoidLookAheadDistance;
 
@@ -394,7 +403,7 @@ namespace Barotrauma
         public void SelectTarget(AITarget target, float priority)
         {
             SelectedAiTarget = target;
-            selectedTargetMemory = GetTargetMemory(target, true);
+            selectedTargetMemory = GetTargetMemory(target, addIfNotFound: true);
             selectedTargetMemory.Priority = priority;
             ignoredTargets.Remove(target);
         }
@@ -641,7 +650,7 @@ namespace Barotrauma
                             {
                                 Character c = a.Character;
                                 if (c.IsDead || c.Removed) { return false; }
-                                if (!IsFriendly(Character, c)) { return true; }
+                                if (!Character.IsFriendly(c)) { return true; }
                                 // Only apply the threshold to friendly characters
                                 return a.Damage >= selectedTargetingParams.DamageThreshold;
                             }
@@ -976,7 +985,7 @@ namespace Barotrauma
                 Character owner = GetOwner(item);
                 if (owner != null)
                 {
-                    if (IsFriendly(Character, owner))
+                    if (Character.IsFriendly(owner))
                     {
                         ResetAITarget();
                         State = AIState.Idle;
@@ -1337,7 +1346,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                canAttack = Character.CharacterList.All(c => c == Character || !IsFriendly(Character, c) || IsFarEnough(c));
+                                canAttack = Character.CharacterList.All(c => c == Character || !Character.IsFriendly(c) || IsFarEnough(c));
                             }
                             if (canAttack)
                             {
@@ -1356,7 +1365,7 @@ namespace Barotrauma
                                         {
                                             hitTarget = limb.character;
                                         }
-                                        if (hitTarget != null && !hitTarget.IsDead && IsFriendly(Character, hitTarget))
+                                        if (hitTarget != null && !hitTarget.IsDead && Character.IsFriendly(hitTarget))
                                         {
                                             return true;
                                         }
@@ -1764,7 +1773,7 @@ namespace Barotrauma
             Character.AnimController.ReleaseStuckLimbs();
             LatchOntoAI?.DeattachFromBody(reset: true, cooldown: 1);
             if (attacker == null || attacker.AiTarget == null || attacker.Removed || attacker.IsDead) { return; }
-            bool isFriendly = IsFriendly(Character, attacker);
+            bool isFriendly = Character.IsFriendly(attacker);
             if (wasLatched)
             {
                 State = AIState.Escape;
@@ -1840,7 +1849,7 @@ namespace Barotrauma
                 }
             }
 
-            AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget, true);
+            AITargetMemory targetMemory = GetTargetMemory(attacker.AiTarget, addIfNotFound: true);
             targetMemory.Priority += GetRelativeDamage(attackResult.Damage, Character.Vitality) * AIParams.AggressionHurt;
 
             // Only allow to react once. Otherwise would attack the target with only a fraction of a cooldown
@@ -1884,16 +1893,15 @@ namespace Barotrauma
         private bool UpdateLimbAttack(float deltaTime, Limb attackingLimb, Vector2 attackSimPos, float distance = -1, Limb targetLimb = null)
         {
             if (SelectedAiTarget?.Entity == null) { return false; }
-
-            ActiveAttack = attackingLimb?.attack;
-
+            if (attackingLimb?.attack == null) { return false; }
+            ActiveAttack = attackingLimb.attack;
             if (wallTarget != null)
             {
                 // If the selected target is not the wall target, make the wall target the selected target.
                 var aiTarget = wallTarget.Structure.AiTarget;
                 if (aiTarget != null && SelectedAiTarget != aiTarget)
                 {
-                    SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget, true).Priority);
+                    SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget, addIfNotFound: true).Priority);
                     State = AIState.Attack;
                 }
             }
@@ -1902,23 +1910,35 @@ namespace Barotrauma
             {
                 //simulate attack input to get the character to attack client-side
                 Character.SetInput(InputType.Attack, true, true);
-#if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(Character, new object[]
+                if (!ActiveAttack.IsRunning)
                 {
+#if SERVER
+                    GameMain.NetworkMember.CreateEntityEvent(Character, new object[]
+                    {
                     Networking.NetEntityEvent.Type.SetAttackTarget,
                     attackingLimb,
                     (damageTarget as Entity)?.ID ?? Entity.NullEntityID,
                     damageTarget is Character character && targetLimb != null ? Array.IndexOf(character.AnimController.Limbs, targetLimb) : 0,
                     SimPosition.X,
                     SimPosition.Y
-                });
+                    });
+#else
+                    Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
 #endif
+                }
+
                 if (attackingLimb.UpdateAttack(deltaTime, attackSimPos, damageTarget, out AttackResult attackResult, distance, targetLimb))
                 {
                     if (damageTarget.Health > 0 && attackResult.Damage > 0)
                     {
                         // Managed to hit a living/non-destroyed target. Increase the priority more if the target is low in health -> dies easily/soon
-                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * AIParams.AggressionGreed;
+                        float greed = AIParams.AggressionGreed;
+                        if (!(damageTarget is Character))
+                        {
+                            // Halve the greed for attacking non-characters.
+                            greed /= 2;
+                        }
+                        selectedTargetMemory.Priority += GetRelativeDamage(attackResult.Damage, damageTarget.Health) * greed;
                     }
                     else
                     {
@@ -2125,6 +2145,9 @@ namespace Barotrauma
                 string targetingTag = null;
                 if (targetCharacter != null)
                 {
+                    // ignore if target is tagged to be explicitly ignored (Feign Death)
+                    if (targetCharacter.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { continue; }
+
                     if (targetCharacter.IsDead)
                     {
                         targetingTag = "dead";
@@ -2139,7 +2162,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (IsFriendly(Character, targetCharacter))
+                        if (Character.IsFriendly(targetCharacter))
                         {
                             continue;
                         }
@@ -2449,7 +2472,7 @@ namespace Barotrauma
                         {
                             if (otherCharacter == character) { continue; }
                             if (otherCharacter.AIController?.SelectedAiTarget != aiTarget) { continue; }
-                            if (!IsFriendly(character, otherCharacter)) { continue; }
+                            if (!character.IsFriendly(otherCharacter)) { continue; }
                             valueModifier /= 2;
                         }
                     }
@@ -2469,7 +2492,7 @@ namespace Barotrauma
                 // -> just ignore the distance and attack whatever has the highest priority
                 dist = Math.Max(dist, 100.0f);
 
-                AITargetMemory targetMemory = GetTargetMemory(aiTarget, true);
+                AITargetMemory targetMemory = GetTargetMemory(aiTarget, addIfNotFound: true);
                 if (Character.CurrentHull != null && Math.Abs(toTarget.Y) > Character.CurrentHull.Size.Y)
                 {
                     // Inside the sub, treat objects that are up or down, as they were farther away.
@@ -2527,7 +2550,7 @@ namespace Barotrauma
                         // Don't target items that we own. 
                         // This is a rare case, and almost entirely related to Humanhusks, so let's check it last to reduce unnecessary checks (although the check shouldn't be expensive)
                         if (owner == character) { continue; }
-                        if (owner != null && (IsFriendly(Character, owner) || owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)))
+                        if (owner != null && (Character.IsFriendly(owner) || owner.AiTarget != null && ignoredTargets.Contains(owner.AiTarget)))
                         {
                             continue;
                         }
@@ -2599,7 +2622,7 @@ namespace Barotrauma
                         wall = wallTarget?.Structure;
                     }
                     // The target is not a wall or it's not the same as we are attached to -> release
-                    bool releaseTarget = wall == null || (!wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB) && wall.Submarine?.PhysicsBody?.FarseerBody != LatchOntoAI.AttachJoints[0].BodyB);
+                    bool releaseTarget = wall?.Bodies == null || (!wall.Bodies.Contains(LatchOntoAI.AttachJoints[0].BodyB) && wall.Submarine?.PhysicsBody?.FarseerBody != LatchOntoAI.AttachJoints[0].BodyB);
                     if (!releaseTarget)
                     {
                         for (int i = 0; i < wall.Sections.Length; i++)
@@ -2847,9 +2870,14 @@ namespace Barotrauma
             {
                 if (addIfNotFound)
                 {
-                    memory = new AITargetMemory(target, 10);
+                    memory = new AITargetMemory(target, minPriority);
                     targetMemories.Add(target, memory);
                 }
+            }
+            if (addIfNotFound)
+            {
+                // Keep the memory alive.
+                memory.Priority = Math.Max(memory.Priority, minPriority);
             }
             return memory;
         }
@@ -3014,7 +3042,7 @@ namespace Barotrauma
             {
                 if (!onlyExisting && !tempParams.ContainsKey(tag))
                 {
-                    if (AIParams.TryAddNewTarget(tag, state, priority ?? 100, out targetParams))
+                    if (AIParams.TryAddNewTarget(tag, state, priority ?? minPriority, out targetParams))
                     {
                         tempParams.Add(tag, targetParams);
                     }
@@ -3051,6 +3079,7 @@ namespace Barotrauma
             ChangeParams(target.SpeciesName, state, priority);
             if (target.IsHuman)
             {
+                priority = GetTargetParams("human")?.Priority;
                 // Target also items, because if we are blind and the target doesn't move, we can only perceive the target when it uses items
                 if (state == AIState.Attack || state == AIState.Escape)
                 {
@@ -3061,20 +3090,19 @@ namespace Barotrauma
                 {
                     // If the target is shooting from the submarine, we might not perceive it because it doesn't move.
                     // --> Target the submarine too.
-                    if (target.Submarine != null && (canAttackDoors || canAttackWalls))
+                    if (target.Submarine != null && Character.Submarine == null && (canAttackDoors || canAttackWalls))
                     {
-                        ChangeParams("room", state, priority);
+                        ChangeParams("room", state, priority * 0.1f);
                         if (canAttackWalls)
                         {
-                            ChangeParams("wall", state, priority);
+                            ChangeParams("wall", state, priority * 0.1f);
                         }
                         if (canAttackDoors)
                         {
-                            ChangeParams("door", state, priority);
+                            ChangeParams("door", state, priority * 0.1f);
                         }
                     }
                     ChangeParams("provocative", state, priority, onlyExisting: true);
-                    ChangeParams("light", state, priority, onlyExisting: true);
                 }
             }
         }
@@ -3306,7 +3334,17 @@ namespace Barotrauma
             return null;
         }
 
-        public static bool IsFriendly(Character me, Character other) => other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+        public override void ServerWrite(IWriteMessage msg)
+        {
+            msg.Write((byte)State);
+            PetBehavior?.ServerWrite(msg);
+        }
+
+        public override void ClientRead(IReadMessage msg)
+        {
+            State = (AIState)msg.ReadByte();
+            PetBehavior?.ClientRead(msg);
+        }
     }
 
     //the "memory" of the Character 

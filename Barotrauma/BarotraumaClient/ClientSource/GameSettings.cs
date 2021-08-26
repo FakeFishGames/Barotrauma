@@ -1519,6 +1519,12 @@ namespace Barotrauma
                 "Will the game automatically move on to Quickstart when the game is launched");
 
             addDebugTickBox(
+                TestScreenEnabled,
+                (b) => TestScreenEnabled = b,
+                "Test screen enabled",
+                "Will the game automatically move on to a test screen when the game is launched");
+
+            addDebugTickBox(
                 AutomaticCampaignLoadEnabled,
                 (b) => AutomaticCampaignLoadEnabled = b,
                 "Automatic campaign load enabled",

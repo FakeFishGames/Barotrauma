@@ -237,6 +237,26 @@ namespace Barotrauma
                 (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
         }
 
+        public float GetStatValue(StatTypes statType)
+        {
+            if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return 0.0f; }
+
+            if (currentEffect.AfflictionStatValues.TryGetValue(statType, out var value))
+            {
+                return MathHelper.Lerp(
+                    value.minValue,
+                    value.maxValue,
+                    (Strength - currentEffect.MinStrength) / (currentEffect.MaxStrength - currentEffect.MinStrength));
+            }
+            return 0.0f;
+        }
+
+        private AfflictionPrefab.Effect GetViableEffect()
+        {
+            if (Strength < Prefab.ActivationThreshold) { return null; }
+            return GetActiveEffect();
+        }
+
         public virtual void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
             foreach (AfflictionPrefab.PeriodicEffect periodicEffect in Prefab.PeriodicEffects)
@@ -264,7 +284,11 @@ namespace Barotrauma
 
             if (currentEffect.StrengthChange < 0) // Reduce diminishing of buffs if boosted
             {
-                _strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier;
+                float durationMultiplier = 1 / (1 + (Prefab.IsBuff ? characterHealth.Character.GetStatValue(StatTypes.BuffDurationMultiplier)
+                    : characterHealth.Character.GetStatValue(StatTypes.DebuffDurationMultiplier)));
+
+                _strength += currentEffect.StrengthChange * deltaTime * StrengthDiminishMultiplier * durationMultiplier;
+
             }
             else // Reduce strengthening of afflictions if resistant
             {

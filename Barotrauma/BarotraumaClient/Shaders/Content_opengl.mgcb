@@ -67,3 +67,8 @@
 /processorParam:DebugMode=Auto
 /build:grainshader_opengl.fx
 
+#begin blueprintshader_opengl.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:blueprintshader_opengl.fx

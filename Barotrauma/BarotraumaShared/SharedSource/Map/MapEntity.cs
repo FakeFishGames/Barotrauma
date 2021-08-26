@@ -48,8 +48,7 @@ namespace Barotrauma
             }
         }
 
-        //observable collection because some entities may need to be notified when the collection is modified
-        public readonly ObservableCollection<MapEntity> linkedTo = new ObservableCollection<MapEntity>();
+        public readonly List<MapEntity> linkedTo = new List<MapEntity>();
 
         protected bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
@@ -515,7 +514,11 @@ namespace Barotrauma
             }
 #endif
 
-            if (aiTarget != null) aiTarget.Remove();
+            if (aiTarget != null)
+            {
+                aiTarget.Remove();
+                aiTarget = null;
+            }
 
             if (linkedTo != null)
             {

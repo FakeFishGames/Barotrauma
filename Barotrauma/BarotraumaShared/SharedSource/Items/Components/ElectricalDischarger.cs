@@ -475,6 +475,21 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            switch (connection.Name)
+            {
+                case "activate":
+                case "use":
+                case "trigger_in":
+                    if (signal.value != "0")
+                    {
+                        item.Use(1.0f, null);
+                    }
+                    break;
+            }
+        }
+
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();

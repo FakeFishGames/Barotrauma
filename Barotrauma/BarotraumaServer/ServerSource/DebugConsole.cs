@@ -1187,6 +1187,7 @@ namespace Barotrauma
                 NewMessage("*****************", Color.Lime);
                 GameServer.Log("Console command \"restart\" executed: closing the server...", ServerLog.MessageType.ServerMessage);
                 GameMain.Instance.CloseServer();
+                GameMain.Instance.TryStartChildServerRelay();
                 GameMain.Instance.StartServer();
             }));
 

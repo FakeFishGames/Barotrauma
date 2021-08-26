@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -214,6 +215,12 @@ namespace Barotrauma
         public Job Job;
         
         public int Salary;
+
+        public int ExperiencePoints { get; private set; }
+
+        public HashSet<string> UnlockedTalents { get; private set; } = new HashSet<string>();
+
+        public int AdditionalTalentPoints { get; private set; }
 
         private Sprite headSprite;
         public Sprite HeadSprite
@@ -529,6 +536,8 @@ namespace Barotrauma
             OriginalName = infoElement.GetAttributeString("originalname", null);
             string genderStr = infoElement.GetAttributeString("gender", "male").ToLowerInvariant();
             Salary = infoElement.GetAttributeInt("salary", 1000);
+            ExperiencePoints = infoElement.GetAttributeInt("experiencepoints", 0);
+            UnlockedTalents = new HashSet<string>(infoElement.GetAttributeStringArray("unlockedtalents", new string[0], convertToLowerInvariant: true));
             Enum.TryParse(infoElement.GetAttributeString("race", "White"), true, out Race race);
             Enum.TryParse(infoElement.GetAttributeString("gender", "None"), true, out Gender gender);
             _speciesName = infoElement.GetAttributeString("speciesname", null);
@@ -599,10 +608,38 @@ namespace Barotrauma
             }      
             foreach (XElement subElement in infoElement.Elements())
             {
-                if (subElement.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase))
+                bool jobCreated = false;
+                if (subElement.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase) && !jobCreated)
                 {
                     Job = new Job(subElement);
-                    break;
+                    jobCreated = true;
+                    // there used to be a break here, but it had to be removed to make room for statvalues
+                    // using the jobCreated boolean to make sure that only the first job found is created
+                }
+                else if (subElement.Name.ToString().Equals("savedstatvalues", StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (XElement savedStat in subElement.Elements())
+                    {
+                        string statTypeString = savedStat.GetAttributeString("stattype", "").ToLowerInvariant();
+                        if (!Enum.TryParse(statTypeString, true, out StatTypes statType))
+                        {
+                            DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" when loading character data in CharacterInfo!");
+                            continue;
+                        }
+
+                        float value = savedStat.GetAttributeFloat("statvalue", 0f);
+                        if (value == 0f) { continue; }
+
+                        string statIdentifier = savedStat.GetAttributeString("statidentifier", "").ToLowerInvariant();
+                        if (string.IsNullOrEmpty(statIdentifier))
+                        {
+                            DebugConsole.ThrowError("Stat identifier not specified for Stat Value when loading character data in CharacterInfo!");
+                            return;
+                        }
+
+                        bool removeOnDeath = savedStat.GetAttributeBool("removeondeath", true);
+                        ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath);
+                    }
                 }
             }
             LoadHeadAttachments();
@@ -939,6 +976,15 @@ namespace Barotrauma
             Job.IncreaseSkillLevel(skillIdentifier, increase);
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
+            if ((int)newLevel > (int)prevLevel)
+            {
+                Character.CheckTalents(AbilityEffectType.OnGainSkillPoint, skillIdentifier);
+
+                foreach (Character character in Character.GetFriendlyCrew(Character))
+                {
+                    character.CheckTalents(AbilityEffectType.OnAllyGainSkillPoint, (skillIdentifier, Character));
+                }
+            }
 
             OnSkillChanged(skillIdentifier, prevLevel, newLevel, pos);
         }
@@ -962,6 +1008,90 @@ namespace Barotrauma
         }
 
         partial void OnSkillChanged(string skillIdentifier, float prevLevel, float newLevel, Vector2 textPopupPos);
+
+        public void GiveExperience(int amount, float popupOffset = 0f, bool isMissionExperience = false)
+        {
+            int prevAmount = ExperiencePoints;
+
+            var experienceGainMultiplier = new AbilityValue(1f);
+            if (isMissionExperience)
+            {
+                Character.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
+            }
+            experienceGainMultiplier.Value += Character.GetStatValue(StatTypes.ExperienceGainMultiplier);
+
+            amount = (int)(amount * experienceGainMultiplier.Value);
+
+            if (amount < 0) { return; }
+
+            ExperiencePoints += amount;
+            OnExperienceChanged(prevAmount, ExperiencePoints, Character.Position + Vector2.UnitY * (150.0f + popupOffset));
+        }
+
+        public void SetExperience(int newExperience)
+        {
+            if (newExperience < 0) { return; }
+
+            int prevAmount = ExperiencePoints;
+            ExperiencePoints = newExperience;
+            OnExperienceChanged(prevAmount, ExperiencePoints, Character.Position + Vector2.UnitY * 150.0f);
+        }
+
+        const int BaseExperienceRequired = 150;
+        const int AddedExperienceRequiredPerLevel = 350;
+
+        public int GetTotalTalentPoints()
+        {
+            return GetCurrentLevel() + AdditionalTalentPoints - 1;
+        }
+
+        public int GetAvailableTalentPoints()
+        {
+            // hashset always has at least 1 
+            return Math.Max(GetTotalTalentPoints() - UnlockedTalents.Count, 0);
+        }
+
+        public float GetProgressTowardsNextLevel()
+        {
+            float progress = (ExperiencePoints - GetExperienceRequiredForCurrentLevel()) / (GetExperienceRequiredToLevelUp() - GetExperienceRequiredForCurrentLevel());
+            return progress;
+        }
+
+        public float GetExperienceRequiredForCurrentLevel()
+        {
+            GetCurrentLevel(out int experienceRequired);
+            return experienceRequired;
+        }
+
+        public float GetExperienceRequiredToLevelUp()
+        {
+            int level = GetCurrentLevel(out int experienceRequired);
+            return experienceRequired + ExperienceRequiredPerLevel(level);
+        }
+
+        public int GetCurrentLevel()
+        {
+            return GetCurrentLevel(out _);
+        }
+
+        private int GetCurrentLevel(out int experienceRequired)
+        {
+            int level = 1;
+            experienceRequired = 0;
+            while (experienceRequired + ExperienceRequiredPerLevel(level) <= ExperiencePoints)
+            {
+                experienceRequired += ExperienceRequiredPerLevel(level);
+                level++;
+            }
+            return level;
+        }
+
+        private int ExperienceRequiredPerLevel(int level)
+        {
+            return BaseExperienceRequired + AddedExperienceRequiredPerLevel * level;
+        }
+
+        partial void OnExperienceChanged(int prevAmount, int newAmount, Vector2 textPopupPos);
 
         public void Rename(string newName)
         {
@@ -999,6 +1129,8 @@ namespace Barotrauma
                 new XAttribute("gender", Head.gender == Gender.Male ? "male" : "female"),
                 new XAttribute("race", Head.race.ToString()),
                 new XAttribute("salary", Salary),
+                new XAttribute("experiencepoints", ExperiencePoints),
+                new XAttribute("unlockedtalents", string.Join(",", UnlockedTalents)),
                 new XAttribute("headspriteid", HeadSpriteId),
                 new XAttribute("hairindex", HairIndex),
                 new XAttribute("beardindex", BeardIndex),
@@ -1019,6 +1151,24 @@ namespace Barotrauma
             }
             
             Job.Save(charElement);
+
+            XElement savedStatElement = new XElement("savedstatvalues");
+            foreach (var statValuePair in savedStatValues)
+            {
+                foreach (var savedStat in statValuePair.Value)
+                {
+                    if (savedStat.StatValue == 0f) { continue; }
+
+                    savedStatElement.Add(new XElement("savedstatvalue",
+                        new XAttribute("stattype", statValuePair.Key.ToString()),
+                        new XAttribute("statidentifier", savedStat.StatIdentifier),
+                        new XAttribute("statvalue", savedStat.StatValue),
+                        new XAttribute("removeondeath", savedStat.RemoveOnDeath)
+                        ));
+                }
+            }
+
+            charElement.Add(savedStatElement);
 
             parentElement.Add(charElement);
             return charElement;
@@ -1331,6 +1481,69 @@ namespace Barotrauma
             HeadSprite = null;
             Portrait = null;
             AttachmentSprites = null;
+        }
+
+        // This could maybe be a LookUp instead?
+        private readonly Dictionary<StatTypes, List<SavedStatValue>> savedStatValues = new Dictionary<StatTypes, List<SavedStatValue>>();
+
+        public void ResetSavedStatValues()
+        {
+            foreach (var savedStatValue in savedStatValues.SelectMany(s => s.Value))
+            {
+                if (savedStatValue.RemoveOnDeath)
+                {
+                    savedStatValue.StatValue = 0f;
+                }
+            }
+        }
+
+        public void ResetSavedStatValue(string statIdentifier)
+        {
+            savedStatValues.SelectMany(s => s.Value).Where(s => s.StatIdentifier == statIdentifier).ForEach(v => v.StatValue = 0f);
+        }
+
+        public float GetSavedStatValue(StatTypes statType)
+        {
+            if (savedStatValues.TryGetValue(statType, out var statValues))
+            {
+                return statValues.Sum(v => v.StatValue);
+            }
+            else
+            {
+                return 0f;
+            }
+        }
+
+        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath)
+        {
+            if (!savedStatValues.ContainsKey(statType))
+            {
+                savedStatValues.Add(statType, new List<SavedStatValue>());
+            }
+
+            if (savedStatValues[statType].FirstOrDefault(s => s.StatIdentifier == statIdentifier) is SavedStatValue savedStat)
+            {
+                savedStat.StatValue += value;
+                savedStat.RemoveOnDeath = removeOnDeath;
+            }
+            else
+            {
+                savedStatValues[statType].Add(new SavedStatValue(statIdentifier, value, removeOnDeath));
+            }
+        }
+    }
+
+    public class SavedStatValue
+    {
+        public string StatIdentifier { get; set; }
+        public float StatValue { get; set; }
+        public bool RemoveOnDeath { get; set; }
+
+        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath)
+        {
+            StatValue = value;
+            RemoveOnDeath = removeOnDeath;
+            StatIdentifier = statIdentifier;
         }
     }
 }

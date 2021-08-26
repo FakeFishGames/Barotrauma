@@ -628,7 +628,7 @@ namespace Barotrauma
             {
                 TextGetter = () =>
                 {
-                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.MaxMissionCount}");
+                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.TotalMaxMissionCount}");
                 }
             };
 
@@ -735,7 +735,7 @@ namespace Barotrauma
 
         private void UpdateMaxMissions(Location location)
         {
-            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.MaxMissionCount;
+            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.TotalMaxMissionCount;
         }
     }
 }

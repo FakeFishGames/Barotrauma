@@ -126,7 +126,8 @@ namespace Barotrauma.Items.Components
         private void DrawOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
-            var lastSlot = inputContainer.Inventory.visualSlots.Last();
+            if (!(inputContainer?.Inventory?.visualSlots is { } visualSlots)) { return; }
+            var lastSlot = visualSlots.Last();
 
             GUI.DrawRectangle(spriteBatch, 
                 new Rectangle(

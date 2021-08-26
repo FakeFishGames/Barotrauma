@@ -938,19 +938,23 @@ namespace Barotrauma
             
             float rotation = MathHelper.WrapAngle(Collider.Rotation);
             rotation = MathHelper.ToDegrees(rotation);
-            if (rotation < 0.0f) rotation += 360;
-
+            if (rotation < 0.0f)
+            {
+                rotation += 360;
+            }
             if (!character.IsRemotelyControlled && !aiming && Anim != Animation.UsingConstruction &&
                 !(character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false))
             {
                 if (rotation > 20 && rotation < 170)
+                {
                     TargetDir = Direction.Left;
+                }
                 else if (rotation > 190 && rotation < 340)
+                {
                     TargetDir = Direction.Right;
+                }
             }
-
             float targetSpeed = TargetMovement.Length();
-
             if (targetSpeed > 0.1f)
             {
                 if (!aiming)
@@ -965,9 +969,7 @@ namespace Barotrauma
                 {
                     Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
                     Vector2 diff = (mousePos - torso.SimPosition) * Dir;
-
                     TargetMovement = new Vector2(0.0f, -0.1f);
-
                     float newRotation = MathUtils.VectorToAngle(diff);
                     Collider.SmoothRotate(newRotation, 5.0f * character.SpeedMultiplier);
                 }
@@ -1622,7 +1624,10 @@ namespace Barotrauma
                     {
                         Vector2 pullLimbAnchor = targetLimb.SimPosition;
                         pullLimb.PullJointMaxForce = 5000.0f;
-                        targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
+                        if (!character.HasAbilityFlag(AbilityFlags.MoveNormallyWhileDragging))
+                        {
+                            targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
+                        }
                             
                         Vector2 shoulderPos = rightShoulder.WorldAnchorA;
                         Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
@@ -1679,7 +1684,7 @@ namespace Barotrauma
                 }
 
                 //limit movement if moving away from the target
-                if (Vector2.Dot(target.WorldPosition - WorldPosition, targetMovement) < 0)
+                if (!character.HasAbilityFlag(AbilityFlags.MoveNormallyWhileDragging) && Vector2.Dot(target.WorldPosition - WorldPosition, targetMovement) < 0)
                 {
                     targetMovement *= MathHelper.Clamp(1.5f - dist, 0.0f, 1.0f);
                 }
@@ -1750,8 +1755,9 @@ namespace Barotrauma
                 Vector2 diff = holdable.Aimable ? (mousePos - AimSourceSimPos) * Dir : Vector2.UnitX;
 
                 holdAngle = MathUtils.VectorToAngle(new Vector2(diff.X, diff.Y * Dir)) - torso.body.Rotation * Dir;
+                holdAngle += GetAimWobble(rightHand, leftHand, item);
 
-                itemAngle = (torso.body.Rotation + holdAngle * Dir);
+                itemAngle = torso.body.Rotation + holdAngle * Dir;
                 
                 if (holdable.ControlPose)
                 {
@@ -1867,6 +1873,26 @@ namespace Barotrauma
                     HandIK(i == 0 ? rightHand : leftHand, transformedHoldPos + transformedHandlePos[i]);
                 }
             }
+        }
+
+        private float GetAimWobble(Limb rightHand, Limb leftHand, Item heldItem)
+        {
+            float wobbleStrength = 0.0f;
+            if (character.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == heldItem)
+            {
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(rightHand, afflictionType: "damage");
+            }
+            if (character.Inventory?.GetItemInLimbSlot(InvSlotType.LeftHand) == heldItem)
+            {
+                wobbleStrength += Character.CharacterHealth.GetLimbDamage(leftHand, afflictionType: "damage");
+            }
+            if (wobbleStrength <= 0.1f) { return 0.0f; }
+            wobbleStrength = (float)Math.Min(wobbleStrength, 1.0f);
+
+            float lowFreqNoise = PerlinNoise.GetPerlin((float)Timing.TotalTime / 320.0f, (float)Timing.TotalTime / 240.0f) - 0.5f;
+            float highFreqNoise = PerlinNoise.GetPerlin((float)Timing.TotalTime / 40.0f, (float)Timing.TotalTime / 50.0f) - 0.5f;
+
+            return (lowFreqNoise * 1.0f + highFreqNoise * 0.1f) * wobbleStrength;
         }
 
         private void HandIK(Limb hand, Vector2 pos, float force = 1.0f)

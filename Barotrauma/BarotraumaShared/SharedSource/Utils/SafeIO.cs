@@ -138,6 +138,11 @@ namespace Barotrauma.IO
             return System.IO.Path.GetPathRoot(path);
         }
 
+        public static string GetRelativePath(string relativeTo, string path)
+        {
+            return System.IO.Path.GetRelativePath(relativeTo, path);
+        }
+
         public static string GetDirectoryName(string path)
         {
             return System.IO.Path.GetDirectoryName(path);

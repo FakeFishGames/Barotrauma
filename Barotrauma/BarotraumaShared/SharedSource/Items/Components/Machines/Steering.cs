@@ -1,4 +1,4 @@
-﻿using Barotrauma.Networking;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -363,6 +363,19 @@ namespace Barotrauma.Items.Components
 
             float velY = MathHelper.Lerp((neutralBallastLevel * 100 - 50) * 2, -100 * Math.Sign(targetVelocity.Y), Math.Abs(targetVelocity.Y) / 100.0f);
             item.SendSignal(new Signal(velY.ToString(CultureInfo.InvariantCulture), sender: user), "velocity_y_out");
+
+            // converts the controlled sub's velocity to km/h and sends it. 
+            // TODO: add current_velocity_x and current_velocity_y pins on the navigation terminals and shuttle terminals
+            // TODO: increase the size of the connection panels of both navigation terminals
+
+            if (controlledSub is { } sub)
+            {
+                item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.X * Physics.DisplayToRealWorldRatio) * 3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_x");
+                item.SendSignal(new Signal((ConvertUnits.ToDisplayUnits(sub.Velocity.Y * Physics.DisplayToRealWorldRatio) * -3.6f).ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_velocity_y");
+
+                item.SendSignal(new Signal(sub.WorldPosition.X.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_position_x");
+                item.SendSignal(new Signal(sub.RealWorldDepth.ToString("0.0000", CultureInfo.InvariantCulture), sender: user), "current_depth");
+            }
 
             // if our tactical AI pilot has left, revert back to maintaining position
             if (navigateTactically && (user == null || user.SelectedConstruction != item))

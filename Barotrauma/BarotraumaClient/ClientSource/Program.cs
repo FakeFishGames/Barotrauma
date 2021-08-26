@@ -54,9 +54,11 @@ namespace Barotrauma
             executableDir = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             Directory.SetCurrentDirectory(executableDir);
             SteamManager.Initialize();
+            EnableNvOptimus();
             Game = new GameMain(args);
             Game.Run();
             Game.Dispose();
+            FreeNvOptimus();
 
             CrossThread.ProcessTasks();
         }
@@ -263,6 +265,27 @@ namespace Barotrauma
                     " if you'd like to help fix this bug, you may post it on Barotrauma's GitHub issue tracker: https://github.com/Regalis11/Barotrauma/issues/", filePath);
             }
         }
+
+        private static IntPtr nvApi64Dll = IntPtr.Zero;
+        private static void EnableNvOptimus()
+        {
+#if WINDOWS && X64
+            // We force load nvapi64.dll so nvidia gives us the dedicated GPU on optimus laptops.
+            // This is not a method for getting optimus that is documented by nvidia, but it works, so...
+            if (NativeLibrary.TryLoad("nvapi64.dll", out nvApi64Dll))
+            {
+                DebugConsole.Log("Loaded nvapi64.dll successfully");
+            }
+#endif
+        }
+
+        private static void FreeNvOptimus()
+        {
+            #warning TODO: determine if we can do this safely
+            //NativeLibrary.Free(nvApi64Dll);
+        }
+        
     }
 #endif
+    
         }

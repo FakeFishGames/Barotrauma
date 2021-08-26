@@ -45,6 +45,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        [Editable, Serialize(false, true, description: "The terminal will use a monospace font if this box is ticked.", alwaysUseInstanceValues: true)]
+        public bool UseMonospaceFont { get; set; }
+
         private string OutputValue { get; set; }
 
         public Terminal(Item item, XElement element)

@@ -101,11 +101,11 @@ namespace Barotrauma
 
         public enum CombatMode
         {
-            Defensive,
-            Offensive,
-            Arrest,
-            Retreat,
-            None
+            Defensive,  // Use weapons against the enemy, but try to retreat to a safe place
+            Offensive,  // Engage the enemy and keep attacking it
+            Arrest,     // Try to arrest the enemy without using lethal weapons (stunning + handcuffs)
+            Retreat,    // Run to a safe place without attacking the target
+            None        // Don't use
         }
 
         public CombatMode Mode { get; private set; }
@@ -958,14 +958,15 @@ namespace Barotrauma
             }
             if (reloadTimer > 0) { return; }
             if (holdFireCondition != null && holdFireCondition()) { return; }
-            float sqrDist = Vector2.DistanceSquared(character.Position, Enemy.Position);
+            sqrDistance = Vector2.DistanceSquared(character.WorldPosition, Enemy.WorldPosition);
+            distanceTimer = distanceCheckInterval;
             if (WeaponComponent is MeleeWeapon meleeWeapon)
             {
                 bool closeEnough = true;
                 float sqrRange = meleeWeapon.Range * meleeWeapon.Range;
                 if (character.AnimController.InWater)
                 {
-                    if (sqrDist > sqrRange) 
+                    if (sqrDistance > sqrRange) 
                     {
                         closeEnough = false;
                     }
@@ -1003,7 +1004,7 @@ namespace Barotrauma
             {
                 if (WeaponComponent is RepairTool repairTool)
                 {
-                    if (sqrDist > repairTool.Range * repairTool.Range) { return; }
+                    if (sqrDistance > repairTool.Range * repairTool.Range) { return; }
                 }
                 float aimFactor = MathHelper.PiOver2 * (1 - AimAccuracy);
                 if (VectorExtensions.Angle(VectorExtensions.Forward(Weapon.body.TransformedRotation), Enemy.Position - Weapon.Position) < MathHelper.PiOver4 + aimFactor)

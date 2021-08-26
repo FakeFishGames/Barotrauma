@@ -325,7 +325,6 @@ namespace Barotrauma
             get { return LevelData.Seed; }
         }
 
-
         public static float? ForcedDifficulty;
         public float Difficulty
         {
@@ -3020,13 +3019,6 @@ namespace Barotrauma
             }
         }
 
-        public string GetWreckIDTag(string originalTag, Submarine wreck)
-        {
-            string shortSeed = ToolBox.StringToInt(LevelData.Seed + wreck?.Info.Name).ToString();
-            if (shortSeed.Length > 6) { shortSeed = shortSeed.Substring(0, 6); }
-            return originalTag + "_" + shortSeed;
-        }
-
         public bool IsCloseToStart(Vector2 position, float minDist) => IsCloseToStart(position.ToPoint(), minDist);
         public bool IsCloseToEnd(Vector2 position, float minDist) => IsCloseToEnd(position.ToPoint(), minDist);
 
@@ -3891,11 +3883,38 @@ namespace Barotrauma
                 LevelObjectManager = null;
             }
 
+            AbyssIslands?.Clear();
+            AbyssResources?.Clear();
+            Caves?.Clear();
+            Tunnels?.Clear();
+            PathPoints?.Clear();
+            PositionsOfInterest?.Clear();
+
+            wreckPositions?.Clear();
+            Wrecks?.Clear();
+
+            BeaconStation = null;
+            beaconSonar = null;
+            StartOutpost = null;
+            EndOutpost = null;
+
+            blockedRects?.Clear();
+
+            EntitiesBeforeGenerate?.Clear();
+            EqualityCheckValues?.Clear();
+
             if (Ruins != null)
             {
                 Ruins.Clear();
                 Ruins = null;
             }
+
+            bottomPositions?.Clear();
+            BottomBarrier = null;
+            TopBarrier = null;
+            SeaFloor = null;
+
+            distanceField = null;
 
             if (ExtraWalls != null)
             {
@@ -3908,13 +3927,18 @@ namespace Barotrauma
                 UnsyncedExtraWalls = null;
             }
 
+            tempCells?.Clear();
             cells = null;
+            cellGrid = null;
             
             if (bodies != null)
             {
                 bodies.Clear();
                 bodies = null;
             }
+
+            StartLocation = null;
+            EndLocation = null;
 
             Loaded = null;
         }

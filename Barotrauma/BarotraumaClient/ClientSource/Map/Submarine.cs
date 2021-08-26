@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -403,6 +404,8 @@ namespace Barotrauma
             }
         }
 
+        // TODO remove
+        [Obsolete("Use MiniMap.CreateMiniMap()")]
         public void CreateMiniMap(GUIComponent parent, IEnumerable<Entity> pointsOfInterest = null, bool ignoreOutpost = false)
         {
             Rectangle worldBorders = GetDockedBorders();
@@ -417,24 +420,125 @@ namespace Barotrauma
             GUIFrame hullContainer = new GUIFrame(new RectTransform(
                 (parentAspectRatio > aspectRatio ? new Vector2(aspectRatio / parentAspectRatio, 1.0f) : new Vector2(1.0f, parentAspectRatio / aspectRatio)) * scale, 
                 parent.RectTransform, Anchor.Center), 
-                style: null);
+                style: null)
+            {
+                UserData = "hullcontainer"
+            };
 
             var connectedSubs = GetConnectedSubs();
-            foreach (Hull hull in Hull.hullList)
-            {
-                if (hull.Submarine != this && !connectedSubs.Contains(hull.Submarine)) { continue; }
-                if (ignoreOutpost && !IsEntityFoundOnThisSub(hull, true)) { continue; }
 
+            HashSet<Hull> hullList = Hull.hullList.Where(hull => hull.Submarine == this || connectedSubs.Contains(hull.Submarine)).Where(hull => !ignoreOutpost || IsEntityFoundOnThisSub(hull, true)).ToHashSet();
+
+            Dictionary<Hull, HashSet<Hull>> combinedHulls = new Dictionary<Hull, HashSet<Hull>>();
+
+            foreach (Hull hull in hullList)
+            {
+                if (combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull))) { continue; }
+
+                List<Hull> linkedHulls = new List<Hull>();
+                MiniMap.GetLinkedHulls(hull, linkedHulls);
+
+                linkedHulls.Remove(hull);
+
+                foreach (Hull linkedHull in linkedHulls)
+                {
+                    if (!combinedHulls.ContainsKey(hull))
+                    {
+                        combinedHulls.Add(hull, new HashSet<Hull>());   
+                    }
+                    
+                    combinedHulls[hull].Add(linkedHull);
+                }
+            }
+
+            foreach (Hull hull in hullList)
+            {
                 Vector2 relativeHullPos = new Vector2(
                     (hull.WorldRect.X - worldBorders.X) / (float)worldBorders.Width, 
                     (worldBorders.Y - hull.WorldRect.Y) / (float)worldBorders.Height);
                 Vector2 relativeHullSize = new Vector2(hull.Rect.Width / (float)worldBorders.Width, hull.Rect.Height / (float)worldBorders.Height);
 
-                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: Color.DarkCyan * 0.8f)
+                bool hideHull = combinedHulls.ContainsKey(hull) || combinedHulls.Values.Any(hh => hh.Contains(hull));
+
+                if (hideHull) { continue; }
+                
+                Color color = Color.DarkCyan * 0.8f;
+
+                var hullFrame = new GUIFrame(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, style: "MiniMapRoom", color: color)
                 {
                     UserData = hull
                 };
-                new GUIFrame(new RectTransform(Vector2.One, hullFrame.RectTransform), style: "ScanLines", color: Color.DarkCyan * 0.8f);
+
+                new GUIFrame(new RectTransform(Vector2.One, hullFrame.RectTransform), style: "ScanLines", color: color);
+            }
+
+            foreach (var (mainHull, linkedHulls) in combinedHulls)
+            {
+                MiniMapHullData data = ConstructLinkedHulls(mainHull, linkedHulls, hullContainer, worldBorders);
+
+                Vector2 relativeHullPos = new Vector2(
+                    (data.Bounds.X - worldBorders.X) / worldBorders.Width, 
+                    (worldBorders.Y - data.Bounds.Y) / worldBorders.Height);
+
+                Vector2 relativeHullSize = new Vector2(data.Bounds.Width / worldBorders.Width, data.Bounds.Height / worldBorders.Height);
+
+                Color color = Color.DarkCyan * 0.8f;
+
+                float highestY = 0f,
+                      highestX = 0f;
+
+                foreach (var (r, _) in data.RectDatas)
+                {
+                    float y = r.Y - -r.Height,
+                          x = r.X;
+
+                    if (y > highestY) { highestY = y; }
+                    if (x > highestX) { highestX = x; }
+                }
+
+                HashSet<GUIFrame> frames = new HashSet<GUIFrame>();
+
+                foreach (var (snappredRect, hull) in data.RectDatas)
+                {
+                    RectangleF rect = snappredRect;
+                    rect.Height = -rect.Height;
+                    rect.Y -= rect.Height;
+
+                    var (parentW, parentH) = hullContainer.Rect.Size.ToVector2();
+                    Vector2 size = new Vector2(rect.Width / parentW, rect.Height / parentH);
+                    // TODO this won't be required if we some day switch RectTransform to use RectangleF
+                    const float padding = 0.001f; 
+                    size.X += padding;
+                    size.Y += padding;
+                    Vector2 pos = new Vector2(rect.X / parentW, rect.Y / parentH);
+
+                    GUIFrame hullFrame = new GUIFrame(new RectTransform(size, hullContainer.RectTransform) { RelativeOffset = pos }, style: "ScanLinesSeamless", color: color)
+                    {
+                        UserData = hull,
+                        UVOffset = new Vector2(highestX - rect.X, highestY - rect.Y)
+                    };
+
+                    frames.Add(hullFrame);
+                }
+
+                new GUICustomComponent(new RectTransform(relativeHullSize, hullContainer.RectTransform) { RelativeOffset = relativeHullPos }, (spriteBatch, component) =>
+                {
+                    foreach (List<Vector2> list in data.Polygon)
+                    {
+                        spriteBatch.DrawPolygonInner(hullContainer.Rect.Location.ToVector2(), list, component.Color, 2f);
+                    }
+                }, (deltaTime, component) =>
+                {
+                    if (component.Parent.Rect.Size != data.ParentSize)
+                    {
+                        data = ConstructLinkedHulls(mainHull, linkedHulls, hullContainer, worldBorders);
+                    }
+                })
+                {
+                    UserData = frames,
+                    Color = color,
+                    CanBeFocused = false
+                };
             }
 
             if (pointsOfInterest != null)
@@ -451,6 +555,64 @@ namespace Barotrauma
                     };
                 }
             }
+        }
+
+        public static MiniMapHullData ConstructLinkedHulls(Hull mainHull, HashSet<Hull> linkedHulls, GUIComponent parent, Rectangle worldBorders)
+        {
+            Rectangle parentRect = parent.Rect;
+
+            Dictionary<Hull, Rectangle> rects = new Dictionary<Hull, Rectangle>();
+            Rectangle worldRect = mainHull.WorldRect;
+            worldRect.Y = -worldRect.Y;
+
+            rects.Add(mainHull, worldRect);
+
+            foreach (Hull hull in linkedHulls)
+            {
+                Rectangle rect = hull.WorldRect;
+                rect.Y = -rect.Y;
+
+                worldRect = Rectangle.Union(worldRect, rect);
+                rects.Add(hull, rect);
+            }
+
+            worldRect.Y = -worldRect.Y;
+
+            List<RectangleF> normalizedRects = new List<RectangleF>();
+            List<Hull> hullRefs = new List<Hull>();
+            foreach (var (hull, rect) in rects)
+            {
+                Rectangle wRect = rect;
+                wRect.Y = -wRect.Y;
+
+                var (posX, posY) = new Vector2(
+                    (wRect.X - worldBorders.X) / (float)worldBorders.Width, 
+                    (worldBorders.Y - wRect.Y) / (float)worldBorders.Height);
+
+                var (scaleX, scaleY) = new Vector2(wRect.Width / (float)worldBorders.Width, wRect.Height / (float)worldBorders.Height);
+
+                RectangleF newRect = new RectangleF(posX * parentRect.Width, posY * parentRect.Height, scaleX * parentRect.Width, scaleY * parentRect.Height);
+
+                normalizedRects.Add(newRect);
+                hullRefs.Add(hull);
+            }
+
+            ImmutableArray<RectangleF> snappedRectangles = ToolBox.SnapRectangles(normalizedRects, treshold: 1);
+
+            List<List<Vector2>> polygon = ToolBox.CombineRectanglesIntoShape(snappedRectangles);
+
+            List<List<Vector2>> scaledPolygon = new List<List<Vector2>>();
+
+            foreach (List<Vector2> list in polygon)
+            {
+                var (polySizeX, polySizeY) = ToolBox.GetPolygonBoundingBoxSize(list);
+                float sizeX = polySizeX - 1f,
+                      sizeY = polySizeY - 1f;
+
+                scaledPolygon.Add(ToolBox.ScalePolygon(list, new Vector2(sizeX / polySizeX, sizeY / polySizeY)));
+            }
+
+            return new MiniMapHullData(scaledPolygon, worldRect, parentRect.Size, snappedRectangles, hullRefs.ToImmutableArray());
         }
 
         public void CheckForErrors()

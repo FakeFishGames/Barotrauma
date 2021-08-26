@@ -193,7 +193,7 @@ namespace Barotrauma
                     if (LoadState == 100.0f)
                     {
 #if DEBUG
-                        if (GameMain.Config.AutomaticQuickStartEnabled || GameMain.Config.AutomaticCampaignLoadEnabled && GameMain.FirstLoad)
+                        if (GameMain.Config.AutomaticQuickStartEnabled || GameMain.Config.AutomaticCampaignLoadEnabled || GameMain.Config.TestScreenEnabled && GameMain.FirstLoad)
                         {
                             loadText = "QUICKSTARTING ...";
                         }

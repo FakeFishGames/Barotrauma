@@ -2020,7 +2020,8 @@ namespace Barotrauma
             var playerFrame = (GUITextBlock)PlayerList.Content.FindChild(client);
             if (playerFrame == null) { return; }
             playerFrame.Text = client.Name;
-            
+
+            playerFrame.ToolTip = "";
             Color color = Color.White;
             if (SelectedMode == GameModePreset.PvP)
             {
@@ -2028,15 +2029,28 @@ namespace Barotrauma
                 {
                     case CharacterTeamType.Team1:
                         color = new Color(0, 110, 150, 255);
+                        playerFrame.ToolTip = TextManager.GetWithVariable("teampreference", "[team]", TextManager.Get("teampreference.team1"));
                         break;
                     case CharacterTeamType.Team2:
                         color = new Color(150, 110, 0, 255);
+                        playerFrame.ToolTip = TextManager.GetWithVariable("teampreference", "[team]", TextManager.Get("teampreference.team2"));
+                        break;
+                    default:
+                        playerFrame.ToolTip = TextManager.GetWithVariable("teampreference", "[team]", TextManager.Get("none"));
                         break;
                 }
             }
-            else if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
+            else
             {
-                color = JobPrefab.Prefabs[client.PreferredJob].UIColor;
+                if (JobPrefab.Prefabs.ContainsKey(client.PreferredJob))
+                {
+                    color = JobPrefab.Prefabs[client.PreferredJob].UIColor;
+                    playerFrame.ToolTip = TextManager.GetWithVariable("jobpreference", "[job]", JobPrefab.Prefabs[client.PreferredJob].Name);
+                }
+                else
+                {
+                    playerFrame.ToolTip = TextManager.GetWithVariable("jobpreference", "[job]", TextManager.Get("none"));
+                }
             }
             playerFrame.Color = color * 0.4f;
             playerFrame.HoverColor = color * 0.6f;

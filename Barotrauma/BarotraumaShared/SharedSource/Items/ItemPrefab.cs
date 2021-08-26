@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -22,7 +23,7 @@ namespace Barotrauma
         public readonly bool CopyCondition;
         public float Commonness { get; }
 
-        public DeconstructItem(XElement element)
+        public DeconstructItem(XElement element, string parentDebugName)
         {
             ItemIdentifier = element.GetAttributeString("identifier", "notfound");
             MinCondition = element.GetAttributeFloat("mincondition", -0.1f);
@@ -30,6 +31,11 @@ namespace Barotrauma
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
+
+            if (element.Attribute("copycondition") != null && element.Attribute("outcondition") != null)
+            {
+                DebugConsole.AddWarning($"Invalid deconstruction output in \"{parentDebugName}\": the output item \"{ItemIdentifier}\" has the out condition set, but is also set to copy the condition of the deconstructed item. Ignoring the out condition.");
+            }
         }
     }
 
@@ -67,8 +73,10 @@ namespace Barotrauma
         public readonly List<RequiredItem> RequiredItems;
         public readonly string[] SuitableFabricatorIdentifiers;
         public readonly float RequiredTime;
+        public readonly bool RequiresRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly List<Skill> RequiredSkills;
+
         public int Amount { get; }
 
         public FabricationRecipe(XElement element, ItemPrefab itemPrefab)
@@ -83,6 +91,7 @@ namespace Barotrauma
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
             RequiredItems = new List<RequiredItem>();
+            RequiresRecipe = element.GetAttributeBool("requiresrecipe", false);
             Amount = element.GetAttributeInt("amount", 1);
 
             foreach (XElement subElement in element.Elements())
@@ -281,7 +290,7 @@ namespace Barotrauma
         /// </summary>
         public List<Rectangle> Triggers;
 
-        private List<XElement> fabricationRecipeElements = new List<XElement>();
+        private readonly List<XElement> fabricationRecipeElements = new List<XElement>();
 
         private readonly Dictionary<string, float> treatmentSuitability = new Dictionary<string, float>();
 
@@ -513,6 +522,20 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize(0.0f, false)]
+        public float AddedRepairSpeedMultiplier
+        {
+            get;
+            private set;
+        }
+
+        [Serialize(false, false)]
+        public bool CannotRepairFail
+        {
+            get;
+            private set;
+        }
+
         [Serialize(null, false)]
         public string EquipConfirmationText { get; set; }
 
@@ -731,6 +754,20 @@ namespace Barotrauma
             originalName = element.GetAttributeString("name", "");
             name = originalName;
             identifier = element.GetAttributeString("identifier", "");
+
+            string variantOf = element.GetAttributeString("variantof", "");
+            if (!string.IsNullOrEmpty(variantOf))
+            {
+                ItemPrefab basePrefab = Find(null, variantOf);
+                if (basePrefab == null)
+                {
+                    DebugConsole.ThrowError($"Failed to load the item variant \"{identifier}\" - could not find the base prefab \"{variantOf}\"");
+                }
+                else
+                {
+                    ConfigElement = element = CreateVariantXML(element, basePrefab);
+                }
+            }
 
             string categoryStr = element.GetAttributeString("category", "Misc");
             if (!Enum.TryParse(categoryStr, true, out MapEntityCategory category))
@@ -1031,7 +1068,7 @@ namespace Barotrauma
                                 DebugConsole.ThrowError("Error in item config \"" + Name + "\" - use item identifiers instead of names to configure the deconstruct items.");
                                 continue;
                             }
-                            DeconstructItems.Add(new DeconstructItem(deconstructItem));
+                            DeconstructItems.Add(new DeconstructItem(deconstructItem, identifier));
                         }
                         RandomDeconstructionOutputAmount = Math.Min(RandomDeconstructionOutputAmount, DeconstructItems.Count);
                         break;
@@ -1044,7 +1081,7 @@ namespace Barotrauma
                         var preferredContainer = new PreferredContainer(subElement);
                         if (preferredContainer.Primary.Count == 0 && preferredContainer.Secondary.Count == 0)
                         {
-                            DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no preferences defined ({subElement.ToString()}).");
+                            DebugConsole.ThrowError($"Error in item prefab {Name}: preferred container has no preferences defined ({subElement}).");
                         }
                         else
                         {
@@ -1313,5 +1350,99 @@ namespace Barotrauma
 
         public static bool IsContainerPreferred(IEnumerable<string> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
         public static bool IsContainerPreferred(IEnumerable<string> preferences, IEnumerable<string> ids) => ids.Any(id => preferences.Contains(id));
+
+        private XElement CreateVariantXML(XElement variantElement, ItemPrefab basePrefab)
+        {
+            XElement newElement = new XElement(variantElement.Name);
+            newElement.Add(basePrefab.ConfigElement.Attributes());
+            newElement.Add(basePrefab.ConfigElement.Elements());
+
+            ReplaceElement(newElement, variantElement);
+
+            void ReplaceElement(XElement element, XElement replacement)
+            {
+                List<XElement> elementsToRemove = new List<XElement>();
+                foreach (XAttribute attribute in replacement.Attributes())
+                {
+                    ReplaceAttribute(element, attribute);
+                }
+                foreach (XElement replacementSubElement in replacement.Elements())
+                {
+                    int index = replacement.Elements().ToList().FindAll(e => e.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)).IndexOf(replacementSubElement);
+                    System.Diagnostics.Debug.Assert(index > -1);
+
+                    int i = 0;
+                    bool matchingElementFound = false;
+                    foreach (XElement subElement in element.Elements())
+                    {
+                        if (!subElement.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { continue; }
+                        if (i == index)
+                        {
+                            if (!replacementSubElement.HasAttributes && !replacementSubElement.HasElements)
+                            {
+                                //if the replacement is empty (no attributes or child elements)
+                                //remove the element from the variant
+                                elementsToRemove.Add(subElement);
+                            }
+                            else
+                            {
+                                ReplaceElement(subElement, replacementSubElement);
+                            }
+                            matchingElementFound = true;
+                            break;
+                        }
+                        i++;
+                    }
+                    if (!matchingElementFound)
+                    {
+                        element.Add(replacementSubElement);
+                    }
+                }
+                elementsToRemove.ForEach(e => e.Remove());
+            }
+
+            void ReplaceAttribute(XElement element, XAttribute newAttribute)
+            {
+                XAttribute existingAttribute = element.Attributes().FirstOrDefault(a => a.Name.ToString().Equals(newAttribute.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+                if (existingAttribute == null)
+                {
+                    element.Add(newAttribute);
+                    return;
+                }
+                float.TryParse(existingAttribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out float value);
+                if (newAttribute.Value.StartsWith('*'))
+                {
+                    string multiplierStr = newAttribute.Value.Substring(1, newAttribute.Value.Length - 1);
+                    float.TryParse(multiplierStr, NumberStyles.Any, CultureInfo.InvariantCulture, out float multiplier);
+                    if (multiplierStr.Contains('.') || existingAttribute.Value.Contains('.'))
+                    {
+                        existingAttribute.Value = (value * multiplier).ToString("G", CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        existingAttribute.Value = ((int)(value * multiplier)).ToString();
+                    }
+                }
+                else if (newAttribute.Value.StartsWith('+'))
+                {
+                    string additionStr = newAttribute.Value.Substring(1, newAttribute.Value.Length - 1);
+                    float.TryParse(additionStr, NumberStyles.Any, CultureInfo.InvariantCulture, out float addition);
+                    if (additionStr.Contains('.') || existingAttribute.Value.Contains('.'))
+                    {
+                        existingAttribute.Value = (value + addition).ToString("G", CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        existingAttribute.Value = ((int)(value + addition)).ToString();
+                    }
+                }
+                else
+                {
+                    existingAttribute.Value = newAttribute.Value;
+                }
+            }
+
+            return newElement;
+        }
     }
 }

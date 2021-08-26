@@ -14,8 +14,8 @@ namespace Barotrauma
     partial class BackgroundSection
     {
         public Rectangle Rect;
-        public int Index;
-        public int RowIndex;
+        public ushort Index;
+        public ushort RowIndex;
 
         private Vector4 colorVector4;
         private Color color;
@@ -39,7 +39,7 @@ namespace Barotrauma
             }
         }
 
-        public BackgroundSection(Rectangle rect, int index, int rowIndex)
+        public BackgroundSection(Rectangle rect, ushort index, ushort rowIndex)
         {
             Rect = rect;
             Index = index;
@@ -53,7 +53,7 @@ namespace Barotrauma
             Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
         }
 
-        public BackgroundSection(Rectangle rect, int index, float colorStrength, Color color, int rowIndex)
+        public BackgroundSection(Rectangle rect, ushort index, float colorStrength, Color color, ushort rowIndex)
         {
             System.Diagnostics.Debug.Assert(rect.Width > 0 && rect.Height > 0);
 
@@ -674,6 +674,9 @@ namespace Barotrauma
                 Gap.UpdateHulls();
             }
 
+            BackgroundSections?.Clear();
+            submergedSections?.Clear();
+
             List<FireSource> fireSourcesToRemove = new List<FireSource>(FireSources);
             foreach (FireSource fireSource in fireSourcesToRemove)
             {
@@ -1260,9 +1263,9 @@ namespace Barotrauma
             {
                 for (int x = 0; x < xBackgroundMax; x++)
                 {
-                    int index = BackgroundSections.Count;
+                    ushort index = (ushort)BackgroundSections.Count;
                     int sector = (int)Math.Floor(index / (float)sectorWidth - xSectors * y) + y / sectorHeight * (int)Math.Ceiling(xSectors);
-                    BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, y));
+                    BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, (ushort)y));
                 }
             }
 

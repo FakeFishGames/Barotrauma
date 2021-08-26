@@ -56,6 +56,6 @@ namespace Barotrauma
         public void ApplyOrderData(Character character)
         {
             CharacterInfo.ApplyOrderData(character, OrderData);
-        } 
+        }
     }
 }

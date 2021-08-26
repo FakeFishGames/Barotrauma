@@ -242,9 +242,8 @@ namespace Barotrauma
                     if (!searchingNewHull)
                     {
                         //find all available hulls first
-                        FindTargetHulls();
                         searchingNewHull = true;
-                        return;
+                        FindTargetHulls();
                     }
                     else if (targetHulls.Any())
                     {
@@ -255,11 +254,10 @@ namespace Barotrauma
                         var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: null, nodeFilter: node =>
                         {
                             if (node.Waypoint.CurrentHull == null) { return false; }
-                            // Check that there is no unsafe or forbidden hulls on the way to the target
+                            // Check that there is no unsafe hulls on the way to the target
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
-                            if (isCurrentHullAllowed && IsForbidden(node.Waypoint.CurrentHull)) { return false; }
                             return true;
-                        });
+                        }, endNodeFilter: node => !isCurrentHullAllowed | !IsForbidden(node.Waypoint.CurrentHull));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -271,30 +269,19 @@ namespace Barotrauma
                             SetTargetTimerLow();
                             return;
                         }
+                        character.AIController.SelectTarget(currentTarget.AiTarget);
+                        PathSteering.SetPath(path);
+                        SetTargetTimerNormal();
                         searchingNewHull = false;
                     }
                     else
                     {
-                        // Couldn't find a target for some reason -> reset
+                        // Couldn't find a valid hull
                         SetTargetTimerHigh();
                         searchingNewHull = false;
                     }
-
-                    if (currentTarget != null)
-                    {
-                        character.AIController.SelectTarget(currentTarget.AiTarget);
-                        string errorMsg = null;
-#if DEBUG
-                        bool isRoomNameFound = currentTarget.DisplayName != null;
-                        errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.DisplayName : currentTarget.ToString()) + ")";
-#endif
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: errorMsg, nodeFilter: node => node.Waypoint.CurrentHull != null);
-                        PathSteering.SetPath(path);
-                    }
-                    SetTargetTimerNormal();
                 }
                 newTargetTimer -= deltaTime;
-
                 if (!character.IsClimbing && IsSteeringFinished())
                 {
                     Wander(deltaTime);

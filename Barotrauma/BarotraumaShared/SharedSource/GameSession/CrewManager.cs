@@ -237,6 +237,9 @@ namespace Barotrauma
                     {
                         CharacterInfo.ApplyHealthData(character, character.Info.HealthData);
                     }
+
+                    character.LoadTalents();
+
                     character.GiveIdCardTags(spawnWaypoints[i]);
                     character.Info.StartItemsGiven = true;
                     if (character.Info.OrderData != null)

@@ -249,6 +249,17 @@ namespace Barotrauma
             get { return subBody?.HullVertices; }
         }
 
+        private int? submarineSpecificIDTag;
+        public int SubmarineSpecificIDTag
+        {
+            get
+            {
+                submarineSpecificIDTag ??= ToolBox.StringToInt((Level.Loaded?.Seed ?? "") + Info.Name);
+                return submarineSpecificIDTag.Value;
+            }
+        }
+
+
         public bool AtDamageDepth
         {
             get
@@ -329,48 +340,6 @@ namespace Barotrauma
             DockedTo.ForEach(s => s.ShowSonarMarker = false);
             PhysicsBody.FarseerBody.BodyType = BodyType.Static;
             TeamID = CharacterTeamType.None;
-
-            string defaultTag = Level.Loaded.GetWreckIDTag("wreck_id", this);
-            ReplaceIDCardTagRequirements("wreck_id", defaultTag);
-
-            foreach (Item item in Item.ItemList)
-            {
-                if (item.Submarine != this) { continue; }
-                if (item.prefab.Identifier == "idcardwreck" || item.prefab.Identifier == "idcard")
-                {
-                    foreach (string tag in item.GetTags().ToList())
-                    {
-                        if (tag == "smallitem") { continue; }
-                        string newTag = Level.Loaded.GetWreckIDTag(tag, this);
-                        item.ReplaceTag(tag, newTag);
-                        ReplaceIDCardTagRequirements(tag, newTag);
-                    }
-                }
-            }
-
-            void ReplaceIDCardTagRequirements(string oldTag, string newTag)
-            {
-                foreach (Item item in Item.ItemList)
-                {
-                    if (item.Submarine != this) { continue; }
-                    foreach (ItemComponent ic in item.Components)
-                    {
-                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Picked, oldTag, newTag);
-                        ReplaceIDCardTagRequirement(ic, RelatedItem.RelationType.Equipped, oldTag, newTag);
-                    }
-                }
-            }
-
-            static void ReplaceIDCardTagRequirement(ItemComponent ic, RelatedItem.RelationType relationType, string oldTag, string newTag)
-            {
-                if (!ic.requiredItems.ContainsKey(relationType)) { return; }
-                foreach (RelatedItem requiredItem in ic.requiredItems[relationType])
-                {
-                    int index = Array.IndexOf(requiredItem.Identifiers, oldTag);
-                    if (index == -1) { continue; }
-                    requiredItem.Identifiers[index] = newTag;
-                }
-            }
         }
 
         public WreckAI WreckAI { get; private set; }
@@ -1718,7 +1687,10 @@ namespace Barotrauma
 
             PhysicsBody.RemoveAll();
 
-            GameMain.World.Clear();
+            GameMain.World?.Clear();
+            GameMain.World = null;
+
+            GC.Collect();
 
             Unloading = false;
         }
@@ -1729,6 +1701,9 @@ namespace Barotrauma
 
             subBody?.Remove();
             subBody = null;
+
+            outdoorNodes?.Clear();
+            outdoorNodes = null;
 
             if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
             {
@@ -1743,8 +1718,8 @@ namespace Barotrauma
 
             visibleEntities = null;
 
-            if (MainSub == this) MainSub = null;
-            if (MainSubs[1] == this) MainSubs[1] = null;
+            if (MainSub == this) { MainSub = null; }
+            if (MainSubs[1] == this) { MainSubs[1] = null; }
 
             ConnectedDockingPorts?.Clear();
 

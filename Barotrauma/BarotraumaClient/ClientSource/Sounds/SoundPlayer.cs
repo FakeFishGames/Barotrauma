@@ -38,6 +38,7 @@ namespace Barotrauma
         public readonly string File;
         public readonly string Type;
         public readonly bool DuckVolume;
+        public readonly float Volume;
 
         public readonly Vector2 IntensityRange;
 
@@ -52,6 +53,7 @@ namespace Barotrauma
             this.Type = element.GetAttributeString("type", "").ToLowerInvariant();
             this.IntensityRange = element.GetAttributeVector2("intensityrange", new Vector2(0.0f, 100.0f));
             this.DuckVolume = element.GetAttributeBool("duckvolume", false);
+            this.Volume = element.GetAttributeFloat("volume", 1.0f);
             this.ContinueFromPreviousTime = element.GetAttributeBool("continuefromprevioustime", false);
             this.Element = element;
         }
@@ -816,6 +818,8 @@ namespace Barotrauma
                 }                
             }
 
+            int noiseLoopIndex = 1;
+
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
@@ -851,7 +855,6 @@ namespace Barotrauma
                     }
                 }
 
-                int noiseLoopIndex = 1;
                 if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
                 {
                     // Find background noise loop for the current biome
@@ -917,7 +920,7 @@ namespace Barotrauma
                     {
                         //mute the channel
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                        if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
+                        if (musicChannel[i].Gain < 0.01f) { DisposeMusicChannel(i); }                     
                     }
                 }
                 //something should be playing, but the targetMusic is invalid
@@ -932,7 +935,7 @@ namespace Barotrauma
                     if (musicChannel[i] != null && musicChannel[i].IsPlaying)
                     {
                         musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, 0.0f, MusicLerpSpeed * deltaTime);
-                        if (musicChannel[i].Gain < 0.01f) DisposeMusicChannel(i);                        
+                        if (musicChannel[i].Gain < 0.01f) { DisposeMusicChannel(i); }                   
                     }
                     //channel free now, start playing the correct clip
                     if (currentMusic[i] == null || (musicChannel[i] == null || !musicChannel[i].IsPlaying))
@@ -949,7 +952,7 @@ namespace Barotrauma
                             targetMusic[i] = null;
                             break;
                         }
-                        musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "" : "music");
                         if (targetMusic[i].ContinueFromPreviousTime)
                         {
                             musicChannel[i].StreamSeekPos = targetMusic[i].PreviousTime;
@@ -963,13 +966,13 @@ namespace Barotrauma
                     if (musicChannel[i] == null || !musicChannel[i].IsPlaying)
                     {
                         musicChannel[i]?.Dispose();
-                        musicChannel[i] = currentMusic[i].Play(0.0f, "music");
+                        musicChannel[i] = currentMusic[i].Play(0.0f, i == noiseLoopIndex ? "" : "music");
                         musicChannel[i].Looping = true;
                     }
-                    float targetGain = 1.0f;
+                    float targetGain = targetMusic[i].Volume;
                     if (targetMusic[i].DuckVolume)
                     {
-                        targetGain = (float)Math.Sqrt(1.0f / activeTrackCount);
+                        targetGain *= (float)Math.Sqrt(1.0f / activeTrackCount);
                     }
                     musicChannel[i].Gain = MathHelper.Lerp(musicChannel[i].Gain, targetGain, MusicLerpSpeed * deltaTime);
                 }

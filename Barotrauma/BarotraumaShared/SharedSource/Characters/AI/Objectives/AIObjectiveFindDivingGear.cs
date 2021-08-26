@@ -57,7 +57,20 @@ namespace Barotrauma
                     };
                 }, 
                 onAbandon: () => Abandon = true,
-                onCompleted: () => RemoveSubObjective(ref getDivingGear));
+                onCompleted: () =>
+                {
+                    RemoveSubObjective(ref getDivingGear);
+                    if (gearTag == HEAVY_DIVING_GEAR && HumanAIController.HasItem(character, LIGHT_DIVING_GEAR, out IEnumerable<Item> masks, requireEquipped: true))
+                    {
+                        foreach (Item mask in masks)
+                        {
+                            if (mask != targetItem)
+                            {
+                                character.Inventory.TryPutItem(mask, character, CharacterInventory.anySlot);
+                            }
+                        }
+                    }
+                });
             }
             else
             {
@@ -71,9 +84,13 @@ namespace Barotrauma
                     {
                         if (character.IsOnPlayerTeam)
                         {
-                            if (HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: min))
+                            if (HumanAIController.HasItem(character, OXYGEN_SOURCE, out _, conditionPercentage: min))
                             {
                                 character.Speak(TextManager.Get("dialogswappingoxygentank"), null, 0, "swappingoxygentank", 30.0f);
+                                if (character.Inventory.FindAllItems(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > min).Count == 1)
+                                {
+                                    character.Speak(TextManager.Get("dialoglastoxygentank"), null, 0.0f, "dialoglastoxygentank", 30.0f);
+                                }
                             }
                             else
                             {
@@ -105,7 +122,7 @@ namespace Barotrauma
                         onAbandon: () =>
                         {
                             Abandon = true;
-                            if (remainingTanks > 0 && !HumanAIController.HasItem(character, "oxygensource", out _, conditionPercentage: 0.01f))
+                            if (remainingTanks > 0 && !HumanAIController.HasItem(character, OXYGEN_SOURCE, out _, conditionPercentage: 0.01f))
                             {
                                 character.Speak(TextManager.Get("dialogcantfindtoxygen"), null, 0, "cantfindoxygen", 30.0f);
                             }
@@ -121,7 +138,7 @@ namespace Barotrauma
                     int ReportOxygenTankCount()
                     {
                         if (character.Submarine != Submarine.MainSub) { return 1; }
-                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag("oxygensource") && i.Condition > 1);
+                        int remainingOxygenTanks = Submarine.MainSub.GetItems(false).Count(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 1);
                         if (remainingOxygenTanks == 0)
                         {
                             character.Speak(TextManager.Get("DialogOutOfOxygenTanks"), null, 0.0f, "outofoxygentanks", 30.0f);
@@ -134,17 +151,6 @@ namespace Barotrauma
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns false only when no inventory can be found from the item.
-        /// </summary>
-        public static bool EjectEmptyTanks(Character actor, Item target, out IEnumerable<Item> containedItems)
-        {
-            containedItems = target.OwnInventory?.AllItems;
-            if (containedItems == null) { return false; }
-            AIController.UnequipEmptyItems(actor, target);
-            return true;
         }
 
         public override void Reset()

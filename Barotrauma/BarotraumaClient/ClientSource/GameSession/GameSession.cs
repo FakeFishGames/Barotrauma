@@ -24,7 +24,7 @@ namespace Barotrauma
                 if (GameMain.NetLobbyScreen.HeadSelectionList != null) { GameMain.NetLobbyScreen.HeadSelectionList.Visible = false; }
                 if (GameMain.NetLobbyScreen.JobSelectionFrame != null) { GameMain.NetLobbyScreen.JobSelectionFrame.Visible = false; }
             }
-            if (tabMenu == null && GameMode is TutorialMode == false)
+            if (tabMenu == null && !(GameMode is TutorialMode) && !ConversationAction.IsDialogOpen)
             {
                 tabMenu = new TabMenu();
                 HintManager.OnShowTabMenu();
@@ -34,7 +34,6 @@ namespace Barotrauma
                 tabMenu = null;
                 NetLobbyScreen.JobInfoFrame = null;
             }
-
             return true;
         }
 
@@ -44,7 +43,7 @@ namespace Barotrauma
         private GUIComponent respawnInfoFrame, respawnButtonContainer;
         private GUITextBlock respawnInfoText;
         private GUITickBox respawnTickBox;
-        private GUILayoutGroup TopLeftButtonGroup;
+
         private void CreateTopLeftButtons()
         {
             if (topLeftButtonGroup != null)

@@ -219,6 +219,7 @@ namespace Barotrauma
             if (character.SelectedCharacter != null)
             {
                 DragCharacter(character.SelectedCharacter, deltaTime);
+                return;
             }
 
             //don't flip when simply physics is enabled

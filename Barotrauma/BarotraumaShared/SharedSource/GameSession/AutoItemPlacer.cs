@@ -8,8 +8,6 @@ namespace Barotrauma
 {
     static class AutoItemPlacer
     {
-        private static readonly List<Item> spawnedItems = new List<Item>();
-
         public static bool OutputDebugInfo = false;
 
         public static void PlaceIfNeeded()
@@ -41,7 +39,12 @@ namespace Barotrauma
             }
         }
 
-        private static void Place(IEnumerable<Submarine> subs)
+        public static void RegenerateLoot(Submarine sub, ItemContainer regeneratedContainer)
+        {
+            Place(sub.ToEnumerable(), regeneratedContainer);
+        }
+
+        private static void Place(IEnumerable<Submarine> subs, ItemContainer regeneratedContainer = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
@@ -49,19 +52,29 @@ namespace Barotrauma
                 return;
             }
 
+            List<Item> spawnedItems = new List<Item>(100);
+
             int itemCountApprox = MapEntityPrefab.List.Count() / 3;
             var containers = new List<ItemContainer>(70 + 30 * subs.Count());
             var prefabsWithContainer = new List<ItemPrefab>(itemCountApprox / 3);
             var prefabsWithoutContainer = new List<ItemPrefab>(itemCountApprox);
             var removals = new List<ItemPrefab>();
 
-            foreach (Item item in Item.ItemList)
+            // generate loot only for a specific container if defined
+            if (regeneratedContainer != null)
             {
-                if (!subs.Contains(item.Submarine)) { continue; }
-                if (item.GetRootInventoryOwner() is Character) { continue; }
-                containers.AddRange(item.GetComponents<ItemContainer>());
+                containers.Add(regeneratedContainer);
             }
-            containers.Shuffle(Rand.RandSync.Server);
+            else
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!subs.Contains(item.Submarine)) { continue; }
+                    if (item.GetRootInventoryOwner() is Character) { continue; }
+                    containers.AddRange(item.GetComponents<ItemContainer>());
+                }
+                containers.Shuffle(Rand.RandSync.Server);
+            }
 
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
@@ -77,7 +90,6 @@ namespace Barotrauma
                 }
             }
 
-            spawnedItems.Clear();
             var validContainers = new Dictionary<ItemContainer, PreferredContainer>();
             prefabsWithContainer.Shuffle(Rand.RandSync.Server);
             // Spawn items that have an ItemContainer component first so we can fill them up with items if needed (oxygen tanks inside the spawned diving masks, etc)
@@ -152,8 +164,10 @@ namespace Barotrauma
                     }
                     foreach (var validContainer in validContainers)
                     {
-                        if (SpawnItem(itemPrefab, containers, validContainer))
+                        var newItems = SpawnItem(itemPrefab, containers, validContainer);
+                        if (newItems.Any())
                         {
+                            spawnedItems.AddRange(newItems);
                             success = true;
                         }
                     }
@@ -184,14 +198,15 @@ namespace Barotrauma
             return validContainers;
         }
 
-        private static bool SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
+        private static List<Item> SpawnItem(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
         {
+            List<Item> spawnedItems = new List<Item>();
             bool success = false;
-            if (Rand.Value(Rand.RandSync.Server) > validContainer.Value.SpawnProbability) { return false; }
+            if (Rand.Value(Rand.RandSync.Server) > validContainer.Value.SpawnProbability) { return spawnedItems; }
             // Don't add dangerously reactive materials in thalamus wrecks 
             if (validContainer.Key.Item.Submarine.WreckAI != null && itemPrefab.Tags.Contains("explodesinwater"))
             {
-                return false;
+                return spawnedItems;
             }
             int amount = Rand.Range(validContainer.Value.MinAmount, validContainer.Value.MaxAmount + 1, Rand.RandSync.Server);
             for (int i = 0; i < amount; i++)
@@ -219,7 +234,7 @@ namespace Barotrauma
                 containers.AddRange(item.GetComponents<ItemContainer>());
                 success = true;
             }
-            return success;
+            return spawnedItems;
         }
     }
 }

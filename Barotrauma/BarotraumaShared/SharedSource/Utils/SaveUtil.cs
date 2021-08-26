@@ -296,20 +296,10 @@ namespace Barotrauma
         public static void CompressStringToFile(string fileName, string value)
         {
             // A.
-            // Write string to temporary file.
-            string temp = Path.GetTempFileName();
-            File.WriteAllText(temp, value);
+            // Convert the string to its byte representation.
+            byte[] b = Encoding.UTF8.GetBytes(value);
 
             // B.
-            // Read file into byte array buffer.
-            byte[] b;
-            using (FileStream f = File.Open(temp, System.IO.FileMode.Open))
-            {
-                b = new byte[f.Length];
-                f.Read(b, 0, (int)f.Length);
-            }
-
-            // C.
             // Use GZipStream to write compressed bytes to target file.
             using (FileStream f2 = File.Open(fileName, System.IO.FileMode.Create))
             using (GZipStream gz = new GZipStream(f2, CompressionMode.Compress, false))

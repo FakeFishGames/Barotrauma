@@ -122,6 +122,12 @@ namespace Barotrauma.Items.Components
 
                 float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
                 Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
+
+                if (item.GetComponent<Repairable>()?.IsTinkering ?? false)
+                {
+                    currForce *= 2.5f;
+                }
+
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
                 if (item.Submarine.FlippedX) { currForce *= -1; }

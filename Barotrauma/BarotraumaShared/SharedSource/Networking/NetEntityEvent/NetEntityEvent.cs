@@ -23,6 +23,9 @@ namespace Barotrauma.Networking
             TeamChange,
             ObjectiveManagerState,
             AddToCrew,
+            UpdateExperience,
+            UpdateTalents,
+            UpdateMoney,
         }
 
         public readonly Entity Entity;

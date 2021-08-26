@@ -219,7 +219,7 @@ namespace Barotrauma
 
         public bool inWater;
 
-        private readonly FixedMouseJoint pullJoint;
+        private FixedMouseJoint pullJoint;
 
         public readonly LimbType type;
 
@@ -683,7 +683,7 @@ namespace Barotrauma
         private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
         private readonly List<DamageModifier> tempModifiers = new List<DamageModifier>();
         private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
-        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f, Character attacker = null)
         {
             appliedDamageModifiers.Clear();
             afflictionsCopy.Clear();
@@ -741,7 +741,7 @@ namespace Barotrauma
                 {
                     newAffliction.SetStrength(affliction.NonClampedStrength);
                 }
-
+                attacker?.CheckTalents(AbilityEffectType.OnAddDamageAffliction, newAffliction);
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);
@@ -1263,6 +1263,14 @@ namespace Barotrauma
         {
             body?.Remove();
             body = null;
+            if (pullJoint != null)
+            {
+                if (GameMain.World.JointList.Contains(pullJoint))
+                {
+                    GameMain.World.Remove(pullJoint);
+                }
+                pullJoint = null;
+            }
             Release();
             RemoveProjSpecific();
             Removed = true;

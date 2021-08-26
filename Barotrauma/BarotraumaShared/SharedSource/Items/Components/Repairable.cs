@@ -103,18 +103,22 @@ namespace Barotrauma.Items.Components
             } 
         }
 
+        public bool IsTinkering { get; private set; } = false;
+
         public float RepairIconThreshold
         {
             get { return RepairThreshold / 2; }
         }
 
         public Character CurrentFixer { get; private set; }
+        private Item currentRepairItem;
 
         public enum FixActions : int
         {
             None = 0,
             Repair = 1,
-            Sabotage = 2
+            Sabotage = 2,
+            Tinker = 3,
         }
 
         private FixActions currentFixerAction = FixActions.None;
@@ -161,11 +165,13 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Check if the character manages to succesfully repair the item
         /// </summary>
-        public bool CheckCharacterSuccess(Character character)
+        public bool CheckCharacterSuccess(Character character, Item bestRepairItem)
         {
             if (character == null) { return false; }
 
             if (statusEffectLists == null || statusEffectLists.None(s => s.Key == ActionType.OnFailure)) { return true; }
+
+            if (bestRepairItem != null && bestRepairItem.Prefab.CannotRepairFail) { return true; }
 
             // unpowered (electrical) items can be repaired without a risk of electrical shock
             if (requiredSkills.Any(s => s != null && s.Identifier.Equals("electrical", StringComparison.OrdinalIgnoreCase)) &&
@@ -201,10 +207,11 @@ namespace Barotrauma.Items.Components
             }
             else
             {
+                Item bestRepairItem = GetBestRepairItem(character);
 #if SERVER
                 if (CurrentFixer != character || currentFixerAction != action)
                 {
-                    if (!CheckCharacterSuccess(character))
+                    if (!CheckCharacterSuccess(character, bestRepairItem))
                     {
                         GameServer.Log($"{GameServer.CharacterLogName(character)} failed to {(action == FixActions.Sabotage ? "sabotage" : "repair")} {item.Name}", ServerLog.MessageType.ItemInteraction);
                         GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, character.ID });
@@ -215,11 +222,18 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #else
-                if (GameMain.Client == null && (CurrentFixer != character || currentFixerAction != action) && !CheckCharacterSuccess(character)) { return false; }
+                if (GameMain.Client == null && (CurrentFixer != character || currentFixerAction != action) && !CheckCharacterSuccess(character, bestRepairItem)) { return false; }
 #endif
                 CurrentFixer = character;
+                currentRepairItem = bestRepairItem;
                 CurrentFixerAction = action;
                 return true;
+
+                Item GetBestRepairItem(Character character)
+                {
+                    return character.HeldItems.OrderByDescending(i => i.Prefab.AddedRepairSpeedMultiplier).FirstOrDefault();
+                }
+
             }
         }
 
@@ -233,8 +247,16 @@ namespace Barotrauma.Items.Components
                     item.CreateServerEvent(this);
                 }
 #endif
+                if (currentRepairItem != null)
+                {
+                    foreach (var ic in currentRepairItem.GetComponents<ItemComponent>())
+                    {
+                        ic.ApplyStatusEffects(ActionType.OnSuccess, 1.0f, character);
+                    }
+                }
                 CurrentFixer.AnimController.Anim = AnimController.Animation.None;
                 CurrentFixer = null;
+                currentRepairItem = null;
                 currentFixerAction = FixActions.None;
 #if CLIENT
                 repairSoundChannel?.FadeOutAndDispose();
@@ -266,7 +288,8 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateProjSpecific(deltaTime);
-            
+            IsTinkering = false;
+
             if (CurrentFixer == null)
             {
                 if (deteriorateAlwaysResetTimer > 0.0f)
@@ -314,6 +337,20 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            if (currentFixerAction == FixActions.Tinker)
+            {
+                // this is a bit code rotty to interject it here, should be less reliant on returning
+                if (!CanTinker(CurrentFixer))
+                {
+                    StopRepairing(CurrentFixer);
+                }
+                else
+                {
+                    IsTinkering = true;
+                }
+                return;
+            }
+
             float successFactor = requiredSkills.Count == 0 ? 1.0f : RepairDegreeOfSuccess(CurrentFixer, requiredSkills);
 
             //item must have been below the repair threshold for the player to get an achievement or XP for repairing it
@@ -327,6 +364,8 @@ namespace Barotrauma.Items.Components
             }
 
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
+            fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
+
             if (currentFixerAction == FixActions.Repair)
             {
                 if (fixDuration <= 0.0f)
@@ -354,6 +393,7 @@ namespace Barotrauma.Items.Components
                                 CurrentFixer.Position + Vector2.UnitY * 100.0f);
                         }
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
+                        CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
                     }
                     deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
                     wasBroken = false;                    
@@ -397,6 +437,12 @@ namespace Barotrauma.Items.Components
             {
                 throw new NotImplementedException(currentFixerAction.ToString());
             }
+        }
+
+        private bool CanTinker(Character character)
+        {
+            if (!character.HasAbilityFlag(AbilityFlags.CanTinker)) { return false; }
+            return true;
         }
 
         partial void UpdateProjSpecific(float deltaTime);

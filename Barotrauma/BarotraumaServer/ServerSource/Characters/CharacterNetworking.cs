@@ -238,7 +238,7 @@ namespace Barotrauma
                     break;
 
                 case ClientNetObject.ENTITY_STATE:
-                    int eventType = msg.ReadRangedInteger(0, 3);
+                    int eventType = msg.ReadRangedInteger(0, 4);
                     switch (eventType)
                     {
                         case 0:
@@ -268,8 +268,35 @@ namespace Barotrauma
                             if (IsIncapacitated)
                             {
                                 var causeOfDeath = CharacterHealth.GetCauseOfDeath();
-                                Kill(causeOfDeath.First, causeOfDeath.Second);
+                                Kill(causeOfDeath.type, causeOfDeath.affliction);
                             }
+                            break;
+                        case 3: // NetEntityEvent.Type.UpdateTalents
+                            if (c.Character != this)
+                            {
+#if DEBUG
+                                DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+#endif
+                                return;
+                            }
+
+                            // get the full list of talents from the player, only give the ones
+                            // that are not already given (or otherwise not viable)
+                            ushort talentCount = msg.ReadUInt16();
+                            List<string> talentSelection = new List<string>();
+                            for (int i = 0; i < talentCount; i++)
+                            {
+                                UInt32 talentIdentifier = msg.ReadUInt32();
+                                var prefab = TalentPrefab.TalentPrefabs.Find(p => p.UIntIdentifier == talentIdentifier);
+                                if (prefab != null) { talentSelection.Add(prefab.Identifier); }                               
+                            }
+                            talentSelection = TalentTree.CheckTalentSelection(this, talentSelection);
+
+                            foreach (string talent in talentSelection)
+                            {
+                                GiveTalent(talent);
+                            }
+
                             break;
                     }
                     break;
@@ -283,7 +310,7 @@ namespace Barotrauma
 
             if (extraData != null)
             {
-                const int min = 0, max = 9;
+                const int min = 0, max = 12;
                 switch ((NetEntityEvent.Type)extraData[0])
                 {
                     case NetEntityEvent.Type.InventoryState:
@@ -394,6 +421,22 @@ namespace Barotrauma
                             msg.Write(inventoryItemIDs[i]);
                         }
                         break;
+                    case NetEntityEvent.Type.UpdateExperience:
+                        msg.WriteRangedInteger(10, min, max);
+                        msg.Write(Info.ExperiencePoints);
+                        break;
+                    case NetEntityEvent.Type.UpdateTalents:
+                        msg.WriteRangedInteger(11, min, max);
+                        msg.Write((ushort)characterTalents.Count);
+                        foreach (var unlockedTalent in characterTalents)
+                        {
+                            msg.Write(unlockedTalent.Prefab.UIntIdentifier);
+                        }
+                        break;
+                    case NetEntityEvent.Type.UpdateMoney:
+                        msg.WriteRangedInteger(12, min, max);
+                        msg.Write(GameMain.GameSession.Campaign.Money);
+                        break;
                     default:
                         DebugConsole.ThrowError("Invalid NetworkEvent type for entity " + ToString() + " (" + (NetEntityEvent.Type)extraData[0] + ")");
                         break;
@@ -499,7 +542,7 @@ namespace Barotrauma
                 if (writeStatus)
                 {
                     WriteStatus(tempBuffer);
-                    (AIController as EnemyAIController)?.PetBehavior?.ServerWrite(tempBuffer);
+                    AIController?.ServerWrite(tempBuffer);
                     HealthUpdatePending = false;
                 }
 

@@ -1903,17 +1903,17 @@ namespace Barotrauma
 
             return connectedComponents;
         }
-        
-        public static readonly Pair<string, string>[] connectionPairs = new Pair<string, string>[]
+
+        public static readonly (string input, string output)[] connectionPairs = new (string input, string output)[]
         {
-            new Pair<string, string>("power_in", "power_out"),
-            new Pair<string, string>("signal_in1", "signal_out1"),
-            new Pair<string, string>("signal_in2", "signal_out2"),
-            new Pair<string, string>("signal_in3", "signal_out3"),
-            new Pair<string, string>("signal_in4", "signal_out4"),
-            new Pair<string, string>("signal_in", "signal_out"),
-            new Pair<string, string>("signal_in1", "signal_out"),
-            new Pair<string, string>("signal_in2", "signal_out")
+            ("power_in", "power_out"),
+            ("signal_in1", "signal_out1"),
+            ("signal_in2", "signal_out2"),
+            ("signal_in3", "signal_out3"),
+            ("signal_in4", "signal_out4"),
+            ("signal_in", "signal_out"),
+            ("signal_in1", "signal_out"),
+            ("signal_in2", "signal_out")
         };
 
         private void GetConnectedComponentsRecursive<T>(Connection c, HashSet<Connection> alreadySearched, List<T> connectedComponents) where T : ItemComponent
@@ -1949,20 +1949,20 @@ namespace Barotrauma
                 recipient.Item.GetConnectedComponentsRecursive(recipient, alreadySearched, connectedComponents);                   
             }
 
-            foreach (Pair<string, string> connectionPair in connectionPairs)
+            foreach ((string input, string output) in connectionPairs)
             {
-                if (connectionPair.First == c.Name)
+                if (input == c.Name)
                 {
-                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.Second);
+                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == output);
                     if (pairedConnection != null)
                     {
                         if (alreadySearched.Contains(pairedConnection)) { continue; }
                         GetConnectedComponentsRecursive(pairedConnection, alreadySearched, connectedComponents);
                     }
                 }
-                else if (connectionPair.Second == c.Name)
+                else if (output == c.Name)
                 {
-                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == connectionPair.First);
+                    var pairedConnection = c.Item.Connections.FirstOrDefault(c2 => c2.Name == input);
                     if (pairedConnection != null)
                     {
                         if (alreadySearched.Contains(pairedConnection)) { continue; }
@@ -1972,18 +1972,27 @@ namespace Barotrauma
             }
         }
 
-        public Controller FindController()
+        public Controller FindController(string[] tags = null)
         {
             //try finding the controller with the simpler non-recursive method first
             var controllers = GetConnectedComponents<Controller>();
-            if (controllers.None()) { controllers = GetConnectedComponents<Controller>(recursive: true); }
-            return controllers.Count < 2 ? controllers.FirstOrDefault() :
-                (controllers.FirstOrDefault(c => c.GetFocusTarget() == this) ?? controllers.FirstOrDefault());
+            bool needsTag = tags != null && tags.Length > 0;
+            if (controllers.None() || (needsTag && controllers.None(c => c.Item.HasTag(tags))))
+            {
+                controllers = GetConnectedComponents<Controller>(recursive: true);
+            }
+            if (needsTag)
+            {
+                controllers.RemoveAll(c => !c.Item.HasTag(tags));
+            }
+            return controllers.Count < 2 ?
+                controllers.FirstOrDefault() :
+                controllers.FirstOrDefault(c => c.GetFocusTarget() == this) ?? controllers.FirstOrDefault();
         }
 
-        public bool TryFindController(out Controller controller)
+        public bool TryFindController(out Controller controller, string[] tags = null)
         {
-            controller = FindController();
+            controller = FindController(tags: tags);
             return controller != null;
         }
 
@@ -3029,6 +3038,8 @@ namespace Barotrauma
                 }
             }
 
+            connections?.Clear();
+
             if (parentInventory != null)
             {
                 if (parentInventory is CharacterInventory characterInventory)
@@ -3053,6 +3064,8 @@ namespace Barotrauma
                 body.Remove();
                 body = null;
             }
+
+            CurrentHull = null;
 
             if (StaticFixtures != null)
             {

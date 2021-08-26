@@ -74,6 +74,20 @@ namespace Barotrauma
         }
     }
 
+    class AttackData
+    {
+        public float DamageMultiplier { get; set; } = 1f;
+        public float AddedPenetration { get; set; } = 0f;
+        public List<Affliction> Afflictions { get; set; }
+        public Attack SourceAttack { get; }
+
+        public AttackData(Attack sourceAttack)
+        {
+            SourceAttack = sourceAttack;
+        }
+
+    }
+
     partial class Attack : ISerializableEntity
     {
         [Serialize(AttackContext.Any, true, description: "The attack will be used only in this context."), Editable]
@@ -271,6 +285,9 @@ namespace Barotrauma
                 statusEffect.SetUser(user);
             }
         }
+
+        // used for talents/ability conditions
+        public Item SourceItem { get; }
         
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {
@@ -320,6 +337,10 @@ namespace Barotrauma
             Penetration = Penetration;
         }
 
+        public Attack(XElement element, string parentDebugName, Item sourceItem) : this(element, parentDebugName)
+        {
+            SourceItem = sourceItem;
+        }
         public Attack(XElement element, string parentDebugName)
         {
             Deserialize(element);

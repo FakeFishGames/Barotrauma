@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Text;
 using System.Xml.Linq;
+using Barotrauma.Sounds;
 
 namespace Barotrauma.Items.Components
 {
@@ -18,7 +19,11 @@ namespace Barotrauma.Items.Components
 
         protected float currentCrossHairScale, currentCrossHairPointerScale;
 
+        private RoundSound chargeSound;
+        private SoundChannel chargeSoundChannel;
+
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
 
         [Serialize(1.0f, false, description: "The scale of the crosshair sprite (if there is one).")]
         public float CrossHairScale
@@ -47,6 +52,12 @@ namespace Barotrauma.Items.Components
                         break;
                     case "particleemitter":
                         particleEmitters.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "particleemittercharge":
+                        particleEmitterCharges.Add(new ParticleEmitter(subElement));
+                        break;
+                    case "chargesound":
+                        chargeSound = Submarine.LoadRoundSound(subElement, false);
                         break;
                 }
             }
@@ -84,6 +95,51 @@ namespace Barotrauma.Items.Components
             crosshairPointerPos = PlayerInput.MousePosition;
         }
 
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            float chargeRatio = currentChargeTime / MaxChargeTime;
+
+            switch (currentChargingState)
+            {
+                case ChargingState.WindingUp:
+                case ChargingState.WindingDown:
+                    Vector2 particlePos = item.WorldPosition + ConvertUnits.ToDisplayUnits(TransformedBarrelPos);
+                    float sizeMultiplier = Math.Clamp(chargeRatio, 0.1f, 1f);
+                    foreach (ParticleEmitter emitter in particleEmitterCharges)
+                    {
+                        emitter.Emit(deltaTime, particlePos, hullGuess: null, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
+                    }
+
+                    if (chargeSoundChannel == null || !chargeSoundChannel.IsPlaying)
+                    {
+                        if (chargeSound != null)
+                        {
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling);
+                            if (chargeSoundChannel != null) chargeSoundChannel.Looping = true;
+                        }
+                    }
+                    else if (chargeSoundChannel != null)
+                    {
+                        chargeSoundChannel.FrequencyMultiplier = MathHelper.Lerp(0.5f, 1.5f, chargeRatio);
+                    }
+                    break;
+                default:
+                    if (chargeSoundChannel != null)
+                    {
+                        if (chargeSoundChannel.IsPlaying)
+                        {
+                            chargeSoundChannel.FadeOutAndDispose();
+                            chargeSoundChannel.Looping = false;
+                        }
+                        else
+                        {
+                            chargeSoundChannel = null;
+                        }
+                    }
+                    break;
+            }
+        }
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (character == null || !character.IsKeyDown(InputType.Aim)) { return; }
@@ -92,7 +148,7 @@ namespace Barotrauma.Items.Components
             if (character.ViewTarget != null && (character.ViewTarget is Item item) && item.Prefab.FocusOnSelected) { return; }
 
             GUI.HideCursor = (crosshairSprite != null || crosshairPointerSprite != null) &&
-                GUI.MouseOn == null && !Inventory.IsMouseOnInventory() && !GameMain.Instance.Paused;
+                GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;
             if (GUI.HideCursor)
             {
                 crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);

@@ -29,6 +29,8 @@ namespace Barotrauma
 
         public bool IsRunning { get; private set; }
 
+        public bool RoundEnding { get; private set; }
+
         public Level Level { get; private set; }
         public LevelData LevelData { get; private set; }
 
@@ -654,43 +656,83 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime);
 
+        public static IEnumerable<Character> GetSessionCrewCharacters()
+        {
+#if SERVER
+            return GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c.Info != null);
+#else
+            return GameMain.GameSession.CrewManager.CharacterInfos.Select(i => i.Character).Where(c => c != null);
+#endif        
+        }
+
         public void EndRound(string endMessage, List<TraitorMissionResult> traitorResults = null, CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None)
         {
-            foreach (Mission mission in missions)
-            {
-                mission.End();
-            }
-#if CLIENT
-            if (GUI.PauseMenuOpen)
-            {
-                GUI.TogglePauseMenu();
-            }
-            GUI.PreventPauseMenuToggle = true;
+            RoundEnding = true;
 
-            if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
+            try
             {
-                GUI.ClearMessages();
-                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
-                GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
-                GUIMessageBox.MessageBoxes.Add(summaryFrame);
-                RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
-            }
+                IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters();
 
-            if (GameMain.NetLobbyScreen != null) GameMain.NetLobbyScreen.OnRoundEnded();
-            TabMenu.OnRoundEnded();
-            GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
-#endif
-            SteamAchievementManager.OnRoundEnded(this);
+                foreach (Mission mission in missions)
+                {
+                    mission.End();
+                }
 
-            GameMode?.End(transitionType);
-            EventManager?.EndRound();
-            StatusEffect.StopAll();
-            missions.Clear();
-            IsRunning = false;
+                if (missions.Any())
+                {
+                    if (missions.Any(m => m.Completed))
+                    {
+                        foreach (CharacterInfo characterInfo in GameMain.GameSession.CrewManager.CharacterInfos)
+                        {
+                            characterInfo.Character?.CheckTalents(AbilityEffectType.OnAnyMissionCompleted);
+                        }
+                    }
+
+                    if (missions.All(m => m.Completed))
+                    {
+                        foreach (CharacterInfo characterInfo in GameMain.GameSession.CrewManager.CharacterInfos)
+                        {
+                            characterInfo.Character?.CheckTalents(AbilityEffectType.OnAllMissionsCompleted);
+                        }
+                    }
+                }
 
 #if CLIENT
-            HintManager.OnRoundEnded();
+                if (GUI.PauseMenuOpen)
+                {
+                    GUI.TogglePauseMenu();
+                }
+                GUI.PreventPauseMenuToggle = true;
+
+                if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
+                {
+                    GUI.ClearMessages();
+                    GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData is RoundSummary);
+                    GUIFrame summaryFrame = RoundSummary.CreateSummaryFrame(this, endMessage, traitorResults, transitionType);
+                    GUIMessageBox.MessageBoxes.Add(summaryFrame);
+                    RoundSummary.ContinueButton.OnClicked = (_, __) => { GUIMessageBox.MessageBoxes.Remove(summaryFrame); return true; };
+                }
+
+                if (GameMain.NetLobbyScreen != null) { GameMain.NetLobbyScreen.OnRoundEnded(); }
+                TabMenu.OnRoundEnded();
+                GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
 #endif
+                SteamAchievementManager.OnRoundEnded(this);
+
+                GameMode?.End(transitionType);
+                EventManager?.EndRound();
+                StatusEffect.StopAll();
+                missions.Clear();
+                IsRunning = false;
+
+#if CLIENT
+                HintManager.OnRoundEnded();
+#endif
+            }
+            finally
+            {
+                RoundEnding = false;
+            }
         }
 
         public void KillCharacter(Character character)

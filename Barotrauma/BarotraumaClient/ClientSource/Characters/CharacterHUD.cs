@@ -391,7 +391,26 @@ namespace Barotrauma
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
 
                     var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
-                    GUI.DrawIndicator(spriteBatch, npc.WorldPosition, cam, npc.CurrentHull == character.CurrentHull ? 500.0f : 100.0f, iconStyle.GetDefaultSprite(), iconStyle.Color);
+                    Range<float> visibleRange = new Range<float>(npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
+                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.Examine)
+                    {
+                        //TODO: we could probably do better than just hardcoding
+                        //a check for InteractionType.Examine here.
+
+                        if (Vector2.DistanceSquared(character.Position, npc.Position) > 500f * 500f) { continue; }
+
+                        var body = Submarine.CheckVisibility(character.SimPosition, npc.SimPosition, ignoreLevel: true);
+                        if (body != null && body.UserData as Character != npc) { continue; }
+
+                        visibleRange = new Range<float>(-100f, 500f);
+                    }
+                    GUI.DrawIndicator(
+                        spriteBatch,
+                        npc.WorldPosition,
+                        cam,
+                        visibleRange,
+                        iconStyle.GetDefaultSprite(),
+                        iconStyle.Color);
                 }
 
                 foreach (Item item in Item.ItemList)
@@ -400,7 +419,7 @@ namespace Barotrauma
                     if (Vector2.DistanceSquared(character.Position, item.Position) > 500f*500f) { continue; }
                     var body = Submarine.CheckVisibility(character.SimPosition, item.SimPosition, ignoreLevel: true);
                     if (body != null && body.UserData as Item != item) { continue; }
-                    GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Vector2(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color, createOffset: false);
+                    GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Range<float>(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color, createOffset: false);
                 }
             }
 
@@ -525,12 +544,7 @@ namespace Barotrauma
 
             textPos -= new Vector2(textSize.X / 2, textSize.Y);
 
-            Color nameColor = GUI.Style.TextColor;
-            if (character.TeamID != character.FocusedCharacter.TeamID)
-            {
-                nameColor = character.FocusedCharacter.TeamID == CharacterTeamType.FriendlyNPC ? Color.SkyBlue : GUI.Style.Red;
-            }
-
+            Color nameColor = character.FocusedCharacter.GetNameColor();
             GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUI.SubHeadingFont);
             textPos.X += 10.0f * GUI.Scale;
             textPos.Y += GUI.SubHeadingFont.MeasureString(focusName).Y;
@@ -544,11 +558,14 @@ namespace Barotrauma
 
             if (character.FocusedCharacter.CanBeDragged)
             {
-                GUI.DrawString(spriteBatch, textPos, GetCachedHudText("GrabHint", GameMain.Config.KeyBindText(InputType.Grab)),
+                string text = character.CanEat ? "EatHint" : "GrabHint";
+                GUI.DrawString(spriteBatch, textPos, GetCachedHudText(text, GameMain.Config.KeyBindText(InputType.Grab)),
                     GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
                 textPos.Y += largeTextSize.Y;
             }
+
             if (!character.DisableHealthWindow &&
+                character.IsFriendly(character.FocusedCharacter) && 
                 character.FocusedCharacter.CharacterHealth.UseHealthWindow &&
                 character.CanInteractWith(character.FocusedCharacter, 160f, false))
             {

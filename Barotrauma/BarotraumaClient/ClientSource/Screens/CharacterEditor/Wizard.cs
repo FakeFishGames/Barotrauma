@@ -262,7 +262,7 @@ namespace Barotrauma.CharacterEditor
                                     {
                                         FileSelection.OnFileSelected = (file) =>
                                         {
-                                            string relativePath = UpdaterUtil.GetRelativePath(Path.GetFullPath(file), Environment.CurrentDirectory);
+                                            string relativePath = Path.GetRelativePath(Environment.CurrentDirectory, Path.GetFullPath(file));
                                             string destinationPath = relativePath;
 
                                         //copy file to XML path if it's not located relative to the game's files

@@ -18,6 +18,10 @@ namespace Barotrauma
         public static CampaignSettings Unsure = Empty;
         public bool RadiationEnabled { get; set; }
         public int MaxMissionCount { get; set; }
+        public int AddedMissionCount { get; set; }
+
+        public int TotalMaxMissionCount => MaxMissionCount + AddedMissionCount;
+
 
         public const int DefaultMaxMissionCount = 2;
         public const int MaxMissionCountLimit = 10;
@@ -27,23 +31,26 @@ namespace Barotrauma
         {
             RadiationEnabled = inc.ReadBoolean();
             MaxMissionCount = inc.ReadInt32();
+            AddedMissionCount = inc.ReadInt32();
         }
-        
+
         public CampaignSettings(XElement element)
         {
-            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLower(), true);
-            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLower(), DefaultMaxMissionCount);
+            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLowerInvariant(), true);
+            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
+            AddedMissionCount = element.GetAttributeInt(nameof(AddedMissionCount).ToLowerInvariant(), 0);
         }
 
         public void Serialize(IWriteMessage msg)
         {
             msg.Write(RadiationEnabled);
             msg.Write(MaxMissionCount);
+            msg.Write(AddedMissionCount);
         }
 
         public XElement Save()
         {
-            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLower(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLower().ToLower(), MaxMissionCount));
+            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLowerInvariant(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLowerInvariant(), MaxMissionCount), new XAttribute(nameof(AddedMissionCount).ToLowerInvariant(), AddedMissionCount));
         }
     }
 
@@ -226,6 +233,8 @@ namespace Barotrauma
             PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
+
+            ResetTalentData();
         }
 
         public void InitCampaignData()
@@ -846,7 +855,7 @@ namespace Barotrauma
             Location location = Map?.CurrentLocation;
             if (location != null)
             {
-                location.Reputation.Value -= attackResult.Damage * Reputation.ReputationLossPerNPCDamage;
+                location.Reputation.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage);
             }
         }
 
@@ -898,15 +907,24 @@ namespace Barotrauma
         {
             foreach (Location location in currentLocation.Connections.Select(c => c.OtherLocation(currentLocation)))
             {
-                if (NumberOfMissionsAtLocation(location) > Settings.MaxMissionCount)
+                if (NumberOfMissionsAtLocation(location) > Settings.TotalMaxMissionCount)
                 {
                     DebugConsole.AddWarning($"Client {sender.Name} had too many missions selected for location {location.Name}! Count was {NumberOfMissionsAtLocation(location)}. Deselecting extra missions.");
-                    foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.MaxMissionCount).ToList())
+                    foreach (Mission mission in currentLocation.SelectedMissions.Where(m => m.Locations[1] == location).Skip(Settings.TotalMaxMissionCount).ToList())
                     {
                         currentLocation.DeselectMission(mission);
                     }
                 }
             }
         }
+
+        // Talent relevant data, only stored for the duration of the mission
+        private void ResetTalentData()
+        {
+            CrewHasDied = false;
+        }
+
+        public bool CrewHasDied { get; set; }
+
     }
 }

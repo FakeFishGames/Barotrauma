@@ -61,7 +61,7 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
-                Attack = new Attack(subElement, item.Name + ", MeleeWeapon");
+                Attack = new Attack(subElement, item.Name + ", MeleeWeapon", item);
                 Attack.DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent());
             }
             item.IsShootable = true;
@@ -95,7 +95,7 @@ namespace Barotrauma.Items.Components
             if (hitPos < MathHelper.PiOver4) { return false; }
 
             ActivateNearbySleepingCharacters();
-            reloadTimer = reload;
+            reloadTimer = reload / (1 + character.GetStatValue(StatTypes.MeleeAttackSpeed));
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;

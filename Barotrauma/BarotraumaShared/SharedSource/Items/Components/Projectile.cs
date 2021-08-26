@@ -201,7 +201,7 @@ namespace Barotrauma.Items.Components
             foreach (XElement subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
-                Attack = new Attack(subElement, item.Name + ", Projectile");
+                Attack = new Attack(subElement, item.Name + ", Projectile", item);
             }
             InitProjSpecific(element);
         }

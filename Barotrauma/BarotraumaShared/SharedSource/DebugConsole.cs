@@ -191,11 +191,6 @@ namespace Barotrauma
                 GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
             }));
 
-            commands.Add(new Command("createfilelist", "", (string[] args) =>
-            {
-                UpdaterUtil.SaveFileList("filelist.xml");
-            }));
-
             commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
@@ -580,7 +575,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("dumptofile", "", (string[] args) =>
+            commands.Add(new Command("dumptofile", "findentityids [filename]: Outputs the contents of the debug console into a text file in the game folder. If the filename argument is omitted, \"consoleOutput.txt\" is used as the filename.", (string[] args) =>
             {
                 string filename = "consoleOutput.txt";
                 if (args.Length > 0) { filename = string.Join(" ", args); }
@@ -607,7 +602,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name] [limb type]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
                 if (args.Length < 2) { return; }
 
@@ -632,14 +627,21 @@ namespace Barotrauma
                     bool.TryParse(args[2], out relativeStrength);
                 }
 
-                Character targetCharacter = (relativeStrength || args.Length <= 2) ? Character.Controlled : FindMatchingCharacter(args.Skip(2).ToArray());
+                Character targetCharacter = (relativeStrength || args.Length <= 2) ? Character.Controlled : FindMatchingCharacter(new string[] { args[2] });
+
+
                 if (targetCharacter != null)
                 {
+                    Limb targetLimb = targetCharacter.AnimController.MainLimb;
+                    if (args.Length > 3)
+                    {
+                        targetLimb = targetCharacter.AnimController.Limbs.FirstOrDefault(l => l.type.ToString().Equals(args[3], StringComparison.OrdinalIgnoreCase));
+                    }
                     if (relativeStrength)
                     {
                         afflictionStrength *= targetCharacter.MaxVitality / afflictionPrefab.MaxStrength;
                     }
-                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetLimb ?? targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
                 }
             },
             () =>
@@ -648,7 +650,8 @@ namespace Barotrauma
                 {
                     AfflictionPrefab.List.Select(a => a.Name).ToArray(),
                     new string[] { "1" },
-                    Character.CharacterList.Select(c => c.Name).ToArray()
+                    Character.CharacterList.Select(c => c.Name).ToArray(),
+                    Enum.GetNames(typeof(LimbType)).ToArray()
                 };
             }, isCheat: true));
 
@@ -833,8 +836,67 @@ namespace Barotrauma
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 Hull.EditWater = !Hull.EditWater;
-                NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
+                NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);
             }, isCheat: true));
+
+            commands.Add(new Command("givetalent", "give [player] testing [talent]", (string[] args) =>
+            {
+                if (args.Length < 2) return;
+                var character = FindMatchingCharacter(args.Skip(1).ToArray()) ?? Character.Controlled;
+                if (character != null)
+                {
+                    character.GiveTalent(args[0]);
+                }
+            },
+            () =>
+            {
+                List<string> talentNames = new List<string>();
+                foreach (TalentPrefab itemPrefab in TalentPrefab.TalentPrefabs)
+                {
+                    talentNames.Add(itemPrefab.Identifier);
+                }
+
+                return new string[][]
+                {
+                talentNames.ToArray(),
+                Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("giveexperience", "giveexperience [amount] [character]: Give experience to character.", (string[] args) =>
+            {
+                if (args.Length < 1)
+                {
+                    NewMessage($"Missing arguments. Expected at least 1 but got {args.Length} (experience, name)");
+                    return;
+                }
+
+                string experienceString = args[0];
+                var character = FindMatchingCharacter(args.Skip(1).ToArray()) ?? Character.Controlled;
+
+                if (character?.Info == null)
+                {
+                    NewMessage("Character is not valid.");
+                    return;
+                }
+
+                if (int.TryParse(experienceString, NumberStyles.Number, CultureInfo.InvariantCulture, out int experience))
+                {
+                    character.Info.GiveExperience(experience);
+                    NewMessage($"Gave {character.Name} {experience} experience");
+                }
+                else
+                {
+                    NewMessage($"{experienceString} is not a valid value. Expected number.");
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {                    
+                    new string[] { "100" },
+                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                };
+            }));
 
             commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
             {
@@ -947,7 +1009,7 @@ namespace Barotrauma
                 string subName = GameMain.Config.QuickStartSubmarineName;
                 if (!string.IsNullOrEmpty(subName))
                 {
-                    selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
+                    selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.Equals(subName, StringComparison.OrdinalIgnoreCase));
                 }
 
                 int count = 0;
@@ -1013,7 +1075,7 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                     {
-                        campaign.Map.CurrentLocation.Reputation.Value = reputation;
+                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation);
                     }
                     else
                     {
@@ -1040,7 +1102,7 @@ namespace Barotrauma
                     {
                         if (float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                         {
-                            faction.Reputation.Value = reputation;
+                            faction.Reputation.SetReputation(reputation);
                         }
                         else
                         {
@@ -1368,7 +1430,7 @@ namespace Barotrauma
                 NewMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("money", "", args =>
+            commands.Add(new Command("money", "money [amount]: Gives the specified amount of money to the crew when a campaign is active.", args =>
             {
                 if (args.Length == 0) { return; }
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
@@ -1488,8 +1550,8 @@ namespace Barotrauma
             {
                 if (args.Length > 0)
                 {
-                    string packageName = string.Join(" ", args).ToLower();
-                    var package = GameMain.Config.AllEnabledPackages.FirstOrDefault(p => p.Name.ToLower() == packageName);
+                    string packageName = string.Join(" ", args);
+                    var package = GameMain.Config.AllEnabledPackages.FirstOrDefault(p => p.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase));
                     if (package == null)
                     {
                         ThrowError("Content package \"" + packageName + "\" not found.");

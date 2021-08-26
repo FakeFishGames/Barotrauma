@@ -289,6 +289,14 @@ namespace Barotrauma
                 teamID = (byte)wifiComponent.TeamID;
                 break;
             }
+            if (teamID == 0)
+            {
+                foreach (IdCard idCard in GetComponents<IdCard>())
+                {
+                    teamID = (byte)idCard.TeamID;
+                    break;
+                }
+            }
 
             msg.Write(teamID);
             bool tagsChanged = tags.Count != prefab.Tags.Count || !tags.All(t => prefab.Tags.Contains(t));

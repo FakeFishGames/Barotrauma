@@ -309,6 +309,9 @@ namespace Barotrauma
 
         public readonly List<Pair<string, float>> ReduceAffliction;
 
+        private readonly List<int> giveExperiences;
+        private readonly List<(string identifier, float amount)> giveSkills;
+
         public float Duration => duration;
 
         //only applicable if targeting NearbyCharacters or NearbyItems
@@ -357,6 +360,9 @@ namespace Barotrauma
             Explosions = new List<Explosion>();
             triggeredEvents = new List<EventPrefab>();
             ReduceAffliction = new List<Pair<string, float>>();
+            giveExperiences = new List<int>();
+            giveSkills = new List<(string, float)>();
+
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
             OnlyOutside = element.GetAttributeBool("onlyoutside", false);
@@ -486,13 +492,22 @@ namespace Barotrauma
                 }
             }
 
+            if (duration > 0.0f && !setValue)
+            {
+                //a workaround to "tags" possibly meaning either an item's tags or this status effect's tags:
+                //if the status effect has a duration, assume tags mean this status effect's tags and leave item tags untouched.
+                propertyAttributes.RemoveAll(a => a.Name.ToString().Equals("tags", StringComparison.OrdinalIgnoreCase));
+            }
+
             int count = propertyAttributes.Count;
+
             propertyNames = new string[count];
             propertyEffects = new object[count];
 
             int n = 0;
             foreach (XAttribute attribute in propertyAttributes)
             {
+
                 propertyNames[n] = attribute.Name.ToString().ToLowerInvariant();
                 propertyEffects[n] = XMLExtensions.GetAttributeObject(attribute);
                 n++;
@@ -625,6 +640,12 @@ namespace Barotrauma
                         break;
                     case "aitrigger":
                         aiTriggers.Add(new AITrigger(subElement));
+                        break;
+                    case "giveexperience":
+                        giveExperiences.Add(subElement.GetAttributeInt("amount", 0));
+                        break;
+                    case "giveskill":
+                        giveSkills.Add((subElement.GetAttributeString("skillidentifier", ""), subElement.GetAttributeFloat("amount", 0)));
                         break;
                 }
             }
@@ -1181,6 +1202,47 @@ namespace Barotrauma
                         }
                     }
                 }
+
+                int i = 0;
+                foreach (int giveExperience in giveExperiences)
+                {
+                    Character targetCharacter = CharacterFromTarget(target);
+                    if (targetCharacter != null && !targetCharacter.Removed)
+                    {
+                        targetCharacter?.Info?.GiveExperience(giveExperience, popupOffset: i * 25f);
+                        i++;
+                    }
+                }
+
+                if (giveSkills.Any())
+                {
+                    foreach ((string skillIdentifier, float amount) in giveSkills)
+                    {
+                        Character targetCharacter = CharacterFromTarget(target);
+                        if (targetCharacter != null && !targetCharacter.Removed)
+                        {
+                            if (skillIdentifier?.ToLowerInvariant() == "randomskill")
+                            {
+                                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
+                                {
+                                    // don't let clients simulate random skill gain
+                                    continue;
+                                }
+                                targetCharacter.Info?.IncreaseSkillLevel(GetRandomSkill(), amount, targetCharacter.Position + Vector2.UnitY * (150.0f + i * 25f));
+                                
+                                string GetRandomSkill()
+                                {
+                                    return targetCharacter.Info?.Job?.Skills.Select(s => s.Identifier).GetRandom();
+                                }
+                            }
+                            else
+                            {
+                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier?.ToLowerInvariant(), amount, targetCharacter.Position + Vector2.UnitY * (150.0f + i * 25f));
+                            }
+                            i++;
+                        }
+                    }
+                }
             }
 
             if (FireSize > 0.0f && entity != null)
@@ -1346,6 +1408,19 @@ namespace Barotrauma
             }
 
             ApplyProjSpecific(deltaTime, entity, targets, hull, position, playSound: true);
+
+            Character CharacterFromTarget(ISerializableEntity target)
+            {
+                Character targetCharacter = target as Character;
+                if (targetCharacter == null)
+                {
+                    if (target is Limb targetLimb && !targetLimb.Removed)
+                    {
+                        targetCharacter = targetLimb.character;
+                    }
+                }
+                return targetCharacter;
+            }
         }
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull currentHull, Vector2 worldPosition, bool playSound);
@@ -1353,38 +1428,31 @@ namespace Barotrauma
         private void ApplyToProperty(ISerializableEntity target, SerializableProperty property, object value, float deltaTime)
         {
             if (disableDeltaTime || setValue) { deltaTime = 1.0f; }
-            Type type = value.GetType();
-            if (type == typeof(float) || (type == typeof(int) && property.GetValue(target) is float))
+            if (value is int || value is float)
             {
-                float floatValue = Convert.ToSingle(value) * deltaTime;
-                if (!setValue)
+                var propertyValue = property.GetValue(target);
+                if (propertyValue is float propertyValueF)
                 {
-                    floatValue += (float)property.GetValue(target);
+                    float floatValue = Convert.ToSingle(value) * deltaTime;
+                    if (!setValue)
+                    {
+                        floatValue += propertyValueF;
+                    }
+                    property.TrySetValue(target, floatValue);
+                    return;
                 }
-                property.TrySetValue(target, floatValue);
-            }
-            else if (type == typeof(int) && value is int)
-            {
-                int intValue = (int)((int)value * deltaTime);
-                if (!setValue)
+                else if (propertyValue is int integer)
                 {
-                    intValue += (int)property.GetValue(target);
+                    int intValue = (int)(Convert.ToInt32(value) * deltaTime);
+                    if (!setValue)
+                    {
+                        intValue += integer;
+                    }
+                    property.TrySetValue(target, intValue);
+                    return;
                 }
-                property.TrySetValue(target, intValue);
             }
-            else if (type == typeof(bool) && value is bool)
-            {
-                property.TrySetValue(target, (bool)value);
-            }
-            else if (type == typeof(string))
-            {
-                property.TrySetValue(target, (string)value);
-            }
-            else
-            {
-                DebugConsole.ThrowError("Couldn't apply value " + value.ToString() + " (" + type + ") to property \"" + property.Name + "\" (" + property.GetValue(target).GetType() + ")! "
-                    + "Make sure the type of the value set in the config files matches the type of the property.");
-            }
+            property.TrySetValue(target, value);
         }
 
         public static void UpdateAll(float deltaTime)

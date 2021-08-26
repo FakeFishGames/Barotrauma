@@ -569,8 +569,7 @@ namespace Barotrauma
             }
 
             var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
-            targetPos = character.WorldPosition;
-            Gap adjacentGap = Gap.FindAdjacent(gaps, targetPos, 500.0f);
+            Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
             if (adjacentGap == null) { return true; }
 
             if (newHull != null)

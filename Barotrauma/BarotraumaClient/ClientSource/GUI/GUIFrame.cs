@@ -28,7 +28,7 @@ namespace Barotrauma
 
             if (OutlineColor != Color.Transparent)
             {
-                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor * (OutlineColor.A/255.0f), false, thickness: OutlineThickness);
+                GUI.DrawRectangle(spriteBatch, Rect, OutlineColor, false, thickness: OutlineThickness);
             }
         }
     }

@@ -13,10 +13,8 @@ namespace Barotrauma
 {
     partial class Explosion
     {
-        private static readonly List<Triplet<Explosion, Vector2, float>> prevExplosions = new List<Triplet<Explosion, Vector2, float>>();
-
         public readonly Attack Attack;
-        
+
         private readonly float force;
 
         private readonly float cameraShake, cameraShakeRange;
@@ -35,6 +33,8 @@ namespace Barotrauma
         private readonly float? flashRange;
         private readonly string decal;
         private readonly float decalSize;
+
+        private readonly float itemRepairStrength;
 
         public float EmpStrength { get; set; }
         
@@ -63,22 +63,24 @@ namespace Barotrauma
 
             force = element.GetAttributeFloat("force", 0.0f);
 
-            sparks      = element.GetAttributeBool("sparks", true);
-            shockwave   = element.GetAttributeBool("shockwave", true);
-            flames      = element.GetAttributeBool("flames", true);
-            underwaterBubble = element.GetAttributeBool("underwaterbubble", true);
-            smoke       = element.GetAttributeBool("smoke", true);
+            bool showEffects = element.GetAttributeBool("showeffects", true);
 
-            playTinnitus = element.GetAttributeBool("playtinnitus", true);
+            sparks = element.GetAttributeBool("sparks", showEffects);
+            shockwave = element.GetAttributeBool("shockwave", showEffects);
+            flames = element.GetAttributeBool("flames", showEffects);
+            underwaterBubble = element.GetAttributeBool("underwaterbubble", showEffects);
+            smoke = element.GetAttributeBool("smoke", showEffects);
 
-            applyFireEffects = element.GetAttributeBool("applyfireeffects", flames);
+            playTinnitus = element.GetAttributeBool("playtinnitus", showEffects);
+
+            applyFireEffects = element.GetAttributeBool("applyfireeffects", flames && showEffects);
             ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", new string[0], convertToLowerInvariant: true);
 
             ignoreCover = element.GetAttributeBool("ignorecover", false);
             onlyInside = element.GetAttributeBool("onlyinside", false);
             onlyOutside = element.GetAttributeBool("onlyoutside", false);
 
-            flash           = element.GetAttributeBool("flash", true);
+            flash           = element.GetAttributeBool("flash", showEffects);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
             if (element.Attribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
             flashColor = element.GetAttributeColor("flashcolor", Color.LightYellow);
@@ -86,15 +88,18 @@ namespace Barotrauma
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
             BallastFloraDamage = element.GetAttributeFloat("ballastfloradamage", 0.0f);
 
-            decal       = element.GetAttributeString("decal", "");
+            itemRepairStrength = element.GetAttributeFloat("itemrepairstrength", 0.0f);
+
+            decal = element.GetAttributeString("decal", "");
             decalSize   = element.GetAttributeFloat(1.0f, "decalSize", "decalsize");
 
-            cameraShake = element.GetAttributeFloat("camerashake", Attack.Range * 0.1f);
-            cameraShakeRange = element.GetAttributeFloat("camerashakerange", Attack.Range);
+            cameraShake = element.GetAttributeFloat("camerashake", showEffects ? Attack.Range * 0.1f : 0f);
+            cameraShakeRange = element.GetAttributeFloat("camerashakerange", showEffects ? Attack.Range : 0f);
 
-            screenColorRange = element.GetAttributeFloat("screencolorrange", Attack.Range * 0.1f);
+            screenColorRange = element.GetAttributeFloat("screencolorrange", showEffects ? Attack.Range * 0.1f : 0f);
             screenColor = element.GetAttributeColor("screencolor", Color.Transparent);
             screenColorDuration = element.GetAttributeFloat("screencolorduration", 0.1f);
+
         }
 
         public void DisableParticles()
@@ -107,19 +112,8 @@ namespace Barotrauma
             underwaterBubble = false;
         }
 
-        public List<Triplet<Explosion, Vector2, float>> GetRecentExplosions(float maxSecondsAgo)
-        {
-            return prevExplosions.FindAll(e => e.Third >= Timing.TotalTime - maxSecondsAgo);
-        }
-        
         public void Explode(Vector2 worldPosition, Entity damageSource, Character attacker = null)
         {
-            prevExplosions.Add(new Triplet<Explosion, Vector2, float>(this, worldPosition, (float)Timing.TotalTime));
-            if (prevExplosions.Count > 100)
-            {
-                prevExplosions.RemoveAt(0);
-            }
-
             Hull hull = Hull.FindHull(worldPosition);
             ExplodeProjSpecific(worldPosition, hull);
 
@@ -176,6 +170,23 @@ namespace Barotrauma
                     if (powerContainer != null)
                     {
                         powerContainer.Charge -= powerContainer.Capacity * EmpStrength * distFactor;
+                    }
+                }
+            }
+
+            if (itemRepairStrength > 0.0f)
+            {
+                float displayRangeSqr = displayRange * displayRange;
+                foreach (Item item in Item.ItemList)
+                {
+                    float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
+                    if (distSqr > displayRangeSqr) continue;
+
+                    float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
+                    //repair repairable items
+                    if (item.Repairables.Any())
+                    {
+                        item.Condition += itemRepairStrength * distFactor;
                     }
                 }
             }

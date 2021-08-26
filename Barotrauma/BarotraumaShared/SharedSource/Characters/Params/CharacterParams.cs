@@ -70,6 +70,9 @@ namespace Barotrauma
         [Serialize(1f, true), Editable]
         public float BleedParticleMultiplier { get; private set; }
 
+        [Serialize(true, true, description: "Can the creature eat bodies? Used by player controlled creatures to allow them to eat. Currently applicable only to non-humanoids. To allow an AI controller to eat, just add an ai target with the state \"eat\""), Editable]
+        public bool CanEat { get; set; }
+
         [Serialize(10f, true, description: "How effectively/easily the character eats other characters. Affects the forces, the amount of particles, and the time required before the target is eaten away"), Editable(MinValueFloat = 1, MaxValueFloat = 1000, ValueStep = 1)]
         public float EatingSpeed { get; set; }
 
@@ -87,6 +90,9 @@ namespace Barotrauma
 
         [Serialize(25000f, true, "If the character is farther than this (in pixels) from the sub and the players, it will be disabled. The halved value is used for triggering simple physics where the ragdoll is disabled and only the main collider is updated."), Editable(MinValueFloat = 10000f, MaxValueFloat = 100000f)]
         public float DisableDistance { get; set; }
+
+        [Serialize(10f, true, "How frequent the recurring idle and attack sounds are?"), Editable(MinValueFloat = 1f, MaxValueFloat = 100f)]
+        public float SoundInterval { get; set; }
 
         public readonly string File;
 

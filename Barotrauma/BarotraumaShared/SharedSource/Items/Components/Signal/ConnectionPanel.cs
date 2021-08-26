@@ -350,6 +350,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            Connections.Clear();
 
 #if CLIENT
             rewireSoundChannel?.FadeOutAndDispose();

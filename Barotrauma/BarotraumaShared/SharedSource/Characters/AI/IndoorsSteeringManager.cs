@@ -161,12 +161,13 @@ namespace Barotrauma
         private Vector2 CalculateSteeringSeek(Vector2 target, float weight, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {
             Vector2 targetDiff = target - currentTarget;
-            if (currentPath != null && currentPath.Nodes.Any())
+            if (currentPath != null && currentPath.Nodes.Any() && character.Submarine != null)
             {
-                //current path calculated relative to a different sub than where the character is now
+                //target in a different sub than where the character is now
                 //take that into account when calculating if the target has moved
-                Submarine currentPathSub = currentPath?.Nodes.First().Submarine;
-                if (currentPathSub != character.Submarine && character.Submarine != null)
+                Submarine currentPathSub = currentPath?.CurrentNode?.Submarine;
+                if (currentPathSub == character.Submarine) { currentPathSub = currentPath?.Nodes.LastOrDefault()?.Submarine; }
+                if (currentPathSub != character.Submarine && targetDiff.LengthSquared() > 1 && currentPathSub != null)
                 {
                     Vector2 subDiff = character.Submarine.SimPosition - currentPathSub.SimPosition;
                     targetDiff += subDiff;

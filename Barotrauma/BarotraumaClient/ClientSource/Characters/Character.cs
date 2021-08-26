@@ -21,7 +21,6 @@ namespace Barotrauma
         public static bool DebugDrawInteract;
 
         protected float soundTimer;
-        protected float soundInterval;
         protected float hudInfoTimer = 1.0f;
         protected bool hudInfoVisible = false;
 
@@ -130,7 +129,7 @@ namespace Barotrauma
         }
 
         public static bool IsMouseOnUI => GUI.MouseOn != null ||
-                    (CharacterInventory.IsMouseOnInventory() && !CharacterInventory.DraggingItemToWorld);
+                    (CharacterInventory.IsMouseOnInventory && !CharacterInventory.DraggingItemToWorld);
 
         public class ObjectiveEntity
         {
@@ -161,8 +160,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific(XElement mainElement)
         {
-            soundInterval = mainElement.GetAttributeFloat("soundinterval", 10.0f);
-            soundTimer = Rand.Range(0.0f, soundInterval);
+            soundTimer = Rand.Range(0.0f, Params.SoundInterval);
 
             sounds = new List<CharacterSound>();
             Params.Sounds.ForEach(s => sounds.Add(new CharacterSound(s)));
@@ -390,12 +388,7 @@ namespace Barotrauma
             {
                 if (attackResult.Damage <= 1.0f) { return; }
             }
-
-            if (soundTimer < soundInterval * 0.5f)
-            {
-                PlaySound(CharacterSound.SoundType.Damage);
-                soundTimer = soundInterval;
-            }
+            PlaySound(CharacterSound.SoundType.Damage, maxInterval: 2);
         }
 
         partial void KillProjSpecific(CauseOfDeathType causeOfDeath, Affliction causeOfDeathAffliction, bool log)
@@ -470,9 +463,9 @@ namespace Barotrauma
         }
 
 
-        private List<Item> debugInteractablesInRange = new List<Item>();
-        private List<Item> debugInteractablesAtCursor = new List<Item>();
-        private List<Pair<Item, float>> debugInteractablesNearCursor = new List<Pair<Item, float>>();
+        private readonly List<Item> debugInteractablesInRange = new List<Item>();
+        private readonly List<Item> debugInteractablesAtCursor = new List<Item>();
+        private readonly List<(Item item, float dist)> debugInteractablesNearCursor = new List<(Item item, float dist)>();
 
         /// <summary>
         ///   Finds the front (lowest depth) interactable item at a position. "Interactable" in this case means that the character can "reach" the item.
@@ -568,7 +561,7 @@ namespace Barotrauma
                 if (distanceToItem > closestItemDistance) { continue; }
                 if (!CanInteractWith(item)) { continue; }
                 
-                debugInteractablesNearCursor.Add(new Pair<Item, float>(item, 1.0f - distanceToItem / (100.0f * aimAssistModifier)));
+                debugInteractablesNearCursor.Add((item, 1.0f - distanceToItem / (100.0f * aimAssistModifier)));
                 closestItem = item;
                 closestItemDistance = distanceToItem;
             }
@@ -579,31 +572,20 @@ namespace Barotrauma
         private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = 150.0f)
         {
             Character closestCharacter = null;
-            float closestDist = 0.0f;
 
             maxDist = ConvertUnits.ToSimUnits(maxDist);
-
+            float closestDist = maxDist * maxDist;
             foreach (Character c in CharacterList)
             {
                 if (!CanInteractWith(c, checkVisibility: false) || (c.AnimController?.SimplePhysicsEnabled ?? true)) { continue; }
 
                 float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
-                if (dist < maxDist * maxDist && (closestCharacter == null || dist < closestDist))
+                if (dist < closestDist || 
+                    (c.CampaignInteractionType != CampaignMode.InteractionType.None && closestCharacter?.CampaignInteractionType == CampaignMode.InteractionType.None && dist * 0.9f < closestDist))
                 {
                     closestCharacter = c;
                     closestDist = dist;
                 }
-
-                /*FarseerPhysics.Common.Transform transform;
-                c.AnimController.Collider.FarseerBody.GetTransform(out transform);
-                for (int i = 0; i < c.AnimController.Collider.FarseerBody.FixtureList.Count; i++)
-                {
-                    if (c.AnimController.Collider.FarseerBody.FixtureList[i].Shape.TestPoint(ref transform, ref mouseSimPos))
-                    {
-                        Console.WriteLine("Hit: " + i);
-                        closestCharacter = c;
-                    }
-                }*/
             }
 
             return closestCharacter;
@@ -638,7 +620,7 @@ namespace Barotrauma
 
             if (!enabled) { return; }
 
-            if (!IsDead && !IsIncapacitated)
+            if (!IsIncapacitated)
             {
                 if (soundTimer > 0)
                 {
@@ -649,7 +631,14 @@ namespace Barotrauma
                     switch (enemyAI.State)
                     {
                         case AIState.Attack:
-                            PlaySound(CharacterSound.SoundType.Attack);
+                            if (Rand.Value() > 0.5f)
+                            {
+                                PlaySound(CharacterSound.SoundType.Attack);
+                            }
+                            else
+                            {
+                                PlaySound(CharacterSound.SoundType.Idle);
+                            }
                             break;
                         default:
                             var petBehavior = enemyAI.PetBehavior;
@@ -660,7 +649,6 @@ namespace Barotrauma
                             else
                             {
                                 PlaySound(CharacterSound.SoundType.Idle);
-
                             }
                             break;
                     }
@@ -827,12 +815,12 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y),
                             new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), Color.White * 0.1f, width: 4);
                     }
-                    foreach (Pair<Item, float> item in debugInteractablesNearCursor)
+                    foreach ((Item item, float dist) in debugInteractablesNearCursor)
                     {
                         GUI.DrawLine(spriteBatch,
                             cursorPos,
-                            new Vector2(item.First.DrawPosition.X, -item.First.DrawPosition.Y),
-                            ToolBox.GradientLerp(item.Second, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green), width: 2);
+                            new Vector2(item.DrawPosition.X, -item.DrawPosition.Y),
+                            ToolBox.GradientLerp(dist, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green), width: 2);
                     }
                 }
                 return;
@@ -856,6 +844,7 @@ namespace Barotrauma
 
                     Vector2 nameSize = GUI.Font.MeasureString(name);
                     Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
+                    Color nameColor = GetNameColor();
 
                     Vector2 screenSize = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             	    Vector2 viewportSize = new Vector2(cam.WorldView.Width, cam.WorldView.Height);
@@ -865,18 +854,6 @@ namespace Barotrauma
             	    namePos *= viewportSize / screenSize;
             	    namePos.X += cam.WorldView.X; namePos.Y -= cam.WorldView.Y;
 
-                    Color nameColor = Color.White;
-                    if (Controlled != null && TeamID != Controlled.TeamID)
-                    {
-                        if (TeamID == CharacterTeamType.FriendlyNPC)
-                        {
-                            nameColor = UniqueNameColor ?? Color.SkyBlue;
-                        }
-                        else
-                        {
-                            nameColor = GUI.Style.Red;
-                        }
-                    }
                     if (CampaignInteractionType != CampaignMode.InteractionType.None && AllowCustomInteract)
                     {
                         var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionBubble." + CampaignInteractionType);
@@ -931,6 +908,40 @@ namespace Barotrauma
             }
         }
 
+        public Color GetNameColor()
+        {
+            CharacterTeamType team = teamID;
+            if (Info?.IsDisguisedAsAnother != null)
+            {
+                var idCard = Inventory.GetItemInLimbSlot(InvSlotType.Card)?.GetComponent<IdCard>();
+                if (idCard != null)
+                {
+                    if (team == CharacterTeamType.Team2 && idCard.TeamID != CharacterTeamType.Team2)
+                    {
+                        team = CharacterTeamType.Team1;
+                    }
+                    else if (team == CharacterTeamType.Team1 && idCard.TeamID == CharacterTeamType.Team2)
+                    {
+                        team = CharacterTeamType.Team2;
+                    }
+                }
+            }
+
+            Color nameColor = GUI.Style.TextColor;
+            if (Controlled != null && team != Controlled.TeamID)
+            {
+                if (TeamID == CharacterTeamType.FriendlyNPC)
+                {
+                    nameColor = UniqueNameColor ?? Color.SkyBlue;
+                }
+                else
+                {
+                    nameColor = GUI.Style.Red;
+                }
+            }
+            return nameColor;
+        }
+
         /// <summary>
         /// Creates a progress bar that's "linked" to the specified object (or updates an existing one if there's one already linked to the object)
         /// The progress bar will automatically fade out after 1 sec if the method hasn't been called during that time
@@ -958,12 +969,13 @@ namespace Barotrauma
 
         private readonly List<CharacterSound> matchingSounds = new List<CharacterSound>();
         private SoundChannel soundChannel;
-        public void PlaySound(CharacterSound.SoundType soundType, float soundIntervalFactor = 1.0f)
+        public void PlaySound(CharacterSound.SoundType soundType, float soundIntervalFactor = 1.0f, float maxInterval = 0)
         {
             if (sounds == null || sounds.Count == 0) { return; }
             if (soundChannel != null && soundChannel.IsPlaying) { return; }
             if (GameMain.SoundManager?.Disabled ?? true) { return; }
-            if (soundTimer > soundInterval * soundIntervalFactor) { return; }
+            if (soundTimer > Params.SoundInterval * soundIntervalFactor) { return; }
+            if (Params.SoundInterval - soundTimer < maxInterval) { return; }
             matchingSounds.Clear();
             foreach (var s in sounds)
             {
@@ -975,7 +987,7 @@ namespace Barotrauma
             var selectedSound = matchingSounds.GetRandom();
             if (selectedSound?.Sound == null) { return; }
             soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, AnimController.WorldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: CurrentHull, ignoreMuffling: selectedSound.IgnoreMuffling);
-            soundTimer = soundInterval;
+            soundTimer = Params.SoundInterval;
         }
 
         public void AddActiveObjectiveEntity(Entity entity, Sprite sprite, Color? color = null)
@@ -1026,6 +1038,21 @@ namespace Barotrauma
                     WorldPosition + Rand.Vector(Rand.Range(0.0f, 50.0f)),
                     Rand.Range(0.0f, MathHelper.TwoPi),
                     Rand.Range(50.0f, 500.0f), null);
+            }
+        }
+
+        partial void OnMoneyChanged(int prevAmount, int newAmount)
+        {
+            if (newAmount > prevAmount)
+            {
+                int increase = newAmount - prevAmount;
+                GUI.AddMessage(
+                    "+" + TextManager.GetWithVariable("currencyformat", "[credits]", increase.ToString()),
+                    GUI.Style.Yellow,
+                    Position + Vector2.UnitY * 150.0f,
+                    Vector2.UnitY * 10.0f,
+                    playSound: true,
+                    subId: Submarine?.ID ?? -1);;
             }
         }
     }

@@ -1034,12 +1034,15 @@ namespace FarseerPhysics.Dynamics
             body.DestroyProxies();
             for (int i = 0; i < body.FixtureList.Count; i++)
             {
+                body.FixtureList[i].UserData = null;
                 if (FixtureRemoved != null)
                     FixtureRemoved(this, body, body.FixtureList[i]);
             }
 
             body._world = null;
             BodyList.Remove(body);
+
+            body.UserData = null;
 
             if (BodyRemoved != null)
                 BodyRemoved(this, body);

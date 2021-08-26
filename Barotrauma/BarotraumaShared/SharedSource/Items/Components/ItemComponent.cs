@@ -711,7 +711,27 @@ namespace Barotrauma.Items.Components
 
             bool CheckItems(RelatedItem relatedItem, IEnumerable<Item> itemList)
             {
-                bool Predicate(Item it) => it != null && it.Condition > 0.0f && relatedItem.MatchesItem(it);
+                bool Predicate(Item it)
+                {
+                    if (it == null || it.Condition <= 0.0f || !relatedItem.MatchesItem(it)) { return false; }
+                    if (item.Submarine != null)
+                    {
+                        var idCard = it.GetComponent<IdCard>();
+                        if (idCard != null)
+                        {
+                            //id cards don't work in enemy subs (except on items that only require the default "idcard" tag)
+                            if (idCard.TeamID != CharacterTeamType.None && idCard.TeamID != item.Submarine.TeamID && relatedItem.Identifiers.Any(id => id != "idcard"))
+                            {
+                                return false;
+                            }
+                            else if (idCard.SubmarineSpecificID != 0 && item.Submarine.SubmarineSpecificIDTag != idCard.SubmarineSpecificID)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                    return true;
+                };
                 bool shouldBreak = false;
                 bool inEditor = false;
 #if CLIENT

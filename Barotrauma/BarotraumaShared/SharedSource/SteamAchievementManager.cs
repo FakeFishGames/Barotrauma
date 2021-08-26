@@ -455,6 +455,8 @@ namespace Barotrauma
                     UnlockAchievement(character, character.Info.Job.Prefab.Identifier + "round");
                 }
             }
+
+            pathFinder = null;
         }
 
         private static void UnlockAchievement(Character recipient, string identifier)

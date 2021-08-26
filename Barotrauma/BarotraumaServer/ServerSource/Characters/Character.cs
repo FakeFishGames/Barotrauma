@@ -46,5 +46,10 @@ namespace Barotrauma
                 }
             }
         }
+
+        partial void OnMoneyChanged(int prevAmount, int newAmount)
+        {
+            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateMoney });
+        }
     }
 }

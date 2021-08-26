@@ -140,6 +140,20 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, false, description: "Should the items be injected into the user.")]
+        public bool AutoInject
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.5f, false, description: "The rotation in which the contained sprites are drawn (in degrees).")]
+        public float AutoInjectThreshold
+        {
+            get;
+            set;
+        }
+
         [Serialize(false, false)]
         public bool RemoveContainedItemsOnDeconstruct { get; set; }
 
@@ -237,9 +251,23 @@ namespace Barotrauma.Items.Components
                 SpawnAlwaysContainedItems();
             }
 
-            if (item.ParentInventory is CharacterInventory)
+            if (item.ParentInventory is CharacterInventory ownerInventory)
             {
                 item.SetContainedItemPositions();
+
+                if (AutoInject)
+                {
+                    if (ownerInventory?.Owner is Character ownerCharacter && 
+                        ownerCharacter.HealthPercentage / 100f <= AutoInjectThreshold &&
+                        ownerCharacter.HasEquippedItem(item))
+                    {
+                        foreach (Item item in Inventory.AllItemsMod)
+                        {
+                            item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter);
+                        }
+                    }
+                }
+
             }
             else if (item.body != null && 
                 item.body.Enabled &&
@@ -256,6 +284,7 @@ namespace Barotrauma.Items.Components
             foreach (var activeContainedItem in activeContainedItems)
             {
                 Item contained = activeContainedItem.Item;
+
                 if (activeContainedItem.ExcludeBroken && contained.Condition <= 0.0f) { continue; }
                 StatusEffect effect = activeContainedItem.StatusEffect;
 
@@ -299,6 +328,8 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            character.CheckTalents(AbilityEffectType.OnOpenItemContainer, item);
+
             return base.Select(character);
         }
 

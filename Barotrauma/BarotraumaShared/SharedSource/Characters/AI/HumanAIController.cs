@@ -915,10 +915,10 @@ namespace Barotrauma
             return false;
         }
 
-        public static void ReportProblem(Character reporter, Order order)
+        public static void ReportProblem(Character reporter, Order order, Hull targetHull = null)
         {
             if (reporter == null || order == null) { return; }
-            var visibleHulls = new List<Hull>(reporter.GetVisibleHulls());
+            var visibleHulls = targetHull is null ? new List<Hull>(reporter.GetVisibleHulls()) : new List<Hull> { targetHull };
             foreach (var hull in visibleHulls)
             {
                 PropagateHullSafety(reporter, hull);
@@ -1415,7 +1415,7 @@ namespace Barotrauma
                 if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation != null)
                 {
                     var reputationLoss = damageAmount * Reputation.ReputationLossPerWallDamage;
-                    GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.Value -= reputationLoss;
+                    GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);
                 }
 
                 if (accumulatedDamage <= WarningThreshold) { return; }
@@ -1510,7 +1510,7 @@ namespace Barotrauma
                             var reputationLoss = MathHelper.Clamp(
                                 (item.Prefab.GetMinPrice() ?? 0) * Reputation.ReputationLossPerStolenItemPrice, 
                                 Reputation.MinReputationLossPerStolenItem, Reputation.MaxReputationLossPerStolenItem);
-                            GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.Value -= reputationLoss;
+                            GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);
                         }
                         item.StolenDuringRound = true;
                         otherCharacter.Speak(TextManager.Get("dialogstealwarning"), null, Rand.Range(0.5f, 1.0f), "thief", 10.0f);
@@ -1971,13 +1971,13 @@ namespace Barotrauma
                 if (c.Removed) { continue; }
                 if (c.TeamID != Character.TeamID) { continue; }
                 if (c.IsIncapacitated) { continue; }
-                other = c;
                 if (c.IsPlayer)
                 {
                     if (c.SelectedConstruction == target.Item)
                     {
                         // If the other character is player, don't try to operate
-                        return true;
+                        other = c;
+                        break;
                     }
                 }
                 else if (c.AIController is HumanAIController operatingAI)
@@ -1991,7 +1991,8 @@ namespace Barotrauma
                     if (!isOrder && isTargetOrdered)
                     {
                         // If the other bot is ordered to operate the item, let him do it, unless we are ordered too
-                        return true;
+                        other = c;
+                        break;
                     }
                     else
                     {
@@ -2012,18 +2013,20 @@ namespace Barotrauma
                                 // Steering is hard-coded -> cannot use the required skills collection defined in the xml
                                 if (Character.GetSkillLevel("helm") <= c.GetSkillLevel("helm"))
                                 {
-                                    return true;
+                                    other = c;
+                                    break;
                                 }
                             }
                             else if (target.DegreeOfSuccess(Character) <= target.DegreeOfSuccess(c))
                             {
-                                return true;
+                                other = c;
+                                break;
                             }
                         }
                     }
                 }
             }
-            return false;
+            return other != null;
             bool IsOrderedToOperateThis(AIController ai) => ai is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.Component.Item == target.Item;
         }
 

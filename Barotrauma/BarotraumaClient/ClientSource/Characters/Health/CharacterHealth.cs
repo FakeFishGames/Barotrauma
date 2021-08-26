@@ -543,7 +543,7 @@ namespace Barotrauma
                         else
                         {
                             var causeOfDeath = GetCauseOfDeath();
-                            Character.Controlled.Kill(causeOfDeath.First, causeOfDeath.Second);
+                            Character.Controlled.Kill(causeOfDeath.type, causeOfDeath.affliction);
                             Character.Controlled = null;
                         }
                     }
@@ -683,19 +683,33 @@ namespace Barotrauma
                 float particleMaxScale = emitter?.Prefab.Properties.ScaleMax ?? 1;
                 float severity = Math.Min(affliction.Strength / affliction.Prefab.MaxStrength * Character.Params.BleedParticleMultiplier, 1);
                 float bloodParticleSize = MathHelper.Lerp(particleMinScale, particleMaxScale, severity);
+
+                Vector2 velocity = Rand.Vector(affliction.Strength * 0.1f);
                 if (!inWater)
                 {
                     bloodParticleSize *= 2.0f;
+                    velocity = targetLimb.LinearVelocity * 100.0f;
                 }
 
                 // TODO: use the blood emitter?
                 var blood = GameMain.ParticleManager.CreateParticle(
                     inWater ? Character.Params.BleedParticleWater : Character.Params.BleedParticleAir,
-                    targetLimb.WorldPosition, Rand.Vector(affliction.Strength), 0.0f, Character.AnimController.CurrentHull);
+                    targetLimb.WorldPosition, velocity, 0.0f, Character.AnimController.CurrentHull);
 
-                if (blood != null)
+                if (blood != null && !inWater)
                 {
                     blood.Size *= bloodParticleSize;
+                    if (!string.IsNullOrEmpty(Character.BloodDecalName) && Rand.Range(0.0f, 1.0f) < 0.05f)
+                    {
+                        blood.OnCollision += (Vector2 pos, Hull hull) =>
+                        {
+                            var decal = hull?.AddDecal(Character.BloodDecalName, pos, Rand.Range(1.0f, 2.0f), isNetworkEvent: true);
+                            if (decal != null)
+                            {
+                                decal.FadeTimer = decal.LifeTime - decal.FadeOutTime * 2;
+                            }
+                        };
+                    }
                 }
                 bloodParticleTimer = MathHelper.Lerp(2, 0.5f, severity);
             }
@@ -1968,9 +1982,9 @@ namespace Barotrauma
             healthBarHolder.Visible = value;
         }
 
-        private readonly List<Pair<AfflictionPrefab, float>> newAfflictions = new List<Pair<AfflictionPrefab, float>>();
-        private readonly List<Triplet<LimbHealth, AfflictionPrefab, float>> newLimbAfflictions = new List<Triplet<LimbHealth, AfflictionPrefab, float>>();
-        private readonly List<Pair<AfflictionPrefab.PeriodicEffect, float>> newPeriodicEffects = new List<Pair<AfflictionPrefab.PeriodicEffect, float>>();
+        private readonly List<(AfflictionPrefab afflictionPrefab, float strength)> newAfflictions = new List<(AfflictionPrefab afflictionPrefab, float strength)>();
+        private readonly List<(LimbHealth limb, AfflictionPrefab afflictionPrefab, float strength)> newLimbAfflictions = new List<(LimbHealth limb, AfflictionPrefab afflictionPrefab, float strength)>();
+        private readonly List<(AfflictionPrefab.PeriodicEffect effect, float timer)> newPeriodicEffects = new List<(AfflictionPrefab.PeriodicEffect effect, float timer)>();
 
         public void ClientRead(IReadMessage inc)
         {
@@ -1997,41 +2011,41 @@ namespace Barotrauma
                 for (int j = 0; j < periodicAfflictionCount; j++)
                 {
                     float periodicAfflictionTimer = inc.ReadRangedSingle(afflictionPrefab.PeriodicEffects[j].MinInterval, afflictionPrefab.PeriodicEffects[j].MaxInterval, 8);
-                    newPeriodicEffects.Add(new Pair<AfflictionPrefab.PeriodicEffect, float>(afflictionPrefab.PeriodicEffects[j], periodicAfflictionTimer));
+                    newPeriodicEffects.Add((afflictionPrefab.PeriodicEffects[j], periodicAfflictionTimer));
                 }
-                newAfflictions.Add(new Pair<AfflictionPrefab, float>(afflictionPrefab, afflictionStrength));
+                newAfflictions.Add((afflictionPrefab, afflictionStrength));
             }
 
             foreach (Affliction affliction in afflictions)
             {
                 //deactivate afflictions that weren't included in the network message
-                if (!newAfflictions.Any(a => a.First == affliction.Prefab))
+                if (!newAfflictions.Any(a => a.afflictionPrefab == affliction.Prefab))
                 {
                     affliction.Strength = 0.0f;
                 }
             }
 
-            foreach (Pair<AfflictionPrefab, float> newAffliction in newAfflictions)
+            foreach (var (afflictionPrefab, strength) in newAfflictions)
             {
-                Affliction existingAffliction = afflictions.Find(a => a.Prefab == newAffliction.First);
+                Affliction existingAffliction = afflictions.Find(a => a.Prefab == afflictionPrefab);
                 if (existingAffliction == null)
                 {
-                    existingAffliction = newAffliction.First.Instantiate(newAffliction.Second);
+                    existingAffliction = afflictionPrefab.Instantiate(strength);
                     afflictions.Add(existingAffliction);
                 }
-                existingAffliction.SetStrength(newAffliction.Second);
+                existingAffliction.SetStrength(strength);
                 if (existingAffliction == stunAffliction)
                 {
                     Character.SetStun(existingAffliction.Strength, true, true);
                 }
                 foreach (var periodicEffect in newPeriodicEffects)
                 {
-                    if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.First)) { continue; }
+                    if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.effect)) { continue; }
                     //timer has wrapped around, apply the effect
-                    if (periodicEffect.Second - existingAffliction.PeriodicEffectTimers[periodicEffect.First] > periodicEffect.First.MinInterval / 2)
+                    if (periodicEffect.timer - existingAffliction.PeriodicEffectTimers[periodicEffect.effect] > periodicEffect.effect.MinInterval / 2)
                     {
-                        existingAffliction.PeriodicEffectTimers[periodicEffect.First] = periodicEffect.Second;
-                        foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
+                        existingAffliction.PeriodicEffectTimers[periodicEffect.effect] = periodicEffect.timer;
+                        foreach (StatusEffect effect in periodicEffect.effect.StatusEffects)
                         {
                             existingAffliction.ApplyStatusEffect(ActionType.OnActive, effect, deltaTime: 1.0f, this, targetLimb: null);
                         }
@@ -2063,9 +2077,9 @@ namespace Barotrauma
                 for (int j = 0; j < periodicAfflictionCount; j++)
                 {
                     float periodicAfflictionTimer = inc.ReadRangedSingle(afflictionPrefab.PeriodicEffects[j].MinInterval, afflictionPrefab.PeriodicEffects[j].MaxInterval, 8);
-                    newPeriodicEffects.Add(new Pair<AfflictionPrefab.PeriodicEffect, float>(afflictionPrefab.PeriodicEffects[j], periodicAfflictionTimer));
+                    newPeriodicEffects.Add((afflictionPrefab.PeriodicEffects[j], periodicAfflictionTimer));
                 }
-                newLimbAfflictions.Add(new Triplet<LimbHealth, AfflictionPrefab, float>(limbHealths[limbIndex], afflictionPrefab, afflictionStrength));
+                newLimbAfflictions.Add((limbHealths[limbIndex], afflictionPrefab, afflictionStrength));
             }
 
             foreach (LimbHealth limbHealth in limbHealths)
@@ -2073,33 +2087,33 @@ namespace Barotrauma
                 foreach (Affliction affliction in limbHealth.Afflictions)
                 {
                     //deactivate afflictions that weren't included in the network message
-                    if (!newLimbAfflictions.Any(a => a.First == limbHealth && a.Second == affliction.Prefab))
+                    if (!newLimbAfflictions.Any(a => a.limb == limbHealth && a.afflictionPrefab == affliction.Prefab))
                     {
                         affliction.Strength = 0.0f;
                     }
                 }
 
-                foreach (Triplet<LimbHealth, AfflictionPrefab, float> newAffliction in newLimbAfflictions)
+                foreach (var (limb, afflictionPrefab, strength) in newLimbAfflictions)
                 {
-                    if (newAffliction.First != limbHealth) { continue; }
-                    Affliction existingAffliction = limbHealth.Afflictions.Find(a => a.Prefab == newAffliction.Second);
+                    if (limb != limbHealth) { continue; }
+                    Affliction existingAffliction = limbHealth.Afflictions.Find(a => a.Prefab == afflictionPrefab);
                     if (existingAffliction == null)
                     {
-                        existingAffliction = newAffliction.Second.Instantiate(newAffliction.Third);
+                        existingAffliction = afflictionPrefab.Instantiate(strength);
                         limbHealth.Afflictions.Add(existingAffliction);
                     }
-                    existingAffliction.SetStrength(newAffliction.Third);
+                    existingAffliction.SetStrength(strength);
 
                     foreach (var periodicEffect in newPeriodicEffects)
                     {
-                        if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.First)) { continue; }
+                        if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.effect)) { continue; }
                         //timer has wrapped around, apply the effect
-                        if (periodicEffect.Second - existingAffliction.PeriodicEffectTimers[periodicEffect.First] > periodicEffect.First.MinInterval / 2)
+                        if (periodicEffect.timer - existingAffliction.PeriodicEffectTimers[periodicEffect.effect] > periodicEffect.effect.MinInterval / 2)
                         {
-                            existingAffliction.PeriodicEffectTimers[periodicEffect.First] = periodicEffect.Second;
-                            foreach (StatusEffect effect in periodicEffect.First.StatusEffects)
+                            existingAffliction.PeriodicEffectTimers[periodicEffect.effect] = periodicEffect.timer;
+                            foreach (StatusEffect effect in periodicEffect.effect.StatusEffects)
                             {
-                                Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == limbHealths.IndexOf(newAffliction.First));
+                                Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == limbHealths.IndexOf(limb));
                                 existingAffliction.ApplyStatusEffect(ActionType.OnActive, effect, deltaTime: 1.0f, this, targetLimb: targetLimb);
                             }
                         }

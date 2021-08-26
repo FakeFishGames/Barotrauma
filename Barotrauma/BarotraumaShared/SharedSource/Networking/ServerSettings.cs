@@ -507,7 +507,7 @@ namespace Barotrauma.Networking
         }
 
         [Serialize(800, true)]
-        private int LinesPerLogFile
+        public int LinesPerLogFile
         {
             get
             {

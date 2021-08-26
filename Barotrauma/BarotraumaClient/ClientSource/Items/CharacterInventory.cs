@@ -161,7 +161,7 @@ namespace Barotrauma
 
         public override void CreateSlots()
         {
-            if (visualSlots == null) { visualSlots = new VisualSlot[capacity]; }
+            visualSlots ??= new VisualSlot[capacity];
 
             float multiplier = !GUI.IsFourByThree() ? UIScale : UIScale * 0.925f;
             
@@ -359,7 +359,8 @@ namespace Barotrauma
                         int personalSlotX = HUDLayoutSettings.InventoryAreaLower.Right - SlotSize.X - Spacing;
                         for (int i = 0; i < visualSlots.Length; i++)
                         {
-                            if (HideSlot(i)) continue;
+                            if (HideSlot(i)) { continue; }
+                            if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
                                 //upperX -= slotSize.X + spacing;
@@ -371,10 +372,18 @@ namespace Barotrauma
                         }
 
                         int lowerX = x;
+                        int handSlotX = x;
                         int personalSlotY = GameMain.GraphicsHeight - bottomOffset * 2 - Spacing * 2 - (int)(!GUI.IsFourByThree() ? UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment : UnequippedIndicator.size.Y * UIScale * IndicatorScaleAdjustment * 2f);
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i)) continue;
+                            if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand)
+                            {
+                                SlotPositions[i] = new Vector2(handSlotX, personalSlotY);
+                                handSlotX += visualSlots[i].Rect.Width + Spacing;
+                                continue;
+                            }
+
+                            if (HideSlot(i)) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
                                 SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
@@ -390,7 +399,8 @@ namespace Barotrauma
                         x = lowerX;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (!HideSlot(i)) continue;
+                            if (!HideSlot(i)) { continue; }
+                            if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             x -= visualSlots[i].Rect.Width + Spacing;
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                         }
@@ -404,7 +414,8 @@ namespace Barotrauma
 
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (HideSlot(i)) continue;
+                            if (HideSlot(i)) { continue; }
+                            if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand) { continue; }
                             if (PersonalSlots.HasFlag(SlotTypes[i]))
                             {
                                 SlotPositions[i] = new Vector2(personalSlotX, personalSlotY);
@@ -416,9 +427,16 @@ namespace Barotrauma
                                 x += visualSlots[i].Rect.Width + Spacing;
                             }
                         }
+                        int handSlotX = x - visualSlots[0].Rect.Width - Spacing;
                         for (int i = 0; i < SlotPositions.Length; i++)
                         {
-                            if (!HideSlot(i)) continue;
+                            if (SlotTypes[i] == InvSlotType.RightHand || SlotTypes[i] == InvSlotType.LeftHand)
+                            {
+                                bool rightSlot = SlotTypes[i] == InvSlotType.RightHand;
+                                SlotPositions[i] = new Vector2(rightSlot ? handSlotX : handSlotX - visualSlots[0].Rect.Width - Spacing, personalSlotY);
+                                continue;
+                            }
+                            if (!HideSlot(i)) { continue; }
                             SlotPositions[i] = new Vector2(x, GameMain.GraphicsHeight - bottomOffset);
                             x += visualSlots[i].Rect.Width + Spacing;
                         }

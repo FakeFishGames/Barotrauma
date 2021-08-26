@@ -25,6 +25,7 @@ namespace Barotrauma
         public ScalableFont SubHeadingFont { get; private set; }
         public ScalableFont DigitalFont { get; private set; }
         public ScalableFont HotkeyFont { get; private set; }
+        public ScalableFont MonospacedFont { get; private set; }
 
         public Dictionary<ScalableFont, bool> ForceFontUpperCase
         {
@@ -40,11 +41,16 @@ namespace Barotrauma
         public SpriteSheet SavingIndicator { get; private set; }
 
         public UISprite UIGlow { get; private set; }
+
+        public UISprite PingCircle { get; private set; }
+
         public UISprite UIGlowCircular { get; private set; }
 
         public UISprite ButtonPulse { get; private set; }
 
         public SpriteSheet FocusIndicator { get; private set; }
+        
+        public UISprite IconOverflowIndicator { get; private set; }
 
         /// <summary>
         /// General green color used for elements whose colors are set from code
@@ -235,6 +241,9 @@ namespace Barotrauma
                     case "uiglow":
                         UIGlow = new UISprite(subElement);
                         break;
+                    case "pingcircle":
+                        PingCircle = new UISprite(subElement);
+                        break;
                     case "radiation":
                         RadiationSprite = new UISprite(subElement);
                         break;
@@ -246,6 +255,9 @@ namespace Barotrauma
                         break;
                     case "endroundbuttonpulse":
                         ButtonPulse = new UISprite(subElement);
+                        break;
+                    case "iconoverflowindicator":
+                        IconOverflowIndicator = new UISprite(subElement);
                         break;
                     case "focusindicator":
                         FocusIndicator = new SpriteSheet(subElement);
@@ -276,6 +288,10 @@ namespace Barotrauma
                     case "digitalfont":
                         DigitalFont = LoadFont(subElement, graphicsDevice);
                         ForceFontUpperCase[DigitalFont] = subElement.GetAttributeBool("forceuppercase", false);
+                        break;
+                    case "monospacedfont":
+                        MonospacedFont = LoadFont(subElement, graphicsDevice);
+                        ForceFontUpperCase[MonospacedFont] = subElement.GetAttributeBool("forceuppercase", false);
                         break;
                     case "hotkeyfont":
                         HotkeyFont = LoadFont(subElement, graphicsDevice);

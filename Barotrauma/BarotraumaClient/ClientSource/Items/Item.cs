@@ -332,7 +332,7 @@ namespace Barotrauma
                             foreach (var decorativeSprite in Prefab.DecorativeSprites)
                             {
                                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }                            
-                                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -rotationRad) * Scale;
+                                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flippedX && Prefab.CanSpriteFlipX ? rotationRad : -rotationRad) * Scale;
                                 if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                                 if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                                 decorativeSprite.Sprite.DrawTiled(spriteBatch, 
@@ -368,7 +368,7 @@ namespace Barotrauma
                         {
                             if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                             float rot = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
-                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -rotationRad) * Scale;
+                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flippedX && Prefab.CanSpriteFlipX ? rotationRad : -rotationRad) * Scale;
                             if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                             if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color, 
@@ -1622,6 +1622,10 @@ namespace Barotrauma
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
             {
                 wifiComponent.TeamID = (CharacterTeamType)teamID;
+            }
+            foreach (IdCard idCard in item.GetComponents<IdCard>())
+            {
+                idCard.TeamID = (CharacterTeamType)teamID;
             }
             if (descriptionChanged) { item.Description = itemDesc; }
             if (tagsChanged) { item.Tags = tags; }

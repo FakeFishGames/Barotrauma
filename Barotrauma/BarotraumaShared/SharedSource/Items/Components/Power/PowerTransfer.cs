@@ -370,5 +370,12 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            connectedRecipients?.Clear();
+            connectionDirty?.Clear();
+        }
     }
 }

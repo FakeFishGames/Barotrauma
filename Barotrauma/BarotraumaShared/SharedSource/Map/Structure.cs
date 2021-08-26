@@ -47,7 +47,7 @@ namespace Barotrauma
         const float LeakThreshold = 0.1f;
 
 #if CLIENT
-        private SpriteEffects SpriteEffects = SpriteEffects.None;
+        public SpriteEffects SpriteEffects = SpriteEffects.None;
 #endif
 
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
@@ -955,6 +955,15 @@ namespace Barotrauma
                 SoundPlayer.PlayDamageSound(attack.StructureSoundType, damageAmount, worldPosition, tags: Tags);
             }
 #endif
+
+            if (Submarine != null && damageAmount > 0)
+            {
+                foreach (Character character in Character.CharacterList)
+                {
+                    character.CheckTalents(AbilityEffectType.AfterSubmarineAttacked, Submarine);
+                }
+            }
+
             return new AttackResult(damageAmount, null);
         }
 

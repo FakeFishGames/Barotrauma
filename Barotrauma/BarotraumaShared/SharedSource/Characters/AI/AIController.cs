@@ -1,7 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.Items.Components;
 using System.Linq;
 
 namespace Barotrauma
@@ -328,5 +329,8 @@ namespace Barotrauma
 
         protected virtual void OnStateChanged(AIState from, AIState to) { }
         protected virtual void OnTargetChanged(AITarget previousTarget, AITarget newTarget) { }
+
+        public virtual void ClientRead(IReadMessage msg) { }
+        public virtual void ServerWrite(IWriteMessage msg) { }
     }
 }

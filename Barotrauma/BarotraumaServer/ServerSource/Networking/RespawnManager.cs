@@ -284,6 +284,8 @@ namespace Barotrauma.Networking
         
         partial void RespawnCharactersProjSpecific(Vector2? shuttlePos)
         {
+            respawnedCharacters.Clear();
+
             var respawnSub = RespawnShuttle ?? Submarine.MainSub;
 
             MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
@@ -300,7 +302,7 @@ namespace Barotrauma.Networking
                 if (matchingData != null && !matchingData.HasSpawned)
                 {
                     c.CharacterInfo = matchingData.CharacterInfo;
-                }                
+                }
 
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
@@ -355,8 +357,21 @@ namespace Barotrauma.Networking
 
                 characterInfos[i].ClearCurrentOrders();
 
-                var character = Character.Create(characterInfos[i], shuttleSpawnPoints[i].WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
+                bool forceSpawnInMainSub = false;
+                if (!bot && campaign != null)
+                {
+                    var matchingData = campaign?.GetClientCharacterData(clients[i]);
+                    if (matchingData != null && !matchingData.HasSpawned)
+                    {
+                        forceSpawnInMainSub = true;
+                    }
+                }
+
+                var character = Character.Create(characterInfos[i], (forceSpawnInMainSub ? mainSubSpawnPoints[i] : shuttleSpawnPoints[i]).WorldPosition, characterInfos[i].Name, isRemotePlayer: !bot, hasAi: bot);
                 character.TeamID = CharacterTeamType.Team1;
+                character.LoadTalents();
+
+                respawnedCharacters.Add(character);
 
                 if (bot)
                 {

@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Xml.Linq;
+using Barotrauma.Abilities;
 
 namespace Barotrauma.Items.Components
 {   
@@ -23,6 +23,12 @@ namespace Barotrauma.Items.Components
         private bool hasPower;
 
         private Character user;
+
+        public float FabricationSpeedMultiplier
+        {
+            get;
+            set;
+        }
 
         private ItemContainer inputContainer, outputContainer;
         
@@ -240,8 +246,10 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (fabricatedItem == null || !CanBeFabricated(fabricatedItem))
+            var availableIngredients = GetAvailableIngredients();
+            if (fabricatedItem == null || !CanBeFabricated(fabricatedItem, availableIngredients, user))
             {
+                FabricationSpeedMultiplier = 1f;
                 CancelFabricating();
                 return;
             }
@@ -278,38 +286,56 @@ namespace Barotrauma.Items.Components
 
             if (powerConsumption <= 0) { Voltage = 1.0f; }
 
-            timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f);
+            timeUntilReady -= deltaTime * Math.Min(Voltage, 1.0f) * FabricationSpeedMultiplier;
+            FabricationSpeedMultiplier = 1f;
+
             UpdateRequiredTimeProjSpecific();
 
             if (timeUntilReady > 0.0f) { return; }
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                var availableIngredients = GetAvailableIngredients();
-                foreach (FabricationRecipe.RequiredItem ingredient in fabricatedItem.RequiredItems)
-                {
-                    for (int i = 0; i < ingredient.Amount; i++)
+                fabricatedItem.RequiredItems.ForEach(requiredItem => {
+                    for (int usedPrefabsAmount = 0; usedPrefabsAmount < requiredItem.Amount; usedPrefabsAmount++)
                     {
-                        var availableItem = availableIngredients.FirstOrDefault(it => 
-                            it != null && ingredient.ItemPrefabs.Contains(it.Prefab) && 
-                            it.ConditionPercentage >= ingredient.MinCondition * 100.0f &&
-                            it.ConditionPercentage <= ingredient.MaxCondition * 100.0f);
-                        if (availableItem == null) { continue; }
-
-                        if (ingredient.UseCondition && availableItem.ConditionPercentage - ingredient.MinCondition * 100 > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
+                        foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
                         {
-                            availableItem.Condition -= availableItem.Prefab.Health * ingredient.MinCondition;
-                            continue;
+                            if (!availableIngredients.ContainsKey(requiredPrefab.Identifier)) { continue; }
+
+                            var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
+                            var availablePrefab = availablePrefabs.FirstOrDefault(potentialPrefab =>
+                            {
+                                return potentialPrefab.ConditionPercentage >= requiredItem.MinCondition * 100.0f &&
+                                       potentialPrefab.ConditionPercentage <= requiredItem.MaxCondition * 100.0f;
+                            });
+
+                            if (availablePrefab == null) { continue; }
+
+                            if (requiredItem.UseCondition && availablePrefab.ConditionPercentage - requiredItem.MinCondition * 100 > 0.0f) //Leave it behind with reduced condition if it has enough to stay above 0
+                            {
+                                availablePrefab.Condition -= availablePrefab.Prefab.Health * requiredItem.MinCondition;
+                                continue;
+                            }
+                            
+                            availablePrefabs.Remove(availablePrefab);
+                            Entity.Spawner.AddToRemoveQueue(availablePrefab);
+                            inputContainer.Inventory.RemoveItem(availablePrefab);
                         }
-                        availableIngredients.Remove(availableItem);
-                        Entity.Spawner.AddToRemoveQueue(availableItem);
-                        inputContainer.Inventory.RemoveItem(availableItem);
                     }
-                }
+                });
 
                 Character tempUser = user;
+
                 int amountFittingContainer = outputContainer.Inventory.HowManyCanBePut(fabricatedItem.TargetItem, fabricatedItem.OutCondition * fabricatedItem.TargetItem.Health);
-                for (int i = 0; i < fabricatedItem.Amount; i++)
+                var itemsCreated = new AbilityValue(fabricatedItem.Amount);
+                foreach (Character character in Character.CharacterList.Where(c => c.TeamID == user.TeamID))
+                {
+                    character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, (fabricatedItem.TargetItem, itemsCreated));
+                }
+
+                tempUser.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, (fabricatedItem.TargetItem, itemsCreated));
+
+                for (int i = 0; i < (int)itemsCreated.Value; i++)
                 {
                     if (i < amountFittingContainer)
                     {
@@ -339,9 +365,13 @@ namespace Barotrauma.Items.Components
                     foreach (Skill skill in fabricatedItem.RequiredSkills)
                     {
                         float userSkill = user.GetSkillLevel(skill.Identifier);
+                        float addedSkill = skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f);
+                        var addedSkillValue = new AbilityValue(0f);
+                        user.CheckTalents(AbilityEffectType.OnItemFabricationSkillGain, addedSkillValue);
+
                         user.Info.IncreaseSkillLevel(
                             skill.Identifier,
-                            skill.Level * SkillSettings.Current.SkillIncreasePerFabricatorRequiredSkill / Math.Max(userSkill, 1.0f),
+                            addedSkill + addedSkillValue.Value,
                             user.Position + Vector2.UnitY * 150.0f);
                     }
                 }
@@ -365,24 +395,36 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateRequiredTimeProjSpecific();
 
-        private bool CanBeFabricated(FabricationRecipe fabricableItem)
+        private bool CanBeFabricated(FabricationRecipe fabricableItem, Dictionary<string, List<Item>> availableIngredients, Character character)
         {
             if (fabricableItem == null) { return false; }
-            List<Item> availableIngredients = GetAvailableIngredients();
-            return CanBeFabricated(fabricableItem, availableIngredients);
-        }
+            if (fabricableItem.RequiresRecipe && (character == null || !character.HasRecipeForItem(fabricableItem.TargetItem.Identifier))) { return false; }
 
-        private bool CanBeFabricated(FabricationRecipe fabricableItem, IEnumerable<Item> availableIngredients)
-        {
-            if (fabricableItem == null) { return false; }            
-            foreach (FabricationRecipe.RequiredItem requiredItem in fabricableItem.RequiredItems)
+            return fabricableItem.RequiredItems.All(requiredItem =>
             {
-                if (availableIngredients.Count(it => IsItemValidIngredient(it, requiredItem)) < requiredItem.Amount)
+                int availablePrefabsAmount = 0;
+                foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
                 {
-                    return false;
+                    if (!availableIngredients.ContainsKey(requiredPrefab.Identifier)) { continue; }
+
+                    var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
+                    foreach (Item availablePrefab in availablePrefabs)
+                    {
+                        if (availablePrefab.Condition / availablePrefab.Prefab.Health >= requiredItem.MinCondition &&
+                            availablePrefab.Condition / availablePrefab.Prefab.Health <= requiredItem.MaxCondition)
+                        {
+                            availablePrefabsAmount++;
+                        }
+
+                        if (availablePrefabsAmount >= requiredItem.Amount)
+                        {
+                            return true;
+                        }
+                    }
                 }
-            }
-            return true;
+
+                return false;
+            });
         }
 
         private float GetRequiredTime(FabricationRecipe fabricableItem, Character user)
@@ -416,7 +458,7 @@ namespace Barotrauma.Items.Components
         /// Get a list of all items available in the input container and linked containers
         /// </summary>
         /// <returns></returns>
-        private List<Item> GetAvailableIngredients()
+        private Dictionary<string, List<Item>> GetAvailableIngredients()
         {
             List<Item> availableIngredients = new List<Item>();
             availableIngredients.AddRange(inputContainer.Inventory.AllItems);
@@ -448,7 +490,19 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
-            return availableIngredients;
+            Dictionary<string, List<Item>> ingredientsDictionary = new Dictionary<string, List<Item>>();
+            for (int i = 0; i < availableIngredients.Count; i++)
+            {
+                var itemIdentifier = availableIngredients[i].prefab.Identifier;
+                if (!ingredientsDictionary.ContainsKey(itemIdentifier))
+                {
+                    ingredientsDictionary[itemIdentifier] = new List<Item>(availableIngredients.Count);
+                }
+
+                ingredientsDictionary[itemIdentifier].Add(availableIngredients[i]);
+            }
+
+            return ingredientsDictionary;
         }
 
         /// <summary>
@@ -463,40 +517,41 @@ namespace Barotrauma.Items.Components
             bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
             var availableIngredients = GetAvailableIngredients();
-            foreach (var requiredItem in targetItem.RequiredItems)
-            {
+            targetItem.RequiredItems.ForEach(requiredItem => {
                 for (int i = 0; i < requiredItem.Amount; i++)
                 {
-                    var matchingItem = availableIngredients.Find(it => !usedItems.Contains(it) && IsItemValidIngredient(it, requiredItem));
-                    if (matchingItem == null) { continue; }
+                    foreach (ItemPrefab requiredPrefab in requiredItem.ItemPrefabs)
+                    {
+                        if (!availableIngredients.ContainsKey(requiredPrefab.Identifier)) { continue; }
 
-                    availableIngredients.Remove(matchingItem);
-                    
-                    if (matchingItem.ParentInventory == inputContainer.Inventory)
-                    {
-                        //already in input container, all good
-                        usedItems.Add(matchingItem);
-                    }
-                    else //in another inventory, we need to move the item
-                    {
-                        if (!inputContainer.Inventory.CanBePut(matchingItem))
+                        var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
+                        var availablePrefab = availablePrefabs.FirstOrDefault(potentialPrefab =>
                         {
-                            var unneededItem = inputContainer.Inventory.AllItems.FirstOrDefault(it => !usedItems.Contains(it));
-                            unneededItem?.Drop(null, createNetworkEvent: !isClient);
-                        }
-                        inputContainer.Inventory.TryPutItem(matchingItem, user: null, createNetworkEvent: !isClient);
-                    }                    
-                }
-            }
-        }
+                            return !usedItems.Contains(potentialPrefab) &&
+                                   potentialPrefab.ConditionPercentage >= requiredItem.MinCondition * 100.0f &&
+                                   potentialPrefab.ConditionPercentage <= requiredItem.MaxCondition * 100.0f;
+                        });
+                        if (availablePrefab == null) { continue; }
 
-        private bool IsItemValidIngredient(Item item, FabricationRecipe.RequiredItem requiredItem)
-        {
-            return 
-                item != null && 
-                requiredItem.ItemPrefabs.Contains(item.prefab) && 
-                item.Condition / item.Prefab.Health >= requiredItem.MinCondition &&
-                item.Condition / item.Prefab.Health <= requiredItem.MaxCondition;
+                        availablePrefabs.Remove(availablePrefab);
+
+                        if (availablePrefab.ParentInventory == inputContainer.Inventory)
+                        {
+                            //already in input container, all good
+                            usedItems.Add(availablePrefab);
+                        }
+                        else //in another inventory, we need to move the item
+                        {
+                            if (!inputContainer.Inventory.CanBePut(availablePrefab))
+                            {
+                                var unneededItem = inputContainer.Inventory.AllItems.FirstOrDefault(it => !usedItems.Contains(it));
+                                unneededItem?.Drop(null, createNetworkEvent: !isClient);
+                            }
+                            inputContainer.Inventory.TryPutItem(availablePrefab, user: null, createNetworkEvent: !isClient);
+                        }
+                    }
+                }
+            });
         }
 
         public override XElement Save(XElement parentElement)

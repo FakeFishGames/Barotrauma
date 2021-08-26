@@ -97,64 +97,51 @@ namespace Barotrauma
 
             foreach (WayPoint wp in wayPoints)
             {
-                wp.linkedTo.CollectionChanged += WaypointLinksChanged;
+                wp.OnLinksChanged += WaypointLinksChanged;
             }
 
             IndoorsSteering = indoorsSteering;
         }
 
-        void WaypointLinksChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void WaypointLinksChanged(WayPoint wp)
         {
             if (Submarine.Unloading) { return; }
 
-            var waypoints = sender as IEnumerable<MapEntity>;
+            var node = nodes.Find(n => n.Waypoint == wp);
+            if (node == null) { return; }
 
-            foreach (MapEntity me in waypoints)
+            for (int i = node.connections.Count - 1; i >= 0; i--)
             {
-                WayPoint wp = me as WayPoint;
-                if (me == null) { continue; }
-
-                var node = nodes.Find(n => n.Waypoint == wp);
-                if (node == null) { return; }
-
-                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                //remove connection if the waypoint isn't connected anymore
+                if (wp.linkedTo.FirstOrDefault(l => l == node.connections[i].Waypoint) == null)
                 {
-                    for (int i = node.connections.Count - 1; i >= 0; i--)
-                    {
-                        //remove connection if the waypoint isn't connected anymore
-                        if (wp.linkedTo.FirstOrDefault(l => l == node.connections[i].Waypoint) == null)
-                        {
-                            node.connections.RemoveAt(i);
-                            node.distances.RemoveAt(i);
-                        }
-                    }
+                    node.connections.RemoveAt(i);
+                    node.distances.RemoveAt(i);
                 }
-                else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+            }
+
+            for (int i = 0; i < wp.linkedTo.Count; i++)
+            {
+                if (!(wp.linkedTo[i] is WayPoint connected)) { continue; }
+
+                //already connected, continue
+                if (node.connections.Any(n => n.Waypoint == connected)) { continue; }
+
+                var matchingNode = nodes.Find(n => n.Waypoint == connected);
+                if (matchingNode == null)
                 {
-                    for (int i = 0; i < wp.linkedTo.Count; i++)
-                    {
-                        if (!(wp.linkedTo[i] is WayPoint connected)) { continue; }
-
-                        //already connected, continue
-                        if (node.connections.Any(n => n.Waypoint == connected)) { continue; }
-
-                        var matchingNode = nodes.Find(n => n.Waypoint == connected);
-                        if (matchingNode == null)
-                        {
 #if DEBUG
-                            DebugConsole.ThrowError("Waypoint connections were changed, no matching path node found in PathFinder");
+                    DebugConsole.ThrowError("Waypoint connections were changed, no matching path node found in PathFinder");
 #endif
-                            return;
-                        }
-
-                        node.connections.Add(matchingNode);
-                        node.distances.Add(Vector2.Distance(node.Position, matchingNode.Position));
-                    }
+                    return;
                 }
+
+                node.connections.Add(matchingNode);
+                node.distances.Add(Vector2.Distance(node.Position, matchingNode.Position));
             }
         }
 
-        private static readonly List<PathNode> sortedNodes = new List<PathNode>();
+        private readonly List<PathNode> sortedNodes = new List<PathNode>();
 
         public SteeringPath FindPath(Vector2 start, Vector2 end, Submarine hostSub = null, string errorMsgStr = null, Func<PathNode, bool> startNodeFilter = null, Func<PathNode, bool> endNodeFilter = null, Func<PathNode, bool> nodeFilter = null, bool checkVisibility = true)
         {

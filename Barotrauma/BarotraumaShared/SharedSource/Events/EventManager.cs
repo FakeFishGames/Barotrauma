@@ -380,9 +380,13 @@ namespace Barotrauma
         {
             pendingEventSets.Clear();
             selectedEvents.Clear();
+            activeEvents.Clear();
+            QueuedEvents.Clear();
 
             preloadedSprites.ForEach(s => s.Remove());
             preloadedSprites.Clear();
+
+            pathFinder = null;
         }
 
         private float CalculateCommonness(EventPrefab eventPrefab, float baseCommonness)
